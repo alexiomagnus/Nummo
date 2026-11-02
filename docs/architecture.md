@@ -21,7 +21,12 @@ letta integralmente e mantenuta invariata.
 | Salvataggio locale delle spese, elenco ricercabile/ordinabile, dashboard con 3 grafici | Richiesta utente; anticipa funzioni post-MVP. Archivio locale scelto dall'agente |
 | Data spesa sempre automatica, nessuna modifica dalla UI | Richiesta utente (rimossa «Modifica data») |
 | Firebase Hosting, budget, deployment e palette | Non confermati |
-| Archivio tecnico, protocollo di scrittura/recupero, persistenza sessione | Da progettare e confermare prima dell'implementazione definitiva |
+| Protocollo di scrittura: ledger Firestore che assegna a ogni `expense_id` una riga fissa del foglio; conferma solo dopo la scrittura verificata | Confermato dall'utente 2/11/2026 (alternative scartate sotto) |
+| Verifica locale con Firebase Emulator Suite (progetto `demo-nummo`), Sheets sostituito negli emulatori | Confermato dall'utente 2/11/2026 |
+| Regione `europe-west1`, `maxInstances: 2`, persistenza sessione `browserLocalPersistence` | Scelte dell'agente, da confermare prima del deployment |
+| Recupero di un invio dopo chiusura/ricaricamento della pagina | Da progettare (proposta sotto, non implementata) |
+| Progetto Firebase reale `nummo-6b6e2` solo per Authentication; Functions e Firestore locali, nessun deployment | Richiesta utente 2/11/2026 |
+| Verifica esplicita dell'ID token nel backend, anche negli emulatori | Richiesta utente 2/11/2026 |
 
 ## Archivio locale temporaneo
 
@@ -98,56 +103,133 @@ Il lockfile fissa l'albero installato. Stato React locale, senza router né stor
 globale; quattro sezioni (Nuova, Spese, Dashboard, Categorie). Il modulo resta montato
 per non perdere la bozza al cambio sezione.
 
-`src/domain` contiene funzioni pure indipendenti da Expo e Firebase. Il futuro
-backend potrà riusare le regole, ma dovrà anche validare a runtime struttura,
-tipi, UUID e campi consentiti di ogni richiesta non fidata. I tipi TypeScript
-non costituiscono validazione di rete.
+`src/domain` contiene funzioni pure indipendenti da Expo e Firebase, compilate anche
+nel backend (`functions/tsconfig.json` include `../src/domain`). `contract.ts` valida a
+runtime ciò che attraversa un confine: richieste al backend (campi esatti, UUID, date),
+conferme, elenchi e record letti da `localStorage`. I tipi TypeScript non bastano.
 
-Il reducer degli invii (`submission.ts`) è una base testata per il backend, **non
-collegata**: oggi il salvataggio è locale e sincrono. L'adapter Sheets dovrà usare
-`valueInputOption: RAW` e testare l'assenza di formule.
+Il reducer degli invii (`submission.ts`) governa entrambi gli archivi (`ExpenseStore`):
+locale (sincrono, conferma immediata) e backend. Il modulo si svuota solo dopo una
+conferma; con esito incerto i campi restano bloccati e «Riprova» rinvia la stessa
+richiesta. La modalità si sceglie in fase di build con `EXPO_PUBLIC_NUMMO_BACKEND`
+(`emulator` | `firebase`; assente = solo browser).
 
-## Prossima prova tecnica: confini obbligatori
+## Backend (prova tecnica, verificato solo negli emulatori)
 
-- Firebase Web SDK per login Google; persistenza da scegliere esplicitamente.
-- Callable autenticata con autorizzazione del singolo UID sul registro configurato
-  lato server. Il client non passa un ID di foglio né un proprietario.
-- Backend assegna `created_at` in UTC, valida il payload e restituisce ID della
-  spesa e conferma applicativa solo dopo la scrittura verificata.
-- Stesso ID e dati diversi devono produrre conflitto. Doppio tocco, concorrenza,
-  perdita risposta e crash dopo scrittura devono lasciare una sola riga.
-- Logout/cambio account svuotano la UI e impediscono di mostrare o elaborare
-  operazioni appartenenti all'account precedente.
+```text
+Web app ── Firebase Auth (Google, browserLocalPersistence)
+   │ callable HTTPS con token Firebase (SDK)
+   ▼
+Cloud Functions europe-west1 (functions/)
+   │ 1. autorizzazione: solo ALLOWED_UID con accesso google.com
+   │ 2. validazione runtime (src/domain/contract.ts, condiviso)
+   │ 3. transazione Firestore: operations/{expense_id} + contatore riga
+   │ 4. scrittura RAW sulla riga riservata, verificata dalla risposta
+   ▼
+Google Sheets «Registro spese», scheda SHEET_TAB (default «Spese»)
+```
 
-### Proposta di recupero da valutare, non implementata
+**API** (callable, regione `europe-west1`):
+- `submitExpense(ExpenseRequest) → { expense_id, created_at }`. Richiesta con
+  esattamente i campi `expense_id` (UUID), `amount_minor`, `currency`, `description`,
+  `category_id` (UUID o `null`), `expense_date` (≤ oggi a Roma), `recurrence`,
+  `source`, `schema_version`; campi in più o mancanti = rifiuto. `created_at` (UTC)
+  è assegnato dal backend alla prima prenotazione e restituito identico ai tentativi.
+- `listExpenses() → { expenses, invalid_rows }`: tutte le righe del foglio; righe
+  vuote (prenotate ma mai scritte) ignorate, righe illeggibili o ID duplicati contati
+  in `invalid_rows` e segnalati nell'interfaccia, mai nascosti in silenzio.
 
-Prima della prima chiamata, salvare localmente un'operazione pendente minima,
-associata all'UID, con ID e payload immutabile. Se la persistenza fallisce, non
-inviare. Al ripristino della sessione riconciliare solo le operazioni dello stesso
-utente con il backend, mantenendo i campi bloccati fino a un esito certo.
-Non salvare copie dei token. Precisare conservazione, logout, storage negato,
-aggiornamento dell'app e richieste provenienti da più schede.
+**Errori**: `unauthenticated`, `permission-denied`, `invalid-argument` (validazione)
+e `already-exists` (stesso ID con dati diversi o di un altro account) sono rifiuti
+definitivi, decisi prima di ogni scrittura: il client sblocca il modulo e un nuovo
+invio usa un nuovo ID. Ogni altro errore diventa `unavailable` (log con solo nome e
+messaggio dell'errore, mai payload o token) ed è trattato come **esito incerto**:
+il client ritenta con lo stesso ID e gli stessi dati. Una conferma vale solo se
+contiene lo stesso `expense_id` e un timestamp UTC valido.
 
-Il protocollo backend va dimostrato prima di adottarlo. Una possibilità da studiare
-è assegnare in modo transazionale una riga stabile a ciascuna operazione in un
-archivio tecnico e ritentare una scrittura sulla stessa riga, invece di append.
-Richiede proteggere la tabella da riordini/inserimenti manuali e definire recupero,
-payload hash e associazione registro/utente. È una proposta con costi e vincoli,
-**non una scelta approvata né una garanzia di atomicità Sheets/database**.
-Un lock con scadenza da solo non risolve una scrittura ancora in volo.
+**Idempotenza**: la transazione Firestore crea `operations/{expense_id}` con UID,
+hash SHA-256 del payload canonico, riga assegnata (`ledger/sheet.next_row`, da 2) e
+`written`. Doppio tocco, richieste concorrenti, risposta persa e crash dopo la
+scrittura riscrivono la **stessa riga** con gli stessi valori (mai append); se la
+riga contiene già esattamente quei valori non viene riscritta. Se la riga riservata
+contiene un altro ID (righe inserite o riordinate a mano) la funzione non sovrascrive
+e fallisce: la scheda va protetta da modifiche manuali. Le regole Firestore negano
+ogni accesso dai client (`firestore.rules`); scrive solo l'Admin SDK.
+
+**Modello della scheda** (`functions/src/sheetRow.ts`, colonne A–J): `expense_id`,
+`expense_date`, `amount_minor`, `currency`, `description`, `category_id`,
+`recurrence`, `created_at`, `source`, `schema_version`. Scrittura con
+`valueInputOption: RAW` (un nome «=…» resta testo) e lettura `UNFORMATTED_VALUE`.
+Differenze da `recap.md` §5: `note` → `description` (obbligatoria), aggiunta
+`recurrence`; `legacy_ref` rimandato alla migrazione dal Form.
+
+**Accesso a Sheets**: Application Default Credentials dell'account di servizio della
+funzione (`google-auth-library`), nessuna chiave nel codice; il foglio va condiviso
+solo con quell'account. `SHEET_ID` e `ALLOWED_UID` sono parametri lato server: il
+client non indica né foglio né proprietario.
+
+**Verifica dei token**: ogni callable verifica l'ID token con `getAuth().verifyIdToken`
+(firma, scadenza, emittente e destinatario del progetto) prima dell'autorizzazione,
+perché l'emulatore delle Functions si limita a decodificarlo (`skipTokenVerification`).
+In produzione è un secondo controllo, con chiavi pubbliche in cache. Con l'emulatore
+Auth attivo l'Admin SDK accetta i suoi token non firmati; nella modalità «Auth reale»
+l'emulatore Auth non è avviato, quindi solo token emessi da Google passano. Non è
+controllata la revoca (`checkRevoked` richiede credenziali): un token resta valido fino
+alla scadenza (1 ora) anche dopo il logout.
+
+**Configurazione del client**: `EXPO_PUBLIC_*` sono inserite nel bundle in build, quindi
+solo valori pubblici. Le modalità non si mescolano: `emulator` usa una configurazione
+demo fissa e ignora `EXPO_PUBLIC_FIREBASE_*`; `firebase` le richiede tutte e, se ne manca
+una, mostra un avviso invece di avviare Firebase. `EXPO_PUBLIC_FUNCTIONS_EMULATOR`
+collega solo le Functions all'emulatore, mai l'Auth.
+
+**Emulatori**: `SHEET_ID=emulator` sostituisce Sheets con la collezione Firestore
+`emulator_sheet_rows`; il codice lo rifiuta fuori dagli emulatori. Il progetto
+`demo-nummo` non richiede credenziali; gli account di prova sono in
+`emulator-seed/` (`demo-owner` ammesso, `demo-intruder` no) e i parametri in
+`functions/.env.demo-nummo`.
+
+**Alternative valutate e non adottate**: Firestore come archivio principale con copia
+asincrona in Sheets (più semplice e atomica, ma cambierebbe due requisiti: Sheets
+archivio principale e conferma dopo la scrittura nel foglio); solo Sheets con ricerca
+e append (nessuna garanzia contro richieste concorrenti).
+
+**Limiti noti**: una riga prenotata e mai scritta (invio abbandonato) resta vuota;
+riordinare o inserire righe a mano rompe l'associazione riga↔ID (rilevato, non
+corretto); `listExpenses` legge tutto il foglio a ogni apertura; le categorie restano
+nel browser (il foglio contiene solo `category_id`). Deployment, fatturazione e un
+foglio reale non sono mai stati usati: l'adapter Google Sheets è testato solo con
+`fetch` simulato.
+
+### Recupero dopo chiusura o ricaricamento — proposta non implementata
+
+Oggi un esito incerto vive solo nella pagina: ricaricando si perde la richiesta
+(il ledger evita duplicati, ma l'utente non sa se la spesa è salvata finché non
+consulta l'elenco). Proposta: prima della prima chiamata salvare localmente
+un'operazione pendente minima, associata all'UID, con ID e payload immutabile; se la
+persistenza fallisce, non inviare. Al ripristino della sessione riconciliare solo le
+operazioni dello stesso utente (nuovo invio con stesso ID: il ledger restituisce la
+conferma), mantenendo i campi bloccati fino a un esito certo. Non salvare copie dei
+token. Precisare conservazione, logout, storage negato e richieste da più schede.
 
 ## Dipendenze e sicurezza
 
-Niente Firebase/Google SDK nella prima fase: non servono al modulo locale. Niente
-segreti né `.env` reali. Firebase Hosting e un eventuale archivio tecnico richiedono
-decisioni separate. Le Cloud Functions richiedono un piano con fatturazione per
-il deployment; nessuna attivazione è stata eseguita.
+App web: `firebase` (solo `app`, `auth`, `functions`; ~350 KB in più nel bundle,
+caricati anche in modalità solo browser). Strumenti: `firebase-tools` (dev) per gli
+emulatori, richiede Java. Backend (`functions/`, pacchetto separato con lockfile):
+`firebase-functions`, `firebase-admin`, `google-auth-library`. Niente segreti né
+`.env` reali: la configurazione web di Firebase è pubblica, i parametri reali vanno
+in un `.env.<progetto>` non versionato o impostati al deployment. Firebase Hosting e
+il deployment (piano Blaze) richiedono autorizzazione; nessuna attivazione eseguita.
 
-L'audit iniziale segnala 11 dipendenze con severità moderata nella catena degli
-strumenti Expo, originate da `glob` e `minimatch`. Nessuna segnalazione alta o critica.
-Non applicare `npm audit fix --force`: il suggerimento attuale retrocede Expo alla
-51. Valutare aggiornamenti upstream o override solo con compatibilità verificata.
-Questa analisi dell'albero non equivale a un audit di sicurezza completo.
+`npm audit` (2/11/2026): radice 29 (25 moderate, 4 alte). Le alte vengono da
+`@grpc/grpc-js` tramite `@firebase/firestore`, non importato dall'app (non finisce nel
+bundle web); la «correzione» proposta retrocede `firebase` alla 9.14. Le moderate
+sono nella catena Expo e `firebase-tools` (`glob`, `minimatch`, `@opentelemetry`).
+`functions/`: 6 moderate (`glob`/`minimatch`/`rimraf` tramite `google-gax`), con
+`npm audit fix` non forzato disponibile ma non applicato senza verifica.
+Non applicare `npm audit fix --force` (retrocede Expo). Questa analisi non equivale
+a un audit di sicurezza completo.
 
 ## Fonti tecniche consultate
 

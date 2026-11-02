@@ -7,3 +7,9 @@ coverage/
 !.env.example
 *.log
 .DS_Store
+!functions/.env.demo-nummo
+functions/lib/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/

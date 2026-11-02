@@ -1,0 +1,29 @@
+{
+  "kind": "identitytoolkit#DownloadAccountResponse",
+  "users": [
+    {
+      "localId": "demo-owner",
+      "email": "proprietario@example.com",
+      "emailVerified": true,
+      "displayName": "Proprietario (demo)",
+      "providerUserInfo": [
+        { "providerId": "google.com", "rawId": "100000000000000000001", "federatedId": "100000000000000000001", "email": "proprietario@example.com", "displayName": "Proprietario (demo)" }
+      ],
+      "validSince": "1700000000",
+      "createdAt": "1700000000000",
+      "lastLoginAt": "1700000000000"
+    },
+    {
+      "localId": "demo-intruder",
+      "email": "estraneo@example.com",
+      "emailVerified": true,
+      "displayName": "Estraneo (demo)",
+      "providerUserInfo": [
+        { "providerId": "google.com", "rawId": "100000000000000000002", "federatedId": "100000000000000000002", "email": "estraneo@example.com", "displayName": "Estraneo (demo)" }
+      ],
+      "validSince": "1700000000",
+      "createdAt": "1700000000000",
+      "lastLoginAt": "1700000000000"
+    }
+  ]
+}

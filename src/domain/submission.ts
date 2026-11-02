@@ -1,6 +1,7 @@
+import { isUtcTimestamp, type Receipt } from './contract.ts';
 import type { ExpenseRequest } from './expense.ts';
 
-export type Receipt = Readonly<{ expense_id: string; created_at: string }>;
+export type { Receipt };
 export type Submission =
   | { status: 'draft' }
   | { status: 'sending'; request: ExpenseRequest }
@@ -41,9 +42,10 @@ export function submissionReducer(state: Submission, event: SubmissionEvent): Su
   }
 }
 
-function isUtcTimestamp(value: string): boolean {
-  const canonical = value.includes('.') ? value : value.replace('Z', '.000Z');
-  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value)
-    && Number.isFinite(Date.parse(value))
-    && new Date(value).toISOString() === canonical;
+// Callable error codes that guarantee nothing was written (checked before any reservation).
+// Anything else, including network failures and timeouts, leaves the outcome uncertain.
+const definitiveRejections = new Set(['invalid-argument', 'already-exists', 'permission-denied', 'unauthenticated']);
+
+export function isDefinitiveRejection(code: string): boolean {
+  return definitiveRejections.has(code.replace(/^functions\//, ''));
 }

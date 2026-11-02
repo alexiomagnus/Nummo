@@ -1,23 +1,23 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View, ScrollView, useColorScheme } from 'react-native';
-import { IconButton, SegmentedButtons, MD3DarkTheme, MD3LightTheme, PaperProvider, Text } from 'react-native-paper';
+import { ActivityIndicator, Button, IconButton, MD3DarkTheme, MD3LightTheme, PaperProvider, Surface, Text } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ExpenseForm } from './src/features/expenses/ExpenseForm';
-import { CategorySettings } from './src/features/categories/CategorySettings';
-import { useCategories } from './src/features/categories/useCategories';
-import { useExpenses } from './src/features/expenses/useExpenses';
-import { ExpenseList } from './src/features/history/ExpenseList';
-import { Dashboard } from './src/features/dashboard/Dashboard';
-import { expandOccurrences } from './src/domain/history';
-import { todayInRome } from './src/domain/policy';
 import { ThemeIcon } from './src/components/ThemeIcon';
+import { SignIn } from './src/features/session/SignIn';
+import { useSession } from './src/features/session/useSession';
+import { LocalWorkspace, RemoteWorkspace } from './src/features/workspace/Workspace';
+import { backendMode, functionsEmulator, missingFirebaseConfig } from './src/services/backendConfig';
+
+const demo = backendMode === 'emulator';
+const configMissing = missingFirebaseConfig.length > 0;
+const storageNote = demo
+  ? 'Ambiente di prova locale (emulatori): account simulati, niente viene scritto su Google Sheets.'
+  : functionsEmulator
+    ? 'Accesso reale, backend locale (emulatori): niente viene scritto su Google Sheets.'
+    : 'Le spese sono salvate nel registro Google Sheets.';
 
 export default function App() {
-  const [section, setSection] = useState('expense');
-  const categoryState = useCategories();
-  const expenseState = useExpenses();
-  // Recomputed when expenses change; a page left open across midnight catches up on the next change.
-  const occurrences = useMemo(() => expandOccurrences(expenseState.expenses, todayInRome()), [expenseState.expenses]);
+  const session = useSession(backendMode !== 'local' && !configMissing);
   const systemScheme = useColorScheme();
   const [override, setOverride] = useState<boolean | null>(null);
   const dark = override ?? systemScheme === 'dark';
@@ -55,23 +55,27 @@ export default function App() {
               <Text variant="headlineSmall" style={styles.title}>Una spesa, pochi gesti.</Text>
               <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Importo, nome e ci sei.</Text>
             </View>
-            <SegmentedButtons value={section} onValueChange={setSection} buttons={[
-              { value: 'expense', label: 'Nuova' },
-              { value: 'list', label: 'Spese' },
-              { value: 'dashboard', label: 'Dashboard' },
-              { value: 'categories', label: 'Categorie' },
-            ]} />
-            <View style={{ display: section === 'expense' ? 'flex' : 'none' }}>
-              <ExpenseForm categories={categoryState.categories} ready={expenseState.ready}
-                error={expenseState.error} onSave={expenseState.save} />
-            </View>
-            {section === 'list' && <ExpenseList occurrences={occurrences} categories={categoryState.categories}
-              error={expenseState.error} onDelete={expenseState.remove} />}
-            {section === 'dashboard' && <Dashboard occurrences={occurrences} categories={categoryState.categories} />}
-            {section === 'categories' && <CategorySettings categories={categoryState.categories}
-              error={categoryState.error} ready={categoryState.ready} onCreate={categoryState.createCategory}
-              onDelete={categoryState.deleteCategory} onChangeIcon={categoryState.changeIcon}
-              onRename={categoryState.rename} />}
+            {session.status === 'signed-in' && (
+              <View style={styles.account}>
+                <Text variant="bodyMedium" numberOfLines={1} style={[styles.email, { color: theme.colors.onSurfaceVariant }]}>
+                  {session.user.email ?? 'Account Google'}
+                </Text>
+                <Button mode="text" onPress={session.signOut}>Esci</Button>
+              </View>
+            )}
+            {configMissing && (
+              <Surface elevation={1} style={styles.notice}>
+                <Text variant="titleMedium" accessibilityRole="header">Configurazione Firebase mancante</Text>
+                <Text variant="bodyMedium">
+                  Mancano: {missingFirebaseConfig.join(', ')}. Copia `.env.example` in `.env.local`,
+                  compila i valori e riavvia Expo.
+                </Text>
+              </Surface>
+            )}
+            {session.status === 'disabled' && !configMissing && <LocalWorkspace />}
+            {session.status === 'loading' && <ActivityIndicator accessibilityLabel="Caricamento della sessione" />}
+            {session.status === 'signed-out' && <SignIn error={session.error} demo={demo} onSignIn={session.signIn} />}
+            {session.status === 'signed-in' && <RemoteWorkspace key={session.user.uid} storageNote={storageNote} />}
             <Text variant="bodySmall" style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>Il tuo registro, una spesa alla volta.</Text>
           </View>
         </ScrollView>
@@ -91,4 +95,7 @@ const styles = StyleSheet.create({
   brandName: { fontWeight: '800', letterSpacing: -1 },
   title: { fontWeight: '600' },
   footer: { textAlign: 'center', paddingBottom: 16 },
+  notice: { padding: 20, borderRadius: 28, gap: 8 },
+  account: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginVertical: -12 },
+  email: { flexShrink: 1 },
 });

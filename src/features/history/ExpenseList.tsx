@@ -13,7 +13,8 @@ type Props = {
   occurrences: readonly Occurrence[];
   categories: readonly Category[];
   error: string | null;
-  onDelete: (expenseId: string) => boolean;
+  // Absent when the archive does not support deleting.
+  onDelete?: (expenseId: string) => boolean;
 };
 
 const dateFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -53,8 +54,8 @@ export function ExpenseList({ occurrences, categories, error, onDelete }: Props)
                 <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{details}</Text>
               </View>
               <Text variant="titleMedium" style={styles.amount}>{formatAmountMinor(item.amount_minor)}</Text>
-              <DeleteAction name={item.recurrence ? `la serie ${item.description}` : item.description}
-                onDelete={() => onDelete(item.expenseId)} />
+              {onDelete && <DeleteAction name={item.recurrence ? `la serie ${item.description}` : item.description}
+                onDelete={() => onDelete(item.expenseId)} />}
             </View>
           );
         })}
@@ -62,7 +63,8 @@ export function ExpenseList({ occurrences, categories, error, onDelete }: Props)
         {occurrences.length > 0 && results.length === 0 && <Text>Nessuna spesa corrisponde alla ricerca.</Text>}
       </View>
       <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-        Le spese ricorrenti compaiono una volta per ogni scadenza fino a oggi; eliminandone una si elimina l’intera serie.
+        Le spese ricorrenti compaiono una volta per ogni scadenza fino a oggi
+        {onDelete ? '; eliminandone una si elimina l’intera serie.' : '.'}
       </Text>
     </Surface>
   );
