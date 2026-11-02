@@ -1,15 +1,31 @@
+import { useState } from 'react';
+import { Button } from 'react-native-paper';
 import type { Category } from '../../domain/category';
 import { ChoiceChips } from '../../components/ChoiceChips';
-import { PixelIcon } from '../../components/PixelIcon';
+import { CategoryGlyph } from '../../components/CategoryGlyph';
 
-type Props = { categories: readonly Category[]; selectedId: string; onChange: (id: string) => void };
+type Props = { categories: readonly Category[]; selectedId: string; onChange: (id: string) => void; disabled?: boolean };
 
-export function CategoryPicker({ categories, selectedId, onChange }: Props) {
+const collapsedCount = 8;
+
+export function CategoryPicker({ categories, selectedId, onChange, disabled }: Props) {
+  const [expanded, setExpanded] = useState(false);
+  const collapsible = categories.length > collapsedCount;
+  // The selected category always stays visible, even when it is beyond the first chips.
+  const visible = !collapsible || expanded ? categories
+    : categories.filter((category, index) => index < collapsedCount || category.id === selectedId);
   return (
-    <ChoiceChips label="Categoria" allowDeselect value={selectedId} onChange={onChange}
-      options={categories.map((category) => ({
-        value: category.id, label: category.label,
-        icon: category.icon ? <PixelIcon icon={category.icon} size={22} /> : undefined,
-      }))} />
+    <>
+      <ChoiceChips label="Categoria" allowDeselect disabled={disabled} value={selectedId} onChange={onChange}
+        options={visible.map((category) => ({
+          value: category.id, label: category.label,
+          icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
+        }))} />
+      {collapsible && (
+        <Button onPress={() => setExpanded(!expanded)} contentStyle={{ minHeight: 48 }} style={{ alignSelf: 'flex-start' }}>
+          {expanded ? 'Mostra meno' : `Mostra tutte (${categories.length})`}
+        </Button>
+      )}
+    </>
   );
 }

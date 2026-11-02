@@ -15,8 +15,9 @@ Firestore è l'unica fonte di verità. Stato operativo: `HANDOFF.md`.
 
 ## Architettura effettiva
 
-`index.ts` → `App.tsx` (Material 3, sessione) → `RemoteWorkspace` (key UID), sezioni
-Nuova · Spese · Dashboard · Categorie. Stato React locale, niente router/store globale.
+`index.ts` → `App.tsx` (tema da `src/theme/`, sessione) → `AppShell` adattivo →
+`RemoteWorkspace` (key UID), sezioni Nuova · Spese · Dashboard · Categorie. Stato React locale, niente router/store globale.
+Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come azione primaria (FAB), mai due navigazioni.
 
 - `src/domain/`: funzioni pure senza SDK. `policy.ts`, `expense.ts`, `contract.ts`,
   `category.ts`, `recurrence.ts`, `history.ts`, `submission.ts` riutilizzati;
@@ -81,6 +82,9 @@ Variabili pubbliche: `EXPO_PUBLIC_NUMMO_BACKEND=emulator|firebase`, config
 `EXPO_PUBLIC_FIRESTORE_CACHE=persistent` è opt-in su dispositivi fidati; altrimenti
 memoria. La cache è quella dell'SDK, mai un database IndexedDB implementato dall'app.
 Expo richiede accessi letterali alle env. Metro può richiedere riavvio `--clear`.
+**`.env.local` vince sulla shell in dev**: `expo/virtual/env` lo fonde sopra `process.env` (anche con
+`EXPO_NO_DOTENV=1`). Per test browser isolati non usare `expo start`: `expo export` con `EXPO_NO_DOTENV=1`, env
+emulatore, output fuori dal repo, e verificare che il bundle non contenga chiave/progetto reali prima di aprirlo.
 
 Test in-process con `--experimental-test-isolation=none` e strip-types; import `.ts`
 nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
@@ -103,11 +107,17 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
   non promettere atomicità dell'intero archivio. Backup server-only, nessun dato privato
   inserito nei log. JSON mantiene originali, CSV neutralizza formule e quota i campi.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
-  `ChoiceChips` e `M3Switch` per componenti Material 3 personalizzati.
+  `ChoiceChips`, `M3Switch`, `Card`, `StateLayerPressable` per componenti Material 3
+  personalizzati. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
+  esiti temporanei con `useSnackbar()`; layout per classe di finestra con `useSizeClass()`.
+- Paper `Menu` montato chiuso mette il focus sul proprio anchor (web): mai un `Menu` per riga di una lista
+  (la pagina salta all'ultima riga); usare un solo menu con anchor a coordinate, come `ExpenseList`.
+  `MenuSelect` per selettori compatti (ordina/filtri), `FieldIcon` per icone decorative dei campi.
 - Accessibilità `role`/`aria-*`: RN Web 0.21 ignora `accessibilityState` nel DOM.
   TextInput Paper: `readonly`, non `disabled`, quando si verifica sola lettura.
-- Icone UI SVG inline, categorie sprite 12×12 in `pixelIcons.ts` via `PixelIcon`
-  (alone scuro gestito lì). Nuova icona = sprite + `categoryIconLabels` e Rules.
+- Icone UI SVG inline, categorie glifi outline 24×24 in `categoryGlyphs.ts` via
+  `CategoryGlyph` (sostituiscono gli sprite pixel-art). Nuova icona = glifo +
+  `categoryIconLabels` e Rules.
 - Grafici: palette categoriale stabile, legenda e tabella, colore legato alla categoria;
   seguire la skill dataviz se disponibile quando si modificano grafici/palette.
 - Web è l'unico target: non promettere persistenza RN nativa, PWA o avvio offline a

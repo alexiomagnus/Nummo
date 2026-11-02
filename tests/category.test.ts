@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { categoryIcons, categoryNameError, defaultCategories } from '../src/domain/category.ts';
-import { pixelPalette, pixelSize, pixelSprites, pixelSvg } from '../src/components/pixelIcons.ts';
+import { categoryGlyphs } from '../src/components/categoryGlyphs.ts';
 import {
   categoryStorageKey, legacyCategoryStorageKey, loadCategories, readCategories, removeCategory, renameCategory, setCategoryIcon, storeCategory,
 } from '../src/services/categoryStorage.ts';
@@ -113,15 +113,9 @@ test('icone sconosciute o ritirate nell’archivio diventano assenti senza perde
     { id: 'x', label: 'Altro', icon: 'javascript:' }, { id: 'p', label: 'Pizza', icon: 'pizza' }]));
   assert.deepEqual(readCategories(storage).map((category) => category.icon), [null, null, 'pizza']);
 });
-test('ogni icona ammessa ha uno sprite 12×12 con soli colori della palette, e viceversa', () => {
-  assert.deepEqual(Object.keys(pixelSprites).sort(), [...categoryIcons].sort());
-  for (const [name, rows] of Object.entries(pixelSprites)) {
-    assert.equal(rows.length, pixelSize, name);
-    for (const row of rows) {
-      assert.equal(row.length, pixelSize, `${name}: ${row}`);
-      for (const char of row) assert.ok(char === '.' || char in pixelPalette, `${name}: ${char}`);
-    }
-  }
+test('ogni icona ammessa ha un glifo vettoriale e viceversa', () => {
+  assert.deepEqual(Object.keys(categoryGlyphs).sort(), [...categoryIcons].sort());
+  for (const [name, shape] of Object.entries(categoryGlyphs)) assert.match(shape, /^<(path|circle|rect)/, name);
 });
 test('rinomina: stesso ID e icona, nome normalizzato, duplicati rifiutati', () => {
   const storage = memoryStorage();
@@ -133,14 +127,4 @@ test('rinomina: stesso ID e icona, nome normalizzato, duplicati rifiutati', () =
   assert.throws(() => renameCategory(storage, 'food', '  '), /nome/);
   assert.throws(() => renameCategory(storage, 'missing', 'Altro'), /non trovata/);
   assert.equal(readCategories(storage)[0]!.label, 'RISTORAZIONE');
-});
-test('alone chiaro per il tema scuro: solo attorno allo sprite, senza coprirlo', () => {
-  const plain = pixelSvg(pixelSprites.cart);
-  const halo = pixelSvg(pixelSprites.cart, { halo: '#E6E1E9' });
-  assert.ok(!plain.includes('#E6E1E9'));
-  const haloRects = [...halo.matchAll(/<rect x="(\d+)" y="(\d+)"[^>]*fill="#E6E1E9"/g)].map((m) => `${m[1]},${m[2]}`);
-  const spriteRects = new Set([...plain.matchAll(/<rect x="(\d+)" y="(\d+)"/g)].map((m) => `${m[1]},${m[2]}`));
-  assert.ok(haloRects.length > 0);
-  assert.ok(haloRects.every((cell) => !spriteRects.has(cell)));
-  assert.match(halo, /viewBox="0 0 14 14"/);
 });

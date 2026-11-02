@@ -1,28 +1,34 @@
-import { StyleSheet } from 'react-native';
-import { Button, HelperText, Surface, Text, useTheme } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Button, HelperText, Text, useTheme } from 'react-native-paper';
+import { Card } from '../../components/Card';
+import { spacing } from '../../theme/tokens';
 
 type Props = { error: string | null; demo: boolean; onSignIn: () => void };
 
 export function SignIn({ error, demo, onSignIn }: Props) {
-  const theme = useTheme();
+  const { colors } = useTheme();
   return (
-    <Surface elevation={1} style={styles.card}>
-      <Text variant="titleLarge" accessibilityRole="header">Accedi</Text>
-      <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
-        Spese e categorie vengono salvate nel tuo progetto Firebase personale. Accedi con l’account Google autorizzato.
-      </Text>
-      {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
-      <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>Accedi con Google</Button>
-      {demo && (
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-          Ambiente di prova locale: account simulati, nessun dato reale.
-        </Text>
-      )}
-    </Surface>
+    <View style={styles.wrap}>
+      <View style={styles.intro}>
+        <Text variant="displaySmall" accessibilityRole="header" aria-level={1}>Una spesa, pochi gesti.</Text>
+        <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>Importo, nome e ci sei.</Text>
+      </View>
+      <Card title="Accedi" description="Spese e categorie vengono salvate nel tuo progetto Firebase personale. Accedi con l’account Google autorizzato.">
+        {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{error}</HelperText>}
+        <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>Accedi con Google</Button>
+        {demo && (
+          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+            Ambiente di prova locale: account simulati, nessun dato reale.
+          </Text>
+        )}
+      </Card>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 20, borderRadius: 28, gap: 16 },
+  wrap: { width: '100%', maxWidth: 480, alignSelf: 'center', gap: spacing.xl, paddingTop: spacing.xl },
+  intro: { gap: spacing.xs },
+  helper: { paddingHorizontal: 0 },
   button: { minHeight: 48 },
 });

@@ -1,6 +1,6 @@
 export type Category = Readonly<{ id: string; label: string; icon: CategoryIcon | null }>;
 
-// Stable IDs of the pixel-art sprites in src/components/pixelIcons.ts (kept in sync by tests).
+// Stable IDs of the outline glyphs in src/components/categoryGlyphs.ts (kept in sync by tests).
 export const categoryIconLabels = {
   cart: 'carrello', burger: 'hamburger', pizza: 'pizza', pasta: 'piatto di pasta', popcorn: 'popcorn',
   coffee: 'caffè', heart: 'cuore',

@@ -98,6 +98,79 @@ con nomi unici per esecuzione, senza cancellare l'archivio. Test finali tutti pa
 - Processo residuo dell'agente precedente: Firestore emulator su 8280 (dati di test
   `demo-nummo`), non fermato. Può essere chiuso dall'utente.
 
+## Sessione UI/UX (2 novembre 2026)
+
+Solo presentazione, nessuna logica/backend toccata: stato sincronizzazione, banner di
+recupero ed errori di sessione in contenitori colorati (errorContainer/surfaceVariant);
+slogan nascosto dopo il login; esportazione/migrazione in `Surface` con pulsanti
+`outlined`; conferma eliminazione che va a capo su schermi stretti.
+Seconda tranche: barra di navigazione inferiore fissa (icone SVG inline) al posto dei
+`SegmentedButtons`, con scroll in alto al cambio sezione e colonna fino a 720 px; campo
+data facoltativo (AAAA-MM-GG, vuoto = oggi, usa la validazione esistente) solo nel form
+«Nuova»; prefisso € sull'importo; snackbar «Spesa salvata.» (Portal); chip categoria
+compressi a 8 con «Mostra tutte» (la selezionata resta visibile); elenco raggruppato per
+mese con totale quando l'ordinamento è per data; righe elenco che vanno a capo.
+`npm run check` superato. **Non verificato visivamente nel browser** (barra `fixed`,
+snackbar sopra la barra, righe strette). Restano: misure di contrasto e aree di tocco.
+
+## Revisione UI/UX e responsive (2 novembre 2026)
+
+Solo presentazione: nessuna modifica a backend, Rules, schema, sessione, sincronizzazione,
+import/export o logica delle ricorrenze. Sostituisce lo stato «non verificato visivamente» sopra.
+
+- **Navigazione** (`AppShell`): una sola navigazione primaria con 3 destinazioni (Spese ·
+  Dashboard · Categorie). «Nuova spesa» è l'azione primaria: FAB esteso nel drawer (≥1024),
+  FAB nella rail (600–1023), FAB esteso sopra la barra inferiore (<600, solo icona sotto 360 px,
+  nascosto sulla propria schermata). Prima «Nuova» era sia tab sia FAB.
+- **Nuova spesa**: colonna centrata (max 560), importo in evidenza, data con scorciatoie Oggi/Ieri
+  (prima il campo non era collegato al modulo), `RepeatField` condiviso con la modifica (frequenza
+  solo se attiva, frase che spiega la ricorrenza), asterischi tolti dalle etichette (obbligo dichiarato
+  una volta nell'intestazione, «facoltativa» sui campi opzionali), barra di salvataggio sticky su mobile.
+- **Spese**: ricerca + `MenuSelect` Ordina/Categoria (filtro nuovo, solo lato client), totale e
+  raggruppamento mensile invariati, azioni «Modifica»/«Elimina» con etichetta (menu a tre puntini
+  su mobile), larghezza massima 880. Esporta/importa fuori dal flusso: pulsante nell'intestazione che
+  apre il pannello (rimane montato per non perdere un'anteprima di importazione).
+- **Dashboard**: toolbar compatta (chip su ≥600, due `MenuSelect` su mobile), 4 KPI in alto (totale,
+  n. spese, media per spesa, categoria principale escluse «Altre»/«Senza categoria»), grafico con legenda
+  affiancata (colore, importo, %; «<1%» invece di 0%), «Dettaglio per periodo» con i soli periodi che hanno
+  spese e «Mostra tutto il periodo». Stato vuoto esplicito.
+- **Categorie**: elenco in primo piano (max 720), creazione in pannello laterale (≥1024) o a scomparsa
+  («Nuova»), ricerca se >8 categorie, conteggio spese per categoria; il dialog di eliminazione dice quante
+  spese perdono la categoria (restano registrate: comportamento invariato, nessun dato perso).
+- **Difetti reali corretti**: (1) cambiando sezione su una lista lunga la pagina saltava in fondo: Paper
+  `Menu` montato chiuso mette il focus sul proprio anchor (web) e con un menu per riga vinceva l'ultimo;
+  ora un solo `Menu` per elenco ancorato a coordinate (`ExpenseList`); (2) icone decorative dei campi esposte
+  come pulsanti (`FieldIcon`); (3) toolbar Dashboard fuori dal viewport su mobile; (4) IconButton/Button
+  <48 px nelle azioni principali.
+- Nessuna ombra aggiunta (FAB `flat`), nessuna dipendenza. `tests/theme.test.ts`: contrasti AA dei token
+  (testo ≥4,5:1, bordi ≥3:1, entrambi i temi) e classi di finestra.
+
+### Verifiche (UI)
+
+Ambiente isolato: emulatori Auth 9399/Firestore 8480, progetto `demo-nummo`, config temporanea nella
+radice (rimossa), dati demo di prova; i processi dell'utente (8180, 4000, 8081, 8280) non sono stati toccati.
+**Attenzione, scoperta durante il lavoro:** in sviluppo `expo/virtual/env` fonde `.env.local` *sopra*
+`process.env` (anche con `EXPO_NO_DOTENV=1` Metro lo include): `expo start` con
+`EXPO_PUBLIC_NUMMO_BACKEND=emulator` avrebbe usato il progetto reale `nummo-6b6e2`. Per i test sono stati usati
+build di produzione (`expo export` con `EXPO_NO_DOTENV=1`) in una cartella temporanea, controllando che il
+bundle non contenesse chiave/progetto reali, serviti in locale; Chromium headless con profilo temporaneo e rete
+confinata al loopback (il popup Google tenta `apis.google.com`: bloccato, sessione dell'emulatore Auth iniettata
+in localStorage).
+
+- `npm run check`: typecheck, **95/95** test app, build riusciti.
+- Browser, viewport 320×700, 390×844, 430×932, 768×1024, 1280×800, 1600×900: nessun overflow orizzontale
+  del documento (24 coppie viewport/sezione); flusso di 21 controlli superato su tutti e 6 (validazione, ricorrenza
+  spenta di default e frequenza condizionata, salvataggio con snackbar, ordinamento, filtro categoria, ricerca,
+  dialog di eliminazione con annulla/conferma, pannello esporta/importa, categorie: duplicato rifiutato, creazione,
+  ricerca, eliminazione, avviso per categoria usata). Tema scuro ispezionato (desktop e mobile). Ordine di tabulazione
+  ragionevole.
+- **Non eseguito/non verificabile qui**: `test:emulator` (nessun accesso ai dati/Rules modificato); tastiera
+  virtuale reale e safe area (la barra sticky usa l'altezza dinamica `dvh`, non provata su dispositivo); download
+  reali di CSV/JSON e importazione da file (non toccati, solo pannello aperto); lettori di schermo; dispositivi
+  reali; tooltip al passaggio del mouse sulle icone senza testo (hanno solo `aria-label`).
+- Residuo: il FAB compatto può coprire in parte l'ultima riga visibile (c'è spazio di scorrimento sotto); lo
+  strumento di overflow segnala le etichette interne di Paper `TextInput` (ritagliate, non visibili).
+
 ## Avvio e passaggi manuali
 
 Guida completa: `docs/firebase-personale.md`.
@@ -135,6 +208,46 @@ Per produzione personale: abilitare Firestore nel proprio progetto, Google Auth 
 domini, creare `config/owner`, revisionare/pubblicare regole, poi avviare/configurare
 la build Firebase. Tutti questi passaggi
 cloud rimangono manuali: nessun deploy, Blaze, servizio aggiuntivo o commit eseguito.
+
+## Refactoring UI Material 3 (2 novembre 2026)
+
+Solo frontend: nessuna modifica a backend, Rules, modello dati, auth o logica di
+business; nessuna dipendenza aggiunta (resta Paper 5, già MD3). Non committato.
+
+- Token centralizzati in `src/theme/` (`tokens.ts` colori chiaro/scuro menta, spaziatura
+  4 px, forme, breakpoint, tipografia Roboto con fallback di sistema; `theme.ts` costruisce
+  il tema Paper, i livelli `elevation` mappano i surface-container; `GlobalStyle.tsx` focus
+  visibile, `100dvh`, `prefers-reduced-motion`). Roboto non è incluso: usa il font se
+  installato, altrimenti il sistema.
+- `AppShell`: top app bar + Navigation Bar (<600), Navigation Rail (600–1023), drawer
+  permanente (≥1024); contenuto scrollabile nella shell, nessun `position: fixed`,
+  safe area, max-width 1200. FAB «Nuova spesa» solo su compatto in Spese/Dashboard.
+  `section` resta stato locale di `RemoteWorkspace` (nessun router, come prima).
+- Stato sync: `SyncChip` discreto (`syncStatus.ts`, testato); «Sincronizzato» solo con
+  dati pronti, online, non da cache e senza scritture pendenti. Snackbar
+  (`SnackbarHost`) per esiti temporanei; errori e copie di recupero restano inline.
+- Menu account (email + Esci), tema nella top bar. Eliminazioni con dialog di conferma
+  (`DeleteDialog`/`DeleteAction`); su compatto le righe spesa usano il menu «Azioni».
+- Categorie su due colonne (≥1024), anteprima/scelta icona, modifica inline di nome e
+  icona (le due operazioni restano separate: ognuna con la propria revisione attesa).
+- Verifica: `npm run check` (typecheck, 91+2 test app, build). Chromium headless via CDP
+  su build demo (emulatori su porte alternative, poi fermati) a 360/390/768/1024/1440/
+  1920 px, chiaro e scuro, 4 sezioni: nessuno scroll orizzontale; flussi spesa/categoria/
+  account/elimina/modifica ok a 390 px. Non eseguito `test:emulator` (nessun accesso
+  ai dati modificato). Palette grafici non rivalidata con lo script dataviz sulle nuove
+  superfici. Contrasto controllato a campione, non con uno strumento WCAG.
+- **Nuova spesa rifatta** (stesso giorno): colonna singola max 640 px, nessuna centratura o
+  altezza forzata; Importo con icona € sempre visibile e Descrizione con contatore discreto;
+  helper solo sugli errori; categoria obbligatoria solo nel modulo (dominio invariato);
+  ricorrenza spenta all'avvio, nessuna frequenza preselezionata, segmented button.
+  Icone categoria: glifi vettoriali (`categoryGlyphs.ts`, `CategoryGlyph`) al posto degli
+  sprite pixel-art (rimossi `pixelIcons.ts`/`PixelIcon`; ID e Rules invariati). Drawer più
+  compatto (248 px, voci da 48). Messaggio dominio: «Inserisci la descrizione.».
+  Verifica: `npm run check` (90 test, build), Chromium su build demo/emulatori locali a
+  360/390/768/1280/1920 px chiaro+scuro, errori di validazione e segmented button a 390 px.
+- Osservazione: in dev (`expo start`) Metro ha servito `EXPO_PUBLIC_NUMMO_BACKEND=firebase`
+  dal `.env.local` nonostante la variabile `emulator` nella shell; per le prove ho usato
+  `EXPO_NO_DOTENV=1` con `expo export`. Verificare cosa fa `npm run dev` in questo checkout.
 
 ## Limiti e prossime verifiche
 

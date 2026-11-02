@@ -54,7 +54,7 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   const amount = parseAmountMinor(draft.amount);
   if (amount === null) errors.amount = draft.amount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo.';
   const description = normalizeDescription(draft.description);
-  if (!description) errors.description = 'Inserisci il nome dell’acquisto.';
+  if (!description) errors.description = 'Inserisci la descrizione.';
   else if (Array.from(description).length > expensePolicy.maxDescriptionLength) {
     errors.description = `Usa al massimo ${expensePolicy.maxDescriptionLength} caratteri.`;
   }

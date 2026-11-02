@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
+import { shape, spacing } from '../theme/tokens';
+import { StateLayerPressable } from './StateLayerPressable';
+import { SvgIcon, iconShapes } from './SvgIcon';
 
 export type Choice<T extends string> = { value: T; label: string; icon?: ReactNode };
 type Props<T extends string> = {
@@ -10,30 +13,30 @@ type Props<T extends string> = {
   // Optional choices (e.g. category) can be cleared by tapping the selected chip again.
   allowDeselect?: boolean;
   label?: string;
+  disabled?: boolean;
+  // Selected chips show a check instead of their own icon (default). Off: the icon stays.
+  showCheck?: boolean;
 };
 
-// The app-wide single-choice style: selected = filled primary + bold, no checkmark.
-export function ChoiceChips<T extends string>({ options, value, onChange, allowDeselect, label }: Props<T>) {
-  const theme = useTheme();
+// Material 3 filter chips used as a single-choice group: selected = secondary container + check.
+export function ChoiceChips<T extends string>({ options, value, onChange, allowDeselect, label, disabled, showCheck = true }: Props<T>) {
+  const { colors } = useTheme();
   return (
     <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel={label}>
       {options.map((option) => {
         const selected = option.value === value;
-        const color = selected ? theme.colors.onPrimary : theme.colors.onSurface;
+        const color = selected ? colors.onSecondaryContainer : colors.onSurfaceVariant;
         return (
-          <Pressable key={option.value} onPress={() => onChange(selected && allowDeselect ? '' : option.value)}
-            accessibilityRole="radio" aria-checked={selected}
+          <StateLayerPressable key={option.value} layerColor={color} radius={shape.sm} disabled={disabled} hitSlop={{ top: 4, bottom: 4 }}
+            onPress={() => onChange(selected && allowDeselect ? '' : option.value)}
+            accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled}
             accessibilityLabel={`${option.label}${selected ? ', selezionata' : ''}`}
-            style={({ pressed }) => [styles.chip, {
-              backgroundColor: selected ? theme.colors.primary : theme.colors.surface,
-              borderColor: selected ? theme.colors.primary : theme.colors.outline,
-              opacity: pressed ? 0.8 : 1,
-            }]}>
-            {option.icon}
-            <Text variant="labelLarge" style={[styles.label, { color, fontWeight: selected ? '700' : '500' }]}>
-              {option.label}
-            </Text>
-          </Pressable>
+            style={[styles.chip, selected
+              ? { backgroundColor: colors.secondaryContainer, borderColor: colors.secondaryContainer }
+              : { borderColor: colors.outline }]}>
+            {selected && showCheck ? <SvgIcon shape={iconShapes.check} size={18} color={color} /> : option.icon}
+            <Text variant="labelLarge" style={[styles.label, { color }]}>{option.label}</Text>
+          </StateLayerPressable>
         );
       })}
     </View>
@@ -41,10 +44,11 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
 }
 
 const styles = StyleSheet.create({
-  list: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  // 40 dp chip; hitSlop brings the touch area to 48 dp.
   chip: {
-    minHeight: 44, maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5,
+    minHeight: 40, maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    paddingHorizontal: spacing.md, borderRadius: shape.sm, borderWidth: 1,
   },
   label: { flexShrink: 1 },
 });

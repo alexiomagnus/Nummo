@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
-import { Button, SegmentedButtons, Text } from 'react-native-paper';
+import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button, Text, useTheme } from 'react-native-paper';
+import { AppShell, type Destination } from '../../components/AppShell';
+import { Card } from '../../components/Card';
+import { PageHeader } from '../../components/PageHeader';
+import { useSnackbar } from '../../components/SnackbarHost';
+import { SyncChip } from '../../components/SyncChip';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { spacing } from '../../theme/tokens';
+import { describeSync } from './syncStatus';
 import { expandOccurrences } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -16,18 +25,31 @@ import { makeBackup } from '../../domain/backup';
 import { firebaseWebConfig } from '../../services/backendConfig';
 import { BackupActions, download } from '../backup/BackupActions';
 import { getDatabase } from '../../services/firebase';
-import { createFirestoreStore } from '../../services/firestoreStore';
+import { createFirestoreStore, type FirestoreStore } from '../../services/firestoreStore';
+import type { ExpenseStore } from '../expenses/expenseStore';
+
+type Section = 'expense' | 'list' | 'dashboard' | 'categories';
+// «Nuova spesa» is the primary action (FAB), not a destination: one primary navigation only.
+const destinations: readonly Destination<Section>[] = [
+  { value: 'list', label: 'Spese', icon: iconShapes.list },
+  { value: 'dashboard', label: 'Dashboard', icon: iconShapes.chart },
+  { value: 'categories', label: 'Categorie', icon: iconShapes.tag },
+];
+const headings: Record<Section, { title: string; description: string }> = {
+  expense: { title: 'Nuova spesa', description: 'Importo, descrizione e categoria sono obbligatori.' },
+  list: { title: 'Spese', description: 'Cerca, filtra, modifica o elimina le spese registrate.' },
+  dashboard: { title: 'Dashboard', description: 'Come si distribuiscono le tue spese nel tempo.' },
+  categories: { title: 'Categorie', description: 'Organizza le spese con categorie e icone.' },
+};
 
 // Keyed by UID in App: every listener, draft and view is discarded on account change.
-export function RemoteWorkspace({ uid, storageNote }: { uid: string; storageNote: string }) {
+export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string; storageNote: string; topActions?: ReactNode }) {
   const backend = useMemo(() => createFirestoreStore(getDatabase(), uid), [uid]);
   const store = useRemoteExpenses(backend, storageNote);
   const categoryState = useRemoteCategories(backend);
-  const [section, setSection] = useState('expense');
-  const [editing, setEditing] = useState<ExpenseRecord | null>(null);
+  const [section, setSection] = useState<Section>('expense');
   const [online, setOnline] = useState(navigator.onLine);
   const [today, setToday] = useState(todayInRome());
-  const [defaultsStatus, setDefaultsStatus] = useState('');
   useEffect(() => {
     const change = () => { setOnline(navigator.onLine); setToday(todayInRome()); };
     window.addEventListener('online', change); window.addEventListener('offline', change); window.addEventListener('focus', change);
@@ -35,38 +57,86 @@ export function RemoteWorkspace({ uid, storageNote }: { uid: string; storageNote
     return () => { clearInterval(timer); window.removeEventListener('online', change); window.removeEventListener('offline', change); window.removeEventListener('focus', change); };
   }, []);
   const occurrences = useMemo(() => expandOccurrences(store.expenses, today), [store.expenses, today]);
-  const pending = store.sync?.pending || categoryState.sync.pending;
-  const cached = store.sync?.fromCache || categoryState.sync.fromCache;
-  const synchronized = store.ready && categoryState.ready && !pending && !cached && online;
+  const usage = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const record of store.expenses) if (record.category_id) counts[record.category_id] = (counts[record.category_id] ?? 0) + 1;
+    return counts;
+  }, [store.expenses]);
+  const pending = Boolean(store.sync?.pending || categoryState.sync.pending);
+  const cached = Boolean(store.sync?.fromCache || categoryState.sync.fromCache);
+  const ready = store.ready && categoryState.ready;
+  const synchronized = ready && !pending && !cached && online;
   const error = store.error || categoryState.error;
+  const status = describeSync({ ready, online, pending, cached, error });
+  return (
+    <AppShell destinations={destinations} selected={section} onSelect={setSection}
+      fab={{ label: 'Nuova spesa', icon: iconShapes.plus, target: 'expense' }}
+      actions={<><SyncChip status={status} />{topActions}</>}>
+      <Sections section={section} backend={backend} uid={uid} store={store} categoryState={categoryState}
+        occurrences={occurrences} usage={usage} online={online} synchronized={synchronized} error={error} />
+    </AppShell>
+  );
+}
+
+type SectionsProps = {
+  section: Section; backend: FirestoreStore; uid: string; store: ExpenseStore;
+  categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
+  usage: Record<string, number>; online: boolean; synchronized: boolean; error: string | null;
+};
+
+function Sections({ section, backend, uid, store, categoryState, occurrences, usage, online, synchronized, error }: SectionsProps) {
+  const theme = useTheme();
+  const notify = useSnackbar();
+  const [showBackup, setShowBackup] = useState(false);
+  const [editing, setEditing] = useState<ExpenseRecord | null>(null);
+  const heading = headings[section];
   return <>
-    <Text accessibilityLiveRegion="polite">{error ?? (pending ? 'Scritture in attesa di conferma da Firestore.' : !online ? 'Offline: dati disponibili dalla cache.' : cached ? 'Dati dalla cache: connessione al server da verificare.' : 'Sincronizzato con Firestore.')}</Text>
-    {!!store.recovery?.length && <View style={{ gap: 8 }}>
-      <Text accessibilityRole="alert">{store.recovery.length === 1 ? 'Una spesa in attesa non risulta confermata' : `${store.recovery.length} spese in attesa non risultano confermate`} sul server. Scaricane una copia prima di chiudere o uscire; nessun reinvio automatico.</Text>
-      <Button onPress={() => download('nummo-spese-da-recuperare.json', makeBackup({ expenses: store.recovery!, categories: categoryState.categories }, { project_id: firebaseWebConfig.projectId, uid }), 'application/json')}>Scarica spese da recuperare</Button>
-    </View>}
-    <SegmentedButtons value={section} onValueChange={setSection} buttons={[
-      { value: 'expense', label: 'Nuova' }, { value: 'list', label: 'Spese' },
-      { value: 'dashboard', label: 'Dashboard' }, { value: 'categories', label: 'Categorie' },
-    ]} />
-    <View style={{ display: section === 'expense' ? 'flex' : 'none' }}>
+    <PageHeader title={heading.title} description={heading.description} style={section === 'expense' ? styles.narrow : undefined}
+      action={section === 'list' ? (
+        <Button mode="outlined" icon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
+          aria-expanded={showBackup} contentStyle={styles.touch} onPress={() => setShowBackup(!showBackup)}>Esporta e importa</Button>
+      ) : undefined} />
+    {!!store.recovery?.length && (
+      <Card style={{ backgroundColor: theme.colors.errorContainer }}>
+        <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{store.recovery.length === 1 ? 'Una spesa in attesa non risulta confermata' : `${store.recovery.length} spese in attesa non risultano confermate`} sul server. Scaricane una copia prima di chiudere o uscire; nessun reinvio automatico.</Text>
+        <View style={styles.start}>
+          <Button mode="contained" buttonColor={theme.colors.error} textColor={theme.colors.onError} onPress={() => download('nummo-spese-da-recuperare.json', makeBackup({ expenses: store.recovery!, categories: categoryState.categories }, { project_id: firebaseWebConfig.projectId, uid }), 'application/json')}>Scarica spese da recuperare</Button>
+        </View>
+      </Card>
+    )}
+    <View style={section === 'expense' ? undefined : styles.hidden}>
       <ExpenseForm categories={categoryState.categories} store={{ ...store, ready: store.ready && categoryState.ready }} />
     </View>
-    {section === 'list' && <>
-      <ExpenseList occurrences={occurrences} categories={categoryState.categories} error={error} onDelete={store.remove}
-        onEdit={(id) => setEditing(store.expenses.find((r) => r.id === id) ?? null)} />
-      <BackupActions backend={backend} uid={uid} enabled={synchronized} />
-    </>}
+    {section === 'list' && (
+      <View style={styles.list}>
+        {/* Kept mounted while hidden so a pending import preview is not lost on close. */}
+        <View style={showBackup ? undefined : styles.hidden}>
+          <BackupActions backend={backend} uid={uid} enabled={synchronized} onClose={() => setShowBackup(false)} />
+        </View>
+        <ExpenseList occurrences={occurrences} categories={categoryState.categories} error={error} onDelete={store.remove}
+          onEdit={(id) => setEditing(store.expenses.find((r) => r.id === id) ?? null)} />
+      </View>
+    )}
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} />}
     {section === 'dashboard' && <Dashboard occurrences={occurrences} categories={categoryState.categories} />}
     {section === 'categories' && <>
-      <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
-        onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onChangeIcon={categoryState.changeIcon} onRename={categoryState.rename} />
-      {categoryState.categories.length === 0 && <Button disabled={!synchronized} onPress={() => {
-        void backend.importRecords([], defaultCategories.map((c) => ({ ...c, id: crypto.randomUUID() })))
-          .then(() => setDefaultsStatus('Categorie predefinite aggiunte.')).catch(() => setDefaultsStatus('Categorie non aggiunte: verifica connessione o duplicati.'));
-      }}>Aggiungi categorie predefinite</Button>}
-      {defaultsStatus !== '' && <Text accessibilityLiveRegion="polite">{defaultsStatus}</Text>}
+      <CategorySettings categories={categoryState.categories} usage={usage} error={categoryState.error} ready={categoryState.ready && online}
+        onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onChangeIcon={categoryState.changeIcon} onRename={categoryState.rename}
+        notify={notify}
+        onAddDefaults={categoryState.categories.length === 0 ? () => {
+          void backend.importRecords([], defaultCategories.map((c) => ({ ...c, id: crypto.randomUUID() })))
+            .then(() => notify('Categorie predefinite aggiunte.')).catch(() => notify('Categorie non aggiunte: verifica connessione o duplicati.'));
+        } : undefined} canAddDefaults={synchronized} />
     </>}
   </>;
 }
+
+const styles = StyleSheet.create({
+  // Lists stay readable: capped width instead of stretching across a wide window.
+  list: { width: '100%', maxWidth: 880, gap: spacing.xl },
+  // The new-expense screen is one centered column: header and form share its width.
+  narrow: { width: '100%', maxWidth: 560, alignSelf: 'center' },
+  hidden: { display: 'none' },
+  start: { alignSelf: 'flex-start' },
+  touch: { minHeight: 48 },
+});
