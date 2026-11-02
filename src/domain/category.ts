@@ -1,4 +1,19 @@
-export type Category = Readonly<{ id: string; label: string }>;
+export type Category = Readonly<{ id: string; label: string; icon: CategoryIcon | null }>;
+
+// Stable IDs of the pixel-art sprites in src/components/pixelIcons.ts (kept in sync by tests).
+export const categoryIconLabels = {
+  cart: 'carrello', burger: 'hamburger', pizza: 'pizza', pasta: 'piatto di pasta', popcorn: 'popcorn',
+  coffee: 'caffè', heart: 'cuore',
+  pill: 'medicina', star: 'stella', gamepad: 'videogioco', bag: 'borsa della spesa', box: 'pacco',
+  house: 'casa', bulb: 'lampadina', car: 'auto', gift: 'regalo', book: 'libro', shirt: 'maglietta',
+  paw: 'zampa', dumbbell: 'manubrio', phone: 'telefono', coin: 'moneta',
+} as const;
+export type CategoryIcon = keyof typeof categoryIconLabels;
+export const categoryIcons = Object.keys(categoryIconLabels) as CategoryIcon[];
+
+export function isCategoryIcon(value: unknown): value is CategoryIcon {
+  return typeof value === 'string' && (categoryIcons as readonly string[]).includes(value);
+}
 
 export function normalizeCategoryName(name: string): string {
   return name.normalize('NFC').trim().replace(/\s+/gu, ' ');
@@ -15,6 +30,9 @@ export function categoryNameError(name: string, categories: readonly Category[])
 }
 
 // Seeded only for a browser that has never stored categories.
-export const defaultCategoryLabels = [
-  'Spesa alimentare', 'Ristorazione', 'Salute', 'Uscita', 'Shopping online',
-] as const;
+export const defaultCategories: readonly { label: string; icon: CategoryIcon }[] = [
+  { label: 'Spesa', icon: 'cart' },
+  { label: 'Ristorazione', icon: 'pasta' },
+  { label: 'Uscita', icon: 'popcorn' },
+  { label: 'Shopping', icon: 'shirt' },
+];

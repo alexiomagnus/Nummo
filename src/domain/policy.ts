@@ -3,7 +3,7 @@ export const expensePolicy = {
   decimals: 2,
   timeZone: 'Europe/Rome',
   maxAmountMinor: 9_999_999,
-  maxNoteLength: 500,
+  maxDescriptionLength: 100,
   minDate: '2000-01-01',
 } as const;
 

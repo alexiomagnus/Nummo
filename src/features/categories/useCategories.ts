@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { Category } from '../../domain/category';
+import type { Category, CategoryIcon } from '../../domain/category';
 import {
-  categoryStorageKey, legacyCategoryStorageKey, loadCategories, readCategories, removeCategory, storeCategory,
+  categoryStorageKey, legacyCategoryStorageKey, loadCategories, readCategories, removeCategory, renameCategory, setCategoryIcon, storeCategory,
 } from '../../services/categoryStorage';
 
 const newId = () => window.crypto.randomUUID();
@@ -30,9 +30,9 @@ export function useCategories() {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const createCategory = (name: string): boolean => {
+  const createCategory = (name: string, icon: CategoryIcon | null): boolean => {
     try {
-      setCategories(storeCategory(window.localStorage, name, newId));
+      setCategories(storeCategory(window.localStorage, name, newId, icon));
       setError(null);
       return true;
     } catch {
@@ -50,5 +50,25 @@ export function useCategories() {
       return false;
     }
   };
-  return { categories, error, ready, createCategory, deleteCategory };
+  const changeIcon = (id: string, icon: CategoryIcon | null): boolean => {
+    try {
+      setCategories(setCategoryIcon(window.localStorage, id, icon));
+      setError(null);
+      return true;
+    } catch {
+      setError('Impossibile modificare l’icona. Ricarica la pagina e riprova.');
+      return false;
+    }
+  };
+  const rename = (id: string, name: string): boolean => {
+    try {
+      setCategories(renameCategory(window.localStorage, id, name));
+      setError(null);
+      return true;
+    } catch {
+      setError('Impossibile rinominare la categoria. Ricarica la pagina e riprova.');
+      return false;
+    }
+  };
+  return { categories, error, ready, createCategory, deleteCategory, changeIcon, rename };
 }

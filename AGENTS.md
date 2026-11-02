@@ -13,24 +13,32 @@ prossimi passi: `HANDOFF.md`.
 - Lo stato effettivo si ricava dal codice e dall'esecuzione dei controlli, non dai documenti.
 
 ## Architettura effettiva
-Solo frontend locale: nessun backend, login o collegamento a Sheets.
-`index.ts` → `App.tsx` (tema Material 3 chiaro/scuro, tre sezioni — Nuova spesa,
-Ricorrenti, Categorie — sempre montate, con stato React locale, senza router né store
-globale). Il dominio è puro e testato; la UI lo usa.
+Solo frontend locale: nessun backend, login o collegamento a Sheets; i dati vivono in
+`localStorage`. `index.ts` → `App.tsx` (tema Material 3 chiaro/scuro, sezioni Nuova ·
+Spese · Dashboard · Categorie, stato React locale, senza router né store globale).
+Il dominio è puro e testato; la UI lo usa.
 
 - `src/domain/`: regole pure, senza dipendenze UI/SDK, riusabili dal futuro backend.
   `policy.ts` (limiti condivisi, `todayInRome`), `expense.ts` (bozza, parsing importi,
-  validazione), `category.ts` (normalizzazione, unicità nomi, predefinite),
-  `recurring.ts` (validazione spese ricorrenti), `submission.ts`
-  (reducer degli stati d'invio, **non ancora collegato alla UI**).
-- `src/features/expenses/`: modulo «Nuova spesa».
-- `src/features/categories/`: sezione «Categorie» e hook `useCategories` condiviso.
-- `src/features/recurring/`: sezione «Ricorrenti» e hook `useRecurringExpenses`.
+  validazione), `category.ts` (normalizzazione, unicità nomi, predefinite, ID icone),
+  `recurrence.ts` (date delle occorrenze), `history.ts` (occorrenze, ricerca, ordinamento,
+  periodi e aggregazione per la dashboard), `submission.ts` (reducer degli stati d'invio
+  verso il futuro backend, **non collegato**).
+- `src/features/expenses/`: modulo «Nuova spesa» (`ExpenseFields`, `CategoryPicker`,
+  `RecurrencePicker`) e hook `useExpenses`.
+- `src/features/history/`: elenco ricercabile e ordinabile («Spese»).
+- `src/features/dashboard/`: dashboard e grafici SVG inline (`charts.tsx`, solo web).
+- `src/features/categories/`: sezione «Categorie», `IconPicker` e hook `useCategories` condiviso.
 - `src/services/`: adapter `localStorage` temporanei, uno per entità
-  (`categoryStorage.ts`, `recurringStorage.ts`); validano i dati letti e
+  (`categoryStorage.ts`, `expenseStorage.ts`); validano i dati letti e
   rileggono prima di ogni scrittura.
-- `src/components/`: componenti UI condivisi (es. `ThemeIcon`: icona SVG inline, perché
-  non è installata una libreria di icone; per le azioni usare pulsanti di testo).
+- `src/components/`: componenti UI condivisi. Non c'è una libreria di icone: le icone
+  di interfaccia sono SVG inline (`SvgIcon` + `iconShapes`); quelle delle categorie sono
+  sprite pixel art 12×12 in `pixelIcons.ts` (dati puri, testati), resi da `PixelIcon`
+  (che aggiunge da solo l'alone chiaro nel tema scuro: non disegnare sprite fuori da lì).
+  Aggiungere un'icona = sprite + voce in `categoryIconLabels` (`src/domain/category.ts`).
+  `DeleteAction`: cestino + conferma, da riusare per ogni eliminazione. `ChoiceChips`:
+  stile unico per le scelte singole (pieno nel colore primario, senza spunta).
 - `tests/`: test di dominio e storage con il runner integrato di Node.
 - `public/index.html`: documento HTML web in italiano. `dist/`: export generato, ignorato da Git.
 
@@ -53,6 +61,12 @@ I test girano in-process (`--experimental-test-isolation=none`) con
 l'estensione `.ts`.
 
 ## Convenzioni
+- Accessibilità: usare `role`/`aria-*` (`aria-checked`, `aria-selected`, `aria-disabled`).
+  React Native Web 0.21 **ignora `accessibilityState`**: lo stato non arriva al DOM.
+- Material 3: componenti personalizzati quando Paper non rende lo stile M3 sul web
+  (es. `M3Switch`, `ChoiceChips`); riusarli invece di introdurne di nuovi.
+- Grafici e colori dei dati: seguire la skill dataviz (palette categoriale in ordine fisso,
+  validata col suo script; legenda e tabella; colore legato alla categoria).
 - Nomi del codice in inglese; interfaccia e documentazione in italiano.
 - Importi interi in centesimi, nessun arrotondamento implicito; data spesa in Europe/Rome,
   timestamp backend in UTC. Data vuota nella bozza = oggi al momento della validazione.

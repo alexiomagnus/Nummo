@@ -1,8 +1,8 @@
 # Nummo
 
-Web app per registrare spese personali in Google Sheets. **Fase 1: base locale**,
-non ancora utilizzabile per registrare spese reali. Google login, backend e Sheets
-saranno integrati nella prova tecnica successiva.
+Web app per registrare spese personali in Google Sheets. **Versione locale**: le spese
+si salvano solo nel browser. Google login, backend e Sheets saranno integrati nella
+prova tecnica successiva.
 
 ## Avvio
 
@@ -13,17 +13,19 @@ npm ci
 npm run dev
 ```
 
-Aprire l'indirizzo localhost stampato da Expo. Al primo avvio nel browser sono
-create cinque categorie predefinite (Spesa alimentare, Ristorazione, Salute, Uscita,
-Shopping online); nella sezione **Categorie** si possono aggiungere ed eliminare.
-La sezione **Ricorrenti** registra spese periodiche (importo, descrizione,
-ricorrenza settimanale, mensile o annuale) solo come elenco: non generano spese.
+Aprire l'indirizzo localhost stampato da Expo. Le sezioni sono:
 
-La data della spesa è sempre quella odierna nel fuso di Roma. Gli errori vengono
-indicati all'uscita dai campi; il controllo completo sarà eseguito dal flusso di salvataggio.
-**Salva spesa** rimane disabilitato finché Google e Sheets non sono collegati.
-La bozza spesa è solo in memoria; categorie e spese ricorrenti persistono nel browser,
-senza sincronizzazione o associazione a un account. Il tema si cambia con l'icona sole/luna.
+- **Nuova**: importo, nome dell'acquisto, categoria facoltativa e, se serve,
+  «Ripeti questa spesa» (settimanale, mensile o annuale). La data è sempre oggi (Roma).
+- **Spese**: elenco ricercabile per nome e ordinabile per data o importo; le spese
+  ricorrenti compaiono a ogni scadenza fino a oggi.
+- **Dashboard**: ciambella, andamento o barre impilate, per mese corrente, 6 o 12 mesi.
+- **Categorie**: al primo avvio Spesa, Ristorazione, Uscita e Shopping, con icone
+  pixel art; si possono aggiungere, rinominare, eliminare e cambiare icona.
+
+Spese e categorie sono salvate **solo in questo browser** (`localStorage`): Google
+Sheets non è ancora collegato, non c'è sincronizzazione e cancellare i dati del sito
+le elimina. Il tema si cambia con l'icona sole/luna.
 
 ```sh
 npm run typecheck

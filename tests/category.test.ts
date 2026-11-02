@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { categoryNameError, defaultCategoryLabels } from '../src/domain/category.ts';
+import { categoryIcons, categoryNameError, defaultCategories } from '../src/domain/category.ts';
+import { pixelPalette, pixelSize, pixelSprites, pixelSvg } from '../src/components/pixelIcons.ts';
 import {
-  categoryStorageKey, legacyCategoryStorageKey, loadCategories, readCategories, removeCategory, storeCategory,
+  categoryStorageKey, legacyCategoryStorageKey, loadCategories, readCategories, removeCategory, renameCategory, setCategoryIcon, storeCategory,
 } from '../src/services/categoryStorage.ts';
 
 function memoryStorage() {
@@ -17,7 +18,7 @@ test('senza inizializzazione nessuna categoria; le categorie create si rileggono
   const storage = memoryStorage();
   assert.deepEqual(readCategories(storage), []);
   const created = storeCategory(storage, '  Spesa   alimentare  ', () => 'my-category');
-  assert.deepEqual(created, [{ id: 'my-category', label: 'Spesa alimentare' }]);
+  assert.deepEqual(created, [{ id: 'my-category', label: 'Spesa alimentare', icon: null }]);
   assert.deepEqual(readCategories(storage), created);
 });
 test('i duplicati ignorano maiuscole, spazi e normalizzazione Unicode', () => {
@@ -62,13 +63,14 @@ const uniqueId = () => `id-${++counter}`;
 test('un nuovo browser riceve le categorie predefinite una sola volta', () => {
   const storage = memoryStorage();
   const seeded = loadCategories(storage, uniqueId);
-  assert.deepEqual(seeded.map((category) => category.label), [...defaultCategoryLabels]);
+  assert.deepEqual(seeded.map(({ label, icon }) => ({ label, icon })), [...defaultCategories]);
+  assert.deepEqual(seeded.map((category) => category.label), ['Spesa', 'Ristorazione', 'Uscita', 'Shopping']);
   assert.deepEqual(loadCategories(storage, uniqueId), seeded);
 });
 test('le categorie predefinite non si aggiungono a quelle già salvate', () => {
   const storage = memoryStorage();
   storeCategory(storage, 'Libri', () => 'books');
-  assert.deepEqual(loadCategories(storage, uniqueId), [{ id: 'books', label: 'Libri' }]);
+  assert.deepEqual(loadCategories(storage, uniqueId), [{ id: 'books', label: 'Libri', icon: null }]);
 });
 test('eliminare tutte le categorie non ripristina le predefinite', () => {
   const storage = memoryStorage();
@@ -79,8 +81,8 @@ test('eliminazione di una categoria creata, rifiutata se inesistente', () => {
   const storage = memoryStorage();
   storeCategory(storage, 'Casa', () => 'home');
   storeCategory(storage, 'Libri', () => 'books');
-  assert.deepEqual(removeCategory(storage, 'home'), [{ id: 'books', label: 'Libri' }]);
-  assert.deepEqual(readCategories(storage), [{ id: 'books', label: 'Libri' }]);
+  assert.deepEqual(removeCategory(storage, 'home'), [{ id: 'books', label: 'Libri', icon: null }]);
+  assert.deepEqual(readCategories(storage), [{ id: 'books', label: 'Libri', icon: null }]);
   assert.throws(() => removeCategory(storage, 'home'), /non trovata/);
 });
 test('l’eliminazione non sovrascrive dati corrotti', () => {
@@ -92,7 +94,53 @@ test('l’eliminazione non sovrascrive dati corrotti', () => {
 test('le categorie salvate con il nome precedente vengono conservate', () => {
   const storage = memoryStorage();
   storage.setItem(legacyCategoryStorageKey, JSON.stringify([{ id: 'home', label: 'Casa' }]));
-  assert.deepEqual(loadCategories(storage, uniqueId), [{ id: 'home', label: 'Casa' }]);
+  assert.deepEqual(loadCategories(storage, uniqueId), [{ id: 'home', label: 'Casa', icon: null }]);
   storeCategory(storage, 'Libri', () => 'books');
   assert.equal(JSON.parse(storage.getItem(categoryStorageKey)!).length, 2);
+});
+test('icona facoltativa in creazione, modificabile e rimovibile', () => {
+  const storage = memoryStorage();
+  assert.deepEqual(storeCategory(storage, 'Casa', () => 'home', 'house'), [{ id: 'home', label: 'Casa', icon: 'house' }]);
+  assert.deepEqual(setCategoryIcon(storage, 'home', 'bulb'), [{ id: 'home', label: 'Casa', icon: 'bulb' }]);
+  assert.deepEqual(setCategoryIcon(storage, 'home', null), [{ id: 'home', label: 'Casa', icon: null }]);
+  assert.throws(() => setCategoryIcon(storage, 'missing', 'house'), /non trovata/);
+  assert.throws(() => setCategoryIcon(storage, 'home', 'x' as never), /Icona/);
+  assert.throws(() => storeCategory(storage, 'Libri', () => 'books', '<svg>' as never), /Icona/);
+});
+test('icone sconosciute o ritirate nell’archivio diventano assenti senza perdere la categoria', () => {
+  const storage = memoryStorage();
+  storage.setItem(categoryStorageKey, JSON.stringify([{ id: 'home', label: 'Casa', icon: '🏠' },
+    { id: 'x', label: 'Altro', icon: 'javascript:' }, { id: 'p', label: 'Pizza', icon: 'pizza' }]));
+  assert.deepEqual(readCategories(storage).map((category) => category.icon), [null, null, 'pizza']);
+});
+test('ogni icona ammessa ha uno sprite 12×12 con soli colori della palette, e viceversa', () => {
+  assert.deepEqual(Object.keys(pixelSprites).sort(), [...categoryIcons].sort());
+  for (const [name, rows] of Object.entries(pixelSprites)) {
+    assert.equal(rows.length, pixelSize, name);
+    for (const row of rows) {
+      assert.equal(row.length, pixelSize, `${name}: ${row}`);
+      for (const char of row) assert.ok(char === '.' || char in pixelPalette, `${name}: ${char}`);
+    }
+  }
+});
+test('rinomina: stesso ID e icona, nome normalizzato, duplicati rifiutati', () => {
+  const storage = memoryStorage();
+  storeCategory(storage, 'Ristorzione', () => 'food', 'pasta');
+  storeCategory(storage, 'Casa', () => 'home');
+  assert.deepEqual(renameCategory(storage, 'food', '  Ristorazione ')[0], { id: 'food', label: 'Ristorazione', icon: 'pasta' });
+  assert.deepEqual(renameCategory(storage, 'food', 'RISTORAZIONE')[0]!.label, 'RISTORAZIONE');
+  assert.throws(() => renameCategory(storage, 'food', 'casa'), /già/);
+  assert.throws(() => renameCategory(storage, 'food', '  '), /nome/);
+  assert.throws(() => renameCategory(storage, 'missing', 'Altro'), /non trovata/);
+  assert.equal(readCategories(storage)[0]!.label, 'RISTORAZIONE');
+});
+test('alone chiaro per il tema scuro: solo attorno allo sprite, senza coprirlo', () => {
+  const plain = pixelSvg(pixelSprites.cart);
+  const halo = pixelSvg(pixelSprites.cart, { halo: '#E6E1E9' });
+  assert.ok(!plain.includes('#E6E1E9'));
+  const haloRects = [...halo.matchAll(/<rect x="(\d+)" y="(\d+)"[^>]*fill="#E6E1E9"/g)].map((m) => `${m[1]},${m[2]}`);
+  const spriteRects = new Set([...plain.matchAll(/<rect x="(\d+)" y="(\d+)"/g)].map((m) => `${m[1]},${m[2]}`));
+  assert.ok(haloRects.length > 0);
+  assert.ok(haloRects.every((cell) => !spriteRects.has(cell)));
+  assert.match(halo, /viewBox="0 0 14 14"/);
 });

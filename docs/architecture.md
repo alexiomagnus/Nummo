@@ -11,59 +11,101 @@ letta integralmente e mantenuta invariata.
 | TypeScript + Expo + React Native Web + React Native Paper | Confermati dall'utente in questa sessione |
 | Uso personale, registro predisposto condiviso con identità di servizio | Confermato dall'utente |
 | Firebase Authentication + Cloud Functions | Confermati come direzione del backend; servizi non configurati |
-| EUR, 2 decimali, Europe/Rome, massimo 99.999,99 €, nota 500 caratteri | Confermati dall'utente |
+| EUR, 2 decimali, Europe/Rome, massimo 99.999,99 € | Confermati dall'utente |
+| Nota rimossa; «nome dell'acquisto» dopo l'importo | Richiesta utente; obbligatorietà e limite 100 scelti dall'agente |
+| Categoria facoltativa; icona pixel art facoltativa per categoria | Richiesta utente (prima emoji, sostituite) |
 | Date dal 2000-01-01 a oggi; nessuna data futura | Confermato dall'utente |
-| Categorie create dall’utente, eliminabili; cinque predefinite per un browser nuovo | Richiesta utente 2/11/2026; sostituisce la versione senza predefinite |
+| Categorie dell’utente rinominabili ed eliminabili; predefinite con icona: Spesa, Ristorazione, Uscita, Shopping | Richiesta utente 2/11/2026; nessuna migrazione dei browser con le predefinite precedenti |
 | Nome applicazione: Nummo (prima Nummus) | Richiesta utente; il foglio resta «Registro spese» |
-| Spese ricorrenti (importo, descrizione, settimanale/mensile/annuale) | Richiesta utente; anticipa la fase «Ricorrenze» della specifica, solo come elenco locale |
+| Ricorrenza come attributo della spesa nella home (settimanale/mensile/annuale) | Richiesta utente; sostituisce la sezione «Ricorrenti» separata |
+| Salvataggio locale delle spese, elenco ricercabile/ordinabile, dashboard con 3 grafici | Richiesta utente; anticipa funzioni post-MVP. Archivio locale scelto dall'agente |
 | Data spesa sempre automatica, nessuna modifica dalla UI | Richiesta utente (rimossa «Modifica data») |
 | Firebase Hosting, budget, deployment e palette | Non confermati |
 | Archivio tecnico, protocollo di scrittura/recupero, persistenza sessione | Da progettare e confermare prima dell'implementazione definitiva |
 
-Le categorie hanno ID UUID stabili e nomi scelti dall'utente. `localStorage`
-conserva categorie (`nummo.categories.v1`, con lettura di ripiego della chiave
-`nummus.categories.v1` del nome precedente) e spese ricorrenti (`nummo.recurring.v1`),
-non spese o credenziali. Le categorie predefinite sono scritte solo se nessuna chiave
-esiste: eliminare tutte le categorie non le ripristina. L'eliminazione di una
-categoria non tocca le spese (non ancora salvate); se era selezionata nella bozza,
-la validazione la rifiuta come sconosciuta. Le sezioni restano montate per non
-perdere le bozze al cambio sezione. I nomi categoria sono normalizzati per spazi e
-Unicode, unici senza distinzione maiuscole/minuscole e limitati a 40 caratteri;
-le descrizioni ricorrenti sono obbligatorie e limitate a 100 caratteri. Entrambi i
-limiti sono scelte implementative modificabili, non vincoli concordati.
+## Archivio locale temporaneo
 
-Le spese ricorrenti sono solo un elenco: non hanno data di inizio né categoria e
-non generano spese. Come produrle (backend pianificato, conferma utente, previsioni
-vs addebiti effettivi secondo la specifica) è da definire.
+`localStorage` conserva categorie (`nummo.categories.v1`, con lettura di ripiego della
+chiave `nummus.categories.v1` del nome precedente) e spese (`nummo.expenses.v1`), mai
+credenziali. Ogni adapter in `src/services/` valida tutto ciò che legge, rilegge prima
+di scrivere e non sovrascrive un archivio illeggibile; storage negato o corrotto non
+produce conferme. La chiave `nummo.recurring.v1` della sezione Ricorrenti rimossa non è
+più letta né cancellata (quegli elementi non avevano data di inizio).
 
-Questo adapter è temporaneo e non è un archivio per utenti autenticati. Prima del
-login, progettare categorie autorizzate lato backend, isolamento per UID e migrazione
-esplicita delle categorie del browser: non associarle automaticamente a chi accede.
-La cancellazione dei dati del browser perde le categorie; non c'è sincronizzazione
-tra dispositivi. Gli aggiornamenti di altre schede vengono riletti, ma localStorage
-non garantisce atomicità tra creazioni simultanee: risolvere nel backend prima del MVP.
-Dati corrotti o storage negato non devono produrre conferme né sovrascrivere l'archivio.
+Le spese salvate localmente esistono perché elenco e dashboard richiedono dati prima
+del backend. Non sono una conferma su Sheets e l'interfaccia lo dichiara. Restano per
+browser, senza sincronizzazione, e `localStorage` non è atomico tra schede. Al
+collegamento con il backend: migrazione **esplicita** dei dati del browser, mai
+associazione automatica a chi accede; il record locale (`id` UUID, `created_at`) è già
+compatibile con `expense_id` e con il payload previsto.
 
-La data non è visibile né modificabile: una data vuota nella bozza significa «oggi
-in Europe/Rome» alla validazione, evitando date obsolete se cambia il giorno. Il
-dominio accetta ancora date esplicite (2000-01-01…oggi) per un futuro uso.
-Il salvataggio resta disabilitato e non viene simulato.
+Categorie: ID UUID stabili, nomi normalizzati per spazi e Unicode, unici senza distinzione
+maiuscole/minuscole, max 40 caratteri. La rinomina conserva ID e icona (le spese puntano
+all'ID). Le predefinite sono scritte solo se nessuna chiave esiste: eliminarle tutte non le
+ripristina, e un browser con predefinite precedenti non viene modificato. Eliminare una categoria non modifica le spese:
+quelle che la citavano appaiono senza categoria; se era selezionata nel modulo viene
+deselezionata, ma un `category_id` indicato e inesistente è rifiutato dalla validazione.
+Le icone sono ID di sprite pixel art propri: in lettura un ID sconosciuto diventa `null`,
+in scrittura è rifiutato. Campi assenti in dati più vecchi valgono `null`. Gli sprite sono
+disegnati in una tela 14×14 (1 px di margine); nel tema scuro quel margine ospita un alone
+chiaro attorno ai pixel pieni, così il contorno scuro resta leggibile senza ricolorare lo sprite.
 
-## Fase 1 implementata
+Nome dell'acquisto (`description`): obbligatorio, normalizzato, max 100 caratteri, scritto
+come testo. I limiti 40/100 sono scelte implementative, non vincoli concordati.
 
-Il frontend usa Expo SDK 58 e versioni React/React Native allineate al template
-ufficiale, con Paper 5. Il lockfile fissa l'albero installato. La UI usa stato React
-locale, senza router né store globale, con tre sezioni: Nuova spesa, Ricorrenti e Categorie.
+La data non è visibile né modificabile: viene risolta come «oggi in Europe/Rome» al
+salvataggio. Il dominio accetta ancora date esplicite (2000-01-01…oggi).
+
+### Ricorrenze
+
+Una spesa con `recurrence` è una serie che inizia a `expense_date`. Le occorrenze non
+vengono salvate ma calcolate (`src/domain/recurrence.ts`, `history.ts`) fino a oggi:
+settimanale ogni 7 giorni, mensile e annuale allo stesso giorno, ridotto all'ultimo
+giorno dei mesi più corti (31 → 30/28, 29 febbraio → 28). Le scadenze future non sono
+spese. Eliminare una spesa ricorrente elimina la serie, incluse le occorrenze passate;
+interruzione e modifica non esistono ancora. Con il backend andrà deciso se le
+occorrenze diventano righe reali nel foglio (richiede un processo pianificato e
+idempotenza per occorrenza) o restano calcolate.
+
+### Dashboard e grafici
+
+Funzioni pure in `src/domain/history.ts` (occorrenze, ricerca senza accenti, ordinamenti,
+periodi, aggregazione); disegno in `src/features/dashboard/charts.tsx` con SVG inline
+(app solo web; un'app nativa richiederebbe `react-native-svg`). Specifiche dalla skill
+dataviz: palette categoriale di riferimento in ordine fisso (validata con il suo script
+su superfici `#F7F2F9` chiara e `#1F2421` scura: chiaro con 4 colori < 3:1, quindi
+legenda e tabella obbligatorie), colore legato alla posizione della categoria
+nell'elenco e non alla classifica, 7 categorie con nome + «Altre categorie», «Senza
+categoria» in grigio neutro; linee 2 px, area al 10%, barre ≤ 24 px con angoli
+superiori di 4 px e 2 px di stacco, griglia sottile; dettaglio a hover/tocco.
+
+### Archivio definitivo delle categorie — raccomandazione, non decisa
+
+Proposta: scheda «Categorie» nello stesso file «Registro spese» (colonne `category_id`,
+`label`, `icon`, `archived_at`), letta e scritta solo dalle Cloud Functions con
+l'identità di servizio. Motivi: la specifica vuole Sheets come archivio senza database
+principale aggiuntivo; uso personale con un solo registro; categorie visibili e
+salvabili col backup del foglio. Le spese salvano `category_id`; eliminare una
+categoria la **archivia** (nascosta nella UI) invece di cancellarla, così le righe
+storiche restano interpretabili. Alternativa: Firestore per UID, da preferire se la
+prova tecnica introduce comunque un archivio tecnico per l'idempotenza (transazioni,
+cache offline, nessun limite di quota Sheets). `localStorage` resterebbe solo come cache.
+
+## Frontend
+
+Expo SDK 58 e versioni React/React Native allineate al template ufficiale, con Paper 5.
+Il lockfile fissa l'albero installato. Stato React locale, senza router né store
+globale; quattro sezioni (Nuova, Spese, Dashboard, Categorie). Il modulo resta montato
+per non perdere la bozza al cambio sezione.
 
 `src/domain` contiene funzioni pure indipendenti da Expo e Firebase. Il futuro
 backend potrà riusare le regole, ma dovrà anche validare a runtime struttura,
 tipi, UUID e campi consentiti di ogni richiesta non fidata. I tipi TypeScript
-non costituiscono validazione di rete. `validateDraft` valida il modulo locale.
+non costituiscono validazione di rete.
 
-Il reducer degli invii costituisce una base testata, **non è collegato al modulo**:
-il pulsante di salvataggio è disabilitato. Nessun ID viene creato prima di un
-invio reale e nessuna conferma di persistenza viene simulata. Le note restano testo;
-l'adapter Sheets dovrà usare `valueInputOption: RAW` e testare l'assenza di formule.
+Il reducer degli invii (`submission.ts`) è una base testata per il backend, **non
+collegata**: oggi il salvataggio è locale e sincrono. L'adapter Sheets dovrà usare
+`valueInputOption: RAW` e testare l'assenza di formule.
 
 ## Prossima prova tecnica: confini obbligatori
 
