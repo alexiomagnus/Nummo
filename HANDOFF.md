@@ -1,8 +1,7 @@
 # HANDOFF — stato operativo
 
 Aggiornamento: 2 novembre 2026. Ultimo commit rilevante: «Rinomina in Nummo, categorie
-predefinite/eliminabili e spese ricorrenti» sul branch `feat/todo-nummo` (non ancora unito
-a `main`, che resta a `3742189` «First commit»). Contesto stabile in `AGENTS.md`.
+predefinite/eliminabili e spese ricorrenti» (`611f4aa`, su `main`). Contesto stabile in `AGENTS.md`.
 
 ## Fase corrente
 **Fase 1 — base locale: completata.** L'app non registra ancora spese reali.
