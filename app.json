@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Nummus",
+    "slug": "nummus",
+    "version": "0.1.0",
+    "platforms": ["web"],
+    "userInterfaceStyle": "automatic",
+    "web": { "bundler": "metro", "output": "single", "name": "Nummus" }
+  }
+}
