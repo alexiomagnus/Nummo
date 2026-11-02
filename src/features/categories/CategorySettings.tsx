@@ -11,27 +11,29 @@ type Props = {
   categories: readonly Category[];
   error: string | null;
   ready: boolean;
-  onCreate: (name: string, icon: CategoryIcon | null) => boolean;
-  onDelete: (id: string) => boolean;
-  onChangeIcon: (id: string, icon: CategoryIcon | null) => boolean;
-  onRename: (id: string, name: string) => boolean;
+  onCreate: (name: string, icon: CategoryIcon | null) => boolean | Promise<boolean>;
+  onDelete: (id: string) => boolean | Promise<boolean>;
+  onChangeIcon: (id: string, icon: CategoryIcon | null, expected: Category) => boolean | Promise<boolean>;
+  onRename: (id: string, name: string, expected: Category) => boolean | Promise<boolean>;
 };
 
 export function CategorySettings({ categories, error, ready, onCreate, onDelete, onChangeIcon, onRename }: Props) {
   const theme = useTheme();
+  const [busy, setBusy] = useState(false);
+  ready = ready && !busy;
   const [name, setName] = useState('');
   const [icon, setIcon] = useState<CategoryIcon | null>(null);
   const [choosingIcon, setChoosingIcon] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
-  const [editingIconOf, setEditingIconOf] = useState<string | null>(null);
-  const [renaming, setRenaming] = useState<{ id: string; name: string; error: string | null } | null>(null);
+  const [editingIconOf, setEditingIconOf] = useState<Category | null>(null);
+  const [renaming, setRenaming] = useState<{ id: string; name: string; error: string | null; original: Category } | null>(null);
   const startRename = (category: Category) => {
-    setRenaming({ id: category.id, name: category.label, error: null });
+    setRenaming({ id: category.id, name: category.label, error: null, original: category });
     setEditingIconOf(null);
     setCreated(false);
   };
-  const saveRename = () => {
+  const saveRename = async () => {
     if (!renaming) return;
     const others = categories.filter((category) => category.id !== renaming.id);
     const validationError = categoryNameError(renaming.name, others);
@@ -39,18 +41,22 @@ export function CategorySettings({ categories, error, ready, onCreate, onDelete,
       setRenaming({ ...renaming, error: validationError });
       return;
     }
-    if (onRename(renaming.id, renaming.name)) setRenaming(null);
+    if (!ready) return;
+    setBusy(true);
+    try { if (await onRename(renaming.id, renaming.name, renaming.original)) setRenaming(null); } finally { setBusy(false); }
   };
-  const create = () => {
+  const create = async () => {
     const validationError = categoryNameError(name, categories);
     setNameError(validationError);
     setCreated(false);
-    if (!validationError && onCreate(name, icon)) {
+    if (!ready || validationError) return;
+    setBusy(true);
+    try { if (await onCreate(name, icon)) {
       setName('');
       setIcon(null);
       setChoosingIcon(false);
       setCreated(true);
-    }
+    } } finally { setBusy(false); }
   };
 
   return (
@@ -72,7 +78,7 @@ export function CategorySettings({ categories, error, ready, onCreate, onDelete,
         {categories.map((category) => (
           <View key={category.id} style={styles.item}>
             <View style={styles.row}>
-              <Pressable onPress={() => setEditingIconOf(editingIconOf === category.id ? null : category.id)}
+              <Pressable onPress={() => setEditingIconOf(editingIconOf?.id === category.id ? null : category)}
                 accessibilityRole="button"
                 accessibilityLabel={category.icon ? `Cambia icona di ${category.label}` : `Aggiungi icona a ${category.label}`}
                 style={[styles.iconSlot, {
@@ -93,7 +99,7 @@ export function CategorySettings({ categories, error, ready, onCreate, onDelete,
               {renaming?.id === category.id ? (
                 <View style={styles.actions}>
                   <Button onPress={() => setRenaming(null)}>Annulla</Button>
-                  <Button mode="contained-tonal" onPress={saveRename}>Salva</Button>
+                  <Button disabled={!ready} mode="contained-tonal" onPress={saveRename}>Salva</Button>
                 </View>
               ) : (
                 <>
@@ -106,15 +112,15 @@ export function CategorySettings({ categories, error, ready, onCreate, onDelete,
             {renaming?.id === category.id && renaming.error && (
               <HelperText type="error" accessibilityRole="alert">{renaming.error}</HelperText>
             )}
-            {editingIconOf === category.id && (
+            {editingIconOf?.id === category.id && (
               <IconPicker value={category.icon}
-                onChange={(next) => { if (onChangeIcon(category.id, next)) setEditingIconOf(null); }} />
+                onChange={async (next) => { if (await onChangeIcon(category.id, next, editingIconOf)) setEditingIconOf(null); }} />
             )}
           </View>
         ))}
         {ready && categories.length === 0 && <Text>Non hai ancora creato categorie.</Text>}
       </View>
-      <Text variant="bodySmall">Le categorie sono conservate in questo browser. Non sono ancora sincronizzate con un account.</Text>
+      <Text variant="bodySmall">Le categorie sono sincronizzate con Firestore. Per modificarle serve una connessione.</Text>
     </Surface>
   );
 }

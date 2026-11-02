@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { parseExpenseList, parseExpenseRequest, parseReceipt } from '../src/domain/contract.ts';
-import { isDefinitiveRejection } from '../src/domain/submission.ts';
+import { isUtcTimestamp, parseExpenseRequest } from '../src/domain/contract.ts';
 
 const now = new Date('2026-11-02T23:30:00.000Z'); // 00:30 on 3 November in Rome (UTC+1)
 const id = '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13';
@@ -23,26 +22,8 @@ test('richiesta con campi in più, mancanti o maiuscole nell’UUID: rifiutata',
   assert.equal(parseExpenseRequest([request], now), null);
 });
 
-test('conferma: solo UUID e timestamp UTC canonico', () => {
-  assert.deepEqual(parseReceipt({ expense_id: id, created_at: '2026-11-02T10:00:00.000Z' }),
-    { expense_id: id, created_at: '2026-11-02T10:00:00.000Z' });
-  assert.equal(parseReceipt({ expense_id: id, created_at: '2026-11-02T11:00:00+01:00' }), null);
-  assert.equal(parseReceipt({ expense_id: 'x', created_at: '2026-11-02T10:00:00Z' }), null);
-});
-
-test('elenco dal backend: un solo elemento non valido invalida la risposta', () => {
-  const record = { ...request, id, created_at: '2026-11-02T10:00:00.000Z' };
-  const { expense_id: _, ...stored } = record;
-  assert.equal(parseExpenseList({ expenses: [stored], invalid_rows: 0 })?.expenses.length, 1);
-  assert.equal(parseExpenseList({ expenses: [stored, { ...stored, amount_minor: -1 }], invalid_rows: 0 }), null);
-  assert.equal(parseExpenseList({ expenses: [], invalid_rows: -1 }), null);
-});
-
-test('solo i rifiuti che escludono la scrittura sbloccano il modulo', () => {
-  for (const code of ['functions/invalid-argument', 'functions/already-exists', 'functions/permission-denied', 'functions/unauthenticated']) {
-    assert.equal(isDefinitiveRejection(code), true, code);
-  }
-  for (const code of ['functions/unavailable', 'functions/deadline-exceeded', 'functions/internal', 'unknown']) {
-    assert.equal(isDefinitiveRejection(code), false, code);
-  }
+test('timestamp: solo UTC canonico', () => {
+  assert.equal(isUtcTimestamp('2026-11-02T10:00:00.000Z'), true);
+  assert.equal(isUtcTimestamp('2026-11-02T11:00:00+01:00'), false);
+  assert.equal(isUtcTimestamp('2026-02-30T10:00:00Z'), false);
 });

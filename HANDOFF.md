@@ -1,231 +1,163 @@
-# HANDOFF — stato operativo
+# HANDOFF — Nummo BYOF
 
-Aggiornamento: 2 novembre 2026. Backend e login reale descritti sotto sono nel ramo
-`backend-firebase` (commit «Backend Firebase locale con login Google reale», da unire a
-`main` dopo la revisione); base: `038c652` «new implementations» su `main`. Commit precedente rilevante: `611f4aa` (rinomina in Nummo, categorie
-predefinite). Contesto stabile in `AGENTS.md`; progetto del backend in
-`docs/architecture.md` § Backend.
+Aggiornamento: 2 novembre 2026. Migrazione e rimozione del vecchio backend committate
+sul branch `backend-firebase` (base `fe759d5`), non pubblicate né unite a `main`.
+Stato precedente ricostruito in `docs/migrazione-byof.md`. Architettura corrente in `AGENTS.md` e `docs/architecture.md`.
 
-## Fase corrente
-**Fase 2 — prova tecnica, primo incremento completato negli emulatori**: login Google
-(simulato), callable autenticata, ledger Firestore con riga fissa, scrittura idempotente,
-elenco riletto dal backend dopo il ricaricamento. In più, **login Google reale** con il
-progetto Firebase `nummo-6b6e2` (solo Authentication) e backend locale. Nessun deployment,
-nessuna scrittura su Google Sheets reale. Fase 1 (base locale, estesa con ricorrenze, elenco e
-dashboard su richiesta dell'utente) resta disponibile come modalità «solo browser».
-Poi 3 MVP PWA e 4 passaggio dal vecchio Form (`docs/progress.md`). Nessuna attività in corso.
+## Risultato corrente
 
-## Implementato (stato del codice)
-Tre modalità, scelte in build con `EXPO_PUBLIC_NUMMO_BACKEND`:
-- **Solo browser** (default, `npm run dev`): come in fase 1, spese in `localStorage`.
-- **Emulatori** (`npm run emulators` + `npm run dev:emulator`): schermata «Accedi con
-  Google» (popup dell'emulatore con due account: «Proprietario (demo)» ammesso, «Estraneo
-  (demo)» no); email e «Esci» in alto; spese salvate tramite `submitExpense` e rilette
-  con `listExpenses`; nessun cestino (eliminazione fuori MVP). Il finto foglio è in
-  Firestore (`emulator_sheet_rows`, visibile nella UI emulatori su 127.0.0.1:4000) e si
-  azzera a ogni riavvio degli emulatori.
-- **Auth reale + backend locale** (`npm run emulators:real` + `npm run dev:firebase`):
-  config web in `.env.local` (non versionato, modello `.env.example`), Functions e
-  Firestore negli emulatori con progetto `nummo-6b6e2`, parametri in
-  `functions/.env.nummo-6b6e2` (non versionato). **`ALLOWED_UID` è ancora il segnaposto
-  `da-impostare`**: finché l'utente non inserisce il proprio UID nessun account è
-  autorizzato (messaggio «Questo account non è autorizzato…»).
-- **Functions pubblicate**: `dev:firebase` senza `EXPO_PUBLIC_FUNCTIONS_EMULATOR`;
-  nessuna funzione è pubblicata, quindi oggi non funziona.
+App web con Google Authentication e accesso diretto a **Cloud Firestore personale**.
+Nessuna integrazione Sheets/callable nel percorso attivo, nessun cloud dello
+sviluppatore obbligatorio, nessun database locale indipendente. Configurazione da env
+pubbliche a build. L'alias personale `real` e i file `.env` esistenti sono intatti.
 
-Stati d'invio nel modulo (entrambe le modalità, `submissionReducer`): «Salvataggio…» con
-campi bloccati; conferma → modulo svuotato e «Spesa salvata.»; esito incerto → campi
-bloccati, messaggio e «Riprova» con stesso ID e dati; rifiuto definitivo → messaggio,
-campi modificabili, nuovo invio con nuovo ID. Account non ammesso: «Questo account non è
-autorizzato ad accedere al registro.», modulo disattivato.
+- Riutilizzati dominio, modulo, ricorrenze, ricerca, dashboard, componenti e icone.
+- Spese e categorie sincronizzate da listener SDK. Timestamp Firestore, UUID,
+  centesimi interi, data civile Europe/Rome. Occorrenze calcolate, non salvate.
+- Proprietario amministrativo in `config/owner`; regole restrittive UID/provider
+  Google, validazione campi/importi/date/timestamp/revisioni, indice nomi categoria
+  mantenuto in transazione. Client incapace di assegnarsi autorizzazioni.
+- CRUD spese; modifica serie su tutte le occorrenze, data iniziale invariata.
+  Rinomina/icona/eliminazione categorie e unicità concorrente. Le modifiche e le
+  conferme di eliminazione conservano la versione iniziale: conflitti espliciti.
+- Inserimenti offline in coda SDK; UI distingue cache, connessione indicativa e
+  scritture pendenti. Nessun falso successo. Persistenza disco opt-in per dispositivi
+  fidati; altrimenti cache in memoria. SDK gestisce retry e più schede.
+- Logout attende le scritture; timeout 5 s lascia la sessione attiva e segnala di
+  riconnettersi. Cambio account smonta stato/listener. Cache disco non cancellata.
+- Copia recuperabile in memoria delle spese pendenti osservate e poi rifiutate/non
+  confermate: download esplicito prima di uscire. Nessun archivio di errori parallelo.
+- CSV UTF-8 BOM/CRLF con importi esatti, quoting e protezione formule; JSON completo
+  di spese/serie/categorie/metadati. Download solo da snapshot server senza pending.
+- Migrazione locale esplicita con download originali, anteprima del progetto/UID,
+  preflight e gruppi ripetibili. Progresso parziale dichiarato in caso di interruzione;
+  ID uguali con dati diversi non sono sovrascritti. Originali mai cancellati.
+- Le vecchie ricorrenze locali senza data restano nel backup grezzo, escluse dalla
+  migrazione automatica. Rimossi gli hook di scrittura localStorage dal frontend.
+- **Vecchio backend rimosso** (Cloud Functions, ledger, adapter Sheets,
+  `firebase.legacy.json`, `firestore.legacy.rules`, test callable/token, esportatore
+  `emulator_sheet_rows`, script npm legacy, codice morto delle callable). Motivo: il
+  foglio non è mai stato reale (`SHEET_ID=emulator`) e nessun emulatore conteneva
+  righe storiche oltre alle fixture dei test. Recupero: commit `fe759d5`. I `.env`
+  personali in `functions/` restano sul disco, ignorati. Nessuna dipendenza aggiunta.
 
-Backend (`functions/`): verifica esplicita dell'ID token (`verifyIdToken`, perché
-l'emulatore la salta), validazione runtime condivisa (`src/domain/contract.ts`),
-autorizzazione di un solo UID con accesso Google, transazione Firestore che assegna la
-riga, scrittura RAW verificata, nessuna sovrascrittura se la riga contiene un altro ID,
-errori imprevisti → `unavailable` (esito incerto). Adapter REST Google Sheets con
-credenziali dell'account di servizio della funzione (nessuna chiave nel codice).
+## Verifiche eseguite
 
-Quattro sezioni (`src/features/workspace/Workspace.tsx`): **Nuova · Spese · Dashboard · Categorie**.
-- **Nuova**: importo (font 20, virgola o punto, max 2 decimali, 0,01–99.999,99 €),
-  nome dell'acquisto (obbligatorio, max 100 punti di codice), categoria facoltativa
-  (chip pieni nel colore primario, senza spunta; secondo tocco deseleziona), riga
-  «Ripeti questa spesa» con interruttore Material 3 (`M3Switch`: binario 52×32, maniglia
-  16→24 px con spunta) che mostra tre riquadri Settimanale/Mensile/Annuale (solo il nome). Errori brevi
-  («Inserisci l'importo.», «Importo non valido (es. 12,50).»); un campo lasciato vuoto non
-  è segnalato all'uscita ma solo al salvataggio. Data sempre
-  oggi (Europe/Rome) risolta al salvataggio. Una nota sotto il pulsante dichiara dove
-  finiscono le spese (browser, emulatori o Sheets).
-- **Ricorrenze**: una spesa con `recurrence` è una serie che parte da `expense_date`;
-  elenco e dashboard la contano una volta per scadenza fino a oggi (`expandOccurrences`,
-  mesi corti: 31 → 30/28, 29 feb → 28). Le occorrenze sono calcolate, non salvate.
-- **Spese**: elenco delle occorrenze con ricerca per nome (senza maiuscole/accenti),
-  ordinamento per data o importo (crescente/decrescente), conteggio e totale dei risultati,
-  eliminazione con cestino + conferma (solo in modalità browser; su una ricorrente
-  elimina l'intera serie).
-- **Dashboard**: grafico scelto al momento fra Ciambella (per categoria), Andamento
-  (area del totale) e Barre impilate (per categoria e periodo); periodo Questo mese
-  (giorni) / Ultimi 6 mesi / Ultimi 12 mesi; totale in evidenza, dettaglio a hover/tocco,
-  legenda con importi e %, vista tabella. SVG inline, nessuna libreria di grafici.
-- **Categorie**: creazione, rinomina (matita → campo in linea, Salva/Annulla; ID e icona
-  invariati, quindi le spese restano collegate), eliminazione, icona pixel art facoltativa
-  (22 sprite 12×12; nel tema scuro con un alone chiaro di 1 px, perché il contorno quasi
-  nero sparirebbe sullo sfondo). Predefinite, solo per un browser senza categorie salvate:
-  Spesa (carrello), Ristorazione (pasta), Uscita (popcorn), Shopping (maglietta).
-  I browser con le vecchie predefinite («Spesa alimentare», «Shopping online», senza icone)
-  **non vengono migrati**: si correggono con rinomina e icona. Nomi unici, max 40.
-- Marchio con logo «N» e «Nummo» grande; tema chiaro/scuro.
+Ambiente: Linux, Node 26.13.0, npm 12.2.1, Java 21, Chromium headless con profilo
+**temporaneo**. Nessun dato/servizio reale coinvolto nei test di scrittura.
 
-## Decisioni significative (dettaglio in `docs/architecture.md`)
-- Stack TypeScript + Expo + RN Web + Paper; backend Firebase Auth + Cloud Functions.
-  Uso personale, registro condiviso con l'account di servizio della funzione.
-- **Protocollo di scrittura (confermato dall'utente il 2/11/2026)**: ledger Firestore
-  che riserva in transazione una riga fissa per `expense_id` (con hash del payload);
-  scrittura sempre su quella riga, mai append; conferma solo dopo la scrittura
-  verificata. Motivo: la sola coppia ricerca+append in Sheets non regge richieste
-  concorrenti; Firestore come archivio principale avrebbe cambiato due requisiti.
-- **Login reale, backend locale (richiesta utente)**: Firebase Auth del progetto reale,
-  Functions/Firestore negli emulatori, nessun deployment. Modalità separate: la demo
-  ignora la config reale; mancando una variabile la modalità reale mostra un avviso.
-- **Verifica negli emulatori (confermata dall'utente)**: nessun progetto, foglio o
-  credenziale disponibili; Sheets sostituito da un finto foglio ammesso solo lì.
-- Scelte dell'agente da confermare: regione `europe-west1`, `maxInstances: 2`,
-  sessione `browserLocalPersistence`, colonne A–J della scheda «Spese», UID ammesso
-  come unico criterio (più provider `google.com`).
-- **Modalità solo browser mantenuta** come default, per non rompere l'uso attuale
-  senza backend; i dati del browser **non** vengono mai caricati sul registro in
-  automatico.
-- La ricorrenza è un attributo della spesa (richiesta utente: «nella home»), non più una
-  sezione; le occorrenze future non contano come spese.
-- Nome dell'acquisto obbligatorio (scelta dell'agente, da confermare); sostituisce la nota.
-- Grafici: palette categoriale di riferimento della skill dataviz in ordine fisso, colore
-  legato alla posizione della categoria nell'elenco (non alla classifica); dalla 8ª
-  categoria in poi «Altre categorie», senza categoria in grigio. Validata con lo script
-  della skill sulle superfici dell'app: nel chiaro 4 colori < 3:1, compensati da legenda e tabella.
-- Icone pixel art proprie, salvate come ID; ID sconosciuti letti come `null`.
-- Archivio definitivo delle categorie: raccomandazione non decisa in `docs/architecture.md`.
+- Baseline prima delle modifiche: `npm run check`, **84 app + 25 backend**, typecheck
+  ed export web riusciti.
+- Prima della rimozione: `npm run check`, **91/91 app + 25/25 legacy**, build riuscita.
+- Dopo la rimozione: vedi § Consolidamento.
+- Suite nuova `tests/emulator/firestore.e2e.ts`: **11/11** (10 sottotest più contenitore),
+  veri SDK e Rules negli emulatori, progetto `demo-nummo`. Porte alternative Auth 9199,
+  Firestore 8280 perché quelle dell'utente erano occupate; i processi dell'utente non
+  sono stati fermati. Config temporanea nella radice rimossa a fine lavoro.
+- Copertura emulata: anonimi/estranei/namespace diverso/autopromozione negati,
+  provider non Google negato anche con UID proprietario, due sessioni, CRUD,
+  conflitto di revisione e cancellazione obsoleta, campi extra/importi/date/timestamp
+  invalidi, nessuna sovrascrittura create, nomi concorrenti e indici manomessi negati,
+  creazione offline senza conferma anticipata, riconnessione senza duplicazione,
+  importazione ripetuta, conflitto senza sovrascrittura, gruppi con **205 spese + 12
+  categorie**, logout. (Il sottotest dell'esportatore legacy è stato rimosso con esso.)
+- Config: due progetti pubblici differenti, demo indipendente, valori mancanti,
+  endpoint errati e variabile Functions legacy; test senza subprocessi per rispettare
+  i limiti del runner/sandbox. Queste prove non sono due progetti cloud reali.
+- Chromium via CDP: popup Google **simulato**, inserimento e conferma, modifica importo
+  verificata nell'elenco, creazione categoria, download JSON/CSV, eliminazione,
+  logout senza dati in UI, estraneo negato senza mostrare dati proprietario.
+- Chromium offline: nessuna conferma anticipata, logout bloccato con pending,
+  reload della pagina con Firestore ancora irraggiungibile → spesa e coda recuperate
+  dalla cache SDK; riconnessione → conferma. Rifiuto dopo reload provocato revocando
+  temporaneamente il proprietario **nel solo emulatore di prova** → download copia
+  recuperabile mostrato; proprietario demo ripristinato.
+- Due schede Chromium con cache persistente: nuova categoria sincronizzata tra schede.
+  Migrazione dalla UI: anteprima, conferma, spesa visibile nell'altra scheda e
+  **localStorage sorgente identico** dopo l'importazione. Screenshot ispezionato.
+- `npm audit`: **29** segnalazioni (25 moderate, 4 alte), già presenti. Alte nella
+  catena Node `@grpc/grpc-js`/Firestore; correzione proposta retrocede Firebase.
+  Nessuna modifica automatica alle dipendenze.
 
-## Problemi aperti e limitazioni
-- Login Google reale **non completato** dall'agente (richiede l'account dell'utente):
-  verificato solo fino alla pagina di accesso di Google.
-- Revoca non controllata: un ID token resta valido fino a 1 ora dopo il logout.
-- Backend mai eseguito fuori dagli emulatori: adapter Google Sheets testato solo con
-  `fetch` simulato; permessi IAM, quote e latenza reali sconosciuti.
-- Esito incerto non sopravvive al ricaricamento della pagina (proposta di recupero in
-  `docs/architecture.md`, non implementata): il ledger evita duplicati, ma l'utente deve
-  controllare l'elenco.
-- Righe del foglio inserite o riordinate a mano rompono l'associazione riga↔ID (rilevato,
-  la scrittura fallisce senza sovrascrivere); va protetta la scheda. Una riga prenotata e
-  mai scritta resta vuota.
-- Categorie solo nel browser anche con il backend; il foglio contiene solo `category_id`
-  (illeggibile in Sheets). Archivio definitivo delle categorie: non deciso.
-- Modalità browser: spese perse cancellando i dati del sito, `localStorage` non atomico
-  tra schede. Per portarle nel registro serve una **migrazione esplicita**, non scritta.
-- Bundle web: +~350 KB per l'SDK Firebase, caricato anche in modalità browser.
-- Console di sviluppo: avviso di React Native Paper «`useNativeDriver` is not supported»
-  (animazioni), non indagato; nessun errore.
-- `listExpenses` legge l'intero foglio a ogni apertura (va bene per uso personale).
-- Nessuna data passata inseribile (rimossa «Modifica data» su richiesta) e nessuna modifica
-  di una spesa salvata: solo eliminazione. Una serie ricorrente non si può interrompere
-  senza eliminarla (cancellando anche le occorrenze passate).
-- Modello dati diverso da `recap.md` §5 (`description` al posto di `note`, `recurrence`
-  aggiunta, `legacy_ref` rimandato): documentato in `docs/architecture.md`.
-- Dati della vecchia sezione Ricorrenti (`nummo.recurring.v1`) **non migrati né cancellati**:
-  non avevano data di inizio. Esistono solo in browser usati per le prove.
-- Grafici solo web (SVG DOM): una futura app nativa richiederà `react-native-svg`.
-- Dashboard: dettaglio a hover/tocco senza navigazione da tastiera tra i segmenti.
-- `npm audit`: radice 29 (25 moderate, 4 alte da `@grpc/grpc-js` tramite
-  `@firebase/firestore`, non usato dall'app); `functions/` 6 moderate. Dettaglio e
-  motivazioni in `docs/architecture.md`; non usare `--force`.
-- Non è una PWA (manifest, icone, HTTPS, aggiornamenti: fase 3).
-- `docs/progress.md` è uno storico della fase 1 (cita ancora «Nummus» e un `.git` non valido).
+I primi tentativi degli emulatori sulle porte predefinite sono stati respinti dal
+sandbox/porte occupate: ripetuti su porte separate. Una ripetizione nella stessa
+suite già popolata ha rilevato collisioni tra nomi dei dati di test: corretto il test
+con nomi unici per esecuzione, senza cancellare l'archivio. Test finali tutti passati.
 
-## Prossime attività (per priorità)
-1. **Revisione e merge** del ramo `backend-firebase`. Login reale con UID impostato:
-   accesso confermato dall'utente; salvataggio, ricaricamento e uscita da riprovare.
-   I dati restano nel Firestore degli emulatori e si perdono alla chiusura
-   (possibile `--import/--export-on-exit`, proposto all'utente, non fatto).
-2. **Confermare con l'utente** le scelte dell'agente: regione, `maxInstances`,
-   persistenza della sessione, colonne della scheda, nome dell'acquisto obbligatorio,
-   assenza di date passate, interruzione delle ricorrenti.
-3. **Functions pubblicate e Sheets reale** (richiede autorizzazione esplicita: piano
-   Blaze, budget e avvisi di spesa). Progetto e Auth Google esistono già (`nummo-6b6e2`).
-   Servono dall'utente: foglio di prova con scheda «Spese» e intestazioni A–J (riga 1), condiviso
-   come Editor solo con l'account di servizio delle funzioni, UID ammesso. Poi:
-   `functions/.env.<progetto>` non versionato con `ALLOWED_UID`, `SHEET_ID`; config web
-   in `EXPO_PUBLIC_FIREBASE_*`. Mai credenziali in chat. Ripetere sul foglio reale i casi
-   di `tests/emulator/backend.e2e.ts` contando le righe per `expense_id`.
-4. **Recupero dopo ricaricamento** (proposta in `docs/architecture.md`): operazione
-   pendente per UID in `localStorage`, riconciliata al ritorno della sessione.
-5. Protezione della scheda (intervallo protetto) e decisione sull'archivio delle
-   categorie (scheda «Categorie» proposta) per rendere leggibile `category_id`.
-6. Migrazione esplicita delle spese della modalità browser verso il registro.
-7. Fase 3: PWA (manifest, icone, HTTPS, Firebase Hosting da confermare), matrice
-   browser/dispositivi (proposta: Chrome Android, Safari iPhone, Chrome desktop).
+## Consolidamento (2 novembre 2026)
 
-## Verifiche
-Login reale (2 novembre 2026):
-- `npm run check`: **84/84** test app (nuovo: lettura dell'indirizzo emulatore Functions),
-  **25/25** `functions/`, export web.
-- `test:emulator:real` (progetto `nummo-6b6e2`, senza emulatore Auth, su porte
-  alternative perché gli emulatori demo dell'utente erano aperti): senza token →
-  «Accedi per continuare.»; token falsificati (alg `none` e `RS256` con firma falsa, ma
-  emittente, destinatario e provider corretti) → rifiutati con il messaggio della
-  **verifica del backend**, quindi non dall'emulatore. 3/3.
-- `test:emulator` demo ripetuto con la verifica dei token: 2/2.
-- Chromium: modalità `firebase` con `.env.local` → «Accedi con Google», il popup apre
-  `accounts.google.com` (config valida, `localhost` autorizzato), nessun errore in
-  console. **Login completo, salvataggio con UID reale e uscita non verificati.**
+- `npm run check` (typecheck, test app, build): **89/89**. Rispetto a 91: rimossi i
+  test di `isDefinitiveRejection`, `parseReceipt`, `parseExpenseList` (solo callable),
+  aggiunto un test di `isUtcTimestamp`.
+- `tests/emulator/firestore.e2e.ts` su emulatori isolati (Auth 9299, Firestore 8380):
+  **10/10**. Emulatori dell'utente non toccati.
+- Script npm: nessun riferimento a file mancanti o a `functions/`. `git diff --check`
+  pulito; nessun UID personale, chiave o `emulator-data/` nei file versionati.
+- Prova manuale nel browser con login Google reale ed emulatore persistente:
+  dichiarata riuscita dall'utente, non ripetuta dall'agente.
+- Processo residuo dell'agente precedente: Firestore emulator su 8280 (dati di test
+  `demo-nummo`), non fermato. Può essere chiuso dall'utente.
 
-Incremento backend (2 novembre 2026, Linux, Node 26.13.0, npm 12.2.1, Java 21; le funzioni
-negli emulatori girano con Node 26, non con il runtime 22 dichiarato):
-- `npm run check` superato: typecheck, **83/83 test** app (nuovi: contratto, classificazione
-  errori), **25/25 test** di `functions/` (servizio con ledger e foglio in memoria: una
-  riga, ritentativi e 5 invii concorrenti, conflitto, crash dopo la scrittura, scrittura
-  fallita, riga occupata, 12 payload non validi, formula come testo, elenco; adapter Sheets
-  con `fetch` simulato: RAW, token, range, verifica, errori senza corpo), export web.
-- `npm run test:emulator` superato (2 test, emulatori reali Auth/Functions/Firestore):
-  senza login e con account non ammesso nessuna lettura/scrittura; **6 invii concorrenti
-  con lo stesso ID → una sola riga e una sola `created_at`**; dati diversi →
-  `ALREADY_EXISTS`; importo decimale → `INVALID_ARGUMENT`.
-- Chromium headless 500 px con emulatori (script CDP non versionato): accesso col
-  popup, salvataggio «12,50 / Pane e latte», elenco, **ricaricamento con sessione e spesa
-  rilette dal backend**, rete disattivata → esito incerto con campi bloccati e «Riprova»,
-  rete riattivata → salvata **una sola volta**, «Esci» → nessun dato visibile, account
-  non ammesso → messaggio e modulo disattivato. Screenshot ispezionati.
-- Chromium in modalità browser: validazione, salvataggio, ricaricamento, eliminazione.
-- **Non verificati**: Firebase/Sheets reali, deployment, scadenza/revoca della sessione,
-  crash reale del backend dopo la scrittura (coperto solo dai test con fake), più schede.
+## Avvio e passaggi manuali
 
-Ricontrollo sul commit `038c652` (2 novembre 2026, Linux, Node 26.13.0, npm 12.2.1):
-`npm run check` superato (typecheck, **78/78 test**, export web in `dist/`, bundle ~959 KB);
-`npm audit`: 11 moderate, invariato. Prove nel browser **non ripetute** in questo ricontrollo.
+Guida completa: `docs/firebase-personale.md`.
 
-Eseguite durante le revisioni UI (prima del commit):
-- Ultima modifica (Salute tolta dalle predefinite, alone delle icone nel tema scuro):
-  `npm run check` con **78/78 test** (nuovo: l'alone circonda lo sprite senza coprirlo);
-  nel browser con profilo nuovo 4 predefinite, icone in chip, selettore, elenco categorie
-  ed elenco spese controllate in scuro (leggibili) e in chiaro (invariate); console pulita.
-- Modifica precedente (rinomina, nuove predefinite con icone, riquadri senza descrizione):
-  `npm run check` con **77/77 test**; nel browser con profilo nuovo verificate predefinite e
-  icone, rinomina con duplicato rifiutato, salvataggio e annulla, riquadri; console pulita.
-  Sprite pasta e popcorn ispezionati ingranditi (pasta ridisegnata una volta).
-- Modifica precedente (messaggi importo, interruttore M3, `aria-*`): **76/76 test**; nel browser verificati assenza di errore all'uscita da un campo vuoto,
-  messaggi brevi, interruttore spento/acceso in chiaro e scuro, `aria-checked` corretto su
-  interruttore, riquadri ricorrenza e chip (prima era assente: `accessibilityState` ignorato).
-- `npm run check` della revisione precedente: **75/75 test superati**. Test aggiunti allora:
-  occorrenze (settimanale, fine mese, 29 febbraio, nessuna futura), ricerca senza accenti,
-  4 ordinamenti, periodi a cavallo d'anno, aggregazione (fuori periodo, «Altre», senza
-  categoria), archivio spese (validazione, corruzione non sovrascritta, ID duplicato).
-- Chromium headless ~500 px (script DevTools locale, non versionato), con 12 spese di esempio
-  su 6 mesi: errori del modulo, salvataggio di una mensile, conteggio 17 occorrenze e totale
-  619,08 € corrispondenti al calcolo manuale, ricerca «SUPER» (2), ordinamento per importo,
-  tre grafici con hover/tocco, legenda, tabella, tema scuro, eliminazione di una serie.
-  Nessun errore in console. Screenshot ispezionati (corretto il font serif nel testo SVG).
-- Revisioni precedenti: icone pixel art ispezionate ingrandite, icone emoji legacy lette
-  come assenti, chiave `nummus.*` coperta solo dai test.
-- `npm audit` (nessuna dipendenza aggiunta da allora): 11 moderate, 0 alte/critiche.
+```sh
+npm run emulators          # terminale 1, prima preservare eventuali vecchi dati
+npm run emulators:seed     # terminale 2, dopo l’avvio
+npm run dev               # demo locale, ignora configurazione reale
+```
 
-**Mai verificati:** login Google reale, permessi e scrittura reale su Sheets, installazione
-PWA, telefoni reali, desktop largo, screen reader, navigazione da tastiera, zoom testuale,
-Node LTS 22/24.
+Per conservare il login Google reale del progetto esistente con DB locale:
+
+```sh
+npm run emulators:real
+npm run emulators:seed:owner -- ID_PROGETTO UID_PROPRIETARIO
+npm run dev:firebase
+```
+
+L'UID del proprietario è quello dell'account Google (Console → Authentication → Utenti),
+mai nei file versionati; in questo checkout coincide con `ALLOWED_UID` del vecchio
+`functions/.env.nummo-6b6e2` (ignorato). Auth reale non richiede l'emulatore Auth.
+Con `emulator-data/` il proprietario si imposta una sola volta. Non è stato creato nessun documento nel progetto cloud reale.
+
+Persistenza (2 novembre 2026): `emulators:real` importa da `emulator-data/` e vi
+riesporta all'arresto (`--export-on-exit`). La cartella contiene dati personali ed è
+esclusa da Git. `config/owner`, spese e categorie sopravvivono ai riavvii **solo con
+arresto pulito** (Ctrl+C una volta, attendere «Export complete»); un kill forzato
+perde le modifiche dall'ultimo avvio. Esportazione iniziale creata a mano con
+`firebase emulators:export emulator-data --project real` dall'emulatore 8180 attivo
+(conteneva solo `config/owner`). Ciclo import → scrittura → export → reimport
+verificato su copia con emulatore isolato. Senza `emulator-data/` (nuovo checkout)
+l'emulatore parte vuoto e crea la cartella all'arresto (verificato).
+
+Per produzione personale: abilitare Firestore nel proprio progetto, Google Auth e
+domini, creare `config/owner`, revisionare/pubblicare regole, poi avviare/configurare
+la build Firebase. Tutti questi passaggi
+cloud rimangono manuali: nessun deploy, Blaze, servizio aggiuntivo o commit eseguito.
+
+## Limiti e prossime verifiche
+
+1. **Non verificati**: login Google reale completo, CRUD/regole sul Firestore cloud
+   personale, OAuth mobile, browser Android/iOS reali, Safari/Firefox/Edge, Node LTS,
+   revoca/scadenza reale dei token e negazione storage/private browsing.
+2. Unico target web. PWA completa, manifest/icone/service worker e avvio a freddo
+   senza rete non implementati; app native richiedono adattamenti. Il test offline
+   ha ricaricato con bundle Expo raggiungibile e Firestore bloccato, non avviato una
+   PWA completamente disconnessa. Chiusura/crash dell'intero browser non collaudati.
+3. Firestore non conserva una cronologia dei rifiuti applicativi: la copia di
+   recupero riguarda pending osservati dai listener e vive in memoria. Scaricarla
+   prima di chiudere. Storage cancellato/negato può perdere dati non confermati.
+4. Importazione atomica per gruppo, non per tutto l'archivio. JSON file fino a 5 MB
+   nella UI. Eventuali volumi superiori o schema diverso richiedono analisi dedicata.
+   Le letture iniziali/backup caricano le collezioni intere: per un archivio grande
+   valutare paginazione e costi. Export di due collezioni non è snapshot globale
+   atomico: evitare modifiche da altre sessioni durante il backup.
+5. Aggiornare in una fase dedicata le dipendenze vulnerabili senza downgrade forzati.
+6. Nessuna prova/importazione da un Google Sheet reale: formato e copie originali
+   non disponibili. Non inferire compatibilità con il vecchio Form senza esaminarlo.
+7. Senza `EXPO_PUBLIC_NUMMO_BACKEND` la modalità è `firebase` (cloud). Gli script
+   `dev`/`dev:emulator`/`dev:firebase` forzano emulatori; `dev:cloud`, `build` e
+   `expo start` diretto leggono `.env.local`, che in questo checkout imposta l'endpoint
+   dell'emulatore 8180: una build per il cloud richiede un ambiente senza quella
+   variabile. Valutare un default più esplicito prima della versione mobile.

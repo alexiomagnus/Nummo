@@ -89,3 +89,26 @@ Verifiche della revisione:
   ritorno alla data automatica nasconde il campo e rimuove l'errore.
 - Nessun errore JavaScript osservato in console. Nessun servizio o deployment.
 - Restano i limiti della prima fase: nessun collaudo su telefoni reali o scrittura Sheets.
+
+## Migrazione BYOF — 2 novembre 2026
+
+Le precedenti sezioni descrivono la storia del progetto. Lo stato operativo corrente
+è ora in `HANDOFF.md`; la richiesta BYOF sostituisce Sheets come fonte di verità.
+
+Implementati Firebase Authentication + accesso diretto Firestore personale, Rules
+proprietario UID/provider, sincronizzazione SDK e cache persistente opzionale,
+CRUD spese e categorie, conflitti per revisione, CSV protetto e backup JSON,
+importazione esplicita con originali preservati e ripresa per gruppi. UI, ricorrenze
+e dashboard riutilizzate. Backend precedente isolato, non cancellato.
+
+Verifiche finali: `npm run check` **91 test app + 25 legacy**, typecheck/build;
+**11 test emulatori** su porte separate; Chromium con login simulato, CRUD,
+logout/estraneo, due schede, offline/reload/reconnessione, rifiuto con copia
+recuperabile, export e migrazione UI con localStorage invariato. Dettagli e limiti
+nel nuovo HANDOFF. Nessun cloud reale/deploy/fatturazione/commit o nuova dipendenza.
+
+Documentati piano e analisi in `docs/migrazione-byof.md`, guida personale in
+`docs/firebase-personale.md`, decisioni in `docs/architecture.md`; AGENTS aggiornato.
+`recap.md` e configurazioni personali mantenuti intatti. Audit: 29 segnalazioni
+preesistenti, nessun downgrade automatico. Da collaudare progetto cloud personale,
+OAuth/dispositivi mobili e PWA completa.

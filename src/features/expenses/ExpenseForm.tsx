@@ -91,14 +91,15 @@ export function ExpenseForm({ categories, store }: Props) {
         {submission.status === 'uncertain' ? (
           <>
             <Text accessibilityRole="alert" style={styles.center}>
-              Non è certo che la spesa sia stata salvata. Riprova: non verrà registrata due volte.
+              Conferma non ancora disponibile. Firestore gestisce la sincronizzazione: controlla lo stato e l’elenco prima di inserire nuovamente la spesa.
             </Text>
-            <Button mode="contained" onPress={store.retry} contentStyle={styles.button}>Riprova</Button>
+            <Button onPress={store.retry}>Verifica sul server</Button>
+
           </>
         ) : (
           <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
             contentStyle={styles.button}>
-            {submission.status === 'sending' ? 'Salvataggio…' : 'Salva spesa'}
+            {submission.status === 'sending' ? 'In attesa di conferma…' : 'Salva spesa'}
           </Button>
         )}
         {saved && <Text accessibilityLiveRegion="polite" style={styles.center}>Spesa salvata.</Text>}

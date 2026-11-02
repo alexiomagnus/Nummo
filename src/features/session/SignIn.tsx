@@ -9,7 +9,7 @@ export function SignIn({ error, demo, onSignIn }: Props) {
     <Surface elevation={1} style={styles.card}>
       <Text variant="titleLarge" accessibilityRole="header">Accedi</Text>
       <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
-        Le spese vengono salvate nel tuo registro Google Sheets. Accedi con l’account Google autorizzato.
+        Spese e categorie vengono salvate nel tuo progetto Firebase personale. Accedi con l’account Google autorizzato.
       </Text>
       {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
       <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>Accedi con Google</Button>

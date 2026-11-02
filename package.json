@@ -8,17 +8,19 @@
     "node": "^22.18.0 || ^24.3.0 || ^26.0.0"
   },
   "scripts": {
-    "dev": "expo start --web --host localhost",
+    "dev": "EXPO_PUBLIC_NUMMO_BACKEND=emulator expo start --web --host localhost",
     "build": "expo export --platform web",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test --experimental-test-isolation=none tests/*.test.ts",
-    "check": "npm run typecheck && npm test && npm --prefix functions run check && npm run build",
+    "check": "npm run typecheck && npm test && npm run build",
     "dev:emulator": "EXPO_PUBLIC_NUMMO_BACKEND=emulator expo start --web --host localhost",
-    "emulators": "npm --prefix functions run build && firebase emulators:start --project demo-nummo --import emulator-seed",
-    "test:emulator": "npm --prefix functions run build && firebase emulators:exec --project demo-nummo --import emulator-seed \"node tests/emulator/backend.e2e.ts\"",
-    "dev:firebase": "EXPO_PUBLIC_NUMMO_BACKEND=firebase EXPO_PUBLIC_FUNCTIONS_EMULATOR=127.0.0.1:5001 expo start --web --host localhost",
-    "emulators:real": "npm --prefix functions run build && firebase emulators:start --project real --only functions,firestore",
-    "test:emulator:real": "npm --prefix functions run build && firebase emulators:exec --project real --only functions,firestore \"node tests/emulator/realAuth.e2e.ts\""
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-nummo --import emulator-seed",
+    "test:emulator": "firebase emulators:exec --only auth,firestore --project demo-nummo --import emulator-seed \"node tests/emulator/firestore.e2e.ts\"",
+    "dev:firebase": "EXPO_PUBLIC_NUMMO_BACKEND=firebase EXPO_PUBLIC_FIRESTORE_EMULATOR=127.0.0.1:8180 expo start --web --host localhost",
+    "emulators:real": "firebase emulators:start --project real --only firestore --import emulator-data --export-on-exit",
+    "emulators:seed": "node scripts/seed-demo.ts",
+    "dev:cloud": "EXPO_PUBLIC_NUMMO_BACKEND=firebase expo start --web --host localhost",
+    "emulators:seed:owner": "node scripts/seed-owner.ts"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.16",

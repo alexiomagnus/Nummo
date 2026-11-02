@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, Surface, Text, TextInput, useTheme } from 'react-native-paper';
+import { HelperText, IconButton, Surface, Text, TextInput, useTheme } from 'react-native-paper';
 import type { Category } from '../../domain/category';
 import { formatAmountMinor } from '../../domain/expense';
 import { searchAndSort, sortLabels, sortOptions, type Occurrence, type SortOption } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { DeleteAction } from '../../components/DeleteAction';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { PixelIcon } from '../../components/PixelIcon';
 
 type Props = {
@@ -14,13 +15,14 @@ type Props = {
   categories: readonly Category[];
   error: string | null;
   // Absent when the archive does not support deleting.
-  onDelete?: (expenseId: string) => boolean;
+  onDelete?: (expenseId: string) => boolean | Promise<boolean>;
+  onEdit?: (expenseId: string) => void;
 };
 
 const dateFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const formatDate = (date: string) => dateFormat.format(new Date(`${date}T00:00:00Z`));
 
-export function ExpenseList({ occurrences, categories, error, onDelete }: Props) {
+export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }: Props) {
   const theme = useTheme();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortOption>('date-desc');
@@ -54,6 +56,7 @@ export function ExpenseList({ occurrences, categories, error, onDelete }: Props)
                 <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{details}</Text>
               </View>
               <Text variant="titleMedium" style={styles.amount}>{formatAmountMinor(item.amount_minor)}</Text>
+              {onEdit && <IconButton accessibilityLabel={`Modifica ${item.description}`} icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={() => onEdit(item.expenseId)} />}
               {onDelete && <DeleteAction name={item.recurrence ? `la serie ${item.description}` : item.description}
                 onDelete={() => onDelete(item.expenseId)} />}
             </View>

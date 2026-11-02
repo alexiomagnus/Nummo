@@ -1,7 +1,7 @@
 import { parseExpenseRecord, type ExpenseRecord } from '../domain/contract.ts';
 import type { ExpenseData } from '../domain/expense.ts';
 
-// Temporary browser archive, used when no backend is configured (see docs/architecture.md).
+// Legacy archive: the active app only reads it for explicit migration. Writers remain regression-tested.
 export const expenseStorageKey = 'nummo.expenses.v1';
 export type { ExpenseRecord };
 type ExpenseStorage = Pick<Storage, 'getItem' | 'setItem'>;

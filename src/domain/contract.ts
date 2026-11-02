@@ -1,4 +1,4 @@
-// Shapes exchanged across trust boundaries (browser storage, network, Sheets) and their
+// Shapes exchanged across trust boundaries (browser storage, Firestore, backups) and their
 // runtime checks. TypeScript types alone do not validate untrusted data.
 import { isValidDate, normalizeDescription, type ExpenseData, type ExpenseRequest } from './expense.ts';
 import { expensePolicy, todayInRome } from './policy.ts';
@@ -6,7 +6,6 @@ import { isRecurrence } from './recurrence.ts';
 
 export type ExpenseRecord = Readonly<ExpenseData & { id: string; created_at: string }>;
 export type Receipt = Readonly<{ expense_id: string; created_at: string }>;
-export type ExpenseList = Readonly<{ expenses: readonly ExpenseRecord[]; invalid_rows: number }>;
 
 const requestKeys = [
   'expense_id', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date',
@@ -50,7 +49,7 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
   };
 }
 
-// A saved expense, from this browser's archive or from the backend.
+// A saved expense, from this browser's old archive, Firestore or a backup.
 export function parseExpenseRecord(value: unknown): ExpenseRecord | null {
   const v = asObject(value);
   if (!v || typeof v.id !== 'string' || v.id === '' || typeof v.created_at !== 'string'
@@ -59,7 +58,7 @@ export function parseExpenseRecord(value: unknown): ExpenseRecord | null {
   return data && { ...data, id: v.id, created_at: v.created_at };
 }
 
-// The backend's final check on an untrusted request: exact fields, no extras, no future dates.
+// Final client check before a Firestore write (mirrored by the Rules): exact fields, no future dates.
 export function parseExpenseRequest(value: unknown, now: Date): ExpenseRequest | null {
   const v = asObject(value);
   if (!v || Object.keys(v).length !== requestKeys.length || !requestKeys.every((key) => key in v)) return null;
@@ -67,22 +66,4 @@ export function parseExpenseRequest(value: unknown, now: Date): ExpenseRequest |
   const data = readData(v);
   if (!data || data.expense_date > todayInRome(now)) return null;
   return { ...data, expense_id: v.expense_id };
-}
-
-export function parseReceipt(value: unknown): Receipt | null {
-  const v = asObject(value);
-  return v && isUuid(v.expense_id) && isUtcTimestamp(v.created_at)
-    ? { expense_id: v.expense_id, created_at: v.created_at } : null;
-}
-
-export function parseExpenseList(value: unknown): ExpenseList | null {
-  const v = asObject(value);
-  if (!v || !Array.isArray(v.expenses) || !Number.isSafeInteger(v.invalid_rows) || (v.invalid_rows as number) < 0) return null;
-  const expenses: ExpenseRecord[] = [];
-  for (const item of v.expenses) {
-    const record = parseExpenseRecord(item);
-    if (!record) return null;
-    expenses.push(record);
-  }
-  return { expenses, invalid_rows: v.invalid_rows as number };
 }

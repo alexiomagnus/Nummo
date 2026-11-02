@@ -5,19 +5,19 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeIcon } from './src/components/ThemeIcon';
 import { SignIn } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
-import { LocalWorkspace, RemoteWorkspace } from './src/features/workspace/Workspace';
-import { backendMode, functionsEmulator, missingFirebaseConfig } from './src/services/backendConfig';
+import { RemoteWorkspace } from './src/features/workspace/Workspace';
+import { backendMode, firestoreEmulator, missingFirebaseConfig, persistentCache } from './src/services/backendConfig';
 
 const demo = backendMode === 'emulator';
 const configMissing = missingFirebaseConfig.length > 0;
-const storageNote = demo
-  ? 'Ambiente di prova locale (emulatori): account simulati, niente viene scritto su Google Sheets.'
-  : functionsEmulator
-    ? 'Accesso reale, backend locale (emulatori): niente viene scritto su Google Sheets.'
-    : 'Le spese sono salvate nel registro Google Sheets.';
+const storageNote = (demo || firestoreEmulator
+  ? 'Spese e categorie negli emulatori locali Firestore.'
+  : 'Spese e categorie nel tuo progetto Firebase personale.') + (persistentCache
+    ? ' Cache offline SDK abilitata dove supportata: usa un dispositivo fidato.'
+    : 'Cache in memoria: le scritture offline non sopravvivono alla chiusura.');
 
 export default function App() {
-  const session = useSession(backendMode !== 'local' && !configMissing);
+  const session = useSession(!configMissing);
   const systemScheme = useColorScheme();
   const [override, setOverride] = useState<boolean | null>(null);
   const dark = override ?? systemScheme === 'dark';
@@ -60,7 +60,7 @@ export default function App() {
                 <Text variant="bodyMedium" numberOfLines={1} style={[styles.email, { color: theme.colors.onSurfaceVariant }]}>
                   {session.user.email ?? 'Account Google'}
                 </Text>
-                <Button mode="text" onPress={session.signOut}>Esci</Button>
+                <Button mode="text" disabled={session.busy} loading={session.busy} onPress={session.signOut}>Esci</Button>
               </View>
             )}
             {configMissing && (
@@ -72,10 +72,10 @@ export default function App() {
                 </Text>
               </Surface>
             )}
-            {session.status === 'disabled' && !configMissing && <LocalWorkspace />}
+            {session.status === 'signed-in' && session.error && <Text accessibilityRole="alert">{session.error}</Text>}
             {session.status === 'loading' && <ActivityIndicator accessibilityLabel="Caricamento della sessione" />}
             {session.status === 'signed-out' && <SignIn error={session.error} demo={demo} onSignIn={session.signIn} />}
-            {session.status === 'signed-in' && <RemoteWorkspace key={session.user.uid} storageNote={storageNote} />}
+            {session.status === 'signed-in' && <View pointerEvents={session.busy ? 'none' : 'auto'}><RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote} /></View>}
             <Text variant="bodySmall" style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>Il tuo registro, una spesa alla volta.</Text>
           </View>
         </ScrollView>

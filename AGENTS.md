@@ -1,145 +1,126 @@
 # Nummo — istruzioni per gli agenti
 
-Web app personale (PWA prevista) per registrare spese in Google Sheets («Registro spese»),
-in sostituzione di Google Forms. Nome dell'app: **Nummo** (in passato «Nummus»,
-nome ancora presente nello storico di `docs/progress.md`; `recap.md` lo indica «da definire»). Stato operativo e
-prossimi passi: `HANDOFF.md`.
+Gestionale personale di spese, Expo web + Firebase personale configurabile (BYOF).
+Firestore è l'unica fonte di verità. Stato operativo: `HANDOFF.md`.
 
-## Fonti
-- `recap.md`: specifica originale v0.4 (comportamento previsto). Leggerla integralmente
-  prima di modifiche funzionali; non modificarla.
-- `docs/architecture.md`: decisioni confermate, confini del backend, proposte non approvate.
-- `docs/progress.md`: piano a fasi e registro dettagliato delle verifiche.
-- Lo stato effettivo si ricava dal codice e dall'esecuzione dei controlli, non dai documenti.
+## Fonti e precedenze
+
+- Richiesta BYOF del 2 novembre 2026 recepita in `docs/architecture.md` e
+  `docs/migrazione-byof.md`: sostituisce Sheets come archivio e il backend callable,
+  rimosso il 2 novembre 2026 (recuperabile dalla cronologia Git, commit `fe759d5`).
+- `recap.md`: specifica originale v0.4, da leggere integralmente prima di modifiche
+  funzionali e da non modificare. Storico delle decisioni, non architettura corrente.
+- `docs/firebase-personale.md`: guida operativa per chi clona il repository.
+- `docs/progress.md`: registro storico; verificare sempre codice ed esecuzione.
 
 ## Architettura effettiva
-Frontend Expo web + backend Firebase (Auth + Cloud Functions + ledger Firestore → Sheets).
-Progetto Firebase reale `nummo-6b6e2` (alias `real` in `.firebaserc`, mai predefinito)
-usato **solo per Authentication**; Functions e Firestore girano sempre negli emulatori.
-Nessun deployment, nessun foglio reale.
-Modalità scelta in build con `EXPO_PUBLIC_NUMMO_BACKEND`, mai mescolate:
-- assente: solo browser (`localStorage`, nessun login);
-- `emulator`: tutto emulato, progetto `demo-nummo`, account Google simulati;
-- `firebase`: Auth reale da `EXPO_PUBLIC_FIREBASE_*` (in `.env.local`, modello
-  `.env.example`) + Functions su `EXPO_PUBLIC_FUNCTIONS_EMULATOR` (host:porta) se
-  impostata, altrimenti quelle pubblicate (oggi inesistenti).
-Protocollo, API ed errori: `docs/architecture.md` § Backend.
 
-`index.ts` → `App.tsx` (tema Material 3, sessione) → `Workspace` (sezioni Nuova · Spese ·
-Dashboard · Categorie, stato React locale, senza router né store globale). Le sezioni
-ricevono un `ExpenseStore` e non sanno quale archivio c'è dietro.
+`index.ts` → `App.tsx` (Material 3, sessione) → `RemoteWorkspace` (key UID), sezioni
+Nuova · Spese · Dashboard · Categorie. Stato React locale, niente router/store globale.
 
-- `src/domain/`: regole pure, senza dipendenze UI/SDK, compilate anche nel backend.
-  `policy.ts` (limiti condivisi, `todayInRome`), `expense.ts` (bozza, parsing importi,
-  validazione), `contract.ts` (validazione runtime di richieste, conferme, elenchi e
-  record: ogni dato non fidato passa da qui), `category.ts` (normalizzazione, unicità
-  nomi, predefinite, ID icone), `recurrence.ts` (date delle occorrenze), `history.ts`
-  (occorrenze, ricerca, ordinamento, periodi e aggregazione per la dashboard),
-  `submission.ts` (reducer degli stati d'invio e classificazione degli errori).
-- `src/features/expenses/`: modulo «Nuova spesa» (`ExpenseFields`, `CategoryPicker`,
-  `RecurrencePicker`), interfaccia `ExpenseStore` e i due archivi `useLocalExpenses` /
-  `useRemoteExpenses` (entrambi passano da `submissionReducer`).
-- `src/features/session/`: `useSession` (Firebase Auth) e schermata `SignIn`.
-- `src/features/workspace/`: `LocalWorkspace`, `RemoteWorkspace` (montato con
-  `key` = UID: uscire o cambiare account scarta tutto lo stato) e sezioni.
-- `src/features/history/`: elenco ricercabile e ordinabile («Spese»; cestino solo in locale).
-- `src/features/dashboard/`: dashboard e grafici SVG inline (`charts.tsx`, solo web).
-- `src/features/categories/`: sezione «Categorie», `IconPicker` e hook `useCategories`
-  (categorie sempre in `localStorage`, anche con il backend).
-- `src/services/`: `backendConfig.ts` (modalità e config web pubblica), `firebase.ts`
-  (unico punto che usa l'SDK: sessione e callable, risposte validate), adapter
-  `localStorage` (`categoryStorage.ts`, `expenseStorage.ts`) che validano i dati letti
-  e rileggono prima di ogni scrittura.
-- `functions/`: pacchetto npm separato (Cloud Functions v2, ESM, compilato con `tsc` in
-  `functions/lib/`). `src/index.ts` (callable `submitExpense`/`listExpenses`, parametri,
-  wiring), `expenses.ts` (servizio applicativo puro), `ports.ts` (`Ledger`, `Sheet`),
-  `firestoreLedger.ts` (transazione + finto foglio per gli emulatori), `googleSheet.ts`
-  (REST Sheets con `fetch`), `sheetRow.ts` (colonne A–J), `authorize.ts`.
-  Il servizio e il mapping non importano SDK: si testano con i fake in `functions/tests/`.
-- `firebase.json`, `firestore.rules` (nega tutto ai client), `emulator-seed/` (account
-  di prova), `functions/.env.demo-nummo` (parametri solo demo, versionato),
-  `functions/.env.nummo-6b6e2` (parametri del progetto reale: `ALLOWED_UID`,
-  `SHEET_ID=emulator`; non versionato).
-- `src/components/`: componenti UI condivisi. Non c'è una libreria di icone: le icone
-  di interfaccia sono SVG inline (`SvgIcon` + `iconShapes`); quelle delle categorie sono
-  sprite pixel art 12×12 in `pixelIcons.ts` (dati puri, testati), resi da `PixelIcon`
-  (che aggiunge da solo l'alone chiaro nel tema scuro: non disegnare sprite fuori da lì).
-  Aggiungere un'icona = sprite + voce in `categoryIconLabels` (`src/domain/category.ts`).
-  `DeleteAction`: cestino + conferma, da riusare per ogni eliminazione. `ChoiceChips`:
-  stile unico per le scelte singole (pieno nel colore primario, senza spunta).
-- `tests/`: test di dominio e storage con il runner integrato di Node;
-  `tests/emulator/backend.e2e.ts`: test d'integrazione eseguito dentro gli emulatori.
-- `public/index.html`: documento HTML web in italiano. `dist/`: export generato, ignorato da Git.
+- `src/domain/`: funzioni pure senza SDK. `policy.ts`, `expense.ts`, `contract.ts`,
+  `category.ts`, `recurrence.ts`, `history.ts`, `submission.ts` riutilizzati;
+  `firestore.ts` valida i record sincronizzati e genera le chiavi nome categoria;
+  `backup.ts` valida le importazioni, genera JSON e CSV protetto da formule.
+- `src/services/backendConfig.ts`: modalità/env pubbliche a build, niente segreti.
+  `firebase.ts`: Auth e inizializzazione Firestore/cache; `firestoreStore.ts`: listener,
+  CRUD, transazioni con revisioni, esportazioni server-only e importazioni in gruppi.
+- `src/features/session/`: login Google popup, sessione SDK, logout con attesa delle
+  scritture pendenti. UI/errori account e stato smontati al cambio UID.
+- `src/features/expenses/`: modulo/validazione, `ExpenseStore`, `useRemoteExpenses`,
+  `ExpenseEditor`. Nessun hook di spese locali nel percorso attivo.
+- `src/features/categories/`: `useRemoteCategories`, impostazioni, icone. ID stabili,
+  unicità nomi tramite transazioni e indice `categoryNames`. Predefinite aggiunte da
+  azione esplicita. Nessun salvataggio in localStorage.
+- `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
+  fino a oggi, non materializzate nel database. Grafici SVG DOM, solo web.
+- `src/features/backup/`: download CSV/JSON, anteprima dei vecchi dati del browser e
+  importazione esplicita. Gli adapter `categoryStorage.ts`/`expenseStorage.ts` restano
+  per compatibilità/migrazione e test; l'app usa solo le loro letture.
+- `firestore.rules`: proprietario da `config/owner` (solo amministratore), provider
+  Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
+  `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
+- `scripts/`: seed demo e configurazione proprietario, solo emulatore localhost.
+- `emulator-data/`: dati persistenti dell'emulatore personale (`emulators:real`),
+  dati personali ignorati da Git. `emulator-seed/`: account Auth della demo.
+- `functions/` può contenere solo `.env` personali ignorati del vecchio backend: non
+  versionarli né cancellarli senza conferma.
+- `tests/`: Node runner per dominio/storage/backup/config; `tests/emulator/firestore.e2e.ts`
+  per SDK e Rules. `dist/` è generato e ignorato.
 
-## Stack
-TypeScript strict (`noUncheckedIndexedAccess`), Expo SDK 58 (solo piattaforma web,
-bundler Metro), React 19.3, React Native 0.88 + React Native Web, React Native Paper 5.
-Firebase JS SDK 13 (web: `app`, `auth`, `functions`); backend con `firebase-functions` 7,
-`firebase-admin` 14, `google-auth-library` 11, TypeScript 6 (runtime dichiarato Node 22).
-`firebase-tools` (dev) per gli emulatori, richiede Java 11+.
-Nessuna libreria di test esterna. Versioni fissate da `package-lock.json` e
-`functions/package-lock.json`.
+## Stack e comandi
 
-## Comandi
-Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm, lockfile versionato.
-- `npm ci && npm ci --prefix functions`: installazione (npm 12 blocca gli script di
-  installazione; gli emulatori funzionano comunque).
-- `npm run dev`: anteprima web solo browser su localhost (Expo).
-- `npm run emulators` (terminale 1) + `npm run dev:emulator` (terminale 2): app con
-  login simulato e backend locale; UI emulatori su 127.0.0.1:4000. Porte: Auth 9099,
-  Functions 5001, Firestore 8180 (8080 era occupata). Se 8081 è occupata:
-  `EXPO_PUBLIC_NUMMO_BACKEND=emulator npx expo start --web --port 8082`.
-- `npm run emulators:real` (terminale 1) + `npm run dev:firebase` (terminale 2): login
-  Google reale, backend locale. Usa le stesse porte della modalità demo: una alla volta.
-- `npm run typecheck`, `npm test`, `npm run build` (export web in `dist/`).
-- `npm run check`: typecheck, test app, controlli di `functions/` e build, con arresto
-  al primo errore.
-- `npm run test:emulator`: compila le funzioni e verifica il backend negli emulatori
-  (non incluso in `check`: richiede Java e porte libere).
-- `npm run test:emulator:real`: progetto reale senza emulatore Auth; verifica che token
-  mancanti o falsificati siano rifiutati dal backend.
-- Con le porte occupate (es. emulatori dell'utente aperti): copia temporanea di
-  `firebase.json` **nella radice** con porte diverse, `--config <file>`, e `AUTH_PORT` /
-  `FUNCTIONS_PORT` per gli script di test; cancellarla dopo.
+TypeScript strict/noUncheckedIndexedAccess, Expo 58 solo web/Metro, React 19.3,
+RN 0.88, RN Web, Paper 5; Firebase JS SDK 13 (`app`, `auth`, `firestore`).
+Nessuna libreria esterna di test. Versioni nei due lockfile; nessuna nuova dipendenza.
 
-I test girano in-process (`--experimental-test-isolation=none`) con
-`--experimental-strip-types`: per questo gli import nei file di dominio e in
-`functions/src` usano l'estensione `.ts` (riscritta in `.js` da `tsc`). Niente sintassi
-TypeScript non cancellabile (es. proprietà nei parametri del costruttore, `enum`).
-Metro a volte non rileva modifiche fatte da script: se il bundle è vecchio, riavviare
-con `--clear`.
+Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulatori
+(Java 21 verificato). In questo ambiente npm 12 blocca gli script di installazione.
+
+- `npm ci`: app e strumenti.
+- `npm run emulators`, poi `npm run emulators:seed`, poi `npm run dev` oppure
+  `dev:emulator`: progetto `demo-nummo`, nessuna risorsa reale. Auth 9099, Firestore
+  8180, UI 4000; loopback. Nessuna Functions nel percorso nuovo.
+- `npm run dev:firebase`: Auth reale da `.env.local`, Firestore forzato localhost:8180.
+  Avviare prima emulatore Firestore del progetto personale e impostarvi `config/owner`
+  con `npm run emulators:seed:owner -- ID_PROGETTO UID`.
+- `npm run emulators:real` usa l'alias `real` preesistente solo in questo checkout.
+  Non è un default: altre installazioni specificano il proprio `--project`. Importa da
+  `emulator-data/` e riesporta all'arresto: fermare con un solo Ctrl+C.
+- `npm run dev:cloud`: usa configurazione personale; non lanciarlo contro risorse
+  reali senza autorizzazione. Nessun fallback a backend/localStorage se config mancante.
+- `npm run check`: typecheck, test app, build.
+- `npm run test:emulator`: nuovi test Auth/Firestore; richiede porte libere.
+- Porte occupate: config temporanea **nella radice** con porte alternative, `--config`,
+  `AUTH_PORT` e `FIRESTORE_PORT` per test/seed. Non fermare gli emulatori dell'utente.
+  Per la demo web: `EXPO_PUBLIC_AUTH_EMULATOR` e `EXPO_PUBLIC_FIRESTORE_EMULATOR`;
+  eliminare la config temporanea a fine verifica.
+
+Variabili pubbliche: `EXPO_PUBLIC_NUMMO_BACKEND=emulator|firebase`, config
+`EXPO_PUBLIC_FIREBASE_*`, endpoint Firestore opzionale. `npm run dev` forza demo.
+`EXPO_PUBLIC_FIRESTORE_CACHE=persistent` è opt-in su dispositivi fidati; altrimenti
+memoria. La cache è quella dell'SDK, mai un database IndexedDB implementato dall'app.
+Expo richiede accessi letterali alle env. Metro può richiedere riavvio `--clear`.
+
+Test in-process con `--experimental-test-isolation=none` e strip-types; import `.ts`
+nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
 
 ## Convenzioni
-- Accessibilità: usare `role`/`aria-*` (`aria-checked`, `aria-selected`, `aria-disabled`).
-  React Native Web 0.21 **ignora `accessibilityState`**: lo stato non arriva al DOM.
-- Material 3: componenti personalizzati quando Paper non rende lo stile M3 sul web
-  (es. `M3Switch`, `ChoiceChips`); riusarli invece di introdurne di nuovi.
-- Grafici e colori dei dati: seguire la skill dataviz (palette categoriale in ordine fisso,
-  validata col suo script; legenda e tabella; colore legato alla categoria).
-- Nomi del codice in inglese; interfaccia e documentazione in italiano.
-- Importi interi in centesimi, nessun arrotondamento implicito; data spesa in Europe/Rome,
-  timestamp backend in UTC. Data vuota nella bozza = oggi al momento della validazione.
-  Limiti solo in `src/domain/policy.ts`.
-- Nessun invio in render/effect. Conferma solo da esito applicativo verificato con `expense_id`.
-- Solo `unauthenticated`/`permission-denied`/`invalid-argument`/`already-exists` sono
-  rifiuti definitivi; ogni altro errore del backend è esito incerto (`isDefinitiveRejection`).
-- Il backend non scrive mai in append: solo sulla riga riservata dal ledger.
-- Retry con stesso ID e payload immutabile; timeout = esito incerto, non rifiuto.
-- Il client non decide identità, registro o permessi. Non memorizzare token manualmente.
-- Il backend verifica sempre l'ID token con `firebase-admin` (`requireOwner`): l'emulatore
-  delle Functions li decodifica soltanto (`skipTokenVerification`). Non rimuovere.
-- Il finto foglio (`SHEET_ID=emulator`) esiste solo negli emulatori; non usarlo altrove.
-- Campi in sola lettura: React Native Paper blocca i `TextInput` con `readonly`, non
-  `disabled` (rilevante per test nel browser).
-- Note scritte come testo (Sheets `valueInputOption: RAW`), mai come formule.
-- Storage illeggibile o negato: nessun falso successo, nessuna sovrascrittura.
 
-## Regole per gli agenti
-- Niente segreti, `.env` reali, deployment, fatturazione o servizi aggiuntivi senza autorizzazione.
-- Non usare `npm audit fix --force` (retrocede Expo).
-- Una fase alla volta; non anticipare funzioni fuori dal MVP (es. OCR, Google Pay) senza
-  richiesta esplicita dell'utente. Dashboard e ricorrenze sono già implementate su sua richiesta.
-- Eseguire `npm run check` prima di dichiarare un lavoro concluso.
-- Testare comportamento e rischi reali; distinguere test locali da prove effettive su Sheets.
-- A fine fase aggiornare `HANDOFF.md`; aggiornare questo file solo se cambiano
-  architettura, strumenti o convenzioni; le decisioni vanno in `docs/architecture.md`.
+- Codice inglese, UI e documentazione italiano. Non riscrivere UI senza necessità.
+- Importi in centesimi interi; data civile Europe/Rome, timestamp Firestore server in
+  UTC. Data vuota = oggi alla validazione. Limiti client in `policy.ts`, corrispettivi
+  in Rules da aggiornare e testare insieme (le Rules non importano TypeScript).
+- Dati non fidati validati runtime; archivi corrotti negano modifica/esportazione,
+  mai nascondere righe invalide o sovrascriverle silenziosamente.
+- Nessun invio in render/effect. SDK gestisce coda/retry. Confermare solo dopo server;
+  `hasPendingWrites` non è successo; `fromCache` non equivale a offline.
+- Un UUID per creazione. Non reimplementare sincronizzazione/idempotenza con un
+  secondo archivio. Modifiche/eliminazioni/categorie online in transazione con la
+  revisione vista all'apertura; conflitti espliciti. Salvataggi incerte: verifica in
+  lettura, mai nuovo ID automatico. Conservare le copie di recupero visibili.
+- Importazione sempre esplicita, originali intatti, preflight più gruppi ripetibili;
+  non promettere atomicità dell'intero archivio. Backup server-only, nessun dato privato
+  inserito nei log. JSON mantiene originali, CSV neutralizza formule e quota i campi.
+- `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
+  `ChoiceChips` e `M3Switch` per componenti Material 3 personalizzati.
+- Accessibilità `role`/`aria-*`: RN Web 0.21 ignora `accessibilityState` nel DOM.
+  TextInput Paper: `readonly`, non `disabled`, quando si verifica sola lettura.
+- Icone UI SVG inline, categorie sprite 12×12 in `pixelIcons.ts` via `PixelIcon`
+  (alone scuro gestito lì). Nuova icona = sprite + `categoryIconLabels` e Rules.
+- Grafici: palette categoriale stabile, legenda e tabella, colore legato alla categoria;
+  seguire la skill dataviz se disponibile quando si modificano grafici/palette.
+- Web è l'unico target: non promettere persistenza RN nativa, PWA o avvio offline a
+  freddo. Distinguere cache dati, disponibilità bundle, login e test su dispositivi.
+
+## Vincoli operativi
+
+Nessun segreto, cancellazione dati, modifica alle credenziali, cloud reale, deployment,
+fatturazione o servizio aggiuntivo senza autorizzazione. Niente commit automatici,
+`npm audit fix --force`, SQLite, Drive, Sheets o Cloud Functions senza richiesta.
+
+Una fase verificabile alla volta; niente OCR/Google Pay o evoluzioni fuori richiesta.
+Prima di dichiarare concluso eseguire `npm run check`; per accesso dati/Rules anche
+`test:emulator`. Aggiornare `HANDOFF.md`; decisioni in `docs/architecture.md`; questo
+file solo per architettura, strumenti e convenzioni stabili. Separare sempre prove
+emulate da verifiche cloud/dispositivi effettivamente eseguite.

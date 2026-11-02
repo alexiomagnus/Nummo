@@ -41,11 +41,3 @@ export function submissionReducer(state: Submission, event: SubmissionEvent): Su
       return state.status === 'confirmed' || state.status === 'rejected' ? { status: 'draft' } : state;
   }
 }
-
-// Callable error codes that guarantee nothing was written (checked before any reservation).
-// Anything else, including network failures and timeouts, leaves the outcome uncertain.
-const definitiveRejections = new Set(['invalid-argument', 'already-exists', 'permission-denied', 'unauthenticated']);
-
-export function isDefinitiveRejection(code: string): boolean {
-  return definitiveRejections.has(code.replace(/^functions\//, ''));
-}

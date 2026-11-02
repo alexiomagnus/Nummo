@@ -1,87 +1,59 @@
 # Nummo
 
-Web app per registrare spese personali in Google Sheets. Per impostazione predefinita
-le spese si salvano solo nel browser. Il backend (Cloud Functions, Sheets) gira **solo
-negli emulatori locali**; il login può essere simulato o, con un progetto Firebase reale,
-Google vero. Nessun deployment e nessun foglio reale collegato.
+Gestionale personale delle spese: Expo web, Firebase Authentication Google e
+**Cloud Firestore del tuo progetto Firebase**. Nessun servizio centralizzato,
+Google Sheets API o database locale parallelo. Configurazione senza modificare il codice.
 
-## Avvio
+Quattro sezioni: Nuova, Spese (ricerca, modifica, eliminazione, CSV e backup JSON),
+Dashboard e Categorie. Ricorrenze settimanali/mensili/annuali, icone pixel art e tema
+chiaro/scuro restano disponibili. La sincronizzazione usa l'SDK Firestore.
 
-Usare Node LTS compatibile con `package.json` (22.18+ oppure 24.3+; supportato anche 26).
+## Avvio locale sicuro
+
+Richiede Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm, Java per gli emulatori.
 
 ```sh
 npm ci
-npm run dev
+npm run emulators       # terminale 1: Auth + Firestore locali
+npm run emulators:seed  # terminale 2, dopo l’avvio degli emulatori
+npm run dev             # demo, account Google simulati
 ```
 
-Aprire l'indirizzo localhost stampato da Expo. Le sezioni sono:
+`npm run dev` forza la demo anche se esiste una configurazione Firebase reale.
+Il proprietario demo è autorizzato; l'estraneo è respinto. I dati degli emulatori
+non sono un backup: esportarli prima di fermarli se si desidera conservarli.
 
-- **Nuova**: importo, nome dell'acquisto, categoria facoltativa e, se serve,
-  «Ripeti questa spesa» (settimanale, mensile o annuale). La data è sempre oggi (Roma).
-- **Spese**: elenco ricercabile per nome e ordinabile per data o importo; le spese
-  ricorrenti compaiono a ogni scadenza fino a oggi.
-- **Dashboard**: ciambella, andamento o barre impilate, per mese corrente, 6 o 12 mesi.
-- **Categorie**: al primo avvio Spesa, Ristorazione, Uscita e Shopping, con icone
-  pixel art; si possono aggiungere, rinominare, eliminare e cambiare icona.
+## Firebase personale
 
-In questa modalità spese e categorie sono salvate **solo in questo browser**
-(`localStorage`): non c'è sincronizzazione e cancellare i dati del sito le elimina.
-Il tema si cambia con l'icona sole/luna.
+Segui [la guida BYOF](docs/firebase-personale.md): progetto personale, Google Auth,
+Firestore, domini autorizzati, UID amministrativo e regole restrittive. La sola
+`firebaseConfig` non completa la configurazione sicura.
 
-### Con il backend negli emulatori
+- `dev:firebase`: Google reale, Firestore su localhost, progetto da `.env.local`.
+- `dev:cloud`: Firebase personale, dopo la configurazione manuale.
+- Cache persistente opzionale per dispositivi fidati: `EXPO_PUBLIC_FIRESTORE_CACHE=persistent`.
 
-Richiede Java 11+. Nessuna credenziale: il progetto `demo-nummo` esiste solo in locale.
+Spese e categorie locali precedenti non vengono cancellate: importazione esplicita
+con anteprima e backup. Vedi [migrazione e analisi](docs/migrazione-byof.md).
+
+## Verifiche
 
 ```sh
-npm ci --prefix functions
-npm run emulators       # terminale 1: Auth, Functions, Firestore (UI su 127.0.0.1:4000)
-npm run dev:emulator    # terminale 2: app con accesso Google simulato
+npm run check             # typecheck, test app, export web
+npm run test:emulator     # SDK e Security Rules contro Auth/Firestore locali
 ```
 
-Accedere con «Proprietario (demo)» (autorizzato) o «Estraneo (demo)» (non autorizzato).
-Le spese passano dalla funzione `submitExpense` e sono rilette dopo il ricaricamento;
-negli emulatori Google Sheets è sostituito da una raccolta Firestore, azzerata a ogni
-riavvio. `npm run test:emulator` verifica il backend (accessi, concorrenza, conflitti).
+Il vecchio backend Cloud Functions/Sheets è stato rimosso; resta consultabile nella
+cronologia Git (commit `fe759d5`).
+Nessuna nuova dipendenza o commit automatico; nessun deployment o fatturazione attivati.
 
-### Con il login Google reale e il backend locale
+L'unico target è **web**. PWA completa, installazione e dispositivi Android/iOS reali
+restano da collaudare/implementare; il recupero dati dalla cache non implica apertura
+a freddo offline dell'app. Importazioni/modifiche e backup richiedono rete; gli
+inserimenti possono restare pendenti nella coda SDK fino alla conferma server.
 
-Usa Firebase Authentication del progetto reale; Functions e Firestore restano negli
-emulatori e niente viene pubblicato né scritto su Google Sheets.
-
-1. Copiare `.env.example` in `.env.local` e compilare la configurazione web del progetto.
-2. In `functions/.env.<id-progetto>` impostare `ALLOWED_UID` (il proprio UID, dalla
-   Console Firebase → Authentication → Utenti) e `SHEET_ID=emulator`.
-3. Avviare (fermando prima gli emulatori demo, usano le stesse porte):
-
-```sh
-npm run emulators:real   # terminale 1
-npm run dev:firebase     # terminale 2
-```
-
-`npm run test:emulator:real` verifica che il backend rifiuti token mancanti o falsificati.
-
-```sh
-npm run typecheck
-npm test
-npm run build
-# Oppure tutti insieme (inclusi i test di functions/), con arresto al primo errore:
-npm run check
-```
-
-L'export web è in `dist/`. Non è ancora una PWA installabile: manifest, icone,
-HTTPS e ciclo di aggiornamento appartengono alla fase 3. Nessun service worker
-o cache dei dati privati è configurato.
-
-Il runner Node esegue i test nello stesso processo (`--experimental-test-isolation=none`):
-in questo ambiente il runner con subprocessi riportava solo i file senza dettaglio
-dei casi. Non sono necessarie librerie di test aggiuntive.
-
-## Documentazione
-
-- [Specifica originale v0.4](recap.md)
-- [Decisioni e confini architetturali](docs/architecture.md)
-- [Piano, avanzamento e verifiche](docs/progress.md)
-- [Istruzioni per gli agenti](AGENTS.md)
-
-Non sono presenti credenziali o configurazioni di servizi reali. Non abilitare
-fatturazione e non effettuare deployment senza autorizzazione.
+- [Stato operativo e verifiche](HANDOFF.md)
+- [Architettura](docs/architecture.md)
+- [Istruzioni agenti](AGENTS.md)
+- [Storico](docs/progress.md)
+- [Specifica originale conservata](recap.md)

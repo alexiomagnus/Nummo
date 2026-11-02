@@ -1,87 +1,95 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import type { ExpenseRecord } from '../../domain/contract';
 import type { ExpenseData, ExpenseRequest } from '../../domain/expense';
-import { isDefinitiveRejection, submissionReducer, type Submission } from '../../domain/submission';
-import { errorCode, listExpenses, submitExpense } from '../../services/firebase';
+import { parseSyncedExpense, type SyncedExpense } from '../../domain/firestore';
+import { submissionReducer } from '../../domain/submission';
+import { errorCode } from '../../services/firebase';
+import type { FirestoreStore } from '../../services/firestoreStore';
 import type { ExpenseStore } from './expenseStore';
 
-const loadError = 'Impossibile caricare le spese dal registro. Controlla la connessione e ricarica la pagina.';
-
-// Mounted per signed-in account (keyed by UID): signing out discards all of this state.
-export function useRemoteExpenses(storageNote: string): ExpenseStore {
-  const [expenses, setExpenses] = useState<readonly ExpenseRecord[]>([]);
+export function useRemoteExpenses(backend: FirestoreStore, storageNote: string): ExpenseStore {
+  const pendingRecords = useRef(new Map<string, SyncedExpense>());
+  const [recovery, setRecovery] = useState<SyncedExpense[]>([]);
+  const [expenses, setExpenses] = useState<SyncedExpense[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [sync, setSync] = useState({ fromCache: true, pending: false });
   const [submission, dispatch] = useReducer(submissionReducer, { status: 'draft' });
-  // Synchronous guards: a double tap in the same frame must not start a second call.
-  const latest = useRef<Submission>(submission);
-  latest.current = submission;
   const inFlight = useRef(false);
-
+  const active = useRef(true);
+  const latest = useRef(submission);
+  latest.current = submission;
   useEffect(() => {
-    let active = true;
-    listExpenses().then((list) => {
-      if (!active) return;
-      setExpenses(list.expenses);
-      setError(list.invalid_rows > 0
-        ? `${list.invalid_rows === 1 ? '1 riga' : `${list.invalid_rows} righe`} del registro non sono leggibili e non sono mostrate.`
-        : null);
-      setReady(true);
-    }, (reason: unknown) => {
-      if (!active) return;
-      const code = errorCode(reason).replace(/^functions\//, '');
-      setError(code === 'permission-denied' ? 'Questo account non è autorizzato ad accedere al registro.' : loadError);
-    });
-    return () => { active = false; };
-  }, []);
-
-  const send = async (request: ExpenseRequest) => {
-    inFlight.current = true;
-    try {
-      const receipt = await submitExpense(request);
-      const { expense_id, ...data } = request;
-      setExpenses((previous) => (previous.some((item) => item.id === expense_id)
-        ? previous : [...previous, { ...data, id: expense_id, created_at: receipt.created_at }]));
-      dispatch({ type: 'confirmed', receipt });
-    } catch (reason) {
-      const code = errorCode(reason);
-      if (isDefinitiveRejection(code)) {
-        dispatch({ type: 'rejected', message: rejectionMessage(code) });
-      } else {
-        dispatch({ type: 'uncertain' });
+    active.current = true;
+    const stop = backend.watchExpenses((s) => {
+      for (const record of s.records) if (s.pendingIds.includes(record.id)) pendingRecords.current.set(record.id, record);
+      if (!s.fromCache) {
+        const missing: SyncedExpense[] = [];
+        for (const [id, record] of pendingRecords.current) {
+          if (s.pendingIds.includes(id)) continue;
+          if (!s.records.some((r) => r.id === id)) missing.push(record);
+          pendingRecords.current.delete(id);
+        }
+        if (missing.length) setRecovery((old) => [...old, ...missing]);
       }
-    } finally {
-      inFlight.current = false;
-    }
+      setExpenses(s.records); setReady(true); setError(null);
+      setSync({ fromCache: s.fromCache, pending: s.pending });
+      const current = latest.current;
+      if (current.status === 'sending' || current.status === 'uncertain') {
+        const saved = s.records.find((r) => r.id === current.request.expense_id);
+        if (saved && !s.pending && !s.fromCache && Object.entries(current.request).every(([key, value]) => key === 'expense_id' || saved[key as keyof ExpenseData] === value)) dispatch({ type: 'confirmed', receipt: { expense_id: saved.id, created_at: saved.created_at } });
+      }
+    }, (reason) => {
+      setRecovery((old) => [...new Map([...old, ...pendingRecords.current.values()].map((r) => [r.id, r])).values()]);
+      setExpenses([]); setReady(false); setError(message(reason));
+    });
+    return () => { active.current = false; stop(); };
+  }, [backend]);
+  const submit = (data: ExpenseData) => {
+    if (inFlight.current || !ready || !['draft', 'rejected'].includes(latest.current.status)) return;
+    const request: ExpenseRequest = { ...data, expense_id: crypto.randomUUID() };
+    inFlight.current = true;
+    latest.current = { status: 'sending', request };
+    dispatch({ type: 'send', request });
+    void backend.createExpense(request).then((receipt) => {
+      if (active.current) dispatch({ type: 'confirmed', receipt });
+    }).catch((reason: unknown) => {
+      if (!active.current) return;
+      if (['permission-denied', 'unauthenticated', 'invalid-argument'].includes(errorCode(reason))) {
+        dispatch({ type: 'rejected', message: message(reason) });
+      } else dispatch({ type: 'uncertain' });
+    }).finally(() => { inFlight.current = false; });
   };
-
+  const mutate = async (action: () => Promise<void>) => {
+    try { await action(); if (active.current) setError(null); return true; }
+    catch (reason) { if (active.current) setError(message(reason)); return false; }
+  };
   return {
-    expenses, error, ready, submission,
-    submit: (data: ExpenseData) => {
-      const status = latest.current.status;
-      if (inFlight.current || (status !== 'draft' && status !== 'rejected')) return;
-      const request: ExpenseRequest = { ...data, expense_id: window.crypto.randomUUID() };
-      latest.current = { status: 'sending', request };
-      dispatch({ type: 'send', request });
-      void send(request);
-    },
+    expenses, error, ready, submission, submit, sync, recovery,
     retry: () => {
       const current = latest.current;
-      if (inFlight.current || current.status !== 'uncertain') return;
-      latest.current = { status: 'sending', request: current.request };
-      dispatch({ type: 'retry' });
-      void send(current.request);
-    },
+      if (current.status !== 'uncertain') return;
+      void backend.confirmExpense(current.request).then((receipt) => {
+        if (active.current) dispatch({ type: 'confirmed', receipt });
+      }).catch((e) => { if (active.current) setError(message(e)); });
+    }, // Read-only verification: Firestore owns reconnection and retries.
     startNew: () => dispatch({ type: 'new-draft' }),
+    remove: (id) => mutate(async () => {
+      const record = expenses.find((e) => e.id === id);
+      if (!record) throw new Error('Spesa non trovata.');
+      await backend.removeExpense(record);
+    }),
+    update: (record, data) => mutate(async () => {
+      const parsed = parseSyncedExpense(record);
+      if (!parsed) throw new Error('Spesa non valida.');
+      await backend.updateExpense(parsed, data);
+    }),
     storageNote,
   };
 }
-
-function rejectionMessage(code: string): string {
-  switch (code.replace(/^functions\//, '')) {
-    case 'unauthenticated': return 'Sessione scaduta: accedi di nuovo. La spesa non è stata salvata.';
-    case 'permission-denied': return 'Questo account non è autorizzato. La spesa non è stata salvata.';
-    case 'already-exists': return 'Conflitto con una spesa già registrata. Salva di nuovo per crearne una nuova.';
-    default: return 'Spesa rifiutata dal registro: controlla i dati e salva di nuovo.';
-  }
+export function message(reason: unknown): string {
+  const code = errorCode(reason);
+  if (code === 'permission-denied') return 'Accesso negato: verifica UID del proprietario e regole Firestore del progetto.';
+  if (code === 'unauthenticated') return 'Sessione scaduta: accedi di nuovo.';
+  if (code === 'unavailable') return 'Operazione non disponibile offline: riconnettiti e riprova.';
+  return reason instanceof Error && !code.includes('/') && code === 'unknown' ? reason.message : 'Operazione non riuscita. Verifica la connessione e riprova.';
 }
