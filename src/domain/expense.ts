@@ -59,3 +59,8 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
     expense_date: date, note: draft.note, source: 'web_app', schema_version: 1,
   } };
 }
+
+// Display only; never feed the result back into calculations.
+export function formatAmountMinor(amountMinor: number): string {
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: expensePolicy.currency }).format(amountMinor / 100);
+}

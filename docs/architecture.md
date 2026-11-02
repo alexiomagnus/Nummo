@@ -13,18 +13,28 @@ letta integralmente e mantenuta invariata.
 | Firebase Authentication + Cloud Functions | Confermati come direzione del backend; servizi non configurati |
 | EUR, 2 decimali, Europe/Rome, massimo 99.999,99 €, nota 500 caratteri | Confermati dall'utente |
 | Date dal 2000-01-01 a oggi; nessuna data futura | Confermato dall'utente |
-| Categorie create dall’utente, senza elenco predefinito | Nuova richiesta; sostituisce le sei categorie iniziali |
-| Nome applicazione: Nummus | Confermato dall’utente; il foglio resta «Registro spese» |
+| Categorie create dall’utente, eliminabili; cinque predefinite per un browser nuovo | Richiesta utente 2/11/2026; sostituisce la versione senza predefinite |
+| Nome applicazione: Nummo (prima Nummus) | Richiesta utente; il foglio resta «Registro spese» |
+| Spese ricorrenti (importo, descrizione, settimanale/mensile/annuale) | Richiesta utente; anticipa la fase «Ricorrenze» della specifica, solo come elenco locale |
+| Data spesa sempre automatica, nessuna modifica dalla UI | Richiesta utente (rimossa «Modifica data») |
 | Firebase Hosting, budget, deployment e palette | Non confermati |
 | Archivio tecnico, protocollo di scrittura/recupero, persistenza sessione | Da progettare e confermare prima dell'implementazione definitiva |
 
-Le categorie hanno ID UUID stabili e nomi scelti dall'utente. Per questa fase,
-`localStorage` conserva solo le categorie (`nummus.categories.v1`), non le spese o
-credenziali. La lista viene condivisa dalle due sezioni senza smontare il modulo,
-così cambiare sezione non perde la bozza. I nomi sono normalizzati per spazi e
-Unicode, unici senza distinzione maiuscole/minuscole e limitati a 40 caratteri.
-Quest'ultimo limite è una scelta implementativa modificabile, non un nuovo vincolo
-funzionale concordato. Nessuna modifica o eliminazione delle categorie in questa fase.
+Le categorie hanno ID UUID stabili e nomi scelti dall'utente. `localStorage`
+conserva categorie (`nummo.categories.v1`, con lettura di ripiego della chiave
+`nummus.categories.v1` del nome precedente) e spese ricorrenti (`nummo.recurring.v1`),
+non spese o credenziali. Le categorie predefinite sono scritte solo se nessuna chiave
+esiste: eliminare tutte le categorie non le ripristina. L'eliminazione di una
+categoria non tocca le spese (non ancora salvate); se era selezionata nella bozza,
+la validazione la rifiuta come sconosciuta. Le sezioni restano montate per non
+perdere le bozze al cambio sezione. I nomi categoria sono normalizzati per spazi e
+Unicode, unici senza distinzione maiuscole/minuscole e limitati a 40 caratteri;
+le descrizioni ricorrenti sono obbligatorie e limitate a 100 caratteri. Entrambi i
+limiti sono scelte implementative modificabili, non vincoli concordati.
+
+Le spese ricorrenti sono solo un elenco: non hanno data di inizio né categoria e
+non generano spese. Come produrle (backend pianificato, conferma utente, previsioni
+vs addebiti effettivi secondo la specifica) è da definire.
 
 Questo adapter è temporaneo e non è un archivio per utenti autenticati. Prima del
 login, progettare categorie autorizzate lato backend, isolamento per UID e migrazione
@@ -34,20 +44,16 @@ tra dispositivi. Gli aggiornamenti di altre schede vengono riletti, ma localStor
 non garantisce atomicità tra creazioni simultanee: risolvere nel backend prima del MVP.
 Dati corrotti o storage negato non devono produrre conferme né sovrascrivere l'archivio.
 
-La data non è visibile all'apertura: una data vuota nella bozza significa «oggi in
-Europe/Rome» alla validazione, evitando date obsolete se cambia il giorno. Il campo
-compare con «Modifica data»; «Usa data automatica» ripristina il comportamento iniziale.
-Rimosso il comando «Verifica dati»: la funzione pura resta per controlli al blur e
-futuro invio. Il salvataggio resta disabilitato e non viene simulato.
-
-La lunghezza delle note si misura in punti di codice Unicode (non byte).
-Si accettano virgola o punto decimale, senza separatori delle migliaia.
+La data non è visibile né modificabile: una data vuota nella bozza significa «oggi
+in Europe/Rome» alla validazione, evitando date obsolete se cambia il giorno. Il
+dominio accetta ancora date esplicite (2000-01-01…oggi) per un futuro uso.
+Il salvataggio resta disabilitato e non viene simulato.
 
 ## Fase 1 implementata
 
 Il frontend usa Expo SDK 58 e versioni React/React Native allineate al template
 ufficiale, con Paper 5. Il lockfile fissa l'albero installato. La UI usa stato React
-locale, senza router né store globale, con due sezioni: Nuova spesa e Categorie.
+locale, senza router né store globale, con tre sezioni: Nuova spesa, Ricorrenti e Categorie.
 
 `src/domain` contiene funzioni pure indipendenti da Expo e Firebase. Il futuro
 backend potrà riusare le regole, ma dovrà anche validare a runtime struttura,

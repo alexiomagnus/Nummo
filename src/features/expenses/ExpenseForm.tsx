@@ -3,17 +3,12 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Chip, HelperText, Surface, Text, TextInput, useTheme } from 'react-native-paper';
 import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import { expensePolicy } from '../../domain/policy';
-import { todayInRome } from '../../domain/policy';
 import type { Category } from '../../domain/category';
 
-export function ExpenseForm({ categories, onManageCategories }: {
-  categories: readonly Category[];
-  onManageCategories: () => void;
-}) {
+export function ExpenseForm({ categories }: { categories: readonly Category[] }) {
   const theme = useTheme();
   const [draft, setDraft] = useState<ExpenseDraft>(() => newDraft());
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [editingDate, setEditingDate] = useState(false);
 
   const change = (field: keyof ExpenseDraft, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -45,19 +40,9 @@ export function ExpenseForm({ categories, onManageCategories }: {
             </Chip>
           ))}
         </View>
-        {categories.length === 0 && <Text variant="bodyMedium">Crea la tua prima categoria per organizzare le spese.</Text>}
-        <Button onPress={onManageCategories}>{categories.length === 0 ? 'Crea categoria' : 'Gestisci categorie'}</Button>
+        {categories.length === 0 && <Text variant="bodyMedium">Crea una categoria nella sezione Categorie.</Text>}
         {errors.categoryId && <HelperText type="error" accessibilityRole="alert">{errors.categoryId}</HelperText>}
       </View>
-      {editingDate ? (
-        <View style={styles.group}>
-          <TextInput label="Data (AAAA-MM-GG)" value={draft.date} onChangeText={(value) => change('date', value)}
-            mode="outlined" accessibilityLabel="Data della spesa, anno mese giorno"
-            onBlur={() => validateField('date')} error={Boolean(errors.date)} />
-          {errors.date && <HelperText type="error" accessibilityRole="alert">{errors.date}</HelperText>}
-          <Button onPress={() => { change('date', ''); setEditingDate(false); }}>Usa data automatica</Button>
-        </View>
-      ) : <Button onPress={() => { change('date', todayInRome()); setEditingDate(true); }}>Modifica data</Button>}
       <View>
         <TextInput label="Nota (facoltativa)" value={draft.note} onChangeText={(value) => change('note', value)}
           mode="outlined" multiline numberOfLines={3} accessibilityLabel="Nota facoltativa"

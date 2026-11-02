@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { Category } from '../../domain/category';
-import { categoryStorageKey, readCategories, storeCategory } from '../../services/categoryStorage';
+import {
+  categoryStorageKey, legacyCategoryStorageKey, loadCategories, readCategories, removeCategory, storeCategory,
+} from '../../services/categoryStorage';
+
+const newId = () => window.crypto.randomUUID();
 
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -8,9 +12,9 @@ export function useCategories() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const refresh = () => {
+    const refresh = (seed: boolean) => {
       try {
-        setCategories(readCategories(window.localStorage));
+        setCategories(seed ? loadCategories(window.localStorage, newId) : readCategories(window.localStorage));
         setError(null);
       } catch {
         setCategories([]);
@@ -18,9 +22,9 @@ export function useCategories() {
       }
       setReady(true);
     };
-    refresh();
+    refresh(true);
     const onStorage = (event: StorageEvent) => {
-      if (event.key === categoryStorageKey || event.key === null) refresh();
+      if (event.key === categoryStorageKey || event.key === legacyCategoryStorageKey || event.key === null) refresh(false);
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -28,7 +32,7 @@ export function useCategories() {
 
   const createCategory = (name: string): boolean => {
     try {
-      setCategories(storeCategory(window.localStorage, name, () => window.crypto.randomUUID()));
+      setCategories(storeCategory(window.localStorage, name, newId));
       setError(null);
       return true;
     } catch {
@@ -36,5 +40,15 @@ export function useCategories() {
       return false;
     }
   };
-  return { categories, error, ready, createCategory };
+  const deleteCategory = (id: string): boolean => {
+    try {
+      setCategories(removeCategory(window.localStorage, id));
+      setError(null);
+      return true;
+    } catch {
+      setError('Impossibile eliminare la categoria. Ricarica la pagina e riprova.');
+      return false;
+    }
+  };
+  return { categories, error, ready, createCategory, deleteCategory };
 }

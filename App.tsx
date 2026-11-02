@@ -5,11 +5,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ExpenseForm } from './src/features/expenses/ExpenseForm';
 import { CategorySettings } from './src/features/categories/CategorySettings';
 import { useCategories } from './src/features/categories/useCategories';
+import { RecurringExpenses } from './src/features/recurring/RecurringExpenses';
+import { useRecurringExpenses } from './src/features/recurring/useRecurringExpenses';
 import { ThemeIcon } from './src/components/ThemeIcon';
 
 export default function App() {
   const [section, setSection] = useState('expense');
   const categoryState = useCategories();
+  const recurringState = useRecurringExpenses();
   const systemScheme = useColorScheme();
   const [override, setOverride] = useState<boolean | null>(null);
   const dark = override ?? systemScheme === 'dark';
@@ -34,7 +37,7 @@ export default function App() {
         <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
           <View style={styles.container}>
             <View style={styles.header}>
-              <Text variant="titleMedium" style={{ color: theme.colors.primary }}>Nummus</Text>
+              <Text variant="headlineMedium" accessibilityRole="header" style={[styles.brand, { color: theme.colors.primary }]}>Nummo</Text>
               <IconButton icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
                 onPress={() => setOverride(!dark)} accessibilityLabel={dark ? 'Attiva tema chiaro' : 'Attiva tema scuro'} />
             </View>
@@ -44,13 +47,19 @@ export default function App() {
             </View>
             <SegmentedButtons value={section} onValueChange={setSection} buttons={[
               { value: 'expense', label: 'Nuova spesa' },
+              { value: 'recurring', label: 'Ricorrenti' },
               { value: 'categories', label: 'Categorie' },
             ]} />
             <View style={{ display: section === 'expense' ? 'flex' : 'none' }}>
-              <ExpenseForm categories={categoryState.categories} onManageCategories={() => setSection('categories')} />
+              <ExpenseForm categories={categoryState.categories} />
+            </View>
+            <View style={{ display: section === 'recurring' ? 'flex' : 'none' }}>
+              <RecurringExpenses items={recurringState.items} error={recurringState.error}
+                ready={recurringState.ready} onCreate={recurringState.create} onDelete={recurringState.remove} />
             </View>
             {section === 'categories' && <CategorySettings categories={categoryState.categories}
-              error={categoryState.error} ready={categoryState.ready} onCreate={categoryState.createCategory} />}
+              error={categoryState.error} ready={categoryState.ready} onCreate={categoryState.createCategory}
+              onDelete={categoryState.deleteCategory} />}
             <Text variant="bodySmall" style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>Il tuo registro, una spesa alla volta.</Text>
           </View>
         </ScrollView>
@@ -64,6 +73,7 @@ const styles = StyleSheet.create({
   container: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 24 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
   intro: { gap: 8, paddingTop: 8 },
+  brand: { fontWeight: '700' },
   title: { fontWeight: '600' },
   footer: { textAlign: 'center', paddingBottom: 16 },
 });

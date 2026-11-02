@@ -1,4 +1,4 @@
-# Nummus
+# Nummo
 
 Web app per registrare spese personali in Google Sheets. **Fase 1: base locale**,
 non ancora utilizzabile per registrare spese reali. Google login, backend e Sheets
@@ -13,16 +13,17 @@ npm ci
 npm run dev
 ```
 
-Aprire l'indirizzo localhost stampato da Expo. Nella sezione **Categorie**, creare
-le proprie categorie: saranno disponibili in **Nuova spesa** e conservate nello
-stesso browser, anche dopo una ricarica. Non esistono categorie predefinite.
+Aprire l'indirizzo localhost stampato da Expo. Al primo avvio nel browser sono
+create cinque categorie predefinite (Spesa alimentare, Ristorazione, Salute, Uscita,
+Shopping online); nella sezione **Categorie** si possono aggiungere ed eliminare.
+La sezione **Ricorrenti** registra spese periodiche (importo, descrizione,
+ricorrenza settimanale, mensile o annuale) solo come elenco: non generano spese.
 
-La data viene assegnata automaticamente nel fuso di Roma; **Modifica data** mostra
-il campo per scegliere una data diversa. Gli errori vengono indicati all'uscita
-dai campi; il controllo completo sarà eseguito dal flusso di salvataggio.
+La data della spesa è sempre quella odierna nel fuso di Roma. Gli errori vengono
+indicati all'uscita dai campi; il controllo completo sarà eseguito dal flusso di salvataggio.
 **Salva spesa** rimane disabilitato finché Google e Sheets non sono collegati.
-La bozza spesa è solo in memoria; le categorie persistono nel browser, senza
-sincronizzazione o associazione a un account. Il tema si cambia con l'icona sole/luna.
+La bozza spesa è solo in memoria; categorie e spese ricorrenti persistono nel browser,
+senza sincronizzazione o associazione a un account. Il tema si cambia con l'icona sole/luna.
 
 ```sh
 npm run typecheck

@@ -8,12 +8,14 @@ type Props = {
   error: string | null;
   ready: boolean;
   onCreate: (name: string) => boolean;
+  onDelete: (id: string) => boolean;
 };
 
-export function CategorySettings({ categories, error, ready, onCreate }: Props) {
+export function CategorySettings({ categories, error, ready, onCreate, onDelete }: Props) {
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const create = () => {
     const validationError = categoryNameError(name, categories);
     setNameError(validationError);
@@ -36,7 +38,21 @@ export function CategorySettings({ categories, error, ready, onCreate }: Props) 
       <Button mode="contained" onPress={create} disabled={!ready} contentStyle={styles.button}>Crea categoria</Button>
       {created && <Text accessibilityLiveRegion="polite">Categoria creata. Puoi selezionarla in Nuova spesa.</Text>}
       <View style={styles.list}>
-        {categories.map((category) => <Text key={category.id} variant="bodyLarge">{category.label}</Text>)}
+        {categories.map((category) => (
+          <View key={category.id} style={styles.row}>
+            <Text variant="bodyLarge" style={styles.label}>{category.label}</Text>
+            {pendingDelete === category.id ? (
+              <View style={styles.actions}>
+                <Button onPress={() => setPendingDelete(null)}>Annulla</Button>
+                <Button mode="contained-tonal" accessibilityLabel={`Conferma eliminazione di ${category.label}`}
+                  onPress={() => { if (onDelete(category.id)) setPendingDelete(null); }}>Elimina</Button>
+              </View>
+            ) : (
+              <Button accessibilityLabel={`Elimina ${category.label}`}
+                onPress={() => { setPendingDelete(category.id); setCreated(false); }}>Elimina</Button>
+            )}
+          </View>
+        ))}
         {ready && categories.length === 0 && <Text>Non hai ancora creato categorie.</Text>}
       </View>
       <Text variant="bodySmall">Le categorie sono conservate in questo browser. Non sono ancora sincronizzate con un account.</Text>
@@ -46,6 +62,9 @@ export function CategorySettings({ categories, error, ready, onCreate }: Props) 
 
 const styles = StyleSheet.create({
   section: { padding: 20, borderRadius: 28, gap: 16 },
-  list: { gap: 12 },
+  list: { gap: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
+  label: { flex: 1, minWidth: 0 },
+  actions: { flexDirection: 'row', gap: 4 },
   button: { minHeight: 48 },
 });

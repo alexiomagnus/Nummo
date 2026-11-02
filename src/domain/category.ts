@@ -13,3 +13,8 @@ export function categoryNameError(name: string, categories: readonly Category[])
   }
   return null;
 }
+
+// Seeded only for a browser that has never stored categories.
+export const defaultCategoryLabels = [
+  'Spesa alimentare', 'Ristorazione', 'Salute', 'Uscita', 'Shopping online',
+] as const;
