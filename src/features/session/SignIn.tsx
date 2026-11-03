@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
-import { Button, HelperText, Text, useTheme } from 'react-native-paper';
+import { HelperText, Text, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { spacing } from '../../theme/tokens';
 

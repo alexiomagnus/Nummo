@@ -157,3 +157,15 @@ trasporto browser; sono comunque interessati gli strumenti Node. Il fix automati
 propone Firebase 9.14, incompatibile con la direzione attuale: nessun downgrade o
 `audit fix --force`. Pianificare aggiornamento compatibile e nuova verifica. Non è
 un audit di sicurezza completo.
+
+## Impostazioni di aspetto (3 novembre 2026)
+
+Menu account → «Impostazioni» (dialog, non una seconda navigazione). Preferenze solo di
+presentazione (tema, monocolore/palette, colore principale, carattere), salvate in
+`localStorage` con chiave `nummo.preferences.v1`: per browser, non sincronizzate, mai dati
+di spesa; valori invalidi tornano ai predefiniti campo per campo. Gli schemi colore
+derivano da una tinta (`src/theme/palette.ts`); Menta+monocolore resta l'identità
+originale a valori fissi. Ogni combinazione è verificata a ≥ 4,5:1 (testo) e ≥ 3:1
+(bordi) in `tests/theme.test.ts`. Il carattere Google Sans (SIL OFL, variabile 400–700, sottoinsiemi latin/latin-ext) è
+ospitato in `public/fonts/`: nessuna richiesta a Google a runtime. Le icone usano un
+unico spessore di linea (`iconStroke`, 1,5).

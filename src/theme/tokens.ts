@@ -54,19 +54,49 @@ export type SizeClass = 'compact' | 'medium' | 'expanded';
 export const sizeClassOf = (width: number): SizeClass =>
   width >= breakpoints.expanded ? 'expanded' : width >= breakpoints.medium ? 'medium' : 'compact';
 
+// Soft-rounded identity: one radius per role, never a pill unless the shape is functionally
+// round (avatar, charts, FAB-less dots). Components read these instead of `shape` literals.
+export const radius = {
+  control: 12, // buttons, selects, chips, menus, snackbar, FAB
+  input: 12, // outlined text fields
+  card: 12, // cards, panels, KPI tiles
+  dialog: 16, // dialogs
+  nav: 12, // selected navigation item (drawer, rail, bar)
+  tile: 12, // icon tiles
+} as const;
+// Spread on every outlined TextInput (Paper takes the field radius from `outlineStyle`).
+export const inputOutline = { borderRadius: radius.input } as const;
+// Paper derives its radii from one `roundness` number: Button = 5×, Dialog = 7×.
+export const paperRoundness = radius.control / 5;
+
 export const layout = {
   navBarHeight: 80,
   railWidth: 80,
   drawerWidth: 248,
   topBarHeight: 64,
+  // Every page fills the main area up to this width (centred beyond it).
   maxContent: 1200,
+  // Single-column forms (new expense) stay readable instead of stretching.
+  maxForm: 560,
+  // Gap between the blocks of a page (toolbar, cards, panels).
+  sectionGap: spacing.lg,
+  controlHeight: 56,
+  // Visible box of an outlined TextInput (Paper's 56 dp container reserves 6 dp on top for the floating label).
+  fieldBoxHeight: 50,
   minTouch: 48,
 } as const;
 
 // State layer opacities from the Material 3 spec.
 export const stateOpacity = { hover: 0.08, focus: 0.1, pressed: 0.1, disabled: 0.38 } as const;
 
-export const typeface = 'Roboto, "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif';
+export const typefaces = {
+  system: 'Roboto, "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif',
+  // Google Sans (SIL OFL, variable 400–700), self-hosted in public/fonts; system sans until it loads.
+  google: '"Google Sans", Roboto, "Helvetica Neue", Arial, system-ui, sans-serif',
+} as const;
+
+// Line weight of every UI icon and category glyph (24 dp grid). Thin = minimal and refined.
+export const iconStroke = 1.5;
 
 // Material 3 emphasized-decelerate / standard easings and durations (ms).
 export const motion = { short: 150, medium: 250, easing: [0.2, 0, 0, 1] as const };

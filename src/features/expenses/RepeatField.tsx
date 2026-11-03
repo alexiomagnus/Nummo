@@ -3,7 +3,7 @@ import { HelperText, Text, useTheme } from 'react-native-paper';
 import { M3Switch } from '../../components/M3Switch';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { recurrenceLabels, type Recurrence } from '../../domain/recurrence';
-import { shape, spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { RecurrencePicker } from './RecurrencePicker';
 
 type Props = {
@@ -27,7 +27,7 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
   return (
     <View style={styles.group}>
       <StateLayerPressable onPress={() => onRepeatChange(!repeat)} disabled={disabled} layerColor={colors.onSurface}
-        radius={shape.md} style={styles.toggle} accessibilityRole="switch" aria-checked={repeat} aria-disabled={disabled}
+        radius={radius.control} style={styles.toggle} accessibilityRole="switch" aria-checked={repeat} aria-disabled={disabled}
         accessibilityLabel="Spesa ricorrente">
         <View style={styles.text}>
           <Text variant="titleSmall">Spesa ricorrente</Text>

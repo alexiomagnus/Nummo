@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { MenuSelect } from '../../components/MenuSelect';
 import { iconShapes } from '../../components/SvgIcon';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
-import { shape, spacing } from '../../theme/tokens';
+import { layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
 import { formatAmountMinor } from '../../domain/expense';
@@ -93,7 +94,7 @@ export function Dashboard({ occurrences, categories }: Props) {
         );
         // Only the donut reacts to a row: the other charts show the legend as plain information.
         return chart === 'donut' ? (
-          <StateLayerPressable key={series.key} layerColor={theme.colors.onSurface} radius={shape.sm} role="listitem"
+          <StateLayerPressable key={series.key} layerColor={theme.colors.onSurface} radius={radius.control} role="listitem"
             onPress={() => setActive(active === index ? null : index)} aria-pressed={active === index}
             accessibilityLabel={`${series.label}: ${formatAmountMinor(series.total)}, ${percent(series.total, data.total)}`}
             style={[styles.legendRow, active === index && { backgroundColor: theme.colors.secondaryContainer }]}>{content}</StateLayerPressable>
@@ -173,7 +174,7 @@ export function Dashboard({ occurrences, categories }: Props) {
           </Card>
 
           <Card title="Dettaglio per periodo" description={withEmpty ? undefined : hidden > 0 ? `Solo i periodi con spese (${hidden} senza movimenti nascosti).` : undefined}
-            actions={<Button mode="text" contentStyle={styles.touch} aria-expanded={showTable} onPress={() => setShowTable(!showTable)}>{showTable ? 'Nascondi' : 'Mostra'}</Button>}>
+            actions={<Button mode="text" aria-expanded={showTable} onPress={() => setShowTable(!showTable)}>{showTable ? 'Nascondi' : 'Mostra'}</Button>}>
             {showTable && (
               <View role="table" accessibilityLabel="Spese per periodo" style={[styles.table, { borderColor: theme.colors.outlineVariant }]}>
                 {rows.map(({ item, total }, index) => (
@@ -185,7 +186,7 @@ export function Dashboard({ occurrences, categories }: Props) {
               </View>
             )}
             {showTable && hidden > 0 && (
-              <Button mode="text" contentStyle={styles.touch} onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
+              <Button mode="text" onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
                 {withEmpty ? 'Nascondi periodi senza spese' : `Mostra tutto il periodo (${data.buckets.length})`}
               </Button>
             )}
@@ -197,12 +198,12 @@ export function Dashboard({ occurrences, categories }: Props) {
 }
 
 const styles = StyleSheet.create({
-  layout: { gap: spacing.lg },
+  layout: { gap: layout.sectionGap },
   // Period on the left, chart type on the right; they wrap on narrow windows.
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.sm },
   select: { flexGrow: 1, flexBasis: 140, minWidth: 0 },
   kpis: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  kpi: { flexGrow: 1, flexBasis: 150, minWidth: 0, borderRadius: shape.md, padding: spacing.lg, gap: 2 },
+  kpi: { flexGrow: 1, flexBasis: 150, minWidth: 0, borderRadius: radius.card, padding: spacing.lg, gap: 2 },
   kpiValue: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
@@ -216,7 +217,6 @@ const styles = StyleSheet.create({
   number: { fontVariant: ['tabular-nums'], textAlign: 'right' },
   share: { width: 40 },
   start: { alignSelf: 'flex-start' },
-  touch: { minHeight: 48 },
-  table: { borderWidth: 1, borderRadius: shape.sm, overflow: 'hidden' },
+  table: { borderWidth: 1, borderRadius: radius.control, overflow: 'hidden' },
   tableRow: { flexDirection: 'row', paddingVertical: spacing.sm, paddingHorizontal: spacing.md, minHeight: 40, alignItems: 'center' },
 });

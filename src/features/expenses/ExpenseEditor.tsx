@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Dialog, HelperText, Portal, Text, useTheme } from 'react-native-paper';
+import { Dialog, HelperText, Portal, Text, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import type { Category } from '../../domain/category';
 import type { ExpenseRecord } from '../../domain/contract';
 import { validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
+import { layout, radius } from '../../theme/tokens';
 import { ExpenseFields } from './ExpenseFields';
 import { RepeatField } from './RepeatField';
 import type { ExpenseStore } from './expenseStore';
@@ -20,7 +22,7 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
     setBusy(true);
     try { if (await store.update(record, result.data)) close(); } finally { setBusy(false); }
   };
-  return <Portal><Dialog visible onDismiss={() => { if (!busy) close(); }} style={{ maxWidth: 560, alignSelf: 'center', width: '92%', maxHeight: '90%' }}>
+  return <Portal><Dialog visible onDismiss={() => { if (!busy) close(); }} style={{ maxWidth: layout.maxForm, alignSelf: 'center', width: '92%', maxHeight: '90%', borderRadius: radius.dialog }}>
     <Dialog.Title>Modifica {record.recurrence ? 'serie' : 'spesa'}</Dialog.Title>
     <Dialog.ScrollArea style={{ paddingHorizontal: 24 }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: 8, gap: 12 }}>
       <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}

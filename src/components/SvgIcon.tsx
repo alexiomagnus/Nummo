@@ -1,8 +1,9 @@
 import { Image } from 'react-native';
+import { iconStroke } from '../theme/tokens';
 
 // Inline SVG: the project ships no icon font. `shape` is trusted static markup.
 export function SvgIcon({ shape, size, color }: { shape: string; size: number; color: string }) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${shape}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${iconStroke}" stroke-linecap="round" stroke-linejoin="round">${shape}</svg>`;
   return <Image accessible={false} source={{ uri: `data:image/svg+xml,${encodeURIComponent(svg)}` }} style={{ width: size, height: size }} />;
 }
 
@@ -20,7 +21,7 @@ export const iconShapes = {
   cloudOff: '<path d="M3 3l18 18M7 18a4.5 4.5 0 0 1-1.6-8.7M9.5 5.6A6 6 0 0 1 18 10.5 3.75 3.75 0 0 1 20 15M12 18H7"/>',
   sync: '<path d="M20 11a8 8 0 0 0-14-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14 4.5l2-2M20 20v-4.5h-4.5"/>',
   alert: '<path d="M12 3 2 20h20L12 3ZM12 10v4M12 17.5h.01"/>',
-  dots: '<path d="M12 5h.01M12 12h.01M12 19h.01" stroke-width="3"/>',
+  dots: '<path d="M12 5h.01M12 12h.01M12 19h.01" stroke-width="2.4"/>',
   download: '<path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 20h14"/>',
   upload: '<path d="M12 16V5m-4.5 4.5L12 5l4.5 4.5M5 20h14"/>',
   face: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>',
@@ -32,5 +33,6 @@ export const iconShapes = {
   chevronUp: '<path d="m6 15 6-6 6 6"/>',
   sort: '<path d="M4 7h9M4 12h6M4 17h3M17 5v14m0 0-3-3m3 3 3-3"/>',
   filter: '<path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"/>',
+  settings: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/>',
   calendar: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4"/>',
 } as const;

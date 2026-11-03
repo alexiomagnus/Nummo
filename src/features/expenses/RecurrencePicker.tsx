@@ -3,7 +3,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { recurrenceLabels, recurrences, type Recurrence } from '../../domain/recurrence';
-import { shape, spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 
 type Props = { value: Recurrence | ''; error?: boolean; disabled?: boolean; onChange: (value: Recurrence) => void };
 
@@ -32,6 +32,6 @@ export function RecurrencePicker({ value, error, disabled, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', borderWidth: 1, borderRadius: shape.full, overflow: 'hidden' },
+  row: { flexDirection: 'row', borderWidth: 1, borderRadius: radius.control, overflow: 'hidden' },
   segment: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.sm },
 });

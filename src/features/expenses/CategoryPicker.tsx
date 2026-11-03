@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import type { Category } from '../../domain/category';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
@@ -22,7 +22,7 @@ export function CategoryPicker({ categories, selectedId, onChange, disabled }: P
           icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
         }))} />
       {collapsible && (
-        <Button onPress={() => setExpanded(!expanded)} contentStyle={{ minHeight: 48 }} style={{ alignSelf: 'flex-start' }}>
+        <Button onPress={() => setExpanded(!expanded)} style={{ alignSelf: 'flex-start' }}>
           {expanded ? 'Mostra meno' : `Mostra tutte (${categories.length})`}
         </Button>
       )}

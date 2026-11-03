@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
-import { Button, HelperText, Text, useTheme } from 'react-native-paper';
+import { HelperText, Text, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { useSnackbar } from '../../components/SnackbarHost';
-import { shape, spacing } from '../../theme/tokens';
+import { layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import type { Category } from '../../domain/category';
@@ -75,7 +76,7 @@ export function ExpenseForm({ categories, store }: Props) {
 
   return (
     <Card style={[styles.form, size === 'compact' && styles.formCompact]}>
-      <ExpenseFields values={current} errors={errors} categories={categories} disabled={!enabled} categoryRequired withDate
+      <ExpenseFields values={current} errors={errors} categories={categories} disabled={!enabled} categoryRequired withDate split={size !== 'compact'}
         extra={repeat} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{store.error}</HelperText>}
       {submission.status === 'rejected' && (
@@ -103,14 +104,14 @@ export function ExpenseForm({ categories, store }: Props) {
 }
 
 const styles = StyleSheet.create({
-  form: { width: '100%', maxWidth: 560, alignSelf: 'center', padding: spacing.xl, gap: spacing.lg },
+  form: { width: '100%', padding: spacing.xl, gap: spacing.lg },
   // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
   // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
-  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.lg, marginBottom: -spacing.lg, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderTopWidth: 1, zIndex: 1, borderBottomLeftRadius: shape.md, borderBottomRightRadius: shape.md } as unknown as ViewStyle,
+  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.lg, marginBottom: -spacing.lg, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderTopWidth: 1, zIndex: 1, borderBottomLeftRadius: radius.card, borderBottomRightRadius: radius.card } as unknown as ViewStyle,
   formCompact: { padding: spacing.lg, gap: spacing.lg },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row', justifyContent: 'flex-end' },
   submit: { minWidth: 200 },
   full: { flexGrow: 1 },
-  button: { minHeight: 56 },
+  button: { minHeight: layout.controlHeight },
 });

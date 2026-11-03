@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { schemes, sizeClassOf, type Scheme } from '../src/theme/tokens.ts';
+import { accents, buildScheme } from '../src/theme/palette.ts';
+import { sizeClassOf, type Scheme } from '../src/theme/tokens.ts';
 
 // WCAG 2.x relative luminance and contrast ratio.
 function luminance(hex: string): number {
@@ -23,9 +24,10 @@ const textPairs: [keyof Scheme, keyof Scheme][] = [
   ['inverseOnSurface', 'inverseSurface'], ['onSurfaceVariant', 'surfaceVariant'],
 ];
 
-for (const name of ['light', 'dark'] as const) {
-  const scheme = schemes[name];
-  test(`tema ${name}: testo su superfici ≥ 4,5:1`, () => {
+for (const [accent, mode, name] of accents.flatMap((a) => (['mono', 'palette'] as const).flatMap((m) => (['light', 'dark'] as const).map((n) => [a, m, n] as const)))) {
+  const scheme = buildScheme(accent, mode, name === 'dark');
+  const label = `${accent}/${mode}/${name}`;
+  test(`tema ${label}: testo su superfici ≥ 4,5:1`, () => {
     for (const surface of surfaces) {
       for (const text of ['onSurface', 'onSurfaceVariant', 'primary', 'error'] as const) {
         assert.ok(contrast(scheme[text], scheme[surface]) >= 4.5, `${text} su ${surface}: ${contrast(scheme[text], scheme[surface]).toFixed(2)}`);
@@ -35,7 +37,7 @@ for (const name of ['light', 'dark'] as const) {
       assert.ok(contrast(scheme[text], scheme[background]) >= 4.5, `${text} su ${background}: ${contrast(scheme[text], scheme[background]).toFixed(2)}`);
     }
   });
-  test(`tema ${name}: bordi dei controlli ≥ 3:1`, () => {
+  test(`tema ${label}: bordi dei controlli ≥ 3:1`, () => {
     for (const surface of surfaces) {
       assert.ok(contrast(scheme.outline, scheme[surface]) >= 3, `outline su ${surface}: ${contrast(scheme.outline, scheme[surface]).toFixed(2)}`);
     }

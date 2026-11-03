@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
+import { useSizeClass } from '../../theme/useSizeClass';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
 import { categoryNameError, type Category, type CategoryIcon } from '../../domain/category';
 import { Card } from '../../components/Card';
 import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
+import { IconTile, ListRow, listRowStyles } from '../../components/ListRow';
 import { leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { shape, spacing } from '../../theme/tokens';
-import { useSizeClass } from '../../theme/useSizeClass';
+import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 import { IconPicker } from './IconPicker';
 
 type Props = {
@@ -30,22 +32,9 @@ type Props = {
 
 type Editing = { id: string; name: string; error: string | null; original: Category };
 
-// Rounded tile showing a category icon (or a neutral placeholder).
-function IconTile({ icon, size = 40 }: { icon: CategoryIcon | null; size?: number }) {
-  const { colors } = useTheme();
-  return (
-    <View style={[styles.tile, { width: size, height: size, backgroundColor: colors.surfaceVariant }]}>
-      {icon ? <CategoryGlyph icon={icon} size={size - 16} /> : <SvgIcon shape={iconShapes.tag} size={size - 18} color={colors.onSurfaceVariant} />}
-    </View>
-  );
-}
-
 export function CategorySettings({ categories, usage, error, ready, notify, onAddDefaults, canAddDefaults, onCreate, onDelete, onChangeIcon, onRename }: Props) {
   const theme = useTheme();
-  const size = useSizeClass();
-  const wide = size === 'expanded';
-  const compact = size === 'compact';
-  const [creating, setCreating] = useState(false);
+  const compact = useSizeClass() === 'compact';
   const [filter, setFilter] = useState('');
   const [busy, setBusy] = useState(false);
   ready = ready && !busy;
@@ -75,16 +64,18 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
       setName('');
       setIcon(null);
       setChoosingIcon(false);
-      setCreating(false);
       notify('Categoria creata. Puoi selezionarla in Nuova spesa.');
     } } finally { setBusy(false); }
   };
 
   const shown = filter ? categories.filter((category) => searchKey(category.label).includes(searchKey(filter))) : categories;
-  const createCard = (
-      <Card title="Nuova categoria" style={wide ? styles.side : undefined}>
-        <View>
-          <TextInput label="Nome categoria" accessibilityLabel="Nome categoria, obbligatorio" mode="outlined" value={name}
+  // Creation form: sits directly on the page card, no extra container.
+  const createForm = (
+    <View style={styles.createPanel}>
+      <Text variant="titleMedium" accessibilityRole="header" aria-level={3}>Nuova categoria</Text>
+      <View style={styles.createRow}>
+        <View style={styles.nameField}>
+          <TextInput outlineStyle={inputOutline} label="Nome categoria" accessibilityLabel="Nome categoria, obbligatorio" mode="outlined" value={name}
             onChangeText={(value) => { setName(value); setNameError(null); }}
             onSubmitEditing={create} error={Boolean(nameError)} disabled={!ready}
             left={icon ? <TextInput.Icon icon={() => <CategoryGlyph icon={icon} size={24} />} /> : undefined} />
@@ -100,22 +91,22 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
           <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)}
             aria-expanded={choosingIcon}>{choosingIcon ? 'Chiudi' : icon ? 'Cambia' : 'Scegli'}</Button>
         </View>
-        {choosingIcon && <IconPicker value={icon} onChange={setIcon} />}
-        {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
-        <View style={styles.actions}>
-          {!wide && <Button disabled={busy} onPress={() => { setCreating(false); setName(''); setNameError(null); }}>Annulla</Button>}
-          <Button mode="contained" onPress={create} disabled={!ready} contentStyle={styles.button}>Crea categoria</Button>
-        </View>
-      </Card>
+        <Button mode="contained" style={styles.create} onPress={create} disabled={!ready}>Crea categoria</Button>
+      </View>
+      {choosingIcon && <IconPicker value={icon} onChange={setIcon} />}
+      {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
+    </View>
   );
 
   return (
-    <View style={[styles.layout, wide && styles.row]}>
-      {!wide && creating && createCard}
-      <Card title="Le tue categorie" description={categories.length > 0 ? `${categories.length} ${categories.length === 1 ? 'categoria' : 'categorie'}` : undefined} style={wide ? styles.main : undefined}
-        actions={!wide && !creating ? <Button mode="contained-tonal" contentStyle={styles.button} icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />} onPress={() => setCreating(true)}>Nuova</Button> : undefined}>
+      <Card>
+        {createForm}
+        <View style={styles.listHeader}>
+          <Text variant="titleMedium" accessibilityRole="header" aria-level={2}>Le tue categorie</Text>
+          {categories.length > 0 && <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{`${categories.length} ${categories.length === 1 ? 'categoria' : 'categorie'}`}</Text>}
+        </View>
         {categories.length > 8 && (
-          <TextInput label="Cerca categoria" accessibilityLabel="Cerca categoria" mode="outlined" value={filter} onChangeText={setFilter} autoCorrect={false}
+          <TextInput outlineStyle={inputOutline} label="Cerca categoria" accessibilityLabel="Cerca categoria" mode="outlined" value={filter} onChangeText={setFilter} autoCorrect={false}
             left={leadingIcon(iconShapes.search)}
             right={filter ? <TextInput.Icon accessibilityLabel="Cancella ricerca" onPress={() => setFilter('')}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
@@ -128,35 +119,29 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
           </View>
         )}
         <View role="list">
-          {shown.map((category) => {
+          {shown.map((category, index) => {
             const used = usage[category.id] ?? 0;
             const isEditing = editing?.id === category.id;
             return (
-              <View key={category.id} role="listitem" style={[styles.item, { borderColor: theme.colors.outlineVariant }]}>
-                <View style={styles.row2}>
-                  <IconTile icon={category.icon} />
-                  <View style={styles.label}>
-                    <Text variant="bodyLarge" numberOfLines={2}>{category.label}</Text>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{used === 0 ? 'Nessuna spesa' : used === 1 ? '1 spesa' : `${used} spese`}</Text>
-                  </View>
-                  <View style={styles.rowActions}>
-                    {compact
-                      ? <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={styles.iconButton}
-                          selected={isEditing} aria-expanded={isEditing} accessibilityLabel={`Modifica ${category.label}`}
-                          onPress={() => setEditing(isEditing ? null : { id: category.id, name: category.label, error: null, original: category })} />
-                      : <Button mode="text" contentStyle={styles.button} icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
-                          aria-expanded={isEditing} accessibilityLabel={`Modifica ${category.label}`}
-                          onPress={() => setEditing(isEditing ? null : { id: category.id, name: category.label, error: null, original: category })}>Modifica</Button>}
-                    <DeleteAction labeled={!compact} name={category.label} title={`Eliminare la categoria “${category.label}”?`}
-                      description={used > 0
-                        ? `${used === 1 ? '1 spesa usa' : `${used} spese usano`} questa categoria: ${used === 1 ? 'resta registrata' : 'restano registrate'}, ma senza categoria. Nessuna spesa viene eliminata.`
-                        : 'Nessuna spesa usa questa categoria. L’operazione non può essere annullata.'}
-                      onDelete={() => onDelete(category.id)} />
-                  </View>
-                </View>
-                {isEditing && editing && (
-                  <View style={[styles.editor, { backgroundColor: theme.colors.elevation.level2 }]}>
-                    <TextInput mode="outlined" label="Nome" value={editing.name} autoFocus
+              <ListRow key={category.id} divider={index < shown.length - 1} icon={category.icon} title={category.label}
+                subtitle={used === 0 ? 'Nessuna spesa' : used === 1 ? '1 spesa' : `${used} spese`}
+                trailing={<>
+                  {compact
+                    ? <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
+                        selected={isEditing} aria-expanded={isEditing} accessibilityLabel={`Modifica ${category.label}`}
+                        onPress={() => setEditing(isEditing ? null : { id: category.id, name: category.label, error: null, original: category })} />
+                    : <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
+                        aria-expanded={isEditing} accessibilityLabel={`Modifica ${category.label}`}
+                        onPress={() => setEditing(isEditing ? null : { id: category.id, name: category.label, error: null, original: category })}>Modifica</Button>}
+                  <DeleteAction labeled={!compact} name={category.label} title={`Eliminare la categoria “${category.label}”?`}
+                    description={used > 0
+                      ? `${used === 1 ? '1 spesa usa' : `${used} spese usano`} questa categoria: ${used === 1 ? 'resta registrata' : 'restano registrate'}, ma senza categoria. Nessuna spesa viene eliminata.`
+                      : 'Nessuna spesa usa questa categoria. L’operazione non può essere annullata.'}
+                    onDelete={() => onDelete(category.id)} />
+                </>}>
+            {isEditing && editing && (
+              <View style={[styles.editor, { backgroundColor: theme.colors.elevation.level2 }]}>
+                    <TextInput outlineStyle={inputOutline} mode="outlined" label="Nome" value={editing.name} autoFocus
                       accessibilityLabel={`Nuovo nome per ${category.label}`} error={Boolean(editing.error)} disabled={!ready}
                       onChangeText={(next) => setEditing({ ...editing, name: next, error: null })} onSubmitEditing={saveRename} />
                     {editing.error && <HelperText type="error" accessibilityRole="alert">{editing.error}</HelperText>}
@@ -170,33 +155,25 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
                       onChange={async (next) => { if (ready && await onChangeIcon(category.id, next, editing.original)) { setEditing(null); notify('Icona aggiornata.'); } }} />
                   </View>
                 )}
-              </View>
+              </ListRow>
             );
           })}
         </View>
         {filter && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna categoria corrisponde alla ricerca.</Text>}
       </Card>
-      {wide && createCard}
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  layout: { gap: spacing.xl },
-  row: { flexDirection: 'row', alignItems: 'flex-start' },
-  side: { width: 340 },
-  main: { flex: 1, minWidth: 0, maxWidth: 720 },
-  tile: { borderRadius: shape.md, alignItems: 'center', justifyContent: 'center' },
-  iconField: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
+  listHeader: { marginTop: spacing.md, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: spacing.md },
+  createPanel: { gap: spacing.md },
+  createRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: spacing.lg },
+  nameField: { flexGrow: 2, flexBasis: 260, minWidth: 0 },
+  create: { alignSelf: 'flex-start', marginTop: 4 },
+  iconField: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap', flexGrow: 1, flexBasis: 260, minHeight: layout.controlHeight },
   iconText: { flex: 1, minWidth: 80 },
-  button: { minHeight: 48 },
   empty: { gap: spacing.sm },
   start: { alignSelf: 'flex-start', marginTop: spacing.sm },
-  item: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.sm, gap: spacing.sm },
-  row2: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56 },
-  label: { flex: 1, minWidth: 0 },
-  rowActions: { flexDirection: 'row', alignItems: 'center' },
-  iconButton: { margin: 0, width: 48, height: 48 },
-  editor: { borderRadius: shape.md, padding: spacing.lg, gap: spacing.sm },
+  editor: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm },
 });

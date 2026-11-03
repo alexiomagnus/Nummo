@@ -1,17 +1,24 @@
 import { useEffect } from 'react';
 import { useTheme } from 'react-native-paper';
 
-// Web-only rules RN Web cannot express: visible keyboard focus, dynamic viewport height
-// (virtual keyboard friendly) and reduced motion.
+// Web-only rules RN Web cannot express: the self-hosted font, visible keyboard focus, dynamic
+// viewport height (virtual keyboard friendly) and reduced motion.
 export function GlobalStyle() {
-  const { colors, dark } = useTheme();
+  const { colors, dark, fonts } = useTheme();
+  const family = fonts.bodyMedium.fontFamily;
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'nummo-global';
     style.textContent = `
+      @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+        src: url('/fonts/GoogleSans-latin-ext.woff2') format('woff2');
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+      @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+        src: url('/fonts/GoogleSans-latin.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
       html, body, #root { height: 100%; }
       @supports (height: 100dvh) { html, body, #root { height: 100dvh; } }
-      body { overflow: hidden; margin: 0; background: ${colors.background}; color-scheme: ${dark ? 'dark' : 'light'}; }
+      body { overflow: hidden; margin: 0; font-family: ${family}; background: ${colors.background}; color-scheme: ${dark ? 'dark' : 'light'}; }
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; border-radius: 4px; }
       input:focus-visible, textarea:focus-visible { outline: none; }
@@ -20,6 +27,6 @@ export function GlobalStyle() {
       }`;
     document.head.appendChild(style);
     return () => { style.remove(); };
-  }, [colors.background, colors.primary, dark]);
+  }, [colors.background, colors.primary, dark, family]);
   return null;
 }

@@ -6,6 +6,9 @@ import { AccountMenu } from './src/components/AccountMenu';
 import { AppShell } from './src/components/AppShell';
 import { Card } from './src/components/Card';
 import { ThemeIcon } from './src/components/ThemeIcon';
+import type { Preferences } from './src/features/settings/preferences';
+import { SettingsDialog } from './src/features/settings/SettingsDialog';
+import { usePreferences } from './src/features/settings/usePreferences';
 import { SignIn } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
 import { RemoteWorkspace } from './src/features/workspace/Workspace';
@@ -26,28 +29,36 @@ const storageNote = (demo || firestoreEmulator
 export default function App() {
   const systemScheme = useColorScheme();
   const reduceMotion = useReducedMotion();
-  const [override, setOverride] = useState<boolean | null>(null);
-  const dark = override ?? systemScheme === 'dark';
-  const theme = useMemo(() => createTheme(dark, reduceMotion), [dark, reduceMotion]);
+  const [preferences, updatePreferences, resetPreferences] = usePreferences();
+  const dark = preferences.theme === 'system' ? systemScheme === 'dark' : preferences.theme === 'dark';
+  const { accent, colorMode, font } = preferences;
+  const theme = useMemo(() => createTheme(dark, reduceMotion, { accent, colorMode, font }), [dark, reduceMotion, accent, colorMode, font]);
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
         <GlobalStyle />
-        <Root dark={dark} onToggleTheme={() => setOverride(!dark)} />
+        <Root dark={dark} onToggleTheme={() => updatePreferences({ theme: dark ? 'light' : 'dark' })}
+          preferences={preferences} onChangePreferences={updatePreferences} onResetPreferences={resetPreferences} />
       </PaperProvider>
     </SafeAreaProvider>
   );
 }
 
-function Root({ dark, onToggleTheme }: { dark: boolean; onToggleTheme: () => void }) {
+type RootProps = {
+  dark: boolean; onToggleTheme: () => void; preferences: Preferences;
+  onChangePreferences: (change: Partial<Preferences>) => void; onResetPreferences: () => void;
+};
+
+function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPreferences }: RootProps) {
   const theme = useTheme();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const session = useSession(!configMissing);
   const themeToggle = (
     <IconButton size={24} style={styles.touch} icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
       onPress={onToggleTheme} accessibilityLabel={dark ? 'Attiva tema chiaro' : 'Attiva tema scuro'} />
   );
   const account = session.status === 'signed-in'
-    ? <AccountMenu email={session.user.email} busy={session.busy} onSignOut={session.signOut} /> : null;
+    ? <AccountMenu email={session.user.email} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsOpen(true)} /> : null;
 
   if (session.status === 'signed-in') {
     return (
@@ -57,6 +68,8 @@ function Root({ dark, onToggleTheme }: { dark: boolean; onToggleTheme: () => voi
             <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{session.error}</Text>
           </View>
         )}
+        <SettingsDialog visible={settingsOpen} preferences={preferences} dark={dark} onChange={onChangePreferences}
+          onReset={onResetPreferences} onDismiss={() => setSettingsOpen(false)} />
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
             topActions={<>{themeToggle}{account}</>} />

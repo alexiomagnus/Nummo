@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Menu, Text, useTheme } from 'react-native-paper';
-import { shape, spacing } from '../theme/tokens';
+import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -18,7 +18,7 @@ type Props<T extends string> = {
   style?: StyleProp<ViewStyle>;
 };
 
-// Compact single-choice selector: a 56 dp field showing the caption and the current value,
+// Compact single-choice selector: a 50 dp field showing the caption and the current value,
 // opening a Material 3 menu. Used where chips would eat too much width (sort, filters).
 export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style }: Props<T>) {
   const { colors } = useTheme();
@@ -29,9 +29,9 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
   return (
     <View style={style}>
       <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom"
-        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: 360 }}
+        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: 360, borderRadius: radius.control }}
         anchor={
-          <StateLayerPressable layerColor={colors.onSurface} radius={shape.xs} accessibilityRole="button"
+          <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
             aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
             onPress={() => setOpen(true)} style={[styles.field, { borderColor: colors.outline }]}>
             {showIcon && <SvgIcon shape={icon} size={20} color={colors.onSurfaceVariant} />}
@@ -54,8 +54,8 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
 
 const styles = StyleSheet.create({
   field: {
-    minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    height: layout.fieldBoxHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1,
+    paddingHorizontal: spacing.md,
   },
   text: { flex: 1, minWidth: 0 },
 });

@@ -51,8 +51,8 @@ function showLabel(index: number, count: number): boolean {
 }
 
 const pad = { top: 12, right: 8, bottom: 26, left: 52 };
-// SVG text defaults to a serif face; match the app's system sans.
-const svgFont = { fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' };
+// SVG text defaults to a serif face; inherit the app font set on <body> by GlobalStyle.
+const svgFont = { fontFamily: 'inherit' };
 const plotHeight = 200;
 
 function Axes({ width, scale, colors, labels }: {

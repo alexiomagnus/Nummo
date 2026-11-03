@@ -1,15 +1,17 @@
 import { MD3DarkTheme, MD3LightTheme, configureFonts, type MD3Theme } from 'react-native-paper';
-import { schemes, shape, typeface } from './tokens';
+import { buildScheme } from './palette';
+import { paperRoundness, typefaces } from './tokens';
+import type { Preferences } from '../features/settings/preferences';
 
 // Builds the Paper theme from the tokens. Paper has no surface-container roles, so they are
 // exposed through its `elevation` levels: level1 = Container Low … level5 = Highest.
-export function createTheme(dark: boolean, reduceMotion = false): MD3Theme {
+export function createTheme(dark: boolean, reduceMotion = false, preferences?: Pick<Preferences, 'accent' | 'colorMode' | 'font'>): MD3Theme {
   const base = dark ? MD3DarkTheme : MD3LightTheme;
-  const s = schemes[dark ? 'dark' : 'light'];
+  const s = buildScheme(preferences?.accent ?? 'mint', preferences?.colorMode ?? 'mono', dark);
   return {
     ...base,
-    roundness: shape.xs,
-    fonts: configureFonts({ config: { fontFamily: typeface } }),
+    roundness: paperRoundness,
+    fonts: configureFonts({ config: { fontFamily: typefaces[preferences?.font ?? 'google'] } }),
     animation: { ...base.animation, scale: reduceMotion ? 0 : 1 },
     colors: {
       ...base.colors,

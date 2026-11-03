@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, IconButton, Text, useTheme } from 'react-native-paper';
+import { IconButton, Text, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { spacing } from '../../theme/tokens';
+import { layout, radius, spacing } from '../../theme/tokens';
 import { exportCsv, makeBackup, parseImport, type ImportData } from '../../domain/backup';
 import { readExpenses } from '../../services/expenseStorage';
 import { readCategories } from '../../services/categoryStorage';
@@ -83,7 +84,7 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
 
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
-  close: { margin: 0, width: 48, height: 48 },
+  close: { margin: 0, width: layout.minTouch, height: layout.minTouch },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  preview: { borderRadius: 12, padding: spacing.lg, gap: spacing.md },
+  preview: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.md },
 });

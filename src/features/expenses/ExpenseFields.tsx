@@ -6,7 +6,7 @@ import { expensePolicy, todayInRome } from '../../domain/policy';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { leadingIcon } from '../../components/FieldIcon';
 import { iconShapes } from '../../components/SvgIcon';
-import { spacing } from '../../theme/tokens';
+import { spacing, inputOutline } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { CategoryPicker } from './CategoryPicker';
 
@@ -21,6 +21,8 @@ type Props = {
   categoryRequired?: boolean;
   // Rendered below the category picker (e.g. the repeat switch).
   extra?: ReactNode;
+  // Two columns (amount, description, date | category, repeat) when the container is wide.
+  split?: boolean;
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
@@ -34,25 +36,26 @@ function yesterdayOf(today: string): string {
 // Shared by the new-expense form and the edit dialog so both look and validate alike.
 // The amount is the hero field; then description/date, category, and `extra` (repeat).
 // Required fields are not starred one by one: the screen says so once, optional ones say «facoltativa».
-export function ExpenseFields({ values, errors, categories, disabled, withDate, categoryRequired, extra, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, disabled, withDate, categoryRequired, extra, split, onChange, onBlur }: Props) {
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const length = Array.from(values.description).length;
   const today = todayInRome();
   const yesterday = yesterdayOf(today);
   const dateChoice = values.date === '' || values.date === today ? 'today' : values.date === yesterday ? 'yesterday' : '';
-  return (
-    <View style={styles.layout}>
+  const amount = (
       <View>
-        <TextInput label="Importo" value={values.amount} onChangeText={(value) => onChange('amount', value)}
+        <TextInput outlineStyle={inputOutline} label="Importo" value={values.amount} onChangeText={(value) => onChange('amount', value)}
           mode="outlined" inputMode="decimal" placeholder="0,00" error={Boolean(errors.amount)} disabled={disabled}
           onBlur={() => onBlur('amount')} accessibilityLabel="Importo in euro, obbligatorio"
           contentStyle={styles.amountText}
           left={leadingIcon(iconShapes.euro)} />
         {errors.amount && <HelperText type="error" accessibilityRole="alert">{errors.amount}</HelperText>}
       </View>
+  );
+  const description = (
       <View>
-        <TextInput label="Descrizione" value={values.description} mode="outlined" error={Boolean(errors.description)}
+        <TextInput outlineStyle={inputOutline} label="Descrizione" value={values.description} mode="outlined" error={Boolean(errors.description)}
           onChangeText={(value) => onChange('description', value)} onBlur={() => onBlur('description')}
           accessibilityLabel="Descrizione, obbligatoria" disabled={disabled} />
         {(errors.description || length > 0) && <View style={styles.helperRow}>
@@ -60,10 +63,11 @@ export function ExpenseFields({ values, errors, categories, disabled, withDate, 
           {length > 0 && <Text variant="bodySmall" style={{ color: length > expensePolicy.maxDescriptionLength ? colors.error : colors.onSurfaceVariant }}>{length}/{expensePolicy.maxDescriptionLength}</Text>}
         </View>}
       </View>
-      {withDate && (
-        <View style={styles.group} role="group" aria-label="Data">
+  );
+  const date = withDate ? (
+              <View style={styles.group} role="group" aria-label="Data">
           <View style={[styles.dateRow, !compact && styles.dateRowWide]}>
-            <TextInput label="Data (facoltativa)" value={values.date} onChangeText={(value) => onChange('date', value)}
+            <TextInput outlineStyle={inputOutline} label="Data (facoltativa)" value={values.date} onChangeText={(value) => onChange('date', value)}
               mode="outlined" placeholder={`Oggi · ${today}`} error={Boolean(errors.date)} onBlur={() => onBlur('date')} style={styles.dateInput}
               accessibilityLabel="Data della spesa, facoltativa, formato AAAA-MM-GG" disabled={disabled} autoCorrect={false}
               left={leadingIcon(iconShapes.calendar)} />
@@ -73,7 +77,8 @@ export function ExpenseFields({ values, errors, categories, disabled, withDate, 
           </View>
           {errors.date && <HelperText type="error" accessibilityRole="alert">{errors.date}</HelperText>}
         </View>
-      )}
+  ) : null;
+  const category = (
       <View style={styles.group} role="group" aria-label="Categoria">
         <Text variant="titleSmall">Categoria{categoryRequired ? '' : ' (facoltativa)'}</Text>
         <CategoryPicker categories={categories} selectedId={values.categoryId}
@@ -81,6 +86,25 @@ export function ExpenseFields({ values, errors, categories, disabled, withDate, 
         {categories.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>Puoi creare categorie nella sezione Categorie.</Text>}
         {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{errors.categoryId}</HelperText>}
       </View>
+  );
+  // Wide: amount and date share a wrapping first row, then description, category and options each
+  // take the full width (chips wrap), so related fields stay close and nothing is stretched alone.
+  return split ? (
+    <View style={styles.layout}>
+      <View style={styles.firstRow}>
+        <View style={styles.amountCell}>{amount}</View>
+        {date && <View style={styles.dateCell}>{date}</View>}
+      </View>
+      {description}
+      {category}
+      {extra}
+    </View>
+  ) : (
+    <View style={styles.layout}>
+      {amount}
+      {description}
+      {date}
+      {category}
       {extra}
     </View>
   );
@@ -88,6 +112,9 @@ export function ExpenseFields({ values, errors, categories, disabled, withDate, 
 
 const styles = StyleSheet.create({
   layout: { gap: spacing.md },
+  firstRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: spacing.lg },
+  amountCell: { flexGrow: 1, flexBasis: 180, minWidth: 0 },
+  dateCell: { flexGrow: 2, flexBasis: 340, minWidth: 0 },
   amountText: { fontSize: 26, fontWeight: '600', fontVariant: ['tabular-nums'] },
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },

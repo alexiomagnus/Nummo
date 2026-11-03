@@ -2,7 +2,7 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { layout, shape, spacing, type SizeClass } from '../theme/tokens';
+import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -39,7 +39,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const bottomBar = hasNav && size === 'compact';
   const barHeight = layout.navBarHeight + insets.bottom;
   const showFab = bottomBar && fab && selected !== fab.target;
-  const padding = size === 'compact' ? spacing.lg : size === 'medium' ? spacing.xl : spacing.xxl;
+  const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -58,7 +58,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           <ScrollView ref={scroller} style={styles.scroll} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: showFab ? padding + 72 : padding }}>
-            <View role="main" style={[styles.content, { maxWidth: layout.maxContent }]}>{children}</View>
+            <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }]}>{children}</View>
           </ScrollView>
         </View>
         {bottomBar && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} />}
@@ -108,7 +108,7 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
       {destinations.map((item) => {
         const active = item.value === selected;
         return (
-          <StateLayerPressable key={item.value} layerColor={colors.onSurface} accessibilityRole="button" radius={shape.md}
+          <StateLayerPressable key={item.value} layerColor={colors.onSurface} accessibilityRole="button" radius={radius.nav}
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)} style={styles.railItem}>
             <View style={[styles.railIndicator, active && { backgroundColor: colors.secondaryContainer }]}>
               <SvgIcon shape={item.icon} size={24} color={active ? colors.onSecondaryContainer : colors.onSurfaceVariant} />
@@ -134,7 +134,7 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab }: Nav
         const active = item.value === selected;
         const color = active ? colors.onSecondaryContainer : colors.onSurfaceVariant;
         return (
-          <StateLayerPressable key={item.value} layerColor={color} accessibilityRole="button" radius={shape.full}
+          <StateLayerPressable key={item.value} layerColor={color} accessibilityRole="button" radius={radius.nav}
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
             style={[styles.drawerItem, active && { backgroundColor: colors.secondaryContainer }]}>
             <SvgIcon shape={item.icon} size={24} color={color} />
@@ -153,22 +153,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg, borderBottomWidth: StyleSheet.hairlineWidth,
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexShrink: 1 },
-  logo: { width: 36, height: 36, borderRadius: shape.md, alignItems: 'center', justifyContent: 'center' },
+  logo: { width: 36, height: 36, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   logoLetter: { fontSize: 22, lineHeight: 26, fontWeight: '800' },
   brandName: { fontWeight: '700', letterSpacing: -0.25 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   body: { flex: 1, flexDirection: 'row', minHeight: 0 },
   scroll: { flex: 1, minWidth: 0 },
-  content: { width: '100%', alignSelf: 'center', gap: spacing.xl },
+  content: { width: '100%', flexGrow: 1, gap: spacing.xl },
   bar: { flexDirection: 'row', paddingTop: spacing.sm },
   barItem: { flex: 1, alignItems: 'center', gap: spacing.xs, minHeight: 56, paddingTop: 4 },
-  indicator: { width: 64, height: 32, borderRadius: shape.lg, alignItems: 'center', justifyContent: 'center' },
+  indicator: { width: 64, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
   rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.sm },
-  railFab: { marginBottom: spacing.md },
+  railFab: { marginBottom: spacing.md, borderRadius: radius.control },
   railItem: { width: layout.railWidth - spacing.sm, alignItems: 'center', gap: spacing.xs, paddingVertical: 4 },
-  railIndicator: { width: 56, height: 32, borderRadius: shape.lg, alignItems: 'center', justifyContent: 'center' },
+  railIndicator: { width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
   drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.xs },
-  drawerFab: { alignSelf: 'flex-start', marginBottom: spacing.md, marginLeft: spacing.xs },
-  drawerItem: { height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
-  fab: { position: 'absolute', right: spacing.lg },
+  drawerFab: { alignSelf: 'flex-start', marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.control },
+  drawerItem: { height: layout.minTouch, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
+  fab: { position: 'absolute', right: spacing.lg, borderRadius: radius.control },
 });

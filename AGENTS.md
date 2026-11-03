@@ -33,6 +33,9 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
 - `src/features/categories/`: `useRemoteCategories`, impostazioni, icone. ID stabili,
   unicità nomi tramite transazioni e indice `categoryNames`. Predefinite aggiunte da
   azione esplicita. Nessun salvataggio in localStorage.
+- `src/features/settings/`: preferenze di aspetto (`preferences.ts` puro, `usePreferences`
+  su localStorage, `SettingsDialog` aperto dal menu account). `src/theme/palette.ts` genera
+  gli schemi da tinta e modalità; `createTheme` li riceve da `App.tsx`.
 - `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
   fino a oggi, non materializzate nel database. Grafici SVG DOM, solo web.
 - `src/features/backup/`: download CSV/JSON, anteprima dei vecchi dati del browser e
@@ -107,8 +110,9 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
   non promettere atomicità dell'intero archivio. Backup server-only, nessun dato privato
   inserito nei log. JSON mantiene originali, CSV neutralizza formule e quota i campi.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
-  `ChoiceChips`, `M3Switch`, `Card`, `StateLayerPressable` per componenti Material 3
-  personalizzati. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
+  `Button` (unico pulsante), `ListRow`/`IconTile` (riga di Spese e Categorie), `ChoiceChips`,
+  `M3Switch`, `Card`, `StateLayerPressable` per componenti Material 3 personalizzati.
+  Raggi, `inputOutline` (per ogni `TextInput` outlined) e `layout` da `src/theme/tokens.ts`. Font e spessore icone (`typefaces`, `iconStroke`) dai token; font in `public/fonts/`. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
   esiti temporanei con `useSnackbar()`; layout per classe di finestra con `useSizeClass()`.
 - Paper `Menu` montato chiuso mette il focus sul proprio anchor (web): mai un `Menu` per riga di una lista
   (la pagina salta all'ultima riga); usare un solo menu con anchor a coordinate, come `ExpenseList`.

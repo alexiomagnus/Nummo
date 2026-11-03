@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { Snackbar } from 'react-native-paper';
-import { spacing } from '../theme/tokens';
+import { radius, spacing } from '../theme/tokens';
 
 type Notify = (message: string) => void;
 const SnackbarContext = createContext<Notify>(() => {});
@@ -22,7 +22,7 @@ export function SnackbarProvider({ bottomOffset, onVisibleChange, children }: {
       {children}
       <Snackbar key={state.id} visible={state.visible} onDismiss={dismiss} duration={5000}
         wrapperStyle={{ bottom: bottomOffset + spacing.sm, zIndex: 20 }}
-        action={{ label: 'Chiudi', onPress: dismiss }}>
+        style={{ borderRadius: radius.control }} action={{ label: 'Chiudi', onPress: dismiss }}>
         {state.message}
       </Snackbar>
     </SnackbarContext.Provider>

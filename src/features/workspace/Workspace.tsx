@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
 import { AppShell, type Destination } from '../../components/AppShell';
 import { Card } from '../../components/Card';
 import { PageHeader } from '../../components/PageHeader';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SyncChip } from '../../components/SyncChip';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { spacing } from '../../theme/tokens';
+import { layout } from '../../theme/tokens';
 import { describeSync } from './syncStatus';
 import { expandOccurrences } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
@@ -91,10 +92,10 @@ function Sections({ section, backend, uid, store, categoryState, occurrences, us
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
   const heading = headings[section];
   return <>
-    <PageHeader title={heading.title} description={heading.description} style={section === 'expense' ? styles.narrow : undefined}
+    <PageHeader title={heading.title} description={heading.description} 
       action={section === 'list' ? (
         <Button mode="outlined" icon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
-          aria-expanded={showBackup} contentStyle={styles.touch} onPress={() => setShowBackup(!showBackup)}>Esporta e importa</Button>
+          aria-expanded={showBackup} onPress={() => setShowBackup(!showBackup)}>Esporta e importa</Button>
       ) : undefined} />
     {!!store.recovery?.length && (
       <Card style={{ backgroundColor: theme.colors.errorContainer }}>
@@ -132,11 +133,8 @@ function Sections({ section, backend, uid, store, categoryState, occurrences, us
 }
 
 const styles = StyleSheet.create({
-  // Lists stay readable: capped width instead of stretching across a wide window.
-  list: { width: '100%', maxWidth: 880, gap: spacing.xl },
-  // The new-expense screen is one centered column: header and form share its width.
-  narrow: { width: '100%', maxWidth: 560, alignSelf: 'center' },
+  // Pages fill the main area (the shell already caps the width); only the form is a narrow column.
+  list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
   start: { alignSelf: 'flex-start' },
-  touch: { minHeight: 48 },
 });

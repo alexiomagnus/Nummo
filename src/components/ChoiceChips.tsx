@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { shape, spacing } from '../theme/tokens';
+import { radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -27,7 +27,7 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
         const selected = option.value === value;
         const color = selected ? colors.onSecondaryContainer : colors.onSurfaceVariant;
         return (
-          <StateLayerPressable key={option.value} layerColor={color} radius={shape.sm} disabled={disabled} hitSlop={{ top: 4, bottom: 4 }}
+          <StateLayerPressable key={option.value} layerColor={color} radius={radius.control} disabled={disabled} hitSlop={{ top: 4, bottom: 4 }}
             onPress={() => onChange(selected && allowDeselect ? '' : option.value)}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled}
             accessibilityLabel={`${option.label}${selected ? ', selezionata' : ''}`}
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   // 40 dp chip; hitSlop brings the touch area to 48 dp.
   chip: {
     minHeight: 40, maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    paddingHorizontal: spacing.md, borderRadius: shape.sm, borderWidth: 1,
+    paddingHorizontal: spacing.md, borderRadius: radius.control, borderWidth: 1,
   },
   label: { flexShrink: 1 },
 });

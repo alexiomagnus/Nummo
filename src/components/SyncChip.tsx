@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import type { SyncDescription, SyncKind } from '../features/workspace/syncStatus';
-import { shape, spacing } from '../theme/tokens';
+import { radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { useSnackbar } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -21,7 +21,7 @@ export function SyncChip({ status }: { status: SyncDescription }) {
   const error = status.kind === 'error';
   const color = error ? colors.onErrorContainer : colors.onSurfaceVariant;
   return (
-    <StateLayerPressable layerColor={color} radius={compact ? shape.full : shape.sm} accessibilityRole="button"
+    <StateLayerPressable layerColor={color} radius={radius.control} accessibilityRole="button"
       accessibilityLabel={`Stato dei dati: ${status.label}. Premi per i dettagli.`}
       onPress={() => notify(status.detail)}
       style={[compact ? styles.icon : styles.chip, error

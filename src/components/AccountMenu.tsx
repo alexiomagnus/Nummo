@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Menu, Text, useTheme } from 'react-native-paper';
-import { spacing } from '../theme/tokens';
+import { radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
-type Props = { email: string | null; busy: boolean; onSignOut: () => void };
+type Props = { email: string | null; busy: boolean; onSignOut: () => void; onOpenSettings: () => void };
 
-// Account avatar → menu with the signed-in e-mail and the sign-out action.
-export function AccountMenu({ email, busy, onSignOut }: Props) {
+// Account avatar → menu with the signed-in e-mail, settings and the sign-out action.
+export function AccountMenu({ email, busy, onSignOut, onOpenSettings }: Props) {
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   const initial = (email ?? 'N').charAt(0).toUpperCase();
   return (
-    <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom" contentStyle={{ backgroundColor: colors.elevation.level2 }}
+    <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom" contentStyle={{ backgroundColor: colors.elevation.level2, borderRadius: radius.control }}
       anchor={
         <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`Account${email ? `: ${email}` : ''}`}
@@ -28,6 +28,9 @@ export function AccountMenu({ email, busy, onSignOut }: Props) {
         <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? 'Account senza e-mail'}</Text>
       </View>
       <Divider />
+      <Menu.Item title="Impostazioni"
+        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.settings} size={size} color={color} />}
+        onPress={() => { setOpen(false); onOpenSettings(); }} />
       <Menu.Item title={busy ? 'Uscita in corso…' : 'Esci'} disabled={busy}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
         onPress={() => { setOpen(false); onSignOut(); }} />
