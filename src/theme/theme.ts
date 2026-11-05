@@ -8,13 +8,18 @@ import type { Preferences } from '../features/settings/preferences';
 export function createTheme(dark: boolean, reduceMotion = false, preferences?: Pick<Preferences, 'accent' | 'colorMode' | 'font'>): MD3Theme {
   const base = dark ? MD3DarkTheme : MD3LightTheme;
   const s = buildScheme(preferences?.accent ?? 'mint', preferences?.colorMode ?? 'mono', dark);
+  const colors = {
+    ...base.colors,
+    // Page panel: a touch lighter than the background (lowest container in light, low in dark).
+    panel: dark ? s.surfaceContainerLow : s.surfaceContainerLowest,
+  };
   return {
     ...base,
     roundness: paperRoundness,
     fonts: configureFonts({ config: { fontFamily: typefaces[preferences?.font ?? 'google'] } }),
     animation: { ...base.animation, scale: reduceMotion ? 0 : 1 },
     colors: {
-      ...base.colors,
+      ...colors,
       primary: s.primary, onPrimary: s.onPrimary, primaryContainer: s.primaryContainer, onPrimaryContainer: s.onPrimaryContainer,
       secondary: s.secondary, onSecondary: s.onSecondary, secondaryContainer: s.secondaryContainer, onSecondaryContainer: s.onSecondaryContainer,
       tertiary: s.tertiary, onTertiary: s.onTertiary, tertiaryContainer: s.tertiaryContainer, onTertiaryContainer: s.onTertiaryContainer,
@@ -31,3 +36,6 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
     },
   };
 }
+
+// Reads the custom `panel` colour added by `createTheme` (Paper's colour type cannot be augmented).
+export const panelColor = (colors: object): string => (colors as { panel?: string }).panel ?? 'transparent';

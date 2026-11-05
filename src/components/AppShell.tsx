@@ -1,9 +1,10 @@
 import { Logo } from './Logo';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
-import { FAB, Text, useTheme } from 'react-native-paper';
+import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { layout, radius, spacing, stateOpacity } from '../theme/tokens';
+import { layout, radius, shape, spacing, stateOpacity } from '../theme/tokens';
+import { panelColor } from '../theme/theme';
 import { useSizeClass } from '../theme/useSizeClass';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -26,7 +27,8 @@ type Props<T extends string> = {
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
 // standing drawer (expanded). The content scrolls inside the shell, nothing is position: fixed.
 export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, children }: Props<T>) {
-  const { colors } = useTheme();
+  const theme = useTheme();
+  const { colors } = theme;
   const size = useSizeClass();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -41,6 +43,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const barHeight = layout.navBarHeight + insets.bottom;
   const showFab = bottomBar && fab && selected !== fab.target;
   const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
+  const compact = size === 'compact';
+  // Inside the panel, `background` is the panel colour so outlined-field label notches and sticky bars blend in.
+  const panelTheme = { ...theme, colors: { ...colors, background: panelColor(colors) } };
+  const panel = { borderRadius: shape.md, marginTop: spacing.md, marginLeft: compact ? spacing.sm : 0, marginRight: compact ? spacing.sm : padding, marginBottom: compact ? spacing.sm : padding };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -64,9 +70,11 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
         <View style={styles.body}>
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
-          <ScrollView ref={scroller} style={styles.scroll} keyboardShouldPersistTaps="handled"
+          <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelColor(colors) }]} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: showFab ? padding + 72 : padding }}>
-            <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }]}>{children}</View>
+            <ThemeProvider theme={panelTheme}>
+              <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }]}>{children}</View>
+            </ThemeProvider>
           </ScrollView>
         </View>
         {bottomBar && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} />}

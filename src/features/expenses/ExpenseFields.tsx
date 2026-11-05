@@ -77,5 +77,5 @@ const styles = StyleSheet.create({
   amountText: { fontSize: 24, fontWeight: '600', fontVariant: ['tabular-nums'] },
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },
-  group: { gap: spacing.sm },
+  group: { gap: spacing.sm, marginTop: spacing.sm },
 });

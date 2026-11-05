@@ -18,5 +18,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 34, lineHeight: 42, fontWeight: '700', letterSpacing: -0.3, flexShrink: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md, minHeight: 48 },
   // «Nuova spesa» sits lower than the other titles. No negative margins: they made the form cover the title when it grew.
-  lowered: { marginTop: spacing.xxxl + spacing.lg },
+  lowered: { marginTop: spacing.xxl },
 });
