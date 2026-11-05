@@ -1,12 +1,14 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 5 novembre 2026. Branch `backend-firebase` (non pubblicato né unito a `main`).
-Ultimo commit: `9ba1665` «rimuove adapter localStorage e rifinisce la UI», sopra `e2b84d3` (Swiss minimalism, calendario, icone)
-(sopra `390f9e2` piano prezzi, `0a3e0fb` studio logo, `3ca98bd` impostazioni di aspetto, `8e1fa0a` UI M3,
-`b77e1db` migrazione Firestore, `fe759d5` ultimo col vecchio backend).
-Le modifiche successive a `e2b84d3` (rimozione adapter localStorage, ritocchi UI, documentazione) sono nel commit
-`9ba1665`, pubblicato su `backend-firebase` e unito a `main`. Architettura e comandi: `AGENTS.md`; decisioni:
-`docs/architecture.md`; migrazione: `docs/migrazione-byof.md`; guida utente: `docs/firebase-personale.md`.
+Aggiornamento: 5 novembre 2026. Branch `main` (= `origin/main`, `26a910f`); `backend-firebase` remoto fermo a `b440e59`.
+Ultimo commit: `26a910f` «mobile Nuova spesa, spese con contorno, menu e hitbox rifiniti», sopra `00acb4a` (pannello
+chiaro per le pagine), `b440e59` (HANDOFF), `9ba1665` (rimozione adapter localStorage), `e2b84d3` (Swiss minimalism,
+calendario, icone), `390f9e2` piano prezzi, `3ca98bd` impostazioni di aspetto, `8e1fa0a` UI M3, `b77e1db` migrazione
+Firestore, `fe759d5` ultimo col vecchio backend.
+Working tree: una sola modifica **non committata** in `src/components/AppShell.tsx` (su smartphone, nella schermata
+«Nuova spesa» il contenuto è centrato in verticale: `justifyContent: 'center'`); non verificata visivamente.
+Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
+guida utente: `docs/firebase-personale.md`.
 
 ## Stato implementato (verificato su codice e test)
 
@@ -33,6 +35,10 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   totale grande + statistiche, tabella dettaglio chiusa. Spese: filtri, riepilogo, azioni di riga a icone.
 - **Impostazioni** (menu account): tema Sistema/Chiaro/Scuro, Monocolore o Palette (6 tinte: Menta predefinita,
   Blu, Viola, Rosa, Ambra, Grafite), carattere Google Sans (`public/fonts/`) o Sistema, «Ripristina».
+- **Ultimi ritocchi UI (5 nov, `00acb4a`, `26a910f`)**: pagine su pannello arrotondato appena più chiaro
+  (`colors.panel`, `panelColor()` in `theme.ts`; assente su smartphone); Nuova spesa mobile a colonna senza pannello
+  né barra; righe di Spese con contorno; `MenuSelect` con righe proprie e spunta fissa; Dashboard: dettaglio sul
+  periodo corrente, il resto a richiesta; hitbox di Ricorrente/cestino/Annulla/Salva. Non verificati nel browser dall'agente.
 - **Ritocchi UI del 5 nov sera** (visti a schermo dall'utente): titoli pagina 34 px (`PageHeader`; «Nuova spesa» abbassata con `lowered`); dialog elimina categoria senza virgolette né testo, pulsanti 40 dp; spunta dei `MenuSelect` più distante; hover di navigazione e legenda dashboard pari all'area colorata; tolti «Si ripete…», «Scegli la frequenza.» e «(+N)»; più spazio sopra «Prezzo promozionale» e «Salva». Inoltre: `StateLayerPressable` con `bleed` (layer hover/pressed oltre l'elemento, usato
   nelle voci di navigazione); logo senza layer né anello di focus; spaziatura voci rail/drawer `lg`;
   Impostazioni con titolo bold, azioni più alte, senza linee dell'area scorrevole; chip/segmenti con più spazio
@@ -51,14 +57,14 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
 
 ## Verifiche
 
-Eseguite il 5 nov 2026 (Node 26.13, Java 21):
+Eseguite il 5 nov 2026 (Node 26.13), sul working tree attuale (compresa la modifica non committata):
 - `EXPO_NO_DOTENV=1 EXPO_PUBLIC_NUMMO_BACKEND=emulator npm run check`: typecheck ok, **138/138** test app, build
-  ok (478 moduli). Il calo da 156 è dovuto alla rimozione dei test degli adapter localStorage.
+  ok (534 moduli). Il calo da 156 test è dovuto alla rimozione dei test degli adapter localStorage.
 
 Non rieseguite oggi / non verificate:
 - `test:emulator`: ultima esecuzione registrata **11/11** (porte alternative 9299/8380, config temporanea poi
-  rimossa) prima dei ritocchi UI e della pulizia; Rules e accesso dati non toccati dal working tree. Oggi le porte
-  4000 e 8180 sono occupate dagli emulatori dell'utente (non fermati), quindi non rieseguito.
+  rimossa) prima dei ritocchi UI e della pulizia; Rules e accesso dati non toccati dal working tree. Riverificato a fine giornata: le porte
+  4000 e 8180 risultano in ascolto dagli emulatori dell'utente (non fermati), quindi non rieseguito.
 - **Nessuna verifica visiva nel browser** di: Swiss minimalism, calendario, 32 nuovi glifi, piano prezzi (campo
   promo, modifica serie, «Prossimi rinnovi»), dialog Impostazioni, `bleed`/logo senza anello, tema scuro con
   i nuovi schemi. Ultime prove visive: Chromium headless su pagina con dati finti (360–1440 px, 3–5 nov) e
@@ -83,7 +89,7 @@ Non rieseguite oggi / non verificate:
 ## Prossimi passi (priorità)
 
 1. Revisione visiva in browser (412×915 e desktop) di tutte le schermate toccate dal 3 al 5 nov, con emulatore
-   persistente e login reale; correggere ciò che emerge. Poi committare **su richiesta** il working tree.
+   persistente e login reale; correggere ciò che emerge. Poi committare **su richiesta** la modifica a `AppShell.tsx` (o scartarla se il centraggio non convince).
 2. Rieseguire `npm run check` e `test:emulator` (porte alternative se 8180/9099 sono occupate) prima del commit;
    ripubblicare le Rules dove già distribuite (icone e piano prezzi).
 3. Collaudo cloud personale (manuale, con autorizzazione): abilitare Firestore e Google Auth, creare

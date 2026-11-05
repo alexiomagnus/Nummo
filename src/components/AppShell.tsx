@@ -75,7 +75,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelBg }]} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: showFab ? padding + 72 : padding }}>
             <ThemeProvider theme={panelTheme}>
-              <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }]}>{children}</View>
+              <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
             </ThemeProvider>
           </ScrollView>
         </View>

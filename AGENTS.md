@@ -36,7 +36,8 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   azione esplicita. Nessun salvataggio in localStorage.
 - `src/features/settings/`: preferenze di aspetto (`preferences.ts` puro, `usePreferences`
   su localStorage, `SettingsDialog` aperto dal menu account). `src/theme/palette.ts` genera
-  gli schemi da tinta e modalità; `createTheme` li riceve da `App.tsx`.
+  gli schemi da tinta e modalità; `createTheme` li riceve da `App.tsx` e aggiunge `colors.panel`
+  (pannello pagine, `panelColor()`; su smartphone il pannello non c'è).
 - `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
   fino a oggi, non materializzate nel database. Grafici SVG DOM, solo web.
 - `src/features/backup/`: download CSV/JSON e importazione esplicita da file JSON.
