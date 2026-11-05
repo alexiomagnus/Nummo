@@ -25,16 +25,30 @@ test('BYOF: due progetti configurabili senza cambiare sorgenti; demo indipendent
       Object.assign(process.env, saved);
     }
   };
+  const real = (projectId: string) => ({ EXPO_PUBLIC_FIREBASE_API_KEY: 'public-key', EXPO_PUBLIC_FIREBASE_APP_ID: 'public-app', EXPO_PUBLIC_FIREBASE_PROJECT_ID: projectId, EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: `${projectId}.firebaseapp.com` });
   for (const projectId of ['my-first-project', 'my-second-project']) {
-    const result = await inspect({ EXPO_PUBLIC_NUMMO_BACKEND: 'firebase', EXPO_PUBLIC_FIREBASE_API_KEY: 'public-key', EXPO_PUBLIC_FIREBASE_APP_ID: 'public-app', EXPO_PUBLIC_FIREBASE_PROJECT_ID: projectId, EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: `${projectId}.firebaseapp.com` });
+    const result = await inspect({ EXPO_PUBLIC_NUMMO_BACKEND: 'cloud', ...real(projectId) });
     assert.equal(result.config.projectId, projectId);
     assert.deepEqual(result.missing, []);
     assert.equal(result.emulator, null);
   }
+  const hybrid = await inspect({ EXPO_PUBLIC_NUMMO_BACKEND: 'hybrid', EXPO_PUBLIC_FIRESTORE_EMULATOR: '127.0.0.1:8180', ...real('mine') });
+  assert.deepEqual(hybrid.missing, []);
+  assert.deepEqual(hybrid.emulator, { host: '127.0.0.1', port: 8180 });
   const demo = await inspect({ EXPO_PUBLIC_NUMMO_BACKEND: 'emulator', EXPO_PUBLIC_FIREBASE_PROJECT_ID: 'not-demo' });
   assert.equal(demo.config.projectId, 'demo-nummo');
   assert.deepEqual(demo.missing, []);
-  assert.ok((await inspect({ EXPO_PUBLIC_NUMMO_BACKEND: 'firebase' })).missing.length > 0);
-  assert.ok((await inspect({ EXPO_PUBLIC_NUMMO_BACKEND: 'firebase', EXPO_PUBLIC_FUNCTIONS_EMULATOR: 'localhost:5001' })).missing.some((s: string) => s.includes('Sostituisci')));
-  assert.ok((await inspect({ EXPO_PUBLIC_NUMMO_BACKEND: 'firebase', EXPO_PUBLIC_FIRESTORE_EMULATOR: 'broken' })).missing.some((s: string) => s.includes('non valido')));
+  const bad = async (extra: Record<string, string>, text: string) =>
+    assert.ok((await inspect(extra)).missing.some((s: string) => s.includes(text)), text);
+  // No fallback: unknown/absent/legacy mode and mixed configurations are errors.
+  await bad({ ...real('p') }, 'mancante');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'firebase', ...real('p') }, 'non è più valido');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'prod', ...real('p') }, 'non valido');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'cloud' }, 'EXPO_PUBLIC_FIREBASE_API_KEY');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'cloud', EXPO_PUBLIC_FIRESTORE_EMULATOR: '127.0.0.1:8180', ...real('p') }, 'non è ammesso con cloud');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'cloud', EXPO_PUBLIC_AUTH_EMULATOR: '127.0.0.1:9099', ...real('p') }, 'AUTH_EMULATOR');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'hybrid', ...real('p') }, 'per hybrid');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'hybrid', EXPO_PUBLIC_FIRESTORE_EMULATOR: 'broken', ...real('p') }, 'per hybrid');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'hybrid', EXPO_PUBLIC_FIRESTORE_EMULATOR: '127.0.0.1:8180', EXPO_PUBLIC_FUNCTIONS_EMULATOR: 'localhost:5001', ...real('p') }, 'FUNCTIONS_EMULATOR');
+  await bad({ EXPO_PUBLIC_NUMMO_BACKEND: 'emulator', EXPO_PUBLIC_FIRESTORE_EMULATOR: 'broken' }, 'non valido');
 });

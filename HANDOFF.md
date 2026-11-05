@@ -1,12 +1,12 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 5 novembre 2026. Branch `main` (= `origin/main`, `26a910f`); `backend-firebase` remoto fermo a `b440e59`.
-Ultimo commit: `26a910f` «mobile Nuova spesa, spese con contorno, menu e hitbox rifiniti», sopra `00acb4a` (pannello
-chiaro per le pagine), `b440e59` (HANDOFF), `9ba1665` (rimozione adapter localStorage), `e2b84d3` (Swiss minimalism,
-calendario, icone), `390f9e2` piano prezzi, `3ca98bd` impostazioni di aspetto, `8e1fa0a` UI M3, `b77e1db` migrazione
-Firestore, `fe759d5` ultimo col vecchio backend.
-Working tree: una sola modifica **non committata** in `src/components/AppShell.tsx` (su smartphone, nella schermata
-«Nuova spesa» il contenuto è centrato in verticale: `justifyContent: 'center'`); non verificata visivamente.
+Aggiornamento: 5 novembre 2026. Branch `main` (= `origin/main`, `6a1466b`); `backend-firebase` remoto fermo a `b440e59`.
+Ultimo commit: `refactor(config): separa gli ambienti emulator, hybrid e cloud` (riassetto ambienti Firebase; hash in
+`git log -1`, non pubblicato), sopra `6a1466b` «center content in AppShell for mobile view when using fab»
+(centraggio verticale di «Nuova spesa» su smartphone, non verificato visivamente), `26a910f`, `00acb4a` (pannello chiaro),
+`b440e59`, `9ba1665` (rimozione adapter localStorage), `e2b84d3` (Swiss minimalism), `390f9e2` piano prezzi, `3ca98bd`
+impostazioni di aspetto, `8e1fa0a` UI M3, `b77e1db` migrazione Firestore, `fe759d5` ultimo col vecchio backend.
+Working tree pulito dopo il commit; push non eseguito. Nessuna modifica a UI o logica applicativa nel riassetto.
 Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
 guida utente: `docs/firebase-personale.md`.
 
@@ -35,6 +35,12 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   totale grande + statistiche, tabella dettaglio chiusa. Spese: filtri, riepilogo, azioni di riga a icone.
 - **Impostazioni** (menu account): tema Sistema/Chiaro/Scuro, Monocolore o Palette (6 tinte: Menta predefinita,
   Blu, Viola, Rosa, Ambra, Grafite), carattere Google Sans (`public/fonts/`) o Sistema, «Ripristina».
+- **Ambienti Firebase** (5 nov): `EXPO_PUBLIC_NUMMO_BACKEND` = `emulator` (`npm run dev`, demo),
+  `hybrid` (`dev:hybrid`: Google reale + Firestore localhost, config da `.env.local`) o `cloud` (`build:cloud`, produzione).
+  Nessun default: assente, ignoto o il vecchio `firebase` bloccano l'avvio con messaggio. Rimossi `dev:emulator`, `dev:firebase`,
+  `dev:cloud`, `build`; aggiunti `build:cloud`, `build:demo`, `preview:cloud`, `check:env`. `.env.local` (sviluppo) contiene solo le
+  4 variabili `EXPO_PUBLIC_FIREBASE_*` (ho tolto da questo checkout le due righe backend/emulatore); la produzione usa
+  `.env.production.local` (da creare, ignorato) o la shell; `build:cloud` imposta `cloud` da sé. Dettagli e motivazioni: `AGENTS.md`, `docs/architecture.md`.
 - **Ultimi ritocchi UI (5 nov, `00acb4a`, `26a910f`)**: pagine su pannello arrotondato appena più chiaro
   (`colors.panel`, `panelColor()` in `theme.ts`; assente su smartphone); Nuova spesa mobile a colonna senza pannello
   né barra; righe di Spese con contorno; `MenuSelect` con righe proprie e spunta fissa; Dashboard: dettaglio sul
@@ -57,9 +63,17 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
 
 ## Verifiche
 
-Eseguite il 5 nov 2026 (Node 26.13), sul working tree attuale (compresa la modifica non committata):
-- `EXPO_NO_DOTENV=1 EXPO_PUBLIC_NUMMO_BACKEND=emulator npm run check`: typecheck ok, **138/138** test app, build
-  ok (534 moduli). Il calo da 156 test è dovuto alla rimozione dei test degli adapter localStorage.
+Eseguite il 5 nov 2026 (Node 26.13) sul working tree attuale:
+- `npm run check` (ora senza variabili esterne): typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`
+  (nessun `127.0.0.1:8180` nel bundle). I test sono saliti da 138 con quelli di `backendConfig` e `envPolicy`.
+- Con un `.env.production.local` **temporaneo e finto** (poi rimosso): `check:env` non lo considera; `build:cloud` rifiuta
+  backend ≠ cloud nel file o nella shell, endpoint emulatore e conflitti file/shell, e riesce con il solo set di 4 variabili.
+- `npm run check:env`: ok su `.env.local` pulito; con un `.env.development` temporaneo contenente un endpoint emulatore
+  si ferma con errore (poi rimosso).
+- `build:cloud` con **configurazione finta** (progetto `fake-proj`, nessun accesso di rete a Firebase): rifiuta variabili
+  mancanti e `EXPO_PUBLIC_FIRESTORE_EMULATOR`; con 4 variabili finte esporta e supera la scansione del bundle. La cartella
+  `dist/` di prova è stata eliminata: **non esiste ancora una build cloud reale**.
+- Prova preliminare: `expo export` con `EXPO_NO_DOTENV=1` non incorpora `.env.local` (con la vecchia riga emulatore: 0 occorrenze).
 
 Non rieseguite oggi / non verificate:
 - `test:emulator`: ultima esecuzione registrata **11/11** (porte alternative 9299/8380, config temporanea poi
@@ -82,21 +96,27 @@ Non rieseguite oggi / non verificate:
 4. Export non è snapshot atomico tra collezioni; import UI limitato a 5 MB.
 5. Palette dei grafici non rivalidata con la skill dataviz sulle nuove superfici; contrasti token testati
    (`tests/theme.test.ts`), non l'intera UI. Il FAB compatto può coprire parte dell'ultima riga.
-6. Senza `EXPO_PUBLIC_NUMMO_BACKEND` il default è `firebase`; `dev:cloud`, `build` ed `expo start` diretto leggono
-   `.env.local`, che in questo checkout punta all'emulatore 8180: una build cloud richiede un ambiente pulito.
+6. `expo start`/`expo export` lanciati direttamente (senza i comandi npm) non impostano la modalità: l'app mostra
+   «configurazione mancante» invece di scegliere un ambiente. `build:cloud` non è stato provato con il progetto reale né
+   con `.env.production.local` (assente); `preview:cloud` (`expo serve dist`) non eseguito.
 7. Chi aveva dati nel vecchio localStorage non ha più un percorso di migrazione in app (vedi sopra).
 
 ## Prossimi passi (priorità)
 
 1. Revisione visiva in browser (412×915 e desktop) di tutte le schermate toccate dal 3 al 5 nov, con emulatore
-   persistente e login reale; correggere ciò che emerge. Poi committare **su richiesta** la modifica a `AppShell.tsx` (o scartarla se il centraggio non convince).
-2. Rieseguire `npm run check` e `test:emulator` (porte alternative se 8180/9099 sono occupate) prima del commit;
+   persistente e login reale; correggere ciò che emerge. Verificare anche il centraggio di «Nuova spesa» su smartphone (`6a1466b`).
+2. Pubblicare il commit del riassetto ambienti (su richiesta); provare `npm run dev` e `dev:hybrid` dal vivo.
+   Rieseguire `npm run check` e `test:emulator` (porte alternative se 8180/9099 sono occupate) prima del commit;
    ripubblicare le Rules dove già distribuite (icone e piano prezzi).
-3. Collaudo cloud personale (manuale, con autorizzazione): abilitare Firestore e Google Auth, creare
-   `config/owner`, pubblicare le Rules, build con env pulita; poi dispositivi reali.
+3. Collaudo cloud personale (manuale, con autorizzazione), in quest'ordine: (a) Console: Google Auth attivo,
+   `localhost` e dominio di pubblicazione tra i domini autorizzati, Firestore Standard in produzione nella regione scelta;
+   (b) accesso una volta per ottenere l'UID, creare `config/owner` `{ uid }`; (c) pubblicare solo le Rules
+   (`firebase deploy --only firestore:rules --project ID`, richiede `firebase login`); (d) creare `.env.production.local`
+   con le 4 variabili (la modalità `cloud` la imposta lo script); (e) `npm run build:cloud`, `npm run preview:cloud`, collaudo
+   (login, secondo account rifiutato, spesa, ricarica); (f) scegliere l'hosting; poi dispositivi reali.
 4. Aggiornare le dipendenze vulnerabili in una fase dedicata, senza `--force`.
 5. Se serve scala: paginazione delle letture e snapshot di backup più robusto.
-6. Prima di mobile/PWA: rendere esplicito il default del backend (limite 6) e pianificare manifest/service worker.
+6. Prima di mobile/PWA: pianificare manifest/service worker (il default del backend ora è esplicito: nessun fallback).
 
 ### Studio logo (in attesa di selezione dell'utente)
 
@@ -120,7 +140,7 @@ Login Google reale con DB locale persistente:
 ```sh
 npm run emulators:real
 npm run emulators:seed:owner -- ID_PROGETTO UID_PROPRIETARIO
-npm run dev:firebase
+npm run dev:hybrid
 ```
 
 L'UID proprietario è quello dell'account Google (Console → Authentication), mai nei file versionati (in questo

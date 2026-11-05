@@ -8,18 +8,19 @@
     "node": "^22.18.0 || ^24.3.0 || ^26.0.0"
   },
   "scripts": {
-    "dev": "EXPO_PUBLIC_NUMMO_BACKEND=emulator expo start --web --host localhost",
-    "build": "expo export --platform web",
+    "dev": "npm run check:env && EXPO_PUBLIC_NUMMO_BACKEND=emulator expo start --web --host localhost",
+    "dev:hybrid": "npm run check:env && EXPO_PUBLIC_NUMMO_BACKEND=hybrid EXPO_PUBLIC_FIRESTORE_EMULATOR=${EXPO_PUBLIC_FIRESTORE_EMULATOR:-127.0.0.1:8180} expo start --web --host localhost",
+    "check:env": "node scripts/check-dev-env.ts",
+    "build:cloud": "node scripts/build-cloud.ts",
+    "build:demo": "EXPO_NO_DOTENV=1 EXPO_PUBLIC_NUMMO_BACKEND=emulator expo export --platform web --output-dir dist-demo",
+    "preview:cloud": "expo serve dist",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test --experimental-test-isolation=none tests/*.test.ts",
-    "check": "npm run typecheck && npm test && npm run build",
-    "dev:emulator": "EXPO_PUBLIC_NUMMO_BACKEND=emulator expo start --web --host localhost",
-    "emulators": "firebase emulators:start --only auth,firestore --project demo-nummo --import emulator-seed",
+    "check": "npm run typecheck && npm test && npm run build:demo",
     "test:emulator": "firebase emulators:exec --only auth,firestore --project demo-nummo --import emulator-seed \"node tests/emulator/firestore.e2e.ts\"",
-    "dev:firebase": "EXPO_PUBLIC_NUMMO_BACKEND=firebase EXPO_PUBLIC_FIRESTORE_EMULATOR=127.0.0.1:8180 expo start --web --host localhost",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-nummo --import emulator-seed",
     "emulators:real": "firebase emulators:start --project real --only firestore --import emulator-data --export-on-exit",
     "emulators:seed": "node scripts/seed-demo.ts",
-    "dev:cloud": "EXPO_PUBLIC_NUMMO_BACKEND=firebase expo start --web --host localhost",
     "emulators:seed:owner": "node scripts/seed-owner.ts"
   },
   "dependencies": {

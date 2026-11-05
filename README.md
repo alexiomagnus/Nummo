@@ -29,8 +29,9 @@ Segui [la guida BYOF](docs/firebase-personale.md): progetto personale, Google Au
 Firestore, domini autorizzati, UID amministrativo e regole restrittive. La sola
 `firebaseConfig` non completa la configurazione sicura.
 
-- `dev:firebase`: Google reale, Firestore su localhost, progetto da `.env.local`.
-- `dev:cloud`: Firebase personale, dopo la configurazione manuale.
+- `dev`: tutto emulato (demo). `dev:hybrid`: Google reale, Firestore su localhost, progetto da `.env.local`.
+- `build:cloud`: build di produzione (variabili da `.env.production.local`/shell, controlli bloccanti) in `dist/`;
+  `preview:cloud` la serve in locale. Nessun deploy automatico.
 - Cache persistente opzionale per dispositivi fidati: `EXPO_PUBLIC_FIRESTORE_CACHE=persistent`.
 
 Spese e categorie locali precedenti non vengono cancellate: importazione esplicita

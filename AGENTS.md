@@ -24,7 +24,8 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   `history.ts`, `submission.ts` riutilizzati;
   `firestore.ts` valida i record sincronizzati e genera le chiavi nome categoria;
   `backup.ts` valida le importazioni, genera JSON e CSV protetto da formule.
-- `src/services/backendConfig.ts`: modalità/env pubbliche a build, niente segreti.
+- `src/services/backendConfig.ts`: modalità (`emulator|hybrid|cloud`) e env pubbliche a build, niente segreti;
+  configurazioni miste → `missingFirebaseConfig` (l'app non avvia la sessione).
   `firebase.ts`: Auth e inizializzazione Firestore/cache; `firestoreStore.ts`: listener,
   CRUD, transazioni con revisioni, esportazioni server-only e importazioni in gruppi.
 - `src/features/session/`: login Google popup, sessione SDK, logout con attesa delle
@@ -45,14 +46,15 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
 - `firestore.rules`: proprietario da `config/owner` (solo amministratore), provider
   Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
-- `scripts/`: seed demo e configurazione proprietario, solo emulatore localhost.
+- `scripts/`: seed demo e configurazione proprietario (solo emulatore localhost); `check-dev-env.ts`,
+  `build-cloud.ts`, `envPolicy.ts` (ambienti).
 - `emulator-data/`: dati persistenti dell'emulatore personale (`emulators:real`),
   dati personali ignorati da Git. `emulator-seed/`: account Auth della demo.
 - `functions/` può contenere solo `.env` personali ignorati del vecchio backend: non
   versionarli né cancellarli senza conferma.
 - `docs/design/logo-concepts/`: proposte di logo SVG (non integrate nell'app).
-- `tests/`: Node runner per dominio/tema/preferenze/backup/config; `tests/emulator/firestore.e2e.ts`
-  per SDK e Rules. `dist/` è generato e ignorato.
+- `tests/`: Node runner per dominio/tema/preferenze/backup/config/policy ambienti (`scripts/envPolicy.ts`); `tests/emulator/firestore.e2e.ts`
+  per SDK e Rules. `dist/` (build cloud) e `dist-demo/` sono generati e ignorati.
 
 ## Stack e comandi
 
@@ -64,32 +66,38 @@ Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulator
 (Java 21 verificato). In questo ambiente npm 12 blocca gli script di installazione.
 
 - `npm ci`: app e strumenti.
-- `npm run emulators`, poi `npm run emulators:seed`, poi `npm run dev` oppure
-  `dev:emulator`: progetto `demo-nummo`, nessuna risorsa reale. Auth 9099, Firestore
-  8180, UI 4000; loopback. Nessuna Functions nel percorso nuovo.
-- `npm run dev:firebase`: Auth reale da `.env.local`, Firestore forzato localhost:8180.
-  Avviare prima emulatore Firestore del progetto personale e impostarvi `config/owner`
-  con `npm run emulators:seed:owner -- ID_PROGETTO UID`.
+- Tre ambienti, scelti **solo dai comandi npm** (`EXPO_PUBLIC_NUMMO_BACKEND` = `emulator|hybrid|cloud`,
+  nessun default: assente/ignoto/`firebase` è un errore bloccante):
+  - `npm run emulators`, `emulators:seed`, poi `npm run dev` (**emulator**): progetto `demo-nummo`, nessuna
+    risorsa reale, ignora la config reale. Auth 9099, Firestore 8180, UI 4000; loopback.
+  - `npm run dev:hybrid` (**hybrid**): Google reale (config da `.env.local`) + Firestore emulato su
+    `127.0.0.1:8180` (override: variabile di shell `EXPO_PUBLIC_FIRESTORE_EMULATOR`). Avviare prima l'emulatore
+    Firestore del progetto personale e impostarvi `config/owner` con `npm run emulators:seed:owner -- ID_PROGETTO UID`.
+  - `npm run build:cloud` (**cloud**): build di produzione in `dist/`, vedi sotto. Non esiste `dev:cloud`.
 - `npm run emulators:real` usa l'alias `real` preesistente solo in questo checkout.
   Non è un default: altre installazioni specificano il proprio `--project`. Importa da
   `emulator-data/` e riesporta all'arresto: fermare con un solo Ctrl+C.
-- `npm run dev:cloud`: usa configurazione personale; non lanciarlo contro risorse
-  reali senza autorizzazione. Nessun fallback a backend/localStorage se config mancante.
-- `npm run check`: typecheck, test app, build.
+- `npm run preview:cloud`: serve `dist/` in locale (verifica; usa il progetto reale: non eseguire azioni di scrittura senza autorizzazione).
+- `npm run check`: typecheck, test app, `build:demo` (demo in `dist-demo/`, mai da pubblicare).
 - `npm run test:emulator`: nuovi test Auth/Firestore; richiede porte libere.
 - Porte occupate: config temporanea **nella radice** con porte alternative, `--config`,
   `AUTH_PORT` e `FIRESTORE_PORT` per test/seed. Non fermare gli emulatori dell'utente.
   Per la demo web: `EXPO_PUBLIC_AUTH_EMULATOR` e `EXPO_PUBLIC_FIRESTORE_EMULATOR`;
   eliminare la config temporanea a fine verifica.
 
-Variabili pubbliche: `EXPO_PUBLIC_NUMMO_BACKEND=emulator|firebase`, config
-`EXPO_PUBLIC_FIREBASE_*`, endpoint Firestore opzionale. `npm run dev` forza demo.
-`EXPO_PUBLIC_FIRESTORE_CACHE=persistent` è opt-in su dispositivi fidati; altrimenti
-memoria. La cache è quella dell'SDK, mai un database IndexedDB implementato dall'app.
-Expo richiede accessi letterali alle env. Metro può richiedere riavvio `--clear`.
-**`.env.local` vince sulla shell in dev**: `expo/virtual/env` lo fonde sopra `process.env` (anche con
-`EXPO_NO_DOTENV=1`). Per test browser isolati non usare `expo start`: `expo export` con `EXPO_NO_DOTENV=1`, env
-emulatore, output fuori dal repo, e verificare che il bundle non contenga chiave/progetto reali prima di aprirlo.
+Variabili pubbliche: `EXPO_PUBLIC_FIREBASE_*` (4, in `.env.local` per lo sviluppo, in `.env.production.local`
+o shell/CI per la produzione; entrambi ignorati da Git; Expo in dev non carica `.env.production.local`). I file `.env*` **non** devono contenere
+`EXPO_PUBLIC_NUMMO_BACKEND` né `*_EMULATOR`: `check:env` (eseguito da `dev` e `dev:hybrid`) si ferma, perché in
+`expo start` il file vince sulla shell. `EXPO_PUBLIC_FIRESTORE_CACHE=persistent` è opt-in su dispositivi fidati;
+altrimenti memoria (cache SDK, mai IndexedDB dell'app). Expo richiede accessi letterali alle env; Metro può
+richiedere riavvio `--clear`.
+
+**Build di produzione** (`scripts/build-cloud.ts`, regole pure in `scripts/envPolicy.ts`): disattiva i `.env*` di Expo
+(`EXPO_NO_DOTENV=1`, verificato: con `expo export` `.env.local` non entra nel bundle), legge solo
+`.env.production.local` + shell (valori in conflitto = errore), imposta `cloud` da sé (un altro valore dichiarato = errore) e richiede le 4 variabili, rifiuta endpoint emulatori, progetto `demo-*` e variabili
+`EXPO_PUBLIC_*` sconosciute, poi scansiona il bundle (endpoint locali, chiave demo, presenza dell'ID progetto) e lo
+cancella se fallisce. Stampa solo nomi e conteggi. Per test browser isolati senza progetto reale: `build:demo`.
+Mai pubblicare `dist-demo/`.
 
 Test in-process con `--experimental-test-isolation=none` e strip-types; import `.ts`
 nel dominio/servizi testati direttamente. Non usare enum o parameter properties.

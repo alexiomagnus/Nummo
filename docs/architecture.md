@@ -137,13 +137,16 @@ atomico dell'intero database. Guida alla migrazione e limiti in `migrazione-byof
 
 ## Configurazioni e legacy
 
-- `npm run dev` / `dev:emulator`: demo locale, ignora i valori reali.
-- `dev:firebase`: Auth dal progetto personale, Firestore obbligatoriamente su localhost.
-- `dev:cloud`: scelta esplicita, usa i parametri dell'ambiente. Richiede che il
-  proprietario abbia predisposto Firestore/regole; nessun deploy è stato eseguito.
-- Config mancante o endpoint malformato: messaggio bloccante. Una vecchia variabile
-  Functions senza il nuovo endpoint Firestore blocca l'avvio per evitare passaggi
-  silenziosi al cloud. Nessun ritorno implicito a localStorage.
+- Tre ambienti, scelti dai comandi npm tramite `EXPO_PUBLIC_NUMMO_BACKEND`, senza default (5 nov 2026):
+  `emulator` (`npm run dev`: demo `demo-nummo`, ignora la config reale), `hybrid` (`dev:hybrid`: Auth reale,
+  Firestore obbligatoriamente su localhost) e `cloud` (`build:cloud`: Auth e Firestore reali, endpoint emulatore vietati).
+  `firebase` è il vecchio nome ambiguo e ora è un errore. `dev:cloud` e `dev:emulator` sono stati rimossi.
+- Motivo: `expo start` fonde `.env.local` sopra la shell, quindi un file con backend/endpoint avrebbe potuto mescolare
+  ambienti o incorporare `127.0.0.1:8180` in una build. Ora i file `.env*` portano solo le 4 variabili Firebase
+  (`check:env` blocca `dev*` se vi trova backend/emulatori) e la build di produzione ignora i `.env*` di Expo
+  (`EXPO_NO_DOTENV=1`), legge `.env.production.local`/shell, valida (`scripts/envPolicy.ts`), scansiona il bundle e lo scarta
+  se contiene endpoint locali. `check` costruisce solo la demo (`dist-demo/`), per non confondere gli artefatti.
+- Config mancante o mista: messaggio bloccante, sessione non avviata. Nessun ritorno implicito a localStorage.
 
 Il vecchio backend (`functions/`, `firebase.legacy.json`, regole deny-all, test
 callable/token ed esportatore del finto foglio) è stato rimosso il 2 novembre 2026:

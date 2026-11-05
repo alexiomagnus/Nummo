@@ -12,7 +12,7 @@ Node conforme a `package.json`, npm e Java 21 consigliati per la CLI corrente:
 npm ci
 npm run emulators           # terminale 1: Auth 9099, Firestore 8180, UI 4000
 npm run emulators:seed      # terminale 2, dopo l’avvio: autorizza demo-owner
-npm run dev                # oppure dev:emulator
+npm run dev                # modalità emulator (demo)
 ```
 
 Seleziona il proprietario demo; l'estraneo deve ricevere accesso negato. Ogni riavvio
@@ -34,11 +34,15 @@ stata modificata durante questa migrazione.
    Functions, Google Sheets API, service account scaricati o Blaze per questa
    architettura. Rimangono [quote e limiti Firestore](https://firebase.google.com/docs/firestore/quotas):
    controllali nella Console; nessuna promessa di uso illimitato gratuito.
-3. Crea `.env.local` da `.env.example` **solo se non esiste già**. Compila
-   `EXPO_PUBLIC_FIREBASE_API_KEY`, `AUTH_DOMAIN`, `PROJECT_ID`, `APP_ID` (ognuno con
-   prefisso `EXPO_PUBLIC_FIREBASE_`). Per cloud aggiungi
-   `EXPO_PUBLIC_NUMMO_BACKEND=firebase`; lascia assenti gli endpoint emulatori.
-   L'app va ricompilata/Expo riavviato dopo ogni cambio di progetto.
+3. Variabili (da `.env.example`, **solo se i file non esistono già**): le quattro
+   `EXPO_PUBLIC_FIREBASE_API_KEY`, `AUTH_DOMAIN`, `PROJECT_ID`, `APP_ID`.
+   - Sviluppo: in `.env.local`. Usate solo da `dev:hybrid`.
+   - Produzione: in `.env.production.local` (ignorato da Git) oppure variabili di shell/CI. `build:cloud`
+     **non legge** `.env.local`, imposta da sé la modalità `cloud` e si ferma se la stessa variabile ha valori
+     diversi nel file e nella shell. Expo in sviluppo non carica mai `.env.production.local`.
+   - Nessun file deve contenere `EXPO_PUBLIC_NUMMO_BACKEND` o endpoint `*_EMULATOR`: scelgono l'ambiente
+     i comandi npm, e `npm run dev*` si ferma se li trova.
+   Dopo ogni cambio di progetto va rieseguita la build/riavviato Expo.
 4. Accedi con Google per creare l'utente Authentication. Anche con regole deny-all il
    login può riuscire: i dati resteranno negati. Copia l'UID esatto da Authentication
    → Utenti (non email, non Google subject ID).
@@ -48,8 +52,10 @@ stata modificata durante questa migrazione.
 6. Revisiona e pubblica manualmente **solo** `firestore.rules` nel tuo progetto.
    Le regole incluse
    negano estranei, accessi incrociati e autopromozione e validano i dati.
-7. Avvia `npm run dev:cloud`, oppure costruisci il web con `npm run build` e ospita
-   `dist/` su HTTPS di tua scelta. Non è stato scelto o configurato un hosting.
+7. Costruisci con `npm run build:cloud` (si interrompe con configurazione mista, mancante o
+   endpoint emulatore nel bundle), prova in locale con `npm run preview:cloud` (usa il progetto
+   reale, `localhost` deve essere tra i domini autorizzati) e ospita `dist/` su HTTPS di tua scelta.
+   Non è stato scelto o configurato un hosting. Mai pubblicare `dist-demo/` (build demo di `check`).
    Verifica nel tuo ambiente login/logout, secondo account rifiutato, una spesa
    confermata, reload e lettura su una seconda sessione prima di migrare lo storico.
 
@@ -63,13 +69,13 @@ guida; nessuna credenziale amministrativa è richiesta dal client.
 
 ## Mantenere il login reale con Firestore locale
 
-Il progetto personale esistente e `.env.local` restano validi. Al posto del vecchio
+Il progetto personale esistente e `.env.local` (solo le 4 variabili `EXPO_PUBLIC_FIREBASE_*`) restano validi. Al posto del vecchio
 parametro delle Functions, autorizza lo stesso UID nel **solo emulatore**:
 
 ```sh
 npx firebase emulators:start --only firestore --project ID_PROGETTO
 npm run emulators:seed:owner -- ID_PROGETTO UID_PROPRIETARIO
-npm run dev:firebase
+npm run dev:hybrid
 ```
 
 Nel checkout originale `npm run emulators:real` usa l'alias già esistente. Quello script
