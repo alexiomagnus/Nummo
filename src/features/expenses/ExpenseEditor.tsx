@@ -57,6 +57,6 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
       {priceError && <HelperText type="error" accessibilityRole="alert">{priceError}</HelperText>}
       {store.error && <HelperText type="error">{store.error}</HelperText>}
     </ScrollView></Dialog.ScrollArea>
-    <Dialog.Actions><Button disabled={busy} onPress={close}>Annulla</Button><Button mode="contained" disabled={busy} loading={busy} onPress={() => void save()}>Salva</Button></Dialog.Actions>
+    <Dialog.Actions><Button disabled={busy} style={{ minWidth: 88 }} onPress={close}>Annulla</Button><Button mode="contained" disabled={busy} loading={busy} style={{ minWidth: 88 }} onPress={() => void save()}>Salva</Button></Dialog.Actions>
   </Dialog></Portal>;
 }

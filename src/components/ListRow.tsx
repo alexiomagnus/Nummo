@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { layout, spacing } from '../theme/tokens';
+import { layout, radius, spacing } from '../theme/tokens';
 import type { CategoryIcon } from '../domain/category';
 import { CategoryGlyph } from './CategoryGlyph';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -26,16 +26,18 @@ type Props = {
   trailing?: ReactNode;
   // Hairline under the row; off for the last row of a group so dividers only sit between items.
   divider?: boolean;
+  // Own bold outline (like the dashboard table) instead of the hairline divider.
+  outlined?: boolean;
   // Below the row, inside the same divider (inline editor).
   children?: ReactNode;
 };
 
 // The one list row of the app (Spese, Categorie): icon tile, title + subtitle, trailing slot, hairline divider.
 // Every row has the same minimum height and centres its content vertically.
-export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, children }: Props) {
+export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children }: Props) {
   const { colors } = useTheme();
   return (
-    <View role="listitem" style={[styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
+    <View role="listitem" style={outlined ? [styles.row, styles.outlined, { borderColor: colors.outline }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
       <View style={styles.main}>
         <IconTile icon={icon} />
         <View style={styles.text}>
@@ -58,6 +60,7 @@ export const listRowStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   row: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.xs, gap: spacing.sm },
   noDivider: { borderBottomWidth: 0 },
+  outlined: { borderWidth: 2, borderRadius: radius.control, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
   main: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56 },
   text: { flex: 1, minWidth: 0 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 },

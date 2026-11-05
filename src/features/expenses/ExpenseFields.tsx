@@ -7,6 +7,7 @@ import { DateButton, DateCalendar } from '../../components/DateField';
 import { leadingIcon } from '../../components/FieldIcon';
 import { iconShapes } from '../../components/SvgIcon';
 import { spacing, inputOutline } from '../../theme/tokens';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { CategoryPicker } from './CategoryPicker';
 
 export type BaseField = 'amount' | 'description' | 'categoryId' | 'date';
@@ -28,17 +29,18 @@ export function ExpenseFields({ values, errors, categories, disabled, extra, onC
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
   const [calendar, setCalendar] = useState(false);
+  const compact = useSizeClass() === 'compact';
   return (
     <View style={styles.layout}>
       <View>
-        <View style={styles.firstRow}>
-          <View style={styles.amount}>
+        <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
+          <View style={[styles.amount, compact && styles.amountCompact]}>
             <TextInput outlineStyle={inputOutline} label="Importo" value={values.amount} onChangeText={(value) => onChange('amount', value)}
               mode="outlined" inputMode="decimal" placeholder="0,00" error={Boolean(errors.amount)} disabled={disabled}
               onBlur={() => onBlur('amount')} accessibilityLabel="Importo in euro, obbligatorio"
               contentStyle={styles.amountText} left={leadingIcon(iconShapes.euro)} />
           </View>
-          <View style={styles.date}>
+          <View style={[styles.date, compact && styles.dateCompact]}>
             <DateButton value={values.date} open={calendar} disabled={disabled} error={Boolean(errors.date)} onToggle={() => setCalendar(!calendar)} />
           </View>
         </View>
@@ -70,12 +72,15 @@ export function ExpenseFields({ values, errors, categories, disabled, extra, onC
 const styles = StyleSheet.create({
   layout: { gap: spacing.lg },
   firstRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  firstRowCompact: { flexDirection: 'column', alignItems: 'stretch' },
+  dateCompact: { width: '100%', marginTop: 0 },
   amount: { flex: 1, minWidth: 0 },
+  amountCompact: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
   // Paper's 56 dp outlined field reserves 6 dp above its box for the floating label: align the date button with the box.
   date: { width: 148, flexShrink: 0, marginTop: 6 },
   text: { fontSize: 18 },
   amountText: { fontSize: 24, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs },
+  helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },
-  group: { gap: spacing.sm, marginTop: spacing.sm },
+  group: { gap: spacing.sm, marginTop: 0 },
 });

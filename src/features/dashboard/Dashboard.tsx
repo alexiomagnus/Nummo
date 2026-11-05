@@ -106,8 +106,11 @@ export function Dashboard({ occurrences, categories }: Props) {
   const changePeriod = (value: Period | '') => { if (value) { setPeriod(value); setActive(null); setWithEmpty(false); } };
   const changeChart = (value: ChartType | '') => { if (value) { setChart(value); setActive(null); } };
 
-  const rows = data.buckets.map((item, index) => ({ item, total: data.totals[index]! })).filter((row) => withEmpty || row.total > 0);
-  const hidden = data.buckets.length - data.totals.filter((total) => total > 0).length;
+  // The current day/month is always listed, even without expenses.
+  const todayDate = todayInRome();
+  const lastIndex = data.buckets.findIndex((bucket) => todayDate >= bucket.from && todayDate <= bucket.to);
+  const rows = data.buckets.map((item, index) => ({ item, total: data.totals[index]!, current: index === lastIndex })).filter((row) => withEmpty || row.current);
+  const hidden = data.buckets.length - 1;
 
   return (
     <View style={styles.layout}>
@@ -189,7 +192,7 @@ export function Dashboard({ occurrences, categories }: Props) {
             )}
             {showTable && hidden > 0 && (
               <Button compact mode="text" onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
-                {withEmpty ? 'Solo con spese' : `Mostra tutti ${period === 'month' ? 'i giorni' : 'i periodi'}`}
+                {withEmpty ? (period === 'month' ? 'Solo oggi' : 'Solo il mese corrente') : `Mostra tutti ${period === 'month' ? 'i giorni' : 'i periodi'}`}
               </Button>
             )}
           </Card>

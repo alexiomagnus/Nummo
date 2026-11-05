@@ -43,9 +43,13 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
           </StateLayerPressable>
         }>
         {options.map((option) => (
-          <Menu.Item key={option.value} title={option.label} onPress={() => { setOpen(false); onChange(option.value); }}
-            trailingIcon={option.value === value ? ({ size, color }) => <View style={{ marginLeft: spacing.md }}><SvgIcon shape={iconShapes.check} size={size} color={color} /></View> : undefined}
-            accessibilityLabel={`${option.label}${option.value === value ? ', selezionato' : ''}`} />
+          <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
+            onPress={() => { setOpen(false); onChange(option.value); }}
+            accessibilityLabel={`${option.label}${option.value === value ? ', selezionato' : ''}`}>
+            <Text variant="bodyLarge" numberOfLines={1} style={styles.itemLabel}>{option.label}</Text>
+            {/* Fixed slot on every row: the check always sits at the right edge, whatever the label length. */}
+            <View style={styles.check}>{option.value === value && <SvgIcon shape={iconShapes.check} size={24} color={colors.onSurface} />}</View>
+          </StateLayerPressable>
         ))}
       </Menu>
     </View>
@@ -58,4 +62,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   text: { flex: 1, minWidth: 0 },
+  // Room for the check on every item, so the menu is always as wide as its longest label plus the check.
+  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl, minHeight: 48, minWidth: 112, paddingHorizontal: spacing.lg },
+  itemLabel: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' },
+  check: { width: 24, height: 24 },
 });

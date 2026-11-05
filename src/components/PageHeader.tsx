@@ -2,12 +2,14 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { spacing } from '../theme/tokens';
+import { useSizeClass } from '../theme/useSizeClass';
 
 // One h1 per screen; the top app bar only carries branding. `action` is a secondary,
 // screen-level action aligned to the title row. No subtitle: the title says it.
 export function PageHeader({ title, action, style, lowered }: { title: string; action?: ReactNode; style?: StyleProp<ViewStyle>; lowered?: boolean }) {
+  const compact = useSizeClass() === 'compact';
   return (
-    <View style={[styles.header, lowered && styles.lowered, style]}>
+    <View style={[styles.header, lowered && !compact && styles.lowered, style]}>
       <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{title}</Text>
       {action}
     </View>

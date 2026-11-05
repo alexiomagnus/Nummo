@@ -109,7 +109,7 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
                   <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmountMinor(monthTotal)}</Text>
                 </View>
               )}
-              <ListRow divider={!lastOfGroup} icon={category?.icon ?? null} title={item.description} subtitle={details}
+              <ListRow outlined icon={category?.icon ?? null} title={item.description} subtitle={details}
                 meta={compact ? <Text variant="titleSmall" style={listRowStyles.amount}>{formatAmountMinor(item.amount_minor)}</Text> : undefined}
                 trailing={<>
                   {!compact && <Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmountMinor(item.amount_minor)}</Text>}

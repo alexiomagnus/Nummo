@@ -71,7 +71,7 @@ export function DeleteAction({ name, title, description, onDelete, labeled }: { 
   return <>
     {labeled
       ? <Button mode="text" icon={icon} textColor={colors.error} accessibilityLabel={`Elimina ${name}`} onPress={request}>Elimina</Button>
-      : <IconButton icon={icon} style={{ margin: 0, width: layout.minTouch, height: layout.minTouch }} accessibilityLabel={`Elimina ${name}`} onPress={request} />}
+      : <IconButton icon={icon} style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 }} accessibilityLabel={`Elimina ${name}`} onPress={request} />}
     <DeleteDialog visible={open} name={name} title={title} description={description} onDismiss={() => setOpen(false)} onConfirm={() => action.current()} />
   </>;
 }

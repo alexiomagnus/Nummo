@@ -86,7 +86,7 @@ export function ExpenseForm({ categories, store }: Props) {
   );
 
   return (
-    <View style={[styles.page, styles.pageCentered]}>
+    <View style={[styles.page, size !== 'compact' && styles.pageCentered]}>
     <View style={styles.form}>
       <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} disabled={!enabled}
         extra={repeat} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
@@ -94,7 +94,7 @@ export function ExpenseForm({ categories, store }: Props) {
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{submission.message}</HelperText>
       )}
-      <View style={[styles.footer, size === 'compact' && [styles.sticky, { backgroundColor: theme.colors.background, borderColor: theme.colors.outlineVariant }]]}>
+      <View style={[styles.footer, size === 'compact' && [styles.sticky, { backgroundColor: theme.colors.background }]]}>
         {submission.status === 'uncertain' ? (
           <>
             <Text accessibilityRole="alert">
@@ -103,7 +103,7 @@ export function ExpenseForm({ categories, store }: Props) {
             <View style={styles.actions}><Button mode="contained" onPress={store.retry}>Verifica sul server</Button></View>
           </>
         ) : (
-          <View style={styles.actions}>
+          <View style={[styles.actions, size === 'compact' && styles.actionsCompact]}>
             <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
               contentStyle={styles.button} style={styles.submit}>
               {submission.status === 'sending' ? 'In attesa di conferma…' : 'Salva'}
@@ -123,10 +123,11 @@ const styles = StyleSheet.create({
   form: { width: '100%', gap: spacing.lg },
   // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
   // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
-  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, zIndex: 1 } as unknown as ViewStyle,
+  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, zIndex: 1 } as unknown as ViewStyle,
   repeat: { gap: spacing.md },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row', marginTop: spacing.xxl },
+  actionsCompact: { marginTop: 0 },
   submit: { flexGrow: 1 },
   full: { flexGrow: 1 },
   button: { minHeight: layout.controlHeight },

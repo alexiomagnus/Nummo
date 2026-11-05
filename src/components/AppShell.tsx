@@ -45,8 +45,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
   const compact = size === 'compact';
   // Inside the panel, `background` is the panel colour so outlined-field label notches and sticky bars blend in.
-  const panelTheme = { ...theme, colors: { ...colors, background: panelColor(colors) } };
-  const panel = { borderRadius: shape.md, marginTop: spacing.md, marginLeft: compact ? spacing.sm : 0, marginRight: compact ? spacing.sm : padding, marginBottom: compact ? spacing.sm : padding };
+  // On phones there is no lighter panel: the page sits on the plain background.
+  const panelBg = compact ? colors.background : panelColor(colors);
+  const panelTheme = { ...theme, colors: { ...colors, background: panelBg } };
+  const panel = compact ? { borderRadius: 0 } : { borderRadius: shape.md, marginTop: spacing.md, marginRight: padding, marginBottom: padding };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -70,7 +72,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
         <View style={styles.body}>
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
-          <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelColor(colors) }]} keyboardShouldPersistTaps="handled"
+          <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelBg }]} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: showFab ? padding + 72 : padding }}>
             <ThemeProvider theme={panelTheme}>
               <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }]}>{children}</View>

@@ -73,7 +73,7 @@ export function PromoField({ value, amount, after, firstAmount, recurrence, star
     ? `${formatAmountMinor(first)} per ${count === 1 ? 'il primo pagamento' : `i primi ${count} pagamenti`}, poi ${formatAmountMinor(then)} dal ${count}° rinnovo (${renewalDate(startDate, recurrence, count)}).` : null;
   return (
     <View style={styles.group}>
-      <StateLayerPressable onPress={() => onChange({ promo: !value })} bleed={4} disabled={disabled} layerColor={colors.onSurface}
+      <StateLayerPressable onPress={() => onChange({ promo: !value })} disabled={disabled} layerColor={colors.onSurface}
         radius={radius.control} style={styles.toggle} accessibilityRole="switch" aria-checked={value} aria-disabled={disabled}
         accessibilityLabel="Prezzo promozionale">
         <View style={styles.text}>
@@ -167,7 +167,7 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
 
 const styles = StyleSheet.create({
   group: { gap: spacing.sm, marginTop: spacing.xl },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 48, paddingVertical: spacing.xs },
+  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 48, paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
   text: { flex: 1 },
   fields: { gap: spacing.sm },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },

@@ -24,7 +24,7 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
   const { colors } = useTheme();
   return (
     <View style={styles.group}>
-      <StateLayerPressable onPress={() => onRepeatChange(!repeat)} bleed={4} disabled={disabled} layerColor={colors.onSurface}
+      <StateLayerPressable onPress={() => onRepeatChange(!repeat)} disabled={disabled} layerColor={colors.onSurface}
         radius={radius.control} style={styles.toggle} accessibilityRole="switch" aria-checked={repeat} aria-disabled={disabled}
         accessibilityLabel="Ricorrente">
         <View style={styles.text}>
@@ -45,7 +45,7 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   // M3 list item with trailing switch: the whole row is the touch target.
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 48, paddingVertical: spacing.xs },
+  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 48, paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
   text: { flex: 1 },
   options: { gap: spacing.sm },
 });
