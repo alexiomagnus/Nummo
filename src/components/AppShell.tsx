@@ -45,11 +45,20 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom} onVisibleChange={setSnackbarOpen}>
-      <View role="banner" style={[styles.topBar, { backgroundColor: colors.background, borderColor: colors.outlineVariant, paddingTop: insets.top, height: layout.topBarHeight + insets.top }]}>
-        <View style={styles.brand}>
-          <Logo size={40} color={colors.primary} />
-          <Text variant="titleLarge" style={[styles.brandName, { color: colors.primary }]}>Nummo</Text>
-        </View>
+      <View role="banner" style={[styles.topBar, { backgroundColor: colors.background, paddingTop: insets.top, paddingHorizontal: padding, height: layout.topBarHeight + insets.top }]}>
+        {fab && hasNav ? (
+          // The brand leads to the primary screen (new expense); on it, it does nothing.
+          <StateLayerPressable layerColor={colors.primary} radius={radius.control} accessibilityRole="button" accessibilityLabel={`Nummo, ${fab.label}`}
+            onPress={() => { if (selected !== fab.target) select(fab.target); }} style={styles.brand}>
+            <Logo size={32} color={colors.primary} />
+            <Text variant="titleLarge" style={[styles.brandName, { color: colors.primary }]}>Nummo</Text>
+          </StateLayerPressable>
+        ) : (
+          <View style={styles.brand}>
+            <Logo size={32} color={colors.primary} />
+            <Text variant="titleLarge" style={[styles.brandName, { color: colors.primary }]}>Nummo</Text>
+          </View>
+        )}
         <View style={styles.actions}>{actions}</View>
       </View>
         <View style={styles.body}>
@@ -78,7 +87,7 @@ type NavProps<T extends string> = { destinations: readonly Destination<T>[]; sel
 function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset }: NavProps<T> & { bottomInset: number }) {
   const { colors } = useTheme();
   return (
-    <View role="navigation" aria-label="Sezioni" style={[styles.bar, { backgroundColor: colors.elevation.level2, height: layout.navBarHeight + bottomInset, paddingBottom: bottomInset }]}>
+    <View role="navigation" aria-label="Sezioni" style={[styles.bar, { borderColor: colors.outlineVariant, backgroundColor: colors.background, height: layout.navBarHeight + bottomInset, paddingBottom: bottomInset }]}>
       {destinations.map((item) => {
         const active = item.value === selected;
         return (
@@ -149,15 +158,14 @@ const styles = StyleSheet.create({
   root: { flex: 1, minWidth: 0, width: '100%' },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm,
-    paddingHorizontal: spacing.lg, borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexShrink: 1 },
-  brandName: { fontSize: 26, lineHeight: 32, fontWeight: '700', letterSpacing: -0.25 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexShrink: 1, minHeight: layout.minTouch, paddingHorizontal: spacing.sm, marginLeft: -spacing.sm },
+  brandName: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.2 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   body: { flex: 1, flexDirection: 'row', minHeight: 0 },
   scroll: { flex: 1, minWidth: 0 },
-  content: { width: '100%', flexGrow: 1, gap: spacing.xl },
-  bar: { flexDirection: 'row', paddingTop: spacing.sm },
+  content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', flexGrow: 1, gap: spacing.xl },
+  bar: { flexDirection: 'row', paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth },
   barItem: { flex: 1, alignItems: 'center', gap: spacing.xs, minHeight: 56, paddingTop: 4 },
   indicator: { width: 64, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
   rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.sm },

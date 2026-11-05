@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { radius, spacing } from '../theme/tokens';
-import { useSizeClass } from '../theme/useSizeClass';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -22,8 +21,8 @@ type Props<T extends string> = {
 // Material 3 filter chips used as a single-choice group: selected = secondary container + check.
 export function ChoiceChips<T extends string>({ options, value, onChange, allowDeselect, label, disabled, showCheck = true }: Props<T>) {
   const { colors } = useTheme();
-  // Phones get a taller chip (44 dp, 48+ with the touch slop); desktop keeps the compact 40 dp.
-  const height = useSizeClass() === 'compact' ? 44 : 40;
+  // 44 dp everywhere (48+ with the touch slop).
+  const height = 44;
   return (
     <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel={label}>
       {options.map((option) => {
@@ -36,7 +35,7 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
             accessibilityLabel={`${option.label}${selected ? ', selezionata' : ''}`}
             style={[styles.chip, { minHeight: height }, selected
               ? { backgroundColor: colors.secondaryContainer, borderColor: colors.secondaryContainer }
-              : { borderColor: colors.outline }]}>
+              : { borderColor: colors.outlineVariant }]}>
             {selected && showCheck ? <SvgIcon shape={iconShapes.check} size={18} color={color} /> : option.icon}
             <Text variant="labelLarge" style={[styles.label, { color }]}>{option.label}</Text>
           </StateLayerPressable>

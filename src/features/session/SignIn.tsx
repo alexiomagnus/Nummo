@@ -14,7 +14,7 @@ export function SignIn({ error, demo, onSignIn }: Props) {
         <Text variant="displaySmall" accessibilityRole="header" aria-level={1}>Una spesa, pochi gesti.</Text>
         <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>Importo, nome e ci sei.</Text>
       </View>
-      <Card title="Accedi" description="Spese e categorie vengono salvate nel tuo progetto Firebase personale. Accedi con l’account Google autorizzato.">
+      <Card>
         {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{error}</HelperText>}
         <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>Accedi con Google</Button>
         {demo && (

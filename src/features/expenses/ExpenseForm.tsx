@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
 import { useSnackbar } from '../../components/SnackbarHost';
-import { layout, radius, spacing } from '../../theme/tokens';
+import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import type { Category } from '../../domain/category';
@@ -78,7 +77,7 @@ export function ExpenseForm({ categories, store }: Props) {
       <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={startDate}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })} />
-      {draft.repeat && (
+      {draft.repeat && draft.recurrence && (
         <PromoField value={draft.promo} amount={draft.promoAmount} after={draft.promoAfter} firstAmount={draft.amount}
           recurrence={draft.recurrence} startDate={startDate} disabled={!enabled}
           errors={{ amount: errors.promoAmount, after: errors.promoAfter }} onChange={update} />
@@ -87,44 +86,48 @@ export function ExpenseForm({ categories, store }: Props) {
   );
 
   return (
-    <Card style={[styles.form, size === 'compact' && styles.formCompact]}>
-      <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} disabled={!enabled} categoryRequired withDate split={size !== 'compact'}
+    <View style={[styles.page, styles.pageCentered]}>
+    <View style={styles.form}>
+      <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} disabled={!enabled}
         extra={repeat} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{store.error}</HelperText>}
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{submission.message}</HelperText>
       )}
-      <View style={[styles.footer, size === 'compact' && [styles.sticky, { backgroundColor: theme.colors.elevation.level1, borderColor: theme.colors.outlineVariant }]]}>
+      <View style={[styles.footer, size === 'compact' && [styles.sticky, { backgroundColor: theme.colors.background, borderColor: theme.colors.outlineVariant }]]}>
         {submission.status === 'uncertain' ? (
           <>
             <Text accessibilityRole="alert">
-              Conferma non ancora disponibile. Firestore gestisce la sincronizzazione: controlla lo stato e l’elenco prima di inserire nuovamente la spesa.
+              Conferma non ancora disponibile: controlla lo stato e l’elenco prima di inserire di nuovo la spesa.
             </Text>
             <View style={styles.actions}><Button mode="contained" onPress={store.retry}>Verifica sul server</Button></View>
           </>
         ) : (
           <View style={styles.actions}>
             <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
-              contentStyle={styles.button} style={[styles.submit, size === 'compact' && styles.full]}>
-              {submission.status === 'sending' ? 'In attesa di conferma…' : 'Salva spesa'}
+              contentStyle={styles.button} style={styles.submit}>
+              {submission.status === 'sending' ? 'In attesa di conferma…' : 'Salva'}
             </Button>
           </View>
         )}
       </View>
-    </Card>
+    </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  form: { width: '100%', maxWidth: layout.maxFormPage, padding: spacing.xl, gap: spacing.lg },
+  page: { width: '100%' },
+  // The form fills the main area (sidebar excluded) and its content is centred, on every screen size.
+  pageCentered: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
+  form: { width: '100%', gap: spacing.lg },
   // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
   // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
-  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.lg, marginBottom: -spacing.lg, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderTopWidth: 1, zIndex: 1, borderBottomLeftRadius: radius.card, borderBottomRightRadius: radius.card } as unknown as ViewStyle,
-  formCompact: { padding: spacing.lg, gap: spacing.lg },
-  repeat: { gap: spacing.sm },
+  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, zIndex: 1 } as unknown as ViewStyle,
+  repeat: { gap: spacing.md },
   footer: { gap: spacing.md },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end' },
-  submit: { minWidth: 200 },
+  actions: { flexDirection: 'row' },
+  submit: { flexGrow: 1 },
   full: { flexGrow: 1 },
   button: { minHeight: layout.controlHeight },
 });

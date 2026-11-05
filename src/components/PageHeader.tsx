@@ -1,25 +1,20 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { spacing } from '../theme/tokens';
 
 // One h1 per screen; the top app bar only carries branding. `action` is a secondary,
-// screen-level action (e.g. export) aligned to the title row.
-export function PageHeader({ title, description, action, style }: { title: string; description?: string; action?: ReactNode; style?: StyleProp<ViewStyle> }) {
-  const { colors } = useTheme();
+// screen-level action aligned to the title row. No subtitle: the title says it.
+export function PageHeader({ title, action, style }: { title: string; action?: ReactNode; style?: StyleProp<ViewStyle> }) {
   return (
     <View style={[styles.header, style]}>
-      <View style={styles.titles}>
-        <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{title}</Text>
-        {description && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{description}</Text>}
-      </View>
+      <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{title}</Text>
       {action}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 32, lineHeight: 40, fontWeight: '700' },
-  header: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
-  titles: { gap: spacing.xs, flexGrow: 1, flexShrink: 1, flexBasis: 240 },
+  title: { fontSize: 28, lineHeight: 36, fontWeight: '700', letterSpacing: -0.3, flexShrink: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md, minHeight: 48 },
 });

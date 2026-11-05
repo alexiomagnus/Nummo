@@ -80,7 +80,7 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
   return (
     <AppShell actions={themeToggle}>
       {configMissing && (
-        <Card title="Configurazione Firebase mancante" variant="outlined">
+        <Card title="Configurazione Firebase mancante">
           <Text variant="bodyMedium">
             Mancano: {missingFirebaseConfig.join(', ')}. Copia `.env.example` in `.env.local`,
             compila i valori e riavvia Expo.

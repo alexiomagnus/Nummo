@@ -19,8 +19,7 @@ export function IconPicker({ value, onChange }: Props) {
             accessibilityRole="button" aria-pressed={selected}
             accessibilityLabel={`Icona ${categoryIconLabels[icon]}${selected ? ', selezionata' : ''}`}
             style={[styles.cell, {
-              backgroundColor: selected ? colors.primaryContainer : colors.surfaceVariant,
-              borderColor: selected ? colors.primary : 'transparent',
+              backgroundColor: selected ? colors.primaryContainer : 'transparent',
             }]}>
             <CategoryGlyph icon={icon} size={26} color={selected ? colors.onPrimaryContainer : colors.onSurfaceVariant} />
           </StateLayerPressable>
@@ -32,5 +31,5 @@ export function IconPicker({ value, onChange }: Props) {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  cell: { width: 48, height: 48, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  cell: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
 });

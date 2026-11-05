@@ -19,14 +19,16 @@ export function GlobalStyle() {
       html, body, #root { height: 100%; }
       @supports (height: 100dvh) { html, body, #root { height: 100dvh; } }
       body { overflow: hidden; margin: 0; font-family: ${family}; background: ${colors.background}; color-scheme: ${dark ? 'dark' : 'light'}; }
+      /* Slim scrollbars (no scrollbar-gutter: on RN Web views, which clip with overflow hidden, it shrinks their content). */
+      * { scrollbar-width: thin; scrollbar-color: ${colors.outline} transparent; }
       :focus { outline: none; }
-      :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; border-radius: 4px; }
+      :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }
       input:focus-visible, textarea:focus-visible { outline: none; }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
       }`;
     document.head.appendChild(style);
     return () => { style.remove(); };
-  }, [colors.background, colors.primary, dark, family]);
+  }, [colors.background, colors.primary, colors.outline, dark, family]);
   return null;
 }

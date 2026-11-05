@@ -39,27 +39,25 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
             <Section title="Tema">
               <ChoiceChips label="Tema" options={themeOptions} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
             </Section>
-            <Section title="Colori">
+            <Section title="Colore">
               <ChoiceChips label="Modalità colore" options={modeOptions} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
-              <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-                {preferences.colorMode === 'mono'
-                  ? 'Un solo colore in tutta l’app.' : 'Colore principale con due colori complementari per stati selezionati e icone.'}
-              </Text>
               <View style={styles.swatches} role="radiogroup" aria-label="Colore principale">
                 {accents.map((accent) => {
                   const scheme = buildScheme(accent, preferences.colorMode, dark);
                   const selected = accent === preferences.accent;
+                  const dots = [scheme.primary, ...(preferences.colorMode === 'palette' && accent !== 'graphite' ? [scheme.secondary, scheme.tertiary] : [])];
                   return (
                     <StateLayerPressable key={accent} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="radio"
                       aria-checked={selected} accessibilityLabel={`${accentLabels[accent]}${selected ? ', selezionato' : ''}`}
+                      // `title` is the web tooltip: the swatch carries no visible text.
+                      {...({ title: accentLabels[accent] } as object)}
                       onPress={() => onChange({ accent })}
-                      style={[styles.swatch, { borderColor: selected ? colors.primary : colors.outlineVariant, borderWidth: selected ? 2 : 1 }]}>
+                      style={[styles.swatch, { borderColor: selected ? colors.primary : 'transparent' }]}>
                       <View style={styles.dots}>
-                        {[scheme.primary, ...(preferences.colorMode === 'palette' && accent !== 'graphite' ? [scheme.secondary, scheme.tertiary] : [])].map((color, index) => (
-                          <View key={index} style={[styles.dot, { backgroundColor: color, marginLeft: index ? -6 : 0 }]} />
+                        {dots.map((color, index) => (
+                          <View key={index} style={[styles.dot, { backgroundColor: color, marginLeft: index ? -8 : 0 }]} />
                         ))}
                       </View>
-                      <Text variant="labelMedium" style={{ color: colors.onSurface }}>{accentLabels[accent]}</Text>
                     </StateLayerPressable>
                   );
                 })}
@@ -68,12 +66,11 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
             <Section title="Carattere">
               <ChoiceChips label="Carattere" options={fontOptions} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
             </Section>
-            <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>Le preferenze restano in questo browser.</Text>
           </ScrollView>
         </Dialog.ScrollArea>
         <Dialog.Actions>
           <Button onPress={onReset}>Ripristina</Button>
-          <Button mode="contained" onPress={onDismiss}>Chiudi</Button>
+          <Button mode="contained" onPress={onDismiss}>Fatto</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
@@ -81,9 +78,10 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.section}>
-      <Text variant="titleSmall" accessibilityRole="header">{title}</Text>
+      <Text variant="labelLarge" accessibilityRole="header" style={{ color: colors.onSurfaceVariant }}>{title}</Text>
       {children}
     </View>
   );
@@ -94,7 +92,7 @@ const styles = StyleSheet.create({
   content: { paddingVertical: spacing.sm, gap: spacing.xl },
   section: { gap: spacing.md },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  swatch: { minHeight: layout.minTouch, minWidth: 96, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.control },
+  swatch: { minHeight: layout.minTouch, minWidth: layout.minTouch, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.sm, borderWidth: 2, borderRadius: radius.control },
   dots: { flexDirection: 'row', alignItems: 'center' },
-  dot: { width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(128,128,128,0.4)' },
+  dot: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(128,128,128,0.4)' },
 });

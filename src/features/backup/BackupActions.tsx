@@ -42,7 +42,7 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
     download('nummo-archivio-browser-originale.json', JSON.stringify(raw, null, 2), 'application/json');
     const data = { expenses: readExpenses(storage), categories: readCategories(storage) };
     setPreview(parseImport(JSON.parse(makeBackup(data, { project_id: 'legacy-browser', uid: 'unassigned' }))));
-    setStatus(raw['nummo.recurring.v1'] ? 'Archivio originale scaricato. Le vecchie ricorrenze senza data iniziale sono conservate nel file, ma escluse dall’importazione.' : 'Archivio originale scaricato. Nessun dato del browser verrà cancellato.');
+    setStatus(raw['nummo.recurring.v1'] ? 'Originale scaricato. Le vecchie ricorrenze senza data iniziale restano nel file ma non vengono importate.' : 'Originale scaricato. Nessun dato del browser viene cancellato.');
   });
   const pick = () => {
     const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json';
@@ -54,25 +54,19 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
     }); }; input.click();
   };
   const icon = (shape: string) => ({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape} size={size} color={color} />;
-  return <Card title="Esporta e importa" description="I dati restano tuoi: scarica una copia o importa un backup."
-    actions={onClose && <IconButton icon={icon(iconShapes.close)} style={styles.close} accessibilityLabel="Chiudi esporta e importa" onPress={onClose} />}>
+  return <Card title="Dati"
+    actions={onClose && <IconButton icon={icon(iconShapes.close)} style={styles.close} accessibilityLabel="Chiudi" onPress={onClose} />}>
     <View style={styles.group}>
-      <Text variant="titleSmall">Esporta</Text>
       <View style={styles.buttons}>
-        <Button mode="contained-tonal" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(true)}>Esporta CSV</Button>
-        <Button mode="contained-tonal" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(false)}>Backup JSON</Button>
-      </View>
-    </View>
-    <View style={styles.group}>
-      <Text variant="titleSmall">Importa</Text>
-      <View style={styles.buttons}>
-        <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={busy} onPress={pick}>Importa backup JSON</Button>
-        <Button mode="outlined" disabled={busy} onPress={() => void previewLocal()}>Esamina dati del browser</Button>
+        <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(true)}>CSV</Button>
+        <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(false)}>Backup JSON</Button>
+        <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={busy} onPress={pick}>Importa JSON</Button>
+        <Button mode="text" disabled={busy} onPress={() => void previewLocal()}>Dati del browser</Button>
       </View>
     </View>
     {preview && <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
       <Text variant="bodyLarge">{preview.expenses.length} spese e {preview.categories.length} categorie pronte da importare.</Text>
-      <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Verranno aggiunte ai dati esistenti: nessuna spesa o categoria già presente viene eliminata o sovrascritta. I dati identici a quelli presenti sono saltati; dati in conflitto bloccano l’importazione.</Text>
+      <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Si aggiungono ai dati esistenti, senza eliminare né sovrascrivere nulla. I duplicati identici sono saltati; i conflitti bloccano l’importazione.</Text>
       <Button disabled={busy || !enabled} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
         await backend.importRecords(preview.expenses, preview.categories); setPreview(null); setStatus('Importazione confermata da Firestore. Originali conservati.');
       })}>Conferma importazione</Button>

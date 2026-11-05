@@ -39,14 +39,14 @@ const percent = (part: number, total: number): string => {
 
 type Props = { occurrences: readonly Occurrence[]; categories: readonly Category[] };
 
-function Kpi({ label, value, hint, primary }: { label: string; value: string; hint?: string; primary?: boolean }) {
+// Plain label + value pair (no container): hierarchy comes from size and weight only.
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   const { colors } = useTheme();
-  const text = primary ? colors.onPrimaryContainer : colors.onSurface;
   return (
-    <View style={[styles.kpi, { backgroundColor: primary ? colors.primaryContainer : colors.elevation.level1 }]}>
-      <Text variant="labelLarge" style={{ color: primary ? colors.onPrimaryContainer : colors.onSurfaceVariant }}>{label}</Text>
-      <Text variant="headlineSmall" numberOfLines={1} style={[styles.kpiValue, { color: text }]}>{value}</Text>
-      {hint !== undefined && <Text variant="bodySmall" numberOfLines={1} style={{ color: primary ? colors.onPrimaryContainer : colors.onSurfaceVariant }}>{hint}</Text>}
+    <View style={styles.stat}>
+      <Text variant="labelLarge" style={{ color: colors.onSurfaceVariant }}>{label}</Text>
+      <Text variant="titleLarge" numberOfLines={1} style={styles.statValue}>{value}</Text>
+      {hint !== undefined && <Text variant="bodySmall" numberOfLines={1} style={{ color: colors.onSurfaceVariant }}>{hint}</Text>}
     </View>
   );
 }
@@ -64,7 +64,7 @@ export function Dashboard({ occurrences, categories }: Props) {
   const colors: ChartColors = {
     series: theme.dark ? palette.dark : palette.light,
     neutral: theme.dark ? '#898781' : '#a3a29c',
-    surface: theme.colors.elevation.level1,
+    surface: theme.colors.background,
     text: theme.colors.onSurface,
     muted: theme.colors.onSurfaceVariant,
     grid: theme.colors.outlineVariant,
@@ -131,17 +131,19 @@ export function Dashboard({ occurrences, categories }: Props) {
       </View>
 
       {data.total === 0 ? (
-        <Card>
-          <Text variant="titleMedium">Nessuna spesa in questo periodo</Text>
-          <Text variant="bodyLarge" style={muted}>Cambia periodo oppure registra una spesa con «Nuova spesa»: totali e grafici compaiono qui.</Text>
-        </Card>
+        <Text variant="bodyLarge" style={muted}>Nessuna spesa in questo periodo.</Text>
       ) : (
         <>
-          <View style={styles.kpis} role="group" aria-label={`Riepilogo: ${periodLabels[period].toLowerCase()}`}>
-            <Kpi primary label={`Totale · ${periodLabels[period].toLowerCase()}`} value={formatAmountMinor(data.total)} />
-            <Kpi label="Spese" value={String(data.count)} hint={data.count === 1 ? 'registrata' : 'registrate'} />
-            <Kpi label="Media per spesa" value={formatAmountMinor(Math.round(data.total / data.count))} />
-            {top && <Kpi label="Categoria principale" value={top.label} hint={`${formatAmountMinor(top.total)} · ${percent(top.total, data.total)}`} />}
+          <View role="group" aria-label={`Riepilogo: ${periodLabels[period].toLowerCase()}`} style={styles.summary}>
+            <View>
+              <Text variant="labelLarge" style={muted}>Totale · {periodLabels[period].toLowerCase()}</Text>
+              <Text variant="displaySmall" numberOfLines={1} style={[styles.total, { color: theme.colors.primary }]}>{formatAmountMinor(data.total)}</Text>
+            </View>
+            <View style={styles.stats}>
+              <Stat label="Spese" value={String(data.count)} />
+              <Stat label="Media" value={formatAmountMinor(Math.round(data.total / data.count))} />
+              {top && <Stat label="Principale" value={top.label} hint={`${formatAmountMinor(top.total)} · ${percent(top.total, data.total)}`} />}
+            </View>
           </View>
 
           <Card title={chartTitles[chart]}>
@@ -164,7 +166,7 @@ export function Dashboard({ occurrences, categories }: Props) {
                     </>
                   ) : (
                     <Text variant="bodySmall" style={muted}>
-                      {chart === 'donut' ? 'Tocca una categoria per evidenziarla.' : 'Passa sopra o tocca il grafico per i dettagli.'}
+                      {chart === 'donut' ? 'Tocca una categoria.' : 'Tocca il grafico per i dettagli.'}
                     </Text>
                   )}
                 </View>
@@ -173,21 +175,21 @@ export function Dashboard({ occurrences, categories }: Props) {
             </View>
           </Card>
 
-          <Card title="Dettaglio per periodo" description={withEmpty ? undefined : hidden > 0 ? `Solo i periodi con spese (${hidden} senza movimenti nascosti).` : undefined}
+          <Card title="Dettaglio per periodo" style={styles.detailCard}
             actions={<Button mode="text" aria-expanded={showTable} onPress={() => setShowTable(!showTable)}>{showTable ? 'Nascondi' : 'Mostra'}</Button>}>
             {showTable && (
-              <View role="table" accessibilityLabel="Spese per periodo" style={[styles.table, { borderColor: theme.colors.outlineVariant }]}>
+              <View role="table" accessibilityLabel="Spese per periodo" style={[styles.table, { borderColor: theme.colors.outline }]}>
                 {rows.map(({ item, total }, index) => (
-                  <View key={item.key} role="row" style={[styles.tableRow, index > 0 && { borderTopWidth: 1, borderColor: theme.colors.outlineVariant }]}>
-                    <Text variant="bodyMedium" role="cell" style={styles.legendLabel}>{bucketTitle(item, period)}</Text>
-                    <Text variant="bodyMedium" role="cell" style={[styles.number, total === 0 && muted]}>{formatAmountMinor(total)}</Text>
+                  <View key={item.key} role="row" style={[styles.tableRow, index > 0 && { borderTopWidth: 1, borderColor: theme.colors.outline }]}>
+                    <Text variant="bodyMedium" role="cell" style={[styles.legendLabel, total === 0 && muted]}>{bucketTitle(item, period)}</Text>
+                    <Text variant="bodyMedium" role="cell" style={[styles.number, styles.rowAmount, total === 0 && muted]}>{formatAmountMinor(total)}</Text>
                   </View>
                 ))}
               </View>
             )}
             {showTable && hidden > 0 && (
-              <Button mode="text" onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
-                {withEmpty ? 'Nascondi periodi senza spese' : `Mostra tutto il periodo (${data.buckets.length})`}
+              <Button compact mode="text" onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
+                {withEmpty ? 'Solo con spese' : `Mostra tutti ${period === 'month' ? 'i giorni' : 'i periodi'} (+${hidden})`}
               </Button>
             )}
           </Card>
@@ -202,13 +204,15 @@ const styles = StyleSheet.create({
   // Period on the left, chart type on the right; they wrap on narrow windows.
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.sm },
   select: { flexGrow: 1, flexBasis: 140, minWidth: 0 },
-  kpis: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  kpi: { flexGrow: 1, flexBasis: 150, minWidth: 0, borderRadius: radius.card, padding: spacing.lg, gap: 2 },
-  kpiValue: { fontWeight: '700', fontVariant: ['tabular-nums'] },
+  summary: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: spacing.xl },
+  total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxl },
+  stat: { gap: 2, minWidth: 0 },
+  statValue: { fontWeight: '600', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   chartCol: { flex: 1, minWidth: 0, gap: spacing.sm },
-  legendCol: { width: 320, flexShrink: 0 },
+  legendCol: { width: 360, flexShrink: 0 },
   detail: { minHeight: 24, gap: 4 },
   legend: { gap: 2 },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 40, paddingHorizontal: spacing.sm },
@@ -216,7 +220,10 @@ const styles = StyleSheet.create({
   legendLabel: { flex: 1, minWidth: 0 },
   number: { fontVariant: ['tabular-nums'], textAlign: 'right' },
   share: { width: 40 },
-  start: { alignSelf: 'flex-start' },
-  table: { borderWidth: 1, borderRadius: radius.control, overflow: 'hidden' },
-  tableRow: { flexDirection: 'row', paddingVertical: spacing.sm, paddingHorizontal: spacing.md, minHeight: 40, alignItems: 'center' },
+  start: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
+  // Full-width table with a bold outline, sized by its content (rows without minimum height).
+  detailCard: { width: '100%', gap: spacing.sm },
+  table: { width: '100%', borderWidth: 2, borderRadius: radius.control, overflow: 'hidden' },
+  tableRow: { flexDirection: 'row', paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignItems: 'center', gap: spacing.lg },
+  rowAmount: { fontWeight: '600' },
 });

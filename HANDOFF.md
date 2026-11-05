@@ -53,6 +53,30 @@ il foglio non è mai stato reale, `SHEET_ID=emulator`).
   headless su una pagina di prova con dati finti (360–1440 px), non con login/emulatori. Avviso console residuo:
   `useNativeDriver` di Paper/RNW. Il file `logo` nella radice è la sorgente fornita dall'utente.
 
+- Refactor Swiss minimalism (5 nov, non committato): raggi 8 (controlli) / 12 (dialog); `Card` è una sezione piatta
+  (niente fondo, bordo o descrizione); `PageHeader` senza sottotitolo; `ListRow` con glifo senza tile colorata;
+  azioni di riga su desktop = icone (matita/cestino) con etichetta accessibile; nessun tetto di larghezza sulle
+  pagine (rimossi `maxContent`/`maxFormPage`; `maxForm` resta per i dialog); `sectionGap` 32. Nuova spesa senza
+  card, due colonne a tutta larghezza; «Ricorrente»/«Prezzo promozionale» senza sottotitoli. Spese: filtri +
+  riga riepilogo, «Prossimi rinnovi» è una riga comprimibile (chiusa), «Dati» (ex Esporta e importa) senza card.
+  Dashboard: totale grande + statistiche inline, niente KPI-card, tabella dettaglio chiusa di default.
+  Categorie: riga unica nome · Icona · Aggiungi, griglia icone a richiesta. Impostazioni: campioni colore
+  solo pallini (nome in `title`/aria). Verificati solo `npm run check`; **nessuna verifica visiva nel browser**.
+
+- Seconda passata UI (5 nov, non committata): `components/DateField.tsx` (`DateButton` + `DateCalendar`, griglia mese
+  senza dipendenze, giorni fuori da 2000-01-01…oggi disabilitati). `ExpenseFields` condiviso da Nuova spesa e modale
+  Modifica: colonna unica (max 560 sul modulo), riga Importo + Data, poi Descrizione, Categoria (sempre obbligatoria,
+  anche in modifica), Ricorrente; il prezzo promozionale compare solo con frequenza scelta. La modale permette di
+  cambiare la data (anche di una serie; l'indice dei rinnovi del piano prezzi resta riferito alla data originale).
+  Categorie: Nome · Icona · Aggiungi con stessa altezza (50 dp, `fieldBoxHeight`). Non verificato nel browser
+  (schermate/Excalidraw allegati non ricevuti): controllare a 412×915 e desktop.
+
+- Terza passata UI (5 nov, non committata): 32 nuovi glifi categoria (54 in tutto; `category.ts`, `categoryGlyphs.ts`, lista
+  icone in `firestore.rules`); `maxContent` 1440 re-introdotto e contenuto centrato nell'`AppShell`; Nuova spesa a due
+  colonne (Importo+Data+Descrizione | Categoria+Ricorrente) da 600 px in su, calendario largo come la Descrizione;
+  il logo/«Nummo» porta a Nuova spesa (nessun effetto se già lì); rimossa la frase sotto il prezzo promozionale.
+  `npm run check` e `test:emulator` (porte alternative 9199/8280) passano; i nuovi glifi non sono stati visti a schermo.
+
 ## Decisioni da ricordare
 
 - Un solo `Menu` Paper per elenco, ancorato a coordinate (`ExpenseList`): un `Menu` per riga sposta il

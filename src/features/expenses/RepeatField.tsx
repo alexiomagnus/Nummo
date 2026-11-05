@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { M3Switch } from '../../components/M3Switch';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
-import { recurrenceLabels, type Recurrence } from '../../domain/recurrence';
+import type { Recurrence } from '../../domain/recurrence';
 import { radius, spacing } from '../../theme/tokens';
 import { RecurrencePicker } from './RecurrencePicker';
 
@@ -28,21 +28,17 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
     <View style={styles.group}>
       <StateLayerPressable onPress={() => onRepeatChange(!repeat)} disabled={disabled} layerColor={colors.onSurface}
         radius={radius.control} style={styles.toggle} accessibilityRole="switch" aria-checked={repeat} aria-disabled={disabled}
-        accessibilityLabel="Spesa ricorrente">
+        accessibilityLabel="Ricorrente">
         <View style={styles.text}>
-          <Text variant="titleSmall">Spesa ricorrente</Text>
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>Si ripete nel tempo: abbonamento, affitto, bolletta</Text>
+          <Text variant="titleSmall">Ricorrente</Text>
         </View>
         <M3Switch value={repeat} disabled={disabled} />
       </StateLayerPressable>
       {repeat && (
         <View style={styles.options}>
-          <Text variant="labelLarge" style={{ color: colors.onSurfaceVariant }}>Frequenza</Text>
           <RecurrencePicker value={recurrence} error={Boolean(error)} disabled={disabled} onChange={onRecurrenceChange} />
           <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-            {recurrence
-              ? `Si ripete ${unit[recurrence]} dal ${dateFormat.format(new Date(`${startDate}T00:00:00Z`))}. Ogni occorrenza viene contata nelle spese quando arriva la sua data.`
-              : `Scegli ogni quanto si ripete (${Object.values(recurrenceLabels).join(', ').toLowerCase()}).`}
+            {recurrence ? `Si ripete ${unit[recurrence]} dal ${dateFormat.format(new Date(`${startDate}T00:00:00Z`))}.` : 'Scegli la frequenza.'}
           </Text>
         </View>
       )}
@@ -54,7 +50,7 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   // M3 list item with trailing switch: the whole row is the touch target.
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, marginHorizontal: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  text: { flex: 1, gap: 2 },
+  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 48, paddingVertical: spacing.xs },
+  text: { flex: 1 },
   options: { gap: spacing.sm },
 });

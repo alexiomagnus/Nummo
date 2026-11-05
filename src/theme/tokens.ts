@@ -42,7 +42,7 @@ export const schemes: { light: Scheme; dark: Scheme } = {
   },
 };
 
-// 4 px grid.
+// 4 px grid. Pages use `lg` (16) between related blocks and `xxl` (32) between sections.
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 } as const;
 
 // Material 3 shape scale (dp).
@@ -54,15 +54,15 @@ export type SizeClass = 'compact' | 'medium' | 'expanded';
 export const sizeClassOf = (width: number): SizeClass =>
   width >= breakpoints.expanded ? 'expanded' : width >= breakpoints.medium ? 'medium' : 'compact';
 
-// Soft-rounded identity: one radius per role, never a pill unless the shape is functionally
-// round (avatar, charts, FAB-less dots). Components read these instead of `shape` literals.
+// Swiss geometry: one small radius per role, never a pill unless the shape is functionally
+// round (avatar, charts, dots). Components read these instead of `shape` literals.
 export const radius = {
-  control: 12, // buttons, selects, chips, menus, snackbar, FAB
-  input: 12, // outlined text fields
-  card: 12, // cards, panels, KPI tiles
-  dialog: 16, // dialogs
-  nav: 12, // selected navigation item (drawer, rail, bar)
-  tile: 12, // icon tiles
+  control: 8, // buttons, selects, chips, menus, snackbar, FAB
+  input: 8, // outlined text fields
+  card: 8, // panels and inline editors
+  dialog: 12, // dialogs
+  nav: 8, // selected navigation item (drawer, rail, bar)
+  tile: 8, // icon tiles
 } as const;
 // Spread on every outlined TextInput (Paper takes the field radius from `outlineStyle`).
 export const inputOutline = { borderRadius: radius.input } as const;
@@ -74,14 +74,12 @@ export const layout = {
   railWidth: 80,
   drawerWidth: 248,
   topBarHeight: 64,
-  // Every page fills the main area up to this width (centred beyond it).
-  maxContent: 1200,
-  // Single-column forms (new expense) stay readable instead of stretching.
+  // Pages fill the viewport up to this width and are centred beyond it (very wide monitors).
+  maxContent: 1440,
+  // Dialogs.
   maxForm: 560,
-  // The new-expense page: a two-column form, still capped so fields do not stretch across a wide window.
-  maxFormPage: 720,
   // Gap between the blocks of a page (toolbar, cards, panels).
-  sectionGap: spacing.lg,
+  sectionGap: spacing.xxl,
   controlHeight: 56,
   // Visible box of an outlined TextInput (Paper's 56 dp container reserves 6 dp on top for the floating label).
   fieldBoxHeight: 50,

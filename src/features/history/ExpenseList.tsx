@@ -6,7 +6,6 @@ import type { Category } from '../../domain/category';
 import { formatAmountMinor } from '../../domain/expense';
 import { searchAndSort, sortLabels, sortOptions, type Occurrence, type SortOption } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
-import { Card } from '../../components/Card';
 import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
 import { leadingIcon } from '../../components/FieldIcon';
 import { MenuSelect } from '../../components/MenuSelect';
@@ -78,8 +77,8 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
         <MenuSelect label="Categoria" icon={iconShapes.filter} options={categoryChoices} value={filter} onChange={setCategoryFilter} style={styles.select} />
       </View>
       {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
-      <View style={[styles.summary, { backgroundColor: theme.colors.elevation.level2 }]}>
-        <Text variant="titleSmall" accessibilityLiveRegion="polite" style={{ color: theme.colors.onSurfaceVariant }}>
+      <View style={styles.summary}>
+        <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.onSurfaceVariant }}>
           {results.length === 1 ? (filtered ? '1 spesa trovata' : '1 spesa') : `${results.length} spese${filtered ? ' trovate' : ''}`}
         </Text>
         <Text variant="titleMedium" style={styles.amount}>{formatAmountMinor(total)}</Text>
@@ -88,7 +87,7 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
   );
 
   return (
-    <Card>
+    <View style={styles.root}>
       {filters}
       <View role="list">
         {results.map((item, index) => {
@@ -120,20 +119,20 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
                       icon={({ size, color }) => <SvgIcon shape={iconShapes.dots} size={size} color={color} />}
                       onPress={() => anchors.current.get(item.key)?.measureInWindow((x, y, width, height) => setMenu({ key: item.key, x: x + width, y: y + height }))} />
                   ) : <>
-                    {onEdit && <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
-                      accessibilityLabel={`Modifica ${item.description}`} onPress={() => onEdit(item.expenseId)}>Modifica</Button>}
-                    {onDelete && <DeleteAction labeled name={name} description={item.recurrence ? seriesNote : undefined}
+                    {onEdit && <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
+                      accessibilityLabel={`Modifica ${item.description}`} onPress={() => onEdit(item.expenseId)} />}
+                    {onDelete && <DeleteAction name={name} description={item.recurrence ? seriesNote : undefined}
                       onDelete={() => onDelete(item.expenseId)} />}
                   </>}
                 </>} />
             </View>
           );
         })}
-        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Non hai ancora salvato spese. Aggiungi la prima con «Nuova spesa».</Text>}
+        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna spesa. Aggiungi la prima con «Nuova spesa».</Text>}
         {occurrences.length > 0 && results.length === 0 && (
           <View style={styles.empty}>
-            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna spesa corrisponde a ricerca e filtri.</Text>
-            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); }}>Azzera ricerca e filtri</Button></View>
+            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessun risultato.</Text>
+            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); }}>Azzera filtri</Button></View>
           </View>
         )}
       </View>
@@ -152,7 +151,7 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
       </Menu>
       <DeleteDialog visible={deleting !== null} name={deleting?.name ?? ''} description={deleting?.description}
         onDismiss={() => setDeleting(null)} onConfirm={() => deleting ? deleting.run() : false} />
-    </Card>
+    </View>
   );
 }
 
@@ -161,8 +160,9 @@ const styles = StyleSheet.create({
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', gap: spacing.md },
   search: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
   select: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
-  summary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderRadius: radius.control, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: spacing.lg, paddingBottom: spacing.xs },
+  root: { gap: spacing.lg },
+  summary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: spacing.xl, paddingBottom: spacing.xs },
   monthName: { textTransform: 'capitalize' },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
   rowAmount: { minWidth: 96, textAlign: 'right' },

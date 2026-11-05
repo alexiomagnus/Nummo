@@ -9,7 +9,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SyncChip } from '../../components/SyncChip';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { layout } from '../../theme/tokens';
+import { layout, radius, spacing } from '../../theme/tokens';
 import { describeSync } from './syncStatus';
 import { addDays, expandOccurrences, forecastOccurrences, upcomingRenewals } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
@@ -38,12 +38,7 @@ const destinations: readonly Destination<Section>[] = [
   { value: 'dashboard', label: 'Dashboard', icon: iconShapes.chart },
   { value: 'categories', label: 'Categorie', icon: iconShapes.tag },
 ];
-const headings: Record<Section, { title: string; description: string }> = {
-  expense: { title: 'Nuova spesa', description: 'Importo, descrizione e categoria sono obbligatori.' },
-  list: { title: 'Spese', description: 'Cerca, filtra, modifica o elimina le spese registrate.' },
-  dashboard: { title: 'Dashboard', description: 'Come si distribuiscono le tue spese nel tempo.' },
-  categories: { title: 'Categorie', description: 'Organizza le spese con categorie e icone.' },
-};
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', categories: 'Categorie' };
 
 // Keyed by UID in App: every listener, draft and view is discarded on account change.
 export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string; storageNote: string; topActions?: ReactNode }) {
@@ -97,20 +92,20 @@ function Sections({ section, backend, uid, store, categoryState, occurrences, re
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
   const heading = headings[section];
   return <>
-    <PageHeader title={heading.title} description={heading.description} 
+    <PageHeader title={heading}
       action={section === 'list' ? (
-        <Button mode="outlined" icon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
-          aria-expanded={showBackup} onPress={() => setShowBackup(!showBackup)}>Esporta e importa</Button>
+        <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
+          aria-expanded={showBackup} onPress={() => setShowBackup(!showBackup)}>Dati</Button>
       ) : undefined} />
     {!!store.recovery?.length && (
-      <Card style={{ backgroundColor: theme.colors.errorContainer }}>
-        <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{store.recovery.length === 1 ? 'Una spesa in attesa non risulta confermata' : `${store.recovery.length} spese in attesa non risultano confermate`} sul server. Scaricane una copia prima di chiudere o uscire; nessun reinvio automatico.</Text>
+      <Card style={[styles.alert, { backgroundColor: theme.colors.errorContainer }]}>
+        <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{store.recovery.length === 1 ? 'Una spesa in attesa non risulta confermata' : `${store.recovery.length} spese in attesa non risultano confermate`} sul server. Scaricane una copia prima di chiudere o uscire.</Text>
         <View style={styles.start}>
           <Button mode="contained" buttonColor={theme.colors.error} textColor={theme.colors.onError} onPress={() => download('nummo-spese-da-recuperare.json', makeBackup({ expenses: store.recovery!, categories: categoryState.categories }, { project_id: firebaseWebConfig.projectId, uid }), 'application/json')}>Scarica spese da recuperare</Button>
         </View>
       </Card>
     )}
-    <View style={section === 'expense' ? undefined : styles.hidden}>
+    <View style={section === 'expense' ? styles.grow : styles.hidden}>
       <ExpenseForm categories={categoryState.categories} store={{ ...store, ready: store.ready && categoryState.ready }} />
     </View>
     {section === 'list' && (
@@ -142,5 +137,7 @@ const styles = StyleSheet.create({
   // Pages fill the main area (the shell already caps the width); only the form is a narrow column.
   list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
+  grow: { flexGrow: 1 },
+  alert: { padding: spacing.lg, borderRadius: radius.card },
   start: { alignSelf: 'flex-start' },
 });

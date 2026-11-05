@@ -1,4 +1,4 @@
-// Outline glyphs (24×24, 2 px stroke) for the category icon IDs. Same style as the UI icons in
+// Outline glyphs (24×24) for the category icon IDs. Same style as the UI icons in
 // SvgIcon.tsx. Pure data: IDs are the stable `categoryIcons` stored in Firestore.
 import type { CategoryIcon } from '../domain/category.ts';
 
@@ -25,4 +25,36 @@ export const categoryGlyphs: Record<CategoryIcon, string> = {
   dumbbell: '<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
   phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
   coin: '<circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1 2-2.5 2c-1 0-2-.5-2.5-1.5"/>',
+  train: '<rect x="5" y="3.5" width="14" height="13" rx="3"/><path d="M5 11h14M9 16.5 7 20.5M15 16.5l2 4M9 7.5h.01M15 7.5h.01"/>',
+  plane: '<path d="M21 4 3 11l6.5 2.5L12 20l2-5.5L21 4Z"/><path d="m9.5 13.5 4-3"/>',
+  bus: '<rect x="4" y="3.5" width="16" height="14" rx="2.5"/><path d="M4 11h16M7 17.5v2.5M17 17.5v2.5M8 14.2h.01M16 14.2h.01"/>',
+  bike: '<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-8h5l3 8M10 8 8.5 6H7M12.5 12.5H9"/>',
+  fuel: '<path d="M5 20V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15M4 20h11"/><path d="M5 9h9M14 8l3 2.5V16a1.5 1.5 0 0 0 3 0V9l-3-3"/>',
+  wifi: '<path d="M3 9.5a14 14 0 0 1 18 0M6 13a9.5 9.5 0 0 1 12 0M9 16.5a5 5 0 0 1 6 0M12 20h.01"/>',
+  music: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+  film: '<rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M8 4v16M16 4v16M3.5 9h4.5M3.5 15h4.5M16 9h4.5M16 15h4.5"/>',
+  camera: '<path d="M4 8h3l1.5-2.5h7L17 8h3v11H4V8Z"/><circle cx="12" cy="13" r="3.5"/>',
+  scissors: '<circle cx="6" cy="6.5" r="2.5"/><circle cx="6" cy="17.5" r="2.5"/><path d="M8 8l12 9.5M8 16l12-9.5"/>',
+  wrench: '<path d="M14.5 6.5a4 4 0 0 0 4.6 5.2L20 13 11 21.5 3.5 14l8.5-8.5 2.5 1Z"/><path d="M14 4a4 4 0 0 1 5 5"/>',
+  graduation: '<path d="m2.5 9.5 9.5-5 9.5 5-9.5 5-9.5-5Z"/><path d="M6.5 12v4.5c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3V12M21.5 9.5V15"/>',
+  briefcase: '<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7.5M3.5 13h17"/>',
+  baby: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c1.5 0 2.5 1 2 2.5M9 12h.01M15 12h.01M9.5 15.5a3.5 3.5 0 0 0 5 0"/>',
+  sofa: '<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 12.5a2 2 0 0 1 4 0V14h10v-1.5a2 2 0 0 1 4 0V18H3v-5.5ZM6 18v2M18 18v2"/>',
+  droplet: '<path d="M12 3.5s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/>',
+  flame: '<path d="M12 21a6 6 0 0 0 6-6c0-3-2-5-3.5-7-.5 1.5-1.5 2.5-2.5 3 0-3-1-5.5-3-7.5C8.5 8 6 10.5 6 15a6 6 0 0 0 6 6Z"/>',
+  wine: '<path d="M7 3.5h10c0 5-1.5 8-5 8s-5-3-5-8Z"/><path d="M12 11.5V20M8 20.5h8M7.3 7.5h9.4"/>',
+  beer: '<path d="M5.5 7h10v12h-10V7Z"/><path d="M15.5 9.5H18a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 18 15.5h-2.5M5.5 7a2.5 2.5 0 0 1 3-2.5 2.5 2.5 0 0 1 4.5 0 2.5 2.5 0 0 1 2.5 2.5M9 11v4.5M12 11v4.5"/>',
+  cake: '<path d="M4 20h16v-6.5H4V20Z"/><path d="M4 16.5c2 1.5 3 1.5 4 0s2.5-1.5 4 0 3 1.5 4 0 2-1.5 4 0M12 13.5V9.5M12 3.5c1 1.5 1 2.5 0 3.5-1-1-1-2 0-3.5Z"/>',
+  umbrella: '<path d="M3 12a9 9 0 0 1 18 0H3Z"/><path d="M12 12v6.5a2 2 0 0 0 4 0"/>',
+  leaf: '<path d="M5 19C4 10 9 4 20 4c0 11-6 16-15 15Z"/><path d="M5 19 14 10"/>',
+  laptop: '<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M2.5 19h19l-1.5-4H4l-1.5 4Z"/>',
+  receipt: '<path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2v-17Z"/><path d="M9 8h6M9 12h6"/>',
+  piggy: '<path d="M5 12.5c0-3.5 3-6 7-6 1.5 0 2.8.4 3.8 1L19 6.5v3.5c1 .8 1.5 1.8 1.5 3V16h-2.5l-1 2.5h-3L13 17h-3l-.5 1.5h-3L5.5 15.5C5.2 14.5 5 13.5 5 12.5Z"/><path d="M15.5 11.5h.01M9 8.5h4"/>',
+  shield: '<path d="M12 3 4.5 6v6c0 4.5 3.2 7.5 7.5 9 4.3-1.5 7.5-4.5 7.5-9V6L12 3Z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+  ticket: '<path d="M3.5 8a1.5 1.5 0 0 1 1.5-1.5h14A1.5 1.5 0 0 1 20.5 8v2.5a2 2 0 0 0 0 3V16a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 16v-2.5a2 2 0 0 0 0-3V8Z"/><path d="M14.5 6.5v11"/>',
+  cross: '<path d="M9 3.5h6v5.5h5.5v6H15v5.5H9V15H3.5V9H9V3.5Z"/>',
+  bed: '<path d="M3.5 19V6M3.5 15h17v4M20.5 15v-3.5a2.5 2.5 0 0 0-2.5-2.5h-7v6"/><circle cx="7" cy="11.5" r="1.8"/>',
+  tree: '<path d="M12 21v-5M12 3.5c-4 0-6.5 3-6.5 6 0 2 1 3.5 2.5 4.5H6.5c-1 1.5 0 3 2 3h7c2 0 3-1.5 2-3H16c1.5-1 2.5-2.5 2.5-4.5 0-3-2.5-6-6.5-6Z"/>',
+  sparkles: '<path d="M10 4l1.8 4.7L16.5 10.5l-4.7 1.8L10 17l-1.8-4.7L3.5 10.5l4.7-1.8L10 4ZM18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14Z"/>',
+  tv: '<rect x="3" y="5.5" width="18" height="12" rx="2"/><path d="M8 20.5h8M12 17.5v3"/>',
 };

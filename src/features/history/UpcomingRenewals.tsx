@@ -1,38 +1,56 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { Card } from '../../components/Card';
 import { ListRow, listRowStyles } from '../../components/ListRow';
+import { StateLayerPressable } from '../../components/StateLayerPressable';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import { formatAmountMinor } from '../../domain/expense';
 import type { Renewal } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
+import { radius, spacing } from '../../theme/tokens';
 
 const dateFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 type Props = { renewals: readonly Renewal[]; categories: readonly Category[]; soon: number; days: number };
 
 // Forecast, kept apart from the spending list: these payments have not happened yet, so they are
-// not in the totals, the dashboard or the exports.
+// not in the totals, the dashboard or the exports. One discreet line, expandable.
 export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
   const { colors } = useTheme();
+  const [open, setOpen] = useState(false);
   if (renewals.length === 0) return null;
   return (
-    <Card title="Prossimi rinnovi" description={`Pagamenti previsti, non ancora contati nelle spese. Entro ${days} giorni: ${formatAmountMinor(soon)}.`}>
-      <View role="list">
-        {renewals.map(({ occurrence, previous }, index) => {
-          const category = categories.find((entry) => entry.id === occurrence.category_id);
-          const changed = occurrence.amount_minor !== previous;
-          const details = [`Previsto il ${dateFormat.format(new Date(`${occurrence.date}T00:00:00Z`))}`, category?.label,
-            occurrence.recurrence && recurrenceLabels[occurrence.recurrence],
-            changed && `cambia da ${formatAmountMinor(previous)}`].filter(Boolean).join(' · ');
-          return (
-            <ListRow key={occurrence.key} divider={index < renewals.length - 1} icon={category?.icon ?? null} title={occurrence.description} subtitle={details}
-              trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.amount, { color: colors.onSurfaceVariant }]}>{formatAmountMinor(occurrence.amount_minor)}</Text>} />
-          );
-        })}
-      </View>
-    </Card>
+    <View>
+      <StateLayerPressable onPress={() => setOpen(!open)} layerColor={colors.onSurface} radius={radius.control}
+        accessibilityRole="button" aria-expanded={open} accessibilityLabel={`Prossimi rinnovi, ${formatAmountMinor(soon)} entro ${days} giorni`}
+        style={[styles.header, { borderColor: colors.outlineVariant }]}>
+        <Text variant="titleSmall" style={styles.title}>Prossimi rinnovi</Text>
+        <Text variant="bodyMedium" style={[styles.amount, { color: colors.onSurfaceVariant }]}>{formatAmountMinor(soon)} · {days} giorni</Text>
+        <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={20} color={colors.onSurfaceVariant} />
+      </StateLayerPressable>
+      {open && (
+        <View role="list">
+          {renewals.map(({ occurrence, previous }, index) => {
+            const category = categories.find((entry) => entry.id === occurrence.category_id);
+            const changed = occurrence.amount_minor !== previous;
+            const details = [dateFormat.format(new Date(`${occurrence.date}T00:00:00Z`)), category?.label,
+              occurrence.recurrence && recurrenceLabels[occurrence.recurrence],
+              changed && `da ${formatAmountMinor(previous)}`].filter(Boolean).join(' · ');
+            return (
+              <ListRow key={occurrence.key} divider={index < renewals.length - 1} icon={category?.icon ?? null} title={occurrence.description} subtitle={details}
+                trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount, { color: colors.onSurfaceVariant }]}>{formatAmountMinor(occurrence.amount_minor)}</Text>} />
+            );
+          })}
+        </View>
+      )}
+    </View>
   );
 }
 
-const styles = StyleSheet.create({ amount: { minWidth: 96, textAlign: 'right' } });
+const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.md, borderWidth: 1 },
+  title: { flex: 1 },
+  amount: { fontVariant: ['tabular-nums'] },
+  rowAmount: { minWidth: 96, textAlign: 'right' },
+});
