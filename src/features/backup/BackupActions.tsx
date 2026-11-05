@@ -7,8 +7,6 @@ import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, radius, spacing } from '../../theme/tokens';
 import { exportCsv, makeBackup, parseImport, type ImportData } from '../../domain/backup';
-import { readExpenses } from '../../services/expenseStorage';
-import { readCategories } from '../../services/categoryStorage';
 import { firebaseWebConfig } from '../../services/backendConfig';
 import type { FirestoreStore } from '../../services/firestoreStore';
 import { message } from '../expenses/useRemoteExpenses';
@@ -34,16 +32,6 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
       : makeBackup(data, { project_id: firebaseWebConfig.projectId, uid }), csv ? 'text/csv;charset=utf-8' : 'application/json');
     notify(csv ? 'CSV delle occorrenze fino a oggi esportato.' : 'Backup completo esportato.');
   });
-  const previewLocal = () => run(async () => {
-    // Back up exact raw storage first, including obsolete records with no start date.
-    setPreview(null);
-    const storage = window.localStorage;
-    const raw = Object.fromEntries(['nummo.expenses.v1', 'nummo.categories.v1', 'nummus.categories.v1', 'nummo.recurring.v1'].map((key) => [key, storage.getItem(key)]));
-    download('nummo-archivio-browser-originale.json', JSON.stringify(raw, null, 2), 'application/json');
-    const data = { expenses: readExpenses(storage), categories: readCategories(storage) };
-    setPreview(parseImport(JSON.parse(makeBackup(data, { project_id: 'legacy-browser', uid: 'unassigned' }))));
-    setStatus(raw['nummo.recurring.v1'] ? 'Originale scaricato. Le vecchie ricorrenze senza data iniziale restano nel file ma non vengono importate.' : 'Originale scaricato. Nessun dato del browser viene cancellato.');
-  });
   const pick = () => {
     const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json';
     input.onchange = () => { void run(async () => {
@@ -61,7 +49,6 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
         <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(true)}>CSV</Button>
         <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(false)}>Backup JSON</Button>
         <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={busy} onPress={pick}>Importa JSON</Button>
-        <Button mode="text" disabled={busy} onPress={() => void previewLocal()}>Dati del browser</Button>
       </View>
     </View>
     {preview && <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">

@@ -48,8 +48,8 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
 const styles = StyleSheet.create({
   list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
-    maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    paddingHorizontal: spacing.md, borderRadius: radius.control, borderWidth: 1,
+    maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    paddingHorizontal: spacing.lg, borderRadius: radius.control, borderWidth: 1,
   },
   label: { flexShrink: 1 },
 });

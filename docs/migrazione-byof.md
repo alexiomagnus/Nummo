@@ -52,18 +52,16 @@ esportatore `export:legacy:emulator`) è stato rimosso il 2 novembre 2026 dopo a
 verificato che non c'erano dati da migrare: il foglio non è mai stato reale
 (`SHEET_ID=emulator`) e gli emulatori non contenevano righe storiche oltre ai dati dei
 test. Recupero dalla cronologia Git, commit `fe759d5`.
-Gli hook che scrivevano in localStorage sono rimossi; gli adapter storici restano per
-leggere/migrare e per i test di compatibilità, senza scritture nel percorso attivo.
+Gli hook che scrivevano in localStorage e gli adapter storici sono rimossi (5 novembre 2026,
+recuperabili dal commit `e2b84d3`): l'unica importazione resta quella da file JSON.
 
 ## Conservazione dei dati
 
 1. Conservare gli originali prima di cambiare ambiente. Non svuotare cache o emulatori
    che contengono dati; `firebase emulators:export <cartella-nuova>` permette una copia
    manuale dell'emulatore in esecuzione (specificare progetto/config corretti).
-2. Nell'app, Spese → Esamina dati del browser scarica prima una copia delle quattro
-   chiavi originali. Legge spese/categorie con gli adapter esistenti, senza seed o
-   modifiche. Le vecchie `nummo.recurring.v1`, prive di data iniziale, sono conservate
-   ma escluse: occorre assegnare esplicitamente una data, senza inventarla.
+2. (Rimosso) L'esame dei dati del browser non esiste più: i vecchi dati localStorage
+   vanno esportati prima con una versione precedente (commit `e2b84d3`) e importati da JSON.
 3. Anteprima con conteggi, progetto e UID destinatario, poi conferma esplicita.
    Niente associazione automatica all'account che effettua login.
 4. Preflight di tutti gli ID, nomi e payload contro il server. Se esistono con valori

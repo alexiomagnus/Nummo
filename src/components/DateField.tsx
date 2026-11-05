@@ -45,7 +45,7 @@ export function DateCalendar({ value, onChange }: { value: string; onChange: (da
   const canPrev = iso(year, monthIndex, 1) > expensePolicy.minDate;
   const canNext = iso(year, monthIndex + 1, 1) <= today;
   const nav = (label: string, shape: string, enabled: boolean, onPress: () => void) => (
-    <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} disabled={!enabled} onPress={onPress}
+    <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} disabled={!enabled} bleed={4} onPress={onPress}
       accessibilityRole="button" accessibilityLabel={label} style={styles.nav}>
       <SvgIcon shape={shape} size={20} color={colors.onSurface} />
     </StateLayerPressable>
@@ -65,7 +65,7 @@ export function DateCalendar({ value, onChange }: { value: string; onChange: (da
           const allowed = date >= expensePolicy.minDate && date <= today;
           return (
             <View key={index} style={styles.cell}>
-              <StateLayerPressable layerColor={active ? colors.onPrimary : colors.onSurface} radius={radius.control} disabled={!allowed}
+              <StateLayerPressable layerColor={active ? colors.onPrimary : colors.onSurface} bleed={2} radius={radius.control} disabled={!allowed}
                 onPress={() => onChange(date === today ? '' : date)} accessibilityRole="button" aria-pressed={active}
                 accessibilityLabel={dayFormat.format(new Date(`${date}T00:00:00Z`))}
                 style={[styles.day, active && { backgroundColor: colors.primary }, !active && date === today && { borderWidth: 1, borderColor: colors.primary }]}>

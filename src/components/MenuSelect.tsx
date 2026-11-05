@@ -44,7 +44,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
         }>
         {options.map((option) => (
           <Menu.Item key={option.value} title={option.label} onPress={() => { setOpen(false); onChange(option.value); }}
-            trailingIcon={option.value === value ? ({ size, color }) => <SvgIcon shape={iconShapes.check} size={size} color={color} /> : undefined}
+            trailingIcon={option.value === value ? ({ size, color }) => <View style={{ marginLeft: spacing.md }}><SvgIcon shape={iconShapes.check} size={size} color={color} /></View> : undefined}
             accessibilityLabel={`${option.label}${option.value === value ? ', selezionato' : ''}`} />
         ))}
       </Menu>

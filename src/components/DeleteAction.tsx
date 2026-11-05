@@ -38,7 +38,7 @@ export function DeleteDialog({ visible, name, title, description, onDismiss, onC
             <SvgIcon shape={iconShapes.trash} size={24} color={colors.error} />
             <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>{title ?? `Eliminare ${name}?`}</Text>
           </View>
-          <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? 'L’operazione non può essere annullata.'}</Text>
+          {(description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? 'L’operazione non può essere annullata.'}</Text>}
           <View style={[styles.actions, compact && styles.actionsCompact]}>
             <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={onDismiss}>Annulla</Button>
             <Button mode="contained" buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy} contentStyle={styles.button}
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column-reverse', alignItems: 'stretch' },
-  button: { paddingHorizontal: spacing.sm },
+  button: { paddingHorizontal: spacing.xs, minHeight: 40 },
 });
 
 // Trash icon first, explicit confirmation dialog second. The action seen when the dialog

@@ -15,7 +15,7 @@ export function AccountMenu({ email, busy, onSignOut, onOpenSettings }: Props) {
   return (
     <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom" contentStyle={{ backgroundColor: colors.elevation.level2, borderRadius: radius.control }}
       anchor={
-        <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} accessibilityRole="button"
+        <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} bleed={4} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`Account${email ? `: ${email}` : ''}`}
           onPress={() => setOpen(true)} style={styles.trigger}>
           <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>

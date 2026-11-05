@@ -149,7 +149,8 @@ Il vecchio backend (`functions/`, `firebase.legacy.json`, regole deny-all, test
 callable/token ed esportatore del finto foglio) è stato rimosso il 2 novembre 2026:
 nessun dato da migrare (foglio mai reale, emulatori senza righe storiche). Recupero
 dalla cronologia Git, commit `fe759d5`. I `.env` personali in `functions/` restano
-sul disco, ignorati. Gli adapter localStorage restano per importare i dati del browser.
+sul disco, ignorati. Gli adapter localStorage e l'anteprima «dati del browser» sono stati rimossi il 5 novembre 2026
+(recuperabili da Git, commit `e2b84d3`).
 
 Audit npm corrente: 29 segnalazioni (25 moderate, 4 alte), invariate rispetto alla
 base. La catena alta è `@grpc/grpc-js` via Firestore, dipendenza Node del SDK, non il

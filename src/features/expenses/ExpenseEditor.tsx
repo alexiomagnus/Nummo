@@ -45,7 +45,7 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
   };
   return <Portal><Dialog visible onDismiss={() => { if (!busy) close(); }} style={{ maxWidth: layout.maxForm, alignSelf: 'center', width: '92%', maxHeight: '90%', borderRadius: radius.dialog }}>
     <Dialog.Title>{record.recurrence ? 'Modifica serie' : 'Modifica spesa'}</Dialog.Title>
-    <Dialog.ScrollArea style={{ paddingHorizontal: spacing.xl }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
+    <Dialog.ScrollArea style={{ paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
       <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
       <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={draft.date || today} error={errors.recurrence} disabled={busy}

@@ -33,5 +33,5 @@ export function RecurrencePicker({ value, error, disabled, onChange }: Props) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', borderWidth: 1, borderRadius: radius.control, overflow: 'hidden' },
-  segment: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.sm },
+  segment: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md, paddingHorizontal: spacing.md },
 });

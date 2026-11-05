@@ -15,7 +15,7 @@ export function IconPicker({ value, onChange }: Props) {
       {categoryIcons.map((icon) => {
         const selected = icon === value;
         return (
-          <StateLayerPressable key={icon} layerColor={colors.onSurface} radius={radius.control} onPress={() => onChange(selected ? null : icon)}
+          <StateLayerPressable key={icon} bleed={4} layerColor={colors.onSurface} radius={radius.control} onPress={() => onChange(selected ? null : icon)}
             accessibilityRole="button" aria-pressed={selected}
             accessibilityLabel={`Icona ${categoryIconLabels[icon]}${selected ? ', selezionata' : ''}`}
             style={[styles.cell, {

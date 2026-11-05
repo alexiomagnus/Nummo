@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, zIndex: 1 } as unknown as ViewStyle,
   repeat: { gap: spacing.md },
   footer: { gap: spacing.md },
-  actions: { flexDirection: 'row' },
+  actions: { flexDirection: 'row', marginTop: spacing.xxl },
   submit: { flexGrow: 1 },
   full: { flexGrow: 1 },
   button: { minHeight: layout.controlHeight },

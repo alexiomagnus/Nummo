@@ -3,7 +3,7 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { layout, radius, spacing } from '../theme/tokens';
+import { layout, radius, spacing, stateOpacity } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -48,8 +48,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
       <View role="banner" style={[styles.topBar, { backgroundColor: colors.background, paddingTop: insets.top, paddingHorizontal: padding, height: layout.topBarHeight + insets.top }]}>
         {fab && hasNav ? (
           // The brand leads to the primary screen (new expense); on it, it does nothing.
-          <StateLayerPressable layerColor={colors.primary} radius={radius.control} accessibilityRole="button" accessibilityLabel={`Nummo, ${fab.label}`}
-            onPress={() => { if (selected !== fab.target) select(fab.target); }} style={styles.brand}>
+          <StateLayerPressable layerColor="transparent" accessibilityRole="button" accessibilityLabel={`Nummo, ${fab.label}`}
+            onPress={() => { if (selected !== fab.target) select(fab.target); }} style={[styles.brand, styles.noRing]}>
             <Logo size={32} color={colors.primary} />
             <Text variant="titleLarge" style={[styles.brandName, { color: colors.primary }]}>Nummo</Text>
           </StateLayerPressable>
@@ -81,6 +81,12 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   );
 }
 
+// Hover/pressed layer drawn on the coloured pill itself, so the highlight is exactly the pill's size.
+function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boolean }; color: string }) {
+  const opacity = state.pressed ? stateOpacity.pressed : state.hovered ? stateOpacity.hover : 0;
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: color, opacity }]} />;
+}
+
 type Fab<T extends string> = { label: string; icon: string; target: T };
 type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
@@ -91,12 +97,15 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
       {destinations.map((item) => {
         const active = item.value === selected;
         return (
-          <StateLayerPressable key={item.value} layerColor={colors.onSurface} accessibilityRole="button"
+          <StateLayerPressable key={item.value} layerColor="transparent" accessibilityRole="button"
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)} style={styles.barItem}>
+            {(state) => <>
             <View style={[styles.indicator, active && { backgroundColor: colors.secondaryContainer }]}>
+              <HoverLayer state={state} color={colors.onSurface} />
               <SvgIcon shape={item.icon} size={24} color={active ? colors.onSecondaryContainer : colors.onSurfaceVariant} />
             </View>
             <Text variant="labelMedium" numberOfLines={1} style={{ color: active ? colors.onSurface : colors.onSurfaceVariant, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
+            </>}
           </StateLayerPressable>
         );
       })}
@@ -116,12 +125,15 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
       {destinations.map((item) => {
         const active = item.value === selected;
         return (
-          <StateLayerPressable key={item.value} layerColor={colors.onSurface} accessibilityRole="button" radius={radius.nav}
+          <StateLayerPressable key={item.value} layerColor="transparent" accessibilityRole="button"
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)} style={styles.railItem}>
+            {(state) => <>
             <View style={[styles.railIndicator, active && { backgroundColor: colors.secondaryContainer }]}>
+              <HoverLayer state={state} color={colors.onSurface} />
               <SvgIcon shape={item.icon} size={24} color={active ? colors.onSecondaryContainer : colors.onSurfaceVariant} />
             </View>
             <Text variant="labelMedium" numberOfLines={1} style={{ color: active ? colors.onSurface : colors.onSurfaceVariant, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
+            </>}
           </StateLayerPressable>
         );
       })}
@@ -159,6 +171,8 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm,
   },
+  // The logo shows no hover/pressed layer and no focus ring (clicking it must leave no highlight).
+  noRing: { outlineStyle: 'none' } as object,
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexShrink: 1, minHeight: layout.minTouch, paddingHorizontal: spacing.sm, marginLeft: -spacing.sm },
   brandName: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.2 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
@@ -167,13 +181,13 @@ const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', flexGrow: 1, gap: spacing.xl },
   bar: { flexDirection: 'row', paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth },
   barItem: { flex: 1, alignItems: 'center', gap: spacing.xs, minHeight: 56, paddingTop: 4 },
-  indicator: { width: 64, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
-  rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.sm },
-  railFab: { marginBottom: spacing.md, borderRadius: radius.control },
+  indicator: { overflow: 'hidden', width: 64, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
+  rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },
+  railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.control },
   railItem: { width: layout.railWidth - spacing.sm, alignItems: 'center', gap: spacing.xs, paddingVertical: 4 },
-  railIndicator: { width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
-  drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.xs },
-  drawerFab: { alignSelf: 'flex-start', marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.control },
+  railIndicator: { overflow: 'hidden', width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
+  drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.lg + 4 },
+  drawerFab: { alignSelf: 'flex-start', marginTop: spacing.md, marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.control },
   drawerItem: { height: layout.minTouch, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
   fab: { position: 'absolute', right: spacing.lg, borderRadius: radius.control },
 });

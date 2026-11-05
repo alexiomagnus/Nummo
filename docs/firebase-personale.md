@@ -106,8 +106,7 @@ Durante il backup evita modifiche da altre sessioni. In Excel/Sheets importa il 
 come UTF-8, separatore virgola e punto decimale; `amount_minor` resta intero in ogni
 locale. I testi sospetti di formula sono protetti da apostrofo.
 
-Esamina dati del browser scarica gli originali e propone un'anteprima. Importa backup
-JSON legge file fino a 5 MB, controlla dati e duplicati, richiede conferma del progetto
+Importa backup JSON legge file fino a 5 MB, controlla dati e duplicati, richiede conferma del progetto
 ed esegue gruppi ripetibili. Non elimina gli originali. Conserva i backup fuori dalla
 cartella del sito. Procedura completa e vecchio emulatore in
 [migrazione-byof.md](migrazione-byof.md).

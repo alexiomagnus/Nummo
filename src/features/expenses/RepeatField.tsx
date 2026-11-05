@@ -17,8 +17,6 @@ type Props = {
   onRecurrenceChange: (recurrence: Recurrence) => void;
 };
 
-const unit: Record<Recurrence, string> = { weekly: 'ogni settimana', monthly: 'ogni mese', yearly: 'ogni anno' };
-const dateFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 // Shared by the new-expense form and the edit dialog. The frequency appears only while repeating
 // is on, followed by a sentence that says exactly what a recurring expense means.
@@ -26,7 +24,7 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
   const { colors } = useTheme();
   return (
     <View style={styles.group}>
-      <StateLayerPressable onPress={() => onRepeatChange(!repeat)} disabled={disabled} layerColor={colors.onSurface}
+      <StateLayerPressable onPress={() => onRepeatChange(!repeat)} bleed={4} disabled={disabled} layerColor={colors.onSurface}
         radius={radius.control} style={styles.toggle} accessibilityRole="switch" aria-checked={repeat} aria-disabled={disabled}
         accessibilityLabel="Ricorrente">
         <View style={styles.text}>
@@ -37,9 +35,6 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
       {repeat && (
         <View style={styles.options}>
           <RecurrencePicker value={recurrence} error={Boolean(error)} disabled={disabled} onChange={onRecurrenceChange} />
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-            {recurrence ? `Si ripete ${unit[recurrence]} dal ${dateFormat.format(new Date(`${startDate}T00:00:00Z`))}.` : 'Scegli la frequenza.'}
-          </Text>
         </View>
       )}
       {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}

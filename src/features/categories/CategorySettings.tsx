@@ -115,10 +115,7 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
                   <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
                     selected={isEditing} aria-expanded={isEditing} accessibilityLabel={`Modifica ${category.label}`}
                     onPress={() => setEditing(isEditing ? null : { id: category.id, name: category.label, error: null, original: category })} />
-                  <DeleteAction name={category.label} title={`Eliminare la categoria “${category.label}”?`}
-                    description={used > 0
-                      ? `${used === 1 ? '1 spesa usa' : `${used} spese usano`} questa categoria: ${used === 1 ? 'resta registrata' : 'restano registrate'}, ma senza categoria. Nessuna spesa viene eliminata.`
-                      : 'Nessuna spesa usa questa categoria. L’operazione non può essere annullata.'}
+                  <DeleteAction name={category.label} title={`Eliminare la categoria ${category.label}?`} description=""
                     onDelete={() => onDelete(category.id)} />
                 </>}>
             {isEditing && editing && (

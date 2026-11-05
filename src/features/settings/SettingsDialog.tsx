@@ -33,7 +33,7 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={{ width: '92%', maxWidth: layout.maxForm, alignSelf: 'center', maxHeight: '90%', borderRadius: radius.dialog }}>
-        <Dialog.Title>Impostazioni</Dialog.Title>
+        <Dialog.Title style={styles.title}>Impostazioni</Dialog.Title>
         <Dialog.ScrollArea style={styles.area}>
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
             <Section title="Tema">
@@ -69,8 +69,8 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
           </ScrollView>
         </Dialog.ScrollArea>
         <Dialog.Actions>
-          <Button onPress={onReset}>Ripristina</Button>
-          <Button mode="contained" onPress={onDismiss}>Fatto</Button>
+          <Button onPress={onReset} contentStyle={styles.action} labelStyle={styles.actionLabel}>Ripristina</Button>
+          <Button mode="contained" onPress={onDismiss} contentStyle={styles.action} labelStyle={styles.actionLabel}>Fatto</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
@@ -88,7 +88,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const styles = StyleSheet.create({
-  area: { paddingHorizontal: spacing.xl },
+  title: { fontWeight: '700' },
+  action: { minHeight: 52, paddingHorizontal: spacing.md },
+  actionLabel: { fontSize: 15, lineHeight: 22 },
+  // Paper's scroll area draws a line above and below: none, spacing separates the parts.
+  area: { paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
   content: { paddingVertical: spacing.sm, gap: spacing.xl },
   section: { gap: spacing.md },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

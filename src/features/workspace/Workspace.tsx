@@ -92,7 +92,7 @@ function Sections({ section, backend, uid, store, categoryState, occurrences, re
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
   const heading = headings[section];
   return <>
-    <PageHeader title={heading}
+    <PageHeader title={heading} lowered={section === 'expense'}
       action={section === 'list' ? (
         <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
           aria-expanded={showBackup} onPress={() => setShowBackup(!showBackup)}>Dati</Button>

@@ -39,9 +39,8 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   gli schemi da tinta e modalità; `createTheme` li riceve da `App.tsx`.
 - `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
   fino a oggi, non materializzate nel database. Grafici SVG DOM, solo web.
-- `src/features/backup/`: download CSV/JSON, anteprima dei vecchi dati del browser e
-  importazione esplicita. Gli adapter `categoryStorage.ts`/`expenseStorage.ts` restano
-  per compatibilità/migrazione e test; l'app usa solo le loro letture.
+- `src/features/backup/`: download CSV/JSON e importazione esplicita da file JSON.
+  Gli adapter localStorage per i vecchi dati del browser sono stati rimossi (5 nov 2026).
 - `firestore.rules`: proprietario da `config/owner` (solo amministratore), provider
   Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
@@ -51,7 +50,7 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
 - `functions/` può contenere solo `.env` personali ignorati del vecchio backend: non
   versionarli né cancellarli senza conferma.
 - `docs/design/logo-concepts/`: proposte di logo SVG (non integrate nell'app).
-- `tests/`: Node runner per dominio/storage/backup/config; `tests/emulator/firestore.e2e.ts`
+- `tests/`: Node runner per dominio/tema/preferenze/backup/config; `tests/emulator/firestore.e2e.ts`
   per SDK e Rules. `dist/` è generato e ignorato.
 
 ## Stack e comandi

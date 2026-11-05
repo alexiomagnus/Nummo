@@ -189,7 +189,7 @@ export function Dashboard({ occurrences, categories }: Props) {
             )}
             {showTable && hidden > 0 && (
               <Button compact mode="text" onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
-                {withEmpty ? 'Solo con spese' : `Mostra tutti ${period === 'month' ? 'i giorni' : 'i periodi'} (+${hidden})`}
+                {withEmpty ? 'Solo con spese' : `Mostra tutti ${period === 'month' ? 'i giorni' : 'i periodi'}`}
               </Button>
             )}
           </Card>
