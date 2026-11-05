@@ -1,11 +1,12 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 3 novembre 2026 (aggiunte le impostazioni di aspetto, non committate). Branch `backend-firebase` (non pubblicato né unito a `main`).
-Ultimo commit: `8e1fa0a` «revisione UI/UX Material 3 responsive» (precedenti: `b77e1db`
-migrazione Firestore + rimozione vecchio backend; `fe759d5` ultimo commit col vecchio backend).
-**Non committato**: passate di uniformità UI del 3 novembre (24 file modificati, più i nuovi
-`src/components/Button.tsx` e `ListRow.tsx`). Architettura e comandi: `AGENTS.md`;
-decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`.
+Aggiornamento: 5 novembre 2026. Branch `backend-firebase` (non pubblicato né unito a `main`).
+Ultimo commit: `3ca98bd` «impostazioni di aspetto, Google Sans e uniformità componenti» (3 nov;
+precedenti: `8e1fa0a` revisione UI/UX M3, `b77e1db` migrazione Firestore + rimozione vecchio backend,
+`fe759d5` ultimo con il vecchio backend). Tutto il codice applicativo è committato.
+**Non committato**: solo l'esplorazione logo in `docs/design/logo-concepts/` (README, `hybrids-10/`,
+ZIP) e questo file. Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`;
+migrazione: `docs/migrazione-byof.md`.
 
 ## Stato implementato
 
@@ -27,13 +28,13 @@ il foglio non è mai stato reale, `SHEET_ID=emulator`).
 - UI Material 3: token in `src/theme/`, `AppShell` (barra <600, rail 600–1023, drawer ≥1024), 3
   destinazioni + FAB «Nuova spesa», `SyncChip`, snackbar, dashboard con KPI/legenda, categorie con
   conteggi, glifi SVG categoria.
-- Uniformità componenti (3 nov, non committata): `radius`/`paperRoundness`/`inputOutline`/`layout` in
+- Uniformità componenti (3 nov): `radius`/`paperRoundness`/`inputOutline`/`layout` in
   `tokens.ts`; `components/Button` (altezza 48) e `ListRow`/`IconTile` (riga unica di Spese e Categorie,
   `divider`); nessun tetto di larghezza sull'area principale; Nuova spesa su due colonne (expanded);
   Categorie = card a larghezza piena con «Nuova categoria» in alto; `layout.fieldBoxHeight` (50 dp)
   allinea ricerca e `MenuSelect`. `SplitLayout` creato e poi rimosso.
 
-- Impostazioni (3 nov, non committate): menu account → «Impostazioni» (tema Sistema/Chiaro/Scuro,
+- Impostazioni (3 nov): menu account → «Impostazioni» (tema Sistema/Chiaro/Scuro,
   Monocolore o Palette, 6 colori: Menta predefinito, Blu, Viola, Rosa, Ambra, Grafite; carattere Google
   Sans o Sistema; «Ripristina»). Font variabile 400–700 ospitato in `public/fonts/` (sottoinsiemi latin e latin-ext, ~58 KB;
   predefinito: Google Sans). Un valore salvato `roman` (versioni precedenti) torna al predefinito.
@@ -52,15 +53,15 @@ il foglio non è mai stato reale, `SHEET_ID=emulator`).
 - Importazione atomica per gruppo, non per archivio; letture/backup caricano collezioni intere.
 - Nessuna dipendenza aggiunta; nessun downgrade forzato per `npm audit`.
 
-## Verifiche (ultima esecuzione, 3 nov 2026)
+## Verifiche (ultima esecuzione, 5 nov 2026)
 
-- `npm run check`: typecheck ok, **141/141** test app (nuovi: contrasti AA di 24 combinazioni accento/modalità/
-  tema, parsing preferenze), build ok. Con le modifiche non committate presenti.
+- `npm run check` (5 nov, con `EXPO_NO_DOTENV=1 EXPO_PUBLIC_NUMMO_BACKEND=emulator`): typecheck ok, **141/141**
+  test app (incl. contrasti AA di 24 combinazioni accento/modalità/tema, parsing preferenze), build ok.
 - Impostazioni: verificata in Chromium headless solo la schermata di accesso (font caricato, icone sottili).
   **Non verificati visivamente**: dialog Impostazioni, palette/colori in tutte le schermate, tema scuro con i
   nuovi schemi, grafici con il nuovo font.
 - `test:emulator`: ultima esecuzione registrata 2 nov, **10/10** (Auth 9299, Firestore 8380, `demo-nummo`);
-  **non rieseguito** il 3 nov (nessun accesso dati/Rules toccato dalle ultime modifiche).
+  **non rieseguito** dopo (nessun accesso dati/Rules toccato dai commit successivi).
 - Browser (Chromium headless, build demo con emulatori su porte alternative, popup Google simulato):
   2 nov, 6 viewport 320–1600 px, nessun overflow orizzontale, flusso di 21 controlli, tema chiaro/scuro.
   3 nov: screenshot 390/820/1440 px su harness temporaneo con dati finti (poi rimosso), non con Auth/dati reali.
@@ -86,18 +87,37 @@ il foglio non è mai stato reale, `SHEET_ID=emulator`).
 7. Senza `EXPO_PUBLIC_NUMMO_BACKEND` il default è `firebase`; `dev:cloud`, `build` ed `expo start` diretto
    leggono `.env.local`, che in questo checkout punta all'emulatore 8180: una build cloud richiede un
    ambiente senza quella variabile.
-8. Processo residuo possibile: Firestore emulator su 8280 (test `demo-nummo`) lasciato dall'agente precedente.
+8. Il 5 nov nessuna porta emulatore (8180/8280/8380/9099/9299) risultava in ascolto.
 
 ## Prossimi passi (priorità)
 
-1. Revisionare e committare le modifiche UI non committate (su richiesta dell'utente; niente commit
-   automatici). Prima: `npm run check`.
-2. Prova visiva con login reale/emulatore persistente delle nuove schermate (Spese, Nuova, Categorie).
-3. Collaudo cloud personale (manuale, con autorizzazione): abilitare Firestore e Google Auth, creare
+### Studio logo (3 novembre 2026, in attesa di selezione dell'utente)
+
+- Seconda esplorazione: l’utente non è convinto di Nastro e richiede dieci icone che
+  combinino Spicchio e Moduli, anche suggerendo una n. Set in
+  `docs/design/logo-concepts/hybrids-10/`: 10 simboli SVG in tre varianti cromatiche,
+  tavola comparativa PNG/SVG e ZIP. Nessuna selezione definitiva; UI invariata.
+  Tavola ispezionata e SVG validati; `npm run check` rieseguito: 141/141 test, typecheck
+  e build superati, con env demo e dotenv disabilitato.
+- Primo giro (committato in `3ca98bd`): tre concept SVG in `docs/design/logo-concepts/`: Nastro, Spicchio e Moduli; simbolo e
+  versione con nome, ciascuno chiaro/scuro/monocromatico. `comparison.svg` e `comparison.png`
+  mostrano il confronto e le prove 16/24/32 px; analisi e motivazioni nel README della cartella.
+- Nessuna modifica alla UI né sostituzione degli asset esistenti. Attendere la selezione
+  dell’utente prima di affinare e integrare. Nessuna nuova decisione architetturale.
+- Rendering della tavola ispezionato; SVG verificati. `npm run check` superato con
+  `EXPO_NO_DOTENV=1 EXPO_PUBLIC_NUMMO_BACKEND=emulator` (typecheck, test app, build).
+  Nessuna prova cloud/dispositivi; nessun accesso dati/Rules modificato.
+
+- Dopo la selezione: affinare e integrare il marchio (oggi `AppShell` usa una N in tile 36 px), su richiesta.
+
+### Attività applicative
+
+1. Prova visiva con login reale/emulatore persistente delle nuove schermate (Spese, Nuova, Categorie).
+2. Collaudo cloud personale (manuale, con autorizzazione): abilitare Firestore e Google Auth, creare
    `config/owner`, pubblicare le Rules, build con env pulita; poi provare su dispositivi reali.
-4. Aggiornare le dipendenze vulnerabili in una fase dedicata, senza `--force`.
-5. Se serve scala: paginazione delle letture e snapshot di backup più robusto.
-6. Prima di una versione mobile/PWA: rendere esplicito il default del backend (punto 7) e pianificare
+3. Aggiornare le dipendenze vulnerabili in una fase dedicata, senza `--force`.
+4. Se serve scala: paginazione delle letture e snapshot di backup più robusto.
+5. Prima di una versione mobile/PWA: rendere esplicito il default del backend (punto 7) e pianificare
    manifest/service worker.
 
 ## Avvio e passaggi manuali

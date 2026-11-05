@@ -49,6 +49,7 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   dati personali ignorati da Git. `emulator-seed/`: account Auth della demo.
 - `functions/` può contenere solo `.env` personali ignorati del vecchio backend: non
   versionarli né cancellarli senza conferma.
+- `docs/design/logo-concepts/`: proposte di logo SVG (non integrate nell'app).
 - `tests/`: Node runner per dominio/storage/backup/config; `tests/emulator/firestore.e2e.ts`
   per SDK e Rules. `dist/` è generato e ignorato.
 
