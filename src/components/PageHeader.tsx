@@ -10,7 +10,7 @@ export function PageHeader({ title, description, action, style }: { title: strin
   return (
     <View style={[styles.header, style]}>
       <View style={styles.titles}>
-        <Text variant="headlineMedium" accessibilityRole="header" aria-level={1}>{title}</Text>
+        <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{title}</Text>
         {description && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{description}</Text>}
       </View>
       {action}
@@ -19,6 +19,7 @@ export function PageHeader({ title, description, action, style }: { title: strin
 }
 
 const styles = StyleSheet.create({
+  title: { fontSize: 32, lineHeight: 40, fontWeight: '700' },
   header: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   titles: { gap: spacing.xs, flexGrow: 1, flexShrink: 1, flexBasis: 240 },
 });

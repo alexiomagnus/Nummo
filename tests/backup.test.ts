@@ -5,7 +5,7 @@ import { categoryNameKey, parseSyncedExpense } from '../src/domain/firestore.ts'
 const id = '11111111-1111-4111-8111-111111111111';
 const categoryId = '22222222-2222-4222-8222-222222222222';
 const record = { id, amount_minor: 1250, currency: 'EUR' as const, description: 'Caffè "buono", sì', category_id: categoryId,
-  expense_date: '2025-01-31', recurrence: 'monthly' as const, source: 'web_app' as const, schema_version: 1 as const, created_at: '2025-01-31T12:00:00.000Z' };
+  expense_date: '2025-01-31', recurrence: 'monthly' as const, price_changes: [], source: 'web_app' as const, schema_version: 1 as const, created_at: '2025-01-31T12:00:00.000Z' };
 const categories = [{ id: categoryId, label: 'Caffè', icon: null }];
 test('JSON completo conserva ID, centesimi, date, ricorrenze, categorie e metadati; round trip importabile', () => {
   const expenses = [{ ...record, revision: 3, updated_at: record.created_at }];

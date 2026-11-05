@@ -20,7 +20,7 @@ async function client(name: string, sub?: string, project = projectId) {
   return { app, auth, db, store: createFirestoreStore(db, auth.currentUser?.uid ?? 'demo-owner') };
 }
 const expense = () => ({ expense_id: randomUUID(), amount_minor: 1250, currency: 'EUR' as const, description: 'Caffè', category_id: null,
-  expense_date: todayInRome(), recurrence: null, source: 'web_app' as const, schema_version: 1 as const });
+  expense_date: todayInRome(), recurrence: null, price_changes: [], source: 'web_app' as const, schema_version: 1 as const });
 const denied = (promise: Promise<unknown>) => assert.rejects(promise, (e: any) => e.code === 'permission-denied');
 const deadline = <T>(promise: Promise<T>): Promise<T> => {
   let timer: ReturnType<typeof setTimeout>;
@@ -81,6 +81,30 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await denied(updateDoc(ref(expense_id), { amount_minor: 1, updated_at: serverTimestamp() }));
       await denied(updateDoc(ref(expense_id), { revision: 2, created_at: Timestamp.fromMillis(1), updated_at: serverTimestamp() }));
       await denied(setDoc(ref(expense_id), valid));
+    });
+    await t.test('piano prezzi: variazioni validate dalle regole, storico stabile dopo la modifica', async () => {
+      const { expense_id, ...data } = expense();
+      const series = { ...data, recurrence: 'yearly' as const, expense_date: '2025-03-12', amount_minor: 600, price_changes: [{ index: 1, amount_minor: 1200, once: false }] };
+      const valid = { ...series, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      const change = { index: 2, amount_minor: 1500, once: true };
+      const { price_changes: _, ...withoutField } = valid;
+      for (const patch of [{ price_changes: [{ ...change, index: 0 }] }, { price_changes: [{ ...change, index: 1000 }] }, { price_changes: [{ ...change, amount_minor: 0 }] },
+        { price_changes: [{ ...change, amount_minor: 1.5 }] }, { price_changes: [{ ...change, once: 'si' }] }, { price_changes: [{ ...change, extra: 1 }] },
+        { price_changes: [{ index: 2, amount_minor: 5 }] }, { price_changes: Array.from({ length: 9 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) },
+        { price_changes: 'x' }, { price_changes: [1] }, { recurrence: null }]) {
+        await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
+      }
+      await denied(setDoc(ref(randomUUID()), withoutField));
+      await setDoc(ref(randomUUID()), { ...valid, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
+      await owner.store.createExpense({ expense_id, ...series });
+      const saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.deepEqual(saved.price_changes, [{ index: 1, amount_minor: 1200, once: false }]);
+      const next = { ...series, price_changes: [...series.price_changes, change] };
+      await owner.store.updateExpense(saved, next);
+      const updated = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.equal(updated.amount_minor, 600);
+      assert.deepEqual(updated.price_changes, next.price_changes);
+      await owner.store.removeExpense(updated);
     });
     await t.test('categorie uniche, rinomina, icone, conflitti ed eliminazione atomica', async () => {
       const id = randomUUID();

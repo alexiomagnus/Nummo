@@ -1,11 +1,9 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 5 novembre 2026. Branch `backend-firebase` (non pubblicato né unito a `main`).
-Ultimo commit: `3ca98bd` «impostazioni di aspetto, Google Sans e uniformità componenti» (3 nov;
-precedenti: `8e1fa0a` revisione UI/UX M3, `b77e1db` migrazione Firestore + rimozione vecchio backend,
-`fe759d5` ultimo con il vecchio backend). Tutto il codice applicativo è committato.
-**Non committato**: solo l'esplorazione logo in `docs/design/logo-concepts/` (README, `hybrids-10/`,
-ZIP) e questo file. Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`;
+Aggiornamento: 5 novembre 2026 (dopo piano prezzi e ritocchi UI). Branch `backend-firebase` (non pubblicato né unito a `main`).
+Ultimo commit: il commit «piano prezzi ricorrenze e ritocchi UI» (5 nov), sopra `0a3e0fb` (docs/studio logo),
+`3ca98bd` (impostazioni di aspetto, Google Sans), `8e1fa0a` (UI/UX M3), `b77e1db` (migrazione Firestore),
+`fe759d5` (ultimo col vecchio backend). Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`;
 migrazione: `docs/migrazione-byof.md`.
 
 ## Stato implementato
@@ -15,7 +13,8 @@ Sheets o Functions nel percorso attivo (rimossi il 2 nov 2026; recuperabili da `
 il foglio non è mai stato reale, `SHEET_ID=emulator`).
 
 - Spese e categorie da listener SDK; UUID, centesimi, data civile Europe/Rome, timestamp server.
-  Occorrenze ricorrenti calcolate, non salvate. Modifica serie = tutte le occorrenze.
+  Occorrenze ricorrenti calcolate, non salvate. Modifica serie = tutte le occorrenze, tranne il prezzo
+  (vedi sotto).
 - Rules: proprietario in `config/owner`, solo provider Google, validazione campi/importi/date/
   revisioni, indice `categoryNames` in transazione. Conflitti di revisione espliciti.
 - Offline: coda SDK, UI distingue cache/connessione/pending, nessun falso successo. Cache disco
@@ -43,6 +42,17 @@ il foglio non è mai stato reale, `SHEET_ID=emulator`).
   `tertiaryContainer` (neutro in monocolore, colorato in palette). Il tema nella barra superiore resta e
   scrive la stessa preferenza.
 
+- Piano prezzi ricorrenze (5 nov): prezzo fisso, promozionale («dopo N rinnovi»),
+  modifica «solo prossimo rinnovo» / «tutti i futuri» senza toccare i pagamenti maturati, card «Prossimi
+  rinnovi» con previsti separati dagli effettivi. Modello e limiti: `docs/architecture.md`. Codice:
+  `src/domain/pricing.ts`, `PriceSchedule.tsx`, `ExpenseEditor.tsx`, `UpcomingRenewals.tsx`, Rules.
+
+- UI 5 nov: logo SVG (`Logo.tsx`, colore `primary`) al posto della N; nome 26 px; titoli pagina 32 px bold;
+  Nuova spesa su due colonne (Importo, Descrizione, Data | Categoria, ricorrenza), form max 720 px; data = chip
+  Oggi/Ieri/«Altra data» (il campo compare solo al tocco); chip 44 dp su mobile. Verificato in Chromium
+  headless su una pagina di prova con dati finti (360–1440 px), non con login/emulatori. Avviso console residuo:
+  `useNativeDriver` di Paper/RNW. Il file `logo` nella radice è la sorgente fornita dall'utente.
+
 ## Decisioni da ricordare
 
 - Un solo `Menu` Paper per elenco, ancorato a coordinate (`ExpenseList`): un `Menu` per riga sposta il
@@ -54,6 +64,11 @@ il foglio non è mai stato reale, `SHEET_ID=emulator`).
 - Nessuna dipendenza aggiunta; nessun downgrade forzato per `npm audit`.
 
 ## Verifiche (ultima esecuzione, 5 nov 2026)
+
+- Piano prezzi: `npm run check` ok (**156/156** test app, 15 nuovi in `tests/pricing.test.ts`: fisso, promo,
+  una tantum, tutti i futuri, storico, previsioni, validazione, CSV). `test:emulator` **11/11** su porte
+  alternative (Auth 9299, Firestore 8380; config temporanea rimossa), incl. un test Rules sul piano prezzi.
+  **Non verificate visivamente** le nuove schermate (campo promo, modifica serie, card «Prossimi rinnovi»).
 
 - `npm run check` (5 nov, con `EXPO_NO_DOTENV=1 EXPO_PUBLIC_NUMMO_BACKEND=emulator`): typecheck ok, **141/141**
   test app (incl. contrasti AA di 24 combinazioni accento/modalità/tema, parsing preferenze), build ok.
@@ -111,6 +126,9 @@ il foglio non è mai stato reale, `SHEET_ID=emulator`).
 - Dopo la selezione: affinare e integrare il marchio (oggi `AppShell` usa una N in tile 36 px), su richiesta.
 
 ### Attività applicative
+
+0. Revisionare in browser il piano prezzi (nuova spesa con promo, modifica serie, previsioni), poi committare
+   su richiesta; ripubblicare le Rules dove già distribuite.
 
 1. Prova visiva con login reale/emulatore persistente delle nuove schermate (Spese, Nuova, Categorie).
 2. Collaudo cloud personale (manuale, con autorizzazione): abilitare Firestore e Google Auth, creare

@@ -1,13 +1,12 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import type { Category } from '../../domain/category';
 import { expensePolicy, todayInRome } from '../../domain/policy';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { leadingIcon } from '../../components/FieldIcon';
-import { iconShapes } from '../../components/SvgIcon';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { spacing, inputOutline } from '../../theme/tokens';
-import { useSizeClass } from '../../theme/useSizeClass';
 import { CategoryPicker } from './CategoryPicker';
 
 export type BaseField = 'amount' | 'description' | 'categoryId' | 'date';
@@ -38,11 +37,15 @@ function yesterdayOf(today: string): string {
 // Required fields are not starred one by one: the screen says so once, optional ones say «facoltativa».
 export function ExpenseFields({ values, errors, categories, disabled, withDate, categoryRequired, extra, split, onChange, onBlur }: Props) {
   const { colors } = useTheme();
-  const compact = useSizeClass() === 'compact';
+  // Wide new-expense page: two columns. The edit dialog (no date) stays a single column.
+  const wide = Boolean(split && withDate);
   const length = Array.from(values.description).length;
   const today = todayInRome();
   const yesterday = yesterdayOf(today);
-  const dateChoice = values.date === '' || values.date === today ? 'today' : values.date === yesterday ? 'yesterday' : '';
+  // «Altra data» reveals the date field; it stays open while a date other than today/yesterday is typed.
+  const [otherOpen, setOtherOpen] = useState(false);
+  const other = otherOpen || (values.date !== '' && values.date !== today && values.date !== yesterday);
+  const dateChoice = other ? 'other' : values.date === yesterday ? 'yesterday' : 'today';
   const amount = (
       <View>
         <TextInput outlineStyle={inputOutline} label="Importo" value={values.amount} onChangeText={(value) => onChange('amount', value)}
@@ -65,18 +68,24 @@ export function ExpenseFields({ values, errors, categories, disabled, withDate, 
       </View>
   );
   const date = withDate ? (
-              <View style={styles.group} role="group" aria-label="Data">
-          <View style={[styles.dateRow, !compact && styles.dateRowWide]}>
-            <TextInput outlineStyle={inputOutline} label="Data (facoltativa)" value={values.date} onChangeText={(value) => onChange('date', value)}
-              mode="outlined" placeholder={`Oggi · ${today}`} error={Boolean(errors.date)} onBlur={() => onBlur('date')} style={styles.dateInput}
-              accessibilityLabel="Data della spesa, facoltativa, formato AAAA-MM-GG" disabled={disabled} autoCorrect={false}
-              left={leadingIcon(iconShapes.calendar)} />
-            <ChoiceChips label="Scorciatoie data" value={dateChoice} disabled={disabled}
-              onChange={(choice) => onChange('date', choice === 'yesterday' ? yesterday : '')}
-              options={[{ value: 'today', label: 'Oggi' }, { value: 'yesterday', label: 'Ieri' }]} />
-          </View>
-          {errors.date && <HelperText type="error" accessibilityRole="alert">{errors.date}</HelperText>}
-        </View>
+    <View style={styles.group} role="group" aria-label="Data">
+      <Text variant="titleSmall">Data</Text>
+      <ChoiceChips label="Data della spesa" value={dateChoice} disabled={disabled}
+        onChange={(choice) => {
+          if (choice === 'other') { setOtherOpen(true); return; }
+          setOtherOpen(false);
+          onChange('date', choice === 'yesterday' ? yesterday : '');
+        }}
+        options={[{ value: 'today', label: 'Oggi' }, { value: 'yesterday', label: 'Ieri' },
+          { value: 'other', label: 'Altra data', icon: <SvgIcon shape={iconShapes.calendar} size={18} color={colors.onSurfaceVariant} /> }]} />
+      {other && (
+        <TextInput outlineStyle={inputOutline} label="Data (AAAA-MM-GG)" value={values.date} onChangeText={(value) => onChange('date', value)}
+          mode="outlined" placeholder={today} error={Boolean(errors.date)} onBlur={() => onBlur('date')}
+          accessibilityLabel="Data della spesa, formato AAAA-MM-GG" disabled={disabled} autoCorrect={false}
+          left={leadingIcon(iconShapes.calendar)} />
+      )}
+      {errors.date && <HelperText type="error" accessibilityRole="alert">{errors.date}</HelperText>}
+    </View>
   ) : null;
   const category = (
       <View style={styles.group} role="group" aria-label="Categoria">
@@ -87,17 +96,12 @@ export function ExpenseFields({ values, errors, categories, disabled, withDate, 
         {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{errors.categoryId}</HelperText>}
       </View>
   );
-  // Wide: amount and date share a wrapping first row, then description, category and options each
-  // take the full width (chips wrap), so related fields stay close and nothing is stretched alone.
-  return split ? (
-    <View style={styles.layout}>
-      <View style={styles.firstRow}>
-        <View style={styles.amountCell}>{amount}</View>
-        {date && <View style={styles.dateCell}>{date}</View>}
-      </View>
-      {description}
-      {category}
-      {extra}
+  // Wide: two columns (amount, description, date | category, options) that wrap into one when the
+  // form is narrow. Narrow: everything stacked in the same order.
+  return wide ? (
+    <View style={styles.columns}>
+      <View style={styles.column}>{amount}{description}{date}</View>
+      <View style={styles.column}>{category}{extra}</View>
     </View>
   ) : (
     <View style={styles.layout}>
@@ -112,14 +116,10 @@ export function ExpenseFields({ values, errors, categories, disabled, withDate, 
 
 const styles = StyleSheet.create({
   layout: { gap: spacing.md },
-  firstRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: spacing.lg },
-  amountCell: { flexGrow: 1, flexBasis: 180, minWidth: 0 },
-  dateCell: { flexGrow: 2, flexBasis: 340, minWidth: 0 },
+  columns: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: spacing.md, columnGap: spacing.lg },
+  column: { flexGrow: 1, flexBasis: 260, minWidth: 0, gap: spacing.md },
   amountText: { fontSize: 26, fontWeight: '600', fontVariant: ['tabular-nums'] },
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },
   group: { gap: spacing.sm },
-  dateRow: { gap: spacing.sm },
-  dateRowWide: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  dateInput: { flex: 1, minWidth: 0 },
 });

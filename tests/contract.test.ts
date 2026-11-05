@@ -6,7 +6,7 @@ const now = new Date('2026-11-02T23:30:00.000Z'); // 00:30 on 3 November in Rome
 const id = '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13';
 const request = {
   expense_id: id, amount_minor: 1250, currency: 'EUR', description: 'Pane', category_id: null,
-  expense_date: '2026-11-03', recurrence: 'weekly', source: 'web_app', schema_version: 1,
+  expense_date: '2026-11-03', recurrence: 'weekly', price_changes: [], source: 'web_app', schema_version: 1,
 };
 
 test('richiesta valida: oggi è calcolato a Roma', () => {

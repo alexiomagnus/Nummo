@@ -10,6 +10,7 @@ import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '..
 import type { Category } from '../../domain/category';
 import { ExpenseFields, type BaseField } from './ExpenseFields';
 import type { ExpenseStore } from './expenseStore';
+import { PromoField } from './PriceSchedule';
 import { RepeatField } from './RepeatField';
 import { todayInRome } from '../../domain/policy';
 
@@ -22,6 +23,8 @@ export function ExpenseForm({ categories, store }: Props) {
   const { submission } = store;
   const [draft, setDraft] = useState<ExpenseDraft>(() => newDraft());
   const [errors, setErrors] = useState<FieldErrors>({});
+  // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
+  const [formKey, setFormKey] = useState(0);
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
   const busy = submission.status === 'sending' || submission.status === 'uncertain';
   const enabled = store.ready && !busy;
@@ -31,6 +34,7 @@ export function ExpenseForm({ categories, store }: Props) {
     if (submission.status !== 'confirmed') return;
     setDraft(newDraft());
     setErrors({});
+    setFormKey((key) => key + 1);
     notify('Spesa salvata e confermata da Firestore.');
     store.startNew();
   }, [submission.status]);
@@ -68,15 +72,23 @@ export function ExpenseForm({ categories, store }: Props) {
     store.submit(result.data);
   };
 
+  const startDate = draft.date || todayInRome();
   const repeat = (
-    <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={draft.date || todayInRome()}
-      error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
-      onRecurrenceChange={(recurrence) => update({ recurrence })} />
+    <View style={styles.repeat}>
+      <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={startDate}
+        error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
+        onRecurrenceChange={(recurrence) => update({ recurrence })} />
+      {draft.repeat && (
+        <PromoField value={draft.promo} amount={draft.promoAmount} after={draft.promoAfter} firstAmount={draft.amount}
+          recurrence={draft.recurrence} startDate={startDate} disabled={!enabled}
+          errors={{ amount: errors.promoAmount, after: errors.promoAfter }} onChange={update} />
+      )}
+    </View>
   );
 
   return (
     <Card style={[styles.form, size === 'compact' && styles.formCompact]}>
-      <ExpenseFields values={current} errors={errors} categories={categories} disabled={!enabled} categoryRequired withDate split={size !== 'compact'}
+      <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} disabled={!enabled} categoryRequired withDate split={size !== 'compact'}
         extra={repeat} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{store.error}</HelperText>}
       {submission.status === 'rejected' && (
@@ -104,11 +116,12 @@ export function ExpenseForm({ categories, store }: Props) {
 }
 
 const styles = StyleSheet.create({
-  form: { width: '100%', padding: spacing.xl, gap: spacing.lg },
+  form: { width: '100%', maxWidth: layout.maxFormPage, padding: spacing.xl, gap: spacing.lg },
   // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
   // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
   sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.lg, marginBottom: -spacing.lg, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderTopWidth: 1, zIndex: 1, borderBottomLeftRadius: radius.card, borderBottomRightRadius: radius.card } as unknown as ViewStyle,
   formCompact: { padding: spacing.lg, gap: spacing.lg },
+  repeat: { gap: spacing.sm },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row', justifyContent: 'flex-end' },
   submit: { minWidth: 200 },

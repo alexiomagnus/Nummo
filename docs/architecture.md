@@ -169,3 +169,29 @@ originale a valori fissi. Ogni combinazione è verificata a ≥ 4,5:1 (testo) e 
 (bordi) in `tests/theme.test.ts`. Il carattere Google Sans (SIL OFL, variabile 400–700, sottoinsiemi latin/latin-ext) è
 ospitato in `public/fonts/`: nessuna richiesta a Google a runtime. Le icone usano un
 unico spessore di linea (`iconStroke`, 1,5).
+
+## Piano prezzi delle spese ricorrenti (5 novembre 2026)
+
+Prima, una serie aveva un solo importo: modificarlo riscriveva anche le occorrenze già
+maturate. Ora `amount_minor` è il prezzo della prima occorrenza e il campo `price_changes`
+(array, sempre scritto, `[]` se vuoto; assente nei documenti precedenti = nessuna variazione)
+elenca le variazioni `{ index, amount_minor, once }`:
+
+- `index` è il **numero di occorrenza** (1 = primo rinnovo), non una data: il passato non
+  dipende dalle date e il prezzo promozionale è «dopo N rinnovi» (Aruba annuale: N = 1).
+  `once: false` vale da quel rinnovo in poi, `once: true` solo per quel rinnovo.
+- `priceAt` (`src/domain/pricing.ts`) è l'unica funzione che risolve il prezzo; la usano elenco,
+  dashboard, CSV e previsioni. Nessun importo è salvato per occorrenza (restano calcolate).
+- Modificare il prezzo di una serie vale dal **prossimo rinnovo** («solo questo» o «tutti i
+  futuri»): le occorrenze maturate non cambiano. «Tutti i futuri» sostituisce le variazioni
+  future programmate; una variazione uguale al prezzo già in vigore non viene salvata.
+- Previsioni (`forecastOccurrences`, `upcomingRenewals`): calcolate, mai nei totali, nella
+  dashboard o negli export; mostrate nella card «Prossimi rinnovi» della sezione Spese.
+- Rules: gli elementi della lista si controllano per posizione (niente cicli) e il limite di
+  1000 espressioni per richiesta fissa il massimo a **8 variazioni per serie** (con 10 la
+  creazione fallisce). Le Rules vanno ripubblicate dove già distribuite; per le spese
+  singole `price_changes` deve essere vuoto.
+- Il formato backup resta `version: 1`: il campo è additivo, i backup precedenti si importano
+  con `[]`. Il confronto tra record usa `sameFieldValue` (uguaglianza per valore).
+- Non implementato: variazioni programmate aggiunte in modifica (si possono solo rimuovere),
+  correzione del prezzo di un pagamento già maturato, più di 8 variazioni.

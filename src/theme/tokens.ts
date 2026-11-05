@@ -78,6 +78,8 @@ export const layout = {
   maxContent: 1200,
   // Single-column forms (new expense) stay readable instead of stretching.
   maxForm: 560,
+  // The new-expense page: a two-column form, still capped so fields do not stretch across a wide window.
+  maxFormPage: 720,
   // Gap between the blocks of a page (toolbar, cards, panels).
   sectionGap: spacing.lg,
   controlHeight: 56,

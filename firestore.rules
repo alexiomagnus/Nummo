@@ -26,15 +26,35 @@ service cloud.firestore {
         && date.year() == year && date.month() == month && date.day() == day
         && date <= request.time + duration.value(request.time >= summerStart && request.time < summerEnd ? 2 : 1, 'h');
     }
+    // Price schedule of a series (mirrors src/domain/pricing.ts): at most 8 changes (more exceed the 1000-expression limit), each
+    // {index 1..999, amount_minor, once}. Rules have no loops, so the list is checked by position.
+    function priceChange(c) {
+      return c is map && c.keys().hasAll(['index', 'amount_minor', 'once']) && c.keys().hasOnly(['index', 'amount_minor', 'once'])
+        && c.index is int && c.index >= 1 && c.index <= 999
+        && c.amount_minor is int && c.amount_minor > 0 && c.amount_minor <= 9999999 && c.once is bool;
+    }
+    function changeAt(l, i) { return l.size() <= i || priceChange(l[i]); }
+    function priceChanges(l) {
+      return l is list && l.size() <= 8
+        && changeAt(l, 0)
+        && changeAt(l, 1)
+        && changeAt(l, 2)
+        && changeAt(l, 3)
+        && changeAt(l, 4)
+        && changeAt(l, 5)
+        && changeAt(l, 6)
+        && changeAt(l, 7);
+    }
     function expense(d) {
-      return d.keys().hasAll(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
-        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
+      return d.keys().hasAll(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
+        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
         && d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 9999999
         && d.currency == 'EUR' && d.description is string && d.description.size() > 0 && d.description.size() <= 100
         && d.description == d.description.trim() && !d.description.matches('.*[\\t\\r\\n].*')
         && (d.category_id == null || uuid(d.category_id))
         && d.expense_date is string && validDate(d.expense_date)
         && d.recurrence in [null, 'weekly', 'monthly', 'yearly']
+        && priceChanges(d.price_changes) && (d.recurrence != null || d.price_changes.size() == 0)
         && d.source == 'web_app' && d.schema_version == 1
         && d.created_at is timestamp && d.created_at <= request.time
         && d.updated_at == request.time && d.revision is int;

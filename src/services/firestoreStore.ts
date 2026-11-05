@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { parseImport } from '../domain/backup.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
-import { parseExpenseRequest, type ExpenseRecord } from '../domain/contract.ts';
+import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../domain/contract.ts';
 import { categoryNameError, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
 import { categoryNameKey, parseSyncedCategory, parseSyncedExpense, type SyncedCategory, type SyncedExpense } from '../domain/firestore.ts';
 
@@ -38,7 +38,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       const saved = await getDocFromServer(doc(expenses, request.expense_id));
       const record = saved.exists() ? parseSyncedExpense(decode(saved.data(), saved.id)) : null;
       const { expense_id, ...data } = request;
-      if (!record || Object.entries(data).some(([key, value]) => record[key as keyof ExpenseData] !== value)) throw new Error('Spesa non ancora confermata dal server. Attendi la riconnessione.');
+      if (!record || Object.entries(data).some(([key, value]) => !sameFieldValue(record[key as keyof ExpenseData], value))) throw new Error('Spesa non ancora confermata dal server. Attendi la riconnessione.');
       return { expense_id, created_at: record.created_at };
     },
     async createExpense(request: ExpenseRequest) {
@@ -48,7 +48,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       await setDoc(doc(expenses, expense_id), { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 });
       const saved = await getDocFromServer(doc(expenses, expense_id));
       const record = saved.exists() ? parseSyncedExpense(decode(saved.data(), saved.id)) : null;
-      if (!record || Object.entries(data).some(([key, value]) => record[key as keyof ExpenseData] !== value)) throw new Error('Conferma non valida.');
+      if (!record || Object.entries(data).some(([key, value]) => !sameFieldValue(record[key as keyof ExpenseData], value))) throw new Error('Conferma non valida.');
       return { expense_id, created_at: record.created_at };
     },
     async updateExpense(previous: SyncedExpense, data: ExpenseData) {
@@ -111,7 +111,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       if (savedExpenses.pending || savedCategories.pending) throw new Error('Attendi le scritture pendenti prima di importare.');
       for (const r of records) {
         const previous = savedExpenses.records.find((p) => p.id === r.id);
-        if (previous && Object.entries(r).some(([key, value]) => previous[key as keyof ExpenseRecord] !== value)) throw conflict();
+        if (previous && Object.entries(r).some(([key, value]) => !sameFieldValue(previous[key as keyof ExpenseRecord], value))) throw conflict();
       }
       for (const r of categoryRecords) {
         const previous = savedCategories.records.find((p) => p.id === r.id || p.name_key === categoryNameKey(r.label));
@@ -131,7 +131,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
               const existing = expenseDocs[i]!;
               if (existing.exists()) {
                 const parsed = parseSyncedExpense(decode(existing.data(), existing.id));
-                if (!parsed || Object.entries(r).some(([key, value]) => parsed[key as keyof ExpenseRecord] !== value)) throw conflict();
+                if (!parsed || Object.entries(r).some(([key, value]) => !sameFieldValue(parsed[key as keyof ExpenseRecord], value))) throw conflict();
               } else {
                 const { id, created_at, ...data } = r;
                 tx.set(doc(expenses, id), { ...data, created_at: Timestamp.fromDate(new Date(created_at)), updated_at: serverTimestamp(), revision: 1 });

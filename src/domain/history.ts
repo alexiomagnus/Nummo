@@ -1,25 +1,60 @@
 import type { Category } from './category.ts';
+import { nextRenewal, priceAt, type PriceChange } from './pricing.ts';
 import { occurrenceDates, type Recurrence } from './recurrence.ts';
 
 // Structural subset of a stored expense, so the domain does not depend on storage.
 export type ExpenseEntry = Readonly<{
   id: string; amount_minor: number; description: string; category_id: string | null;
   expense_date: string; recurrence: Recurrence | null; created_at: string;
+  // Absent on expenses saved before price schedules existed.
+  price_changes?: readonly PriceChange[];
 }>;
 export type Occurrence = Readonly<{
   key: string; expenseId: string; date: string; amount_minor: number;
   description: string; category_id: string | null; recurrence: Recurrence | null;
 }>;
 
-// A recurring expense counts once per occurrence up to today; future ones are not spending yet.
+function toOccurrence(entry: ExpenseEntry, date: string, index: number): Occurrence {
+  return {
+    key: `${entry.id}:${date}`, expenseId: entry.id, date, amount_minor: priceAt(entry.amount_minor, entry.price_changes ?? [], index),
+    description: entry.description, category_id: entry.category_id, recurrence: entry.recurrence,
+  };
+}
+
+// A recurring expense counts once per occurrence up to today, at the price it had on that occurrence;
+// future ones are not spending yet (see forecastOccurrences).
 export function expandOccurrences(entries: readonly ExpenseEntry[], today: string): Occurrence[] {
   return entries.flatMap((entry) => {
     const dates = entry.recurrence ? occurrenceDates(entry.expense_date, entry.recurrence, today) : [entry.expense_date];
-    return dates.filter((date) => date <= today).map((date) => ({
-      key: `${entry.id}:${date}`, expenseId: entry.id, date, amount_minor: entry.amount_minor,
-      description: entry.description, category_id: entry.category_id, recurrence: entry.recurrence,
-    }));
+    return dates.flatMap((date, index) => (date <= today ? [toOccurrence(entry, date, index)] : []));
   });
+}
+
+// Planned (not yet paid) occurrences after `today` up to `until` inclusive, with their scheduled price.
+export function forecastOccurrences(entries: readonly ExpenseEntry[], today: string, until: string): Occurrence[] {
+  return entries.flatMap((entry) => {
+    if (!entry.recurrence) return [];
+    const dates = occurrenceDates(entry.expense_date, entry.recurrence, until);
+    return dates.flatMap((date, index) => (date > today ? [toOccurrence(entry, date, index)] : []));
+  });
+}
+
+// The next renewal of every recurring expense, soonest first. `previous` is the price of the
+// occurrence before it, so a scheduled change can be pointed out.
+export type Renewal = Readonly<{ occurrence: Occurrence; previous: number }>;
+export function upcomingRenewals(entries: readonly ExpenseEntry[], today: string): Renewal[] {
+  return entries.flatMap((entry) => {
+    const next = nextRenewal(entry.expense_date, entry.recurrence, today);
+    if (!next) return [];
+    const changes = entry.price_changes ?? [];
+    return [{ occurrence: toOccurrence(entry, next.date, next.index), previous: priceAt(entry.amount_minor, changes, next.index - 1) }];
+  }).sort((a, b) => a.occurrence.date.localeCompare(b.occurrence.date) || a.occurrence.key.localeCompare(b.occurrence.key));
+}
+
+export function addDays(date: string, days: number): string {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
 }
 
 export const sortOptions = ['date-desc', 'date-asc', 'amount-desc', 'amount-asc'] as const;

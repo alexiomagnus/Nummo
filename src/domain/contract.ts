@@ -2,6 +2,7 @@
 // runtime checks. TypeScript types alone do not validate untrusted data.
 import { isValidDate, normalizeDescription, type ExpenseData, type ExpenseRequest } from './expense.ts';
 import { expensePolicy, todayInRome } from './policy.ts';
+import { parsePriceChanges } from './pricing.ts';
 import { isRecurrence } from './recurrence.ts';
 
 export type ExpenseRecord = Readonly<ExpenseData & { id: string; created_at: string }>;
@@ -9,8 +10,18 @@ export type Receipt = Readonly<{ expense_id: string; created_at: string }>;
 
 const requestKeys = [
   'expense_id', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date',
-  'recurrence', 'source', 'schema_version',
+  'recurrence', 'price_changes', 'source', 'schema_version',
 ] as const;
+
+// Field comparison that also handles the price schedule (an array of objects).
+export function sameFieldValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  const x = a as Record<string, unknown>;
+  const y = b as Record<string, unknown>;
+  const keys = Object.keys(x);
+  return Array.isArray(a) === Array.isArray(b) && keys.length === Object.keys(y).length && keys.every((k) => sameFieldValue(x[k], y[k]));
+}
 
 // Canonical lowercase UUID as produced by crypto.randomUUID().
 export function isUuid(value: unknown): value is string {
@@ -41,10 +52,11 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     && typeof v.expense_date === 'string' && isValidDate(v.expense_date) && v.expense_date >= expensePolicy.minDate
     && (v.recurrence === null || isRecurrence(v.recurrence))
     && v.source === 'web_app' && v.schema_version === 1;
-  if (!valid) return null;
+  const price_changes = parsePriceChanges(v.price_changes);
+  if (!valid || !price_changes) return null;
   return {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: v.category_id as string | null,
-    expense_date: v.expense_date as string, recurrence: v.recurrence as ExpenseData['recurrence'],
+    expense_date: v.expense_date as string, recurrence: v.recurrence as ExpenseData['recurrence'], price_changes,
     source: 'web_app', schema_version: 1,
   };
 }

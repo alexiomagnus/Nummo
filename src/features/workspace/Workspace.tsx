@@ -11,7 +11,7 @@ import { SyncChip } from '../../components/SyncChip';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout } from '../../theme/tokens';
 import { describeSync } from './syncStatus';
-import { expandOccurrences } from '../../domain/history';
+import { addDays, expandOccurrences, forecastOccurrences, upcomingRenewals } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
 import { defaultCategories } from '../../domain/category';
@@ -22,6 +22,7 @@ import { ExpenseForm } from '../expenses/ExpenseForm';
 import { ExpenseEditor } from '../expenses/ExpenseEditor';
 import { useRemoteExpenses } from '../expenses/useRemoteExpenses';
 import { ExpenseList } from '../history/ExpenseList';
+import { UpcomingRenewals } from '../history/UpcomingRenewals';
 import { makeBackup } from '../../domain/backup';
 import { firebaseWebConfig } from '../../services/backendConfig';
 import { BackupActions, download } from '../backup/BackupActions';
@@ -29,6 +30,7 @@ import { getDatabase } from '../../services/firebase';
 import { createFirestoreStore, type FirestoreStore } from '../../services/firestoreStore';
 import type { ExpenseStore } from '../expenses/expenseStore';
 
+const forecastDays = 30;
 type Section = 'expense' | 'list' | 'dashboard' | 'categories';
 // «Nuova spesa» is the primary action (FAB), not a destination: one primary navigation only.
 const destinations: readonly Destination<Section>[] = [
@@ -58,6 +60,8 @@ export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string;
     return () => { clearInterval(timer); window.removeEventListener('online', change); window.removeEventListener('offline', change); window.removeEventListener('focus', change); };
   }, []);
   const occurrences = useMemo(() => expandOccurrences(store.expenses, today), [store.expenses, today]);
+  const renewals = useMemo(() => upcomingRenewals(store.expenses, today), [store.expenses, today]);
+  const soon = useMemo(() => forecastOccurrences(store.expenses, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [store.expenses, today]);
   const usage = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const record of store.expenses) if (record.category_id) counts[record.category_id] = (counts[record.category_id] ?? 0) + 1;
@@ -74,7 +78,7 @@ export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string;
       fab={{ label: 'Nuova spesa', icon: iconShapes.plus, target: 'expense' }}
       actions={<><SyncChip status={status} />{topActions}</>}>
       <Sections section={section} backend={backend} uid={uid} store={store} categoryState={categoryState}
-        occurrences={occurrences} usage={usage} online={online} synchronized={synchronized} error={error} />
+        occurrences={occurrences} renewals={renewals} soon={soon} usage={usage} online={online} synchronized={synchronized} error={error} />
     </AppShell>
   );
 }
@@ -82,10 +86,11 @@ export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string;
 type SectionsProps = {
   section: Section; backend: FirestoreStore; uid: string; store: ExpenseStore;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
+  renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   usage: Record<string, number>; online: boolean; synchronized: boolean; error: string | null;
 };
 
-function Sections({ section, backend, uid, store, categoryState, occurrences, usage, online, synchronized, error }: SectionsProps) {
+function Sections({ section, backend, uid, store, categoryState, occurrences, renewals, soon, usage, online, synchronized, error }: SectionsProps) {
   const theme = useTheme();
   const notify = useSnackbar();
   const [showBackup, setShowBackup] = useState(false);
@@ -114,6 +119,7 @@ function Sections({ section, backend, uid, store, categoryState, occurrences, us
         <View style={showBackup ? undefined : styles.hidden}>
           <BackupActions backend={backend} uid={uid} enabled={synchronized} onClose={() => setShowBackup(false)} />
         </View>
+        <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
         <ExpenseList occurrences={occurrences} categories={categoryState.categories} error={error} onDelete={store.remove}
           onEdit={(id) => setEditing(store.expenses.find((r) => r.id === id) ?? null)} />
       </View>

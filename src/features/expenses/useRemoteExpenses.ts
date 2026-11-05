@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { ExpenseData, ExpenseRequest } from '../../domain/expense';
+import { sameFieldValue } from '../../domain/contract';
 import { parseSyncedExpense, type SyncedExpense } from '../../domain/firestore';
 import { submissionReducer } from '../../domain/submission';
 import { errorCode } from '../../services/firebase';
@@ -36,7 +37,7 @@ export function useRemoteExpenses(backend: FirestoreStore, storageNote: string):
       const current = latest.current;
       if (current.status === 'sending' || current.status === 'uncertain') {
         const saved = s.records.find((r) => r.id === current.request.expense_id);
-        if (saved && !s.pending && !s.fromCache && Object.entries(current.request).every(([key, value]) => key === 'expense_id' || saved[key as keyof ExpenseData] === value)) dispatch({ type: 'confirmed', receipt: { expense_id: saved.id, created_at: saved.created_at } });
+        if (saved && !s.pending && !s.fromCache && Object.entries(current.request).every(([key, value]) => key === 'expense_id' || sameFieldValue(saved[key as keyof ExpenseData], value))) dispatch({ type: 'confirmed', receipt: { expense_id: saved.id, created_at: saved.created_at } });
       }
     }, (reason) => {
       setRecovery((old) => [...new Map([...old, ...pendingRecords.current.values()].map((r) => [r.id, r])).values()]);

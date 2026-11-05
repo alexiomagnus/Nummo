@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { spacing } from '../../theme/tokens';
 import { Button } from '../../components/Button';
 import type { Category } from '../../domain/category';
 import { ChoiceChips } from '../../components/ChoiceChips';
@@ -22,7 +23,7 @@ export function CategoryPicker({ categories, selectedId, onChange, disabled }: P
           icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
         }))} />
       {collapsible && (
-        <Button onPress={() => setExpanded(!expanded)} style={{ alignSelf: 'flex-start' }}>
+        <Button onPress={() => setExpanded(!expanded)} style={{ alignSelf: 'flex-start', marginLeft: -spacing.md, marginVertical: -spacing.xs }}>
           {expanded ? 'Mostra meno' : `Mostra tutte (${categories.length})`}
         </Button>
       )}

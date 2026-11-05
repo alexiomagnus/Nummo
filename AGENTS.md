@@ -20,7 +20,8 @@ Firestore è l'unica fonte di verità. Stato operativo: `HANDOFF.md`.
 Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come azione primaria (FAB), mai due navigazioni.
 
 - `src/domain/`: funzioni pure senza SDK. `policy.ts`, `expense.ts`, `contract.ts`,
-  `category.ts`, `recurrence.ts`, `history.ts`, `submission.ts` riutilizzati;
+  `category.ts`, `recurrence.ts`, `pricing.ts` (piano prezzi per numero di rinnovo),
+  `history.ts`, `submission.ts` riutilizzati;
   `firestore.ts` valida i record sincronizzati e genera le chiavi nome categoria;
   `backup.ts` valida le importazioni, genera JSON e CSV protetto da formule.
 - `src/services/backendConfig.ts`: modalità/env pubbliche a build, niente segreti.

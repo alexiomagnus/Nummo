@@ -54,7 +54,7 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   // M3 list item with trailing switch: the whole row is the touch target.
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, marginHorizontal: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   text: { flex: 1, gap: 2 },
-  options: { gap: spacing.sm, paddingHorizontal: spacing.md },
+  options: { gap: spacing.sm },
 });

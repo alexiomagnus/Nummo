@@ -1,3 +1,4 @@
+import { Logo } from './Logo';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, useTheme } from 'react-native-paper';
@@ -46,9 +47,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
       <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom} onVisibleChange={setSnackbarOpen}>
       <View role="banner" style={[styles.topBar, { backgroundColor: colors.background, borderColor: colors.outlineVariant, paddingTop: insets.top, height: layout.topBarHeight + insets.top }]}>
         <View style={styles.brand}>
-          <View style={[styles.logo, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.logoLetter, { color: colors.onPrimary }]}>N</Text>
-          </View>
+          <Logo size={40} color={colors.primary} />
           <Text variant="titleLarge" style={[styles.brandName, { color: colors.primary }]}>Nummo</Text>
         </View>
         <View style={styles.actions}>{actions}</View>
@@ -153,9 +152,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg, borderBottomWidth: StyleSheet.hairlineWidth,
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexShrink: 1 },
-  logo: { width: 36, height: 36, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
-  logoLetter: { fontSize: 22, lineHeight: 26, fontWeight: '800' },
-  brandName: { fontWeight: '700', letterSpacing: -0.25 },
+  brandName: { fontSize: 26, lineHeight: 32, fontWeight: '700', letterSpacing: -0.25 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   body: { flex: 1, flexDirection: 'row', minHeight: 0 },
   scroll: { flex: 1, minWidth: 0 },

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { radius, spacing } from '../theme/tokens';
+import { useSizeClass } from '../theme/useSizeClass';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -21,17 +22,19 @@ type Props<T extends string> = {
 // Material 3 filter chips used as a single-choice group: selected = secondary container + check.
 export function ChoiceChips<T extends string>({ options, value, onChange, allowDeselect, label, disabled, showCheck = true }: Props<T>) {
   const { colors } = useTheme();
+  // Phones get a taller chip (44 dp, 48+ with the touch slop); desktop keeps the compact 40 dp.
+  const height = useSizeClass() === 'compact' ? 44 : 40;
   return (
     <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel={label}>
       {options.map((option) => {
         const selected = option.value === value;
         const color = selected ? colors.onSecondaryContainer : colors.onSurfaceVariant;
         return (
-          <StateLayerPressable key={option.value} layerColor={color} radius={radius.control} disabled={disabled} hitSlop={{ top: 4, bottom: 4 }}
+          <StateLayerPressable key={option.value} layerColor={color} radius={radius.control} disabled={disabled} hitSlop={{ top: 2, bottom: 2 }}
             onPress={() => onChange(selected && allowDeselect ? '' : option.value)}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled}
             accessibilityLabel={`${option.label}${selected ? ', selezionata' : ''}`}
-            style={[styles.chip, selected
+            style={[styles.chip, { minHeight: height }, selected
               ? { backgroundColor: colors.secondaryContainer, borderColor: colors.secondaryContainer }
               : { borderColor: colors.outline }]}>
             {selected && showCheck ? <SvgIcon shape={iconShapes.check} size={18} color={color} /> : option.icon}
@@ -45,9 +48,8 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
 
 const styles = StyleSheet.create({
   list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  // 40 dp chip; hitSlop brings the touch area to 48 dp.
   chip: {
-    minHeight: 40, maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.md, borderRadius: radius.control, borderWidth: 1,
   },
   label: { flexShrink: 1 },

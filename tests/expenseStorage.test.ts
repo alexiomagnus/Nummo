@@ -12,7 +12,7 @@ function memoryStorage() {
 }
 const data: ExpenseData = {
   amount_minor: 1230, currency: 'EUR', description: 'Pane', category_id: null, expense_date: '2026-11-02',
-  recurrence: null, source: 'web_app', schema_version: 1,
+  recurrence: null, price_changes: [], source: 'web_app', schema_version: 1,
 };
 const now = new Date('2026-11-02T10:00:00.000Z');
 
