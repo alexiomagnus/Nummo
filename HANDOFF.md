@@ -1,11 +1,11 @@
 # HANDOFF — Nummo BYOF
 
 Aggiornamento: 5 novembre 2026. Branch `backend-firebase` (non pubblicato né unito a `main`).
-Ultimo commit: `e2b84d3` «refactor Swiss minimalism, calendario, nuove icone, Nuova spesa a colonna unica»
+Ultimo commit: `9ba1665` «rimuove adapter localStorage e rifinisce la UI», sopra `e2b84d3` (Swiss minimalism, calendario, icone)
 (sopra `390f9e2` piano prezzi, `0a3e0fb` studio logo, `3ca98bd` impostazioni di aspetto, `8e1fa0a` UI M3,
 `b77e1db` migrazione Firestore, `fe759d5` ultimo col vecchio backend).
-**Working tree sporco** (non committato): rimozione adapter localStorage e relativi test, ritocchi UI (sotto),
-aggiornamenti di `AGENTS.md`, `HANDOFF.md`, `docs/`. Architettura e comandi: `AGENTS.md`; decisioni:
+Le modifiche successive a `e2b84d3` (rimozione adapter localStorage, ritocchi UI, documentazione) sono nel commit
+`9ba1665`, pubblicato su `backend-firebase` e unito a `main`. Architettura e comandi: `AGENTS.md`; decisioni:
 `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`; guida utente: `docs/firebase-personale.md`.
 
 ## Stato implementato (verificato su codice e test)
@@ -33,7 +33,7 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   totale grande + statistiche, tabella dettaglio chiusa. Spese: filtri, riepilogo, azioni di riga a icone.
 - **Impostazioni** (menu account): tema Sistema/Chiaro/Scuro, Monocolore o Palette (6 tinte: Menta predefinita,
   Blu, Viola, Rosa, Ambra, Grafite), carattere Google Sans (`public/fonts/`) o Sistema, «Ripristina».
-- **Ritocchi non committati**: `StateLayerPressable` con `bleed` (layer hover/pressed oltre l'elemento, usato
+- **Ritocchi UI del 5 nov sera** (visti a schermo dall'utente): titoli pagina 34 px (`PageHeader`; «Nuova spesa» abbassata con `lowered`); dialog elimina categoria senza virgolette né testo, pulsanti 40 dp; spunta dei `MenuSelect` più distante; hover di navigazione e legenda dashboard pari all'area colorata; tolti «Si ripete…», «Scegli la frequenza.» e «(+N)»; più spazio sopra «Prezzo promozionale» e «Salva». Inoltre: `StateLayerPressable` con `bleed` (layer hover/pressed oltre l'elemento, usato
   nelle voci di navigazione); logo senza layer né anello di focus; spaziatura voci rail/drawer `lg`;
   Impostazioni con titolo bold, azioni più alte, senza linee dell'area scorrevole; chip/segmenti con più spazio
   dopo la spunta; rimossi `categoryStorage.ts`, `expenseStorage.ts`, `tests/expenseStorage.test.ts`, il pannello
