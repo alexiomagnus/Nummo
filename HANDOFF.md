@@ -50,7 +50,7 @@ con valori chiari sacrificherebbe il tema scuro. Soluzione certa: TWA (Bubblewra
 
 **Nuovi glifi categoria (6 nov, non committato)**: dallo screenshot delle 12 categorie consigliate mancavano 4 icone (le altre 8 esistevano: cart, house, graduation, laptop, shirt, gift, car/bus, ticket/film).
 Aggiunti `utensils` (Ristorazione), `heartpulse` (Salute), `cloud` (Servizi digitali), `ellipsis` (Altro): `category.ts`, `categoryGlyphs.ts`, lista in `firestore.rules` (totale 58).
-**Le Rules vanno ripubblicate** dove già distribuite, altrimenti le nuove icone sono rifiutate. Verifica: `npm run check` (142/142) e `test:emulator` (11/11) ok; glifi renderizzati e guardati.
+**Rules pubblicate il 6 nov 2026 (15:45 UTC) su `nummo-6b6e2`** con `firebase deploy --only firestore:rules` (dry-run ok; verificato in sola lettura che coincidono con `firestore.rules` locale). Prima la release cloud era quella precedente a `755a439` (identica a `f70df6b`) e rifiutava le 4 icone nuove: sintomo «Accesso negato…» (`message()` mostra lo stesso testo per ogni `permission-denied`). **Non verificato**: salvataggio reale di una categoria con icona nuova dopo la pubblicazione; UID in `config/owner` (non letto), se l'errore persiste. Verifica: `npm run check` (142/142) e `test:emulator` (11/11) ok; glifi renderizzati e guardati.
 Non aggiunti al seed `defaultCategories` (restano 4); l'elenco delle 12 categorie non è stato implementato.
 
 ## Nuova spesa Material 3 e forme (6 nov, `f70df6b`)
