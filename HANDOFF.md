@@ -39,10 +39,14 @@ con login (ripresentazione all'avvio, anello con Tab su Categoria).
 a larghezza uguale, ciascuna icona 24 + etichetta sotto (56 dp di altezza); l'attiva ha l'intera voce su `primaryContainer`/`onPrimaryContainer`, le altre `onSurfaceVariant`.
 A destra il pulsante tondo «Nuova spesa» (64 dp, `primary`/`onPrimary`, distinto dalle destinazioni; assente nella sua pagina, dove la pillola occupa tutta la larghezza).
 Nel flusso del layout (non copre i contenuti né la barra Salva), padding inferiore = inset. Tolti FAB compatto, bordo superiore, ombra e `layout.navBarHeight` (ora `floatingBar` 64).
-Bordo 2 px delle righe di Spese → 1 px uniforme. **Incoerenza nota**: rail (tablet) e drawer (desktop) usano ancora `secondaryContainer` per la voce attiva e `primaryContainer` per il FAB:
+**Animazione**: all'entrata/uscita di «Nuova spesa» il pulsante tondo anima larghezza, opacità e scala (`Animated.timing`, `motion.medium` 250 ms, `motion.easing`, stesso schema di `M3Switch`; durata 0 con riduzione del movimento via `useReducedMotion`) e la pillola flex si allarga/restringe di conseguenza; il pulsante resta montato finché l'uscita non finisce (un'uscita interrotta non lo smonta), con `pointerEvents` none e `tabIndex` −1 quando nascosto. Provata via CDP in tempo reale (412 px): uscita, ingresso e 5 cambi in 400 ms; stato finale corretto. Non provata `prefers-reduced-motion`, dispositivo reale. Bordo 2 px delle righe di Spese → 1 px uniforme. **Incoerenza nota**: rail (tablet) e drawer (desktop) usano ancora `secondaryContainer` per la voce attiva e `primaryContainer` per il FAB:
 con la modalità «Palette» il secondario ruota di tinta (es. verde con Ambra), quindi su desktop resta quel verde; la barra mobile no. Allinearli è da decidere.
 Verifica: `npm run check` ok; Chromium headless su pagina di prova con tema Ambra/Palette: 412×915 chiaro (Spese attiva) e scuro (Dashboard attiva), schermata «Nuova spesa» (senza +), desktop 1440 (drawer
 invariato). **Non verificato**: Pixel 8 reale, schermate reali con dati, tastiera/focus, snackbar sopra la barra, safe area con inset ≠ 0.
+
+**Barra di navigazione Android (indagine ripetuta, nessuna modifica)**: non esiste API web per colorare la barra a gesture di una PWA standalone; `theme-color`
+colora solo la barra di stato. Resta la sola ipotesi non verificata che Chrome usi `background_color`/`theme_color` statici del manifest (oggi scuri): provarla
+con valori chiari sacrificherebbe il tema scuro. Soluzione certa: TWA (Bubblewrap, `navigationBarColor`/`navigationBarColorDark`), non intrapresa.
 
 ## Nuova spesa Material 3 e forme (6 nov, `f70df6b`)
 

@@ -1,11 +1,11 @@
 import { Logo } from './Logo';
-import { useCallback, useRef, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Animated, Easing, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { layout, radius, shape, spacing, stateOpacity } from '../theme/tokens';
+import { layout, motion, radius, shape, spacing, stateOpacity } from '../theme/tokens';
 import { panelColor } from '../theme/theme';
-import { useSizeClass } from '../theme/useSizeClass';
+import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon } from './SvgIcon';
@@ -105,6 +105,21 @@ type NavProps<T extends string> = { destinations: readonly Destination<T>[]; sel
 
 function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab }: NavProps<T> & { bottomInset: number }) {
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
+  // The round action enters/leaves with width, opacity and scale; the pill is flex: 1, so it widens/narrows with it.
+  // The action stays mounted until its exit animation has finished (an interrupted one must not unmount it).
+  const lastFab = useRef(fab);
+  if (fab) lastFab.current = fab;
+  const [mounted, setMounted] = useState(Boolean(fab));
+  const progress = useRef(new Animated.Value(fab ? 1 : 0)).current;
+  const visible = Boolean(fab);
+  useEffect(() => {
+    if (visible) setMounted(true);
+    Animated.timing(progress, {
+      toValue: visible ? 1 : 0, duration: reduceMotion ? 0 : motion.medium, easing: Easing.bezier(...motion.easing), useNativeDriver: false,
+    }).start(({ finished }) => { if (finished && !visible) setMounted(false); });
+  }, [visible, progress, reduceMotion]);
+  const action = fab ?? lastFab.current;
   return (
     <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }]}>
       <View role="navigation" aria-label="Sezioni" style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
@@ -121,11 +136,19 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
           );
         })}
       </View>
-      {fab && (
-        <StateLayerPressable layerColor={colors.onPrimary} radius={radius.pill} accessibilityRole="button" accessibilityLabel={fab.label}
-          onPress={() => onSelect(fab.target)} style={[styles.roundAction, { backgroundColor: colors.primary }]}>
-          <SvgIcon shape={fab.icon} size={28} color={colors.onPrimary} />
-        </StateLayerPressable>
+      {mounted && action && (
+        <Animated.View pointerEvents={visible ? 'auto' : 'none'} aria-hidden={!visible}
+          style={[styles.actionSlot, {
+            width: progress.interpolate({ inputRange: [0, 1], outputRange: [0, layout.floatingBar] }),
+            marginLeft: progress.interpolate({ inputRange: [0, 1], outputRange: [0, spacing.sm] }),
+            opacity: progress, transform: [{ scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
+          }]}>
+          <StateLayerPressable layerColor={colors.onPrimary} radius={radius.pill} accessibilityRole="button" accessibilityLabel={action.label}
+            tabIndex={visible ? 0 : -1}
+            onPress={() => onSelect(action.target)} style={[styles.roundAction, { backgroundColor: colors.primary }]}>
+            <SvgIcon shape={action.icon} size={28} color={colors.onPrimary} />
+          </StateLayerPressable>
+        </Animated.View>
       )}
     </View>
   );
@@ -197,9 +220,10 @@ const styles = StyleSheet.create({
   body: { flex: 1, flexDirection: 'row', minHeight: 0 },
   scroll: { flex: 1, minWidth: 0 },
   content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', flexGrow: 1, gap: spacing.xl },
-  floating: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingTop: spacing.md, paddingHorizontal: spacing.md },
+  floating: { flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.md },
   pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: spacing.xs, gap: spacing.xs },
   pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill },
+  actionSlot: { height: layout.floatingBar, overflow: 'hidden' },
   roundAction: { width: layout.floatingBar, height: layout.floatingBar, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },
   railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.control },
