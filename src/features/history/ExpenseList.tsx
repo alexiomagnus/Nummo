@@ -78,7 +78,7 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
       </View>
       {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
       <View style={styles.summary}>
-        <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.onSurfaceVariant }}>
+        <Text variant="titleMedium" accessibilityLiveRegion="polite" style={styles.count}>
           {results.length === 1 ? (filtered ? '1 spesa trovata' : '1 spesa') : `${results.length} spese${filtered ? ' trovate' : ''}`}
         </Text>
         <Text variant="titleMedium" style={styles.amount}>{formatAmountMinor(total)}</Text>
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
   summary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: spacing.xl, paddingBottom: spacing.md },
   monthName: { textTransform: 'capitalize' },
+  count: { fontWeight: '600' },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
   rowAmount: { minWidth: 96, textAlign: 'right' },
   empty: { gap: spacing.sm },

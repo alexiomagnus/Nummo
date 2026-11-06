@@ -166,7 +166,7 @@ export function Dashboard({ occurrences, categories }: Props) {
                         </View>
                       ))}
                     </>
-                  ) : chart !== 'donut' && (
+                  ) : (
                     <Text variant="bodySmall" style={muted}>Tocca il grafico per i dettagli.</Text>
                   )}
                 </View>

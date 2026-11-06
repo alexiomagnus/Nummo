@@ -54,8 +54,8 @@ stata modificata durante questa migrazione.
    negano estranei, accessi incrociati e autopromozione e validano i dati.
 7. Costruisci con `npm run build:cloud` (si interrompe con configurazione mista, mancante o
    endpoint emulatore nel bundle), prova in locale con `npm run preview:cloud` (usa il progetto
-   reale, `localhost` deve essere tra i domini autorizzati) e ospita `dist/` su HTTPS di tua scelta.
-   Non è stato scelto o configurato un hosting. Mai pubblicare `dist-demo/` (build demo di `check`).
+   reale, `localhost` deve essere tra i domini autorizzati). Mai pubblicare `dist-demo/` (build demo di `check`).
+   Hosting: vedi «Pubblicazione su Firebase Hosting» sotto.
    Verifica nel tuo ambiente login/logout, secondo account rifiutato, una spesa
    confermata, reload e lettura su una seconda sessione prima di migrare lo storico.
 
@@ -116,3 +116,32 @@ Importa backup JSON legge file fino a 5 MB, controlla dati e duplicati, richiede
 ed esegue gruppi ripetibili. Non elimina gli originali. Conserva i backup fuori dalla
 cartella del sito. Procedura completa e vecchio emulatore in
 [migrazione-byof.md](migrazione-byof.md).
+
+## Pubblicazione su Firebase Hosting
+
+`firebase.json` contiene la sezione `hosting` (cartella `dist/`); `npm run deploy:hosting` ricostruisce con
+`build:cloud` e pubblica **solo Hosting** sul progetto delle variabili `EXPO_PUBLIC_FIREBASE_PROJECT_ID`.
+Rules e Firestore si pubblicano a parte e solo a mano (`firebase deploy --only firestore:rules --project ID`).
+Non usare `firebase deploy` senza `--only`: includerebbe anche le Rules.
+
+Prima pubblicazione (manuale, richiede autorizzazione):
+
+1. Prerequisiti già descritti sopra: Google attivo, `config/owner` creato, Rules pubblicate, `.env.production.local` con le
+   4 variabili. Console → Hosting → «Inizia» se il sito non esiste (nessuna fatturazione richiesta dal piano base).
+2. `npx firebase login` (una volta, su questa macchina).
+3. `npm run deploy:hosting -- --dry-run`: build e verifiche, stampa progetto e comando, non pubblica. Controlla che il
+   progetto sia quello atteso.
+4. `npm run deploy:hosting -- --channel anteprima`: pubblica su un URL temporaneo `...--anteprima-xxxx.web.app` (scade in 7
+   giorni, il sito live resta vuoto/invariato). Provalo da PC e da Android (login, secondo account rifiutato, nuova spesa,
+   ricarica). I domini `*.web.app` e `*.firebaseapp.com` del progetto sono autorizzati di default; per gli URL dei canali di
+   anteprima e per un dominio personalizzato verifica Authentication → Impostazioni → Domini autorizzati.
+5. Solo dopo l'esito positivo: `npm run deploy:hosting` per il sito live (`https://ID.web.app`).
+6. Su Android (Chrome): menu ⋮ → «Installa app» / «Aggiungi a schermata Home» e riprova il login dall'app installata.
+
+Sviluppo e pubblicazione restano separati: `npm run dev`/`dev:hybrid` non usano `dist/` né Hosting. L'emulatore Hosting non
+è parte del flusso; per provare localmente la build di produzione usa `npm run preview:cloud`.
+
+Login Google sui browser mobili: l'app usa il popup (`signInWithPopup`) avviato direttamente dal tocco, quindi i blocchi popup
+sono evitati; se il browser lo blocca compare un messaggio. Possibili limiti non verificati su dispositivo: browser integrati
+in altre app (Google rifiuta il login in alcune WebView), Safari iOS con prevenzione del tracciamento e app installata iOS.
+Il sito non invia `Cross-Origin-Opener-Policy` (renderebbe inaffidabile il popup): non aggiungerlo.

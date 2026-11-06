@@ -48,8 +48,8 @@ Il vecchio backend Cloud Functions/Sheets è stato rimosso; resta consultabile n
 cronologia Git (commit `fe759d5`).
 Nessuna nuova dipendenza o commit automatico; nessun deployment o fatturazione attivati.
 
-L'unico target è **web**. PWA completa, installazione e dispositivi Android/iOS reali
-restano da collaudare/implementare; il recupero dati dalla cache non implica apertura
+L'unico target è **web**. Hosting, manifest e icone sono pronti (`docs/firebase-personale.md`); service worker, installazione
+e dispositivi Android/iOS reali restano da collaudare/implementare; il recupero dati dalla cache non implica apertura
 a freddo offline dell'app. Importazioni/modifiche e backup richiedono rete; gli
 inserimenti possono restare pendenti nella coda SDK fino alla conferma server.
 

@@ -111,7 +111,9 @@ Nessun motore di sincronizzazione personalizzato.
 | Web Chrome Android, Safari iOS | Obiettivi; dispositivi reali e OAuth mobile da verificare |
 | React/Expo web | Build/typecheck verificati; unico target dichiarato in app.json |
 | App native Android/iOS | Non implementate: UI SVG DOM e login popup richiedono adattamenti; il Firebase JS SDK in RN non fornisce persistenza Firestore nativa equivalente |
-| PWA installabile/apertura a freddo senza rete | Non implementata: manca service worker/manifest completo; cache dati ≠ disponibilità offline del bundle |
+| Installazione Android (manifest + icone) | Manifest e icone presenti (6 nov 2026); installabilità non provata su dispositivo; niente service worker |
+| Apertura a freddo senza rete | Non implementata: manca il service worker; cache dati ≠ disponibilità offline del bundle |
+| Firebase Hosting | Configurato in `firebase.json` e `npm run deploy:hosting` (solo Hosting); nessuna pubblicazione eseguita |
 
 La persistenza web supportata e le differenze RN sono documentate da
 [Firebase offline](https://firebase.google.com/docs/firestore/manage-data/enable-offline),

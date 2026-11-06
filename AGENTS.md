@@ -47,7 +47,11 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
 - `scripts/`: seed demo e configurazione proprietario (solo emulatore localhost); `check-dev-env.ts`,
-  `build-cloud.ts`, `envPolicy.ts` (ambienti).
+  `build-cloud.ts`, `envPolicy.ts` (ambienti), `deploy-hosting.ts` (pubblicazione solo Hosting).
+- `public/`: copiato in `dist/` dall'export: `index.html` (modello HTML con manifest/icone), `manifest.webmanifest`,
+  `icons/` (PNG 192/512, maskable, apple-touch, SVG: segno «n» su `#0F1512`), `fonts/`.
+- `firebase.json`: `firestore` (Rules), `hosting` (`dist/`, fallback SPA su `/index.html`, cache lunga solo per
+  `/_expo/static/**`, `no-cache` per HTML/manifest, senza COOP/COEP: romperebbero il popup Google) ed `emulators`.
 - `emulator-data/`: dati persistenti dell'emulatore personale (`emulators:real`),
   dati personali ignorati da Git. `emulator-seed/`: account Auth della demo.
 - `functions/` può contenere solo `.env` personali ignorati del vecchio backend: non
@@ -77,6 +81,11 @@ Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulator
 - `npm run emulators:real` usa l'alias `real` preesistente solo in questo checkout.
   Non è un default: altre installazioni specificano il proprio `--project`. Importa da
   `emulator-data/` e riesporta all'arresto: fermare con un solo Ctrl+C.
+- `npm run deploy:hosting`: **l'unico modo previsto di pubblicare**. Ricostruisce con `build:cloud`, ricava il progetto dalle
+  stesse variabili della build e lancia `firebase deploy --only hosting --project ID` (mai Rules/indici). `-- --channel nome`:
+  anteprima temporanea (7 giorni) senza toccare il sito live; `-- --dry-run`: build e controlli, stampa il comando e non
+  pubblica. Non lanciare `firebase deploy` senza `--only hosting` (pubblicherebbe anche `firestore.rules`) e non farlo
+  senza autorizzazione. `.firebaserc` ha solo l'alias `real`, nessun default.
 - `npm run preview:cloud`: serve `dist/` in locale (verifica; usa il progetto reale: non eseguire azioni di scrittura senza autorizzazione).
 - `npm run check`: typecheck, test app, `build:demo` (demo in `dist-demo/`, mai da pubblicare).
 - `npm run test:emulator`: nuovi test Auth/Firestore; richiede porte libere.

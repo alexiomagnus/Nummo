@@ -14,6 +14,7 @@
     "build:cloud": "node scripts/build-cloud.ts",
     "build:demo": "EXPO_NO_DOTENV=1 EXPO_PUBLIC_NUMMO_BACKEND=emulator expo export --platform web --output-dir dist-demo",
     "preview:cloud": "expo serve dist",
+    "deploy:hosting": "node scripts/deploy-hosting.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test --experimental-test-isolation=none tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build:demo",

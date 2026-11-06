@@ -51,6 +51,13 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   «Dati del browser» e il codice di migrazione localStorage (`tests/category.test.ts` ridotto al dominio;
   recuperabili dal commit `e2b84d3`). Le palette extra provate in precedenza sono state tolte (restano le 6 originali).
 
+- **Preparazione Hosting/PWA** (6 nov, non committata): `firebase.json` con `hosting` (`dist/`, fallback `**` → `/index.html`, cache immutable
+  su `/_expo/static/**`, `no-cache` su HTML/manifest, `X-Frame-Options: DENY`), `public/manifest.webmanifest` (standalone, tema `#0F1512`),
+  `public/icons/` (PNG 192/512, maskable 512, apple-touch, SVG), `public/index.html` con manifest/icone/theme-color,
+  `scripts/deploy-hosting.ts` + `npm run deploy:hosting`. Nessun service worker (scelta: l'app non promette avvio offline). L'export
+  Expo è `output: single` senza router: il fallback serve solo ricarica/URL arbitrari. Procedura di prima pubblicazione:
+  `docs/firebase-personale.md` («Pubblicazione su Firebase Hosting»).
+
 ## Decisioni da ricordare
 
 - Un solo `Menu` Paper per elenco, ancorato a coordinate (`ExpenseList`): un `Menu` per riga sposta il focus.
@@ -58,9 +65,19 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   progetto reale. Prove isolate: `expo export` con `EXPO_NO_DOTENV=1` (vedi `AGENTS.md`).
 - Importazione atomica per gruppo, non per archivio; letture/backup caricano collezioni intere.
 - Nessuna dipendenza aggiunta; nessun downgrade forzato per `npm audit`.
+- Pubblicare solo con `npm run deploy:hosting` (progetto ricavato dalle variabili della build, `--only hosting`): un `firebase deploy`
+  nudo includerebbe `firestore.rules`. `.firebaserc` ha solo l'alias `real`, nessun default. Nessun COOP/COEP: romperebbero il popup Google.
 - Nella modale Modifica di una serie, l'indice dei rinnovi del piano prezzi resta riferito alla data originale.
 
 ## Verifiche
+
+Hosting/PWA (6 nov, working tree con le modifiche sopra): `npm run check` ok (typecheck, 142/142, `build:demo`);
+`npm run deploy:hosting -- --dry-run` ok (build:cloud reale con `.env.production.local`, stampa progetto e comando, nessuna
+pubblicazione; nome canale non valido rifiutato); `dist/` contiene `manifest.webmanifest` e `icons/`. Con l'emulatore Hosting locale
+(`firebase emulators:start --only hosting`, config temporanea poi rimossa) verificati: `/`, percorsi arbitrari e `/manifest.webmanifest`
+→ 200 con `no-cache`, icone 1 giorno, bundle `immutable`, tipo `application/manifest+json`. **Non verificati**: pubblicazione reale e
+`firebase login`, installabilità su Android (Chrome decide anche in base alla versione e al service worker assente), login Google
+da Chrome/Safari mobile e da app installata, aspetto delle icone (generate con `rsvg-convert`, non guardate), canali di anteprima.
 
 Eseguite il 6 nov 2026 (Node 26.13) su `dd2fe2c`, working tree pulito:
 - `npm run check` (rieseguito all'ultimo aggiornamento di questo file): typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`.
@@ -112,10 +129,10 @@ Non verificate:
    (b) accesso una volta per ottenere l'UID, creare `config/owner` `{ uid }`; (c) pubblicare solo le Rules
    (`firebase deploy --only firestore:rules --project ID`, richiede `firebase login`); (d) creare `.env.production.local`
    con le 4 variabili (la modalità `cloud` la imposta lo script); (e) `npm run build:cloud`, `npm run preview:cloud`, collaudo
-   (login, secondo account rifiutato, spesa, ricarica); (f) scegliere l'hosting; poi dispositivi reali.
+   (login, secondo account rifiutato, spesa, ricarica); (f) Hosting: `docs/firebase-personale.md` (anteprima con `--channel`, poi live); poi dispositivi reali.
 4. Aggiornare le dipendenze vulnerabili in una fase dedicata, senza `--force`.
 5. Se serve scala: paginazione delle letture e snapshot di backup più robusto.
-6. Prima di mobile/PWA: pianificare manifest/service worker (il default del backend ora è esplicito: nessun fallback).
+6. PWA: manifest e icone ci sono; decidere se aggiungere un service worker (avvio offline a freddo) solo se serve.
 
 ### Studio logo (in attesa di selezione dell'utente)
 
