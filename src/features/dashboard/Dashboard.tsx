@@ -58,7 +58,6 @@ export function Dashboard({ occurrences, categories }: Props) {
   const [chart, setChart] = useState<ChartType>('donut');
   const [period, setPeriod] = useState<Period>('month');
   const [active, setActive] = useState<number | null>(null);
-  const [showTable, setShowTable] = useState(true);
   const [withEmpty, setWithEmpty] = useState(false);
   const data = useMemo(() => breakdown(occurrences, categories, period, todayInRome()), [occurrences, categories, period]);
   const colors: ChartColors = {
@@ -167,10 +166,8 @@ export function Dashboard({ occurrences, categories }: Props) {
                         </View>
                       ))}
                     </>
-                  ) : (
-                    <Text variant="bodySmall" style={muted}>
-                      {chart === 'donut' ? 'Tocca una categoria.' : 'Tocca il grafico per i dettagli.'}
-                    </Text>
+                  ) : chart !== 'donut' && (
+                    <Text variant="bodySmall" style={muted}>Tocca il grafico per i dettagli.</Text>
                   )}
                 </View>
               </View>
@@ -178,19 +175,16 @@ export function Dashboard({ occurrences, categories }: Props) {
             </View>
           </Card>
 
-          <Card title="Dettaglio per periodo" style={styles.detailCard}
-            actions={<Button mode="text" aria-expanded={showTable} onPress={() => setShowTable(!showTable)}>{showTable ? 'Nascondi' : 'Mostra'}</Button>}>
-            {showTable && (
-              <View role="table" accessibilityLabel="Spese per periodo" style={[styles.table, { borderColor: theme.colors.outline }]}>
-                {rows.map(({ item, total }, index) => (
-                  <View key={item.key} role="row" style={[styles.tableRow, index > 0 && { borderTopWidth: 1, borderColor: theme.colors.outline }]}>
-                    <Text variant="bodyMedium" role="cell" style={[styles.legendLabel, total === 0 && muted]}>{bucketTitle(item, period)}</Text>
-                    <Text variant="bodyMedium" role="cell" style={[styles.number, styles.rowAmount, total === 0 && muted]}>{formatAmountMinor(total)}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-            {showTable && hidden > 0 && (
+          <Card title="Dettaglio per periodo" style={styles.detailCard}>
+            <View role="table" accessibilityLabel="Spese per periodo" style={[styles.table, { borderColor: theme.colors.outline }]}>
+              {rows.map(({ item, total }, index) => (
+                <View key={item.key} role="row" style={[styles.tableRow, index > 0 && { borderTopWidth: 1, borderColor: theme.colors.outline }]}>
+                  <Text variant="bodyMedium" role="cell" style={[styles.legendLabel, total === 0 && muted]}>{bucketTitle(item, period)}</Text>
+                  <Text variant="bodyMedium" role="cell" style={[styles.number, styles.rowAmount, total === 0 && muted]}>{formatAmountMinor(total)}</Text>
+                </View>
+              ))}
+            </View>
+            {hidden > 0 && (
               <Button compact mode="text" onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
                 {withEmpty ? (period === 'month' ? 'Solo oggi' : 'Solo il mese corrente') : `Mostra tutti ${period === 'month' ? 'i giorni' : 'i periodi'}`}
               </Button>

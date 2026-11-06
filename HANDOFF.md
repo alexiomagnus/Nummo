@@ -1,12 +1,11 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 5 novembre 2026. Branch `main` (= `origin/main`, `6a1466b`); `backend-firebase` remoto fermo a `b440e59`.
-Ultimo commit: `refactor(config): separa gli ambienti emulator, hybrid e cloud` (riassetto ambienti Firebase; hash in
-`git log -1`, non pubblicato), sopra `6a1466b` «center content in AppShell for mobile view when using fab»
-(centraggio verticale di «Nuova spesa» su smartphone, non verificato visivamente), `26a910f`, `00acb4a` (pannello chiaro),
-`b440e59`, `9ba1665` (rimozione adapter localStorage), `e2b84d3` (Swiss minimalism), `390f9e2` piano prezzi, `3ca98bd`
-impostazioni di aspetto, `8e1fa0a` UI M3, `b77e1db` migrazione Firestore, `fe759d5` ultimo col vecchio backend.
-Working tree pulito dopo il commit; push non eseguito. Nessuna modifica a UI o logica applicativa nel riassetto.
+Aggiornamento: 6 novembre 2026. Branch `main` = `origin/main` = `dd2fe2c` (pubblicato); `backend-firebase` remoto fermo a `b440e59`.
+Ultimo commit: `dd2fe2c` «refactor(config): separa gli ambienti emulator, hybrid e cloud» (riassetto ambienti Firebase, senza
+modifiche a UI o logica), sopra `6a1466b` «center content in AppShell for mobile view when using fab» (centraggio verticale di
+«Nuova spesa» su smartphone, non verificato visivamente), `26a910f`, `00acb4a` (pannello chiaro), `b440e59`, `9ba1665`
+(rimozione adapter localStorage), `e2b84d3` (Swiss minimalism), `390f9e2` piano prezzi, `3ca98bd` impostazioni di aspetto,
+`8e1fa0a` UI M3, `b77e1db` migrazione Firestore, `fe759d5` ultimo col vecchio backend. Il commit successivo (6 nov) toglie «Nascondi/Mostra» e «Tocca una categoria.» dalla Dashboard e aumenta lo spazio sotto il mese in Spese (non verificato nel browser).
 Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
 guida utente: `docs/firebase-personale.md`.
 
@@ -63,9 +62,12 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
 
 ## Verifiche
 
-Eseguite il 5 nov 2026 (Node 26.13) sul working tree attuale:
-- `npm run check` (ora senza variabili esterne): typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`
-  (nessun `127.0.0.1:8180` nel bundle). I test sono saliti da 138 con quelli di `backendConfig` e `envPolicy`.
+Eseguite il 6 nov 2026 (Node 26.13) su `dd2fe2c`, working tree pulito:
+- `npm run check` (rieseguito all'ultimo aggiornamento di questo file): typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`.
+- `npm run test:emulator`: **11/11** (porte 4000/8180/9099 libere al momento della prova; gli errori `PERMISSION_DENIED`
+  nel log sono i rifiuti attesi dei test sulle Rules).
+
+Eseguite il 5 nov 2026 (riassetto ambienti):
 - Con un `.env.production.local` **temporaneo e finto** (poi rimosso): `check:env` non lo considera; `build:cloud` rifiuta
   backend ≠ cloud nel file o nella shell, endpoint emulatore e conflitti file/shell, e riesce con il solo set di 4 variabili.
 - `npm run check:env`: ok su `.env.local` pulito; con un `.env.development` temporaneo contenente un endpoint emulatore
@@ -75,10 +77,7 @@ Eseguite il 5 nov 2026 (Node 26.13) sul working tree attuale:
   `dist/` di prova è stata eliminata: **non esiste ancora una build cloud reale**.
 - Prova preliminare: `expo export` con `EXPO_NO_DOTENV=1` non incorpora `.env.local` (con la vecchia riga emulatore: 0 occorrenze).
 
-Non rieseguite oggi / non verificate:
-- `test:emulator`: ultima esecuzione registrata **11/11** (porte alternative 9299/8380, config temporanea poi
-  rimossa) prima dei ritocchi UI e della pulizia; Rules e accesso dati non toccati dal working tree. Riverificato a fine giornata: le porte
-  4000 e 8180 risultano in ascolto dagli emulatori dell'utente (non fermati), quindi non rieseguito.
+Non verificate:
 - **Nessuna verifica visiva nel browser** di: Swiss minimalism, calendario, 32 nuovi glifi, piano prezzi (campo
   promo, modifica serie, «Prossimi rinnovi»), dialog Impostazioni, `bleed`/logo senza anello, tema scuro con
   i nuovi schemi. Ultime prove visive: Chromium headless su pagina con dati finti (360–1440 px, 3–5 nov) e
@@ -105,8 +104,8 @@ Non rieseguite oggi / non verificate:
 
 1. Revisione visiva in browser (412×915 e desktop) di tutte le schermate toccate dal 3 al 5 nov, con emulatore
    persistente e login reale; correggere ciò che emerge. Verificare anche il centraggio di «Nuova spesa» su smartphone (`6a1466b`).
-2. Pubblicare il commit del riassetto ambienti (su richiesta); provare `npm run dev` e `dev:hybrid` dal vivo.
-   Rieseguire `npm run check` e `test:emulator` (porte alternative se 8180/9099 sono occupate) prima del commit;
+2. Provare `npm run dev` e `dev:hybrid` dal vivo (il riassetto ambienti è pubblicato, `dd2fe2c`, ma mai avviato dall'agente).
+   Prima di ogni commit rieseguire `npm run check` e `test:emulator` (porte alternative se 8180/9099 sono occupate);
    ripubblicare le Rules dove già distribuite (icone e piano prezzi).
 3. Collaudo cloud personale (manuale, con autorizzazione), in quest'ordine: (a) Console: Google Auth attivo,
    `localhost` e dominio di pubblicazione tra i domini autorizzati, Firestore Standard in produzione nella regione scelta;

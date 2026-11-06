@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   select: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
   root: { gap: spacing.lg },
   summary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: spacing.xl, paddingBottom: spacing.xs },
+  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: spacing.xl, paddingBottom: spacing.md },
   monthName: { textTransform: 'capitalize' },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
   rowAmount: { minWidth: 96, textAlign: 'right' },
