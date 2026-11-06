@@ -1,7 +1,7 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 6 novembre 2026. Branch `main` = `origin/main` = `3517b27` «docs: prepara la distribuzione open source BYOF» (working tree pulito
-all'inizio di questo aggiornamento). Precedenti rilevanti: `6f4d42b` (guida introduttiva), `afc6ebf` (Hosting/PWA), `136c740`, `dd2fe2c`
+Aggiornamento: 6 novembre 2026. Branch `main` = `origin/main` = `f70df6b` «feat(ui): Nuova spesa in Material 3, accesso senza pannello e forme più
+morbide» (working tree pulito). Precedenti rilevanti: `3517b27` (preparazione open source), `6f4d42b` (guida introduttiva), `afc6ebf` (Hosting/PWA), `136c740`, `dd2fe2c`
 (ambienti emulator/hybrid/cloud), `6a1466b` (centraggio «Nuova spesa» mobile, non verificato visivamente); `fe759d5` ultimo col vecchio
 backend. `backend-firebase` remoto fermo a `b440e59`. Nessun deploy eseguito.
 Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
@@ -12,10 +12,25 @@ guida utente: `docs/firebase-personale.md`.
 Audit: nessun segreto/UID/email nei file versionati né nella cronologia (nessuna `AIza`); app, Rules e script già
 parametrici. Unico riferimento personale: l'ID progetto in `.firebaserc` (tracciato). Fatto: `.firebaserc` tolto dall'indice
 (`git rm --cached`, file locale intatto) e ignorato; script `emulators:personal`; README riscritto come guida di installazione;
-`docs/firebase-personale.md` e AGENTS.md allineati. Restano: scelta della licenza (assente), prova della procedura da clone pulito
+`docs/firebase-personale.md` e AGENTS.md allineati. Restano (ancora aperti): scelta della licenza (assente), prova della procedura da clone pulito
 con un progetto Firebase nuovo, collaudo PWA/mobile. L'ID progetto resta nella cronologia Git (pubblico per natura, non segreto).
 
-## Modifiche non committate (6 nov, dopo `3517b27`)
+## Barre di sistema Android (6 nov, non committato)
+
+Richiesta: barre di stato/navigazione nere sul Pixel 8. Modifiche: `viewport-fit=cover` in `public/index.html` (senza, `env(safe-area-inset-*)` resta 0);
+`theme-color` iniziale per schema OS (`#F5FBF5`/`#0F1511`, background Menta) e, a runtime, un solo tag aggiornato da `GlobalStyle` su `colors.background`
+(colore di barra superiore e di navigazione) a ogni cambio tema/tinta; `background_color`/`theme_color` del manifest `#0F1512`→`#0F1511` (come lo
+sfondo scuro Menta). `AppShell`: padding laterale per gli inset `left/right` e inset inferiore nel contenuto quando non c'è la barra di navigazione
+(accesso, guida, rail/drawer); barra superiore e navigazione usavano già `insets.top/bottom`.
+**Limiti**: il manifest ha colori statici (nessun supporto per schema/tema scelto nell'app): splash e primo frame dell'app installata usano il
+colore scuro anche con tema chiaro; dopo il caricamento vale `theme-color`. Barra di navigazione/gesture: la colora Android/Chrome, in scheda
+del browser la barra inferiore è di Chrome e non personalizzabile; nell'app installata il risultato dipende dalla versione di Android/Chrome.
+**Verifica**: `npm run check` ok (142/142); `build:demo` contiene i meta; in Chromium headless il tag diventa `#0F1511` (scuro) o `#F5FBF5` (chiaro)
+seguendo lo schema del sistema. **Non verificato**: Pixel 8 reale, PWA installata, valori degli inset, cambio tema dal pulsante a runtime
+(stesso effetto, non provato), tinte diverse da Menta.
+Dopo il deploy la PWA già installata potrebbe tenere il vecchio manifest: reinstallare per vedere i nuovi colori.
+
+## Nuova spesa Material 3 e forme (6 nov, `f70df6b`)
 
 - **Accesso**: tolta la scritta «Ambiente di prova locale…» e la prop `demo` di `SignIn`; il pannello pagina di `AppShell` compare solo
   ≥1024 px **e** con la navigazione (mai su accesso/guida, mai su tablet/smartphone).
@@ -47,9 +62,9 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   `src/domain/pricing.ts`, `PriceSchedule.tsx`, `UpcomingRenewals.tsx`, Rules.
 - **UI** (Swiss minimalism su base Material 3): `AppShell` (barra <600, rail 600–1023, drawer ≥1024), 3
   destinazioni + FAB; contenuto centrato fino a `maxContent` 1440; `Card` piatta, `PageHeader` senza
-  sottotitolo, raggi 8/12; logo/«Nummo» porta a Nuova spesa. `ExpenseFields` condiviso da Nuova spesa e modale
-  Modifica (colonna unica; due colonne da 600 px nella pagina): Importo + Data (`DateField`, calendario senza
-  dipendenze, 2000-01-01…oggi), Descrizione, Categoria (obbligatoria), Ricorrente. Categorie in riga unica
+  sottotitolo, raggi da `tokens.ts` (vedi sopra); logo/«Nummo» porta a Nuova spesa. `ExpenseFields` condiviso da Nuova spesa e modale
+  Modifica: Importo + Data (`DateField`, picker modale senza dipendenze, 2000-01-01…oggi), Descrizione,
+  Categoria (`SelectField`, obbligatoria), Ricorrente (`SwitchRow`, `SegmentedButtons`). Categorie in riga unica
   Nome · Icona · Aggiungi; **54 glifi** categoria (`category.ts`, `categoryGlyphs.ts`, Rules). Dashboard:
   totale grande + statistiche, tabella dettaglio chiusa. Spese: filtri, riepilogo, azioni di riga a icone.
 - **Impostazioni** (menu account): tema Sistema/Chiaro/Scuro, Monocolore o Palette (6 tinte: Menta predefinita,
@@ -110,7 +125,7 @@ pubblicazione; nome canale non valido rifiutato); `dist/` contiene `manifest.web
 `firebase login`, installabilità su Android (Chrome decide anche in base alla versione e al service worker assente), login Google
 da Chrome/Safari mobile e da app installata, aspetto delle icone (generate con `rsvg-convert`, non guardate), canali di anteprima.
 
-Eseguite il 6 nov 2026 (Node 26.13) su `3517b27`, working tree pulito (rieseguite a questo aggiornamento):
+Eseguite il 6 nov 2026 (Node 26.13) su `f70df6b`, working tree pulito (rieseguite a questo aggiornamento):
 - `npm run check`: typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`.
 - `npm run test:emulator`: **11/11** (porte 4000/8180/9099 libere; gli errori `PERMISSION_DENIED`
   nel log sono i rifiuti attesi dei test sulle Rules).
@@ -149,8 +164,9 @@ Non verificate:
 
 ## Prossimi passi (priorità)
 
-1. Revisione visiva in browser (412×915 e desktop) di tutte le schermate toccate dal 3 al 5 nov, con emulatore
-   persistente e login reale; correggere ciò che emerge. Verificare anche il centraggio di «Nuova spesa» su smartphone (`6a1466b`).
+1. Revisione visiva in browser (412×915 e desktop) di tutte le schermate toccate dal 3 al 6 nov, con emulatore
+   persistente e login reale; correggere ciò che emerge. In particolare: modale Modifica spesa con i nuovi campi M3 (mai vista), tastiera
+   nei nuovi controlli, centraggio di «Nuova spesa» su smartphone (`6a1466b`), pannello pagina solo ≥1024 px.
 2. Provare `npm run dev` e `dev:hybrid` dal vivo (il riassetto ambienti è pubblicato, `dd2fe2c`, ma mai avviato dall'agente).
    Prima di ogni commit rieseguire `npm run check` e `test:emulator` (porte alternative se 8180/9099 sono occupate);
    ripubblicare le Rules dove già distribuite (icone e piano prezzi).

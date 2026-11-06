@@ -55,7 +55,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: padding, marginBottom: padding };
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom} onVisibleChange={setSnackbarOpen}>
       <View role="banner" style={[styles.topBar, { backgroundColor: colors.background, paddingTop: insets.top, paddingHorizontal: padding, height: layout.topBarHeight + insets.top }]}>
         {fab && hasNav ? (
@@ -83,7 +83,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelBg }]} keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: showFab ? padding + 72 : padding }}>
+            contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: (showFab ? padding + 72 : padding) + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
               <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
             </ThemeProvider>

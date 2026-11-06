@@ -50,7 +50,7 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
 - `scripts/`: seed demo e configurazione proprietario (solo emulatore localhost); `check-dev-env.ts`,
   `build-cloud.ts`, `envPolicy.ts` (ambienti), `deploy-hosting.ts` (pubblicazione solo Hosting).
-- `public/`: copiato in `dist/` dall'export: `index.html` (modello HTML con manifest/icone), `manifest.webmanifest`,
+- `public/`: copiato in `dist/` dall'export: `index.html` (modello HTML con manifest/icone), `manifest.webmanifest` (colori statici: il manifest non segue il tema), `theme-color` aggiornato a runtime da `GlobalStyle` su `colors.background`,
   `icons/` (PNG 192/512, maskable, apple-touch, SVG: segno «n» su `#0F1512`), `fonts/`.
 - `firebase.json`: `firestore` (Rules), `hosting` (`dist/`, fallback SPA su `/index.html`, cache lunga solo per
   `/_expo/static/**`, `no-cache` per HTML/manifest, senza COOP/COEP: romperebbero il popup Google) ed `emulators`.

@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useTheme } from 'react-native-paper';
 
 // Web-only rules RN Web cannot express: the self-hosted font, visible keyboard focus, dynamic
-// viewport height (virtual keyboard friendly) and reduced motion.
+// viewport height (virtual keyboard friendly), reduced motion and the browser/system bar colour
+// (`theme-color` follows `colors.background`, the colour of the top bar and navigation bar).
 export function GlobalStyle() {
   const { colors, dark, fonts } = useTheme();
   const family = fonts.bodyMedium.fontFamily;
@@ -30,5 +31,13 @@ export function GlobalStyle() {
     document.head.appendChild(style);
     return () => { style.remove(); };
   }, [colors.background, colors.primary, colors.outline, dark, family]);
+  useEffect(() => {
+    // The static tags in index.html are per OS scheme; the user's theme may differ, so keep a single untargeted tag.
+    const tags = Array.from(document.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
+    const meta = tags[0] ?? document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'theme-color' }));
+    tags.slice(1).forEach((tag) => tag.remove());
+    meta.removeAttribute('media');
+    meta.content = colors.background;
+  }, [colors.background]);
   return null;
 }

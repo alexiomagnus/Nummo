@@ -2,9 +2,12 @@
 <html lang="it">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Nummo: inserimento rapido delle spese personali." />
-    <meta name="theme-color" content="#0F1512" />
+    <!-- Prima del bundle: colori di `background` dello schema Menta (tokens.ts). A runtime GlobalStyle li sostituisce con un solo tag che segue il tema scelto. -->
+    <meta name="theme-color" content="#F5FBF5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0F1511" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
