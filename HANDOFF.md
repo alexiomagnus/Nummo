@@ -1,20 +1,33 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 6 novembre 2026. Branch `main`; `origin/main` = `478cd4d` (pubblicato); `backend-firebase` remoto fermo a `b440e59`.
-Commit recenti: `478cd4d` (rimuove una config temporanea), `afc6ebf` «prepara la pubblicazione su Firebase Hosting e il manifest PWA»
-(+ ritocchi UI di Spese e Dashboard), `136c740`, `dd2fe2c` (ambienti emulator/hybrid/cloud), `6a1466b` (centraggio «Nuova spesa» mobile,
-non verificato visivamente), `00acb4a`, `9ba1665`, `e2b84d3`, `390f9e2`, `3ca98bd`, `8e1fa0a`, `b77e1db`; `fe759d5` ultimo col vecchio
-backend. Il commit della guida introduttiva è locale e **non pubblicato**; nessun deploy eseguito.
+Aggiornamento: 6 novembre 2026. Branch `main` = `origin/main` = `3517b27` «docs: prepara la distribuzione open source BYOF» (working tree pulito
+all'inizio di questo aggiornamento). Precedenti rilevanti: `6f4d42b` (guida introduttiva), `afc6ebf` (Hosting/PWA), `136c740`, `dd2fe2c`
+(ambienti emulator/hybrid/cloud), `6a1466b` (centraggio «Nuova spesa» mobile, non verificato visivamente); `fe759d5` ultimo col vecchio
+backend. `backend-firebase` remoto fermo a `b440e59`. Nessun deploy eseguito.
 Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
 guida utente: `docs/firebase-personale.md`.
 
-## Preparazione open source BYOF (6 nov, non committata)
+## Preparazione open source BYOF (6 nov, `3517b27`)
 
 Audit: nessun segreto/UID/email nei file versionati né nella cronologia (nessuna `AIza`); app, Rules e script già
 parametrici. Unico riferimento personale: l'ID progetto in `.firebaserc` (tracciato). Fatto: `.firebaserc` tolto dall'indice
 (`git rm --cached`, file locale intatto) e ignorato; script `emulators:personal`; README riscritto come guida di installazione;
 `docs/firebase-personale.md` e AGENTS.md allineati. Restano: scelta della licenza (assente), prova della procedura da clone pulito
 con un progetto Firebase nuovo, collaudo PWA/mobile. L'ID progetto resta nella cronologia Git (pubblico per natura, non segreto).
+
+## Modifiche non committate (6 nov, dopo `3517b27`)
+
+- **Accesso**: tolta la scritta «Ambiente di prova locale…» e la prop `demo` di `SignIn`; il pannello pagina di `AppShell` compare solo
+  ≥1024 px **e** con la navigazione (mai su accesso/guida, mai su tablet/smartphone).
+- **Forme** (`tokens.ts`): `radius` più morbido (controlli 20, campi/card 16, dialog 28, `pill` 999); `M3Switch` a track/handle circolari.
+- **Nuova spesa, Material 3**: nuovi `SegmentedButtons` (ricorrenza), `SwitchRow` (Ricorrente, Prezzo promozionale), `SelectField`
+  (categoria, menu largo come il campo, icone; senza categorie: riquadro con «Crea categoria» → sezione Categorie, via `onCreateCategory`),
+  `DateField` (campo «Data» + date picker modale con Annulla/OK; sostituisce `DateButton`/`DateCalendar`). Rimosso `CategoryPicker`.
+  Form in colonna da `layout.maxForm` allineata al titolo (niente centratura verticale; `lowered` di `PageHeader` rimosso), Salva a fine colonna
+  su desktop / a tutta larghezza e sticky con filetto su smartphone, importo a 28 px. Logica, Firestore e domain invariati.
+  Modale Modifica spesa usa gli stessi campi (non rivista visivamente).
+- **Verifica**: pagina di prova temporanea con dati finti (poi eliminata) in Chromium headless: desktop 1440, mobile 390, chiaro/scuro; menu
+  categoria, date picker (scelta del 3 nov e OK), switch, segmenti, promo, stato senza categorie. Non provati: tastiera, dispositivo reale, modale Modifica.
 
 ## Stato implementato (verificato su codice e test)
 
@@ -97,9 +110,9 @@ pubblicazione; nome canale non valido rifiutato); `dist/` contiene `manifest.web
 `firebase login`, installabilità su Android (Chrome decide anche in base alla versione e al service worker assente), login Google
 da Chrome/Safari mobile e da app installata, aspetto delle icone (generate con `rsvg-convert`, non guardate), canali di anteprima.
 
-Eseguite il 6 nov 2026 (Node 26.13) su `dd2fe2c`, working tree pulito:
-- `npm run check` (rieseguito all'ultimo aggiornamento di questo file): typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`.
-- `npm run test:emulator`: **11/11** (porte 4000/8180/9099 libere al momento della prova; gli errori `PERMISSION_DENIED`
+Eseguite il 6 nov 2026 (Node 26.13) su `3517b27`, working tree pulito (rieseguite a questo aggiornamento):
+- `npm run check`: typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`.
+- `npm run test:emulator`: **11/11** (porte 4000/8180/9099 libere; gli errori `PERMISSION_DENIED`
   nel log sono i rifiuti attesi dei test sulle Rules).
 
 Eseguite il 5 nov 2026 (riassetto ambienti):
@@ -131,8 +144,7 @@ Non verificate:
 5. Palette dei grafici non rivalidata con la skill dataviz sulle nuove superfici; contrasti token testati
    (`tests/theme.test.ts`), non l'intera UI. Il FAB compatto può coprire parte dell'ultima riga.
 6. `expo start`/`expo export` lanciati direttamente (senza i comandi npm) non impostano la modalità: l'app mostra
-   «configurazione mancante» invece di scegliere un ambiente. `build:cloud` non è stato provato con il progetto reale né
-   con `.env.production.local` (assente); `preview:cloud` (`expo serve dist`) non eseguito.
+   «configurazione mancante» invece di scegliere un ambiente. `build:cloud` reale provato solo in `--dry-run` di `deploy:hosting` (6 nov, `.env.production.local` ora presente nel checkout); `preview:cloud` (`expo serve dist`) non eseguito.
 7. Chi aveva dati nel vecchio localStorage non ha più un percorso di migrazione in app (vedi sopra).
 
 ## Prossimi passi (priorità)

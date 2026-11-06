@@ -54,15 +54,15 @@ export type SizeClass = 'compact' | 'medium' | 'expanded';
 export const sizeClassOf = (width: number): SizeClass =>
   width >= breakpoints.expanded ? 'expanded' : width >= breakpoints.medium ? 'medium' : 'compact';
 
-// Swiss geometry: one small radius per role, never a pill unless the shape is functionally
-// round (avatar, charts, dots). Components read these instead of `shape` literals.
+// Material 3 rounded geometry: one radius per role (dp). Components read these instead of `shape` literals.
 export const radius = {
-  control: 8, // buttons, selects, chips, menus, snackbar, FAB
-  input: 8, // outlined text fields
-  card: 8, // panels and inline editors
-  dialog: 12, // dialogs
-  nav: 8, // selected navigation item (drawer, rail, bar)
-  tile: 8, // icon tiles
+  control: 20, // buttons (40 dp tall = pill), selects, chips, menus, snackbar, FAB
+  input: 16, // outlined text fields, switch track
+  card: 16, // panels and inline editors
+  dialog: 28, // dialogs
+  nav: 16, // selected navigation item (drawer, rail, bar): 32 dp indicator = pill
+  tile: 12, // icon tiles
+  pill: 999, // fully rounded: segmented buttons, switch track, day cells
 } as const;
 // Spread on every outlined TextInput (Paper takes the field radius from `outlineStyle`).
 export const inputOutline = { borderRadius: radius.input } as const;

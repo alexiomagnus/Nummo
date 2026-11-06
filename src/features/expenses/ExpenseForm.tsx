@@ -13,9 +13,9 @@ import { PromoField } from './PriceSchedule';
 import { RepeatField } from './RepeatField';
 import { todayInRome } from '../../domain/policy';
 
-type Props = { categories: readonly Category[]; store: ExpenseStore };
+type Props = { categories: readonly Category[]; store: ExpenseStore; onCreateCategory?: () => void };
 
-export function ExpenseForm({ categories, store }: Props) {
+export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
   const theme = useTheme();
   const notify = useSnackbar();
   const size = useSizeClass();
@@ -86,10 +86,10 @@ export function ExpenseForm({ categories, store }: Props) {
   );
 
   return (
-    <View style={[styles.page, size !== 'compact' && styles.pageCentered]}>
+    <View style={styles.page}>
     <View style={styles.form}>
       <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} disabled={!enabled}
-        extra={repeat} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
+        extra={repeat} onCreateCategory={onCreateCategory} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{store.error}</HelperText>}
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{submission.message}</HelperText>
@@ -103,9 +103,9 @@ export function ExpenseForm({ categories, store }: Props) {
             <View style={styles.actions}><Button mode="contained" onPress={store.retry}>Verifica sul server</Button></View>
           </>
         ) : (
-          <View style={[styles.actions, size === 'compact' && styles.actionsCompact]}>
+          <View style={styles.actions}>
             <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
-              contentStyle={styles.button} style={styles.submit}>
+              contentStyle={styles.button} labelStyle={styles.label} style={styles.submit}>
               {submission.status === 'sending' ? 'In attesa di conferma…' : 'Salva'}
             </Button>
           </View>
@@ -118,17 +118,14 @@ export function ExpenseForm({ categories, store }: Props) {
 
 const styles = StyleSheet.create({
   page: { width: '100%' },
-  // The form fills the main area (sidebar excluded) and its content is centred, on every screen size.
-  pageCentered: { flexGrow: 1, alignItems: 'center', justifyContent: 'center' },
   form: { width: '100%', gap: spacing.lg },
   // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
   // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
-  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, zIndex: 1 } as unknown as ViewStyle,
+  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, zIndex: 1, borderTopWidth: 1 } as unknown as ViewStyle,
   repeat: { gap: spacing.md },
   footer: { gap: spacing.md },
-  actions: { flexDirection: 'row', marginTop: spacing.xxl },
-  actionsCompact: { marginTop: 0 },
+  actions: { flexDirection: 'row', marginTop: spacing.sm },
   submit: { flexGrow: 1 },
-  full: { flexGrow: 1 },
+  label: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   button: { minHeight: layout.controlHeight },
 });

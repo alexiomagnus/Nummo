@@ -1,14 +1,16 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import type { Category } from '../../domain/category';
 import { expensePolicy } from '../../domain/policy';
-import { DateButton, DateCalendar } from '../../components/DateField';
+import { Button } from '../../components/Button';
+import { CategoryGlyph } from '../../components/CategoryGlyph';
+import { DateField } from '../../components/DateField';
+import { SelectField } from '../../components/SelectField';
 import { leadingIcon } from '../../components/FieldIcon';
 import { iconShapes } from '../../components/SvgIcon';
-import { spacing, inputOutline } from '../../theme/tokens';
+import { inputOutline, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
-import { CategoryPicker } from './CategoryPicker';
 
 export type BaseField = 'amount' | 'description' | 'categoryId' | 'date';
 type Props = {
@@ -18,18 +20,22 @@ type Props = {
   disabled?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
+  // Shown as an action when there are no categories yet (opens the Categories section).
+  onCreateCategory?: () => void;
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
 
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
-// amount + date on the first row, then description, category and `extra` (repeat).
+// amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
 // Every field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, disabled, extra, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, disabled, extra, onCreateCategory, onChange, onBlur }: Props) {
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
-  const [calendar, setCalendar] = useState(false);
   const compact = useSizeClass() === 'compact';
+  const options = useMemo(() => categories.map((category) => ({
+    value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
+  })), [categories]);
   return (
     <View style={styles.layout}>
       <View>
@@ -41,13 +47,12 @@ export function ExpenseFields({ values, errors, categories, disabled, extra, onC
               contentStyle={styles.amountText} left={leadingIcon(iconShapes.euro)} />
           </View>
           <View style={[styles.date, compact && styles.dateCompact]}>
-            <DateButton value={values.date} open={calendar} disabled={disabled} error={Boolean(errors.date)} onToggle={() => setCalendar(!calendar)} />
+            <DateField value={values.date} disabled={disabled} error={Boolean(errors.date)} onChange={(date) => onChange('date', date)} />
           </View>
         </View>
         {errors.amount && <HelperText type="error" accessibilityRole="alert">{errors.amount}</HelperText>}
         {errors.date && <HelperText type="error" accessibilityRole="alert">{errors.date}</HelperText>}
       </View>
-      {calendar && <DateCalendar value={values.date} onChange={(date) => { onChange('date', date); setCalendar(false); }} />}
       <View>
         <TextInput outlineStyle={inputOutline} label="Descrizione" value={values.description} mode="outlined" error={Boolean(errors.description)}
           onChangeText={(value) => onChange('description', value)} onBlur={() => onBlur('description')}
@@ -57,13 +62,19 @@ export function ExpenseFields({ values, errors, categories, disabled, extra, onC
           {length > 0 && <Text variant="bodySmall" style={{ color: length > expensePolicy.maxDescriptionLength ? colors.error : colors.onSurfaceVariant }}>{length}/{expensePolicy.maxDescriptionLength}</Text>}
         </View>}
       </View>
-      <View style={styles.group} role="group" aria-label="Categoria">
-        <Text variant="titleMedium">Categoria</Text>
-        <CategoryPicker categories={categories} selectedId={values.categoryId}
-          onChange={(id) => onChange('categoryId', id)} disabled={disabled} />
-        {categories.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>Nessuna categoria: creala in Categorie.</Text>}
-        {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{errors.categoryId}</HelperText>}
-      </View>
+      {categories.length === 0 ? (
+        <View style={[styles.empty, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label="Categoria">
+          <View style={styles.emptyText}>
+            <Text variant="titleSmall">Nessuna categoria</Text>
+            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>Serve almeno una categoria per salvare la spesa.</Text>
+          </View>
+          {onCreateCategory && <Button mode="contained-tonal" onPress={onCreateCategory} disabled={disabled}>Crea categoria</Button>}
+          {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{errors.categoryId}</HelperText>}
+        </View>
+      ) : (
+        <SelectField label="Categoria" options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
+          disabled={disabled} error={errors.categoryId} />
+      )}
       {extra}
     </View>
   );
@@ -76,11 +87,11 @@ const styles = StyleSheet.create({
   dateCompact: { width: '100%', marginTop: 0 },
   amount: { flex: 1, minWidth: 0 },
   amountCompact: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
-  // Paper's 56 dp outlined field reserves 6 dp above its box for the floating label: align the date button with the box.
-  date: { width: 148, flexShrink: 0, marginTop: 6 },
+  date: { width: 200, flexShrink: 0 },
   text: { fontSize: 18 },
-  amountText: { fontSize: 24, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  amountText: { fontSize: 28, fontWeight: '600', fontVariant: ['tabular-nums'] },
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },
-  group: { gap: spacing.sm, marginTop: 0 },
+  empty: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderRadius: radius.card, padding: spacing.lg },
+  emptyText: { flex: 1, minWidth: 180, gap: spacing.xs },
 });

@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { radius, shape } from '../theme/tokens';
+import { radius } from '../theme/tokens';
 import { useReducedMotion } from '../theme/useSizeClass';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Material 3 switch (visual only: the parent row owns press handling and accessibility).
-// Squared like the fields (track radius = input radius, handle 4). Spec: 52×32 track; handle 16 px off / 24 px on with a check icon; outlined track when off.
+// Fully rounded track and circular handle. Spec: 52×32 track; handle 16 px off / 24 px on with a check icon; outlined track when off.
 export function M3Switch({ value, disabled }: { value: boolean; disabled?: boolean }) {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
@@ -40,6 +40,6 @@ export function M3Switch({ value, disabled }: { value: boolean; disabled?: boole
 }
 
 const styles = StyleSheet.create({
-  track: { width: 52, height: 32, borderRadius: radius.input, borderWidth: 2 },
-  handle: { position: 'absolute', borderRadius: shape.xs, alignItems: 'center', justifyContent: 'center', marginLeft: -2, marginTop: -2 },
+  track: { width: 52, height: 32, borderRadius: radius.pill, borderWidth: 2 },
+  handle: { position: 'absolute', borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', marginLeft: -2, marginTop: -2 },
 });

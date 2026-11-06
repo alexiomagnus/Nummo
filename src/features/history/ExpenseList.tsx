@@ -128,7 +128,7 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
             </View>
           );
         })}
-        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna spesa. Aggiungi la prima con «Nuova spesa».</Text>}
+        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna spesa. Aggiungi la prima con Nuova spesa.</Text>}
         {occurrences.length > 0 && results.length === 0 && (
           <View style={styles.empty}>
             <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessun risultato.</Text>

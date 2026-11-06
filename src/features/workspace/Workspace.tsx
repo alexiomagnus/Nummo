@@ -72,27 +72,27 @@ export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string;
     <AppShell destinations={destinations} selected={section} onSelect={setSection}
       fab={{ label: 'Nuova spesa', icon: iconShapes.plus, target: 'expense' }}
       actions={<><SyncChip status={status} />{topActions}</>}>
-      <Sections section={section} backend={backend} uid={uid} store={store} categoryState={categoryState}
+      <Sections section={section} onNavigate={setSection} backend={backend} uid={uid} store={store} categoryState={categoryState}
         occurrences={occurrences} renewals={renewals} soon={soon} usage={usage} online={online} synchronized={synchronized} error={error} />
     </AppShell>
   );
 }
 
 type SectionsProps = {
-  section: Section; backend: FirestoreStore; uid: string; store: ExpenseStore;
+  section: Section; onNavigate: (section: Section) => void; backend: FirestoreStore; uid: string; store: ExpenseStore;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   usage: Record<string, number>; online: boolean; synchronized: boolean; error: string | null;
 };
 
-function Sections({ section, backend, uid, store, categoryState, occurrences, renewals, soon, usage, online, synchronized, error }: SectionsProps) {
+function Sections({ section, onNavigate, backend, uid, store, categoryState, occurrences, renewals, soon, usage, online, synchronized, error }: SectionsProps) {
   const theme = useTheme();
   const notify = useSnackbar();
   const [showBackup, setShowBackup] = useState(false);
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
   const heading = headings[section];
   return <>
-    <PageHeader title={heading} lowered={section === 'expense'}
+    <PageHeader title={heading}
       action={section === 'list' ? (
         <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
           aria-expanded={showBackup} onPress={() => setShowBackup(!showBackup)}>Dati</Button>
@@ -106,7 +106,7 @@ function Sections({ section, backend, uid, store, categoryState, occurrences, re
       </Card>
     )}
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
-      <ExpenseForm categories={categoryState.categories} store={{ ...store, ready: store.ready && categoryState.ready }} />
+      <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')} store={{ ...store, ready: store.ready && categoryState.ready }} />
     </View>
     {section === 'list' && (
       <View style={styles.list}>

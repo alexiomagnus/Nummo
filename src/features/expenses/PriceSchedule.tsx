@@ -2,7 +2,7 @@ import { useEffect, useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { ChoiceChips } from '../../components/ChoiceChips';
-import { M3Switch } from '../../components/M3Switch';
+import { SwitchRow } from '../../components/SwitchRow';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { formatAmountMinor, parseAmountMinor } from '../../domain/expense';
@@ -16,7 +16,7 @@ export const formatLongDate = (date: string) => dateFormat.format(new Date(`${da
 // Date of renewal number `index` (1 = first renewal), for texts that say when a price starts.
 export const renewalDate = (start: string, recurrence: Recurrence, index: number) => formatLongDate(occurrenceDateAt(start, recurrence, index));
 
-// Square Material 3 stepper (− / +) with the outline and radius of the fields, always visible. The mouse wheel
+// Round Material 3 outlined icon buttons (− / +) at the height of the fields, always visible. The mouse wheel
 // over the focused field steps too; the native listener is non-passive so the page does not scroll meanwhile.
 function useWheelStep(value: string, step: (delta: number) => void) {
   const box = useRef<ComponentRef<typeof View>>(null);
@@ -39,7 +39,7 @@ function useWheelStep(value: string, step: (delta: number) => void) {
 function StepButton({ label, shape, disabled, onPress }: { label: string; shape: string; disabled: boolean; onPress: () => void }) {
   const { colors } = useTheme();
   return (
-    <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} disabled={disabled} onPress={onPress}
+    <StateLayerPressable layerColor={colors.onSurface} radius={radius.pill} disabled={disabled} onPress={onPress}
       accessibilityRole="button" accessibilityLabel={label} style={[styles.step, { borderColor: colors.outline }]}>
       <SvgIcon shape={shape} size={20} color={colors.onSurface} />
     </StateLayerPressable>
@@ -73,14 +73,7 @@ export function PromoField({ value, amount, after, firstAmount, recurrence, star
     ? `${formatAmountMinor(first)} per ${count === 1 ? 'il primo pagamento' : `i primi ${count} pagamenti`}, poi ${formatAmountMinor(then)} dal ${count}° rinnovo (${renewalDate(startDate, recurrence, count)}).` : null;
   return (
     <View style={styles.group}>
-      <StateLayerPressable onPress={() => onChange({ promo: !value })} disabled={disabled} layerColor={colors.onSurface}
-        radius={radius.control} style={styles.toggle} accessibilityRole="switch" aria-checked={value} aria-disabled={disabled}
-        accessibilityLabel="Prezzo promozionale">
-        <View style={styles.text}>
-          <Text variant="titleSmall">Prezzo promozionale</Text>
-        </View>
-        <M3Switch value={value} disabled={disabled} />
-      </StateLayerPressable>
+      <SwitchRow label="Prezzo promozionale" value={value} disabled={disabled} onChange={(promo) => onChange({ promo })} />
       {value && (
         <View style={styles.fields}>
           <View style={styles.row}>
@@ -166,10 +159,8 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing.sm, marginTop: spacing.xl },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 48, paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
-  text: { flex: 1 },
-  fields: { gap: spacing.sm },
+  group: { gap: spacing.sm },
+  fields: { gap: spacing.sm, paddingHorizontal: spacing.lg },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   amount: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
   after: { flexGrow: 1, flexBasis: 300, minWidth: 0 },

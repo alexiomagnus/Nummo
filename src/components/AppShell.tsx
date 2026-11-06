@@ -21,12 +21,14 @@ type Props<T extends string> = {
   // Primary action (new expense): extended FAB on compact, FAB in the rail, extended FAB in the drawer.
   // Hidden on compact while its own screen is open. It is not part of `destinations`.
   fab?: { label: string; icon: string; target: T };
+  // Without navigation (sign-in, guide): makes the brand a button, e.g. back to the sign-in.
+  brand?: { label: string; onPress: () => void };
   children: ReactNode;
 };
 
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
 // standing drawer (expanded). The content scrolls inside the shell, nothing is position: fixed.
-export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, children }: Props<T>) {
+export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, brand, children }: Props<T>) {
   const theme = useTheme();
   const { colors } = theme;
   const size = useSizeClass();
@@ -44,11 +46,13 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const showFab = bottomBar && fab && selected !== fab.target;
   const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
   const compact = size === 'compact';
+  const expanded = size === 'expanded';
+  const showPanel = expanded && hasNav; // no panel on the sign-in and guide screens
   // Inside the panel, `background` is the panel colour so outlined-field label notches and sticky bars blend in.
-  // On phones there is no lighter panel: the page sits on the plain background.
-  const panelBg = compact ? colors.background : panelColor(colors);
+  // On phones and tablets there is no lighter panel (desktop only): the page sits on the plain background.
+  const panelBg = !showPanel ? colors.background : panelColor(colors);
   const panelTheme = { ...theme, colors: { ...colors, background: panelBg } };
-  const panel = compact ? { borderRadius: 0 } : { borderRadius: shape.md, marginTop: spacing.md, marginRight: padding, marginBottom: padding };
+  const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: padding, marginBottom: padding };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -58,6 +62,12 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           // The brand leads to the primary screen (new expense); on it, it does nothing.
           <StateLayerPressable layerColor="transparent" accessibilityRole="button" accessibilityLabel={`Nummo, ${fab.label}`}
             onPress={() => { if (selected !== fab.target) select(fab.target); }} style={[styles.brand, styles.noRing]}>
+            <Logo size={32} color={colors.primary} />
+            <Text variant="titleLarge" style={[styles.brandName, { color: colors.primary }]}>Nummo</Text>
+          </StateLayerPressable>
+        ) : brand ? (
+          <StateLayerPressable layerColor="transparent" accessibilityRole="button" accessibilityLabel={`Nummo, ${brand.label}`}
+            onPress={brand.onPress} style={[styles.brand, styles.noRing]}>
             <Logo size={32} color={colors.primary} />
             <Text variant="titleLarge" style={[styles.brandName, { color: colors.primary }]}>Nummo</Text>
           </StateLayerPressable>

@@ -9,7 +9,7 @@ import { ThemeIcon } from './src/components/ThemeIcon';
 import type { Preferences } from './src/features/settings/preferences';
 import { SettingsDialog } from './src/features/settings/SettingsDialog';
 import { usePreferences } from './src/features/settings/usePreferences';
-import { SignIn } from './src/features/session/SignIn';
+import { SignIn, leaveGuide } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
 import { RemoteWorkspace } from './src/features/workspace/Workspace';
 import { backendMode, firestoreEmulator, missingFirebaseConfig, persistentCache } from './src/services/backendConfig';
@@ -78,7 +78,7 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
     );
   }
   return (
-    <AppShell actions={themeToggle}>
+    <AppShell actions={themeToggle} brand={{ label: 'accesso', onPress: leaveGuide }}>
       {configMissing && (
         <Card title="Configurazione Firebase mancante">
           <Text variant="bodyMedium">
@@ -88,7 +88,7 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
         </Card>
       )}
       {session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel="Caricamento della sessione" /></View>}
-      {session.status === 'signed-out' && <SignIn error={session.error} demo={demo} onSignIn={session.signIn} />}
+      {session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} />}
     </AppShell>
   );
 }

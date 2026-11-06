@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Pressable } from 'react-native';
+import { Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { Button } from './Button';
+import { leadingIcon } from './FieldIcon';
 import { expensePolicy, todayInRome } from '../domain/policy';
-import { layout, radius, spacing } from '../theme/tokens';
+import { inputOutline, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -15,43 +18,81 @@ const yesterdayOf = (today: string) => { const d = new Date(`${today}T00:00:00Z`
 const labelOf = (selected: string, today: string) =>
   selected === today ? 'Oggi' : selected === yesterdayOf(today) ? 'Ieri' : dayFormat.format(new Date(`${selected}T00:00:00Z`));
 
-// 50 dp button showing the chosen date («Oggi», «Ieri» or the date); toggles the calendar.
-export function DateButton({ value, open, onToggle, error, disabled }: { value: string; open: boolean; onToggle: () => void; error?: boolean; disabled?: boolean }) {
-  const { colors } = useTheme();
-  const shown = labelOf(value || todayInRome(), todayInRome());
+const headlineFormat = new Intl.DateTimeFormat('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+// Outlined read-only field showing the chosen date («Oggi», «Ieri» or the date); opens the modal date picker.
+// An empty `value` means today (resolved at save time), as in the draft.
+export function DateField({ value, error, disabled, onChange }: { value: string; error?: boolean; disabled?: boolean; onChange: (date: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const today = todayInRome();
+  const shown = labelOf(value || today, today);
   return (
-    <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} disabled={disabled} accessibilityRole="button"
-      aria-expanded={open} aria-haspopup="dialog" accessibilityLabel={`Data della spesa: ${shown}`} onPress={onToggle}
-      style={[styles.field, { borderColor: error ? colors.error : colors.outline }]}>
-      <SvgIcon shape={iconShapes.calendar} size={20} color={colors.onSurfaceVariant} />
-      <Text variant="bodyLarge" numberOfLines={1} style={styles.value}>{shown}</Text>
-    </StateLayerPressable>
+    <>
+      <Pressable disabled={disabled} onPress={() => setOpen(true)} accessibilityRole="button" aria-haspopup="dialog" aria-expanded={open}
+        aria-disabled={disabled} accessibilityLabel={`Data della spesa: ${shown}. Cambia data`}>
+        <View pointerEvents="none">
+          <TextInput outlineStyle={inputOutline} label="Data" value={shown} mode="outlined" readOnly focusable={false} error={error}
+            disabled={disabled} showSoftInputOnFocus={false} left={leadingIcon(iconShapes.calendar)} />
+        </View>
+      </Pressable>
+      <DatePickerDialog visible={open} value={value} onDismiss={() => setOpen(false)}
+        onConfirm={(date) => { setOpen(false); onChange(date); }} />
+    </>
   );
 }
 
-// Month grid. Days outside the allowed range (2000-01-01 … today) are disabled, so no invalid date
-// can be picked. Mounted only while open: it always starts on the selected month.
-export function DateCalendar({ value, onChange }: { value: string; onChange: (date: string) => void }) {
+// Material 3 modal date picker: headline with the pending date, month grid, Annulla / OK. Days outside the allowed
+// range (2000-01-01 … today) are disabled, so no invalid date can be picked.
+function DatePickerDialog({ visible, value, onDismiss, onConfirm }: { visible: boolean; value: string; onDismiss: () => void; onConfirm: (date: string) => void }) {
   const { colors } = useTheme();
   const today = todayInRome();
-  const selected = value || today;
-  const [month, setMonth] = useState(selected.slice(0, 7));
+  const [picked, setPicked] = useState(value || today);
+  // Reopening always restarts from the current value.
+  const [month, setMonth] = useState((value || today).slice(0, 7));
+  const [wasVisible, setWasVisible] = useState(false);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible) { setPicked(value || today); setMonth((value || today).slice(0, 7)); }
+  }
+  return (
+    <Portal>
+      <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
+        <View style={styles.headline} accessibilityLiveRegion="polite">
+          <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>Seleziona data</Text>
+          <Text variant="headlineMedium" style={styles.headlineText}>{headlineFormat.format(new Date(`${picked}T00:00:00Z`))}</Text>
+        </View>
+        <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
+        <View style={styles.body}>
+          <Calendar selected={picked} month={month} onMonth={setMonth} onPick={setPicked} />
+        </View>
+        <Dialog.Actions>
+          <Button onPress={onDismiss}>Annulla</Button>
+          <Button onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
+        </Dialog.Actions>
+      </Dialog>
+    </Portal>
+  );
+}
+
+function Calendar({ selected, month, onMonth, onPick }: { selected: string; month: string; onMonth: (month: string) => void; onPick: (date: string) => void }) {
+  const { colors } = useTheme();
+  const today = todayInRome();
   const year = Number(month.slice(0, 4));
   const monthIndex = Number(month.slice(5, 7)) - 1;
   const lead = (new Date(Date.UTC(year, monthIndex, 1)).getUTCDay() + 6) % 7;
   const days = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
   const cells = Array.from({ length: Math.ceil((lead + days) / 7) * 7 }, (_, index) => (index < lead || index >= lead + days ? null : iso(year, monthIndex, index - lead + 1)));
-  const shift = (delta: number) => setMonth(iso(year, monthIndex + delta, 1).slice(0, 7));
+  const shift = (delta: number) => onMonth(iso(year, monthIndex + delta, 1).slice(0, 7));
   const canPrev = iso(year, monthIndex, 1) > expensePolicy.minDate;
   const canNext = iso(year, monthIndex + 1, 1) <= today;
   const nav = (label: string, shape: string, enabled: boolean, onPress: () => void) => (
-    <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} disabled={!enabled} bleed={4} onPress={onPress}
+    <StateLayerPressable layerColor={colors.onSurface} radius={radius.pill} disabled={!enabled} onPress={onPress}
       accessibilityRole="button" accessibilityLabel={label} style={styles.nav}>
       <SvgIcon shape={shape} size={20} color={colors.onSurface} />
     </StateLayerPressable>
   );
   return (
-    <View role="dialog" aria-label="Scegli la data" style={[styles.panel, { borderColor: colors.outlineVariant }]}>
+    <View>
       <View style={styles.header}>
         {nav('Mese precedente', iconShapes.chevronLeft, canPrev, () => shift(-1))}
         <Text variant="titleSmall" accessibilityLiveRegion="polite" style={styles.month}>{monthFormat.format(new Date(Date.UTC(year, monthIndex, 1)))}</Text>
@@ -65,8 +106,8 @@ export function DateCalendar({ value, onChange }: { value: string; onChange: (da
           const allowed = date >= expensePolicy.minDate && date <= today;
           return (
             <View key={index} style={styles.cell}>
-              <StateLayerPressable layerColor={active ? colors.onPrimary : colors.onSurface} bleed={2} radius={radius.control} disabled={!allowed}
-                onPress={() => onChange(date === today ? '' : date)} accessibilityRole="button" aria-pressed={active}
+              <StateLayerPressable layerColor={active ? colors.onPrimary : colors.onSurface} radius={radius.pill} disabled={!allowed}
+                onPress={() => onPick(date)} accessibilityRole="button" aria-pressed={active}
                 accessibilityLabel={dayFormat.format(new Date(`${date}T00:00:00Z`))}
                 style={[styles.day, active && { backgroundColor: colors.primary }, !active && date === today && { borderWidth: 1, borderColor: colors.primary }]}>
                 <Text variant="bodyMedium" style={{ color: active ? colors.onPrimary : colors.onSurface, fontVariant: ['tabular-nums'] }}>{Number(date.slice(8))}</Text>
@@ -80,13 +121,15 @@ export function DateCalendar({ value, onChange }: { value: string; onChange: (da
 }
 
 const styles = StyleSheet.create({
-  field: { height: layout.fieldBoxHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, paddingHorizontal: spacing.md },
-  value: { flex: 1, minWidth: 0 },
-  panel: { borderWidth: 1, borderRadius: radius.card, padding: spacing.sm, gap: spacing.xs, width: '100%' },
+  dialog: { width: '92%', maxWidth: 360, alignSelf: 'center' },
+  headline: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing.lg, gap: spacing.lg },
+  headlineText: { textTransform: 'capitalize' },
+  divider: { height: 1 },
+  body: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   month: { textTransform: 'capitalize' },
-  nav: { width: layout.minTouch, height: 40, alignItems: 'center', justifyContent: 'center' },
+  nav: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { width: `${100 / 7}%`, height: 40, alignItems: 'center', justifyContent: 'center' },
-  day: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  cell: { width: `${100 / 7}%`, height: 44, alignItems: 'center', justifyContent: 'center' },
+  day: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 });

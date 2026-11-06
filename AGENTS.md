@@ -132,8 +132,9 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
   inserito nei log. JSON mantiene originali, CSV neutralizza formule e quota i campi.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
   `Button` (unico pulsante), `ListRow`/`IconTile` (riga di Spese e Categorie), `ChoiceChips`,
-  `M3Switch`, `Card`, `StateLayerPressable` per componenti Material 3 personalizzati.
-  Raggi, `inputOutline` (per ogni `TextInput` outlined) e `layout` da `src/theme/tokens.ts`. Font e spessore icone (`typefaces`, `iconStroke`) dai token; font in `public/fonts/`. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
+  `SegmentedButtons`, `SwitchRow`/`M3Switch`, `SelectField` (menu a tendina), `DateField` (picker modale), `Card`,
+  `StateLayerPressable` per componenti Material 3 personalizzati.
+  Raggi (`radius`: controlli 20, campi/card 16, dialog 28, `pill`), `inputOutline` (per ogni `TextInput` outlined) e `layout` da `src/theme/tokens.ts`. Font e spessore icone (`typefaces`, `iconStroke`) dai token; font in `public/fonts/`. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
   esiti temporanei con `useSnackbar()`; layout per classe di finestra con `useSizeClass()`.
 - Paper `Menu` montato chiuso mette il focus sul proprio anchor (web): mai un `Menu` per riga di una lista
   (la pagina salta all'ultima riga); usare un solo menu con anchor a coordinate, come `ExpenseList`.

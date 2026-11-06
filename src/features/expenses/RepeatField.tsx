@@ -1,9 +1,8 @@
 import { StyleSheet, View } from 'react-native';
-import { HelperText, Text, useTheme } from 'react-native-paper';
-import { M3Switch } from '../../components/M3Switch';
-import { StateLayerPressable } from '../../components/StateLayerPressable';
+import { HelperText } from 'react-native-paper';
+import { SwitchRow } from '../../components/SwitchRow';
 import type { Recurrence } from '../../domain/recurrence';
-import { radius, spacing } from '../../theme/tokens';
+import { spacing } from '../../theme/tokens';
 import { RecurrencePicker } from './RecurrencePicker';
 
 type Props = {
@@ -21,17 +20,9 @@ type Props = {
 // Shared by the new-expense form and the edit dialog. The frequency appears only while repeating
 // is on, followed by a sentence that says exactly what a recurring expense means.
 export function RepeatField({ repeat, recurrence, startDate, error, disabled, onRepeatChange, onRecurrenceChange }: Props) {
-  const { colors } = useTheme();
   return (
     <View style={styles.group}>
-      <StateLayerPressable onPress={() => onRepeatChange(!repeat)} disabled={disabled} layerColor={colors.onSurface}
-        radius={radius.control} style={styles.toggle} accessibilityRole="switch" aria-checked={repeat} aria-disabled={disabled}
-        accessibilityLabel="Ricorrente">
-        <View style={styles.text}>
-          <Text variant="titleSmall">Ricorrente</Text>
-        </View>
-        <M3Switch value={repeat} disabled={disabled} />
-      </StateLayerPressable>
+      <SwitchRow label="Ricorrente" value={repeat} disabled={disabled} onChange={onRepeatChange} />
       {repeat && (
         <View style={styles.options}>
           <RecurrencePicker value={recurrence} error={Boolean(error)} disabled={disabled} onChange={onRecurrenceChange} />
@@ -44,8 +35,5 @@ export function RepeatField({ repeat, recurrence, startDate, error, disabled, on
 
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
-  // M3 list item with trailing switch: the whole row is the touch target.
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 48, paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
-  text: { flex: 1 },
-  options: { gap: spacing.sm },
+  options: { paddingHorizontal: spacing.lg },
 });

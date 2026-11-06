@@ -39,7 +39,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title="Registrare una spesa">
-        {p('Tocca «Nuova spesa» e inserisci importo, data, descrizione e categoria. La categoria è obbligatoria; se lasci vuota la data vale oggi.')}
+        {p('Tocca Nuova spesa e inserisci importo, data, descrizione e categoria. La categoria è obbligatoria; se lasci vuota la data vale oggi.')}
         <Text variant="bodyMedium" style={muted}>Esempio: 4,50 € · Caffè · Colazione.</Text>
       </Section>
 
@@ -54,11 +54,11 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
       <Section title="Spese ricorrenti e abbonamenti">
         {p('Una spesa può ripetersi ogni settimana, mese o anno: la inserisci una volta sola e compare a ogni scadenza maturata.')}
-        {p('Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com\'erano. «Prossimi rinnovi» mostra le scadenze in arrivo.')}
+        {p('Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com\'erano. Prossimi rinnovi mostra le scadenze in arrivo.')}
       </Section>
 
       <Section title="Esportare i dati">
-        {p('Dal pulsante «Dati» della pagina Spese scarichi un file CSV, che si apre con Excel o Google Sheets. Sono disponibili anche un backup completo in JSON e l\'importazione da file JSON. Servono la connessione e la sincronizzazione completata.')}
+        {p('Dal pulsante Dati della pagina Spese scarichi un file CSV, che si apre con Excel o Google Sheets. Sono disponibili anche un backup completo in JSON e l\'importazione da file JSON. Servono la connessione e la sincronizzazione completata.')}
       </Section>
 
       <Section title="Dove sono i dati">
