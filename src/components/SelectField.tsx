@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Menu, Text, TextInput, useTheme } from 'react-native-paper';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -17,17 +17,32 @@ type Props<T extends string> = {
 
 // Material 3 exposed dropdown menu: an outlined text field (label, trailing arrow) that opens a menu as wide as the field.
 // The field is read-only and not focusable itself: the surrounding button owns focus, press and accessibility.
+const MENU_MAX_HEIGHT = 360;
+const MENU_MIN_HEIGHT = 192; // below this much room, Paper shifts the menu up instead (it then fits whole)
+const SCREEN_MARGIN = 16;
+
 export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState(0);
+  const [maxHeight, setMaxHeight] = useState(MENU_MAX_HEIGHT);
+  const anchorRef = useRef<ComponentRef<typeof Pressable>>(null);
+  const windowHeight = useWindowDimensions().height;
+  // Open: cap the height to the room below the field (inner scroll for the rest); with little room Paper moves the menu up.
+  const openMenu = () => {
+    anchorRef.current?.measureInWindow((_x, y, _w, h) => {
+      const below = windowHeight - (y + h) - SCREEN_MARGIN;
+      setMaxHeight(Math.min(MENU_MAX_HEIGHT, below >= MENU_MIN_HEIGHT ? below : windowHeight - 2 * SCREEN_MARGIN));
+      setOpen(true);
+    });
+  };
   const current = options.find((option) => option.value === value);
   return (
     <View>
       <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom"
-        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: 360, borderRadius: radius.card, minWidth: width, paddingVertical: spacing.xs }}
+        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight, borderRadius: radius.card, minWidth: width, paddingVertical: spacing.xs }}
         anchor={
-          <Pressable style={styles.anchor} disabled={disabled} onPress={() => setOpen(true)} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+          <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
             accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled}
             accessibilityLabel={`${label}${current ? `: ${current.label}` : ', obbligatoria, nessuna selezione'}`}>
             <View pointerEvents="none">
@@ -38,6 +53,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
             </View>
           </Pressable>
         }>
+        <ScrollView style={{ maxHeight: maxHeight - 2 * spacing.xs }} keyboardShouldPersistTaps="handled">
         {options.map((option) => {
           const selected = option.value === value;
           return (
@@ -49,6 +65,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
             </StateLayerPressable>
           );
         })}
+        </ScrollView>
       </Menu>
       {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
     </View>
