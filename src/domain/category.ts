@@ -39,6 +39,10 @@ export const categoryIconLabels = {
   tree: 'natura',
   sparkles: 'svago',
   tv: 'televisione',
+  utensils: 'posate',
+  heartpulse: 'salute e battito',
+  cloud: 'nuvola',
+  ellipsis: 'altro',
 } as const;
 export type CategoryIcon = keyof typeof categoryIconLabels;
 export const categoryIcons = Object.keys(categoryIconLabels) as CategoryIcon[];

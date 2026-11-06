@@ -48,6 +48,11 @@ invariato). **Non verificato**: Pixel 8 reale, schermate reali con dati, tastier
 colora solo la barra di stato. Resta la sola ipotesi non verificata che Chrome usi `background_color`/`theme_color` statici del manifest (oggi scuri): provarla
 con valori chiari sacrificherebbe il tema scuro. Soluzione certa: TWA (Bubblewrap, `navigationBarColor`/`navigationBarColorDark`), non intrapresa.
 
+**Nuovi glifi categoria (6 nov, non committato)**: dallo screenshot delle 12 categorie consigliate mancavano 4 icone (le altre 8 esistevano: cart, house, graduation, laptop, shirt, gift, car/bus, ticket/film).
+Aggiunti `utensils` (Ristorazione), `heartpulse` (Salute), `cloud` (Servizi digitali), `ellipsis` (Altro): `category.ts`, `categoryGlyphs.ts`, lista in `firestore.rules` (totale 58).
+**Le Rules vanno ripubblicate** dove già distribuite, altrimenti le nuove icone sono rifiutate. Verifica: `npm run check` (142/142) e `test:emulator` (11/11) ok; glifi renderizzati e guardati.
+Non aggiunti al seed `defaultCategories` (restano 4); l'elenco delle 12 categorie non è stato implementato.
+
 ## Nuova spesa Material 3 e forme (6 nov, `f70df6b`)
 
 - **Accesso**: tolta la scritta «Ambiente di prova locale…» e la prop `demo` di `SignIn`; il pannello pagina di `AppShell` compare solo
@@ -83,7 +88,7 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   sottotitolo, raggi da `tokens.ts` (vedi sopra); logo/«Nummo» porta a Nuova spesa. `ExpenseFields` condiviso da Nuova spesa e modale
   Modifica: Importo + Data (`DateField`, picker modale senza dipendenze, 2000-01-01…oggi), Descrizione,
   Categoria (`SelectField`, obbligatoria), Ricorrente (`SwitchRow`, `SegmentedButtons`). Categorie in riga unica
-  Nome · Icona · Aggiungi; **54 glifi** categoria (`category.ts`, `categoryGlyphs.ts`, Rules). Dashboard:
+  Nome · Icona · Aggiungi; **58 glifi** categoria (`category.ts`, `categoryGlyphs.ts`, Rules). Dashboard:
   totale grande + statistiche, tabella dettaglio chiusa. Spese: filtri, riepilogo, azioni di riga a icone.
 - **Impostazioni** (menu account): tema Sistema/Chiaro/Scuro, Monocolore o Palette (6 tinte: Menta predefinita,
   Blu, Viola, Rosa, Ambra, Grafite), carattere Google Sans (`public/fonts/`) o Sistema, «Ripristina».
