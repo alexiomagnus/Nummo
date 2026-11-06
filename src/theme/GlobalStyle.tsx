@@ -25,12 +25,22 @@ export function GlobalStyle() {
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }
       input:focus-visible, textarea:focus-visible { outline: none; }
+      /* Programmatic focus on load (Paper Menu anchors) must not draw a ring: only after a real key press. */
+      html:not([data-input='key']) :focus-visible { outline: none; }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
       }`;
     document.head.appendChild(style);
     return () => { style.remove(); };
   }, [colors.background, colors.primary, colors.outline, dark, family]);
+  useEffect(() => {
+    const root = document.documentElement;
+    const onKey = (event: KeyboardEvent) => { if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key !== 'Shift') root.dataset.input = 'key'; };
+    const onPointer = () => { root.dataset.input = 'pointer'; };
+    window.addEventListener('keydown', onKey, true);
+    window.addEventListener('pointerdown', onPointer, true);
+    return () => { window.removeEventListener('keydown', onKey, true); window.removeEventListener('pointerdown', onPointer, true); };
+  }, []);
   useEffect(() => {
     // The static tags in index.html are per OS scheme; the user's theme may differ, so keep a single untargeted tag.
     const tags = Array.from(document.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));

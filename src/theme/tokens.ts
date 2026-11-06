@@ -70,7 +70,7 @@ export const inputOutline = { borderRadius: radius.input } as const;
 export const paperRoundness = radius.control / 5;
 
 export const layout = {
-  navBarHeight: 80,
+  floatingBar: 64, // compact floating navigation pill / round action
   railWidth: 80,
   drawerWidth: 248,
   topBarHeight: 64,

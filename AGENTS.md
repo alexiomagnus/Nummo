@@ -17,7 +17,7 @@ Firestore è l'unica fonte di verità. Stato operativo: `HANDOFF.md`.
 
 `index.ts` → `App.tsx` (tema da `src/theme/`, sessione) → `AppShell` adattivo →
 `RemoteWorkspace` (key UID), sezioni Nuova · Spese · Dashboard · Categorie. Stato React locale, niente router/store globale.
-Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come azione primaria (FAB), mai due navigazioni.
+Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come azione primaria, mai due navigazioni. Su smartphone: barra flottante in pillola (3 destinazioni uguali, icona + etichetta, attiva su `primaryContainer`) + pulsante tondo «Nuova spesa» in `primary` (nascosto nella sua pagina), nel flusso del layout; rail/drawer con FAB.
 
 - `src/domain/`: funzioni pure senza SDK. `policy.ts`, `expense.ts`, `contract.ts`,
   `category.ts`, `recurrence.ts`, `pricing.ts` (piano prezzi per numero di rinnovo),

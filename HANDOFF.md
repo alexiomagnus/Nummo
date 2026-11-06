@@ -30,6 +30,20 @@ seguendo lo schema del sistema. **Non verificato**: Pixel 8 reale, PWA installat
 (stesso effetto, non provato), tinte diverse da Menta.
 Dopo il deploy la PWA già installata potrebbe tenere il vecchio manifest: reinstallare per vedere i nuovi colori.
 
+**Anello di focus e filetto (6 nov, non committato)**: all'avvio il `Menu` di Paper sposta il focus sull'anchor di `SelectField` (e a volte sul marchio) e il browser
+disegnava il rettangolo `:focus-visible`. `GlobalStyle` ora mostra l'anello solo dopo un vero tasto premuto (`html[data-input=key]`, azzerato da `pointerdown`);
+l'anchor di `SelectField` ha `radius.input`. Tolto il `borderTopWidth` della barra Salva sticky (smartphone). `npm run check` ok; **non verificato** nel browser
+con login (ripresentazione all'avvio, anello con Tab su Categoria).
+
+**Barra flottante mobile (6 nov, non committato)**: su <600 px `NavigationBar` di `AppShell` è una pillola tonale (`elevation.level3`, senza bordo né ombra) con le 3 destinazioni
+a larghezza uguale, ciascuna icona 24 + etichetta sotto (56 dp di altezza); l'attiva ha l'intera voce su `primaryContainer`/`onPrimaryContainer`, le altre `onSurfaceVariant`.
+A destra il pulsante tondo «Nuova spesa» (64 dp, `primary`/`onPrimary`, distinto dalle destinazioni; assente nella sua pagina, dove la pillola occupa tutta la larghezza).
+Nel flusso del layout (non copre i contenuti né la barra Salva), padding inferiore = inset. Tolti FAB compatto, bordo superiore, ombra e `layout.navBarHeight` (ora `floatingBar` 64).
+Bordo 2 px delle righe di Spese → 1 px uniforme. **Incoerenza nota**: rail (tablet) e drawer (desktop) usano ancora `secondaryContainer` per la voce attiva e `primaryContainer` per il FAB:
+con la modalità «Palette» il secondario ruota di tinta (es. verde con Ambra), quindi su desktop resta quel verde; la barra mobile no. Allinearli è da decidere.
+Verifica: `npm run check` ok; Chromium headless su pagina di prova con tema Ambra/Palette: 412×915 chiaro (Spese attiva) e scuro (Dashboard attiva), schermata «Nuova spesa» (senza +), desktop 1440 (drawer
+invariato). **Non verificato**: Pixel 8 reale, schermate reali con dati, tastiera/focus, snackbar sopra la barra, safe area con inset ≠ 0.
+
 ## Nuova spesa Material 3 e forme (6 nov, `f70df6b`)
 
 - **Accesso**: tolta la scritta «Ambiente di prova locale…» e la prop `demo` di `SignIn`; il pannello pagina di `AppShell` compare solo
@@ -157,7 +171,7 @@ Non verificate:
 3. La copia di recupero vive in memoria e riguarda solo pending osservati.
 4. Export non è snapshot atomico tra collezioni; import UI limitato a 5 MB.
 5. Palette dei grafici non rivalidata con la skill dataviz sulle nuove superfici; contrasti token testati
-   (`tests/theme.test.ts`), non l'intera UI. Il FAB compatto può coprire parte dell'ultima riga.
+   (`tests/theme.test.ts`), non l'intera UI. 
 6. `expo start`/`expo export` lanciati direttamente (senza i comandi npm) non impostano la modalità: l'app mostra
    «configurazione mancante» invece di scegliere un ambiente. `build:cloud` reale provato solo in `--dry-run` di `deploy:hosting` (6 nov, `.env.production.local` ora presente nel checkout); `preview:cloud` (`expo serve dist`) non eseguito.
 7. Chi aveva dati nel vecchio localStorage non ha più un percorso di migrazione in app (vedi sopra).

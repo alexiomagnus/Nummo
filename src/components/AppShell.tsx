@@ -1,6 +1,6 @@
 import { Logo } from './Logo';
-import { useCallback, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
+import { useCallback, useRef, type ReactNode } from 'react';
+import { ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layout, radius, shape, spacing, stateOpacity } from '../theme/tokens';
@@ -33,16 +33,15 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const { colors } = theme;
   const size = useSizeClass();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const scroller = useRef<ScrollViewInstance>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const select = useCallback((value: T) => {
     onSelect?.(value);
     scroller.current?.scrollTo({ y: 0, animated: false });
   }, [onSelect]);
   const hasNav = Boolean(destinations?.length);
   const bottomBar = hasNav && size === 'compact';
-  const barHeight = layout.navBarHeight + insets.bottom;
+  // Compact: floating toolbar (destinations pill + round primary action) in the layout flow, above the bottom inset.
+  const barHeight = layout.floatingBar + spacing.md * 2 + insets.bottom;
   const showFab = bottomBar && fab && selected !== fab.target;
   const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
   const compact = size === 'compact';
@@ -56,7 +55,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>
-      <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom} onVisibleChange={setSnackbarOpen}>
+      <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom}>
       <View role="banner" style={[styles.topBar, { backgroundColor: colors.background, paddingTop: insets.top, paddingHorizontal: padding, height: layout.topBarHeight + insets.top }]}>
         {fab && hasNav ? (
           // The brand leads to the primary screen (new expense); on it, it does nothing.
@@ -83,19 +82,13 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelBg }]} keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: (showFab ? padding + 72 : padding) + (bottomBar ? 0 : insets.bottom) }}>
+            contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
               <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
             </ThemeProvider>
           </ScrollView>
         </View>
-        {bottomBar && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} />}
-        {showFab && fab && (
-          <FAB mode="flat" label={width >= 360 ? fab.label : undefined} icon={({ size: s, color }) => <SvgIcon shape={fab.icon} size={s} color={color} />}
-            onPress={() => select(fab.target)} accessibilityLabel={fab.label}
-            style={[styles.fab, { backgroundColor: colors.primaryContainer, bottom: barHeight + spacing.lg + (snackbarOpen ? 64 : 0) }]}
-            color={colors.onPrimaryContainer} />
-        )}
+        {bottomBar && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} fab={showFab ? fab : undefined} />}
       </SnackbarProvider>
     </View>
   );
@@ -110,25 +103,30 @@ function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boo
 type Fab<T extends string> = { label: string; icon: string; target: T };
 type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
-function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset }: NavProps<T> & { bottomInset: number }) {
+function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab }: NavProps<T> & { bottomInset: number }) {
   const { colors } = useTheme();
   return (
-    <View role="navigation" aria-label="Sezioni" style={[styles.bar, { borderColor: colors.outlineVariant, backgroundColor: colors.background, height: layout.navBarHeight + bottomInset, paddingBottom: bottomInset }]}>
-      {destinations.map((item) => {
-        const active = item.value === selected;
-        return (
-          <StateLayerPressable key={item.value} layerColor="transparent" accessibilityRole="button"
-            aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)} style={styles.barItem}>
-            {(state) => <>
-            <View style={[styles.indicator, active && { backgroundColor: colors.secondaryContainer }]}>
-              <HoverLayer state={state} color={colors.onSurface} />
-              <SvgIcon shape={item.icon} size={24} color={active ? colors.onSecondaryContainer : colors.onSurfaceVariant} />
-            </View>
-            <Text variant="labelMedium" numberOfLines={1} style={{ color: active ? colors.onSurface : colors.onSurfaceVariant, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
-            </>}
-          </StateLayerPressable>
-        );
-      })}
+    <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }]}>
+      <View role="navigation" aria-label="Sezioni" style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
+        {destinations.map((item) => {
+          const active = item.value === selected;
+          const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
+          return (
+            <StateLayerPressable key={item.value} layerColor={color} radius={radius.pill} accessibilityRole="button"
+              aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
+              style={[styles.pillItem, active && { backgroundColor: colors.primaryContainer }]}>
+              <SvgIcon shape={item.icon} size={24} color={color} />
+              <Text variant="labelMedium" numberOfLines={1} style={{ color, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
+            </StateLayerPressable>
+          );
+        })}
+      </View>
+      {fab && (
+        <StateLayerPressable layerColor={colors.onPrimary} radius={radius.pill} accessibilityRole="button" accessibilityLabel={fab.label}
+          onPress={() => onSelect(fab.target)} style={[styles.roundAction, { backgroundColor: colors.primary }]}>
+          <SvgIcon shape={fab.icon} size={28} color={colors.onPrimary} />
+        </StateLayerPressable>
+      )}
     </View>
   );
 }
@@ -199,9 +197,10 @@ const styles = StyleSheet.create({
   body: { flex: 1, flexDirection: 'row', minHeight: 0 },
   scroll: { flex: 1, minWidth: 0 },
   content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', flexGrow: 1, gap: spacing.xl },
-  bar: { flexDirection: 'row', paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth },
-  barItem: { flex: 1, alignItems: 'center', gap: spacing.xs, minHeight: 56, paddingTop: 4 },
-  indicator: { overflow: 'hidden', width: 64, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
+  floating: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingTop: spacing.md, paddingHorizontal: spacing.md },
+  pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: spacing.xs, gap: spacing.xs },
+  pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill },
+  roundAction: { width: layout.floatingBar, height: layout.floatingBar, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },
   railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.control },
   railItem: { width: layout.railWidth - spacing.sm, alignItems: 'center', gap: spacing.xs, paddingVertical: 4 },
@@ -209,5 +208,4 @@ const styles = StyleSheet.create({
   drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.lg + 4 },
   drawerFab: { alignSelf: 'flex-start', marginTop: spacing.md, marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.control },
   drawerItem: { height: layout.minTouch, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
-  fab: { position: 'absolute', right: spacing.lg, borderRadius: radius.control },
 });

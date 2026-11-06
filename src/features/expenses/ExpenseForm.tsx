@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   form: { width: '100%', gap: spacing.lg },
   // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
   // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
-  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, zIndex: 1, borderTopWidth: 1 } as unknown as ViewStyle,
+  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, zIndex: 1 } as unknown as ViewStyle,
   repeat: { gap: spacing.md },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row', marginTop: spacing.sm },

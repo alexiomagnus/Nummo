@@ -27,7 +27,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
       <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom"
         contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: 360, borderRadius: radius.card, minWidth: width, paddingVertical: spacing.xs }}
         anchor={
-          <Pressable disabled={disabled} onPress={() => setOpen(true)} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+          <Pressable style={styles.anchor} disabled={disabled} onPress={() => setOpen(true)} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
             accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled}
             accessibilityLabel={`${label}${current ? `: ${current.label}` : ', obbligatoria, nessuna selezione'}`}>
             <View pointerEvents="none">
@@ -56,6 +56,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
 }
 
 const styles = StyleSheet.create({
+  anchor: { borderRadius: radius.input },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.lg },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },

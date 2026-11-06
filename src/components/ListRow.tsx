@@ -60,7 +60,7 @@ export const listRowStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   row: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.xs, gap: spacing.sm },
   noDivider: { borderBottomWidth: 0 },
-  outlined: { borderWidth: 2, borderRadius: radius.control, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
+  outlined: { borderWidth: 1, borderBottomWidth: 1, borderRadius: radius.control, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
   main: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56 },
   text: { flex: 1, minWidth: 0 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 },
