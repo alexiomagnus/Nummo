@@ -1,11 +1,10 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 6 novembre 2026. Branch `main` = `origin/main` = `dd2fe2c` (pubblicato); `backend-firebase` remoto fermo a `b440e59`.
-Ultimo commit: `dd2fe2c` «refactor(config): separa gli ambienti emulator, hybrid e cloud» (riassetto ambienti Firebase, senza
-modifiche a UI o logica), sopra `6a1466b` «center content in AppShell for mobile view when using fab» (centraggio verticale di
-«Nuova spesa» su smartphone, non verificato visivamente), `26a910f`, `00acb4a` (pannello chiaro), `b440e59`, `9ba1665`
-(rimozione adapter localStorage), `e2b84d3` (Swiss minimalism), `390f9e2` piano prezzi, `3ca98bd` impostazioni di aspetto,
-`8e1fa0a` UI M3, `b77e1db` migrazione Firestore, `fe759d5` ultimo col vecchio backend. Il commit successivo (6 nov) toglie «Nascondi/Mostra» e «Tocca una categoria.» dalla Dashboard e aumenta lo spazio sotto il mese in Spese (non verificato nel browser).
+Aggiornamento: 6 novembre 2026. Branch `main`; `origin/main` = `478cd4d` (pubblicato); `backend-firebase` remoto fermo a `b440e59`.
+Commit recenti: `478cd4d` (rimuove una config temporanea), `afc6ebf` «prepara la pubblicazione su Firebase Hosting e il manifest PWA»
+(+ ritocchi UI di Spese e Dashboard), `136c740`, `dd2fe2c` (ambienti emulator/hybrid/cloud), `6a1466b` (centraggio «Nuova spesa» mobile,
+non verificato visivamente), `00acb4a`, `9ba1665`, `e2b84d3`, `390f9e2`, `3ca98bd`, `8e1fa0a`, `b77e1db`; `fe759d5` ultimo col vecchio
+backend. Il commit della guida introduttiva è locale e **non pubblicato**; nessun deploy eseguito.
 Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
 guida utente: `docs/firebase-personale.md`.
 
@@ -51,12 +50,18 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
   «Dati del browser» e il codice di migrazione localStorage (`tests/category.test.ts` ridotto al dominio;
   recuperabili dal commit `e2b84d3`). Le palette extra provate in precedenza sono state tolte (restano le 6 originali).
 
-- **Preparazione Hosting/PWA** (6 nov, non committata): `firebase.json` con `hosting` (`dist/`, fallback `**` → `/index.html`, cache immutable
+- **Preparazione Hosting/PWA** (6 nov, `afc6ebf`): `firebase.json` con `hosting` (`dist/`, fallback `**` → `/index.html`, cache immutable
   su `/_expo/static/**`, `no-cache` su HTML/manifest, `X-Frame-Options: DENY`), `public/manifest.webmanifest` (standalone, tema `#0F1512`),
   `public/icons/` (PNG 192/512, maskable 512, apple-touch, SVG), `public/index.html` con manifest/icone/theme-color,
   `scripts/deploy-hosting.ts` + `npm run deploy:hosting`. Nessun service worker (scelta: l'app non promette avvio offline). L'export
   Expo è `output: single` senza router: il fallback serve solo ricarica/URL arbitrari. Procedura di prima pubblicazione:
   `docs/firebase-personale.md` («Pubblicazione su Firebase Hosting»).
+
+- **Guida introduttiva** (6 nov): `src/features/session/Guide.tsx`, aperta dal link «Cos'è Nummo e come funziona?» in `SignIn`
+  (`#guida` con `pushState`: collegamento diretto, ricarica e tasto Indietro funzionano; HTML semantico via ruoli RN Web: `article`, `h1`, 7 `h2`,
+  `section`). Solo testo statico, accessibile senza login e senza Firestore; per chi ha già la sessione il collegamento non compare (si apre l'app).
+  Nessuna modifica a `public/index.html`, manifest, `firebase.json`, Auth o Rules. I due pulsanti di navigazione restano `button`
+  (con `role="link"` su un `div`, `Invio` non li attivava in RN Web: verificato e corretto).
 
 ## Decisioni da ricordare
 
@@ -71,7 +76,12 @@ Functions nel percorso attivo (rimossi il 2 nov; recuperabili da `fe759d5`; il f
 
 ## Verifiche
 
-Hosting/PWA (6 nov, working tree con le modifiche sopra): `npm run check` ok (typecheck, 142/142, `build:demo`);
+Guida (6 nov, build demo, Chromium headless via CDP): login → guida → ricarica → «Torna all'accesso», tasto Indietro e link diretto
+ok; da tastiera Tab raggiunge tema, «Accedi con Google» e il link, `Invio` apre la guida e riporta al login; tema chiaro e scuro letti a
+390 px senza testo tagliato. Non provati: lettore di schermo, dispositivo reale, clic reale su «Accedi con Google» (codice non toccato),
+focus spostato sul titolo dopo la navigazione (resta all'inizio pagina).
+
+Hosting/PWA (6 nov, su `afc6ebf`): `npm run check` ok (typecheck, 142/142, `build:demo`);
 `npm run deploy:hosting -- --dry-run` ok (build:cloud reale con `.env.production.local`, stampa progetto e comando, nessuna
 pubblicazione; nome canale non valido rifiutato); `dist/` contiene `manifest.webmanifest` e `icons/`. Con l'emulatore Hosting locale
 (`firebase emulators:start --only hosting`, config temporanea poi rimossa) verificati: `/`, percorsi arbitrari e `/manifest.webmanifest`

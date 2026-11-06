@@ -29,7 +29,9 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   `firebase.ts`: Auth e inizializzazione Firestore/cache; `firestoreStore.ts`: listener,
   CRUD, transazioni con revisioni, esportazioni server-only e importazioni in gruppi.
 - `src/features/session/`: login Google popup, sessione SDK, logout con attesa delle
-  scritture pendenti. UI/errori account e stato smontati al cambio UID.
+  scritture pendenti; `Guide.tsx`: guida pubblica statica («Cos'è Nummo e come funziona?»), aperta da `SignIn`
+  su `#guida` (history, link diretto e ricarica; nessuna richiesta Firebase, nessun router). Testo da aggiornare quando
+  cambiano le funzioni descritte; non presentare l'app come aperta a registrazioni. UI/errori account e stato smontati al cambio UID.
 - `src/features/expenses/`: modulo/validazione, `ExpenseStore`, `useRemoteExpenses`,
   `ExpenseEditor`. Nessun hook di spese locali nel percorso attivo.
 - `src/features/categories/`: `useRemoteCategories`, impostazioni, icone. ID stabili,

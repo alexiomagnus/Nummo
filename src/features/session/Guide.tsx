@@ -1,0 +1,83 @@
+import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+import { Button } from '../../components/Button';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { spacing } from '../../theme/tokens';
+
+// Public introduction, shown on the signed-out screen. Static text only: no Firebase access and no
+// dependency on the session. Every statement below describes something the app does today.
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <View role="region" aria-label={title} style={styles.section}>
+      <Text variant="titleMedium" style={styles.heading} accessibilityRole="header" aria-level={2}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+export function Guide({ onBack }: { onBack: () => void }) {
+  const { colors } = useTheme();
+  const muted = { color: colors.onSurfaceVariant };
+  const p = (text: string) => <Text variant="bodyLarge" style={styles.paragraph}>{text}</Text>;
+  return (
+    <View role="article" aria-label="Cos'è Nummo e come funziona" style={styles.wrap}>
+      <Button mode="text" compact onPress={onBack} style={styles.back}
+        icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}>
+        Torna all'accesso
+      </Button>
+      <View style={styles.intro}>
+        <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>Cos'è Nummo</Text>
+        <Text variant="bodyLarge" style={muted}>
+          Un'app per registrare le spese di ogni giorno e capire dove va il denaro. Funziona dal browser, anche da smartphone.
+        </Text>
+      </View>
+
+      <Section title="Come iniziare">
+        {p('Si entra con il proprio account Google.')}
+        {p('Nummo è un\'app personale: al momento può accedere solo il proprietario autorizzato. Non c\'è una registrazione aperta e gli altri account Google non vedono né salvano alcun dato.')}
+      </Section>
+
+      <Section title="Registrare una spesa">
+        {p('Tocca «Nuova spesa» e inserisci importo, data, descrizione e categoria. La categoria è obbligatoria; se lasci vuota la data vale oggi.')}
+        <Text variant="bodyMedium" style={muted}>Esempio: 4,50 € · Caffè · Colazione.</Text>
+      </Section>
+
+      <Section title="Organizzare le categorie">
+        {p('Nella pagina Categorie crei le tue categorie con un nome e, se vuoi, un\'icona. Puoi rinominarle o eliminarle, oppure aggiungere quelle già pronte.')}
+      </Section>
+
+      <Section title="Consultare le spese">
+        {p('In Spese trovi l\'elenco raggruppato per mese, con ricerca per nome, ordinamento e filtro per categoria. Da qui modifichi o elimini una voce.')}
+        {p('La Dashboard mostra il totale e la ripartizione per categoria nel mese corrente o negli ultimi 6 o 12 mesi, con ciambella, andamento o barre.')}
+      </Section>
+
+      <Section title="Spese ricorrenti e abbonamenti">
+        {p('Una spesa può ripetersi ogni settimana, mese o anno: la inserisci una volta sola e compare a ogni scadenza maturata.')}
+        {p('Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com\'erano. «Prossimi rinnovi» mostra le scadenze in arrivo.')}
+      </Section>
+
+      <Section title="Esportare i dati">
+        {p('Dal pulsante «Dati» della pagina Spese scarichi un file CSV, che si apre con Excel o Google Sheets. Sono disponibili anche un backup completo in JSON e l\'importazione da file JSON. Servono la connessione e la sincronizzazione completata.')}
+      </Section>
+
+      <Section title="Dove sono i dati">
+        {p('Le spese sono salvate in Cloud Firestore, il database di Firebase (Google), nel progetto del proprietario: non ci sono altri archivi. Possono leggerle e scriverle solo l\'accesso con Google e le regole di sicurezza del database, riservate al proprietario.')}
+        {p('Il segnale in alto mostra se i dati sono sincronizzati; senza rete alcune operazioni non sono disponibili.')}
+      </Section>
+
+      <Button mode="outlined" onPress={onBack} style={styles.bottom}>Torna all'accesso</Button>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { width: '100%', maxWidth: 640, alignSelf: 'center', gap: spacing.xl },
+  back: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
+  intro: { gap: spacing.sm },
+  title: { fontWeight: '700', letterSpacing: -0.3 },
+  section: { gap: spacing.sm },
+  heading: { fontWeight: '700' },
+  paragraph: { lineHeight: 26 },
+  bottom: { alignSelf: 'flex-start' },
+});
