@@ -58,8 +58,6 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
   // Closing returns the focus to the row button that opened the menu (keyboard users).
   const closeMenu = () => { const key = menu?.key; setMenu(null); if (key) setTimeout(() => anchors.current.get(key)?.focus?.(), 0); };
   const byDate = sort === 'date-desc' || sort === 'date-asc';
-  const total = results.reduce((sum, item) => sum + item.amount_minor, 0);
-  const filtered = query.trim() !== '' || filter !== ALL;
   const seriesNote = 'Eliminando una ricorrenza si elimina l’intera serie. L’operazione non può essere annullata.';
   const sortChoices = sortOptions.map((value) => ({ value, label: sortLabels[value] }));
   const categoryChoices = [{ value: ALL, label: 'Tutte le categorie' }, ...categories.map((category) => ({ value: category.id, label: category.label })),
@@ -77,12 +75,6 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
         <MenuSelect label="Categoria" icon={iconShapes.filter} options={categoryChoices} value={filter} onChange={setCategoryFilter} style={styles.select} />
       </View>
       {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
-      <View style={styles.summary}>
-        <Text variant="titleMedium" accessibilityLiveRegion="polite" style={styles.count}>
-          {results.length === 1 ? (filtered ? '1 spesa trovata' : '1 spesa') : `${results.length} spese${filtered ? ' trovate' : ''}`}
-        </Text>
-        <Text variant="titleMedium" style={styles.amount}>{formatAmountMinor(total)}</Text>
-      </View>
     </>
   );
 
@@ -128,7 +120,7 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
             </View>
           );
         })}
-        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna spesa. Aggiungi la prima con Nuova spesa.</Text>}
+        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna spesa.</Text>}
         {occurrences.length > 0 && results.length === 0 && (
           <View style={styles.empty}>
             <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessun risultato.</Text>
@@ -161,10 +153,8 @@ const styles = StyleSheet.create({
   search: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
   select: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
   root: { gap: spacing.lg },
-  summary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: spacing.xl, paddingBottom: spacing.md },
   monthName: { textTransform: 'capitalize' },
-  count: { fontWeight: '600' },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
   rowAmount: { minWidth: 96, textAlign: 'right' },
   empty: { gap: spacing.sm },

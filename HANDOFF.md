@@ -1,9 +1,9 @@
 # HANDOFF — Nummo BYOF
 
-Aggiornamento: 6 novembre 2026. Branch `main` = `origin/main` = `f70df6b` «feat(ui): Nuova spesa in Material 3, accesso senza pannello e forme più
-morbide» (working tree pulito). Precedenti rilevanti: `3517b27` (preparazione open source), `6f4d42b` (guida introduttiva), `afc6ebf` (Hosting/PWA), `136c740`, `dd2fe2c`
-(ambienti emulator/hybrid/cloud), `6a1466b` (centraggio «Nuova spesa» mobile, non verificato visivamente); `fe759d5` ultimo col vecchio
-backend. `backend-firebase` remoto fermo a `b440e59`. Nessun deploy eseguito.
+Aggiornamento: 6 novembre 2026. Branch `main` = `origin/main` = `a30a988` «docs: registra la pubblicazione delle Rules con le nuove icone» (working tree pulito).
+Ultimo commit di codice: `755a439` (icone categoria); prima `9ed57e8` e `02d6bda` (barra flottante mobile), `6bccaf9` (barre di sistema/PWA), `f70df6b` (Nuova spesa M3),
+`3517b27` (preparazione open source), `6f4d42b` (guida), `afc6ebf` (Hosting/PWA), `dd2fe2c` (ambienti emulator/hybrid/cloud); `fe759d5` ultimo col vecchio
+backend. `backend-firebase` remoto fermo a `b440e59`. Nessun deploy di Hosting eseguito; Rules pubblicate il 6 nov (vedi «Nuovi glifi categoria»).
 Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
 guida utente: `docs/firebase-personale.md`.
 
@@ -15,7 +15,7 @@ parametrici. Unico riferimento personale: l'ID progetto in `.firebaserc` (tracci
 `docs/firebase-personale.md` e AGENTS.md allineati. Restano (ancora aperti): scelta della licenza (assente), prova della procedura da clone pulito
 con un progetto Firebase nuovo, collaudo PWA/mobile. L'ID progetto resta nella cronologia Git (pubblico per natura, non segreto).
 
-## Barre di sistema Android (6 nov, non committato)
+## Barre di sistema Android (6 nov, `6bccaf9`)
 
 Richiesta: barre di stato/navigazione nere sul Pixel 8. Modifiche: `viewport-fit=cover` in `public/index.html` (senza, `env(safe-area-inset-*)` resta 0);
 `theme-color` iniziale per schema OS (`#F5FBF5`/`#0F1511`, background Menta) e, a runtime, un solo tag aggiornato da `GlobalStyle` su `colors.background`
@@ -30,12 +30,12 @@ seguendo lo schema del sistema. **Non verificato**: Pixel 8 reale, PWA installat
 (stesso effetto, non provato), tinte diverse da Menta.
 Dopo il deploy la PWA già installata potrebbe tenere il vecchio manifest: reinstallare per vedere i nuovi colori.
 
-**Anello di focus e filetto (6 nov, non committato)**: all'avvio il `Menu` di Paper sposta il focus sull'anchor di `SelectField` (e a volte sul marchio) e il browser
+**Anello di focus e filetto (6 nov, `02d6bda`)**: all'avvio il `Menu` di Paper sposta il focus sull'anchor di `SelectField` (e a volte sul marchio) e il browser
 disegnava il rettangolo `:focus-visible`. `GlobalStyle` ora mostra l'anello solo dopo un vero tasto premuto (`html[data-input=key]`, azzerato da `pointerdown`);
 l'anchor di `SelectField` ha `radius.input`. Tolto il `borderTopWidth` della barra Salva sticky (smartphone). `npm run check` ok; **non verificato** nel browser
 con login (ripresentazione all'avvio, anello con Tab su Categoria).
 
-**Barra flottante mobile (6 nov, non committato)**: su <600 px `NavigationBar` di `AppShell` è una pillola tonale (`elevation.level3`, senza bordo né ombra) con le 3 destinazioni
+**Barra flottante mobile (6 nov, `02d6bda`, `9ed57e8`)**: su <600 px `NavigationBar` di `AppShell` è una pillola tonale (`elevation.level3`, senza bordo né ombra) con le 3 destinazioni
 a larghezza uguale, ciascuna icona 24 + etichetta sotto (56 dp di altezza); l'attiva ha l'intera voce su `primaryContainer`/`onPrimaryContainer`, le altre `onSurfaceVariant`.
 A destra il pulsante tondo «Nuova spesa» (64 dp, `primary`/`onPrimary`, distinto dalle destinazioni; assente nella sua pagina, dove la pillola occupa tutta la larghezza).
 Nel flusso del layout (non copre i contenuti né la barra Salva), padding inferiore = inset. Tolti FAB compatto, bordo superiore, ombra e `layout.navBarHeight` (ora `floatingBar` 64).
@@ -48,7 +48,7 @@ invariato). **Non verificato**: Pixel 8 reale, schermate reali con dati, tastier
 colora solo la barra di stato. Resta la sola ipotesi non verificata che Chrome usi `background_color`/`theme_color` statici del manifest (oggi scuri): provarla
 con valori chiari sacrificherebbe il tema scuro. Soluzione certa: TWA (Bubblewrap, `navigationBarColor`/`navigationBarColorDark`), non intrapresa.
 
-**Nuovi glifi categoria (6 nov, non committato)**: dallo screenshot delle 12 categorie consigliate mancavano 4 icone (le altre 8 esistevano: cart, house, graduation, laptop, shirt, gift, car/bus, ticket/film).
+**Nuovi glifi categoria (6 nov, `755a439`)**: dallo screenshot delle 12 categorie consigliate mancavano 4 icone (le altre 8 esistevano: cart, house, graduation, laptop, shirt, gift, car/bus, ticket/film).
 Aggiunti `utensils` (Ristorazione), `heartpulse` (Salute), `cloud` (Servizi digitali), `ellipsis` (Altro): `category.ts`, `categoryGlyphs.ts`, lista in `firestore.rules` (totale 58).
 **Rules pubblicate il 6 nov 2026 (15:45 UTC) su `nummo-6b6e2`** con `firebase deploy --only firestore:rules` (dry-run ok; verificato in sola lettura che coincidono con `firestore.rules` locale). Prima la release cloud era quella precedente a `755a439` (identica a `f70df6b`) e rifiutava le 4 icone nuove: sintomo «Accesso negato…» (`message()` mostra lo stesso testo per ogni `permission-denied`). **Non verificato**: salvataggio reale di una categoria con icona nuova dopo la pubblicazione; UID in `config/owner` (non letto), se l'errore persiste. Verifica: `npm run check` (142/142) e `test:emulator` (11/11) ok; glifi renderizzati e guardati.
 Non aggiunti al seed `defaultCategories` (restano 4); l'elenco delle 12 categorie non è stato implementato.
@@ -148,7 +148,7 @@ pubblicazione; nome canale non valido rifiutato); `dist/` contiene `manifest.web
 `firebase login`, installabilità su Android (Chrome decide anche in base alla versione e al service worker assente), login Google
 da Chrome/Safari mobile e da app installata, aspetto delle icone (generate con `rsvg-convert`, non guardate), canali di anteprima.
 
-Eseguite il 6 nov 2026 (Node 26.13) su `f70df6b`, working tree pulito (rieseguite a questo aggiornamento):
+Eseguite il 6 nov 2026 (Node 26.13) su `a30a988`, working tree pulito (rieseguite a questo aggiornamento):
 - `npm run check`: typecheck ok, **142/142** test app, `build:demo` ok in `dist-demo/`.
 - `npm run test:emulator`: **11/11** (porte 4000/8180/9099 libere; gli errori `PERMISSION_DENIED`
   nel log sono i rifiuti attesi dei test sulle Rules).

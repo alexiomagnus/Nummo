@@ -25,6 +25,8 @@ export function GlobalStyle() {
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }
       input:focus-visible, textarea:focus-visible { outline: none; }
+      /* Menu items sit flush with the menu edge: draw the ring inside, rounded, so it is not clipped or square. */
+      [role='menuitem']:focus-visible { outline-offset: -3px; border-radius: 12px; }
       /* Programmatic focus on load (Paper Menu anchors) must not draw a ring: only after a real key press. */
       html:not([data-input='key']) :focus-visible { outline: none; }
       @media (prefers-reduced-motion: reduce) {
