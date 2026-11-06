@@ -14,3 +14,6 @@ ui-debug.log
 .firebase/
 # Dati locali degli emulatori (dati personali, mai versionati)
 emulator-data/
+
+# Alias/progetti Firebase personali della CLI (mai versionati)
+.firebaserc

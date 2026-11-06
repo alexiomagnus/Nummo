@@ -80,14 +80,14 @@ Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulator
     `127.0.0.1:8180` (override: variabile di shell `EXPO_PUBLIC_FIRESTORE_EMULATOR`). Avviare prima l'emulatore
     Firestore del progetto personale e impostarvi `config/owner` con `npm run emulators:seed:owner -- ID_PROGETTO UID`.
   - `npm run build:cloud` (**cloud**): build di produzione in `dist/`, vedi sotto. Non esiste `dev:cloud`.
-- `npm run emulators:real` usa l'alias `real` preesistente solo in questo checkout.
-  Non è un default: altre installazioni specificano il proprio `--project`. Importa da
+- `npm run emulators:personal -- --project ID` è la variante generica (Firestore, import/export in `emulator-data/`).
+  `emulators:real` usa l'alias `real` del solo `.firebaserc` locale di questo checkout (non versionato, ignorato). Importa da
   `emulator-data/` e riesporta all'arresto: fermare con un solo Ctrl+C.
 - `npm run deploy:hosting`: **l'unico modo previsto di pubblicare**. Ricostruisce con `build:cloud`, ricava il progetto dalle
   stesse variabili della build e lancia `firebase deploy --only hosting --project ID` (mai Rules/indici). `-- --channel nome`:
   anteprima temporanea (7 giorni) senza toccare il sito live; `-- --dry-run`: build e controlli, stampa il comando e non
   pubblica. Non lanciare `firebase deploy` senza `--only hosting` (pubblicherebbe anche `firestore.rules`) e non farlo
-  senza autorizzazione. `.firebaserc` ha solo l'alias `real`, nessun default.
+  senza autorizzazione. `.firebaserc` non è versionato (ignorato): il repository non ha alcun progetto predefinito, la CLI richiede sempre `--project`.
 - `npm run preview:cloud`: serve `dist/` in locale (verifica; usa il progetto reale: non eseguire azioni di scrittura senza autorizzazione).
 - `npm run check`: typecheck, test app, `build:demo` (demo in `dist-demo/`, mai da pubblicare).
 - `npm run test:emulator`: nuovi test Auth/Firestore; richiede porte libere.

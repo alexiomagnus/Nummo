@@ -21,6 +21,7 @@
     "test:emulator": "firebase emulators:exec --only auth,firestore --project demo-nummo --import emulator-seed \"node tests/emulator/firestore.e2e.ts\"",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-nummo --import emulator-seed",
     "emulators:real": "firebase emulators:start --project real --only firestore --import emulator-data --export-on-exit",
+    "emulators:personal": "firebase emulators:start --only firestore --import emulator-data --export-on-exit",
     "emulators:seed": "node scripts/seed-demo.ts",
     "emulators:seed:owner": "node scripts/seed-owner.ts"
   },

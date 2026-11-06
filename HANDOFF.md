@@ -8,6 +8,14 @@ backend. Il commit della guida introduttiva è locale e **non pubblicato**; ness
 Architettura e comandi: `AGENTS.md`; decisioni: `docs/architecture.md`; migrazione: `docs/migrazione-byof.md`;
 guida utente: `docs/firebase-personale.md`.
 
+## Preparazione open source BYOF (6 nov, non committata)
+
+Audit: nessun segreto/UID/email nei file versionati né nella cronologia (nessuna `AIza`); app, Rules e script già
+parametrici. Unico riferimento personale: l'ID progetto in `.firebaserc` (tracciato). Fatto: `.firebaserc` tolto dall'indice
+(`git rm --cached`, file locale intatto) e ignorato; script `emulators:personal`; README riscritto come guida di installazione;
+`docs/firebase-personale.md` e AGENTS.md allineati. Restano: scelta della licenza (assente), prova della procedura da clone pulito
+con un progetto Firebase nuovo, collaudo PWA/mobile. L'ID progetto resta nella cronologia Git (pubblico per natura, non segreto).
+
 ## Stato implementato (verificato su codice e test)
 
 App web con Google Auth e Cloud Firestore personale (BYOF). Nessun backend dello sviluppatore, Sheets o
@@ -170,7 +178,7 @@ npm run dev:hybrid
 ```
 
 L'UID proprietario è quello dell'account Google (Console → Authentication), mai nei file versionati (in questo
-checkout coincide con `ALLOWED_UID` di `functions/.env.nummo-6b6e2`, ignorato). `emulators:real` importa da
+checkout coincide con `ALLOWED_UID` di un vecchio file ignorato in `functions/`). `emulators:real` importa da
 `emulator-data/` e riesporta all'arresto: i dati sopravvivono **solo con arresto pulito** (un solo Ctrl+C,
 attendere «Export complete»). Nessun documento è stato creato nel progetto cloud reale; deploy, Blaze e servizi
 aggiuntivi restano manuali.

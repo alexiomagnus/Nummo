@@ -59,9 +59,9 @@ stata modificata durante questa migrazione.
    Verifica nel tuo ambiente login/logout, secondo account rifiutato, una spesa
    confermata, reload e lettura su una seconda sessione prima di migrare lo storico.
 
-`.firebaserc` mantiene l'alias personale esistente `real` per non rompere il checkout
-attuale; non è usato dall'app o dalla demo. Chi clona deve indicare esplicitamente il
-proprio `--project ID` alla CLI: non usare quell'alias come progetto condiviso.
+Il repository non contiene `.firebaserc`: nessun progetto Firebase è preimpostato e la CLI
+richiede sempre `--project ID_PROGETTO` esplicito (`deploy:hosting` lo ricava dalle variabili
+della build). Un `.firebaserc` locale è ignorato da Git.
 
 Un wizard interno che chiedesse solo `firebaseConfig` non completerebbe i passaggi
 2, 4, 5 e 6. Per questo la prima versione BYOF usa configurazione a build e questa
@@ -78,9 +78,10 @@ npm run emulators:seed:owner -- ID_PROGETTO UID_PROPRIETARIO
 npm run dev:hybrid
 ```
 
-Nel checkout originale `npm run emulators:real` usa l'alias già esistente. Quello script
-importa da `emulator-data/` e vi riesporta all'arresto (Ctrl+C una volta): il
-proprietario va impostato una sola volta. La modalità non richiede Functions. Non
+Per conservare i dati tra i riavvii usa `npm run emulators:personal -- --project ID_PROGETTO`:
+importa da `emulator-data/` (ignorata da Git) e vi riesporta all'arresto (Ctrl+C una volta,
+attendere «Export complete»). Il proprietario va impostato una sola volta. (`emulators:real`
+è l'equivalente del solo checkout originale, con alias locale `real`.) La modalità non richiede Functions. Non
 avviare l'Auth emulator in questa modalità. Gli emulatori non devono essere esposti
 in rete e non dimostrano la verifica crittografica dei token della produzione.
 
