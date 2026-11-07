@@ -1,5 +1,5 @@
 import { Logo } from './Logo';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,6 +32,22 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const theme = useTheme();
   const { colors } = theme;
   const size = useSizeClass();
+  const reduceMotion = useReducedMotion();
+  const pageProgress = useRef(new Animated.Value(1)).current;
+  const previousSection = useRef(selected);
+  // Animate the existing content container: changing its key would discard the expense draft.
+  useLayoutEffect(() => {
+    const changed = previousSection.current !== selected;
+    previousSection.current = selected;
+    pageProgress.stopAnimation();
+    if (!changed || reduceMotion) { pageProgress.setValue(1); return; }
+    pageProgress.setValue(0);
+    const animation = Animated.timing(pageProgress, {
+      toValue: 1, duration: motion.medium, easing: Easing.bezier(...motion.easing), useNativeDriver: false,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [selected, reduceMotion, pageProgress]);
   const insets = useSafeAreaInsets();
   const scroller = useRef<ScrollViewInstance>(null);
   const select = useCallback((value: T) => {
@@ -84,7 +100,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelBg }]} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
-              <View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
+              <Animated.View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }, {
+                opacity: pageProgress,
+                transform: [{ translateY: pageProgress.interpolate({ inputRange: [0, 1], outputRange: [spacing.sm, 0] }) }],
+              }]}>{children}</Animated.View>
             </ThemeProvider>
           </ScrollView>
         </View>

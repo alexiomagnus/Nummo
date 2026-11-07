@@ -64,7 +64,7 @@ service cloud.firestore {
         && d.keys().hasOnly(['label', 'icon', 'name_key', 'revision', 'updated_at'])
         && d.label is string && d.label.size() > 0 && d.label.size() <= 40 && d.label == d.label.trim()
         && !d.label.matches('.*[\\t\\r\\n].*')
-        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'pill', 'star', 'gamepad', 'bag', 'box', 'house', 'bulb', 'car', 'gift', 'book', 'shirt', 'paw', 'dumbbell', 'phone', 'coin', 'train', 'plane', 'bus', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'scissors', 'wrench', 'graduation', 'briefcase', 'baby', 'sofa', 'droplet', 'flame', 'wine', 'beer', 'cake', 'umbrella', 'leaf', 'laptop', 'receipt', 'piggy', 'shield', 'ticket', 'cross', 'bed', 'tree', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud', 'ellipsis']
+        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'star', 'gamepad', 'bag', 'box', 'house', 'bulb', 'car', 'gift', 'shirt', 'paw', 'dumbbell', 'phone', 'coin', 'train', 'bus', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'wrench', 'graduation', 'briefcase', 'sofa', 'droplet', 'beer', 'cake', 'laptop', 'receipt', 'piggy', 'ticket', 'cross', 'bed', 'tree', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
         && d.name_key == nameKey(d.label) && d.revision is int && d.updated_at == request.time
         && getAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(d.name_key)).data.category_id == id;
     }

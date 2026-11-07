@@ -26,7 +26,8 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
   const [formKey, setFormKey] = useState(0);
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
   const busy = submission.status === 'sending' || submission.status === 'uncertain';
-  const enabled = store.ready && !busy;
+  const dataState = store.ready ? 'ready' : store.error ? 'error' : 'loading';
+  const enabled = dataState === 'ready' && !busy;
 
   // The draft is cleared only after a verified confirmation (no sending happens here).
   useEffect(() => {
@@ -88,7 +89,7 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
   return (
     <View style={styles.page}>
     <View style={styles.form}>
-      <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} disabled={!enabled}
+      <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
         extra={repeat} onCreateCategory={onCreateCategory} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{store.error}</HelperText>}
       {submission.status === 'rejected' && (

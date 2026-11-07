@@ -16,7 +16,7 @@ sicurezza del progetto sono una tua responsabilità (vedi [Sicurezza](#sicurezza
 - **Nuova spesa** con importo, data, descrizione e categoria; **Spese** con ricerca, filtri, modifica ed eliminazione.
 - **Ricorrenze** settimanali, mensili e annuali, con prezzo promozionale per i primi rinnovi e riepilogo dei prossimi rinnovi.
 - **Categorie** personalizzabili, con icone, e **Dashboard** con totali e grafici.
-- **Backup**: esportazione CSV e JSON, importazione da file JSON.
+- **Backup**: esportazione CSV e JSON, importazione da file CSV o JSON esportati da Nummo.
 - Tema chiaro/scuro e colori personalizzabili; layout per smartphone, tablet e desktop.
 - Sincronizzazione tramite l'SDK Firestore. Solo web; vedi i [limiti](#installazione-come-pwa).
 

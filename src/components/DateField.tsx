@@ -32,7 +32,7 @@ export function DateField({ value, error, disabled, onChange }: { value: string;
         aria-disabled={disabled} accessibilityLabel={`Data della spesa: ${shown}. Cambia data`}>
         <View pointerEvents="none">
           <TextInput outlineStyle={inputOutline} label="Data" value={shown} mode="outlined" readOnly focusable={false} error={error}
-            disabled={disabled} showSoftInputOnFocus={false} left={leadingIcon(iconShapes.calendar)} />
+            aria-disabled={disabled} showSoftInputOnFocus={false} left={leadingIcon(iconShapes.calendar)} />
         </View>
       </Pressable>
       <DatePickerDialog visible={open} value={value} onDismiss={() => setOpen(false)}

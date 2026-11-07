@@ -6,6 +6,7 @@ import { initializeAuth, connectAuthEmulator, signInWithCredential, GoogleAuthPr
 import { initializeFirestore, connectFirestoreEmulator, doc, setDoc, getDocFromServer, getDocsFromServer, collection,
   updateDoc, deleteDoc, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate } from 'firebase/firestore';
 import { createFirestoreStore } from '../../src/services/firestoreStore.ts';
+import { exportCsv, parseCsvImport } from '../../src/domain/backup.ts';
 import { todayInRome } from '../../src/domain/policy.ts';
 await import('../../scripts/seed-demo.ts');
 const projectId = 'demo-nummo';
@@ -141,14 +142,19 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     });
     await t.test('migrazione ripetibile, ID e date preservati, conflitti senza sovrascrittura', async () => {
       const { expense_id, ...payload } = expense();
-      const records = [{ ...payload, id: expense_id, created_at: '2025-01-01T00:00:00.000Z' }];
       const cats = [{ id: randomUUID(), label: `Migrata ${suffix}`, icon: null }];
-      await owner.store.importRecords(records, cats);
+      const records = [{ ...payload, id: expense_id, category_id: cats[0]!.id, recurrence: 'monthly' as const,
+        expense_date: '2025-01-31', price_changes: [{ index: 1, amount_minor: 1500, once: false }], created_at: '2025-01-01T00:00:00.000Z' }];
+      const csv = parseCsvImport(exportCsv(records, cats));
+      await owner.store.importRecords(csv.expenses, csv.categories);
+      await owner.store.importRecords(csv.expenses, csv.categories);
       await owner.store.importRecords(records, cats);
       await assert.rejects(owner.store.importRecords([{ ...records[0]!, amount_minor: 1 }], cats));
       const all = (await owner.store.exportSnapshot()).expenses;
       assert.equal(all.find((r) => r.id === expense_id)?.created_at, records[0]!.created_at);
       assert.equal(all.find((r) => r.id === expense_id)?.amount_minor, 1250);
+      assert.equal(all.filter((r) => r.id === expense_id).length, 1);
+      assert.deepEqual(all.find((r) => r.id === expense_id)?.price_changes, records[0]!.price_changes);
     });
     await t.test('migrazione oltre il limite di accessi Rules: gruppi di categorie e spese ripetibili', async () => {
       const categories = Array.from({ length: 12 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));

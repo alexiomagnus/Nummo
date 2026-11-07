@@ -83,25 +83,30 @@ export function searchAndSort(items: readonly Occurrence[], query: string, sort:
 
 // ---- Dashboard aggregation ----
 
-export const periods = ['month', 'half-year', 'year'] as const;
+export const periods = ['month', 'previous-month', 'quarter', 'half-year', 'year'] as const;
 export type Period = (typeof periods)[number];
-export const periodLabels: Record<Period, string> = { month: 'Questo mese', 'half-year': 'Ultimi 6 mesi', year: 'Ultimi 12 mesi' };
+export const periodLabels: Record<Period, string> = { month: 'Questo mese', 'previous-month': 'Mese scorso', quarter: 'Ultimi 3 mesi', 'half-year': 'Ultimi 6 mesi', year: 'Ultimi 12 mesi' };
+export const isDailyPeriod = (period: Period): boolean => period === 'month' || period === 'previous-month';
 
 export type Bucket = Readonly<{ key: string; label: string; from: string; to: string }>;
 const monthNames = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
 const pad = (value: number) => String(value).padStart(2, '0');
 
-// Days of the current month, or the last 6/12 calendar months including the current one.
+// Daily buckets for this/previous month; multi-month windows include the current month.
 export function bucketsFor(period: Period, today: string): Bucket[] {
-  const [year, month] = today.split('-').map(Number) as [number, number];
-  if (period === 'month') {
+  let [year, month] = today.split('-').map(Number) as [number, number];
+  if (isDailyPeriod(period)) {
+    if (period === 'previous-month') {
+      const previous = new Date(Date.UTC(year, month - 2, 1));
+      year = previous.getUTCFullYear(); month = previous.getUTCMonth() + 1;
+    }
     const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
     return Array.from({ length: days }, (_, index) => {
       const date = `${year}-${pad(month)}-${pad(index + 1)}`;
       return { key: date, label: String(index + 1), from: date, to: date };
     });
   }
-  const count = period === 'half-year' ? 6 : 12;
+  const count = period === 'quarter' ? 3 : period === 'half-year' ? 6 : 12;
   return Array.from({ length: count }, (_, index) => {
     const total = year * 12 + (month - 1) - (count - 1 - index);
     const y = Math.floor(total / 12);
@@ -113,8 +118,8 @@ export function bucketsFor(period: Period, today: string): Bucket[] {
 
 export const otherCategoriesKey = '__other';
 export const uncategorizedKey = '__none';
-// Matches the 8 validated categorical slots: 7 categories + "Altre categorie".
-export const maxNamedCategories = 7;
+// Matches the 12 validated categorical slots (Dashboard palette): 12 categories + "Altre categorie".
+export const maxNamedCategories = 12;
 
 export type Series = Readonly<{ key: string; label: string; slot: number | null; total: number; values: number[] }>;
 export type Breakdown = Readonly<{ buckets: Bucket[]; series: Series[]; totals: number[]; total: number; count: number }>;

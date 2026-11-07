@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Menu, Text, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -23,13 +24,18 @@ type Props<T extends string> = {
 export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style }: Props<T>) {
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
+  const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const maxHeight = Math.max(0, Math.min(360, height - insets.top - insets.bottom - 2 * spacing.lg));
+  const maxWidth = Math.max(0, width - insets.left - insets.right - 2 * spacing.lg);
   // On phones the leading icon is dropped to leave room for the value.
   const showIcon = useSizeClass() !== 'compact';
   const current = options.find((option) => option.value === value);
   return (
     <View style={style}>
       <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom"
-        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: 360, borderRadius: radius.control }}
+        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight, maxWidth, borderRadius: radius.control,
+          paddingVertical: spacing.xs, overflow: 'hidden' }}
         anchor={
           <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
             aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
@@ -42,6 +48,8 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
             <SvgIcon shape={iconShapes.chevronDown} size={20} color={colors.onSurfaceVariant} />
           </StateLayerPressable>
         }>
+        {/* A maxHeight on Paper's surface alone does not make custom rows scrollable. */}
+        <ScrollView style={{ maxHeight: Math.max(0, maxHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">
         {options.map((option) => (
           <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
             onPress={() => { setOpen(false); onChange(option.value); }}
@@ -51,6 +59,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
             <View style={styles.check}>{option.value === value && <SvgIcon shape={iconShapes.check} size={24} color={colors.onSurface} />}</View>
           </StateLayerPressable>
         ))}
+        </ScrollView>
       </Menu>
     </View>
   );

@@ -9,7 +9,7 @@ const entry = (over: Partial<ExpenseEntry>): ExpenseEntry => ({
   id: 'x', amount_minor: 100, description: 'Spesa', category_id: null, expense_date: '2026-11-02',
   recurrence: null, created_at: '2026-11-02T10:00:00.000Z', ...over,
 });
-const cats = Array.from({ length: 9 }, (_, i) => ({ id: `c${i}`, label: `Cat ${i}`, icon: null }));
+const cats = Array.from({ length: 14 }, (_, i) => ({ id: `c${i}`, label: `Cat ${i}`, icon: null }));
 
 test('settimanale: ogni 7 giorni fino a oggi incluso', () => {
   assert.deepEqual(occurrenceDates('2026-10-12', 'weekly', '2026-11-02'), ['2026-10-12', '2026-10-19', '2026-10-26', '2026-11-02']);
@@ -56,14 +56,34 @@ test('aggregazione: totali in centesimi, fuori periodo esclusi, colore legato al
   const items = expandOccurrences([
     entry({ id: 'a', amount_minor: 1000, category_id: 'c1', expense_date: '2026-11-01' }),
     entry({ id: 'b', amount_minor: 250, category_id: null, expense_date: '2026-11-02' }),
-    entry({ id: 'c', amount_minor: 300, category_id: 'c8', expense_date: '2026-11-02' }),
+    entry({ id: 'c', amount_minor: 300, category_id: 'c12', expense_date: '2026-11-02' }),
     entry({ id: 'd', amount_minor: 999, category_id: 'c0', expense_date: '2026-10-31' }),
   ], '2026-11-02');
   const result = breakdown(items, cats, 'month', '2026-11-02');
   assert.equal(result.total, 1550);
   assert.equal(result.count, 3);
   assert.deepEqual(result.series.map((s) => [s.label, s.slot, s.total]),
-    [['Cat 1', 1, 1000], ['Altre categorie', 7, 300], ['Senza categoria', null, 250]]);
+    [['Cat 1', 1, 1000], ['Altre categorie', 12, 300], ['Senza categoria', null, 250]]);
   assert.equal(result.totals[0], 1000);
   assert.equal(result.totals[1], 550);
+});
+
+test('mese scorso: gennaio attraversa l’anno, febbraio rispetta gli anni bisestili', () => {
+  const january = bucketsFor('previous-month', '2026-01-15');
+  assert.equal(january.length, 31);
+  assert.equal(january[0]!.from, '2025-12-01');
+  assert.equal(january[30]!.to, '2025-12-31');
+  assert.equal(bucketsFor('previous-month', '2024-03-01').length, 29);
+  assert.equal(bucketsFor('previous-month', '2025-03-31').length, 28);
+});
+test('ultimi 3 mesi comprendono quello corrente; totali separati dal mese scorso', () => {
+  assert.deepEqual(bucketsFor('quarter', '2026-01-15').map((b) => b.key), ['2025-11', '2025-12', '2026-01']);
+  const items = expandOccurrences([
+    entry({ expense_date: '2025-10-31', amount_minor: 999 }),
+    entry({ expense_date: '2025-11-01', amount_minor: 100 }),
+    entry({ expense_date: '2025-12-31', amount_minor: 200 }),
+    entry({ expense_date: '2026-01-15', amount_minor: 300 }),
+  ], '2026-01-15');
+  assert.equal(breakdown(items, [], 'quarter', '2026-01-15').total, 600);
+  assert.equal(breakdown(items, [], 'previous-month', '2026-01-15').total, 200);
 });

@@ -49,7 +49,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
       <Section title="Consultare le spese">
         {p('In Spese trovi l\'elenco raggruppato per mese, con ricerca per nome, ordinamento e filtro per categoria. Da qui modifichi o elimini una voce.')}
-        {p('La Dashboard mostra il totale e la ripartizione per categoria nel mese corrente o negli ultimi 6 o 12 mesi, con ciambella, andamento o barre.')}
+        {p('La Dashboard mostra il totale e la ripartizione per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con ciambella, andamento o barre.')}
       </Section>
 
       <Section title="Spese ricorrenti e abbonamenti">
@@ -58,7 +58,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title="Esportare i dati">
-        {p('Dal pulsante Dati della pagina Spese scarichi un file CSV, che si apre con Excel o Google Sheets. Sono disponibili anche un backup completo in JSON e l\'importazione da file JSON. Servono la connessione e la sincronizzazione completata.')}
+        {p('Dal pulsante Dati della pagina Spese scarichi un file CSV, che si apre con Excel o Google Sheets. Sono disponibili anche un backup completo in JSON e l\'importazione da file CSV o JSON esportati da Nummo. Servono la connessione e la sincronizzazione completata.')}
       </Section>
 
       <Section title="Dove sono i dati">

@@ -17,6 +17,7 @@ type Props = {
   values: Record<BaseField, string>;
   errors: Partial<Record<BaseField, string>>;
   categories: readonly Category[];
+  dataState?: 'loading' | 'ready' | 'error';
   disabled?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
@@ -29,7 +30,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
 // Every field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, disabled, extra, onCreateCategory, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, extra, onCreateCategory, onChange, onBlur }: Props) {
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
   const compact = useSizeClass() === 'compact';
@@ -37,12 +38,12 @@ export function ExpenseFields({ values, errors, categories, disabled, extra, onC
     value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
   })), [categories]);
   return (
-    <View style={styles.layout}>
+    <View style={styles.layout} aria-busy={dataState === 'loading'}>
       <View>
         <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
           <View style={[styles.amount, compact && styles.amountCompact]}>
             <TextInput outlineStyle={inputOutline} label="Importo" value={values.amount} onChangeText={(value) => onChange('amount', value)}
-              mode="outlined" inputMode="decimal" placeholder="0,00" error={Boolean(errors.amount)} disabled={disabled}
+              mode="outlined" inputMode="decimal" placeholder="0,00" error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
               onBlur={() => onBlur('amount')} accessibilityLabel="Importo in euro, obbligatorio"
               contentStyle={styles.amountText} left={leadingIcon(iconShapes.euro)} />
           </View>
@@ -56,13 +57,18 @@ export function ExpenseFields({ values, errors, categories, disabled, extra, onC
       <View>
         <TextInput outlineStyle={inputOutline} label="Descrizione" value={values.description} mode="outlined" error={Boolean(errors.description)}
           onChangeText={(value) => onChange('description', value)} onBlur={() => onBlur('description')}
-          accessibilityLabel="Descrizione, obbligatoria" disabled={disabled} contentStyle={styles.text} />
+          accessibilityLabel="Descrizione, obbligatoria" readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {(errors.description || length > 0) && <View style={styles.helperRow}>
           <HelperText type="error" visible={Boolean(errors.description)} accessibilityRole="alert" style={styles.helper}>{errors.description ?? ' '}</HelperText>
           {length > 0 && <Text variant="bodySmall" style={{ color: length > expensePolicy.maxDescriptionLength ? colors.error : colors.onSurfaceVariant }}>{length}/{expensePolicy.maxDescriptionLength}</Text>}
         </View>}
       </View>
-      {categories.length === 0 ? (
+      {dataState !== 'ready' ? (
+        // Keep the category field's footprint while reading: [] is not an empty archive yet.
+        <TextInput outlineStyle={inputOutline} label="Categoria" mode="outlined" readOnly aria-disabled
+          value={dataState === 'loading' ? 'Caricamento…' : 'Dati non disponibili'}
+          accessibilityLabel={dataState === 'loading' ? 'Categoria: caricamento in corso' : 'Categoria: dati non disponibili'} />
+      ) : categories.length === 0 ? (
         <View style={[styles.empty, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label="Categoria">
           <View style={styles.emptyText}>
             <Text variant="titleSmall">Nessuna categoria</Text>

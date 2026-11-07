@@ -1,6 +1,7 @@
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Menu, Text, TextInput, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -27,12 +28,16 @@ export function SelectField<T extends string>({ label, options, value, onChange,
   const [width, setWidth] = useState(0);
   const [maxHeight, setMaxHeight] = useState(MENU_MAX_HEIGHT);
   const anchorRef = useRef<ComponentRef<typeof Pressable>>(null);
-  const windowHeight = useWindowDimensions().height;
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const viewportHeight = Math.max(0, windowHeight - insets.top - insets.bottom - 2 * SCREEN_MARGIN);
+  const menuHeight = Math.min(maxHeight, viewportHeight);
+  const menuWidth = Math.min(width, Math.max(0, windowWidth - insets.left - insets.right - 2 * SCREEN_MARGIN));
   // Open: cap the height to the room below the field (inner scroll for the rest); with little room Paper moves the menu up.
   const openMenu = () => {
     anchorRef.current?.measureInWindow((_x, y, _w, h) => {
-      const below = windowHeight - (y + h) - SCREEN_MARGIN;
-      setMaxHeight(Math.min(MENU_MAX_HEIGHT, below >= MENU_MIN_HEIGHT ? below : windowHeight - 2 * SCREEN_MARGIN));
+      const below = windowHeight - insets.bottom - (y + h) - SCREEN_MARGIN;
+      setMaxHeight(Math.min(MENU_MAX_HEIGHT, below >= MENU_MIN_HEIGHT ? below : viewportHeight));
       setOpen(true);
     });
   };
@@ -40,20 +45,21 @@ export function SelectField<T extends string>({ label, options, value, onChange,
   return (
     <View>
       <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom"
-        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight, borderRadius: radius.card, minWidth: width, paddingVertical: spacing.xs }}
+        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: menuHeight, borderRadius: radius.card,
+          width: menuWidth, paddingVertical: spacing.xs, overflow: 'hidden' }}
         anchor={
           <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
             accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled}
             accessibilityLabel={`${label}${current ? `: ${current.label}` : ', obbligatoria, nessuna selezione'}`}>
             <View pointerEvents="none">
               <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false}
-                error={Boolean(error)} disabled={disabled} showSoftInputOnFocus={false}
+                error={Boolean(error)} aria-disabled={disabled} showSoftInputOnFocus={false}
                 left={current?.icon ? <TextInput.Icon icon={() => current.icon} tabIndex={-1} aria-hidden /> : undefined}
                 right={<TextInput.Icon icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />} tabIndex={-1} aria-hidden />} />
             </View>
           </Pressable>
         }>
-        <ScrollView style={{ maxHeight: maxHeight - 2 * spacing.xs }} keyboardShouldPersistTaps="handled">
+        <ScrollView style={{ maxHeight: Math.max(0, menuHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">
         {options.map((option) => {
           const selected = option.value === value;
           return (

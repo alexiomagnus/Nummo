@@ -11,7 +11,7 @@ import { layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
 import { formatAmountMinor } from '../../domain/expense';
-import { breakdown, otherCategoriesKey, periodLabels, periods, uncategorizedKey, type Bucket, type Occurrence, type Period } from '../../domain/history';
+import { breakdown, isDailyPeriod, otherCategoriesKey, periodLabels, periods, uncategorizedKey, type Bucket, type Occurrence, type Period } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
 import { AreaChart, DonutChart, StackedBarChart, seriesColor, type ChartColors } from './charts';
 
@@ -20,16 +20,17 @@ type ChartType = (typeof chartTypes)[number];
 const chartLabels: Record<ChartType, string> = { donut: 'Ciambella', area: 'Andamento', bars: 'Barre' };
 const chartTitles: Record<ChartType, string> = { donut: 'Spese per categoria', area: 'Andamento delle spese', bars: 'Spese per periodo e categoria' };
 
-// Reference categorical palette from the dataviz skill, validated with its script against
-// this app's light and dark card surfaces (surface container low). Order is fixed, never cycled.
+// Categorical palette: the 8 reference slots of the dataviz skill plus 4 more (cyan, olive, purple, rust).
+// All 12 validated with its script (adjacent pairs) in both modes, light/dark surfaces. Order is fixed, never cycled;
+// the legend/table carry identity beyond colour. Past 12 categories the rest fold into «Altre categorie».
 const palette = {
-  light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'],
-  dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'],
+  light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948', '#0e9fb8', '#7a9400', '#a846b3', '#a85a1c'],
+  dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767', '#1fa0bd', '#7f9d00', '#b85bc2', '#b86a2a'],
 };
 
 const dayFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 function bucketTitle(bucket: Bucket, period: Period): string {
-  return period === 'month' ? dayFormat.format(new Date(`${bucket.from}T00:00:00Z`)) : `${bucket.label} ${bucket.from.slice(0, 4)}`;
+  return isDailyPeriod(period) ? dayFormat.format(new Date(`${bucket.from}T00:00:00Z`)) : `${bucket.label} ${bucket.from.slice(0, 4)}`;
 }
 // Whole percentages, but a non-zero share never shows as 0%.
 const percent = (part: number, total: number): string => {
@@ -49,6 +50,39 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
       {hint !== undefined && <Text variant="bodySmall" numberOfLines={1} style={{ color: colors.onSurfaceVariant }}>{hint}</Text>}
     </View>
   );
+}
+
+const monthFormat = new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const weekdayFormat = new Intl.DateTimeFormat('it-IT', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
+
+function DailyBreakdown({ buckets, totals, today }: { buckets: readonly Bucket[]; totals: readonly number[]; today: string }) {
+  const { colors } = useTheme();
+  const [width, setWidth] = useState(0);
+  // Use the actual card width: amounts need room even on narrow phones and beside a drawer.
+  const columns = Math.max(1, Math.min(7, Math.floor((width + spacing.sm) / (144 + spacing.sm))));
+  const cellWidth = width > 0 ? (width - spacing.sm * (columns - 1)) / columns : '100%';
+  return <>
+    <Text variant="titleMedium">{monthFormat.format(new Date(`${buckets[0]!.from}T00:00:00Z`))}</Text>
+    <View role="list" accessibilityLabel="Spese per giorno" style={styles.dayGrid}
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+      {buckets.map((day, index) => {
+        const current = day.from === today;
+        const future = day.from > today;
+        const total = totals[index]!;
+        const amount = future ? '—' : formatAmountMinor(total);
+        const color = current ? colors.onPrimaryContainer : total > 0 ? colors.onSurface : colors.onSurfaceVariant;
+        return <View key={day.key} role="listitem"
+          accessibilityLabel={`${bucketTitle(day, 'month')}${current ? ', oggi' : ''}: ${future ? 'giorno futuro' : amount}`}
+          style={[styles.dayCell, { width: cellWidth, backgroundColor: current ? colors.primaryContainer : colors.elevation.level1 }]}>
+          <View style={styles.dayHeading}>
+            <Text variant="labelMedium" style={{ color }}>{weekdayFormat.format(new Date(`${day.from}T00:00:00Z`))}</Text>
+            {current && <Text variant="labelSmall" style={{ color }}>Oggi</Text>}
+          </View>
+          <Text variant="bodyLarge" style={[styles.dayAmount, { color, fontWeight: total > 0 ? '600' : '400' }]}>{amount}</Text>
+        </View>;
+      })}
+    </View>
+  </>;
 }
 
 export function Dashboard({ occurrences, categories }: Props) {
@@ -105,7 +139,7 @@ export function Dashboard({ occurrences, categories }: Props) {
   const changePeriod = (value: Period | '') => { if (value) { setPeriod(value); setActive(null); setWithEmpty(false); } };
   const changeChart = (value: ChartType | '') => { if (value) { setChart(value); setActive(null); } };
 
-  // The current day/month is always listed, even without expenses.
+  // Multi-month detail starts with the current month; daily detail always includes every day.
   const todayDate = todayInRome();
   const lastIndex = data.buckets.findIndex((bucket) => todayDate >= bucket.from && todayDate <= bucket.to);
   const rows = data.buckets.map((item, index) => ({ item, total: data.totals[index]!, current: index === lastIndex })).filter((row) => withEmpty || row.current);
@@ -143,7 +177,6 @@ export function Dashboard({ occurrences, categories }: Props) {
             </View>
             <View style={styles.stats}>
               <Stat label="Spese" value={String(data.count)} />
-              <Stat label="Media" value={formatAmountMinor(Math.round(data.total / data.count))} />
               {top && <Stat label="Principale" value={top.label} hint={`${formatAmountMinor(top.total)} · ${percent(top.total, data.total)}`} />}
             </View>
           </View>
@@ -175,7 +208,10 @@ export function Dashboard({ occurrences, categories }: Props) {
             </View>
           </Card>
 
-          <Card title="Dettaglio per periodo" style={styles.detailCard}>
+          <Card title={isDailyPeriod(period) ? 'Dettaglio giornaliero' : 'Dettaglio per periodo'} style={styles.detailCard}>
+            {isDailyPeriod(period) ? (
+              <DailyBreakdown buckets={data.buckets} totals={data.totals} today={todayDate} />
+            ) : <>
             <View role="table" accessibilityLabel="Spese per periodo" style={[styles.table, { borderColor: theme.colors.outline }]}>
               {rows.map(({ item, total }, index) => (
                 <View key={item.key} role="row" style={[styles.tableRow, index > 0 && { borderTopWidth: 1, borderColor: theme.colors.outline }]}>
@@ -186,9 +222,10 @@ export function Dashboard({ occurrences, categories }: Props) {
             </View>
             {hidden > 0 && (
               <Button compact mode="text" onPress={() => setWithEmpty(!withEmpty)} style={styles.start}>
-                {withEmpty ? (period === 'month' ? 'Solo oggi' : 'Solo il mese corrente') : `Mostra tutti ${period === 'month' ? 'i giorni' : 'i periodi'}`}
+                {withEmpty ? 'Solo il mese corrente' : 'Mostra tutti i periodi'}
               </Button>
             )}
+            </>}
           </Card>
         </>
       )}
@@ -220,6 +257,10 @@ const styles = StyleSheet.create({
   start: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
   // Full-width table with a bold outline, sized by its content (rows without minimum height).
   detailCard: { width: '100%', gap: spacing.sm },
+  dayGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, width: '100%' },
+  dayCell: { minWidth: 0, borderRadius: radius.tile, padding: spacing.md, gap: spacing.sm },
+  dayHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs },
+  dayAmount: { fontVariant: ['tabular-nums'] },
   table: { width: '100%', borderWidth: 2, borderRadius: radius.control, overflow: 'hidden' },
   tableRow: { flexDirection: 'row', paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignItems: 'center', gap: spacing.lg },
   rowAmount: { fontWeight: '600' },

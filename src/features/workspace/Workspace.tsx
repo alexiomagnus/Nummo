@@ -10,7 +10,7 @@ import { useSnackbar } from '../../components/SnackbarHost';
 import { SyncChip } from '../../components/SyncChip';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, radius, spacing } from '../../theme/tokens';
-import { describeSync } from './syncStatus';
+import { describeSync, hasUsableCategorySnapshot } from './syncStatus';
 import { addDays, expandOccurrences, forecastOccurrences, upcomingRenewals } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -106,7 +106,8 @@ function Sections({ section, onNavigate, backend, uid, store, categoryState, occ
       </Card>
     )}
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
-      <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')} store={{ ...store, ready: store.ready && categoryState.ready }} />
+      <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')}
+        store={{ ...store, ready: store.ready && hasUsableCategorySnapshot(categoryState), error: store.error || categoryState.error }} />
     </View>
     {section === 'list' && (
       <View style={styles.list}>

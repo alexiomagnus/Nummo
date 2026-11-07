@@ -113,9 +113,13 @@ Durante il backup evita modifiche da altre sessioni. In Excel/Sheets importa il 
 come UTF-8, separatore virgola e punto decimale; `amount_minor` resta intero in ogni
 locale. I testi sospetti di formula sono protetti da apostrofo.
 
-Importa backup JSON legge file fino a 5 MB, controlla dati e duplicati, richiede conferma del progetto
+Importa CSV o JSON legge file Nummo fino a 5 MB, controlla dati e duplicati, richiede conferma del progetto
 ed esegue gruppi ripetibili. Non elimina gli originali. Conserva i backup fuori dalla
-cartella del sito. Procedura completa e vecchio emulatore in
+cartella del sito. Il CSV nuovo conserva serie, prezzi e categorie utilizzate nelle colonne
+`expense_data`/`category_data`: mantenerle insieme alle colonne delle occorrenze, senza modificarle.
+I vecchi CSV di sole spese singole sono importabili; quelli con ricorrenze o testi protetti
+ambigui richiedono il JSON o una nuova esportazione. Il JSON conserva anche le categorie
+senza spese ed è il formato consigliato per il backup completo. Procedura completa e vecchio emulatore in
 [migrazione-byof.md](migrazione-byof.md).
 
 ## Pubblicazione su Firebase Hosting

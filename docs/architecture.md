@@ -27,6 +27,14 @@ listener e bozze. Il dominio rimane puro. Le sezioni ricevono `ExpenseStore`, ca
 e callback; il servizio `createFirestoreStore` riceve database e UID ed è testato con
 veri SDK contro emulatori.
 
+Avvio del modulo (7 novembre 2026): la lettura iniziale delle due collezioni è distinta
+dall'archivio vuoto. Il campo Categoria mantiene il proprio ingombro e indica
+«Caricamento…» fino a categorie disponibili o a uno snapshot server che ne confermi
+l'assenza; una cache iniziale vuota non basta. Un errore di lettura è esposto come tale.
+Le categorie valide già in cache sono utilizzabili subito (resta visibile lo stato di sincronizzazione).
+I campi bloccati usano sola lettura e trigger disabilitati, preservando i contorni anche nel
+tema scuro; bozza e modulo rimangono montati. Nessun ritardo artificiale o scrittura all'avvio.
+
 ## Schema e proprietà
 
 | Percorso | Contenuto |
@@ -125,7 +133,13 @@ Le transazioni richiedono rete: [documentazione Firebase](https://firebase.googl
 
 CSV UTF-8 con BOM, CRLF, separatore virgola e quoting RFC 4180: occorrenze fino a oggi,
 ID serie/occorrenza, data ISO, importo decimale con punto e centesimi interi, valuta,
-descrizione, ID/nome categoria, ricorrenza e timestamp. Un apostrofo anteposto ai testi
+descrizione, ID/nome categoria, ricorrenza e timestamp. Dal 7 novembre 2026 include anche
+`expense_data` e `category_data` (JSON nelle celle) per ripristinare serie, piano prezzi,
+testi originali e icone senza confondere occorrenze e spese. L'importatore valida tutte
+le righe e la coerenza con le colonne leggibili, deduplica le serie per ID e usa lo stesso
+preflight/transazioni del JSON. Le categorie senza spese restano nel solo backup JSON.
+I CSV precedenti sono accettati solo per spese singole e testi non ambigui; con ricorrenze
+o protezioni da formula non reversibili viene richiesto JSON/nuovo CSV. Un apostrofo anteposto ai testi
 che iniziano con `=`, `+`, `-`, `@` anche dopo spazi/controlli limita l'interpretazione
 come formule. Il JSON mantiene i testi originali senza questa trasformazione.
 

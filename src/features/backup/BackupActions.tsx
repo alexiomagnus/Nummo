@@ -6,7 +6,7 @@ import { Card } from '../../components/Card';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, radius, spacing } from '../../theme/tokens';
-import { exportCsv, makeBackup, parseImport, type ImportData } from '../../domain/backup';
+import { exportCsv, makeBackup, parseCsvImport, parseImport, type ImportData } from '../../domain/backup';
 import { firebaseWebConfig } from '../../services/backendConfig';
 import type { FirestoreStore } from '../../services/firestoreStore';
 import { message } from '../expenses/useRemoteExpenses';
@@ -33,12 +33,13 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
     notify(csv ? 'CSV delle occorrenze fino a oggi esportato.' : 'Backup completo esportato.');
   });
   const pick = () => {
-    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json';
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,.csv,application/json,text/csv';
     input.onchange = () => { void run(async () => {
       setPreview(null);
       const file = input.files?.[0]; if (!file) return;
       if (file.size > 5_000_000) throw new Error('File troppo grande (massimo 5 MB).');
-      setPreview(parseImport(JSON.parse(await file.text())));
+      const text = await file.text();
+      setPreview(file.name.toLowerCase().endsWith('.csv') ? parseCsvImport(text) : parseImport(JSON.parse(text)));
     }); }; input.click();
   };
   const icon = (shape: string) => ({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape} size={size} color={color} />;
@@ -47,10 +48,11 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
     <View style={styles.group}>
       <View style={styles.buttons}>
         <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(true)}>CSV</Button>
-        <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(false)}>Backup JSON</Button>
-        <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={busy} onPress={pick}>Importa JSON</Button>
+        <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(false)}>JSON</Button>
+        <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={busy} onPress={pick}>Importa CSV o JSON</Button>
       </View>
     </View>
+    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Esporta o importa file.</Text>
     {preview && <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
       <Text variant="bodyLarge">{preview.expenses.length} spese e {preview.categories.length} categorie pronte da importare.</Text>
       <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Si aggiungono ai dati esistenti, senza eliminare né sovrascrivere nulla. I duplicati identici sono saltati; i conflitti bloccano l’importazione.</Text>

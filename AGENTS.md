@@ -12,6 +12,8 @@ Firestore è l'unica fonte di verità. Stato operativo: `HANDOFF.md`.
   funzionali e da non modificare. Storico delle decisioni, non architettura corrente.
 - `docs/firebase-personale.md`: guida operativa per chi clona il repository.
 - `docs/progress.md`: registro storico; verificare sempre codice ed esecuzione.
+- Codice e verifiche eseguite descrivono lo stato effettivo; requisiti e registri
+  storici non dimostrano implementazione, collaudo o pubblicazione corrente.
 
 ## Architettura effettiva
 
@@ -43,15 +45,16 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   (pannello pagine, `panelColor()`; su smartphone il pannello non c'è).
 - `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
   fino a oggi, non materializzate nel database. Grafici SVG DOM, solo web.
-- `src/features/backup/`: download CSV/JSON e importazione esplicita da file JSON.
-  Gli adapter localStorage per i vecchi dati del browser sono stati rimossi (5 nov 2026).
+- `src/features/backup/`: download CSV/JSON e importazione esplicita da file CSV/JSON di Nummo.
+  Nessun adapter attivo per i vecchi dati localStorage.
 - `firestore.rules`: proprietario da `config/owner` (solo amministratore), provider
   Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
 - `scripts/`: seed demo e configurazione proprietario (solo emulatore localhost); `check-dev-env.ts`,
   `build-cloud.ts`, `envPolicy.ts` (ambienti), `deploy-hosting.ts` (pubblicazione solo Hosting).
-- `public/`: copiato in `dist/` dall'export: `index.html` (modello HTML con manifest/icone), `manifest.webmanifest` (colori statici: il manifest non segue il tema), `theme-color` aggiornato a runtime da `GlobalStyle` su `colors.background`,
-  `icons/` (PNG 192/512, maskable, apple-touch, SVG: segno «n» su `#0F1512`), `fonts/`.
+- `public/`: copiato dall'export: modello `index.html`, manifest con colori statici,
+  icone PNG/SVG (anche maskable e apple-touch), font locali. `GlobalStyle` aggiorna
+  `theme-color` su `colors.background`; nessun service worker.
 - `firebase.json`: `firestore` (Rules), `hosting` (`dist/`, fallback SPA su `/index.html`, cache lunga solo per
   `/_expo/static/**`, `no-cache` per HTML/manifest, senza COOP/COEP: romperebbero il popup Google) ed `emulators`.
 - `emulator-data/`: dati persistenti dell'emulatore personale (`emulators:real`),
@@ -66,12 +69,13 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
 
 TypeScript strict/noUncheckedIndexedAccess, Expo 58 solo web/Metro, React 19.3,
 RN 0.88, RN Web, Paper 5; Firebase JS SDK 13 (`app`, `auth`, `firestore`).
-Nessuna libreria esterna di test. Versioni nei due lockfile; nessuna nuova dipendenza.
+TypeScript 6 e Firebase CLI 15 per gli strumenti; nessuna libreria esterna di test.
+Versioni risolte in `package-lock.json`; non aggiungere dipendenze senza richiesta.
 
-Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulatori
-(Java 21 verificato). In questo ambiente npm 12 blocca gli script di installazione.
+Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulatori.
+Ambiente effettivamente provato e risultati correnti: `HANDOFF.md`.
 
-- `npm ci`: app e strumenti.
+- `npm ci`: installazione da lockfile di app e strumenti; prova da clone pulito in `HANDOFF.md`.
 - Tre ambienti, scelti **solo dai comandi npm** (`EXPO_PUBLIC_NUMMO_BACKEND` = `emulator|hybrid|cloud`,
   nessun default: assente/ignoto/`firebase` è un errore bloccante):
   - `npm run emulators`, `emulators:seed`, poi `npm run dev` (**emulator**): progetto `demo-nummo`, nessuna
@@ -90,7 +94,7 @@ Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulator
   senza autorizzazione. `.firebaserc` non è versionato (ignorato): il repository non ha alcun progetto predefinito, la CLI richiede sempre `--project`.
 - `npm run preview:cloud`: serve `dist/` in locale (verifica; usa il progetto reale: non eseguire azioni di scrittura senza autorizzazione).
 - `npm run check`: typecheck, test app, `build:demo` (demo in `dist-demo/`, mai da pubblicare).
-- `npm run test:emulator`: nuovi test Auth/Firestore; richiede porte libere.
+- `npm run test:emulator`: test SDK Auth/Firestore e Rules; avvia e arresta emulatori demo, richiede porte libere.
 - Porte occupate: config temporanea **nella radice** con porte alternative, `--config`,
   `AUTH_PORT` e `FIRESTORE_PORT` per test/seed. Non fermare gli emulatori dell'utente.
   Per la demo web: `EXPO_PUBLIC_AUTH_EMULATOR` e `EXPO_PUBLIC_FIRESTORE_EMULATOR`;
@@ -101,7 +105,7 @@ o shell/CI per la produzione; entrambi ignorati da Git; Expo in dev non carica `
 `EXPO_PUBLIC_NUMMO_BACKEND` né `*_EMULATOR`: `check:env` (eseguito da `dev` e `dev:hybrid`) si ferma, perché in
 `expo start` il file vince sulla shell. `EXPO_PUBLIC_FIRESTORE_CACHE=persistent` è opt-in su dispositivi fidati;
 altrimenti memoria (cache SDK, mai IndexedDB dell'app). Expo richiede accessi letterali alle env; Metro può
-richiedere riavvio `--clear`.
+richiedere riavvio con `npm run dev -- --clear` o `npm run dev:hybrid -- --clear`.
 
 **Build di produzione** (`scripts/build-cloud.ts`, regole pure in `scripts/envPolicy.ts`): disattiva i `.env*` di Expo
 (`EXPO_NO_DOTENV=1`, verificato: con `expo export` `.env.local` non entra nel bundle), legge solo

@@ -7,7 +7,7 @@ import { formatAmountMinor } from '../../domain/expense';
 import type { Breakdown, Series } from '../../domain/history';
 
 export type ChartColors = {
-  series: readonly string[]; // 8 validated categorical slots, fixed order
+  series: readonly string[]; // 12 validated categorical slots, fixed order
   neutral: string; // "Senza categoria"
   surface: string;
   text: string;

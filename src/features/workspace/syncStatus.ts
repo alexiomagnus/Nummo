@@ -4,6 +4,12 @@ export type SyncKind = 'loading' | 'synced' | 'pending' | 'cached' | 'offline' |
 export type SyncInput = { ready: boolean; online: boolean; pending: boolean; cached: boolean; error: string | null };
 export type SyncDescription = { kind: SyncKind; label: string; detail: string };
 
+// An initial empty cache is not proof of an empty archive. Existing cached categories
+// can be shown immediately; only a server snapshot can establish that none exist.
+export function hasUsableCategorySnapshot(state: { ready: boolean; categories: readonly unknown[]; sync: { fromCache: boolean } }): boolean {
+  return state.ready && (state.categories.length > 0 || !state.sync.fromCache);
+}
+
 export function describeSync({ ready, online, pending, cached, error }: SyncInput): SyncDescription {
   if (error) return { kind: 'error', label: 'Problema di sincronizzazione', detail: error };
   if (pending) return { kind: 'pending', label: 'Sincronizzazione…', detail: 'Alcune modifiche attendono la conferma di Firestore.' };

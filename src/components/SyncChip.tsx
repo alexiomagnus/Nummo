@@ -27,7 +27,7 @@ export function SyncChip({ status }: { status: SyncDescription }) {
       style={[compact ? styles.icon : styles.chip, error
         ? { backgroundColor: colors.errorContainer }
         : compact ? null : { borderWidth: 1, borderColor: colors.outlineVariant }]}>
-      <SvgIcon shape={icons[status.kind]} size={18} color={color} />
+      <SvgIcon shape={icons[status.kind]} size={compact ? 24 : 22} color={color} />
       <Text variant="labelLarge" accessibilityLiveRegion="polite" style={[{ color }, compact && styles.hidden]}>{status.label}</Text>
     </StateLayerPressable>
   );
