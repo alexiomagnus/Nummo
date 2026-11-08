@@ -1,180 +1,176 @@
-# HANDOFF — Nummo BYOF
+# HANDOFF — Nummo
 
-Aggiornamento: **7 novembre 2026**. Dopo la revisione documentale, implementate le tre
-richieste UI/importazione descritte sotto; modifiche ancora non committate. Nessun intervento cloud.
-Base: `main`, **`738b68b`** (6 nov), «feat(ui): enhance SelectField component with dynamic
-menu height and scroll functionality». Il riferimento locale `origin/main` coincide;
-nessun fetch eseguito. Working tree inizialmente pulito.
+Aggiornamento: **8 novembre 2026**, revisione di codice, documentazione e Git locale.
+Ramo `main`, HEAD **`3b1edac`** (8 nov), «feat: enhance category icons and labels,
+add new periods for dashboard»; `origin/main` locale coincide, nessun fetch eseguito.
+Working tree inizialmente pulito: le modifiche prima indicate come non committate
+sono incluse in HEAD. Dopo la revisione documentale, applicata la correzione hybrid
+descritta sotto, ancora non committata (file modificati: `.env.example`, `AGENTS.md`, `HANDOFF.md`,
+`README.md`, `docs/architecture.md`, `docs/firebase-personale.md`, `package.json`, `Workspace.tsx`; nuovi:
+`scripts/{dev-hybrid,check-hybrid,hybridRunner,hybridPreflight}.ts`, `HybridConnectionNotice.tsx`,
+`tests/hybrid*.test.ts`, `tests/integration/`). Nessuna operazione sul cloud.
 
-## Stato implementato
+## Funzionalità implementate
 
-Gestionale personale **solo web**, Expo/RN Web e Material 3, con Google Auth e accesso
-diretto al Firestore dell'utente (BYOF). Nessun backend centrale, Sheets o Functions
-nel percorso attivo. Architettura, convenzioni e comandi completi: `AGENTS.md`;
-configurazione di una nuova installazione: `docs/firebase-personale.md` e `README.md`.
+Gestionale personale solo web, con Google Auth e Firestore personale (BYOF), accesso
+riservato al proprietario. Struttura, comandi e regole stabili: `AGENTS.md`;
+installazione personale: `README.md` e `docs/firebase-personale.md`.
 
-- Inserimento, ricerca/filtri/ordinamento, modifica ed eliminazione delle spese;
-  categorie condivise tra sessioni, rinomina, icone e unicità dei nomi. Le 4 categorie
-  predefinite richiedono un'azione esplicita; l'elenco proposto di 12 non è implementato.
-  Il modulo richiede categoria; dominio e archivio ammettono riferimenti null/orfani.
-- Ricorrenze settimanali/mensili/annuali, prezzi promozionali e variazioni dal prossimo
-  rinnovo, una tantum o per tutti i futuri, senza riscrivere gli importi maturati.
-  Storico/dashboard calcolano occorrenze fino a oggi; «Prossimi rinnovi» mostra previsioni
-  separate dai totali. Nessun addebito automatico.
-- Listener Firestore, coda/retry SDK, stato cache/pending/connessione distinto e conflitti
-  per revisione. Conferma di inserimento dopo lettura server con ID/payload corrispondenti.
-  Cache in memoria, disco opt-in; logout attende i pending (timeout 5 s mantiene la sessione).
-  Cambio UID smonta listener, bozze e stato; recupero dei pending rifiutati osservati in memoria.
-- Spese → «Dati»: export CSV protetto da formule e JSON da server; importazione CSV/JSON di Nummo
-  esplicita con anteprima/preflight, ID conservati e ripresa per gruppi senza sovrascritture.
-- UI adattiva: barra mobile flottante con 3 destinazioni e azione «Nuova spesa» animata,
-  rail/tablet e drawer/desktop; modulo M3 e campi condivisi con l'editor; 47 glifi categoria (11 rimosse il 7 nov: Rules locali aggiornate, non ancora pubblicate).
-  Impostazioni di tema, 6 tinte, monocolore/palette e font locale Google Sans o Sistema.
-- Guida statica pubblica da accesso (`#guida`, ricarica/Indietro); manifest, icone e
-  configurazione Hosting presenti, senza service worker. Non è un servizio aperto alle registrazioni.
+- CRUD spese, ricerca/filtri/ordinamento; categorie sincronizzate con nomi unici,
+  rinomina e 47 icone. Quattro categorie predefinite aggiunte solo su azione esplicita;
+  l'elenco proposto di 12 non è implementato. Categoria obbligatoria nel modulo;
+  dominio/archivio ammettono riferimenti null o a categorie eliminate.
+- Ricorrenze settimanali/mensili/annuali, promozioni e variazioni dal prossimo rinnovo
+  (singolo o tutti i futuri), preservando i prezzi maturati. Storico e dashboard
+  calcolano le occorrenze fino a oggi; previsioni separate in «Prossimi rinnovi».
+- Sincronizzazione SDK con stati cache/pending/rete distinti, conferma di inserimento
+  verificata sul server, conflitti per revisione e recupero in memoria dei pending
+  rifiutati osservati. Cache in memoria o persistente opt-in; logout attende i pending
+  per massimo 5 secondi, poi mantiene la sessione. Cambio UID smonta stato e listener.
+- Spese → «Dati»: CSV delle occorrenze e JSON completo letti dal server; importazione
+  CSV/JSON Nummo con anteprima, conferma, preflight e gruppi ripetibili senza sovrascritture.
+  Il nuovo CSV conserva serie, prezzi e categorie utilizzate; solo JSON include anche
+  categorie senza spese. Vecchi CSV ricorrenti o con testi protetti ambigui sono rifiutati.
+- UI adattiva Material 3, navigazione mobile flottante, tema chiaro/scuro, sei tinte,
+  monocolore/palette, font locale Google Sans o Sistema. Guida pubblica statica `#guida`,
+  manifest/icone e configurazione Hosting presenti; nessun service worker o addebito automatico.
 
-## Modifiche recenti e attività in corso
+## Modifiche recenti e fase corrente
 
-| Commit (6 nov) | Risultato presente nel codice |
+| Commit | Risultato presente nel codice |
 | --- | --- |
-| `738b68b` | `SelectField`: altezza del menu misurata rispetto alla finestra, limite e scorrimento interno. |
-| `baa352e` | Anello di focus interno alle voci menu; tolta la riga numero/totale da Spese, stato vuoto «Nessuna spesa.». |
-| `755a439` | Icone `utensils`, `heartpulse`, `cloud`, `ellipsis` aggiunte a dominio, glifi e Rules. |
-| `02d6bda`, `9ed57e8` | Navigazione mobile flottante/animata, gestione focus e movimento ridotto. |
-| `6bccaf9`, `f70df6b` | Safe area/theme-color, forme e modulo M3; accesso/guida senza pannello. |
-| `3517b27`, `6f4d42b`, `afc6ebf` | Preparazione BYOF distribuibile, guida introduttiva, Hosting/manifest/icone. |
+| `3b1edac` (8 nov) | Import CSV con conservazione delle serie e test; dashboard «Mese scorso» e «Ultimi 3 mesi», griglia giornaliera, palette a 12 slot e rimozione «Media»; 11 icone rimosse anche dalle Rules. |
+| `3b1edac` | Modulo con caricamento/errore categorie distinto dall'archivio vuoto, contorni preservati nei campi bloccati; cache categorie popolata subito utilizzabile; menu lunghi con scorrimento e limiti al viewport; transizioni di sezione e icona sync ingrandita. |
+| `738b68b`, `baa352e` (6 nov) | Altezza/scorrimento di `SelectField`, focus interno nei menu, rimozione riepilogo numero/totale da Spese. |
+| `755a439`, `02d6bda`, `9ed57e8` (6 nov) | Nuovi glifi categoria e navigazione mobile flottante/animata. |
+| `3517b27`, `6f4d42b`, `afc6ebf` | Preparazione alla distribuzione BYOF, guida pubblica, Hosting e manifest. |
 
-**Fase corrente (7 nov, non committata):** icona sincronizzazione 24 px mobile e 22 px
-tablet/desktop (ulteriore ingrandimento richiesto dall'utente); selettore dashboard con «Mese scorso» (mese solare precedente,
-dettaglio giornaliero completo) e «Ultimi 3 mesi» (mese corrente e due precedenti).
-Avvio PWA (diagnosi del video Pixel 8 e correzione UI): il modulo mostrava «Nessuna
-categoria» prima della lettura e Paper rendeva trasparenti i contorni disabilitati in scuro.
-`ExpenseForm` distingue caricamento/errore/dati pronti; campo Categoria con ingombro stabile
-e «Caricamento…» durante la lettura, «Dati non disponibili» con l'errore esplicito se fallisce.
-Importo/descrizione in sola lettura e DateField/SelectField con trigger disabilitato mantengono
-i bordi; modulo/bozza non rimontati, nessuna attesa server aggiunta per la cache valida.
-Gli errori categorie arrivano anche al modulo. Cache iniziale vuota distinta dall'archivio
-server vuoto; cache con categorie utilizzabile subito. Test di regressione per questa sequenza.
-Non modificati splash/manifest, ancora statici.
-`npm run check` OK (149 test, typecheck, build demo); nuovo avvio su Pixel 8 e rete lenta
-ancora da verificare, nessun deployment effettuato.
-Menu lunghi su smartphone: `MenuSelect` aveva un `maxHeight` senza scorrimento delle
-righe personalizzate, che uscivano dalla superficie. Aggiunto `ScrollView` interno,
-contenimento dei bordi e limiti di altezza/larghezza basati su finestra e safe area.
-La correzione copre Categoria/Ordina in Spese e Periodo/Grafico in Dashboard.
-`SelectField` (categoria in Nuova/Modifica spesa) aveva già lo scorrimento: aggiunti
-contenimento e limiti aggiornati al ridimensionamento. Audit sorgenti: menu Account
-e azioni spesa hanno contenuto fisso breve e non il `maxHeight` che causava questo difetto.
-`npm run check` OK (148 test, typecheck, build demo). Verifica visiva/touch non eseguita:
-il collegamento al browser CUA non è disponibile in questa sessione; riprovare sul telefono
-menu lunghi, scorrimento fino all'ultima voce, selezione, finestre basse e rotazione.
-Dettaglio giornaliero della dashboard: sostituita la lunga tabella con una griglia
-adattiva (fino a 7 colonne, larghezza minima indicativa 144 px), tutti i giorni visibili,
-totali leggibili, oggi evidenziato e giorni futuri con trattino; periodi plurimensili
-conservano la tabella. `npm run check` OK (148 test, typecheck, build demo);
-resa visiva della griglia nel browser/dispositivi ancora da verificare.
-Cambio sezione in `AppShell`: ingresso con dissolvenza e lieve movimento verticale (250 ms,
-token `motion`), senza rimontare il contenitore/bozza; interruzione e pulizia dell'animazione
-ai cambi rapidi, passaggio immediato con movimento ridotto. `npm run check` OK
-(148 test, typecheck, build demo); resa visiva e cambi rapidi nel browser ancora da provare.
-Importazione CSV/JSON dallo stesso selettore, con anteprima e conferma; il CSV nuovo
-conserva serie, prezzi e categorie utilizzate, senza creare una spesa per rinnovo.
-Pulsanti di esportazione etichettati «CSV» e «JSON» (rimossa la parola «Backup»);
-testo introduttivo ridotto a «Esporta o importa file.» su richiesta dell'utente.
-`npm run check` rieseguito dopo il ritocco: typecheck, 148 test e build demo OK.
-CSV precedenti con ricorrenze/testi protetti ambigui rifiutati: usare JSON o nuovo export.
-Nessun formato CSV esterno generico o mappatura colonne. Restano i collaudi sotto elencati.
-La distribuzione resta da completare: licenza assente e procedura da clone pulito non provata.
-Gli studi in `docs/design/logo-concepts/` sono separati dal logo SVG già usato dall'app;
-nessuna sostituzione da fare senza scelta/richiesta dell'utente.
+**Workflow hybrid autonomo (8 nov, non committato):** diagnosticato Expo attivo in hybrid
+su 8081 ma connessione a Firestore 8180 rifiutata (`ECONNREFUSED`). Una lettura SDK
+con progetto demo fittizio, senza Auth o scritture, ha riprodotto `unavailable` e
+cache vuota inutilizzabile dal modulo. `dev:hybrid` avviava solo Expo.
 
-## Decisioni tecniche da conservare
+- `npm run dev` (prima `dev:hybrid`) avvia `scripts/dev-hybrid.ts`/`hybridRunner.ts`: ambiente sviluppo
+  letto dal parser Expo e congelato per i figli; Auth reale, solo Firestore emulato.
+  Riusa l'istanza identificata da locator Hub del progetto/PID/endpoint, altrimenti
+  avvia Firestore con config temporanea nella radice e import da `emulator-data/`.
+  Readiness REST prima di Expo; timeout, errore su progetto/servizio sconosciuto e
+  cleanup dei soli gruppi di processo gestiti. `check:hybrid` resta disponibile.
+- Ctrl+C: export in staging, promozione dopo successo, copia precedente conservata
+  in `.firebase/hybrid-*/previous`. Lock di archivio contro avvii concorrenti; resta
+  in caso di export fallito o interruzione forzata, da esaminare prima del recupero.
+  Nessun bootstrap automatico del proprietario; nessuna nuova dipendenza o modifica Rules.
+- Comandi rinominati: `dev` = workflow hybrid autonomo; `dev:demo` = precedente
+  demo con Auth/Firestore emulati. Rimosso il comando npm `dev:hybrid`; file interni
+  `dev-hybrid.ts`, `check:hybrid` e `test:hybrid` mantengono il nome tecnico.
+  Rinomina verificata con `npm run check` (155 test, typecheck e build demo) e
+  controllo della mappatura dei comandi; nessun nuovo avvio servizi o deploy in questa sottofase.
+- Avviso solo hybrid dopo 10 s senza conferma, rimosso alla sincronizzazione o in
+  presenza di errore esplicito. Nessuna modifica a UUID, Promise o coda/retry SDK.
+- Nella precedente fase riavviato `emulators:real` importando `emulator-data/`, con export all'arresto;
+  CLI isolata in `/tmp/nummo-hybrid-cli-isolated` senza login/credenziali reali.
+  Copia preventiva: `/tmp/nummo-hybrid-backup-t2ajt781/emulator-data` (temporanea,
+  non sostituisce un backup durevole). Firestore lasciato attivo su 8180, UI su 4000;
+  Expo preesistente su 8081 non arrestato. In questa fase le istanze preesistenti
+  sono state preservate: il nuovo runner le riusa, ma non ne gestisce arresto/export.
+- Lettura locale amministrativa: `config/owner` presente, due categorie e nessuna
+  icona non supportata. Nessun record modificato; corrispondenza con l'account Google
+  e creazione dall'interfaccia non provate, per non usare credenziali reali.
 
-- BYOF sostituisce Sheets/backend callable: Firestore è l'unica fonte di verità, con
-  Rules proprietario (`config/owner`) e provider Google. Specifica originale `recap.md`
-  storica e immutabile; motivazioni in `docs/architecture.md` e `docs/migrazione-byof.md`.
-- Modalità emulator/hybrid/cloud scelte dagli script npm, nessun default valido.
-  La build cloud ignora i dotenv di Expo, valida produzione/shell e scansiona il bundle:
-  evita che `.env.local` mescoli progetto reale ed endpoint locali. `check` genera solo demo.
-- Backup legge collezioni separate; importazione atomica solo per gruppo (8 categorie
-  o 200 spese), perché le Rules limitano gli accessi. Fermare modifiche concorrenti
-  durante export; ripetere lo stesso JSON per riprendere un'importazione interrotta.
-- Prezzi indicizzati per numero di rinnovo, non per data, con massimo 8 variazioni
-  (limite di valutazione delle Rules). Nell'editor l'indice resta relativo alla data originale.
-- Nessun service worker: cache dati e disponibilità offline del bundle sono distinte.
-  Hosting e Rules hanno pubblicazioni separate; nessun deploy implicito nei controlli.
-- Backend legacy recuperabile da `fe759d5`; adapter localStorage rimossi il 5 nov,
-  recuperabili da `e2b84d3`. Nessuna migrazione dei vecchi dati browser nella UI corrente.
+Restano i collaudi e le decisioni elencati sotto. Le correzioni di
+avvio rispondono al difetto segnalato su Pixel 8, ma il nuovo avvio reale non è stato
+ricollaudato. Gli studi di logo restano separati dall'identità già usata nell'app.
 
-## Verifiche e stato delle pubblicazioni
+## Decisioni tecniche e motivazioni
 
-**Eseguite in questa fase (7 nov, base `738b68b`):** Node **26.13.0**, npm **12.2.2**,
+- BYOF sostituisce Sheets/callable: elimina il coordinamento tra due archivi.
+  Motivazioni in `docs/architecture.md` e `docs/migrazione-byof.md`; `recap.md` è storico.
+  Backend recuperabile da `fe759d5`, adapter localStorage da `e2b84d3`.
+- Ambienti scelti dagli script npm e build cloud isolata dai dotenv di Expo per evitare
+  bundle con progetti/endpoint misti. `check` costruisce solo la demo, mai pubblicabile.
+- Prezzi indicizzati per numero di rinnovo per preservare lo storico; massimo otto
+  variazioni per serie a causa del limite di valutazione delle Rules.
+- Importazione atomica per gruppo (8 categorie o 200 spese), non per archivio, per i
+  limiti delle Rules. Export di collezioni separate: sospendere modifiche concorrenti
+  durante il backup; ripetere lo stesso file per riprendere gruppi interrotti.
+- Hosting e Rules si pubblicano separatamente. Cache dati e disponibilità offline del
+  bundle sono distinte: il manifest non garantisce l'avvio senza rete.
+
+## Verifiche e pubblicazioni
+
+**Eseguite l'8 novembre sul working tree con la correzione hybrid:** Linux, Node **26.13.0**, npm **12.2.2**,
 Java **21.0.13**; dipendenze già presenti.
 
-| Verifica | Esito |
+| Verifica | Risultato attuale |
 | --- | --- |
-| `npm run check` | OK: typecheck, **148/148** test app e build demo in `dist-demo/`. |
-| `npm run check:env` | OK sulla configurazione di sviluppo presente; valori personali non riportati. |
-| `npm run test:emulator` | OK: **11/11** (10 sottotest + contenitore), SDK/Rules su `demo-nummo`, inclusa reimportazione CSV di una serie senza duplicati. Primo avvio bloccato da `EPERM` della sandbox; rieseguito con autorizzazione fuori sandbox. Emulatori arrestati dalla CLI; `PERMISSION_DENIED` attesi nei casi negativi. |
+| `npm run check` | OK, ripetuto durante questo aggiornamento documentale: typecheck, **155/155 test**, export web demo in `dist-demo/`. |
+| `npm run check:env` | OK sulla configurazione di sviluppo presente, senza riportarne i valori. |
+| Suite `tests/emulator/firestore.e2e.ts` | OK: **11/11**, Auth/Firestore demo su porte alternative 9199/8280 (hub 14400, logging 14500, websocket 19150), tramite config temporanea nella radice poi rimossa. Emulatori arrestati dalla CLI; `PERMISSION_DENIED` attesi nei casi negativi. Nessun arresto delle istanze personali. |
+| Fixture in memoria, senza scritture | Riprodotto il rifiuto delle 11 icone rimosse in `parseSyncedCategory` e `parseImport`; controllo positivo con `cart`. |
+| `npm run test:hybrid` | OK: **8/8** (7 scenari + contenitore), Firestore demo reale/Expo simulato e dati temporanei: avvio automatico, riuso, progetto diverso, Ctrl+C selettivo, persistenza categorie/spese, crash CLI con discendente poi terminato, servizio sconosciuto. Hash degli originali invariato dopo errore. |
+| Comando completo con Expo reale | `BROWSER=none npm run dev:hybrid -- --port 18081` (nome precedente alla rinomina in `dev`, non ripetuto dopo): Firestore personale preesistente riconosciuto e riusato, Metro avviato; Ctrl+C arresta Expo con codice 0. Browser non aperto, nessun login/salvataggio; istanze preesistenti preservate. |
 
-**Prove storiche registrate nel precedente HANDOFF/Git, non ripetute qui:**
+**Evidenza storica, non ripetuta:** precedenti HANDOFF registrano prove Chromium con
+emulatori (2 nov: CRUD, due schede, offline/reload, recupero e backup/import) e UI
+simulata (6 nov: modulo/menu, navigazione, guida e tema). Il 6 nov è registrato un
+dry-run Hosting con build cloud e controllo locale di fallback/manifest/header.
+Il login Google con Firestore emulato era stato dichiarato riuscito dall'utente;
+non è una verifica corrente dell'agente.
 
-- 2 nov: Chromium con emulatori, CRUD, estraneo/logout, due schede, offline/reload,
-  riconnessione, recupero rifiuti, export/import UI. Non prova del cloud reale.
-- 6 nov: Chromium headless con dati finti per modulo M3, menu/data/promo e barra mobile
-  chiara/scura; animazione anche con cambi rapidi. Guida: link diretto, reload, Indietro,
-  tastiera e tema a 390 px. Meta `theme-color` seguiva lo schema OS nella build demo.
-- 6 nov: `deploy:hosting -- --dry-run` riuscito con configurazione reale (build cloud,
-  nessuna pubblicazione); emulatore Hosting con fallback, manifest, icone e header cache verificati.
-- Commit **`a30a988`**: registra Rules pubblicate il **6 nov, 15:45 UTC** nel progetto
-  personale allora configurato, confrontate con il file locale. Non verificati qui
-  release attuale, documento proprietario o salvataggio cloud con le nuove icone.
-  Nessun deploy Hosting risulta registrato nelle fonti esaminate; stato remoto non interrogato.
+Il commit **`a30a988`** registra la pubblicazione delle Rules il **6 nov, 15:45 UTC**,
+allora confrontate con il file locale. HEAD restringe successivamente le icone:
+la pubblicazione di questa versione non risulta documentata. Stato remoto, proprietario
+ed effettivo salvataggio cloud non interrogati. Nessuna pubblicazione Hosting risulta
+registrata nelle fonti esaminate; ciò non dimostra l'assenza di un sito remoto.
 
-**Non eseguiti in questa fase:** `npm ci` (nessuna reinstallazione), avvio interattivo
-`dev`/`dev:hybrid`, build/preview cloud, dry-run/deploy, browser/dispositivi e `npm audit`.
-Non c'è lint configurato. Le nuove dimensioni/periodi e il selettore file non sono stati provati nel browser.
-Le prove correnti non validano installazione da clone pulito,
-Node LTS, OAuth reale o UI. Il login Google con Firestore emulato era stato dichiarato
-riuscito dall'utente nel precedente handoff, senza ripetizione da parte dell'agente.
+**Non eseguiti in questa fase:** `npm ci`/clone pulito,
+build/preview cloud, dry-run/deploy, browser/dispositivi e `npm audit`. Nessun lint
+configurato. Le prove automatiche non verificano OAuth reale, resa visiva del nuovo
+avviso, UI touch o Node LTS. Non verificata la comparsa/scomparsa dell'avviso nel browser.
+Lifecycle del runner verificato su Linux; Windows/macOS e recupero dopo guasto fisico
+del disco non collaudati. I test di persistenza usano fixture locali, non account reali.
 
-## Problemi aperti e limiti
+## Problemi aperti e limitazioni
 
-- Dashboard (7 nov): palette a 12 slot validati (adjacent, chiaro/scuro) e «Media» rimossa; oltre la 12ª categoria
-  della lista le spese confluiscono ancora in «Altre categorie». Resa visiva su dati reali non collaudata.
-- Nuovo scorrimento/posizionamento `SelectField` e focus menu non collaudati visivamente
-  su HEAD; da provare molti elementi, finestre basse, tastiera virtuale e modale Modifica.
-  Mancano anche prove complete di impostazioni, piano prezzi e grafici su dati reali.
-- Mobile usa `primaryContainer` per la destinazione attiva; rail/drawer usano
-  `secondaryContainer`. Coerenza cromatica da decidere, soprattutto in modalità Palette.
-- Pixel 8/PWA reale, Android/iOS, Safari/Firefox/Edge, safe area non nulle, movimento ridotto,
-  screen reader e flusso completo da tastiera non collaudati. Il manifest ha colori statici;
-  `theme-color` segue il tema a runtime, effetto sulle barre Android da verificare sul dispositivo.
-- Nessuna garanzia di avvio offline a freddo; crash browser, storage negato/private browsing,
-  scadenza/revoca token non collaudati. Copie di recupero solo in memoria e per pending osservati;
-  cache persistente può restare sul disco dopo logout.
-- Letture di collezioni intere, export non atomico tra collezioni, import UI massimo 5 MB.
-  Non disponibili correzioni del prezzo già maturato o aggiunta di variazioni programmate nell'editor.
-- Audit storico: 29 segnalazioni (25 moderate, 4 alte, catena `@grpc/grpc-js`);
-  **conteggio non aggiornato**, nessun fix forzato. Contrasti dei token testati,
-  palette grafici e accessibilità dell'intera UI ancora da rivalidare.
+- **Compatibilità icone (riprodotta su fixture):** HEAD rimuove `pill`, `book`,
+  `plane`, `scissors`, `baby`, `flame`, `wine`, `umbrella`, `leaf`, `shield`, `ellipsis`.
+  `parseSyncedCategory` e `parseImport` le rifiutano: eventuali record/backup precedenti
+  con tali valori bloccano lettura categorie/importazione ed export completo.
+  Nessun adapter di migrazione presente; presenza nei dati personali non verificata.
+- UI recente non ricollaudata nel browser: avvio Pixel 8 con rete lenta/tema scuro,
+  menu lunghi e finestre basse/rotazione, editor, griglia giornaliera e cambi rapidi
+  di sezione. Mancano prove complete di prezzi, impostazioni e grafici su dati reali.
+- Dashboard: oltre la 12ª categoria della lista confluenza in «Altre categorie».
+  Mobile evidenzia con `primaryContainer`, rail/drawer con `secondaryContainer`:
+  uniformità cromatica ancora da decidere.
+- Android/iOS, Safari/Firefox/Edge, installazione e OAuth da schermata Home, safe area,
+  movimento ridotto, screen reader e flusso completo da tastiera non collaudati.
+  Manifest/splash statici; effetto di `theme-color` sulle barre Android da verificare.
+- Avvio offline a freddo non garantito; crash, storage negato/private browsing e
+  revoca/scadenza token non collaudati. Recupero rifiuti solo in memoria e per pending
+  osservati; cache persistente può restare sul disco dopo logout.
+- Collezioni lette integralmente, backup non atomico, import UI massimo 5 MB.
+  Non disponibili correzioni di prezzi già maturati o aggiunta di variazioni
+  programmate nell'editor (si possono rimuovere quelle esistenti).
+- Licenza assente; installazione da clone pulito e guida su progetto nuovo non provate.
+  Audit storico: 29 segnalazioni (25 moderate, 4 alte, catena `@grpc/grpc-js`), conteggio
+  non aggiornato. Contrasti dei token testati, accessibilità complessiva non certificata.
 
-## Prossimi passi, in ordine
+## Prossime attività, in ordine
 
-1. **Collaudo UI locale** su emulatori demo, mobile 412×915 e desktop: menu categoria con
-   liste lunghe/viewport basso, editor, prezzi, impostazioni, Tab/focus, snackbar e navigazione.
-   Procedura: `npm run emulators`, poi `npm run emulators:seed` e `npm run dev`.
-   Preservare eventuali emulatori/dati dell'utente; porte alternative come in `AGENTS.md`.
-2. **Collaudo cloud e dispositivi, con autorizzazione**: verificare configurazione Auth,
-   domini autorizzati, proprietario e Rules attualmente pubblicate; provare prima categoria
-   con nuova icona, poi CRUD, secondo account negato, reload/seconda sessione e backup/import.
-   Build/preview locale, eventuale Hosting anteprima e solo dopo live secondo la guida;
-   OAuth e installazione su Android/iOS reali. Non ripubblicare Rules già corrette alla cieca.
-3. **Preparazione alla distribuzione**: scegliere la licenza; provare `npm ci` e l'intera
-   guida da clone pulito/progetto nuovo (risorse reali solo autorizzate), anche su Node LTS.
-4. **Manutenzione dedicata**: aggiornare audit e dipendenze compatibili senza `--force`;
-   decidere uniformità navigazione. Paginazione/backup più robusto e service worker solo
-   se richiesti da volume dati o requisito offline.
-
-Dopo modifiche applicative: `npm run check`; per accesso dati/Rules anche
-`npm run test:emulator`. Registrare qui risultati, ambiente e limiti effettivi.
+1. **Compatibilità dei dati:** definire preservazione o migrazione esplicita delle
+   icone rimosse prima di distribuire; usare le fixture descritte sopra come regressione.
+   Non modificare dati personali né ripubblicare Rules alla cieca.
+2. **Collaudo UI demo:** `npm run emulators`, `npm run emulators:seed`, `npm run dev:demo`;
+   mobile 412×915 e desktop, rete lenta, menu fino all'ultima voce, editor/prezzi,
+   import CSV/JSON, tastiera/focus, griglia e animazioni. Preservare emulatori utente;
+   porte alternative come in `AGENTS.md`.
+   Per hybrid, ricaricare l'app con Firestore locale attivo e provare categoria/spesa
+   con l'account proprietario; controllare anche l'avviso in caso di arresto del servizio.
+3. **Cloud e dispositivi, previa autorizzazione:** controllare Auth/domini, proprietario
+   e Rules effettive; categoria con icona valida, CRUD, estraneo negato, reload/seconda
+   sessione e ripristino backup. Poi build/preview, eventuale anteprima Hosting e live
+   secondo la guida; verificare Android/iOS e avvio installato.
+4. **Distribuzione/manutenzione:** scegliere licenza; provare `npm ci` e guida da clone
+   pulito su Node LTS; aggiornare audit e valutare dipendenze compatibili senza `--force`.
+   Paginazione, backup più robusto e service worker richiedono una necessità confermata.

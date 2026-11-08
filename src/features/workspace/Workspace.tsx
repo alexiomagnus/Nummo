@@ -11,6 +11,7 @@ import { SyncChip } from '../../components/SyncChip';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, radius, spacing } from '../../theme/tokens';
 import { describeSync, hasUsableCategorySnapshot } from './syncStatus';
+import { HybridConnectionNotice } from './HybridConnectionNotice';
 import { addDays, expandOccurrences, forecastOccurrences, upcomingRenewals } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -24,7 +25,7 @@ import { useRemoteExpenses } from '../expenses/useRemoteExpenses';
 import { ExpenseList } from '../history/ExpenseList';
 import { UpcomingRenewals } from '../history/UpcomingRenewals';
 import { makeBackup } from '../../domain/backup';
-import { firebaseWebConfig } from '../../services/backendConfig';
+import { backendMode, firebaseWebConfig, firestoreEmulator } from '../../services/backendConfig';
 import { BackupActions, download } from '../backup/BackupActions';
 import { getDatabase } from '../../services/firebase';
 import { createFirestoreStore, type FirestoreStore } from '../../services/firestoreStore';
@@ -104,6 +105,9 @@ function Sections({ section, onNavigate, backend, uid, store, categoryState, occ
           <Button mode="contained" buttonColor={theme.colors.error} textColor={theme.colors.onError} onPress={() => download('nummo-spese-da-recuperare.json', makeBackup({ expenses: store.recovery!, categories: categoryState.categories }, { project_id: firebaseWebConfig.projectId, uid }), 'application/json')}>Scarica spese da recuperare</Button>
         </View>
       </Card>
+    )}
+    {backendMode === 'hybrid' && firestoreEmulator && (
+      <HybridConnectionNotice waiting={!synchronized && !error} endpoint={firestoreEmulator} />
     )}
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
       <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')}

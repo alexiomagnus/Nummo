@@ -51,6 +51,8 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
 - `scripts/`: seed demo e configurazione proprietario (solo emulatore localhost); `check-dev-env.ts`,
+  `dev-hybrid.ts`/`hybridRunner.ts` (avvio, riuso verificato e arresto dei servizi hybrid),
+  `check-hybrid.ts`/`hybridPreflight.ts` (raggiungibilità locale),
   `build-cloud.ts`, `envPolicy.ts` (ambienti), `deploy-hosting.ts` (pubblicazione solo Hosting).
 - `public/`: copiato dall'export: modello `index.html`, manifest con colori statici,
   icone PNG/SVG (anche maskable e apple-touch), font locali. `GlobalStyle` aggiorna
@@ -61,7 +63,8 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   dati personali ignorati da Git. `emulator-seed/`: account Auth della demo.
 - `functions/` può contenere solo `.env` personali ignorati del vecchio backend: non
   versionarli né cancellarli senza conferma.
-- `docs/design/logo-concepts/`: proposte di logo SVG (non integrate nell'app).
+- `docs/design/logo-concepts/`: studi SVG separati dal logo già usato dall'app;
+  non integrarli senza una richiesta esplicita.
 - `tests/`: Node runner per dominio/tema/preferenze/backup/config/policy ambienti (`scripts/envPolicy.ts`); `tests/emulator/firestore.e2e.ts`
   per SDK e Rules. `dist/` (build cloud) e `dist-demo/` sono generati e ignorati.
 
@@ -75,14 +78,22 @@ Versioni risolte in `package-lock.json`; non aggiungere dipendenze senza richies
 Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm; Java necessario per emulatori.
 Ambiente effettivamente provato e risultati correnti: `HANDOFF.md`.
 
-- `npm ci`: installazione da lockfile di app e strumenti; prova da clone pulito in `HANDOFF.md`.
+- `npm ci`: installazione da lockfile di app e strumenti; stato della prova da clone pulito in `HANDOFF.md`.
 - Tre ambienti, scelti **solo dai comandi npm** (`EXPO_PUBLIC_NUMMO_BACKEND` = `emulator|hybrid|cloud`,
   nessun default: assente/ignoto/`firebase` è un errore bloccante):
-  - `npm run emulators`, `emulators:seed`, poi `npm run dev` (**emulator**): progetto `demo-nummo`, nessuna
+  - `npm run emulators`, `emulators:seed`, poi `npm run dev:demo` (**emulator**): progetto `demo-nummo`, nessuna
     risorsa reale, ignora la config reale. Auth 9099, Firestore 8180, UI 4000; loopback.
-  - `npm run dev:hybrid` (**hybrid**): Google reale (config da `.env.local`) + Firestore emulato su
-    `127.0.0.1:8180` (override: variabile di shell `EXPO_PUBLIC_FIRESTORE_EMULATOR`). Avviare prima l'emulatore
-    Firestore del progetto personale e impostarvi `config/owner` con `npm run emulators:seed:owner -- ID_PROGETTO UID`.
+  - `npm run dev` (**hybrid**): Google reale (config da `.env.local`) + Firestore emulato su
+    `127.0.0.1:8180` (override di shell `EXPO_PUBLIC_FIRESTORE_EMULATOR`, solo `localhost`/`127.0.0.1`).
+    Avvia Firestore con import da `emulator-data/` o riusa un'istanza identificata dal locator Hub del
+    progetto effettivo, PID e endpoint; poi attende una risposta Firestore prima di avviare Expo.
+    Configurazione sviluppo letta dal parser già incluso in Expo e passata identica ai due processi;
+    nessun alias `.firebaserc` necessario. `config/owner` locale va predisposto una volta tramite
+    `npm run emulators:seed:owner -- ID_PROGETTO UID`; il comando non inventa UID né modifica il cloud.
+    Ctrl+C arresta solo i processi avviati dal runner. Export in staging e promozione dopo successo;
+    copia precedente in `.firebase/hybrid-*/previous`, lock `.firebase/hybrid.lock` contro gestioni concorrenti.
+    Export fallito/interruzione forzata: preservare staging e originali, controllare prima di rimuovere il lock.
+    `check:hybrid` resta un controllo TCP manuale: non avvia servizi né certifica progetto/Rules/proprietario.
   - `npm run build:cloud` (**cloud**): build di produzione in `dist/`, vedi sotto. Non esiste `dev:cloud`.
 - `npm run emulators:personal -- --project ID` è la variante generica (Firestore, import/export in `emulator-data/`).
   `emulators:real` usa l'alias `real` del solo `.firebaserc` locale di questo checkout (non versionato, ignorato). Importa da
@@ -95,6 +106,8 @@ Ambiente effettivamente provato e risultati correnti: `HANDOFF.md`.
 - `npm run preview:cloud`: serve `dist/` in locale (verifica; usa il progetto reale: non eseguire azioni di scrittura senza autorizzazione).
 - `npm run check`: typecheck, test app, `build:demo` (demo in `dist-demo/`, mai da pubblicare).
 - `npm run test:emulator`: test SDK Auth/Firestore e Rules; avvia e arresta emulatori demo, richiede porte libere.
+- `npm run test:hybrid`: ciclo di vita del runner con Firestore demo reale, porte/dati temporanei
+  ed Expo simulato (avvio, riuso, segnali, persistenza e guasti); richiede Java e porte locali.
 - Porte occupate: config temporanea **nella radice** con porte alternative, `--config`,
   `AUTH_PORT` e `FIRESTORE_PORT` per test/seed. Non fermare gli emulatori dell'utente.
   Per la demo web: `EXPO_PUBLIC_AUTH_EMULATOR` e `EXPO_PUBLIC_FIRESTORE_EMULATOR`;
@@ -102,10 +115,10 @@ Ambiente effettivamente provato e risultati correnti: `HANDOFF.md`.
 
 Variabili pubbliche: `EXPO_PUBLIC_FIREBASE_*` (4, in `.env.local` per lo sviluppo, in `.env.production.local`
 o shell/CI per la produzione; entrambi ignorati da Git; Expo in dev non carica `.env.production.local`). I file `.env*` **non** devono contenere
-`EXPO_PUBLIC_NUMMO_BACKEND` né `*_EMULATOR`: `check:env` (eseguito da `dev` e `dev:hybrid`) si ferma, perché in
+`EXPO_PUBLIC_NUMMO_BACKEND` né `*_EMULATOR`: `check:env` (eseguito da `dev:demo` e `dev`) si ferma, perché in
 `expo start` il file vince sulla shell. `EXPO_PUBLIC_FIRESTORE_CACHE=persistent` è opt-in su dispositivi fidati;
 altrimenti memoria (cache SDK, mai IndexedDB dell'app). Expo richiede accessi letterali alle env; Metro può
-richiedere riavvio con `npm run dev -- --clear` o `npm run dev:hybrid -- --clear`.
+richiedere riavvio con `npm run dev:demo -- --clear` o `npm run dev -- --clear`.
 
 **Build di produzione** (`scripts/build-cloud.ts`, regole pure in `scripts/envPolicy.ts`): disattiva i `.env*` di Expo
 (`EXPO_NO_DOTENV=1`, verificato: con `expo export` `.env.local` non entra nel bundle), legge solo
@@ -146,8 +159,8 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
 - Accessibilità `role`/`aria-*`: RN Web 0.21 ignora `accessibilityState` nel DOM.
   TextInput Paper: `readonly`, non `disabled`, quando si verifica sola lettura.
 - Icone UI SVG inline, categorie glifi outline 24×24 in `categoryGlyphs.ts` via
-  `CategoryGlyph` (sostituiscono gli sprite pixel-art). Nuova icona = glifo +
-  `categoryIconLabels` e Rules.
+  `CategoryGlyph`. Aggiornare insieme glifi, `categoryIconLabels` e Rules;
+  prima di rimuovere un identificativo valutare compatibilità di record e backup esistenti.
 - Grafici: palette categoriale stabile, legenda e tabella, colore legato alla categoria;
   seguire la skill dataviz se disponibile quando si modificano grafici/palette.
 - Web è l'unico target: non promettere persistenza RN nativa, PWA o avvio offline a

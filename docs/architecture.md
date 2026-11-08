@@ -154,7 +154,7 @@ atomico dell'intero database. Guida alla migrazione e limiti in `migrazione-byof
 ## Configurazioni e legacy
 
 - Tre ambienti, scelti dai comandi npm tramite `EXPO_PUBLIC_NUMMO_BACKEND`, senza default (5 nov 2026):
-  `emulator` (`npm run dev`: demo `demo-nummo`, ignora la config reale), `hybrid` (`dev:hybrid`: Auth reale,
+  `emulator` (`npm run dev:demo`: demo `demo-nummo`, ignora la config reale), `hybrid` (`dev`: Auth reale,
   Firestore obbligatoriamente su localhost) e `cloud` (`build:cloud`: Auth e Firestore reali, endpoint emulatore vietati).
   `firebase` è il vecchio nome ambiguo e ora è un errore. `dev:cloud` e `dev:emulator` sono stati rimossi.
 - Motivo: `expo start` fonde `.env.local` sopra la shell, quindi un file con backend/endpoint avrebbe potuto mescolare
@@ -163,6 +163,21 @@ atomico dell'intero database. Guida alla migrazione e limiti in `migrazione-byof
   (`EXPO_NO_DOTENV=1`), legge `.env.production.local`/shell, valida (`scripts/envPolicy.ts`), scansiona il bundle e lo scarta
   se contiene endpoint locali. `check` costruisce solo la demo (`dist-demo/`), per non confondere gli artefatti.
 - Config mancante o mista: messaggio bloccante, sessione non avviata. Nessun ritorno implicito a localStorage.
+
+In hybrid, `scripts/hybridRunner.ts` legge l'ambiente sviluppo con il parser incluso
+in Expo e lo passa identico a Expo e al processo Firestore. Riusa un endpoint solo
+dopo confronto tra locator Hub del progetto, PID e registro degli emulatori, più
+readiness REST; altrimenti avvia il solo Firestore con import da `emulator-data/`.
+Questo evita di scambiare un altro servizio/progetto per il database previsto.
+`check:hybrid` resta disponibile per il solo controllo TCP manuale (1,5 s).
+
+I figli hanno gruppi di processo separati: Ctrl+C attende l'export Firestore prima
+di terminare eventuali discendenti rimasti, senza segnalare emulatori preesistenti.
+L'export è in staging, promosso solo dopo successo con copia dell'archivio precedente;
+un lock impedisce due gestioni concorrenti dello stesso archivio. Errori di export
+conservano il lock per richiedere recupero esplicito. Nessun bootstrap automatico
+del proprietario o modifica al cloud. Se la conferma tarda oltre 10 s, l'avviso UI
+solo hybrid resta informativo: non annulla Promise, cambia UUID o riaccoda scritture.
 
 Il vecchio backend (`functions/`, `firebase.legacy.json`, regole deny-all, test
 callable/token ed esportatore del finto foglio) è stato rimosso il 2 novembre 2026:

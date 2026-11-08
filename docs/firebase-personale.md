@@ -12,7 +12,7 @@ Node conforme a `package.json`, npm e Java 21 consigliati per la CLI corrente:
 npm ci
 npm run emulators           # terminale 1: Auth 9099, Firestore 8180, UI 4000
 npm run emulators:seed      # terminale 2, dopo l’avvio: autorizza demo-owner
-npm run dev                # modalità emulator (demo)
+npm run dev:demo                # modalità emulator (demo)
 ```
 
 Seleziona il proprietario demo; l'estraneo deve ricevere accesso negato. Ogni riavvio
@@ -36,7 +36,7 @@ stata modificata durante questa migrazione.
    controllali nella Console; nessuna promessa di uso illimitato gratuito.
 3. Variabili (da `.env.example`, **solo se i file non esistono già**): le quattro
    `EXPO_PUBLIC_FIREBASE_API_KEY`, `AUTH_DOMAIN`, `PROJECT_ID`, `APP_ID`.
-   - Sviluppo: in `.env.local`. Usate solo da `dev:hybrid`.
+   - Sviluppo: in `.env.local`. Usate solo da `dev`.
    - Produzione: in `.env.production.local` (ignorato da Git) oppure variabili di shell/CI. `build:cloud`
      **non legge** `.env.local`, imposta da sé la modalità `cloud` e si ferma se la stessa variabile ha valori
      diversi nel file e nella shell. Expo in sviluppo non carica mai `.env.production.local`.
@@ -69,21 +69,44 @@ guida; nessuna credenziale amministrativa è richiesta dal client.
 
 ## Mantenere il login reale con Firestore locale
 
-Il progetto personale esistente e `.env.local` (solo le 4 variabili `EXPO_PUBLIC_FIREBASE_*`) restano validi. Al posto del vecchio
-parametro delle Functions, autorizza lo stesso UID nel **solo emulatore**:
+Il progetto personale esistente e `.env.local` (le 4 variabili `EXPO_PUBLIC_FIREBASE_*`)
+restano validi. Per avviare tutto lo sviluppo hybrid:
 
 ```sh
-npx firebase emulators:start --only firestore --project ID_PROGETTO
-npm run emulators:seed:owner -- ID_PROGETTO UID_PROPRIETARIO
-npm run dev:hybrid
+npm run dev
 ```
 
-Per conservare i dati tra i riavvii usa `npm run emulators:personal -- --project ID_PROGETTO`:
-importa da `emulator-data/` (ignorata da Git) e vi riesporta all'arresto (Ctrl+C una volta,
-attendere «Export complete»). Il proprietario va impostato una sola volta. (`emulators:real`
-è l'equivalente del solo checkout originale, con alias locale `real`.) La modalità non richiede Functions. Non
-avviare l'Auth emulator in questa modalità. Gli emulatori non devono essere esposti
-in rete e non dimostrano la verifica crittografica dei token della produzione.
+Il runner legge la configurazione sviluppo con il parser incluso in Expo, impone
+Auth reale/Firestore locale e usa lo stesso ID progetto per entrambi. Se Firestore
+è spento, lo avvia con `firebase.json` e importa `emulator-data/`. Se è acceso, verifica
+il locator Hub del progetto, il PID, l'endpoint registrato e una risposta REST di
+Firestore prima di riutilizzarlo. Una porta occupata da un servizio sconosciuto o
+da un altro progetto blocca l'avvio senza toccare quel processo. Expo parte solo dopo
+la readiness (timeout complessivo 90 s). Non servono alias `.firebaserc` o login CLI.
+
+Al primo uso configura una volta `config/owner` **nel solo emulatore**, da un secondo
+terminale: `npm run emulators:seed:owner -- ID_PROGETTO UID_PROPRIETARIO`.
+Il proprietario cloud non viene copiato e il runner non sceglie un UID. Con l'override
+di porta imposta anche `FIRESTORE_PORT` per il seed. `config/owner` persiste insieme ai dati.
+
+**Arresto e dati:** Ctrl+C una volta e attendere il messaggio «dati salvati».
+Il runner ferma solo i propri figli, lascia intatti gli emulatori preesistenti e
+ne delega l'export al loro gestore. Per il proprio Firestore esporta in staging
+`.firebase/hybrid-*/export`, poi aggiorna `emulator-data/` solo dopo conferma di successo;
+il precedente archivio resta in `.firebase/hybrid-*/previous`. Queste cartelle sono
+ignorate da Git e contengono dati personali. Nessuna pulizia automatica dei backup.
+Se l'export fallisce, l'archivio precedente resta intatto e il lock
+`.firebase/hybrid.lock` impedisce un nuovo avvio gestito: controllare staging/log e
+recuperare il backup appropriato prima di rimuovere il lock. Lo stesso controllo serve
+dopo un arresto forzato. Un archivio non vuoto ma invalido non viene reinizializzato.
+
+L'override `EXPO_PUBLIC_FIRESTORE_EMULATOR` deve essere `localhost:porta` o
+`127.0.0.1:porta`, solo nella shell; le altre porte restano quelle di `firebase.json`.
+`npm run check:hybrid` rimane un controllo TCP manuale (1,5 s), non certifica progetto,
+proprietario o Rules. `npm run emulators:personal -- --project ID_PROGETTO` e
+`emulators:real` restano disponibili per gestire il database separatamente.
+Non avviare Auth Emulator in hybrid; non esporre porte in rete. Se Firestore cade
+dopo l'avvio, l'avviso UI dopo 10 s resta informativo, senza reinviare le spese.
 
 ## Offline e dispositivi
 
@@ -143,7 +166,7 @@ Prima pubblicazione (manuale, richiede autorizzazione):
 5. Solo dopo l'esito positivo: `npm run deploy:hosting` per il sito live (`https://ID.web.app`).
 6. Su Android (Chrome): menu ⋮ → «Installa app» / «Aggiungi a schermata Home» e riprova il login dall'app installata.
 
-Sviluppo e pubblicazione restano separati: `npm run dev`/`dev:hybrid` non usano `dist/` né Hosting. L'emulatore Hosting non
+Sviluppo e pubblicazione restano separati: `npm run dev:demo`/`dev` non usano `dist/` né Hosting. L'emulatore Hosting non
 è parte del flusso; per provare localmente la build di produzione usa `npm run preview:cloud`.
 
 Login Google sui browser mobili: l'app usa il popup (`signInWithPopup`) avviato direttamente dal tocco, quindi i blocchi popup

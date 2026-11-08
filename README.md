@@ -48,7 +48,7 @@ cd nummo
 npm ci
 npm run emulators        # terminale 1: Auth e Firestore locali
 npm run emulators:seed   # terminale 2, dopo l'avvio
-npm run dev              # demo con account simulati
+npm run dev:demo              # demo con account simulati
 ```
 
 La demo usa il progetto fittizio `demo-nummo` e ignora ogni configurazione reale.
@@ -65,7 +65,7 @@ Nella [Console Firebase](https://console.firebase.google.com):
 ### 3. Configura le variabili
 
 ```sh
-cp .env.example .env.local              # sviluppo (usato da dev:hybrid)
+cp .env.example .env.local              # sviluppo (usato da npm run dev)
 cp .env.example .env.production.local   # produzione (usato da build:cloud)
 ```
 
@@ -125,20 +125,28 @@ Esistono manifest e icone, quindi dal browser mobile (es. Chrome Android: ⋮ �
 
 | Comando | Ambiente | Cosa fa |
 | --- | --- | --- |
-| `npm run dev` | emulator | Tutto locale (`demo-nummo`), account simulati. Richiede `emulators` e `emulators:seed` |
-| `npm run dev:hybrid` | hybrid | Google reale (da `.env.local`) + Firestore emulato su `127.0.0.1:8180` |
+| `npm run dev:demo` | emulator | Tutto locale (`demo-nummo`), account simulati. Richiede `emulators` e `emulators:seed` |
+| `npm run dev` | hybrid | Avvia o riusa Firestore locale, poi Expo; Google reale da `.env.local` |
+| `npm run check:hybrid` | hybrid | Verifica l'endpoint locale prima di Expo; non avvia Firestore né controlla il proprietario |
 | `npm run build:cloud` | cloud | Build di produzione in `dist/` con controlli bloccanti |
 | `npm run preview:cloud` | cloud | Serve `dist/` in locale: usa il progetto reale |
 | `npm run check` | – | Typecheck, test e build demo (`dist-demo/`, mai da pubblicare) |
 | `npm run test:emulator` | emulator | Test di SDK e Security Rules su Auth/Firestore locali |
+| `npm run test:hybrid` | emulator | Test isolati di avvio, riuso, arresto, persistenza e guasti del runner |
 
-Per `dev:hybrid` avvia prima l'emulatore Firestore con il tuo progetto, imposta il proprietario **nell'emulatore** e poi l'app:
+Con le quattro variabili Firebase in `.env.local`, basta un comando:
 
 ```sh
-npm run emulators:personal -- --project ID_PROGETTO   # terminale 1 (dati in emulator-data/, ignorata da Git)
-npm run emulators:seed:owner -- ID_PROGETTO UID       # terminale 2, una volta
-npm run dev:hybrid
+npm run dev
 ```
+
+Il comando riusa Firestore solo se l'Emulator Hub lo identifica come appartenente al
+progetto previsto; altrimenti lo avvia con i dati in `emulator-data/`. Ctrl+C attende
+l'export e arresta solo i servizi avviati dal comando. Gli emulatori preesistenti
+rimangono attivi. Il progetto locale deve avere `config/owner`: solo al primo uso,
+da un secondo terminale, `npm run emulators:seed:owner -- ID_PROGETTO UID`.
+Non viene copiato automaticamente dal cloud. Dettagli e recupero di export falliti
+in [docs/firebase-personale.md](docs/firebase-personale.md).
 
 Per aggiornare il tuo sito: scarica le modifiche (`git pull`, `npm ci`), esegui `npm run check`, poi `npm run deploy:hosting`.
 Le **regole Firestore non vengono pubblicate da `deploy:hosting`**: dopo un aggiornamento che modifica `firestore.rules`
