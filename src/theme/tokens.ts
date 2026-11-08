@@ -100,7 +100,8 @@ export const typefaces = {
 export const iconStroke = 1.5;
 
 // Material 3 emphasized-decelerate / standard easings and durations (ms).
-export const motion = { short: 150, medium: 250, easing: [0.2, 0, 0, 1] as const };
+// `enter` is the emphasized-decelerate curve for things that appear (fast start, soft landing); `easing` for state changes.
+export const motion = { short: 150, medium: 250, long: 300, easing: [0.2, 0, 0, 1] as const, enter: [0.05, 0.7, 0.1, 1] as const };
 
 // Neutral chart content/state-layer colors; tile text follows the selected page mode.
 export const chartTextColors = { dark: '#000000', light: '#FFFFFF' } as const;

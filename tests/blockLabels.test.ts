@@ -27,12 +27,23 @@ test('etichette: grandi complete, medie nome/importo, basse almeno il nome, minu
 });
 
 test('etichette: nome intero su più righe, nessun testo quando il nome non entra (la legenda lo mostra)', () => {
-  const narrow = blockLabelPlan(64, 60, text, measure);
+  const narrow = blockLabelPlan(40, 60, text, measure);
   assert.ok(narrow.name.length >= 2);
   assert.equal(narrow.name.join(''), 'Alimentari');
   const iconOnly = blockLabelPlan(40, 40, { ...text, name: 'Categoria con un nome molto lungo' }, measure);
   assert.deepEqual(iconOnly.name, []);
   assert.equal(iconOnly.usedHeight, 0);
+});
+
+test('etichette: il testo si rimpicciolisce prima di spezzare una parola (mobile: Tecnologia, Alimentari)', () => {
+  // 412 px phone, narrow tiles: the name stays on one line at a smaller size instead of "Tecnolog/ia".
+  for (const name of ['Tecnologia', 'Alimentari']) {
+    const plan = blockLabelPlan(66, 60, { ...text, name }, measure);
+    assert.deepEqual(plan.name, [name]);
+    assert.ok(plan.fontSize < 14 && plan.fontSize >= 10);
+  }
+  // Roomy tiles keep the regular size.
+  assert.equal(blockLabelPlan(240, 180, text, measure).fontSize, 14);
 });
 
 test('etichette: stessa percentuale, geometrie diverse e misura del testo effettiva', () => {

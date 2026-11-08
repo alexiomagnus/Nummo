@@ -63,7 +63,7 @@ export function DonutChart({ data, colors, active, onActive }: ChartProps) {
           onMouseLeave={() => onActive(null)}>
           {segments.map((segment, index) => (
             <path key={index} d={segment.d} fill={segment.color} stroke={colors.surface} strokeWidth={2}
-              opacity={active === null || active === index ? 1 : 0.35} style={{ cursor: 'pointer' }}
+              opacity={active === null || active === index ? 1 : 0.35} style={{ cursor: 'pointer', transition: 'opacity 150ms cubic-bezier(0.2, 0, 0, 1)' }}
               onMouseEnter={() => onActive(index)} onClick={() => onActive(active === index ? null : index)} />
           ))}
         </svg>

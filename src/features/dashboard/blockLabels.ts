@@ -26,17 +26,26 @@ function linesFor(text: string, width: number, measure: (value: string) => numbe
   return lines;
 }
 
+// [font size, line height, maximum name lines], from the most to the least comfortable.
+const labelSizes = [[14, 20, 2], [12, 16, 3], [11, 15, 3], [10, 14, 3]] as const;
+
 // Only label content changes. Rectangle dimensions/area and category percentages never enter the decision.
 export function blockLabelPlan(width: number, height: number,
   text: { name: string; amount: string; percent: string }, measure: TextMeasure): BlockLabelPlan {
-  const padding = width >= 120 && height >= 64 ? spacing.sm : spacing.xs;
+  // Very narrow tiles (phones) give up inner margin first, so the name can stay whole at a small size.
+  const padding = width >= 120 && height >= 64 ? spacing.sm : width < 72 ? 2 : spacing.xs;
   const innerWidth = width - 2 * padding - 1; // rounding/font rasterisation allowance
   const innerHeight = height - 2 * padding;
   const empty: BlockLabelPlan = { padding, fontSize: 12, lineHeight: 16, name: [], amount: false, percent: false, usedHeight: 0 };
   if (innerWidth <= 0 || innerHeight < 16) return empty;
-  for (const [fontSize, lineHeight, maxLines] of [[14, 20, 2], [12, 16, 3]] as const) {
+  // Shrink the text before breaking a word: smaller tiers (down to 10 px) are tried first, and only the last one
+  // may still split a long word across lines.
+  const words = text.name.trim().split(/\s+/u).length;
+  for (const [fontSize, lineHeight, maxLines] of labelSizes) {
     const name = linesFor(text.name, innerWidth, (value) => measure(value, fontSize, '600'));
     if (!name?.length || name.length > maxLines || name.length * lineHeight > innerHeight) continue;
+    const splitsWord = name.join(' ').split(/\s+/u).length > words;
+    if (splitsWord && fontSize !== labelSizes[labelSizes.length - 1]![0]) continue;
     let usedHeight = name.length * lineHeight;
     const fitsLine = (value: string) => measure(value, fontSize, '400') <= innerWidth
       && usedHeight + spacing.xs + lineHeight <= innerHeight;

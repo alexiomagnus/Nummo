@@ -1,7 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import type { Category } from '../../domain/category';
+import { barTransition } from '../../theme/motion';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { useI18n } from '../../i18n/I18nProvider';
 import { radius, spacing } from '../../theme/tokens';
@@ -30,7 +31,7 @@ export function BarChart({ data, colors, active, onActive, categories }: ChartPr
             <Text variant="bodyMedium" style={styles.number}>{formatAmount(series.total)} · {share}</Text>
           </View>
           <View style={[styles.track, { backgroundColor: colors.grid }]} aria-hidden>
-            <View style={{ height: '100%', width: `${series.total / data.total * 100}%`, backgroundColor: fill }} />
+            <View style={[{ height: '100%', width: '100%', backgroundColor: fill, transformOrigin: 'left center', transform: [{ scaleX: series.total / data.total }] } as ViewStyle, barTransition]} />
           </View>
         </StateLayerPressable>
       </View>;

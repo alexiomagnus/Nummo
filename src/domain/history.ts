@@ -89,6 +89,12 @@ export function subscriptionSummaries(entries: readonly ExpenseEntry[], today: s
       || a.entry.description.localeCompare(b.entry.description) || a.entry.id.localeCompare(b.entry.id));
 }
 
+// Name search over the series (same normalisation as the expense list); an empty query keeps every series.
+export function searchSubscriptions(items: readonly SubscriptionSummary[], query: string): SubscriptionSummary[] {
+  const needle = searchKey(query);
+  return needle ? items.filter((item) => searchKey(item.entry.description).includes(needle)) : [...items];
+}
+
 export function addDays(date: string, days: number): string {
   const value = new Date(`${date}T00:00:00Z`);
   value.setUTCDate(value.getUTCDate() + days);

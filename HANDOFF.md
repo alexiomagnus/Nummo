@@ -1,6 +1,6 @@
 # HANDOFF — Nummo
 
-Aggiornamento: **8 novembre 2026, ore 17:38 (Europe/Rome)**. Gestionale personale solo web, Google Auth e Firestore BYOF;
+Aggiornamento: **8 novembre 2026, ore 19:15 (Europe/Rome)**. Gestionale personale solo web, Google Auth e Firestore BYOF;
 accesso riservato all’UID amministrativo in `config/owner`. Architettura, convenzioni e comandi:
 `AGENTS.md`; configurazione: `README.md` e `docs/firebase-personale.md`; decisioni: `docs/architecture.md`.
 Ultima fase: pagina Spese divisa in Spese/Abbonamenti con stati degli abbonamenti (sezione «Abbonamenti» sotto).
@@ -8,14 +8,17 @@ Requisiti e registri storici non attestano implementazione o pubblicazione.
 
 ## Git e lavoro da preservare
 
-- Ramo `main`, HEAD **`d2fbe15`**, «Refactor backup import/export functionality and enhance error handling»,
-  8 novembre 2026, 06:57 +01:00. Uguale al riferimento locale `origin/main`; nessun fetch, remoto non verificato.
-- Albero ampiamente modificato già all’inizio: UI, dominio, servizi, Rules, test e documentazione, con nuovi file
-  non tracciati. Le novità descritte sotto sono presenti nel checkout, ma non tutte in HEAD. Nessun commit o deployment qui.
-  Prima di riprendere leggere `git status` e `git diff`; preservare il lavoro preesistente.
-- HEAD traccia erroneamente `.nummo-hybrid-97110.json`, già eliminata nell’albero; presente anche
-  `.nummo-hybrid-12312.json` non tracciata. `.gitignore` non copre queste config temporanee.
-  Non reinserire quella eliminata né cancellare config, lock, staging o copie `previous` di runner utente.
+- Ramo `main`, HEAD **`112ebcb`**, «Add comprehensive tests for category icons, presentation, defaults, startup, and
+  subscription features», 8 novembre 2026, 17:49 +01:00; contiene la fase abbonamenti, icone, avvio e test. Uguale al
+  riferimento locale `origin/main` (0 commit avanti); nessun fetch, remoto non verificato.
+- Non committato (`git status`): `HANDOFF.md`, `src/components/categoryPixelGlyphs.ts` (sprite wifi/car/fuel/maglietta),
+  `src/features/dashboard/blockLabels.ts` + `tests/blockLabels.test.ts` (etichette Blocchi), `SubscriptionList.tsx`
+  (ritocchi layout) e `public/manifest.webmanifest` (`theme_color` da `#121212` a `#F5FBF5`: origine non documentata;
+  la splash Android usa questi colori statici, confermare l’intenzione prima del commit).
+  Nessun commit o deployment da questo passaggio; preservare il lavoro preesistente.
+- HEAD traccia `.nummo-hybrid-12312.json` (config temporanea del runner, rinominata dalla `-97110` già tracciata per errore);
+  `.gitignore` non la copre. Da rimuovere dall’indice e ignorare in una fase di igiene separata; non cancellare
+  config, lock, staging o copie `previous` di runner utente in uso.
 - Il precedente passaggio segnalava hybrid su 8180/4000 ed Expo su 8081, con materiale di recupero in
   `.firebase/`. Stato dei processi **non riconfermato**: `ss` è limitato dal sandbox (`Operation not permitted`).
   Ispezionare prima di riavviare o ripulire; i test di questa revisione usano porte/dati separati.
@@ -65,6 +68,10 @@ Riscontro nel codice e nei test automatici; non equivale a collaudo cloud o su t
   azioni Metti in pausa / Riattiva / Annulla abbonamento, disabilitate senza sincronizzazione completa, conferma dopo
   la transazione server e snackbar. «Prossimi rinnovi» spostato in questa vista. Nessuna nuova collezione: gli
   abbonamenti sono le stesse spese ricorrenti.
+  Ritocchi successivi su richiesta: pillola a tutta larghezza anche su desktop; testo esplicativo sotto le azioni rimosso
+  (resta solo l’avviso offline); icona × su «Annulla abbonamento»; 24 px prima dello storico; su mobile pulsanti
+  `compact` di Paper (altezza 48 px invariata) affiancati. Misurato in Chromium headless: stessa riga a 412 px,
+  a capo a 360 e 320 px (etichette mai troncate, ritorno a capo come riserva).
   Dominio `src/domain/subscription.ts` (stati, `setStatus`, codifica), occorrenze/previsioni/rinnovi che saltano i
   periodi non attivi in `history.ts`, `subscriptionSummaries`, `dataOf`; campo `status_changes` in contratto, editor
   (conservato), servizio (stringa compatta, omessa se vuota, `deleteField` al ritorno a vuoto), Rules, backup v2;
@@ -82,13 +89,36 @@ Riscontro nel codice e nei test automatici; non equivale a collaudo cloud o su t
   Anteprima controllata a 24/96 px su chiaro/scuro; `npm run check` passato alle 17:24 (259 test, typecheck,
   build demo). Questo esito supera il blocco transitorio del typecheck riportato sotto; nessun collaudo nell’app qui.
 
-- **Icona maglietta pixel art:** sprite `shirt` ridisegnato e ridotto a 6×8 celle, centrato nel canvas 12×12
-  (sagoma 12×16 px quando il componente è 24 px), con spalle più strette,
-  maniche che sporgono una sola cella per lato, scollo e dettagli in tinta; ID e palette invariati. Anteprima SVG verificata a 24/96 px su chiaro/scuro.
-  Test icone dedicati **9/9** passati; anteprima chiaro/scuro verificata, collaudo nell’app non eseguito qui.
-  Il `npm run check` della revisione delle spalle era **bloccato al typecheck** da modifiche concorrenti al contratto `status_changes`
-  (campo richiesto mancante nei test e tipi opzionali incompatibili nei test prezzi). Test completi/build non eseguiti
-  in questo tentativo; i 259 test e la build precedenti restano evidenza della revisione precedente.
+- **Animazioni e transizioni (8 novembre, su richiesta, non committato).** Analisi: esistevano solo la transizione di pagina
+  (opacità + 8 px), l'azione tonda della pillola (larghezza/scala), l'interruttore M3 (animava larghezza/altezza/left/top) e
+  le animazioni di Paper (menu, dialoghi, snackbar, che seguono `theme.animation.scale`); state layer, selezioni di pillola/
+  segmenti/chip, dimming dei grafici e apertura dei dettagli erano istantanei. Ora: `src/theme/motion.ts` (`transition`,
+  `fadeTransition`, `fillTransition`: CSS via RN Web, token `motion`); `StateLayerPressable` e `HoverLayer` sfumano layer,
+  sfondo, bordo e opacità (copre pillola, segmenti, chip, righe, barre); `Reveal` (fade + 4 px, solo opacity/transform) per i
+  dettagli di abbonamenti, giorni della Dashboard e Prossimi rinnovi; `M3Switch` ora usa solo `transform` (maniglia fissa 24 px
+  con scala 16/24) e colori in transizione; ciambella e foto account con transizione di opacità. `prefers-reduced-motion`
+  (regola CSS globale) e `useReducedMotion` restano rispettati; nessun cambio di layout né di funzioni.
+  Verifiche: `npm run check` OK (274 test, nuovo `tests/motion.test.ts`). **Non verificato nel browser/su telefono:** resa
+  e fluidità reali (anche con riduzione movimento attiva), geometria della maniglia dell'interruttore (calcolata, non vista).
+  Secondo passaggio «più smooth»: `motion.enter` (emphasized-decelerate) e `motion.long` 300 ms per la pagina; `Reveal` ora è
+  un'animazione CSS keyframe (fuori dal thread JS); state layer a 100 ms per un feedback immediato; barre della Dashboard con
+  `scaleX` + transizione 400 ms invece della larghezza. `npm run check` OK (275 test); resa non vista nel browser.
+  Non toccate: animazione larghezza dell'azione tonda (resta layout, necessaria alla pillola flex), uscita dei dettagli
+  (istantanea), animazioni interne di Paper.
+
+- **Etichette dei Blocchi su mobile (su richiesta):** `blockLabelPlan` prova 14/12/11/10 px e rimpicciolisce il testo prima di
+  spezzare una parola («Tecnolog/ia», «Alimenta/ri» nello screenshot a 412 px); solo l’ultimo livello può ancora spezzarla.
+  Tessere larghe meno di 72 px usano 2 px di margine interno. Test aggiunto (273/273, `npm run check` OK). **Non verificato con il
+  font reale nel browser:** «Tecnologia» in una tessera di circa 60 px è al limite; se si spezza ancora, valutare un livello a 9 px.
+
+- **Sprite pixel `wifi`, `car`, `fuel` rigenerati (su richiesta):** `wifi` con arco esterno, arco interno e punto separati;
+  `car` con contorno, tetto/finestrini in `t`, archi delle ruote; `fuel` con pompa 7 celle (finestrino in `t`) e tubo a destra.
+  Anteprima 24/48/96 px chiaro/scuro, 9/9 test icone e `npm run check` OK; non verificati nell’app. Richiesta aperta: una scritta
+  da rendere più minimale, il cui testo incollato non è arrivato (da richiedere all’utente).
+
+- **Maglietta pixel art rigenerata (su richiesta):** lo sprite 6×8 senza contorno era illeggibile a 24 px. Ora 12×10
+  celle con contorno `i`, massa `b`, polsini in `t`, scollo a V; ID e tinta rosa invariati. Anteprima 24/48/96 px chiaro/scuro
+  verificata; 9/9 test icone e `npm run check` OK.
 
 - **Ultima modifica dashboard:** icone spostate dalla legenda alle tessere dei Blocchi, rispettando lo stile scelto;
   spazio riservato sopra le etichette, omissione sulle tessere sotto 40×40 px. Legenda con colore, nome e valori.
@@ -135,7 +165,7 @@ Riscontro nel codice e nei test automatici; non equivale a collaudo cloud o su t
 
 ## Problemi aperti e limiti
 
-- **Dashboard irraggiungibile (risolto alle 17:45):** `CategoryLegend.tsx` (modifica concorrente delle 17:26) usava
+- **Dashboard irraggiungibile (risolto, 8 novembre 17:45):** `CategoryLegend.tsx` (modifica concorrente delle 17:26) usava
   `categories` senza riceverla tra le props: `ReferenceError` al render, l’app si smontava cliccando Dashboard e il
   typecheck falliva. Corretto aggiungendo `categories` alla destrutturazione (prop già dichiarata e passata da
   `Dashboard.tsx`). Resta da decidere se la legenda debba mostrare le icone: l’ultima voce «Ultima modifica dashboard»
@@ -174,7 +204,11 @@ Riscontro nel codice e nei test automatici; non equivale a collaudo cloud o su t
 
 ## Verifiche di questa revisione
 
-**Fase abbonamenti (fino alle 17:37),** Node 26.13.0, Java 21.0.13, porte 39099/39280 con config temporanea rimossa;
+**Riverifica del 19:15 (passaggio di contesto, nessuna modifica al codice):** Node 26.13.0, npm 12.2.2, dipendenze già
+presenti. `npm run check` **OK**: typecheck, **273/273** test, build demo (402 moduli, bundle ~2,2 MB). Non rieseguiti
+`test:emulator`, `test:hybrid`, `check:env`, browser: gli esiti sotto sono quelli precedenti.
+
+**Fase abbonamenti (fino alle 17:37; i conteggi test sono quelli di allora),** Node 26.13.0, Java 21.0.13, porte 39099/39280 con config temporanea rimossa;
 servizi utente su 8180/4000/8081 intatti:
 
 | Comando | Risultato |

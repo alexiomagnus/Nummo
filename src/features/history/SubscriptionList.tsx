@@ -1,15 +1,17 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, IconButton, Text, useTheme } from 'react-native-paper';
+import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { ListRow, listRowStyles } from '../../components/ListRow';
+import { Reveal } from '../../components/Reveal';
+import { leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
-import type { SubscriptionSummary } from '../../domain/history';
+import { searchSubscriptions, type SubscriptionSummary } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
 import { statusLabels, type SubscriptionStatus } from '../../domain/subscription';
-import { radius, spacing } from '../../theme/tokens';
+import { inputOutline, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 
 type Props = {
@@ -42,13 +44,15 @@ export function StatusBadge({ status }: { status: SubscriptionStatus }) {
   );
 }
 
-export function SubscriptionList({ subscriptions, categories, error, canChange, onEdit, onSetStatus }: Props) {
+export function SubscriptionList({ subscriptions: allSeries, categories, error, canChange, onEdit, onSetStatus }: Props) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const [complete, setComplete] = useState<ReadonlySet<string>>(() => new Set());
   const [busy, setBusy] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const subscriptions = useMemo(() => searchSubscriptions(allSeries, query), [allSeries, query]);
   const toggle = (set: typeof setExpanded, id: string) => set((previous) => {
     const next = new Set(previous);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -59,7 +63,7 @@ export function SubscriptionList({ subscriptions, categories, error, canChange, 
     setBusy(id);
     try { await onSetStatus(id, status); } finally { setBusy(null); }
   };
-  if (subscriptions.length === 0) {
+  if (allSeries.length === 0) {
     return <View style={styles.root}>
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento. Per aggiungerne uno, crea una spesa che si ripete.")}</Text>
@@ -67,7 +71,12 @@ export function SubscriptionList({ subscriptions, categories, error, canChange, 
   }
   return (
     <View style={styles.root}>
+      <TextInput outlineStyle={inputOutline} label={t("Cerca per nome")} accessibilityLabel={t("Cerca per nome")} mode="outlined" value={query}
+        onChangeText={setQuery} autoCorrect={false} left={leadingIcon(iconShapes.search)}
+        right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => setQuery('')}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
+      {subscriptions.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento corrisponde alla ricerca.")}</Text>}
       <View role="list">
         {subscriptions.map(({ entry, status, amount_minor, next, payments, total }) => {
           const category = categories.find((item) => item.id === entry.category_id);
@@ -96,7 +105,7 @@ export function SubscriptionList({ subscriptions, categories, error, canChange, 
                   <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
                     accessibilityLabel={t("Modifica {p0}", { p0: entry.description })} onPress={() => onEdit(entry.id)} />
                 </>}>
-                {open && <View nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: entry.description })}
+                {open && <Reveal nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: entry.description })}
                   style={[styles.details, { borderColor: colors.outlineVariant }]}>
                   <View style={styles.fields}>
                     <Field label={t("Pagamenti effettuati")} value={String(payments.length)} />
@@ -105,21 +114,21 @@ export function SubscriptionList({ subscriptions, categories, error, canChange, 
                     <Field label={t("Inizio")} value={formatDate(entry.expense_date, locale)} />
                     <Field label={t("Prossimo rinnovo")} value={next ? formatDate(next.date, locale) : t("Nessuno")} />
                   </View>
-                  <View style={styles.actions}>
-                    {status === 'active' && <Button mode="outlined" disabled={!canChange || working} loading={working}
+                  <View style={[styles.actions, compact && styles.compactActions]}>
+                    {status === 'active' && <Button compact={compact} mode="outlined" disabled={!canChange || working} loading={working}
                       icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
                       onPress={() => void change(entry.id, 'paused')}>{t("Metti in pausa")}</Button>}
-                    {status !== 'active' && <Button mode="contained-tonal" disabled={!canChange || working} loading={working}
+                    {status !== 'active' && <Button compact={compact} mode="contained-tonal" disabled={!canChange || working} loading={working}
                       icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
                       onPress={() => void change(entry.id, 'active')}>{t("Riattiva")}</Button>}
-                    {status !== 'cancelled' && <Button mode="text" textColor={colors.error} disabled={!canChange || working}
+                    {status !== 'cancelled' && <Button compact={compact} mode="text" textColor={colors.error} disabled={!canChange || working}
                       icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
                       onPress={() => void change(entry.id, 'cancelled')}>{t("Annulla abbonamento")}</Button>}
                   </View>
                   {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
                     {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
                   </Text>}
-                  <View>
+                  <View style={styles.history}>
                     <Text variant="titleSmall" accessibilityRole="header" style={styles.historyTitle}>{t("Storico dei pagamenti")}</Text>
                     {payments.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Nessun pagamento.")}</Text>}
                     <View role="list">
@@ -136,7 +145,7 @@ export function SubscriptionList({ subscriptions, categories, error, canChange, 
                       </Button>
                     </View>}
                   </View>
-                </View>}
+                </Reveal>}
               </ListRow>
             </View>
           );
@@ -166,6 +175,10 @@ const styles = StyleSheet.create({
   fields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
   field: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  // Phones: compact buttons side by side (still 48 dp tall); they wrap only on very narrow screens.
+  compactActions: { gap: spacing.xs },
+  // A little more than the details gap (lg): the history is a separate block from the actions above.
+  history: { marginTop: spacing.sm },
   historyTitle: { marginBottom: spacing.xs },
   payment: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, minHeight: 40, alignItems: 'center' },
   start: { alignSelf: 'flex-start' },

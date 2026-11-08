@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { ListRow, listRowStyles } from '../../components/ListRow';
+import { Reveal } from '../../components/Reveal';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
@@ -58,7 +59,7 @@ export function DailyBreakdown({ data, occurrences, categories, today }: Props) 
             layerColor={color} radius={shape.xs} onPress={() => setExpanded(open ? null : row.date)}
             style={summaryStyle}>{summary}</StateLayerPressable>
             : <View style={[summaryStyle, { borderRadius: shape.xs }]} accessibilityLabel={label}>{summary}</View>}
-          {open && hasExpenses && <View nativeID={`dashboard-day-${row.date}`} role="list"
+          {open && hasExpenses && <Reveal nativeID={`dashboard-day-${row.date}`} role="list"
             accessibilityLabel={t("Spese del {p0}", { p0: fullDateFormat(locale).format(dateValue(row.date)) })} style={styles.details}>
             {row.items.map((item, itemIndex) => {
               const category = categories.find((entry) => entry.id === item.category_id);
@@ -67,7 +68,7 @@ export function DailyBreakdown({ data, occurrences, categories, today }: Props) 
               return <ListRow key={item.key} icon={category?.icon ?? null} title={item.description} subtitle={subtitle}
                 divider={itemIndex < row.items.length - 1} meta={compact ? amount : undefined} trailing={compact ? undefined : amount} />;
             })}
-          </View>}
+          </Reveal>}
         </View>;
       })}
     </View>

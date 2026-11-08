@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type PressableProps, type PressableStateCallbackType, type StyleProp, type ViewStyle } from 'react-native';
+import { fillTransition, layerTransition } from '../theme/motion';
 import { stateOpacity } from '../theme/tokens';
 
 type State = PressableStateCallbackType & { hovered?: boolean };
@@ -18,12 +19,12 @@ type Props = Omit<PressableProps, 'style' | 'children'> & {
 export function StateLayerPressable({ layerColor, radius = 0, bleed = 0, style, children, disabled, ...rest }: Props) {
   return (
     <Pressable {...rest} disabled={disabled}
-      style={(state) => [{ overflow: bleed ? 'visible' : 'hidden', borderRadius: radius, opacity: disabled ? 0.38 : 1 }, typeof style === 'function' ? style(state as State) : style]}>
+      style={(state) => [{ overflow: bleed ? 'visible' : 'hidden', borderRadius: radius, opacity: disabled ? 0.38 : 1 }, fillTransition, typeof style === 'function' ? style(state as State) : style]}>
       {(raw) => {
         const state = raw as State;
         const opacity = disabled ? 0 : state.pressed ? stateOpacity.pressed : state.hovered ? stateOpacity.hover : 0;
         return <>
-          <View pointerEvents="none" style={[StyleSheet.absoluteFill, bleed ? { top: -bleed, left: -bleed, right: -bleed, bottom: -bleed, borderRadius: radius + bleed } : null, { backgroundColor: layerColor, opacity }]} />
+          <View pointerEvents="none" style={[StyleSheet.absoluteFill, bleed ? { top: -bleed, left: -bleed, right: -bleed, bottom: -bleed, borderRadius: radius + bleed } : null, { backgroundColor: layerColor, opacity }, layerTransition]} />
           {typeof children === 'function' ? children(state) : children}
         </>;
       }}

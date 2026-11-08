@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { Animated, Easing, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { layerTransition } from '../theme/motion';
 import { layout, motion, radius, shape, spacing, stateOpacity } from '../theme/tokens';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
@@ -66,7 +67,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     if (!changed || reduceMotion) { pageProgress.setValue(1); return; }
     pageProgress.setValue(0);
     const animation = Animated.timing(pageProgress, {
-      toValue: 1, duration: motion.medium, easing: Easing.bezier(...motion.easing), useNativeDriver: false,
+      toValue: 1, duration: motion.long, easing: Easing.bezier(...motion.enter), useNativeDriver: false,
     });
     animation.start();
     return () => animation.stop();
@@ -144,7 +145,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
 // Hover/pressed layer drawn on the coloured pill itself, so the highlight is exactly the pill's size.
 function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boolean }; color: string }) {
   const opacity = state.pressed ? stateOpacity.pressed : state.hovered ? stateOpacity.hover : 0;
-  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: color, opacity }]} />;
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: color, opacity }, layerTransition]} />;
 }
 
 type Fab<T extends string> = { label: string; icon: string; target: T };

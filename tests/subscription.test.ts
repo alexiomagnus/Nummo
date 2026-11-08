@@ -152,3 +152,13 @@ test('backup v2 e CSV: stati conservati, v1 letto come attivo, identici saltati,
   const rows = exportCsv([record], [], '2026-04-30').trim().split('\r\n').slice(1);
   assert.deepEqual(rows.map((row) => row.split(';')[0]), ['2026-01-05', '2026-02-05']);
 });
+
+test('searchSubscriptions filters by normalised name and keeps all on empty query', async () => {
+  const { searchSubscriptions, subscriptionSummaries } = await import('../src/domain/history.ts');
+  const base = { amount_minor: 100, category_id: null, expense_date: '2026-01-01', recurrence: 'monthly' as const, created_at: '2026-01-01T10:00:00.000Z' };
+  const list = subscriptionSummaries([{ ...base, id: 'a', description: 'Netflix' }, { ...base, id: 'b', description: 'Caffè Club' }], '2026-11-08');
+  assert.equal(searchSubscriptions(list, '').length, 2);
+  assert.deepEqual(searchSubscriptions(list, 'NETF').map((s) => s.entry.id), ['a']);
+  assert.deepEqual(searchSubscriptions(list, 'caffe').map((s) => s.entry.id), ['b']);
+  assert.equal(searchSubscriptions(list, 'zzz').length, 0);
+});
