@@ -110,7 +110,6 @@ export function FundsPage({ remote, expenses, today, canWrite, defaultFundId, on
           <Text variant="titleMedium" style={styles.number}>{formatAmount(overview.budget)}</Text>
         </View>
         <BudgetMeter label={t("Budget del mese")} spent={overview.budgetSpent} budget={overview.budget} state={overview.state} forecast={forecast} />
-        <Text variant="bodySmall" style={muted}>{t("Somma dei budget dei fondi che ne hanno uno. Le somme non spese restano nel saldo del fondo e non si aggiungono al budget del mese dopo.")}</Text>
       </View>}
 
       <View style={[styles.actions, compact && styles.actionsCompact]}>

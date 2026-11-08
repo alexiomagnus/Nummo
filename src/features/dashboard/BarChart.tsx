@@ -20,21 +20,17 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
   const maximum = Math.max(0, ...sorted.map(row => row.total));
   const icons = new Map(categories.map(category => [category.id, category.icon]));
   return <View style={styles.bars}>
-    <Text variant="bodySmall" style={{ color: colors.muted }}>
-      {t('Lunghezza delle barre relativa alla categoria con spesa maggiore.')}
-    </Text>
     <View role="list" accessibilityLabel={t('Barre delle spese per categoria')}>
       {sorted.map(series => {
         const name = seriesLabel(series, t);
         const amount = formatAmount(series.total);
         const share = categoryPercent(series.total, total);
-        const count = t('{p0} transazioni', { p0: series.count });
         const change = series.change !== null && Math.abs(series.change) >= 1
           ? new Intl.NumberFormat(locale, { maximumFractionDigits: 0, signDisplay: 'always' }).format(series.change) + '%' : null;
         return <View key={series.key} role="listitem">
           <StateLayerPressable role="button" layerColor={colors.text} radius={radius.card}
             onPress={() => onOpen(series.key)}
-            accessibilityLabel={[name, amount, share, count, change && t('{p0} rispetto al periodo precedente', { p0: change })].filter(Boolean).join(', ')}
+            accessibilityLabel={[name, amount, share, change && t('{p0} rispetto al periodo precedente', { p0: change })].filter(Boolean).join(', ')}
             style={styles.barRow}>
             <View style={styles.header}>
               <IconTile icon={icons.get(series.key) ?? null} />
@@ -47,7 +43,7 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
                   transform: [{ scaleX: maximum > 0 ? series.total / maximum : 0 }] } as ViewStyle, barTransition]} />
               </View>
               <View style={styles.footer}>
-                <Text variant="bodySmall" style={{ color: colors.muted }}>{share} · {count}</Text>
+                <Text variant="bodySmall" style={{ color: colors.muted }}>{share}</Text>
                 {change && <Text variant="bodySmall" style={{ color: colors.muted }}>{change}</Text>}
               </View>
             </View>

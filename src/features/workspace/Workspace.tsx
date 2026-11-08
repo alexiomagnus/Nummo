@@ -46,9 +46,9 @@ import { ListsPage } from '../lists/ListsPage';
 import { useRemoteLists, type RemoteLists } from '../lists/useRemoteLists';
 
 const forecastDays = 30;
-type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categories';
+type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categories' | 'backup';
 // «Nuova spesa» is the primary action (FAB), not a destination: one primary navigation only.
-// Categories are not a destination: they open from Settings (and from the form when none exists), see App.tsx.
+// Categories and import/export open from the account menu, outside the main destinations.
 const destinations: readonly Destination<Section>[] = [
   { value: 'list', label: 'Spese', icon: iconShapes.list },
   { value: 'dashboard', label: 'Dashboard', icon: iconShapes.chart },
@@ -58,7 +58,7 @@ const destinations: readonly Destination<Section>[] = [
 // The Spese page has two views: one-off expenses and subscriptions (every recurring series), never both.
 type ListView = 'expenses' | 'subscriptions';
 const listViews = [{ value: 'expenses', label: 'Spese' }, { value: 'subscriptions', label: 'Pagamenti ricorrenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie' };
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Importa ed esporta' };
 
 const startGateMs = 4000;
 
@@ -68,7 +68,7 @@ type DashboardSettingsProps = {
   onChangeDashboardPreferences: (change: Partial<DashboardPreferences>) => void;
 };
 
-export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0 }: { uid: string; storageNote: string; topActions?: ReactNode; onReleased?: () => void; categoriesRequest?: number } & DashboardSettingsProps) {
+export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0 }: { uid: string; storageNote: string; topActions?: ReactNode; onReleased?: () => void; categoriesRequest?: number; backupRequest?: number } & DashboardSettingsProps) {
   const { t } = useI18n();
   const backend = useMemo(() => createFirestoreStore(getDatabase(), uid), [uid]);
   const store = useRemoteExpenses(backend, storageNote);
@@ -76,13 +76,20 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   const fundState = useRemoteFunds(backend);
   const listState = useRemoteLists(backend);
   const [section, setSection] = useState<Section>('expense');
-  // The Categories page returns where it was opened from (it is not in the navigation).
+  // Account pages return to the originating main section (they are not navigation destinations).
   const [returnTo, setReturnTo] = useState<Section>('list');
   const navigate = (next: Section) => {
-    if (next === 'categories' && section !== 'categories') setReturnTo(section);
+    if ((next === 'categories' || next === 'backup') && section !== 'categories' && section !== 'backup') setReturnTo(section);
     setSection(next);
   };
   useEffect(() => { if (categoriesRequest > 0) navigate('categories'); }, [categoriesRequest]);
+  // Requests are events: an old request must not reopen the page when the UID workspace remounts.
+  const lastBackupRequest = useRef(backupRequest);
+  useEffect(() => {
+    if (backupRequest === lastBackupRequest.current) return;
+    lastBackupRequest.current = backupRequest;
+    navigate('backup');
+  }, [backupRequest]);
   const [online, setOnline] = useState(navigator.onLine);
   const [today, setToday] = useState(todayInRome());
   useEffect(() => {
@@ -164,7 +171,6 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
-  const [showBackup, setShowBackup] = useState(false);
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
   const [listView, setListView] = useState<ListView>('expenses');
   const [defaultFundId, setDefaultFundId] = useState(() => readDefaultFund(uid));
@@ -212,10 +218,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   return <>
     {/* The Lists page draws its own header (the open list's name is the title). */}
     {section !== 'lists' && <PageHeader title={heading}
-      action={section === 'list' ? (
-        <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
-          aria-expanded={showBackup} onPress={() => setShowBackup(!showBackup)}>{t("Dati")}</Button>
-      ) : section === 'categories' ? (
+      action={section === 'categories' || section === 'backup' ? (
         <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}
           onPress={() => onNavigate(returnTo)}>{t("Fatto")}</Button>
       ) : undefined} />}
@@ -241,10 +244,6 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </View>
     {section === 'list' && !starting && (
       <View style={styles.list}>
-        {/* Kept mounted while hidden so a pending import preview is not lost on close. */}
-        <View style={showBackup ? undefined : styles.hidden}>
-          <BackupActions backend={backend} enabled={synchronized} onClose={() => setShowBackup(false)} />
-        </View>
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
           options={listViews.map((view) => ({ ...view, label: t(view.label) }))} />
         {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} />}
@@ -255,6 +254,10 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         </>}
       </View>
     )}
+    {/* Preserve import previews and in-flight actions when leaving this page; no reads until an explicit action. */}
+    <View style={section === 'backup' && !starting ? undefined : styles.hidden}>
+      <BackupActions backend={backend} enabled={synchronized} />
+    </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} />}
     {section === 'lists' && !starting && <ListsPage remote={listState} categories={categoryState.categories} expenses={store.expenses}
       fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify} onCreateCategory={() => onNavigate('categories')} />}

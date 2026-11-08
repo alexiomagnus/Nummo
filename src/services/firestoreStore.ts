@@ -312,7 +312,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists);
       const current = await readArchive();
       const plan = planImport(checked, current, mode);
-      if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi del backup sono diversi da quelli già salvati con lo stesso ID o nome. Nessun dato è stato modificato.`);
+      if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi diversi dai dati salvati. Nessuna modifica.`);
       if (mode === 'replace') {
         const savedNames = await getDocsFromServer(names);
         const removedCategories = current.categories.filter((c) => plan.removeCategoryIds.includes(c.id));
@@ -342,8 +342,8 @@ export function createFirestoreStore(db: Firestore, uid: string) {
             for (const d of remaining.slice(i, i + 200)) batch.delete(d.ref);
             await batch.commit();
           }
-        } catch (reason) {
-          throw new Error('Sostituzione interrotta durante l’eliminazione: alcuni dati precedenti potrebbero essere già stati eliminati. Ripeti la sostituzione con lo stesso file. ' + (reason instanceof Error ? reason.message : ''));
+        } catch {
+          throw new Error('Sostituzione interrotta: alcuni dati potrebbero essere già eliminati. Riprova con lo stesso file.');
         }
       }
       type Chunk = { records: readonly ExpenseRecord[]; categoryRecords: readonly Category[]; fundRecords?: readonly Fund[]; movementRecords?: readonly Movement[] };
@@ -419,8 +419,8 @@ export function createFirestoreStore(db: Firestore, uid: string) {
             list.items.forEach((i) => tx.set(doc(listItems, i.id), { list_id: list.id, name: i.name, checked: i.checked, position: i.position }));
           });
         }
-      } catch (reason) {
-        throw new Error('Importazione interrotta: alcuni gruppi potrebbero essere già confermati. Originali intatti; ripeti lo stesso backup dopo aver risolto il problema. ' + (reason instanceof Error ? reason.message : ''));
+      } catch {
+        throw new Error('Importazione interrotta: riprova con lo stesso file, nulla verrà duplicato.');
       }
     },
   };

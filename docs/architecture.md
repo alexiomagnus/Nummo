@@ -547,3 +547,15 @@ globale. Riepilogo, Ciambella, Blocchi e andamento restano quelli della fase pre
 Su richiesta successiva, rimosso il pulsante «Spese del …» e il collegamento da Invio alle transazioni
 del giorno. TimeChart conserva selezione e lettura esatta di data/importo, senza callback di apertura.
 Il dialogo delle transazioni resta accessibile dalle categorie. Guida aggiornata in entrambe le lingue.
+
+## Pagina Importa ed esporta — 8 novembre 2026
+
+Esportazioni CSV/JSON e importazione JSON spostate dal pannello Dati della pagina Spese a una pagina
+del workspace, aperta dal menu account sotto Categorie. «Fatto» torna alla sezione principale di provenienza,
+anche passando da una pagina account all'altra. La richiesta di apertura è un evento di presentazione
+da App a RemoteWorkspace, senza router o destinazione aggiuntiva.
+
+BackupActions resta montato e nascosto fuori dalla pagina per preservare anteprima e lavoro asincrono;
+il montaggio non legge né scrive dati. Conferme, sincronizzazione richiesta, preflight, copia automatica
+e operazioni server restano quelle esistenti. CSV rimane solo esportazione, JSON esportazione/ripristino.
+La bozza del modulo resta montata e la pagina viene smontata con il workspace al cambio UID.

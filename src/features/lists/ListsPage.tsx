@@ -270,15 +270,13 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
           <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Totale spesa")} value={totalText} inputMode="decimal"
             placeholder="0,00" error={Boolean(totalError)} left={leadingIcon(iconShapes.euro)} accessibilityLabel={t("Totale spesa in euro, facoltativo")}
             onChangeText={(value) => { setTotalText(value); setTotalError(null); }} onBlur={saveTotal} onSubmitEditing={saveTotal} />
-          {totalError ? <HelperText type="error" accessibilityRole="alert">{t(totalError)}</HelperText>
-            : <HelperText type="info">{t("Basta il totale dello scontrino: i prezzi dei singoli prodotti non servono.")}</HelperText>}
+          {totalError && <HelperText type="error" accessibilityRole="alert">{t(totalError)}</HelperText>}
         </View>
         <View style={[styles.checkoutActions, compact && styles.checkoutCompact]}>
           <Button mode="contained" disabled={!canRegister} onPress={() => { saveTotal(); remote.clearError(); setRegistering(true); }}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.check} size={size} color={color} />}>{t("Registra spesa")}</Button>
         </View>
-        <Text variant="bodySmall" style={muted}>{!canRegister ? t("La registrazione richiede la connessione e dati sincronizzati.")
-          : remaining > 0 ? t("Puoi registrare anche se non hai spuntato tutti i prodotti.") : t("Tutti i prodotti sono stati acquistati.")}</Text>
+        {!canRegister && <Text variant="bodySmall" style={muted}>{t("La registrazione richiede la connessione e dati sincronizzati.")}</Text>}
       </View>}
 
       {!editable && remaining > 0 && <View style={styles.start}>

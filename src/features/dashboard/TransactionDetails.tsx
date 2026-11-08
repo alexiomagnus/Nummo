@@ -15,6 +15,9 @@ export function TransactionDetails({ title, items, categories, onClose }: {
   const compact = useSizeClass() === 'compact';
   return <Portal><AppDialog visible onDismiss={onClose}>
     <AppDialog.Title>{title}</AppDialog.Title>
+    <AppDialog.Content>
+      <Text variant="titleLarge" style={{ fontWeight: '700' }}>{items.length === 1 ? t('1 transazione') : t('{p0} transazioni', { p0: items.length })}</Text>
+    </AppDialog.Content>
     <AppDialog.ScrollArea><ScrollView>
       {!items.length && <Text>{t('Nessuna spesa')}</Text>}
       {[...items].sort((a, b) => b.date.localeCompare(a.date) || a.key.localeCompare(b.key)).map(item => {

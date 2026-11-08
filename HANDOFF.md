@@ -5,6 +5,61 @@ Firestore BYOF, accesso riservato all’UID in `config/owner`. Contesto stabile 
 configurazione: `README.md` e `docs/firebase-personale.md`; motivazioni architetturali: `docs/architecture.md`.
 Il codice e le verifiche sotto descrivono il checkout; requisiti e risultati storici non certificano il cloud.
 
+## Didascalia Barre rimossa — 8 novembre 2026
+
+- Eliminata dalla vista Barre la scritta «Lunghezza delle barre relativa alla categoria con spesa maggiore.».
+  Scala e calcoli invariati.
+- `npm run check` OK: typecheck, 303/303 test e build demo; `git diff --check` OK. Nessun deploy.
+
+## Rimozione confronto globale Dashboard — 8 novembre 2026
+
+- Rimosso il blocco comune con «+…% rispetto al periodo precedente» e le date del periodo precedente,
+  quindi non compare più scegliendo Ciambella, Blocchi o Barre. Conservate le date del periodo selezionato.
+- Solo modifica di presentazione in Dashboard; calcoli invariati.
+- `npm run check` OK: typecheck, 303/303 test e build demo; `git diff --check` OK. Nessun deploy.
+
+## Conteggio più evidente e nota budget rimossa — 8 novembre 2026
+
+- Conteggio transazioni nel dialogo Dashboard in `titleLarge` e grassetto 700.
+- Rimossa dalla pagina Fondi la nota «Somma dei budget dei fondi che ne hanno uno…».
+  Nessuna modifica ai calcoli di budget/saldo.
+- `npm run check` OK: typecheck, 303/303 test e build demo; `git diff --check` OK.
+  Nessuna nuova prova browser o deploy.
+
+## Conteggio transazioni nel dettaglio — 8 novembre 2026
+
+- Numero di transazioni mostrato sotto il titolo di TransactionDetails, calcolato sugli elementi
+  effettivamente aperti nel periodo; singolare/plurale IT/EN esistenti.
+- Rimosso il conteggio dalle righe Barre e dal pannello dei Blocchi; percentuali e importi conservati.
+  Eliminata la callback countOf dei Blocchi, ora superflua.
+- `npm run check` OK: typecheck, 303/303 test, build demo; `git diff --check` OK.
+  Nessuna nuova prova browser per questo spostamento, nessun deploy.
+
+## Importa ed esporta dal menu account — 8 novembre 2026
+
+- Nuova voce «Importa ed esporta» sotto Categorie e prima di Esci: apre una pagina intera del workspace
+  con Esporta transazioni CSV, Scarica backup JSON e Importa backup JSON. Rimosso «Dati» dalla pagina Spese.
+  «Fatto» torna alla sezione principale d'origine; quattro destinazioni invariate.
+- Riutilizzate le azioni BackupActions, senza titolo Dati o chiusura interna ridondanti. Componente mantenuto
+  montato/nascosto fuori dalla pagina per conservare anteprima e operazioni in corso; nessuna lettura al montaggio.
+  Evento di apertura backup consumato solo al cambio contatore, non al rimontaggio di un workspace UID.
+- Guida e IT/EN aggiornati. Nessuna modifica ai formati, alle conferme o all'accesso dati: CSV solo esportazione,
+  JSON esportazione e ripristino con le protezioni esistenti.
+- `npm run check` OK: typecheck, **303/303 test**, build demo; `git diff --check` OK.
+  Chromium headless su emulatori demo dedicati: 412×915 chiaro IT, 1280×900 scuro EN, 320×740 scuro EN.
+  Verificati ordine menu, azioni presenti, assenza del vecchio ingresso Dati, ritorno da Nuova spesa e da Spese,
+  bozza del modulo conservata e nessun overflow/errore JS. Screenshot `/tmp/nummo-backup-page-*.png`.
+- Nessun import/export effettivo o test Rules/hybrid ripetuto in questa fase di navigazione; nessun dispositivo
+  reale/cloud/deploy. Emulatori propri arrestati e configurazione temporanea rimossa.
+
+## Blocchi senza scritte — 8 novembre 2026
+
+- Rimossi nomi, importi e percentuali dalle tessere di BlockChart, insieme alla misurazione canvas/font
+  che serviva a impaginarli. Conservati geometria, colori, animazioni, selezione, etichette accessibili
+  e pannello dettagli sottostante (hover/focus/selezione).
+- `npm run check` OK: typecheck, 303/303 test e build demo; `git diff --check` OK.
+  Nessuna nuova prova visuale nel browser per questa rimozione; nessun deploy.
+
 ## Nuova spesa desktop più compatta — 8 novembre 2026
 
 - Solo la pagina Nuova spesa in classe expanded (≥1024 dp) attiva `dense` in ExpenseFields:
@@ -27,6 +82,16 @@ Il codice e le verifiche sotto descrivono il checkout; requisiti e risultati sto
   Rimangono selezione del giorno e lettura di data/importo con mouse, tocco e frecce;
   i dettagli per categoria restano disponibili. Rimossa la prop `onOpen` di TimeChart e aggiornata la Guida IT/EN.
 - `npm run check` OK: typecheck, 303/303 test e build demo; nessun deploy.
+
+## Riepilogo ed esiti del ripristino brevi — 8 novembre 2026 (non committato)
+
+- `BackupActions`: riepilogo = titolo, nome file su una riga, **una riga** «Da aggiungere: …» con i soli tipi presenti
+  (spese, categorie, fondi, movimenti, liste, singolare/plurale), un avviso breve sui riferimenti mancanti; pulsanti
+  affiancati di larghezza naturale (colonna su mobile). Successo in snackbar «Importazione completata.»; errori in una
+  riga in colore errore. Conferma di sostituzione in due frasi con i totali di eliminati/aggiunti.
+- `firestoreStore`: messaggi di blocco/interruzione accorciati, senza il dettaglio tecnico accodato (logica invariata).
+  Traduzioni obsolete rimosse, test i18n aggiornati. `npm run check` OK (303/303, build demo); `git diff --check` OK.
+  Non verificato nel browser (il selettore file dinamico non è pilotabile dallo script di collaudo).
 
 ## Blocchi della Dashboard — 8 novembre 2026 (non committato)
 
@@ -413,3 +478,18 @@ File passato da `makeBackup`/`parseBackup`; piani import vuoto/identico/conflitt
 asserzioni temporanee. `npm run check` OK (typecheck, 303/303 test, build demo); `git diff --check` OK.
 Nessuna importazione/scrittura nel database o modifica al codice applicativo da questa fase; import UI e Rules
 con questo file non provati. Usare preferibilmente la demo; risultati attesi e precauzioni nella guida.
+
+## Testi Liste ridotti
+
+Rimosse le tre frasi informative su tutti i prodotti acquistati, totale scontrino e registrazione parziale,
+con le traduzioni inglesi inutilizzate. Restano errori del totale e avviso di connessione/sincronizzazione.
+`npm run check` OK: typecheck, 303/303 test e build demo; `git diff --check` OK.
+
+## Backup spese standard — 8 novembre 2026
+
+Creato `docs/testing/nummo-spese-standard-2026-11-08.json` (v4): 66 spese singole e 6 ricorrenti,
+8 categorie, 3 fondi, 6 movimenti e 2 liste, da settembre all’8 novembre. Dati fittizi quotidiani, senza casi estremi;
+ID distinti dal precedente file limite, nomi categorie/fondi/liste prefissati `Demo ·`.
+Parser, piano import senza conflitti/riferimenti mancanti e ripetibilità verificati; totali nella guida
+`docs/testing/README.md`. `npm run check` OK: typecheck, 303/303 test e build demo; `git diff --check` OK.
+Nessuna scrittura nel database, modifica applicativa o importazione UI eseguita per questa fase.

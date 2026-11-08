@@ -1,20 +1,17 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { IconButton, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { layout, radius, spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
 import type { FirestoreStore } from '../../services/firestoreStore';
 import { message } from '../expenses/useRemoteExpenses';
-const importedMessage = 'Importazione completata con successo';
-// Success messages are shown in bold.
-const headlines = [importedMessage];
 const maxFileBytes = 5_000_000;
 export function download(name: string, content: string, type: string) {
   const url = URL.createObjectURL(new Blob([content], { type }));
@@ -23,7 +20,7 @@ export function download(name: string, content: string, type: string) {
 }
 type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: ImportPlan };
 
-export function BackupActions({ backend, enabled, onClose }: { backend: FirestoreStore; enabled: boolean; onClose?: () => void }) {
+export function BackupActions({ backend, enabled }: { backend: FirestoreStore; enabled: boolean }) {
   const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -60,17 +57,20 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
     }); }; input.click();
   };
   const icon = (shape: string) => ({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape} size={size} color={color} />;
-  const counts = (expenses: number, categories: number) => t("{p0} spese · {p1} categorie", { p0: expenses, p1: categories });
-  const fundCounts = (funds: number, movements: number) => t("{p0} fondi · {p1} movimenti", { p0: funds, p1: movements });
-  const hasFunds = (data: ImportData) => data.funds.length + data.movements.length > 0;
   const hint = { color: theme.colors.onSurfaceVariant };
   const merge = preview?.merge;
   const replace = preview?.replace;
   const mergeBlocked = !!merge && merge.conflicts.length > 0;
-  const mergeEmpty = !!merge && merge.addExpenses.length === 0 && merge.addCategories.length === 0 && merge.addFunds.length === 0 && merge.addMovements.length === 0 && merge.addLists.length === 0;
-  const finish = () => { setPreview(null); setStatus(importedMessage); };
-  return <Card title={t("Dati")}
-    actions={onClose && <IconButton icon={icon(iconShapes.close)} style={styles.close} accessibilityLabel={t("Chiudi")} onPress={onClose} />}>
+  // One line: only the kinds of data the file would add.
+  const added = merge ? [
+    [merge.addExpenses.length, "1 spesa", "{p0} spese"], [merge.addCategories.length, "1 categoria", "{p0} categorie"],
+    [merge.addFunds.length, "1 fondo", "{p0} fondi"], [merge.addMovements.length, "1 movimento", "{p0} movimenti"],
+    [merge.addLists.length, "1 lista", "{p0} liste"],
+  ].filter(([n]) => (n as number) > 0).map(([n, one, many]) => (n === 1 ? t(one as string) : t(many as string, { p0: n as number }))) : [];
+  const mergeEmpty = !!merge && added.length === 0;
+  const missing = merge ? merge.missingFundReferences + merge.missingCategoryReferences : 0;
+  const finish = () => { setPreview(null); notify("Importazione completata."); };
+  return <Card>
     <View style={styles.group}>
       <Text variant="titleSmall">{t("Consulta le spese")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
@@ -85,37 +85,28 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
       </View>
     </View>
     {preview && merge && replace && <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
-      <Text variant="titleSmall">{mergeBlocked ? t("Impossibile unire il backup") : t("Riepilogo del ripristino")}</Text>
-      {mergeBlocked ? <Text variant="bodyMedium" style={hint}>
-        {t("{p0} elementi sono diversi dai dati salvati.", { p0: merge.conflicts.length })}
-      </Text> : <>
-        <Text variant="bodyMedium" style={hint}>{t("File: {p0}", { p0: preview.file })}</Text>
-        <View style={styles.lines}>
-          <Text variant="bodyLarge">{t("Nel backup: {p0}", { p0: counts(preview.data.expenses.length, preview.data.categories.length) })}</Text>
-          <Text variant="bodyLarge">{t("Da aggiungere: {p0}", { p0: counts(merge.addExpenses.length, merge.addCategories.length) })}</Text>
-          <Text variant="bodyLarge">{t("Già presenti e identici: {p0}", { p0: counts(merge.sameExpenses, merge.sameCategories) })}</Text>
-          {(hasFunds(preview.data) || merge.addFunds.length + merge.sameFunds > 0) && <Text variant="bodyLarge">
-            {t("Fondi nel backup: {p0} · da aggiungere: {p1}", { p0: fundCounts(preview.data.funds.length, preview.data.movements.length), p1: fundCounts(merge.addFunds.length, merge.addMovements.length) })}</Text>}
-          {(preview.data.lists.length > 0 || merge.sameLists > 0) && <Text variant="bodyLarge">
-            {t("Liste nel backup: {p0} · da aggiungere: {p1}", { p0: preview.data.lists.length, p1: merge.addLists.length })}</Text>}
-          {merge.missingFundReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese o movimenti fanno riferimento a fondi che non saranno presenti: appariranno senza fondo.", { p0: merge.missingFundReferences })}</Text>}
-          {merge.missingCategoryReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese fanno riferimento a categorie che non saranno presenti.", { p0: merge.missingCategoryReferences })}</Text>}
-        </View>
-      </>}
-      {mergeEmpty && !mergeBlocked && <Text variant="bodyMedium" style={hint}>{t("Non c’è nulla da aggiungere: i dati del backup sono già presenti.")}</Text>}
-      {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
-        await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists); finish();
-      })}>{t("Unisci ai dati esistenti")}</Button>}
-      <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
-      <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
+      <View style={styles.lines}>
+        <Text variant="titleSmall">{mergeBlocked ? t("Impossibile unire il backup") : t("Riepilogo del ripristino")}</Text>
+        <Text variant="bodySmall" numberOfLines={1} style={hint}>{preview.file}</Text>
+      </View>
+      <Text variant="bodyLarge">
+        {mergeBlocked ? t("{p0} elementi sono diversi dai dati salvati.", { p0: merge.conflicts.length })
+          : mergeEmpty ? t("Niente da aggiungere: dati già presenti.")
+          : t("Da aggiungere: {p0}", { p0: added.join(' · ') })}</Text>
+      {!mergeBlocked && missing > 0 && <Text variant="bodySmall" style={hint}>
+        {missing === 1 ? t("1 riferimento a fondi o categorie mancanti.") : t("{p0} riferimenti a fondi o categorie mancanti.", { p0: missing })}</Text>}
+      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
+        {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists); finish();
+        })}>{t("Unisci ai dati esistenti")}</Button>}
+        <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
+        <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
+      </View>
     </View>}
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
-      description={replace && t("Verranno eliminate {p0} spese e {p1} categorie attuali diverse dal backup e aggiunte {p2} spese e {p3} categorie. Prima di procedere viene scaricata una copia dei dati attuali (JSON). L’operazione non può essere annullata.",
-        { p0: replace.removeExpenseIds.length, p1: replace.removeCategoryIds.length, p2: replace.addExpenses.length, p3: replace.addCategories.length })
-        + (replace.removeFundIds.length + replace.removeMovementIds.length + replace.addFunds.length + replace.addMovements.length > 0
-          ? '\n\n' + t("Fondi e movimenti: {p0} eliminati, {p1} aggiunti.", { p0: replace.removeFundIds.length + replace.removeMovementIds.length, p1: replace.addFunds.length + replace.addMovements.length }) : '')
-        + (replace.removeListIds.length + replace.addLists.length > 0
-          ? '\n\n' + t("Liste della spesa: {p0} eliminate, {p1} aggiunte.", { p0: replace.removeListIds.length, p1: replace.addLists.length }) : '')}
+      description={replace && t("Verranno eliminati {p0} elementi e aggiunti {p1}. Prima viene scaricata una copia dei dati attuali.", {
+        p0: replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length + replace.removeMovementIds.length + replace.removeListIds.length,
+        p1: replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length + replace.addMovements.length + replace.addLists.length })}
       onDismiss={() => setConfirmReplace(false)}
       onConfirm={async () => {
         if (!preview || busy) return false;
@@ -127,16 +118,14 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />
-    {status !== '' && <Text accessibilityLiveRegion="polite" style={headlines.some((item) => status.startsWith(item)) ? styles.bold : undefined}>{t(status)}</Text>}
+    {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}
   </Card>;
 }
 
 const styles = StyleSheet.create({
-  bold: { fontWeight: '700' },
   group: { gap: spacing.sm },
-  lines: { gap: spacing.xs },
-  close: { margin: 0, width: layout.minTouch, height: layout.minTouch },
+  lines: { gap: 2 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
-  preview: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.md, marginTop: spacing.md },
+  preview: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.md },
 });

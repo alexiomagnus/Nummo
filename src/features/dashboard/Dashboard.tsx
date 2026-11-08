@@ -36,7 +36,7 @@ type Props = { occurrences: readonly Occurrence[]; categories: readonly Category
 };
 
 export function Dashboard({ occurrences, categories, preferences, onChangePreferences }: Props) {
-  const { t, formatAmount, formatDate, locale } = useI18n();
+  const { t, formatAmount, formatDate } = useI18n();
   const theme = useTheme();
   const size = useSizeClass();
   const sideBySide = size !== 'compact';
@@ -48,9 +48,6 @@ export function Dashboard({ occurrences, categories, preferences, onChangePrefer
   const source = useMemo(() => breakdown(occurrences, categories, period, todayInRome()), [occurrences, categories, period]);
   const { data, others } = useMemo(() => categoryPresentation(source), [source]);
   const insights = useMemo(() => dashboardInsights(source, occurrences, categories, todayInRome()), [source, occurrences, categories]);
-  // Transactions per series in the period; the «Altre» group counts the categories it contains.
-  const counts = useMemo(() => new Map(insights.rows.map((row) => [row.key, row.count])), [insights.rows]);
-  const countOf = (key: string) => key === otherCategoriesKey ? others.reduce((sum, item) => sum + (counts.get(item.key) ?? 0), 0) : counts.get(key) ?? 0;
   const openCategory = (key: string) => {
     const series = data.series.find(item => item.key === key) ?? source.series.find(item => item.key === key);
     const keys = key === otherCategoriesKey ? new Set(others.map(item => item.key)) : new Set([key]);
@@ -110,19 +107,13 @@ export function Dashboard({ occurrences, categories, preferences, onChangePrefer
           <Text variant="titleLarge">{source.count}</Text>
         </View>
       </View>
-      {insights.change !== null && <View style={{ gap: spacing.xs }}>
-        <Text variant="bodySmall" style={muted}>
-          {t('{p0} rispetto al periodo precedente', { p0: new Intl.NumberFormat(locale, { maximumFractionDigits: 0, signDisplay: 'always' }).format(insights.change) + '%' })}</Text>
-        <Text variant="bodySmall" style={muted}>
-          {formatDate(insights.previousFrom)} – {formatDate(insights.previousTo)}
-        </Text>
-      </View>}
+
 
       {source.count === 0 ? <Text variant="bodyMedium" style={muted}>{t('Nessuna spesa in questo periodo.')}</Text> :
         <Card>
           {chart === 'bars' ? <BarChart rows={insights.rows} total={source.total} categories={categories} colors={colors} onOpen={openCategory} /> :
             chart === 'blocks' ? <View style={styles.chartRow}>
-              <BlockChart data={data} colors={colors} active={active} onActive={setActive} percent={percent} countOf={countOf} onOpen={openCategory} />
+              <BlockChart data={data} colors={colors} active={active} onActive={setActive} percent={percent} onOpen={openCategory} />
               {/* Every category, by amount, identified by colour; «Altre» expands to the categories it groups. */}
               <CategoryLegend key={period} series={data.series} others={others} categories={categories} total={data.total}
                 colors={colors} active={active} onActive={setActive} onOpen={openCategory} compact />

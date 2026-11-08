@@ -6,10 +6,10 @@ import { radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
-type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut: () => void; onOpenSettings: () => void; onOpenCategories: () => void };
+type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut: () => void; onOpenSettings: () => void; onOpenCategories: () => void; onOpenBackup: () => void };
 
-// Account avatar → menu with the signed-in e-mail, settings, categories and the sign-out action.
-export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenCategories }: Props) {
+// Account avatar → menu with the signed-in e-mail, settings, categories, import/export and the sign-out action.
+export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenCategories, onOpenBackup }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -49,6 +49,9 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
       <Menu.Item title={t("Categorie")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.tag} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenCategories(); }} />
+      <Menu.Item title={t("Importa ed esporta")} style={styles.item}
+        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
+        onPress={() => { setOpen(false); onOpenBackup(); }} />
       <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
         onPress={() => { setOpen(false); onSignOut(); }} />

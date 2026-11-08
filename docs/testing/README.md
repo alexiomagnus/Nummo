@@ -56,3 +56,32 @@ Le 89 righe del backup includono le sei serie; non sono 89 pagamenti del mese.
 
 Il file valido serve a esplorare situazioni difficili ma ammesse; importi negativi o date impossibili non sono
 inclusi perché renderebbero inutilizzabile l’intero backup.
+
+## Spese standard di un utente comune
+
+File: [`nummo-spese-standard-2026-11-08.json`](nummo-spese-standard-2026-11-08.json), backup v4.
+Profilo fittizio di una persona che vive in affitto: **66 spese singole e 6 pagamenti ricorrenti**, da settembre
+all’8 novembre 2026, in 8 categorie. Supermercato, bar, pranzi, bollette, autobus, carburante, farmacia,
+abbigliamento e tempo libero, con normali differenze tra un mese e l’altro.
+Ricorrenti: affitto 650 €, internet 26,90 €, telefono 9,99 €, musica 10,99 €, palestra 29,90 € e antivirus annuale 24,99 €.
+
+Include 3 fondi (conto quotidiano, contanti e risparmi), stipendio mensile simulato da 1.850 €, un rimborso da 35 €,
+trasferimenti per prelievi/risparmio e 2 liste della spesa (una registrata, una da completare).
+Nomi di categorie, fondi e liste prefissati `Demo ·`; descrizioni delle spese naturali, nessun importo estremo,
+riferimento mancante, pausa o annullamento. Gli ID sono distinti da quelli del file dei casi limite.
+
+Su archivio contenente solo questo file, all’8 novembre 2026:
+
+| Periodo | Speso maturato | Entrate, ricariche incluse |
+| --- | ---: | ---: |
+| Settembre 2026 | 1.456,65 € | 1.850,00 € |
+| Ottobre 2026 | 1.555,79 € | 1.885,00 € |
+| Novembre fino all’8 | 828,77 € | 1.850,00 € |
+
+Totale disponibile attuale, tutti i fondi: **3.893,79 €**; **80 occorrenze** maturate.
+Valori calcolati con il dominio; variano dopo l’8 novembre o unendo dati preesistenti.
+
+Importare da **Spese → Dati → Importa backup (JSON) → Unisci ai dati esistenti**, preferibilmente nella demo.
+Le categorie con nomi uguali ma ID diversi possono produrre un conflitto: usare un archivio demo vuoto in tal caso.
+File verificato con parser, piano su archivio vuoto, riferimenti completi e reimportazione identica senza aggiunte.
+Importazione UI/Firestore con questo specifico file non eseguita.

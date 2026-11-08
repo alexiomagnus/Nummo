@@ -41,10 +41,11 @@ test('errori dominio: validazione e CSV tradotti nel punto di presentazione', ()
     assert.match(error instanceof Error ? t(error.message) : '', /newer version of Nummo/);
     return true;
   });
-  assert.equal(t('Importazione bloccata: 2 elementi del backup sono diversi da quelli già salvati con lo stesso ID o nome. Nessun dato è stato modificato.'),
-    'Import blocked: 2 items in the backup differ from those already saved with the same ID or name. No data was changed.');
-  assert.equal(t('Importazione interrotta: alcuni gruppi potrebbero essere già confermati. Originali intatti; ripeti lo stesso backup dopo aver risolto il problema. Spesa non valida.'),
-    'Import interrupted: some batches may already have been confirmed. Originals are intact; import the same backup again after resolving the issue. Invalid expense.');
+  // Import outcomes stay short: one sentence, no appended technical detail.
+  assert.equal(t('Importazione bloccata: 2 elementi diversi dai dati salvati. Nessuna modifica.'), 'Import blocked: 2 items differ from your saved data. Nothing changed.');
+  assert.equal(t('Importazione interrotta: riprova con lo stesso file, nulla verrà duplicato.'), 'Import interrupted: try again with the same file, nothing will be duplicated.');
+  assert.equal(t('Importazione completata.'), 'Import completed.');
+  assert.equal(t('Da aggiungere: 89 spese · 15 categorie'), 'To add: 89 spese · 15 categorie');
 });
 
 test('date e importi: lingua di visualizzazione, valuta e data civile invariate', () => {
