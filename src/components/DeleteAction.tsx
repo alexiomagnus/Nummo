@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Dialog, IconButton, Portal, Text, useTheme } from 'react-native-paper';
@@ -20,6 +21,7 @@ type DialogProps = {
 // left-aligned title and consequences, actions at the bottom right (full width on phones).
 // Escape cancels; the safe action («Annulla») takes the initial focus.
 export function DeleteDialog({ visible, name, title, description, onDismiss, onConfirm }: DialogProps) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const [busy, setBusy] = useState(false);
@@ -33,17 +35,17 @@ export function DeleteDialog({ visible, name, title, description, onDismiss, onC
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={() => { if (!busy) onDismiss(); }} style={{ width: '92%', maxWidth: 400, alignSelf: 'center', borderRadius: radius.dialog }}>
-        <View role="alertdialog" aria-label={title ?? `Eliminare ${name}?`}>
+        <View role="alertdialog" aria-label={title ?? t("Eliminare {p0}?", { p0: name })}>
           <View style={styles.header}>
             <SvgIcon shape={iconShapes.trash} size={24} color={colors.error} />
-            <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>{title ?? `Eliminare ${name}?`}</Text>
+            <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>{title ?? t("Eliminare {p0}?", { p0: name })}</Text>
           </View>
-          {(description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? 'L’operazione non può essere annullata.'}</Text>}
+          {(description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? t("L’operazione non può essere annullata.")}</Text>}
           <View style={[styles.actions, compact && styles.actionsCompact]}>
-            <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={onDismiss}>Annulla</Button>
+            <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={onDismiss}>{t("Annulla")}</Button>
             <Button mode="contained" buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy} contentStyle={styles.button}
-              accessibilityLabel={`Conferma eliminazione di ${name}`}
-              onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>Elimina</Button>
+              accessibilityLabel={t("Conferma eliminazione di {p0}", { p0: name })}
+              onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{t("Elimina")}</Button>
           </View>
         </View>
       </Dialog>
@@ -62,16 +64,18 @@ const styles = StyleSheet.create({
 
 // Trash icon first, explicit confirmation dialog second. The action seen when the dialog
 // was opened is the one confirmed, even if the parent re-renders with newer data meanwhile.
-export function DeleteAction({ name, title, description, onDelete, labeled }: { name: string; title?: string; description?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean }) {
+export function DeleteAction({ name, title, description, onDelete, labeled, disabled, onOpenChange }: { name: string; title?: string; description?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
+  const { t } = useI18n();
   const action = useRef(onDelete);
   const [open, setOpen] = useState(false);
   const { colors } = useTheme();
-  const request = () => { action.current = onDelete; setOpen(true); };
+  const request = () => { action.current = onDelete; setOpen(true); onOpenChange?.(true); };
+  const dismiss = () => { setOpen(false); onOpenChange?.(false); };
   const icon = ({ size, color }: { size: number; color: string }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />;
   return <>
     {labeled
-      ? <Button mode="text" icon={icon} textColor={colors.error} accessibilityLabel={`Elimina ${name}`} onPress={request}>Elimina</Button>
-      : <IconButton icon={icon} style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 }} accessibilityLabel={`Elimina ${name}`} onPress={request} />}
-    <DeleteDialog visible={open} name={name} title={title} description={description} onDismiss={() => setOpen(false)} onConfirm={() => action.current()} />
+      ? <Button mode="text" disabled={disabled} icon={icon} textColor={colors.error} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</Button>
+      : <IconButton disabled={disabled} icon={icon} style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 }} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request} />}
+    <DeleteDialog visible={open} name={name} title={title} description={description} onDismiss={dismiss} onConfirm={() => action.current()} />
   </>;
 }

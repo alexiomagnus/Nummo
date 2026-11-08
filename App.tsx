@@ -6,6 +6,7 @@ import { AccountMenu } from './src/components/AccountMenu';
 import { AppShell } from './src/components/AppShell';
 import { Card } from './src/components/Card';
 import { ThemeIcon } from './src/components/ThemeIcon';
+import { SvgIcon, iconShapes } from './src/components/SvgIcon';
 import type { Preferences } from './src/features/settings/preferences';
 import { SettingsDialog } from './src/features/settings/SettingsDialog';
 import { usePreferences } from './src/features/settings/usePreferences';
@@ -17,14 +18,10 @@ import { GlobalStyle } from './src/theme/GlobalStyle';
 import { createTheme } from './src/theme/theme';
 import { spacing } from './src/theme/tokens';
 import { useReducedMotion } from './src/theme/useSizeClass';
+import { I18nProvider, useI18n } from './src/i18n/I18nProvider';
 
 const demo = backendMode === 'emulator';
 const configMissing = missingFirebaseConfig.length > 0;
-const storageNote = (demo || firestoreEmulator
-  ? 'Spese e categorie negli emulatori locali Firestore.'
-  : 'Spese e categorie nel tuo progetto Firebase personale.') + (persistentCache
-    ? ' Cache offline SDK abilitata dove supportata: usa un dispositivo fidato.'
-    : ' Cache in memoria: le scritture offline non sopravvivono alla chiusura.');
 
 export default function App() {
   const systemScheme = useColorScheme();
@@ -34,13 +31,15 @@ export default function App() {
   const { accent, colorMode, font } = preferences;
   const theme = useMemo(() => createTheme(dark, reduceMotion, { accent, colorMode, font }), [dark, reduceMotion, accent, colorMode, font]);
   return (
-    <SafeAreaProvider>
-      <PaperProvider theme={theme}>
-        <GlobalStyle />
-        <Root dark={dark} onToggleTheme={() => updatePreferences({ theme: dark ? 'light' : 'dark' })}
-          preferences={preferences} onChangePreferences={updatePreferences} onResetPreferences={resetPreferences} />
-      </PaperProvider>
-    </SafeAreaProvider>
+    <I18nProvider language={preferences.language}>
+      <SafeAreaProvider>
+        <PaperProvider theme={theme}>
+          <GlobalStyle />
+          <Root dark={dark} onToggleTheme={() => updatePreferences({ theme: dark ? 'light' : 'dark' })}
+            preferences={preferences} onChangePreferences={updatePreferences} onResetPreferences={resetPreferences} />
+        </PaperProvider>
+      </SafeAreaProvider>
+    </I18nProvider>
   );
 }
 
@@ -50,12 +49,20 @@ type RootProps = {
 };
 
 function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPreferences }: RootProps) {
+  const { t } = useI18n();
   const theme = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const session = useSession(!configMissing);
+  const storageNote = t(demo || firestoreEmulator
+    ? 'Spese e categorie negli emulatori locali Firestore.'
+    : 'Spese e categorie nel tuo progetto Firebase personale.') + ' ' + t(persistentCache
+      ? 'Cache offline SDK abilitata dove supportata: usa un dispositivo fidato.'
+      : 'Cache in memoria: le scritture offline non sopravvivono alla chiusura.');
+  const settings = <SettingsDialog visible={settingsOpen} preferences={preferences} dark={dark} onChange={onChangePreferences}
+    onReset={onResetPreferences} onDismiss={() => setSettingsOpen(false)} />;
   const themeToggle = (
     <IconButton size={24} style={styles.touch} icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
-      onPress={onToggleTheme} accessibilityLabel={dark ? 'Attiva tema chiaro' : 'Attiva tema scuro'} />
+      onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
   const account = session.status === 'signed-in'
     ? <AccountMenu email={session.user.email} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsOpen(true)} /> : null;
@@ -65,11 +72,10 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
       <>
         {session.error && (
           <View style={[styles.alert, { backgroundColor: theme.colors.errorContainer }]}>
-            <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{session.error}</Text>
+            <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{t(session.error)}</Text>
           </View>
         )}
-        <SettingsDialog visible={settingsOpen} preferences={preferences} dark={dark} onChange={onChangePreferences}
-          onReset={onResetPreferences} onDismiss={() => setSettingsOpen(false)} />
+        {settings}
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
             topActions={<>{themeToggle}{account}</>} />
@@ -78,18 +84,21 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
     );
   }
   return (
-    <AppShell actions={themeToggle} brand={{ label: 'accesso', onPress: leaveGuide }}>
+    <>
+    {settings}
+    <AppShell actions={<>{themeToggle}<IconButton style={styles.touch} accessibilityLabel={t('Impostazioni')}
+      icon={({ size, color }) => <SvgIcon shape={iconShapes.settings} size={size} color={color} />}
+      onPress={() => setSettingsOpen(true)} /></>} brand={{ label: t("accesso"), onPress: leaveGuide }}>
       {configMissing && (
-        <Card title="Configurazione Firebase mancante">
+        <Card title={t("Configurazione Firebase mancante")}>
           <Text variant="bodyMedium">
-            Mancano: {missingFirebaseConfig.join(', ')}. Copia `.env.example` in `.env.local`,
-            compila i valori e riavvia Expo.
-          </Text>
+            {t("Mancano: ")}{missingFirebaseConfig.join(', ')}{t(". Copia `.env.example` in `.env.local`, compila i valori e riavvia Expo.")}</Text>
         </Card>
       )}
-      {session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel="Caricamento della sessione" /></View>}
+      {session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
       {session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} />}
     </AppShell>
+    </>
   );
 }
 

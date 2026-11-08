@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native';
@@ -9,29 +10,30 @@ import { inputOutline, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
-const monthFormat = new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const dayFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-const weekdays = ['L', 'M', 'M', 'G', 'V', 'S', 'D'];
+const monthFormat = (locale: string) => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const dayFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const italianWeekdays = ['L', 'M', 'M', 'G', 'V', 'S', 'D'];
 const iso = (year: number, month: number, day: number) => new Date(Date.UTC(year, month, day)).toISOString().slice(0, 10);
 const yesterdayOf = (today: string) => { const d = new Date(`${today}T00:00:00Z`); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); };
 
-const labelOf = (selected: string, today: string) =>
-  selected === today ? 'Oggi' : selected === yesterdayOf(today) ? 'Ieri' : dayFormat.format(new Date(`${selected}T00:00:00Z`));
+const labelOf = (selected: string, today: string, locale: string) =>
+  selected === today ? 'Oggi' : selected === yesterdayOf(today) ? 'Ieri' : dayFormat(locale).format(new Date(`${selected}T00:00:00Z`));
 
-const headlineFormat = new Intl.DateTimeFormat('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const headlineFormat = (locale: string) => new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 // Outlined read-only field showing the chosen date («Oggi», «Ieri» or the date); opens the modal date picker.
 // An empty `value` means today (resolved at save time), as in the draft.
 export function DateField({ value, error, disabled, onChange }: { value: string; error?: boolean; disabled?: boolean; onChange: (date: string) => void }) {
+  const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const today = todayInRome();
-  const shown = labelOf(value || today, today);
+  const shown = t(labelOf(value || today, today, locale));
   return (
     <>
       <Pressable disabled={disabled} onPress={() => setOpen(true)} accessibilityRole="button" aria-haspopup="dialog" aria-expanded={open}
-        aria-disabled={disabled} accessibilityLabel={`Data della spesa: ${shown}. Cambia data`}>
+        aria-disabled={disabled} accessibilityLabel={t("Data della spesa: {p0}. Cambia data", { p0: shown })}>
         <View pointerEvents="none">
-          <TextInput outlineStyle={inputOutline} label="Data" value={shown} mode="outlined" readOnly focusable={false} error={error}
+          <TextInput outlineStyle={inputOutline} label={t("Data")} value={shown} mode="outlined" readOnly focusable={false} error={error}
             aria-disabled={disabled} showSoftInputOnFocus={false} left={leadingIcon(iconShapes.calendar)} />
         </View>
       </Pressable>
@@ -44,6 +46,7 @@ export function DateField({ value, error, disabled, onChange }: { value: string;
 // Material 3 modal date picker: headline with the pending date, month grid, Annulla / OK. Days outside the allowed
 // range (2000-01-01 … today) are disabled, so no invalid date can be picked.
 function DatePickerDialog({ visible, value, onDismiss, onConfirm }: { visible: boolean; value: string; onDismiss: () => void; onConfirm: (date: string) => void }) {
+  const { t, locale } = useI18n();
   const { colors } = useTheme();
   const today = todayInRome();
   const [picked, setPicked] = useState(value || today);
@@ -58,15 +61,15 @@ function DatePickerDialog({ visible, value, onDismiss, onConfirm }: { visible: b
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
         <View style={styles.headline} accessibilityLiveRegion="polite">
-          <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>Seleziona data</Text>
-          <Text variant="headlineMedium" style={styles.headlineText}>{headlineFormat.format(new Date(`${picked}T00:00:00Z`))}</Text>
+          <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Seleziona data")}</Text>
+          <Text variant="headlineMedium" style={styles.headlineText}>{headlineFormat(locale).format(new Date(`${picked}T00:00:00Z`))}</Text>
         </View>
         <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
         <View style={styles.body}>
           <Calendar selected={picked} month={month} onMonth={setMonth} onPick={setPicked} />
         </View>
         <Dialog.Actions>
-          <Button onPress={onDismiss}>Annulla</Button>
+          <Button onPress={onDismiss}>{t("Annulla")}</Button>
           <Button onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
         </Dialog.Actions>
       </Dialog>
@@ -75,6 +78,7 @@ function DatePickerDialog({ visible, value, onDismiss, onConfirm }: { visible: b
 }
 
 function Calendar({ selected, month, onMonth, onPick }: { selected: string; month: string; onMonth: (month: string) => void; onPick: (date: string) => void }) {
+  const { t, locale } = useI18n();
   const { colors } = useTheme();
   const today = todayInRome();
   const year = Number(month.slice(0, 4));
@@ -94,12 +98,12 @@ function Calendar({ selected, month, onMonth, onPick }: { selected: string; mont
   return (
     <View>
       <View style={styles.header}>
-        {nav('Mese precedente', iconShapes.chevronLeft, canPrev, () => shift(-1))}
-        <Text variant="titleSmall" accessibilityLiveRegion="polite" style={styles.month}>{monthFormat.format(new Date(Date.UTC(year, monthIndex, 1)))}</Text>
-        {nav('Mese successivo', iconShapes.chevronRight, canNext, () => shift(1))}
+        {nav(t("Mese precedente"), iconShapes.chevronLeft, canPrev, () => shift(-1))}
+        <Text variant="titleSmall" accessibilityLiveRegion="polite" style={styles.month}>{monthFormat(locale).format(new Date(Date.UTC(year, monthIndex, 1)))}</Text>
+        {nav(t("Mese successivo"), iconShapes.chevronRight, canNext, () => shift(1))}
       </View>
       <View style={styles.grid}>
-        {weekdays.map((day, index) => <View key={index} style={styles.cell}><Text variant="labelSmall" style={{ color: colors.onSurfaceVariant }}>{day}</Text></View>)}
+        {(locale === 'it-IT' ? italianWeekdays : ['M', 'T', 'W', 'T', 'F', 'S', 'S']).map((day, index) => <View key={index} style={styles.cell}><Text variant="labelSmall" style={{ color: colors.onSurfaceVariant }}>{day}</Text></View>)}
         {cells.map((date, index) => {
           if (!date) return <View key={index} style={styles.cell} />;
           const active = date === selected;
@@ -108,7 +112,7 @@ function Calendar({ selected, month, onMonth, onPick }: { selected: string; mont
             <View key={index} style={styles.cell}>
               <StateLayerPressable layerColor={active ? colors.onPrimary : colors.onSurface} radius={radius.pill} disabled={!allowed}
                 onPress={() => onPick(date)} accessibilityRole="button" aria-pressed={active}
-                accessibilityLabel={dayFormat.format(new Date(`${date}T00:00:00Z`))}
+                accessibilityLabel={dayFormat(locale).format(new Date(`${date}T00:00:00Z`))}
                 style={[styles.day, active && { backgroundColor: colors.primary }, !active && date === today && { borderWidth: 1, borderColor: colors.primary }]}>
                 <Text variant="bodyMedium" style={{ color: active ? colors.onPrimary : colors.onSurface, fontVariant: ['tabular-nums'] }}>{Number(date.slice(8))}</Text>
               </StateLayerPressable>

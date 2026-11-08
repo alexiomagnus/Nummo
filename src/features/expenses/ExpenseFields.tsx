@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
@@ -31,6 +32,7 @@ type Props = {
 // amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
 // Every field is required; the screen does not star them one by one.
 export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, extra, onCreateCategory, onChange, onBlur }: Props) {
+  const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
   const compact = useSizeClass() === 'compact';
@@ -42,52 +44,54 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       <View>
         <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
           <View style={[styles.amount, compact && styles.amountCompact]}>
-            <TextInput outlineStyle={inputOutline} label="Importo" value={values.amount} onChangeText={(value) => onChange('amount', value)}
-              mode="outlined" inputMode="decimal" placeholder="0,00" error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
-              onBlur={() => onBlur('amount')} accessibilityLabel="Importo in euro, obbligatorio"
+            <TextInput outlineStyle={inputOutline} label={t("Importo")} value={values.amount} onChangeText={(value) => onChange('amount', value)}
+              mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'} error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
+              onBlur={() => onBlur('amount')} accessibilityLabel={t("Importo in euro, obbligatorio")}
               contentStyle={styles.amountText} left={leadingIcon(iconShapes.euro)} />
           </View>
           <View style={[styles.date, compact && styles.dateCompact]}>
             <DateField value={values.date} disabled={disabled} error={Boolean(errors.date)} onChange={(date) => onChange('date', date)} />
           </View>
         </View>
-        {errors.amount && <HelperText type="error" accessibilityRole="alert">{errors.amount}</HelperText>}
-        {errors.date && <HelperText type="error" accessibilityRole="alert">{errors.date}</HelperText>}
+        {errors.amount && <HelperText type="error" accessibilityRole="alert">{t(errors.amount)}</HelperText>}
+        {errors.date && <HelperText type="error" accessibilityRole="alert">{t(errors.date)}</HelperText>}
       </View>
       <View>
-        <TextInput outlineStyle={inputOutline} label="Descrizione" value={values.description} mode="outlined" error={Boolean(errors.description)}
+        <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
           onChangeText={(value) => onChange('description', value)} onBlur={() => onBlur('description')}
-          accessibilityLabel="Descrizione, obbligatoria" readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
+          accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {(errors.description || length > 0) && <View style={styles.helperRow}>
-          <HelperText type="error" visible={Boolean(errors.description)} accessibilityRole="alert" style={styles.helper}>{errors.description ?? ' '}</HelperText>
+          <HelperText type="error" visible={Boolean(errors.description)} accessibilityRole="alert" style={styles.helper}>{t(errors.description ?? ' ')}</HelperText>
           {length > 0 && <Text variant="bodySmall" style={{ color: length > expensePolicy.maxDescriptionLength ? colors.error : colors.onSurfaceVariant }}>{length}/{expensePolicy.maxDescriptionLength}</Text>}
         </View>}
       </View>
       {dataState !== 'ready' ? (
         // Keep the category field's footprint while reading: [] is not an empty archive yet.
-        <TextInput outlineStyle={inputOutline} label="Categoria" mode="outlined" readOnly aria-disabled
-          value={dataState === 'loading' ? 'Caricamento…' : 'Dati non disponibili'}
-          accessibilityLabel={dataState === 'loading' ? 'Categoria: caricamento in corso' : 'Categoria: dati non disponibili'} />
+        <TextInput outlineStyle={inputOutline} label={t("Categoria")} mode="outlined" readOnly aria-disabled
+          value={dataState === 'loading' ? t("Caricamento…") : t("Dati non disponibili")}
+          accessibilityLabel={dataState === 'loading' ? t("Categoria: caricamento in corso") : t("Categoria: dati non disponibili")} />
       ) : categories.length === 0 ? (
-        <View style={[styles.empty, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label="Categoria">
+        <View style={[styles.empty, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label={t("Categoria")}>
           <View style={styles.emptyText}>
-            <Text variant="titleSmall">Nessuna categoria</Text>
-            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>Serve almeno una categoria per salvare la spesa.</Text>
+            <Text variant="titleSmall">{t("Nessuna categoria")}</Text>
+            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Serve almeno una categoria per salvare la spesa.")}</Text>
           </View>
-          {onCreateCategory && <Button mode="contained-tonal" onPress={onCreateCategory} disabled={disabled}>Crea categoria</Button>}
-          {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{errors.categoryId}</HelperText>}
+          {onCreateCategory && <Button mode="contained-tonal" onPress={onCreateCategory} disabled={disabled}>{t("Crea categoria")}</Button>}
+          {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.categoryId)}</HelperText>}
         </View>
       ) : (
-        <SelectField label="Categoria" options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
+        <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
           disabled={disabled} error={errors.categoryId} />
       )}
-      {extra}
+      {extra ? <View style={styles.extra}>{extra}</View> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   layout: { gap: spacing.lg },
+  // Layout gap (16) + 8 = the 24 dp used between repeat and promo price.
+  extra: { marginTop: spacing.sm },
   firstRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   firstRowCompact: { flexDirection: 'column', alignItems: 'stretch' },
   dateCompact: { width: '100%', marginTop: 0 },

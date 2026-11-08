@@ -46,6 +46,11 @@ export function normalizeCategoryName(name: string): string {
   return name.normalize('NFC').trim().replace(/\s+/gu, ' ');
 }
 
+// Client-side only: Firestore Rules cannot count a collection. Archives that already exceed it stay readable.
+// Below the 12 dashboard colour slots (history.ts), so every category always has its own colour.
+export const maxCategories = 10;
+export const categoryLimitMessage = `Puoi creare al massimo ${maxCategories} categorie.`;
+
 export function categoryNameError(name: string, categories: readonly Category[]): string | null {
   const label = normalizeCategoryName(name);
   if (!label) return 'Inserisci il nome della categoria.';

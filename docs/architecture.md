@@ -111,6 +111,30 @@ il fallback del SDK resta in memoria negli ambienti non compatibili. Non promett
 recupero dopo chiusura in modalità memoria/private browsing o se lo storage è negato.
 Nessun motore di sincronizzazione personalizzato.
 
+## Consultazione di spese e dashboard
+
+Nell'elenco Spese ogni occorrenza occupa una riga intera, anche su desktop, e mostra
+inizialmente descrizione/importo e azioni;
+data, categoria e ripetizione si consultano nel pannello aperto dalla freccia della
+riga. Il dettaglio usa solo le occorrenze già caricate; più pannelli possono restare
+aperti, con stato indipendente per chiave di occorrenza. La matita apre l'editor;
+«Elimina» è solo nell'editor, con conferma e revisione del record vista all'apertura.
+Per una ricorrenza elimina l'intera serie; non salva prima le modifiche della bozza.
+
+Dashboard, dettaglio giornaliero (8 novembre 2026): elenco compatto dei giorni con
+spese per tutti i periodi (anche 3/6/12 mesi), dal più recente, sette iniziali con
+espansione esplicita. Senza titolo/intestazione mensile: il mese è nella data di ogni
+riga, con anno quando l'intervallo attraversa due anni. I giorni senza
+spese si possono mostrare; quelli futuri sono esclusi. Una riga espandibile mostra
+le occorrenze originali già caricate (categoria, descrizione e importo), senza nuove
+letture o scritture. Totali e grafici mantengono l'aggregazione esistente; cambio
+periodo/mese azzera espansione e filtri del dettaglio.
+
+Ciambella: l'affiancamento della legenda dipende dalla larghezza effettiva del
+contenitore (almeno 616 px), così rail e drawer non comprimono il grafico. Raggi
+proporzionali su superfici strette e testo confinato al foro, con descrizione
+accessibile completa anche quando il nome viene troncato visivamente.
+
 ## Piattaforme
 
 | Ambiente | Stato |
@@ -204,6 +228,26 @@ originale a valori fissi. Ogni combinazione è verificata a ≥ 4,5:1 (testo) e 
 (bordi) in `tests/theme.test.ts`. Il carattere Google Sans (SIL OFL, variabile 400–700, sottoinsiemi latin/latin-ext) è
 ospitato in `public/fonts/`: nessuna richiesta a Google a runtime. Le icone usano un
 unico spessore di linea (`iconStroke`, 1,5).
+
+## Lingua dell'interfaccia (8 novembre 2026)
+
+Italiano e inglese, scelti in Impostazioni anche prima del login; italiano iniziale.
+`language: it|en` estende `nummo.preferences.v1` senza migrazione: preferenze precedenti
+o valori invalidi tornano all'italiano. Scelta locale al browser; storage negato significa
+scelta valida solo per la sessione, come le altre preferenze.
+
+`I18nProvider` in `App.tsx` espone `t`, `locale`, `formatAmount` e `formatDate`.
+I messaggi sorgente italiani sono chiavi del catalogo inglese (`src/i18n/en.ts`),
+senza dipendenze aggiuntive. Dominio e servizi mantengono i messaggi esistenti:
+`translate.ts` li traduce alla presentazione, anche quando contengono parametri o
+cause concatenate; le stringhe sconosciute restano visibili. Ogni nuovo messaggio
+deve avere una voce inglese; testano copertura dei richiami statici e parametri.
+
+La lingua aggiorna anche guida, accessibilità e `html.lang`; `it-IT`/`en-GB` determinano
+la visualizzazione di date e importi EUR. Nessuna chiave React dipende dalla lingua:
+sessione, listener e bozze rimangono montati. Non si traducono dati utente, schemi,
+CSV/JSON, né si cambia il fuso di business Europe/Rome. Solo l'aggiunta esplicita
+delle categorie predefinite ne crea i nomi nella lingua scelta.
 
 ## Piano prezzi delle spese ricorrenti (5 novembre 2026)
 

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { categoryIconLabels, categoryIcons, type CategoryIcon } from '../../domain/category';
@@ -9,15 +10,16 @@ type Props = { value: CategoryIcon | null; onChange: (icon: CategoryIcon | null)
 
 // Tapping the selected icon removes it: icons are optional.
 export function IconPicker({ value, onChange }: Props) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
-    <View style={styles.grid} role="group" aria-label="Icona della categoria (facoltativa)">
+    <View style={styles.grid} role="group" aria-label={t("Icona della categoria (facoltativa)")}>
       {categoryIcons.map((icon) => {
         const selected = icon === value;
         return (
           <StateLayerPressable key={icon} bleed={4} layerColor={colors.onSurface} radius={radius.control} onPress={() => onChange(selected ? null : icon)}
             accessibilityRole="button" aria-pressed={selected}
-            accessibilityLabel={`Icona ${categoryIconLabels[icon]}${selected ? ', selezionata' : ''}`}
+            accessibilityLabel={t("Icona {p0}{p1}", { p0: t(categoryIconLabels[icon]), p1: selected ? t(", selezionata") : '' })}
             style={[styles.cell, {
               backgroundColor: selected ? colors.primaryContainer : 'transparent',
             }]}>

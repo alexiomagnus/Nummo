@@ -74,10 +74,10 @@ export function useRemoteExpenses(backend: FirestoreStore, storageNote: string):
       }).catch((e) => { if (active.current) setError(message(e)); });
     }, // Read-only verification: Firestore owns reconnection and retries.
     startNew: () => dispatch({ type: 'new-draft' }),
-    remove: (id) => mutate(async () => {
-      const record = expenses.find((e) => e.id === id);
-      if (!record) throw new Error('Spesa non trovata.');
-      await backend.removeExpense(record);
+    remove: (record) => mutate(async () => {
+      const parsed = parseSyncedExpense(record);
+      if (!parsed) throw new Error('Spesa non valida.');
+      await backend.removeExpense(parsed);
     }),
     update: (record, data) => mutate(async () => {
       const parsed = parseSyncedExpense(record);

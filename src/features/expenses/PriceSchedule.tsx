@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nProvider';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
@@ -5,16 +6,16 @@ import { ChoiceChips } from '../../components/ChoiceChips';
 import { SwitchRow } from '../../components/SwitchRow';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { formatAmountMinor, parseAmountMinor } from '../../domain/expense';
+import { parseAmountMinor } from '../../domain/expense';
 import { maxPromoAfter, type PriceChange, type PriceScope } from '../../domain/pricing';
 import { occurrenceDateAt, type Recurrence } from '../../domain/recurrence';
 import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 
-const dateFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-export const formatLongDate = (date: string) => dateFormat.format(new Date(`${date}T00:00:00Z`));
+const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+export const formatLongDate = (date: string, locale: string) => dateFormat(locale).format(new Date(`${date}T00:00:00Z`));
 
 // Date of renewal number `index` (1 = first renewal), for texts that say when a price starts.
-export const renewalDate = (start: string, recurrence: Recurrence, index: number) => formatLongDate(occurrenceDateAt(start, recurrence, index));
+export const renewalDate = (start: string, recurrence: Recurrence, index: number, locale: string) => formatLongDate(occurrenceDateAt(start, recurrence, index), locale);
 
 // Round Material 3 outlined icon buttons (− / +) at the height of the fields, always visible. The mouse wheel
 // over the focused field steps too; the native listener is non-passive so the page does not scroll meanwhile.
@@ -61,6 +62,7 @@ type PromoProps = {
 
 // Optional promotional price of a new series: the amount typed above is the starting price.
 export function PromoField({ value, amount, after, firstAmount, recurrence, startDate, errors, disabled, onChange }: PromoProps) {
+  const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const muted = { color: colors.onSurfaceVariant };
   const current = /^\d{1,3}$/.test(after.trim()) ? Number(after) : 0;
@@ -70,30 +72,30 @@ export function PromoField({ value, amount, after, firstAmount, recurrence, star
   const then = parseAmountMinor(amount);
   const count = /^\d{1,3}$/.test(after.trim()) ? Number(after) : 0;
   const summary = first !== null && then !== null && count >= 1 && count <= 999 && recurrence
-    ? `${formatAmountMinor(first)} per ${count === 1 ? 'il primo pagamento' : `i primi ${count} pagamenti`}, poi ${formatAmountMinor(then)} dal ${count}° rinnovo (${renewalDate(startDate, recurrence, count)}).` : null;
+    ? t("{p0} per {p1}, poi {p2} dal {p3}° rinnovo ({p4}).", { p0: formatAmount(first), p1: count === 1 ? t("il primo pagamento") : t("i primi {p0} pagamenti", { p0: count }), p2: formatAmount(then), p3: count, p4: renewalDate(startDate, recurrence, count, locale) }) : null;
   return (
     <View style={styles.group}>
-      <SwitchRow label="Prezzo promozionale" value={value} disabled={disabled} onChange={(promo) => onChange({ promo })} />
+      <SwitchRow label={t("Prezzo promozionale")} value={value} disabled={disabled} onChange={(promo) => onChange({ promo })} />
       {value && (
         <View style={styles.fields}>
           <View style={styles.row}>
             <View style={styles.amount}>
-              <TextInput outlineStyle={inputOutline} label="Importo successivo" value={amount} mode="outlined" inputMode="decimal" placeholder="0,00"
+              <TextInput outlineStyle={inputOutline} label={t("Importo successivo")} value={amount} mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'}
                 onChangeText={(promoAmount) => onChange({ promoAmount })} error={Boolean(errors.amount)} disabled={disabled}
-                accessibilityLabel="Importo dopo il periodo promozionale, in euro" />
-              {errors.amount && <HelperText type="error" accessibilityRole="alert">{errors.amount}</HelperText>}
+                accessibilityLabel={t("Importo dopo il periodo promozionale, in euro")} />
+              {errors.amount && <HelperText type="error" accessibilityRole="alert">{t(errors.amount)}</HelperText>}
             </View>
             <View ref={afterBox} style={styles.after}>
               <View style={styles.afterRow}>
-              <TextInput style={styles.afterField} outlineStyle={inputOutline} label="Dopo quanti rinnovi" value={after} mode="outlined" inputMode="numeric"
+              <TextInput style={styles.afterField} outlineStyle={inputOutline} label={t("Dopo quanti rinnovi")} value={after} mode="outlined" inputMode="numeric"
                 onChangeText={(promoAfter) => onChange({ promoAfter })} error={Boolean(errors.after)} disabled={disabled}
-                accessibilityLabel="Numero di rinnovi dopo i quali cambia l’importo" />
+                accessibilityLabel={t("Numero di rinnovi dopo i quali cambia l’importo")} />
               <View style={styles.steps}>
-                <StepButton label="Meno un rinnovo" shape={iconShapes.minus} disabled={disabled || current <= 1} onPress={() => step(-1)} />
-                <StepButton label="Più un rinnovo" shape={iconShapes.plus} disabled={disabled || current >= maxPromoAfter} onPress={() => step(1)} />
+                <StepButton label={t("Meno un rinnovo")} shape={iconShapes.minus} disabled={disabled || current <= 1} onPress={() => step(-1)} />
+                <StepButton label={t("Più un rinnovo")} shape={iconShapes.plus} disabled={disabled || current >= maxPromoAfter} onPress={() => step(1)} />
               </View>
               </View>
-              {errors.after && <HelperText type="error" accessibilityRole="alert">{errors.after}</HelperText>}
+              {errors.after && <HelperText type="error" accessibilityRole="alert">{t(errors.after)}</HelperText>}
             </View>
           </View>
           {summary && <Text variant="bodySmall" style={muted}>{summary}</Text>}
@@ -120,6 +122,7 @@ type ChangeProps = {
 
 // Edit dialog of a series: the amount field is the price of the next renewal. Past payments never change.
 export function PriceChangeField({ next, shownAmount, typed, scope, changes, start, recurrence, disabled, onScope, onRemove }: ChangeProps) {
+  const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const muted = { color: colors.onSurfaceVariant };
   if (!next) return null;
@@ -128,27 +131,26 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
   const scheduled = changes.filter((change) => change.index >= next.index);
   return (
     <View style={styles.group}>
-      <Text variant="titleSmall">Prezzo dei rinnovi</Text>
+      <Text variant="titleSmall">{t("Prezzo dei rinnovi")}</Text>
       <Text variant="bodySmall" style={muted}>
-        Prossimo rinnovo ({formatLongDate(next.date)}): {formatAmountMinor(shownAmount)}. I pagamenti passati non cambiano.
-      </Text>
+        {t("Prossimo rinnovo (")}{formatLongDate(next.date, locale)}): {formatAmount(shownAmount)}{t(". I pagamenti passati non cambiano.")}</Text>
       {changed && (
-        <View style={styles.group} role="group" aria-label="Da quando vale il nuovo importo">
-          <Text variant="labelLarge" style={muted}>Il nuovo importo vale</Text>
-          <ChoiceChips label="Da quando vale il nuovo importo" value={scope} disabled={disabled}
+        <View style={styles.group} role="group" aria-label={t("Da quando vale il nuovo importo")}>
+          <Text variant="labelLarge" style={muted}>{t("Il nuovo importo vale")}</Text>
+          <ChoiceChips label={t("Da quando vale il nuovo importo")} value={scope} disabled={disabled}
             onChange={(value) => { if (value) onScope(value); }}
-            options={[{ value: 'future', label: 'Per tutti i rinnovi futuri' }, { value: 'once', label: 'Solo per il prossimo rinnovo' }]} />
+            options={[{ value: 'future', label: t("Per tutti i rinnovi futuri") }, { value: 'once', label: t("Solo per il prossimo rinnovo") }]} />
         </View>
       )}
       {scheduled.length > 0 && (
-        <View role="list" aria-label="Variazioni programmate">
-          <Text variant="labelLarge" style={muted}>Variazioni programmate</Text>
+        <View role="list" aria-label={t("Variazioni programmate")}>
+          <Text variant="labelLarge" style={muted}>{t("Variazioni programmate")}</Text>
           {scheduled.map((change) => (
             <View key={`${change.index}:${change.once}`} role="listitem" style={styles.scheduled}>
               <Text variant="bodyMedium" style={styles.scheduledText}>
-                {change.once ? 'Solo il' : 'Dal'} {renewalDate(start, recurrence, change.index)}: {formatAmountMinor(change.amount_minor)}
+                {change.once ? t("Solo il") : t("Dal")} {renewalDate(start, recurrence, change.index, locale)}: {formatAmount(change.amount_minor)}
               </Text>
-              <IconButton accessibilityLabel={`Rimuovi la variazione del ${renewalDate(start, recurrence, change.index)}`} disabled={disabled}
+              <IconButton accessibilityLabel={t("Rimuovi la variazione del {p0}", { p0: renewalDate(start, recurrence, change.index, locale) })} disabled={disabled}
                 icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} onPress={() => onRemove(change)} />
             </View>
           ))}

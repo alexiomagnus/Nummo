@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nProvider';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
@@ -21,6 +22,7 @@ export function leaveGuide() {
 }
 
 export function SignIn({ error, onSignIn }: Props) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [guide, setGuide] = useState(readGuide);
   useEffect(() => {
@@ -35,14 +37,14 @@ export function SignIn({ error, onSignIn }: Props) {
   return (
     <View style={styles.wrap}>
       <View style={styles.intro}>
-        <Text variant="displaySmall" accessibilityRole="header" aria-level={1}>Semplifica le tue spese.</Text>
-        <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>Fallo in maniera pragmatica.</Text>
+        <Text variant="displaySmall" accessibilityRole="header" aria-level={1}>{t("Semplifica le tue spese.")}</Text>
+        <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Fallo in maniera pragmatica.")}</Text>
       </View>
       <Card>
-        {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{error}</HelperText>}
-        <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>Accedi con Google</Button>
+        {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
+        <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>{t("Accedi con Google")}</Button>
       </Card>
-      <Button mode="text" compact onPress={openGuide} style={styles.guideLink}>Cos'è Nummo e come funziona?</Button>
+      <Button mode="text" compact onPress={openGuide} style={styles.guideLink}>{t("Cos'è Nummo e come funziona?")}</Button>
     </View>
   );
 }

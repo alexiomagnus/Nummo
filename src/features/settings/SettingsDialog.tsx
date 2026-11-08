@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nProvider';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Dialog, Portal, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -26,31 +27,36 @@ const fontOptions: { value: FontChoice; label: string }[] = [
   { value: 'google', label: 'Google Sans' }, { value: 'system', label: 'Sistema' },
 ];
 
-// Display settings, opened from the account menu. Every change applies at once and is kept in
+// Display settings, opened from the account menu or the sign-in screen. Every change applies at once and is kept in
 // this browser; nothing here touches expense data.
 export function SettingsDialog({ visible, preferences, dark, onChange, onReset, onDismiss }: Props) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={{ width: '92%', maxWidth: layout.maxForm, alignSelf: 'center', maxHeight: '90%', borderRadius: radius.dialog }}>
-        <Dialog.Title style={styles.title}>Impostazioni</Dialog.Title>
+        <Dialog.Title style={styles.title}>{t("Impostazioni")}</Dialog.Title>
         <Dialog.ScrollArea style={styles.area}>
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-            <Section title="Tema">
-              <ChoiceChips label="Tema" options={themeOptions} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
+            <Section title={t("Lingua")}>
+              <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
+                value={preferences.language} onChange={(language) => language && onChange({ language })} />
             </Section>
-            <Section title="Colore">
-              <ChoiceChips label="Modalità colore" options={modeOptions} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
-              <View style={styles.swatches} role="radiogroup" aria-label="Colore principale">
+            <Section title={t("Tema")}>
+              <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
+            </Section>
+            <Section title={t("Colore")}>
+              <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
+              <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
                 {accents.map((accent) => {
                   const scheme = buildScheme(accent, preferences.colorMode, dark);
                   const selected = accent === preferences.accent;
                   const dots = [scheme.primary, ...(preferences.colorMode === 'palette' && accent !== 'graphite' ? [scheme.secondary, scheme.tertiary] : [])];
                   return (
                     <StateLayerPressable key={accent} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="radio"
-                      aria-checked={selected} accessibilityLabel={`${accentLabels[accent]}${selected ? ', selezionato' : ''}`}
+                      aria-checked={selected} accessibilityLabel={`${t(accentLabels[accent])}${selected ? t(", selezionato") : ''}`}
                       // `title` is the web tooltip: the swatch carries no visible text.
-                      {...({ title: accentLabels[accent] } as object)}
+                      {...({ title: t(accentLabels[accent]) } as object)}
                       onPress={() => onChange({ accent })}
                       style={[styles.swatch, { borderColor: selected ? colors.primary : 'transparent' }]}>
                       <View style={styles.dots}>
@@ -63,14 +69,14 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
                 })}
               </View>
             </Section>
-            <Section title="Carattere">
-              <ChoiceChips label="Carattere" options={fontOptions} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
+            <Section title={t("Carattere")}>
+              <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
             </Section>
           </ScrollView>
         </Dialog.ScrollArea>
         <Dialog.Actions>
-          <Button onPress={onReset} contentStyle={styles.action} labelStyle={styles.actionLabel}>Ripristina</Button>
-          <Button mode="contained" onPress={onDismiss} contentStyle={styles.action} labelStyle={styles.actionLabel}>Fatto</Button>
+          <Button onPress={onReset} contentStyle={styles.action} labelStyle={styles.actionLabel}>{t("Ripristina")}</Button>
+          <Button mode="contained" onPress={onDismiss} contentStyle={styles.action} labelStyle={styles.actionLabel}>{t("Fatto")}</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>

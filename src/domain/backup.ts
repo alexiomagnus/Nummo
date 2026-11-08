@@ -1,4 +1,4 @@
-import { categoryNameError, isCategoryIcon, normalizeCategoryName, type Category } from './category.ts';
+import { categoryLimitMessage, categoryNameError, maxCategories, isCategoryIcon, normalizeCategoryName, type Category } from './category.ts';
 import { isUuid, parseExpenseRecord, sameFieldValue, type ExpenseRecord } from './contract.ts';
 import { validateImportedExpense } from './firestore.ts';
 import { expandOccurrences } from './history.ts';
@@ -7,6 +7,7 @@ export type ImportData = { expenses: ExpenseRecord[]; categories: Category[] };
 export function parseImport(value: unknown): ImportData {
   const v = value as { format?: unknown; version?: unknown; expenses?: unknown; categories?: unknown } | null;
   if (!v || v.format !== 'nummo-backup' || v.version !== 1 || !Array.isArray(v.expenses) || !Array.isArray(v.categories)) throw new Error('Formato backup non riconosciuto.');
+  if (v.categories.length > maxCategories) throw new Error(`Il file contiene ${v.categories.length} categorie. ${categoryLimitMessage}`);
   const expenses: ExpenseRecord[] = [];
   const categories: Category[] = [];
   for (const item of v.categories) {

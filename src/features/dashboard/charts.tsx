@@ -1,10 +1,11 @@
-// Web-only charts drawn with inline SVG (react-dom renders it under react-native-web).
-// Mark specs follow the dataviz guidance: 2px lines, 10% area wash, bars <= 24px with a
-// 4px rounded data end, 2px surface gaps between touching fills, hairline recessive grid.
+import { seriesLabel } from './seriesLabel';
+import { useI18n } from '../../i18n/I18nProvider';
 import { useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import { formatAmountMinor } from '../../domain/expense';
+import { Text } from 'react-native-paper';
 import type { Breakdown, Series } from '../../domain/history';
+import { spacing } from '../../theme/tokens';
+import { donutMetrics } from './donutLayout';
 
 export type ChartColors = {
   series: readonly string[]; // 12 validated categorical slots, fixed order
@@ -31,60 +32,14 @@ function useWidth(): [number, (event: LayoutChangeEvent) => void] {
   return [width, (event) => setWidth(Math.round(event.nativeEvent.layout.width))];
 }
 
-// Clean axis maximum and step (1/2/2.5/5 × 10^n) so ticks read as round euros.
-function niceScale(maxMinor: number, ticks = 4): { max: number; step: number } {
-  const max = Math.max(maxMinor, 100);
-  const raw = max / ticks;
-  const power = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * power).find((candidate) => candidate >= raw)!;
-  return { max: Math.ceil(max / step) * step, step };
-}
-const euroFormat = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 0 });
-function axisEuro(minor: number, axisMax: number): string {
-  const euros = minor / 100;
-  return axisMax / 100 >= 10_000 ? `${euroFormat.format(euros / 1000)}K €` : `${euroFormat.format(euros)} €`;
-}
-// Sparse x labels: at most ~7 so they never collide.
-function showLabel(index: number, count: number): boolean {
-  const every = Math.ceil(count / 7);
-  return index % every === 0 || index === count - 1;
-}
-
-const pad = { top: 12, right: 8, bottom: 26, left: 52 };
-// SVG text defaults to a serif face; inherit the app font set on <body> by GlobalStyle.
-const svgFont = { fontFamily: 'inherit' };
-const plotHeight = 200;
-
-function Axes({ width, scale, colors, labels }: {
-  width: number; scale: { max: number; step: number }; colors: ChartColors; labels: { x: number; text: string }[];
-}) {
-  const ticks: number[] = [];
-  for (let value = 0; value <= scale.max; value += scale.step) ticks.push(value);
-  const y = (value: number) => pad.top + plotHeight - (value / scale.max) * plotHeight;
-  return (
-    <g>
-      {ticks.map((tick) => (
-        <g key={tick}>
-          <line x1={pad.left} x2={width - pad.right} y1={y(tick)} y2={y(tick)}
-            stroke={tick === 0 ? colors.baseline : colors.grid} strokeWidth={1} />
-          <text x={pad.left - 8} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={11} fill={colors.muted}
-            style={{ fontVariantNumeric: 'tabular-nums' }}>{axisEuro(tick, scale.max)}</text>
-        </g>
-      ))}
-      {labels.map((label) => (
-        <text key={label.x} x={label.x} y={pad.top + plotHeight + 18} textAnchor="middle" fontSize={11} fill={colors.muted}>
-          {label.text}
-        </text>
-      ))}
-    </g>
-  );
-}
-
 export function DonutChart({ data, colors, active, onActive }: ChartProps) {
+  const { t, formatAmount } = useI18n();
   const [width, onLayout] = useWidth();
-  const size = Math.min(width, 240);
-  const outer = size / 2;
-  const inner = outer - 30;
+  const focus = active === null ? null : data.series[active];
+  const amount = formatAmount(focus ? focus.total : data.total);
+  const share = focus ? (focus.total / data.total) * 100 : 0;
+  const caption = focus ? `${share > 0 && share < 1 ? '<1' : Math.round(share)}% · ${seriesLabel(focus, t)}` : t("totale");
+  const { size, outer, inner, centerSide, amountFontSize } = donutMetrics(width, amount);
   const segments: { d: string; color: string }[] = [];
   let angle = -Math.PI / 2;
   const point = (r: number, a: number) => `${outer + r * Math.cos(a)} ${outer + r * Math.sin(a)}`;
@@ -100,113 +55,32 @@ export function DonutChart({ data, colors, active, onActive }: ChartProps) {
     });
     angle = end;
   }
-  const focus = active === null ? null : data.series[active];
   return (
     <View onLayout={onLayout} style={styles.center}>
       {size > 0 && (
-        <svg style={svgFont} width={size} height={size} role="img" aria-label="Grafico ad anello delle spese per categoria"
+        <View style={{ position: 'relative', width: size, height: size }}>
+        <svg width={size} height={size} role="img" aria-label={t("Grafico ad anello delle spese per categoria: {p0}, {p1}", { p0: amount, p1: caption })}
           onMouseLeave={() => onActive(null)}>
           {segments.map((segment, index) => (
             <path key={index} d={segment.d} fill={segment.color} stroke={colors.surface} strokeWidth={2}
               opacity={active === null || active === index ? 1 : 0.35} style={{ cursor: 'pointer' }}
               onMouseEnter={() => onActive(index)} onClick={() => onActive(active === index ? null : index)} />
           ))}
-          <text x={outer} y={outer - 6} textAnchor="middle" fontSize={20} fontWeight={700} fill={colors.text}>
-            {formatAmountMinor(focus ? focus.total : data.total)}
-          </text>
-          <text x={outer} y={outer + 16} textAnchor="middle" fontSize={12} fill={colors.muted}>
-            {focus ? `${Math.round((focus.total / data.total) * 100)}% · ${focus.label}` : 'totale'}
-          </text>
         </svg>
+        {centerSide >= 64 && <View pointerEvents="none" aria-hidden style={[styles.caption, {
+          width: centerSide, height: centerSide, left: outer - centerSide / 2, top: outer - centerSide / 2,
+        }]}>
+          <Text numberOfLines={1} style={[styles.captionText, { color: colors.text, fontSize: amountFontSize, lineHeight: amountFontSize * 1.3, fontWeight: '700' }]}>{amount}</Text>
+          <Text numberOfLines={2} style={[styles.captionText, { color: colors.muted, fontSize: 14, lineHeight: 18 }]}>{caption}</Text>
+        </View>}
+        </View>
       )}
     </View>
   );
 }
 
-export function AreaChart({ data, colors, active, onActive }: ChartProps) {
-  const [width, onLayout] = useWidth();
-  const scale = niceScale(Math.max(...data.totals));
-  const count = data.buckets.length;
-  const plotWidth = Math.max(width - pad.left - pad.right, 1);
-  const x = (index: number) => pad.left + (count === 1 ? plotWidth / 2 : (index / (count - 1)) * plotWidth);
-  const y = (value: number) => pad.top + plotHeight - (value / scale.max) * plotHeight;
-  const line = data.totals.map((value, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(value)}`).join(' ');
-  const area = `${line} L ${x(count - 1)} ${y(0)} L ${x(0)} ${y(0)} Z`;
-  const color = colors.series[0]!;
-  const band = plotWidth / Math.max(count - 1, 1);
-  return (
-    <View onLayout={onLayout}>
-      {width > 0 && (
-        <svg style={svgFont} width={width} height={pad.top + plotHeight + pad.bottom} role="img"
-          aria-label="Grafico ad area dell’andamento delle spese" onMouseLeave={() => onActive(null)}>
-          <Axes width={width} scale={scale} colors={colors}
-            labels={data.buckets.flatMap((bucket, index) => (showLabel(index, count) ? [{ x: x(index), text: bucket.label }] : []))} />
-          <path d={area} fill={color} fillOpacity={0.1} />
-          <path d={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-          {active !== null && (
-            <g pointerEvents="none">
-              <line x1={x(active)} x2={x(active)} y1={pad.top} y2={pad.top + plotHeight} stroke={colors.muted} strokeWidth={1} />
-              <circle cx={x(active)} cy={y(data.totals[active]!)} r={5} fill={color} stroke={colors.surface} strokeWidth={2} />
-            </g>
-          )}
-          {data.buckets.map((bucket, index) => (
-            <rect key={bucket.key} x={x(index) - band / 2} y={pad.top} width={band} height={plotHeight} fill="transparent"
-              onMouseEnter={() => onActive(index)} onClick={() => onActive(active === index ? null : index)} />
-          ))}
-        </svg>
-      )}
-    </View>
-  );
-}
-
-function roundedTop(x: number, y: number, w: number, h: number): string {
-  const r = Math.min(4, h, w / 2);
-  return `M ${x} ${y + h} L ${x} ${y + r} Q ${x} ${y} ${x + r} ${y} L ${x + w - r} ${y} Q ${x + w} ${y} ${x + w} ${y + r} L ${x + w} ${y + h} Z`;
-}
-
-export function StackedBarChart({ data, colors, active, onActive }: ChartProps) {
-  const [width, onLayout] = useWidth();
-  const scale = niceScale(Math.max(...data.totals));
-  const count = data.buckets.length;
-  const plotWidth = Math.max(width - pad.left - pad.right, 1);
-  const band = plotWidth / count;
-  const barWidth = Math.max(Math.min(24, band * 0.6), 2);
-  const y = (value: number) => (value / scale.max) * plotHeight;
-  const gap = 2;
-  return (
-    <View onLayout={onLayout}>
-      {width > 0 && (
-        <svg style={svgFont} width={width} height={pad.top + plotHeight + pad.bottom} role="img"
-          aria-label="Grafico a barre impilate delle spese per categoria" onMouseLeave={() => onActive(null)}>
-          <Axes width={width} scale={scale} colors={colors}
-            labels={data.buckets.flatMap((bucket, index) => (showLabel(index, count)
-              ? [{ x: pad.left + band * index + band / 2, text: bucket.label }] : []))} />
-          {data.buckets.map((bucket, index) => {
-            const left = pad.left + band * index + (band - barWidth) / 2;
-            const parts = data.series.filter((series) => series.values[index]! > 0);
-            let base = pad.top + plotHeight;
-            return (
-              <g key={bucket.key} opacity={active === null || active === index ? 1 : 0.35}>
-                {parts.map((series, partIndex) => {
-                  const height = y(series.values[index]!);
-                  const top = base - height;
-                  // Gap is cut from each segment's top, so stacked heights stay proportional.
-                  const visible = Math.max(height - (partIndex < parts.length - 1 ? gap : 0), 0.5);
-                  const shape = partIndex === parts.length - 1
-                    ? <path key={series.key} d={roundedTop(left, top, barWidth, visible)} fill={seriesColor(series, colors)} />
-                    : <rect key={series.key} x={left} y={top + (height - visible)} width={barWidth} height={visible} fill={seriesColor(series, colors)} />;
-                  base = top;
-                  return shape;
-                })}
-                <rect x={pad.left + band * index} y={pad.top} width={band} height={plotHeight} fill="transparent"
-                  onMouseEnter={() => onActive(index)} onClick={() => onActive(active === index ? null : index)} />
-              </g>
-            );
-          })}
-        </svg>
-      )}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({ center: { alignItems: 'center' } });
+const styles = StyleSheet.create({
+  center: { alignItems: 'center' },
+  caption: { position: 'absolute', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, overflow: 'hidden' },
+  captionText: { width: '100%', textAlign: 'center' },
+});

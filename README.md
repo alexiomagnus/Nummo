@@ -18,6 +18,9 @@ sicurezza del progetto sono una tua responsabilità (vedi [Sicurezza](#sicurezza
 - **Categorie** personalizzabili, con icone, e **Dashboard** con totali e grafici.
 - **Backup**: esportazione CSV e JSON, importazione da file CSV o JSON esportati da Nummo.
 - Tema chiaro/scuro e colori personalizzabili; layout per smartphone, tablet e desktop.
+- Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
+  dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
+  nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.
 - Sincronizzazione tramite l'SDK Firestore. Solo web; vedi i [limiti](#installazione-come-pwa).
 
 Stato: progetto personale in fase di preparazione alla distribuzione. Collaudato su Chrome desktop;

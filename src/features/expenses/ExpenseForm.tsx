@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nProvider';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
@@ -16,6 +17,7 @@ import { todayInRome } from '../../domain/policy';
 type Props = { categories: readonly Category[]; store: ExpenseStore; onCreateCategory?: () => void };
 
 export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
+  const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
   const size = useSizeClass();
@@ -35,7 +37,7 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
     setDraft(newDraft());
     setErrors({});
     setFormKey((key) => key + 1);
-    notify('Spesa salvata e confermata da Firestore.');
+    notify("Spesa salvata e confermata da Firestore.");
     store.startNew();
   }, [submission.status]);
   // A category deleted in the other section simply stops being selected.
@@ -57,7 +59,7 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
     const result = validateDraft(current, categories);
     setErrors((previous) => ({ ...previous, [field]: result.ok ? undefined : result.errors[field] }));
   };
-  const categoryMissing = categories.length === 0 ? 'Crea prima una categoria nella sezione Categorie.' : 'Seleziona una categoria.';
+  const categoryMissing = categories.length === 0 ? "Crea prima una categoria nella sezione Categorie." : "Seleziona una categoria.";
   const save = () => {
     // Today is resolved here, at save time, so a form left open past midnight is not stale.
     const result = validateDraft(current, categories);
@@ -91,23 +93,22 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
     <View style={styles.form}>
       <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
         extra={repeat} onCreateCategory={onCreateCategory} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
-      {store.error && <HelperText type="error" accessibilityRole="alert">{store.error}</HelperText>}
+      {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
       {submission.status === 'rejected' && (
-        <HelperText type="error" accessibilityRole="alert">{submission.message}</HelperText>
+        <HelperText type="error" accessibilityRole="alert">{t(submission.message)}</HelperText>
       )}
       <View style={[styles.footer, size === 'compact' && [styles.sticky, { backgroundColor: theme.colors.background }]]}>
         {submission.status === 'uncertain' ? (
           <>
             <Text accessibilityRole="alert">
-              Conferma non ancora disponibile: controlla lo stato e l’elenco prima di inserire di nuovo la spesa.
-            </Text>
-            <View style={styles.actions}><Button mode="contained" onPress={store.retry}>Verifica sul server</Button></View>
+              {t("Conferma non ancora disponibile: controlla lo stato e l’elenco prima di inserire di nuovo la spesa.")}</Text>
+            <View style={styles.actions}><Button mode="contained" onPress={store.retry}>{t("Verifica sul server")}</Button></View>
           </>
         ) : (
           <View style={styles.actions}>
             <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
               contentStyle={styles.button} labelStyle={styles.label} style={styles.submit}>
-              {submission.status === 'sending' ? 'In attesa di conferma…' : 'Salva'}
+              {submission.status === 'sending' ? t("In attesa di conferma…") : t("Salva")}
             </Button>
           </View>
         )}
@@ -122,8 +123,8 @@ const styles = StyleSheet.create({
   form: { width: '100%', gap: spacing.lg },
   // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
   // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
-  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, zIndex: 1 } as unknown as ViewStyle,
-  repeat: { gap: spacing.md },
+  sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, borderTopWidth: 0, boxShadow: 'none', zIndex: 1 } as unknown as ViewStyle,
+  repeat: { gap: spacing.xl },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row', marginTop: spacing.sm },
   submit: { flexGrow: 1 },

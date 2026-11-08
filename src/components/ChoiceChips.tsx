@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
@@ -20,6 +21,7 @@ type Props<T extends string> = {
 
 // Material 3 filter chips used as a single-choice group: selected = secondary container + check.
 export function ChoiceChips<T extends string>({ options, value, onChange, allowDeselect, label, disabled, showCheck = true }: Props<T>) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   // 44 dp everywhere (48+ with the touch slop).
   const height = 44;
@@ -29,10 +31,10 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
         const selected = option.value === value;
         const color = selected ? colors.onSecondaryContainer : colors.onSurfaceVariant;
         return (
-          <StateLayerPressable key={option.value} layerColor={color} radius={radius.control} disabled={disabled} hitSlop={{ top: 2, bottom: 2 }}
+          <StateLayerPressable key={option.value} layerColor={color} radius={radius.button} disabled={disabled} hitSlop={{ top: 2, bottom: 2 }}
             onPress={() => onChange(selected && allowDeselect ? '' : option.value)}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled}
-            accessibilityLabel={`${option.label}${selected ? ', selezionata' : ''}`}
+            accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}
             style={[styles.chip, { minHeight: height }, selected
               ? { backgroundColor: colors.secondaryContainer, borderColor: colors.secondaryContainer }
               : { borderColor: colors.outlineVariant }]}>
@@ -49,7 +51,7 @@ const styles = StyleSheet.create({
   list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
     maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    paddingHorizontal: spacing.lg, borderRadius: radius.control, borderWidth: 1,
+    paddingHorizontal: spacing.lg, borderRadius: radius.button, borderWidth: 1,
   },
   label: { flexShrink: 1 },
 });

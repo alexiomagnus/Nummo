@@ -1,10 +1,11 @@
+import { useI18n } from '../../i18n/I18nProvider';
 import { useState } from 'react';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
-import { categoryNameError, type Category, type CategoryIcon } from '../../domain/category';
+import { categoryLimitMessage, categoryNameError, maxCategories, type Category, type CategoryIcon } from '../../domain/category';
 import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
@@ -15,8 +16,6 @@ import { IconPicker } from './IconPicker';
 
 type Props = {
   categories: readonly Category[];
-  // Number of saved expenses per category ID (to explain what deleting a category does).
-  usage: Readonly<Record<string, number>>;
   error: string | null;
   ready: boolean;
   notify: (message: string) => void;
@@ -31,7 +30,8 @@ type Props = {
 
 type Editing = { id: string; name: string; error: string | null; original: Category };
 
-export function CategorySettings({ categories, usage, error, ready, notify, onAddDefaults, canAddDefaults, onCreate, onDelete, onChangeIcon, onRename }: Props) {
+export function CategorySettings({ categories, error, ready, notify, onAddDefaults, canAddDefaults, onCreate, onDelete, onChangeIcon, onRename }: Props) {
+  const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
   const [filter, setFilter] = useState('');
@@ -52,10 +52,10 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
     }
     if (!ready) return;
     setBusy(true);
-    try { if (await onRename(editing.id, editing.name, editing.original)) { setEditing(null); notify('Categoria rinominata.'); } } finally { setBusy(false); }
+    try { if (await onRename(editing.id, editing.name, editing.original)) { setEditing(null); notify("Categoria rinominata."); } } finally { setBusy(false); }
   };
   const create = async () => {
-    const validationError = categoryNameError(name, categories);
+    const validationError = categories.length >= maxCategories ? categoryLimitMessage : categoryNameError(name, categories);
     setNameError(validationError);
     if (!ready || validationError) return;
     setBusy(true);
@@ -63,7 +63,7 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
       setName('');
       setIcon(null);
       setChoosingIcon(false);
-      notify('Categoria creata.');
+      notify("Categoria creata.");
     } } finally { setBusy(false); }
   };
 
@@ -71,21 +71,21 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
   // Creation: one row (name, icon, add); the icon grid opens only on demand.
   const createForm = (
     <View style={styles.createPanel}>
-      <View style={styles.createRow}>
-        <View style={styles.nameField}>
-          <TextInput outlineStyle={inputOutline} label="Nuova categoria" accessibilityLabel="Nome della nuova categoria, obbligatorio" mode="outlined" value={name}
+      <View style={[styles.createRow, compact && styles.createRowCompact]}>
+        <View style={[styles.nameField, compact && styles.nameFieldCompact]}>
+          <TextInput outlineStyle={inputOutline} label={t("Nuova categoria")} accessibilityLabel={t("Nome della nuova categoria, obbligatorio")} mode="outlined" value={name}
             onChangeText={(value) => { setName(value); setNameError(null); }}
             onSubmitEditing={create} error={Boolean(nameError)} disabled={!ready}
             left={icon ? <TextInput.Icon icon={() => <CategoryGlyph icon={icon} size={24} />} /> : undefined} />
-          {nameError && <HelperText type="error" accessibilityRole="alert">{nameError}</HelperText>}
+          {nameError && <HelperText type="error" accessibilityRole="alert">{t(nameError)}</HelperText>}
         </View>
         <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}
           icon={({ size, color }) => <SvgIcon shape={choosingIcon ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
-          accessibilityLabel="Icona della categoria, facoltativa" style={styles.create} contentStyle={styles.createContent}>Icona</Button>
-        <Button mode="contained" style={styles.create} contentStyle={styles.createContent} onPress={create} disabled={!ready}>Aggiungi</Button>
+          accessibilityLabel={t("Icona della categoria, facoltativa")} style={styles.create} contentStyle={styles.createContent}>{t("Icona")}</Button>
+        <Button mode="contained" style={styles.create} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>
       </View>
       {choosingIcon && <IconPicker value={icon} onChange={setIcon} />}
-      {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
+      {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
   );
 
@@ -93,50 +93,48 @@ export function CategorySettings({ categories, usage, error, ready, notify, onAd
       <View style={styles.root}>
         {createForm}
         {categories.length > 8 && (
-          <TextInput outlineStyle={inputOutline} label="Cerca categoria" accessibilityLabel="Cerca categoria" mode="outlined" value={filter} onChangeText={setFilter} autoCorrect={false}
+          <TextInput outlineStyle={inputOutline} label={t("Cerca categoria")} accessibilityLabel={t("Cerca categoria")} mode="outlined" value={filter} onChangeText={setFilter} autoCorrect={false}
             left={leadingIcon(iconShapes.search)}
-            right={filter ? <TextInput.Icon accessibilityLabel="Cancella ricerca" onPress={() => setFilter('')}
+            right={filter ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => setFilter('')}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
         )}
         {categories.length === 0 && ready && (
           <View style={styles.empty}>
-            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna categoria.</Text>
-            {onAddDefaults && <View style={styles.start}><Button mode="outlined" disabled={!canAddDefaults} onPress={onAddDefaults}>Aggiungi quelle predefinite</Button></View>}
+            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna categoria.")}</Text>
+            {onAddDefaults && <View style={styles.start}><Button mode="outlined" disabled={!canAddDefaults} onPress={onAddDefaults}>{t("Aggiungi quelle predefinite")}</Button></View>}
           </View>
         )}
         <View role="list">
           {shown.map((category, index) => {
-            const used = usage[category.id] ?? 0;
             const isEditing = editing?.id === category.id;
             return (
               <ListRow key={category.id} divider={index < shown.length - 1} icon={category.icon} title={category.label}
-                subtitle={used === 0 ? 'Nessuna spesa' : used === 1 ? '1 spesa' : `${used} spese`}
                 trailing={<>
                   <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
-                    selected={isEditing} aria-expanded={isEditing} accessibilityLabel={`Modifica ${category.label}`}
+                    selected={isEditing} aria-expanded={isEditing} accessibilityLabel={t("Modifica {p0}", { p0: category.label })}
                     onPress={() => setEditing(isEditing ? null : { id: category.id, name: category.label, error: null, original: category })} />
-                  <DeleteAction name={category.label} title={`Eliminare la categoria ${category.label}?`} description=""
+                  <DeleteAction name={category.label} title={t("Eliminare la categoria {p0}?", { p0: category.label })} description=""
                     onDelete={() => onDelete(category.id)} />
                 </>}>
             {isEditing && editing && (
               <View style={styles.editor}>
-                    <TextInput outlineStyle={inputOutline} mode="outlined" label="Nome" value={editing.name} autoFocus
-                      accessibilityLabel={`Nuovo nome per ${category.label}`} error={Boolean(editing.error)} disabled={!ready}
+                    <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome")} value={editing.name} autoFocus
+                      accessibilityLabel={t("Nuovo nome per {p0}", { p0: category.label })} error={Boolean(editing.error)} disabled={!ready}
                       onChangeText={(next) => setEditing({ ...editing, name: next, error: null })} onSubmitEditing={saveRename} />
-                    {editing.error && <HelperText type="error" accessibilityRole="alert">{editing.error}</HelperText>}
+                    {editing.error && <HelperText type="error" accessibilityRole="alert">{t(editing.error)}</HelperText>}
                     <View style={styles.actions}>
-                      <Button onPress={() => setEditing(null)}>Annulla</Button>
-                      <Button disabled={!ready} mode="contained" onPress={saveRename}>Salva nome</Button>
+                      <Button onPress={() => setEditing(null)}>{t("Annulla")}</Button>
+                      <Button disabled={!ready} mode="contained" onPress={saveRename}>{t("Salva nome")}</Button>
                     </View>
                     <IconPicker value={category.icon}
-                      onChange={async (next) => { if (ready && await onChangeIcon(category.id, next, editing.original)) { setEditing(null); notify('Icona aggiornata.'); } }} />
+                      onChange={async (next) => { if (ready && await onChangeIcon(category.id, next, editing.original)) { setEditing(null); notify("Icona aggiornata."); } }} />
                   </View>
                 )}
               </ListRow>
             );
           })}
         </View>
-        {filter && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessun risultato.</Text>}
+        {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
       </View>
   );
 }
@@ -145,6 +143,9 @@ const styles = StyleSheet.create({
   root: { gap: spacing.lg },
   createPanel: { gap: spacing.md },
   createRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: spacing.md },
+  // Phones: name, icon and add share one row instead of wrapping the add button onto its own line.
+  createRowCompact: { flexWrap: 'nowrap', gap: spacing.sm },
+  nameFieldCompact: { flexBasis: 0, minWidth: 120 },
   nameField: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
   // Paper's outlined field is 56 dp with 6 dp reserved above its box: buttons take the same 50 dp box and offset.
   create: { marginTop: 6, height: layout.fieldBoxHeight },

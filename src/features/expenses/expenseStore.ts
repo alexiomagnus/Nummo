@@ -14,7 +14,7 @@ export type ExpenseStore = Readonly<{
   // After a confirmation or a definitive rejection.
   startNew: () => void;
   // Async mutations report success only after their server transaction.
-  remove?: (id: string) => boolean | Promise<boolean>;
+  remove?: (record: ExpenseRecord) => boolean | Promise<boolean>;
   update?: (record: ExpenseRecord, data: ExpenseData) => Promise<boolean>;
   recovery?: readonly ExpenseRecord[];
   sync?: Readonly<{ fromCache: boolean; pending: boolean }>;

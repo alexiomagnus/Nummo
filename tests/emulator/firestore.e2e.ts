@@ -157,13 +157,30 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.deepEqual(all.find((r) => r.id === expense_id)?.price_changes, records[0]!.price_changes);
     });
     await t.test('migrazione oltre il limite di accessi Rules: gruppi di categorie e spese ripetibili', async () => {
-      const categories = Array.from({ length: 12 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));
+      const categories = Array.from({ length: 9 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));
       const records = Array.from({ length: 205 }, () => { const { expense_id, ...data } = expense(); return { ...data, id: expense_id, created_at: '2025-01-01T00:00:00.000Z' }; });
-      await owner.store.importRecords(records, categories);
+      // Replace first: the archive already holds other categories and the limit is 10.
+      await owner.store.importRecords(records, categories, 'replace');
       await owner.store.importRecords(records, categories);
       const snapshot = await owner.store.exportSnapshot();
       assert.equal(snapshot.expenses.filter((r) => records.some((e) => e.id === r.id)).length, 205);
-      assert.equal(snapshot.categories.filter((r) => categories.some((c) => c.id === r.id)).length, 12);
+      assert.equal(snapshot.categories.filter((r) => categories.some((c) => c.id === r.id)).length, 9);
+      // Over the 10-category limit the whole file is refused before any write.
+      await assert.rejects(owner.store.importRecords([], Array.from({ length: 2 }, (_, i) => ({ id: randomUUID(), label: `Oltre ${suffix} ${i}`, icon: null }))), /al massimo 10 categorie/);
+    });
+    await t.test('importazione che sostituisce: elimina i dati precedenti e importa solo il file, ripetibile', async () => {
+      const cats = [{ id: randomUUID(), label: `Sostituita ${suffix}`, icon: null }];
+      const records = [{ ...(({ expense_id, ...data }) => ({ ...data, id: expense_id }))(expense()), category_id: cats[0]!.id, created_at: '2025-02-01T00:00:00.000Z' }];
+      await owner.store.importRecords(records, cats, 'replace');
+      let snapshot = await owner.store.exportSnapshot();
+      assert.deepEqual(snapshot.expenses.map((r) => r.id), [records[0]!.id]);
+      assert.deepEqual(snapshot.categories.map((r) => r.id), [cats[0]!.id]);
+      await owner.store.importRecords(records, cats, 'replace');
+      snapshot = await owner.store.exportSnapshot();
+      assert.equal(snapshot.expenses.length, 1);
+      assert.equal(snapshot.categories.length, 1);
+      // The old name is free again after the replacement.
+      await owner.store.saveCategory(randomUUID(), `Gruppo ${suffix} 0`, null);
     });
     await t.test('logout revoca accesso ai dati del server', async () => {
       await signOut(second.auth);

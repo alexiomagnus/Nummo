@@ -1,8 +1,9 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Menu, Text, TextInput, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { inputOutline, radius, spacing } from '../theme/tokens';
+import { inputOutline, layout, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -21,8 +22,12 @@ type Props<T extends string> = {
 const MENU_MAX_HEIGHT = 360;
 const MENU_MIN_HEIGHT = 192; // below this much room, Paper shifts the menu up instead (it then fits whole)
 const SCREEN_MARGIN = 16;
+// Selected/hover highlight is inset in the menu and rounded like the keyboard focus ring (GlobalStyle: 12).
+const itemRadius = 12;
+const fieldLabelGap = layout.controlHeight - layout.fieldBoxHeight;
 
 export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState(0);
@@ -50,8 +55,8 @@ export function SelectField<T extends string>({ label, options, value, onChange,
         anchor={
           <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
             accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled}
-            accessibilityLabel={`${label}${current ? `: ${current.label}` : ', obbligatoria, nessuna selezione'}`}>
-            <View pointerEvents="none">
+            accessibilityLabel={`${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`}>
+            <View pointerEvents="none" style={styles.field}>
               <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false}
                 error={Boolean(error)} aria-disabled={disabled} showSoftInputOnFocus={false}
                 left={current?.icon ? <TextInput.Icon icon={() => current.icon} tabIndex={-1} aria-hidden /> : undefined}
@@ -63,8 +68,8 @@ export function SelectField<T extends string>({ label, options, value, onChange,
         {options.map((option) => {
           const selected = option.value === value;
           return (
-            <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={[styles.item, selected && { backgroundColor: colors.secondaryContainer }]}
-              onPress={() => { setOpen(false); onChange(option.value); }} accessibilityLabel={`${option.label}${selected ? ', selezionata' : ''}`}>
+            <StateLayerPressable key={option.value} layerColor={colors.onSurface} radius={itemRadius} accessibilityRole="menuitem" style={[styles.item, selected && { backgroundColor: colors.secondaryContainer }]}
+              onPress={() => { setOpen(false); onChange(option.value); }} accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}>
               {option.icon && <View style={styles.icon}>{option.icon}</View>}
               <Text variant="bodyLarge" numberOfLines={1} style={[styles.itemLabel, selected && { color: colors.onSecondaryContainer }]}>{option.label}</Text>
               <View style={styles.check}>{selected && <SvgIcon shape={iconShapes.check} size={20} color={colors.onSecondaryContainer} />}</View>
@@ -73,14 +78,17 @@ export function SelectField<T extends string>({ label, options, value, onChange,
         })}
         </ScrollView>
       </Menu>
-      {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
+      {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  anchor: { borderRadius: radius.input },
-  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.lg },
+  // Paper's 56 dp input reserves 6 dp above the outline for the floating label. The pressable (focus ring, press) must
+  // hug the visible outline (fieldBoxHeight), so the input is pulled up by that gap and the pressable pushed down by it.
+  anchor: { borderRadius: radius.input, marginTop: fieldLabelGap },
+  field: { marginTop: -fieldLabelGap },
+  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.md, marginHorizontal: spacing.xs },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },
   check: { width: 20, height: 20 },

@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { Logo } from './Logo';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
@@ -123,6 +124,7 @@ type Fab<T extends string> = { label: string; icon: string; target: T };
 type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
 function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab }: NavProps<T> & { bottomInset: number }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
   // The round action enters/leaves with width, opacity and scale; the pill is flex: 1, so it widens/narrows with it.
@@ -141,7 +143,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const action = fab ?? lastFab.current;
   return (
     <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }]}>
-      <View role="navigation" aria-label="Sezioni" style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
+      <View role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
         {destinations.map((item) => {
           const active = item.value === selected;
           const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
@@ -174,9 +176,10 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
 }
 
 function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavProps<T>) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
-    <View role="navigation" aria-label="Sezioni" style={[styles.rail, { backgroundColor: colors.background }]}>
+    <View role="navigation" aria-label={t("Sezioni")} style={[styles.rail, { backgroundColor: colors.background }]}>
       {fab && (
         <FAB mode="flat" icon={({ size, color }) => <SvgIcon shape={fab.icon} size={size} color={color} />} accessibilityLabel={fab.label}
           onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
@@ -202,11 +205,12 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
 }
 
 function Drawer<T extends string>({ destinations, selected, onSelect, fab }: NavProps<T>) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
-    <View role="navigation" aria-label="Sezioni" style={[styles.drawer, { backgroundColor: colors.background }]}>
+    <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, { backgroundColor: colors.background }]}>
       {fab && (
-        <FAB mode="flat" label={fab.label} icon={({ size, color }) => <SvgIcon shape={fab.icon} size={size} color={color} />}
+        <FAB mode="flat" customSize={60} label={fab.label} icon={({ size, color }) => <SvgIcon shape={fab.icon} size={size} color={color} />}
           accessibilityLabel={fab.label} onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
           style={[styles.drawerFab, { backgroundColor: colors.primaryContainer }]} />
       )}
@@ -218,7 +222,7 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab }: Nav
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
             style={[styles.drawerItem, active && { backgroundColor: colors.secondaryContainer }]}>
             <SvgIcon shape={item.icon} size={24} color={color} />
-            <Text variant="labelLarge" style={{ color, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
+            <Text variant="titleSmall" style={{ color, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
           </StateLayerPressable>
         );
       })}
@@ -245,10 +249,10 @@ const styles = StyleSheet.create({
   actionSlot: { height: layout.floatingBar, overflow: 'hidden' },
   roundAction: { width: layout.floatingBar, height: layout.floatingBar, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },
-  railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.control },
+  railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.button },
   railItem: { width: layout.railWidth - spacing.sm, alignItems: 'center', gap: spacing.xs, paddingVertical: 4 },
   railIndicator: { overflow: 'hidden', width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
   drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.lg + 4 },
-  drawerFab: { alignSelf: 'flex-start', marginTop: spacing.md, marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.control },
-  drawerItem: { height: layout.minTouch, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
+  drawerFab: { alignSelf: 'flex-start', marginTop: spacing.md, marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.button },
+  drawerItem: { height: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
 });

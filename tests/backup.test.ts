@@ -79,3 +79,9 @@ test('vecchio CSV: spese singole importabili, serie o testi protetti richiedono 
   assert.throws(() => parseCsvImport(legacy(exportCsv([record], categories, '2025-02-28'))), /vecchio CSV/);
   assert.throws(() => parseCsvImport(legacy(exportCsv([{ ...single, description: '=test' }], categories))), /vecchio CSV/);
 });
+
+test('importazione: oltre 10 categorie è rifiutata, 10 sono accettate', () => {
+  const categories = (count: number) => Array.from({ length: count }, (_, i) => ({ id: crypto.randomUUID(), label: `Cat ${i}`, icon: null }));
+  assert.equal(parseImport({ format: 'nummo-backup', version: 1, expenses: [], categories: categories(10) }).categories.length, 10);
+  assert.throws(() => parseImport({ format: 'nummo-backup', version: 1, expenses: [], categories: categories(11) }), /al massimo 10 categorie/);
+});

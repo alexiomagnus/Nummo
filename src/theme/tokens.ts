@@ -56,8 +56,9 @@ export const sizeClassOf = (width: number): SizeClass =>
 
 // Material 3 rounded geometry: one radius per role (dp). Components read these instead of `shape` literals.
 export const radius = {
-  control: 20, // buttons (40 dp tall = pill), selects, chips, menus, snackbar, FAB
+  control: 20, // list rows, selects, menus, snackbar (buttons: `button`)
   input: 16, // outlined text fields, switch track
+  button: 16, // every button (and FAB, filter chip): same corner as fields and cards
   card: 16, // panels and inline editors
   dialog: 28, // dialogs
   nav: 16, // selected navigation item (drawer, rail, bar): 32 dp indicator = pill

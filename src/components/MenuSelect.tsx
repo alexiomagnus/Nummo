@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Menu, Text, useTheme } from 'react-native-paper';
@@ -22,6 +23,7 @@ type Props<T extends string> = {
 // Compact single-choice selector: a 50 dp field showing the caption and the current value,
 // opening a Material 3 menu. Used where chips would eat too much width (sort, filters).
 export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style }: Props<T>) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   const { height, width } = useWindowDimensions();
@@ -53,7 +55,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
         {options.map((option) => (
           <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
             onPress={() => { setOpen(false); onChange(option.value); }}
-            accessibilityLabel={`${option.label}${option.value === value ? ', selezionato' : ''}`}>
+            accessibilityLabel={`${option.label}${option.value === value ? t(", selezionato") : ''}`}>
             <Text variant="bodyLarge" numberOfLines={1} style={styles.itemLabel}>{option.label}</Text>
             {/* Fixed slot on every row: the check always sits at the right edge, whatever the label length. */}
             <View style={styles.check}>{option.value === value && <SvgIcon shape={iconShapes.check} size={24} color={colors.onSurface} />}</View>

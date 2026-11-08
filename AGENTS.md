@@ -39,10 +39,14 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
 - `src/features/categories/`: `useRemoteCategories`, impostazioni, icone. ID stabili,
   unicità nomi tramite transazioni e indice `categoryNames`. Predefinite aggiunte da
   azione esplicita. Nessun salvataggio in localStorage.
-- `src/features/settings/`: preferenze di aspetto (`preferences.ts` puro, `usePreferences`
-  su localStorage, `SettingsDialog` aperto dal menu account). `src/theme/palette.ts` genera
+- `src/features/settings/`: preferenze di aspetto e lingua (`preferences.ts` puro, `usePreferences`
+  su localStorage, `SettingsDialog` dal menu account o dall'ingranaggio prima del login). `src/theme/palette.ts` genera
   gli schemi da tinta e modalità; `createTheme` li riceve da `App.tsx` e aggiunge `colors.panel`
   (pannello pagine, `panelColor()`; su smartphone il pannello non c'è).
+- `src/i18n/`: italiano/inglese tramite `I18nProvider` e `useI18n()`, catalogo `en.ts`
+  con messaggi sorgente italiani, traduzione e formattazione pure in `translate.ts`.
+  Lingua iniziale `it`, salvata in `nummo.preferences.v1`, solo nel browser; nessuna
+  sincronizzazione Firebase. Il provider cambia valore senza rimontare sessione o bozze.
 - `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
   fino a oggi, non materializzate nel database. Grafici SVG DOM, solo web.
 - `src/features/backup/`: download CSV/JSON e importazione esplicita da file CSV/JSON di Nummo.
@@ -132,7 +136,18 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
 
 ## Convenzioni
 
-- Codice inglese, UI e documentazione italiano. Non riscrivere UI senza necessità.
+- Codice inglese, documentazione italiano, **UI italiano e inglese**. Per ogni nuovo
+  testo, errore, guida o etichetta accessibile usare `useI18n().t('testo italiano')`
+  e aggiungere la traduzione in `src/i18n/en.ts`; interpolare con `{p0}`, `{p1}`, ecc.
+  I messaggi di dominio/servizi restano puri e si traducono al confine UI; conservarli
+  nella lingua sorgente nello stato. Niente stato globale mutabile per la lingua.
+  Usare `formatAmount`/`formatDate` del contesto o `locale` per `Intl` nella UI.
+  Non tradurre descrizioni, nomi di categorie già salvati, ID o campi dei backup;
+  solo le categorie predefinite appena create assumono la lingua corrente.
+  Valuta EUR, date civili Europe/Rome, calcoli e formato CSV/JSON restano invariati.
+  Nei grafici tradurre solo serie sintetiche tramite `seriesLabel`, mai nomi utente.
+  Estendere `tests/i18n.test.ts` per nuovi casi; verificare entrambe le lingue,
+  persistenza della scelta e conservazione delle bozze. Non riscrivere UI senza necessità.
 - Importi in centesimi interi; data civile Europe/Rome, timestamp Firestore server in
   UTC. Data vuota = oggi alla validazione. Limiti client in `policy.ts`, corrispettivi
   in Rules da aggiornare e testare insieme (le Rules non importano TypeScript).

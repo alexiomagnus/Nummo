@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Menu, Text, useTheme } from 'react-native-paper';
@@ -9,6 +10,7 @@ type Props = { email: string | null; busy: boolean; onSignOut: () => void; onOpe
 
 // Account avatar → menu with the signed-in e-mail, settings and the sign-out action.
 export function AccountMenu({ email, busy, onSignOut, onOpenSettings }: Props) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   const initial = (email ?? 'N').charAt(0).toUpperCase();
@@ -24,14 +26,14 @@ export function AccountMenu({ email, busy, onSignOut, onOpenSettings }: Props) {
         </StateLayerPressable>
       }>
       <View style={styles.info}>
-        <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>Account Google</Text>
-        <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? 'Account senza e-mail'}</Text>
+        <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Account Google")}</Text>
+        <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? t("Account senza e-mail")}</Text>
       </View>
       <Divider />
-      <Menu.Item title="Impostazioni"
+      <Menu.Item title={t("Impostazioni")}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.settings} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenSettings(); }} />
-      <Menu.Item title={busy ? 'Uscita in corso…' : 'Esci'} disabled={busy}
+      <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
         onPress={() => { setOpen(false); onSignOut(); }} />
     </Menu>

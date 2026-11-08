@@ -1,11 +1,11 @@
 import {
   collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
-  Timestamp, type Firestore, type DocumentData, type QuerySnapshot,
+  Timestamp, writeBatch, type Firestore, type DocumentData, type QuerySnapshot,
 } from 'firebase/firestore';
 import { parseImport } from '../domain/backup.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../domain/contract.ts';
-import { categoryNameError, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
+import { categoryLimitMessage, categoryNameError, maxCategories, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
 import { categoryNameKey, parseSyncedCategory, parseSyncedExpense, type SyncedCategory, type SyncedExpense } from '../domain/firestore.ts';
 
 export type SnapshotState<T> = { records: T[]; fromCache: boolean; pending: boolean; pendingIds: string[] };
@@ -101,7 +101,8 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       if (expenseState.pending || categoryState.pending) throw new Error('Attendi la sincronizzazione prima di esportare.');
       return { expenses: expenseState.records, categories: categoryState.records };
     },
-    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[]) {
+    // 'merge' only adds (identical duplicates skipped, conflicts block). 'replace' first deletes every saved expense and category.
+    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: 'merge' | 'replace' = 'merge') {
       const checked = parseImport({ format: 'nummo-backup', version: 1, expenses: records, categories: categoryRecords });
       records = checked.expenses; categoryRecords = checked.categories;
       // Preflight the whole destination before writing. Each chunk rechecks its IDs in a transaction.
@@ -109,11 +110,40 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       const savedExpenses = parseSnapshot(e, parseSyncedExpense);
       const savedCategories = parseSnapshot(c, parseSyncedCategory);
       if (savedExpenses.pending || savedCategories.pending) throw new Error('Attendi le scritture pendenti prima di importare.');
-      for (const r of records) {
+      if (mode === 'replace') {
+        const savedNames = await getDocsFromServer(names);
+        try {
+          for (let i = 0; i < savedExpenses.records.length; i += 200) {
+            const batch = writeBatch(db);
+            for (const r of savedExpenses.records.slice(i, i + 200)) batch.delete(doc(expenses, r.id));
+            await batch.commit();
+          }
+          // Same group size as the import (Rules: one existsAfter per category delete); each lock goes with its category.
+          for (let i = 0; i < savedCategories.records.length; i += 8) {
+            const batch = writeBatch(db);
+            for (const r of savedCategories.records.slice(i, i + 8)) { batch.delete(doc(categories, r.id)); batch.delete(doc(names, r.name_key)); }
+            await batch.commit();
+          }
+          // Orphan name locks (no category any more) would block names of the new categories.
+          const remaining = savedNames.docs.filter((d) => !savedCategories.records.some((r) => r.name_key === d.id));
+          for (let i = 0; i < remaining.length; i += 200) {
+            const batch = writeBatch(db);
+            for (const d of remaining.slice(i, i + 200)) batch.delete(d.ref);
+            await batch.commit();
+          }
+        } catch (reason) {
+          throw new Error('Sostituzione interrotta durante l’eliminazione: alcuni dati precedenti potrebbero essere già stati eliminati. Ripeti la sostituzione con lo stesso file. ' + (reason instanceof Error ? reason.message : ''));
+        }
+      }
+      if (mode === 'merge') {
+        const total = new Set([...savedCategories.records.map((r) => r.id), ...categoryRecords.map((r) => r.id)]).size;
+        if (total > maxCategories) throw new Error(`Con questo file le categorie sarebbero ${total}. ${categoryLimitMessage}`);
+      }
+      if (mode === 'merge') for (const r of records) {
         const previous = savedExpenses.records.find((p) => p.id === r.id);
         if (previous && Object.entries(r).some(([key, value]) => !sameFieldValue(previous[key as keyof ExpenseRecord], value))) throw conflict();
       }
-      for (const r of categoryRecords) {
+      if (mode === 'merge') for (const r of categoryRecords) {
         const previous = savedCategories.records.find((p) => p.id === r.id || p.name_key === categoryNameKey(r.label));
         if (previous && (previous.id !== r.id || previous.label !== r.label || previous.icon !== r.icon)) throw conflict();
       }

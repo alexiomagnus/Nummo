@@ -1,80 +1,66 @@
-import { useMemo, useRef, useState } from 'react';
+import { useI18n } from '../../i18n/I18nProvider';
+import { Fragment, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, IconButton, Menu, Text, TextInput, useTheme } from 'react-native-paper';
+import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import type { Category } from '../../domain/category';
-import { formatAmountMinor } from '../../domain/expense';
 import { searchAndSort, sortLabels, sortOptions, type Occurrence, type SortOption } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
-import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
 import { leadingIcon } from '../../components/FieldIcon';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ListRow, listRowStyles } from '../../components/ListRow';
-import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
+import { inputOutline, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 
 type Props = {
   occurrences: readonly Occurrence[];
   categories: readonly Category[];
   error: string | null;
-  // Absent when the archive does not support deleting.
-  onDelete?: (expenseId: string) => boolean | Promise<boolean>;
   onEdit?: (expenseId: string) => void;
 };
 
-const dateFormat = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-const monthFormat = new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const monthOf = (date: string) => monthFormat.format(new Date(`${date.slice(0, 7)}-01T00:00:00Z`));
-const formatDate = (date: string) => dateFormat.format(new Date(`${date}T00:00:00Z`));
-
-type Anchor = { measureInWindow: (callback: (x: number, y: number, width: number, height: number) => void) => void; focus?: () => void };
+const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const monthFormat = (locale: string) => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const monthOf = (date: string, locale: string) => monthFormat(locale).format(new Date(`${date.slice(0, 7)}-01T00:00:00Z`));
+const formatDate = (date: string, locale: string) => dateFormat(locale).format(new Date(`${date}T00:00:00Z`));
 
 // Filter values: every category, those without a (still existing) category, or one category ID.
 const ALL = 'all';
-const NONE = 'none';
 
-export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }: Props) {
+export function ExpenseList({ occurrences, categories, error, onEdit }: Props) {
+  const { t, locale, formatAmount } = useI18n();
   const theme = useTheme();
   const size = useSizeClass();
   const compact = size === 'compact';
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortOption>('date-desc');
   const [categoryFilter, setCategoryFilter] = useState<string>(ALL);
-  // One shared action menu for the whole list, anchored to coordinates: Paper focuses the anchor of
-  // every Menu that mounts closed (web), so one Menu per row would scroll the page to the last row.
-  const [menu, setMenu] = useState<{ key: string; x: number; y: number } | null>(null);
-  const anchors = useRef(new Map<string, Anchor | null>());
-  const [deleting, setDeleting] = useState<{ name: string; description: string; run: () => boolean | Promise<boolean> } | null>(null);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   // A deleted category leaves expenses pointing at a missing ID: they count as uncategorised.
   const known = useMemo(() => new Set(categories.map((category) => category.id)), [categories]);
-  const filter = categoryFilter === ALL || categoryFilter === NONE || known.has(categoryFilter) ? categoryFilter : ALL;
+  const filter = categoryFilter === ALL || known.has(categoryFilter) ? categoryFilter : ALL;
   const results = useMemo(() => {
     const scoped = filter === ALL ? occurrences
-      : occurrences.filter((item) => (filter === NONE ? !item.category_id || !known.has(item.category_id) : item.category_id === filter));
+      : occurrences.filter((item) => item.category_id === filter);
     return searchAndSort(scoped, query, sort);
   }, [occurrences, known, filter, query, sort]);
-  const menuItem = menu ? results.find((entry) => entry.key === menu.key) : undefined;
-  // Closing returns the focus to the row button that opened the menu (keyboard users).
-  const closeMenu = () => { const key = menu?.key; setMenu(null); if (key) setTimeout(() => anchors.current.get(key)?.focus?.(), 0); };
   const byDate = sort === 'date-desc' || sort === 'date-asc';
-  const seriesNote = 'Eliminando una ricorrenza si elimina l’intera serie. L’operazione non può essere annullata.';
-  const sortChoices = sortOptions.map((value) => ({ value, label: sortLabels[value] }));
-  const categoryChoices = [{ value: ALL, label: 'Tutte le categorie' }, ...categories.map((category) => ({ value: category.id, label: category.label })),
-    { value: NONE, label: 'Senza categoria' }];
+  const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]) }));
+  const categoryChoices = [{ value: ALL, label: t("Tutte le categorie") }, ...categories.map((category) => ({ value: category.id, label: category.label }))];
 
   const filters = (
     <>
       <View style={styles.toolbar}>
-        <TextInput outlineStyle={inputOutline} label="Cerca per nome" accessibilityLabel="Cerca per nome" mode="outlined" value={query}
+        <TextInput outlineStyle={inputOutline} label={t("Cerca per nome")} accessibilityLabel={t("Cerca per nome")} mode="outlined" value={query}
           onChangeText={setQuery} autoCorrect={false} style={styles.search}
           left={leadingIcon(iconShapes.search)}
-          right={query ? <TextInput.Icon accessibilityLabel="Cancella ricerca" onPress={() => setQuery('')}
+          right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => setQuery('')}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
-        <MenuSelect label="Ordina" icon={iconShapes.sort} options={sortChoices} value={sort} onChange={setSort} style={styles.select} />
-        <MenuSelect label="Categoria" icon={iconShapes.filter} options={categoryChoices} value={filter} onChange={setCategoryFilter} style={styles.select} />
+        <MenuSelect label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort} onChange={setSort} style={styles.select} />
+        <MenuSelect label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter} onChange={setCategoryFilter} style={styles.select} />
       </View>
-      {error && <HelperText type="error" accessibilityRole="alert">{error}</HelperText>}
+      {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>
   );
 
@@ -83,66 +69,70 @@ export function ExpenseList({ occurrences, categories, error, onDelete, onEdit }
       {filters}
       <View role="list">
         {results.map((item, index) => {
-          const month = monthOf(item.date);
-          const heading = byDate && (index === 0 || monthOf(results[index - 1]!.date) !== month);
-          const monthTotal = heading ? results.filter((entry) => monthOf(entry.date) === month).reduce((sum, entry) => sum + entry.amount_minor, 0) : 0;
+          const month = monthOf(item.date, locale);
+          const heading = byDate && (index === 0 || monthOf(results[index - 1]!.date, locale) !== month);
+          const inMonth = heading ? results.filter((entry) => monthOf(entry.date, locale) === month) : [];
+          const monthTotal = inMonth.reduce((sum, entry) => sum + entry.amount_minor, 0);
           // Dividers only between rows: none after the last row of a month group (the next heading separates it) or of the list.
           const next = results[index + 1];
-          const lastOfGroup = !next || (byDate && monthOf(next.date) !== month);
+          const lastOfGroup = !next || (byDate && monthOf(next.date, locale) !== month);
           const category = categories.find((entry) => entry.id === item.category_id);
-          const details = [formatDate(item.date), category?.label, item.recurrence && recurrenceLabels[item.recurrence]]
-            .filter(Boolean).join(' · ');
-          const name = item.recurrence ? `la serie ${item.description}` : item.description;
+          const open = expanded.has(item.key);
+          const detailsId = `expense-details-${item.key}`;
           return (
-            <View key={item.key}>
+            <Fragment key={item.key}>
               {heading && (
-                <View style={styles.month} accessibilityRole="header">
-                  <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{month}</Text>
-                  <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmountMinor(monthTotal)}</Text>
+                <View style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
+                  <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>
+                    {month}
+                  </Text>
+                  <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{`${inMonth.length} ${inMonth.length === 1 ? t("spesa") : t("spese")} · ${formatAmount(monthTotal)}`}</Text>
                 </View>
               )}
-              <ListRow outlined icon={category?.icon ?? null} title={item.description} subtitle={details}
-                meta={compact ? <Text variant="titleSmall" style={listRowStyles.amount}>{formatAmountMinor(item.amount_minor)}</Text> : undefined}
+              <View>
+              <ListRow outlined icon={category?.icon ?? null} title={item.description}
+                meta={compact ? <Text variant="titleSmall" style={listRowStyles.amount}>{formatAmount(item.amount_minor)}</Text> : undefined}
                 trailing={<>
-                  {!compact && <Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmountMinor(item.amount_minor)}</Text>}
-                  {compact ? (onEdit || onDelete) && (
-                    <IconButton accessibilityLabel={`Azioni per ${item.description}`} aria-haspopup="menu" style={listRowStyles.iconButton}
-                      ref={(node) => { anchors.current.set(item.key, node as unknown as Anchor | null); }}
-                      icon={({ size, color }) => <SvgIcon shape={iconShapes.dots} size={size} color={color} />}
-                      onPress={() => anchors.current.get(item.key)?.measureInWindow((x, y, width, height) => setMenu({ key: item.key, x: x + width, y: y + height }))} />
-                  ) : <>
-                    {onEdit && <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
-                      accessibilityLabel={`Modifica ${item.description}`} onPress={() => onEdit(item.expenseId)} />}
-                    {onDelete && <DeleteAction name={name} description={item.recurrence ? seriesNote : undefined}
-                      onDelete={() => onDelete(item.expenseId)} />}
-                  </>}
-                </>} />
-            </View>
+                  {!compact && <Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>}
+                  <IconButton style={listRowStyles.iconButton} aria-expanded={open} aria-controls={open ? detailsId : undefined}
+                    accessibilityLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: formatDate(item.date, locale) })}
+                    icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
+                    onPress={() => setExpanded((previous) => {
+                      const next = new Set(previous);
+                      if (next.has(item.key)) next.delete(item.key); else next.add(item.key);
+                      return next;
+                    })} />
+                  {onEdit && <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
+                    accessibilityLabel={t("Modifica {p0}", { p0: item.description })} onPress={() => onEdit(item.expenseId)} />}
+                </>}>
+                {open && <View nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: item.description })}
+                  style={[styles.details, { borderColor: theme.colors.outlineVariant }]}>
+                  <View style={styles.detailField}>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Data")}</Text>
+                    <Text variant="bodyMedium">{formatDate(item.date, locale)}</Text>
+                  </View>
+                  <View style={styles.detailField}>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
+                    <Text variant="bodyMedium">{category?.label ?? t("Senza categoria")}</Text>
+                  </View>
+                  {item.recurrence && <View style={styles.detailField}>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
+                    <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
+                  </View>}
+                </View>}
+              </ListRow>
+              </View>
+            </Fragment>
           );
         })}
-        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessuna spesa.</Text>}
+        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna spesa.")}</Text>}
         {occurrences.length > 0 && results.length === 0 && (
           <View style={styles.empty}>
-            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>Nessun risultato.</Text>
-            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); }}>Azzera filtri</Button></View>
+            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>
+            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); }}>{t("Azzera filtri")}</Button></View>
           </View>
         )}
       </View>
-      <Menu visible={menu !== null && menuItem !== undefined} onDismiss={closeMenu} anchor={{ x: menu?.x ?? 0, y: menu?.y ?? 0 }}
-        contentStyle={{ backgroundColor: theme.colors.elevation.level2, borderRadius: radius.control }}>
-        {onEdit && <Menu.Item title="Modifica" leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
-          onPress={() => { if (menuItem) onEdit(menuItem.expenseId); closeMenu(); }} />}
-        {onDelete && <Menu.Item title="Elimina" leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}
-          onPress={() => {
-            if (menuItem) {
-              const target = menuItem;
-              setDeleting({ name: target.recurrence ? `la serie ${target.description}` : target.description, description: target.recurrence ? seriesNote : 'L’operazione non può essere annullata.', run: () => onDelete(target.expenseId) });
-            }
-            closeMenu();
-          }} />}
-      </Menu>
-      <DeleteDialog visible={deleting !== null} name={deleting?.name ?? ''} description={deleting?.description}
-        onDismiss={() => setDeleting(null)} onConfirm={() => deleting ? deleting.run() : false} />
     </View>
   );
 }
@@ -153,10 +143,14 @@ const styles = StyleSheet.create({
   search: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
   select: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
   root: { gap: spacing.lg },
-  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: spacing.xl, paddingBottom: spacing.md },
-  monthName: { textTransform: 'capitalize' },
+  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 40, paddingBottom: spacing.md },
+  firstMonth: { paddingTop: spacing.lg },
+  monthName: { flex: 1, fontWeight: '700', fontSize: 15, lineHeight: 22 },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
-  rowAmount: { minWidth: 96, textAlign: 'right' },
+  rowAmount: { minWidth: 96, textAlign: 'right', marginRight: spacing.md },
+  details: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: spacing.md, paddingBottom: spacing.sm },
+  detailField: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
   empty: { gap: spacing.sm },
   start: { alignSelf: 'flex-start' },
 });
