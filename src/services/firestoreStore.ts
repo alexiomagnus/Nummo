@@ -1,18 +1,20 @@
 import {
-  collection, deleteField, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
-  Timestamp, writeBatch, type Firestore, type DocumentData, type QuerySnapshot,
+  collection, deleteDoc, deleteField, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
+  Timestamp, updateDoc, writeBatch, type Firestore, type DocumentData, type QuerySnapshot,
 } from 'firebase/firestore';
 import { planImport, sameCategory, sameExpense, sameFund, sameMovement, validateBackupData, type ImportData, type ImportMode } from '../domain/backup.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../domain/contract.ts';
 import { categoryNameError, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
 import { decodeStatusChanges, encodeStatusChanges } from '../domain/subscription.ts';
-import { categoryNameKey, parseSyncedCategory, parseSyncedExpense, parseSyncedFund, parseSyncedMovement, type SyncedCategory, type SyncedExpense, type SyncedFund, type SyncedMovement } from '../domain/firestore.ts';
+import { categoryNameKey, parseSyncedCategory, parseSyncedExpense, parseSyncedFund, parseSyncedList, parseSyncedListItem, parseSyncedMovement, type SyncedCategory, type SyncedExpense, type SyncedFund, type SyncedList, type SyncedListItem, type SyncedMovement } from '../domain/firestore.ts';
+import { decodeListItems, encodeListItems, listNameError, itemNameError, normalizeListText, parseListData, sameListRecord, sortItems, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFundData, parseMovementData, type Fund, type FundData, type Movement, type MovementData } from '../domain/funds.ts';
 
 export type SnapshotState<T> = { records: T[]; fromCache: boolean; pending: boolean; pendingIds: string[] };
 function decode(data: DocumentData, id: string) {
-  return { ...data, ...('status_changes' in data ? { status_changes: decodeStatusChanges(data.status_changes) } : {}), id, created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : data.created_at,
+  return { ...data, ...('status_changes' in data ? { status_changes: decodeStatusChanges(data.status_changes) } : {}),
+    ...('list_items' in data ? { list_items: decodeListItems(data.list_items) } : {}), id, created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : data.created_at,
     updated_at: data.updated_at instanceof Timestamp ? data.updated_at.toDate().toISOString() : data.updated_at };
 }
 // Fund schedules are stored as compact strings (see firestore.rules); undecodable strings fail the record check.
@@ -34,10 +36,18 @@ function parseSnapshot<T>(snapshot: QuerySnapshot, parse: (value: unknown) => T 
 }
 // `status_changes` is stored (encoded as one string) only when a series has one: records without it (every
 // one-off expense and series never paused) keep the exact shape that Rules published before statuses accept.
-// Likewise `fund_id` is stored only when the expense has a fund (expenses saved before funds existed have none).
-function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id'>>(data: T) {
-  const { status_changes, fund_id, ...rest } = data;
-  return { ...rest, ...(status_changes.length ? { status_changes: encodeStatusChanges(status_changes) } : {}), ...(fund_id ? { fund_id } : {}) };
+// Likewise `fund_id` is stored only when the expense has a fund (expenses saved before funds existed have none), and
+// `list_id` + `list_items` (names joined by '\n') only for the expense that registered a shopping list.
+function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id' | 'list_id' | 'list_items'>>(data: T) {
+  const { status_changes, fund_id, list_id, list_items, ...rest } = data;
+  return { ...rest, ...(status_changes.length ? { status_changes: encodeStatusChanges(status_changes) } : {}), ...(fund_id ? { fund_id } : {}),
+    ...(list_id ? { list_id, list_items: encodeListItems(list_items) } : {}) };
+}
+const storedList = (data: ShoppingListData) => ({ name: data.name, category_id: data.category_id, total_minor: data.total_minor, expense_id: data.expense_id });
+// Lists of the archive with their items (backups and import plans). Items whose list no longer exists are left out.
+function listRecords(lists: readonly SyncedList[], items: readonly SyncedListItem[]): ShoppingListRecord[] {
+  return lists.map((l) => ({ id: l.id, name: l.name, category_id: l.category_id, total_minor: l.total_minor, expense_id: l.expense_id, created_at: l.created_at,
+    items: sortItems(items.filter((i) => i.list_id === l.id)).map((i) => ({ id: i.id, name: i.name, checked: i.checked, position: i.position })) }));
 }
 
 export function createFirestoreStore(db: Firestore, uid: string) {
@@ -46,17 +56,27 @@ export function createFirestoreStore(db: Firestore, uid: string) {
   const names = collection(db, 'users', uid, 'categoryNames');
   const funds = collection(db, 'users', uid, 'funds');
   const movements = collection(db, 'users', uid, 'movements');
+  const lists = collection(db, 'users', uid, 'lists');
+  const listItems = collection(db, 'users', uid, 'listItems');
   const conflict = () => new Error('I dati sono cambiati in un’altra sessione. Riapri la modifica e riprova.');
   // Reads the saved archive from the server for a restore plan. Refuses while writes are pending.
   async function readAll() {
-    const [e, c, f, m] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements)]);
-    return [parseSnapshot(e, parseSyncedExpense), parseSnapshot(c, parseSyncedCategory), parseSnapshot(f, parseSyncedFund, decodeFund), parseSnapshot(m, parseSyncedMovement)] as const;
+    const [e, c, f, m, l, i] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements),
+      getDocsFromServer(lists), getDocsFromServer(listItems)]);
+    return [parseSnapshot(e, parseSyncedExpense), parseSnapshot(c, parseSyncedCategory), parseSnapshot(f, parseSyncedFund, decodeFund), parseSnapshot(m, parseSyncedMovement),
+      parseSnapshot(l, parseSyncedList), parseSnapshot(i, parseSyncedListItem)] as const;
   }
   async function readArchive() {
-    const [savedExpenses, savedCategories, savedFunds, savedMovements] = await readAll();
-    if (savedExpenses.pending || savedCategories.pending || savedFunds.pending || savedMovements.pending) throw new Error('Attendi le scritture pendenti prima di importare.');
-    return { expenses: savedExpenses.records, categories: savedCategories.records, funds: savedFunds.records, movements: savedMovements.records };
+    const states = await readAll();
+    const [savedExpenses, savedCategories, savedFunds, savedMovements, savedLists, savedItems] = states;
+    if (states.some((state) => state.pending)) throw new Error('Attendi le scritture pendenti prima di importare.');
+    return { expenses: savedExpenses.records, categories: savedCategories.records, funds: savedFunds.records, movements: savedMovements.records,
+      lists: listRecords(savedLists.records, savedItems.records), items: savedItems.records };
   }
+  // Checklist edits are plain writes queued by the SDK (they work with a weak signal in a shop): the listener shows them
+  // at once and the sync chip until the server has them. A rejected write is reported, never retried by the app.
+  let onWriteError: (reason: unknown) => void = () => {};
+  const queued = (write: Promise<void>) => { void write.catch((reason) => onWriteError(reason)); };
   return {
     watchExpenses(next: (value: SnapshotState<SyncedExpense>) => void, error: (reason: Error) => void) {
       return onSnapshot(expenses, { includeMetadataChanges: true }, (s) => {
@@ -91,15 +111,20 @@ export function createFirestoreStore(db: Firestore, uid: string) {
         const ref = doc(expenses, previous.id);
         const current = await tx.get(ref);
         if (!current.exists() || current.data().revision !== previous.revision) throw conflict();
-        tx.update(ref, { ...stored(data), ...(data.status_changes.length ? {} : { status_changes: deleteField() }), ...(data.fund_id ? {} : { fund_id: deleteField() }), revision: previous.revision + 1, updated_at: serverTimestamp() });
+        tx.update(ref, { ...stored(data), ...(data.status_changes.length ? {} : { status_changes: deleteField() }), ...(data.fund_id ? {} : { fund_id: deleteField() }),
+          ...(data.list_id ? {} : { list_id: deleteField(), list_items: deleteField() }), revision: previous.revision + 1, updated_at: serverTimestamp() });
       });
     },
+    // Deleting the expense that registered a shopping list brings that list back among the active ones in the same
+    // transaction (the purchase can be registered again): no archived list ever points at a deleted expense.
     async removeExpense(previous: SyncedExpense) {
       await runTransaction(db, async (tx) => {
         const ref = doc(expenses, previous.id);
         const current = await tx.get(ref);
+        const list = previous.list_id ? await tx.get(doc(lists, previous.list_id)) : null;
         if (!current.exists() || current.data().revision !== previous.revision) throw conflict();
         tx.delete(ref);
+        if (list?.exists() && list.data().expense_id === previous.id) tx.update(list.ref, { expense_id: null, updated_at: serverTimestamp() });
       });
     },
     async saveCategory(id: string, name: string, icon: CategoryIcon | null, previous?: SyncedCategory) {
@@ -196,11 +221,84 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       }
       return done;
     },
+    watchLists(next: (value: SnapshotState<SyncedList>) => void, error: (reason: Error) => void) {
+      return onSnapshot(lists, { includeMetadataChanges: true }, (s) => {
+        try { next(parseSnapshot(s, parseSyncedList)); } catch (e) { error(e as Error); }
+      }, error);
+    },
+    watchListItems(next: (value: SnapshotState<SyncedListItem>) => void, error: (reason: Error) => void) {
+      return onSnapshot(listItems, { includeMetadataChanges: true }, (s) => {
+        try { next(parseSnapshot(s, parseSyncedListItem)); } catch (e) { error(e as Error); }
+      }, error);
+    },
+    // Receives the outcome of queued checklist writes rejected by the server (Rules, permissions).
+    onQueuedWriteError(handler: (reason: unknown) => void) { onWriteError = handler; return () => { onWriteError = () => {}; }; },
+    // New list (optionally with items: duplicate, products not bought) in one batch, so it never appears half-made.
+    createList(id: string, data: Pick<ShoppingListData, 'name' | 'category_id'>, items: readonly { name: string; position: number }[] = []) {
+      const list = { name: normalizeListText(data.name), category_id: data.category_id, total_minor: null, expense_id: null };
+      if (listNameError(list.name) || !parseListData(list) || items.some((i) => itemNameError(i.name))) throw new Error('Lista non valida.');
+      const batch = writeBatch(db);
+      batch.set(doc(lists, id), { ...list, created_at: serverTimestamp(), updated_at: serverTimestamp() });
+      for (const item of items) batch.set(doc(listItems, crypto.randomUUID()), { list_id: id, name: normalizeListText(item.name), checked: false, position: item.position });
+      queued(batch.commit());
+    },
+    updateList(list: SyncedList, change: Partial<Pick<ShoppingListData, 'name' | 'category_id' | 'total_minor'>>) {
+      const next = { ...storedList(list), ...change, ...(change.name !== undefined ? { name: normalizeListText(change.name) } : {}) };
+      if (list.expense_id !== null || !parseListData(next)) throw new Error('Lista non valida.');
+      queued(updateDoc(doc(lists, list.id), { ...storedList(next), updated_at: serverTimestamp() }));
+    },
+    // A list whose expense no longer exists (removed outside the app's delete) becomes active again.
+    reopenList(list: SyncedList) {
+      queued(updateDoc(doc(lists, list.id), { expense_id: null, updated_at: serverTimestamp() }));
+    },
+    removeList(list: SyncedList, items: readonly SyncedListItem[]) {
+      const batch = writeBatch(db);
+      batch.delete(doc(lists, list.id));
+      for (const item of items) if (item.list_id === list.id) batch.delete(doc(listItems, item.id));
+      queued(batch.commit());
+    },
+    addListItem(listId: string, name: string, position: number) {
+      const item = { list_id: listId, name: normalizeListText(name), checked: false, position };
+      if (!parseSyncedListItem({ ...item, id: crypto.randomUUID() })) throw new Error('Prodotto non valido.');
+      queued(setDoc(doc(listItems, crypto.randomUUID()), item));
+    },
+    updateListItem(item: SyncedListItem, change: Partial<Pick<SyncedListItem, 'name' | 'checked'>>) {
+      const next = { ...item, ...change, ...(change.name !== undefined ? { name: normalizeListText(change.name) } : {}) };
+      if (!parseSyncedListItem(next)) throw new Error('Prodotto non valido.');
+      queued(updateDoc(doc(listItems, item.id), { name: next.name, checked: next.checked }));
+    },
+    removeListItem(item: SyncedListItem) {
+      queued(deleteDoc(doc(listItems, item.id)));
+    },
+    // Registers a list: ONE server transaction creates the expense (ID chosen when the confirmation opened) and archives
+    // the list. Repeating it after an uncertain outcome finds the same expense and does nothing; a list already registered
+    // (other device, double press) is refused, so a purchase is never counted twice.
+    // `remember`: the category used becomes the list's default (kept by its duplicates).
+    async registerList(list: SyncedList, expenseId: string, data: ExpenseData, remember = false) {
+      if (data.list_id !== list.id || data.recurrence !== null || !parseExpenseRequest({ ...data, expense_id: expenseId }, new Date())) throw new Error('Spesa non valida.');
+      await runTransaction(db, async (tx) => {
+        const listRef = doc(lists, list.id);
+        const expenseRef = doc(expenses, expenseId);
+        const [currentList, currentExpense] = [await tx.get(listRef), await tx.get(expenseRef)];
+        if (currentExpense.exists()) {
+          const saved = parseSyncedExpense(decode(currentExpense.data(), currentExpense.id));
+          if (saved && currentList.exists() && currentList.data().expense_id === expenseId
+            && Object.entries(data).every(([key, value]) => sameFieldValue(saved[key as keyof ExpenseData], value))) return;
+          throw conflict();
+        }
+        if (!currentList.exists()) throw new Error('La lista non esiste più.');
+        if (currentList.data().expense_id !== null) throw new Error('Questa lista è già stata registrata come spesa.');
+        tx.set(expenseRef, { ...stored(data), created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 });
+        tx.update(listRef, { expense_id: expenseId, total_minor: data.amount_minor, ...(remember ? { category_id: data.category_id } : {}), updated_at: serverTimestamp() });
+      });
+    },
     async exportSnapshot() {
       // Server-only: never label an incomplete offline cache as a complete backup.
-      const [expenseState, categoryState, fundState, movementState] = await readAll();
-      if (expenseState.pending || categoryState.pending || fundState.pending || movementState.pending) throw new Error('Attendi la sincronizzazione prima di esportare.');
-      return { expenses: expenseState.records, categories: categoryState.records, funds: fundState.records, movements: movementState.records };
+      const states = await readAll();
+      const [expenseState, categoryState, fundState, movementState, listState, itemState] = states;
+      if (states.some((state) => state.pending)) throw new Error('Attendi la sincronizzazione prima di esportare.');
+      return { expenses: expenseState.records, categories: categoryState.records, funds: fundState.records, movements: movementState.records,
+        lists: listRecords(listState.records, itemState.records) };
     },
     // Preview for the import dialog: what each mode would do, computed on the current server data. No writes.
     async previewImport(data: ImportData) {
@@ -210,8 +308,8 @@ export function createFirestoreStore(db: Firestore, uid: string) {
     // 'merge' only adds (identical items skipped; any conflict blocks the whole import before the first write).
     // 'replace' makes the archive equal to the file: it removes saved items that differ from the file, then adds the rest.
     // Nothing is written until the file and the plan have been validated against the server data.
-    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = []) {
-      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords);
+    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = []) {
+      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists);
       const current = await readArchive();
       const plan = planImport(checked, current, mode);
       if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi del backup sono diversi da quelli già salvati con lo stesso ID o nome. Nessun dato è stato modificato.`);
@@ -219,7 +317,11 @@ export function createFirestoreStore(db: Firestore, uid: string) {
         const savedNames = await getDocsFromServer(names);
         const removedCategories = current.categories.filter((c) => plan.removeCategoryIds.includes(c.id));
         try {
-          for (const [target, ids] of [[expenses, plan.removeExpenseIds], [movements, plan.removeMovementIds], [funds, plan.removeFundIds]] as const) {
+          // A replaced list goes with all its items; items of no kept list (left by concurrent edits) are removed too.
+          const keptLists = new Set(current.lists.filter((l) => !plan.removeListIds.includes(l.id)).map((l) => l.id));
+          const removeItemIds = current.items.filter((i) => !keptLists.has(i.list_id)).map((i) => i.id);
+          for (const [target, ids] of [[expenses, plan.removeExpenseIds], [movements, plan.removeMovementIds], [funds, plan.removeFundIds],
+            [listItems, removeItemIds], [lists, plan.removeListIds]] as const) {
             for (let i = 0; i < ids.length; i += 200) {
               const batch = writeBatch(db);
               for (const id of ids.slice(i, i + 200)) batch.delete(doc(target, id));
@@ -298,6 +400,23 @@ export function createFirestoreStore(db: Firestore, uid: string) {
                 tx.set(doc(names, key), { category_id: r.id });
               }
             });
+          });
+        }
+        // One transaction per list with its items (at most 101 documents); an identical saved list is skipped.
+        for (const list of plan.addLists) {
+          await runTransaction(db, async (tx) => {
+            const ref = doc(lists, list.id);
+            const existing = await tx.get(ref);
+            const itemDocs = await Promise.all(list.items.map((i) => tx.get(doc(listItems, i.id))));
+            if (existing.exists()) {
+              const parsed = parseSyncedList(decode(existing.data(), existing.id));
+              const savedItems = itemDocs.flatMap((d) => (d.exists() ? [parseSyncedListItem({ ...d.data(), id: d.id })] : []));
+              if (!parsed || savedItems.some((i) => !i || i.list_id !== list.id) || !sameListRecord(listRecords([parsed], savedItems as SyncedListItem[])[0]!, list)) throw conflict();
+              return;
+            }
+            if (itemDocs.some((d) => d.exists())) throw conflict();
+            tx.set(ref, { ...storedList(list), created_at: Timestamp.fromDate(new Date(list.created_at)), updated_at: serverTimestamp() });
+            list.items.forEach((i) => tx.set(doc(listItems, i.id), { list_id: list.id, name: i.name, checked: i.checked, position: i.position }));
           });
         }
       } catch (reason) {

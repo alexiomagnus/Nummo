@@ -2,6 +2,7 @@ import { categoryNameError, isCategoryIcon, normalizeCategoryName, type Category
 import { isUtcTimestamp, isUuid, parseExpenseRecord, type ExpenseRecord } from './contract.ts';
 import { parseExpenseRequest } from './contract.ts';
 import { parseFund, parseMovement, type Fund, type Movement } from './funds.ts';
+import { parseListItem, parseShoppingList, type ListItem, type ShoppingList } from './shoppingList.ts';
 export type SyncedExpense = ExpenseRecord & { revision: number; updated_at: string };
 export type SyncedCategory = Category & { revision: number; updated_at: string; name_key: string };
 export function categoryNameKey(label: string): string {
@@ -12,7 +13,8 @@ export function parseSyncedExpense(value: unknown): SyncedExpense | null {
   const record = parseExpenseRecord(value);
   if (!v || !record || !isUuid(record.id) || !isUtcTimestamp(record.created_at)
     || !isUtcTimestamp(v.updated_at) || !Number.isSafeInteger(v.revision) || v.revision! < 1
-    || (record.category_id !== null && !isUuid(record.category_id)) || (record.fund_id !== null && !isUuid(record.fund_id))) return null;
+    || (record.category_id !== null && !isUuid(record.category_id)) || (record.fund_id !== null && !isUuid(record.fund_id))
+    || (record.list_id !== null && !isUuid(record.list_id))) return null;
   return { ...record, revision: v.revision!, updated_at: v.updated_at };
 }
 export function parseSyncedCategory(value: unknown): SyncedCategory | null {
@@ -43,3 +45,14 @@ export function parseSyncedMovement(value: unknown): SyncedMovement | null {
   const movement = parseMovement(value);
   return movement && isUtcTimestamp(movement.created_at) ? movement : null;
 }
+
+// Shopping lists: last write wins (no revision), items are separate documents. See shoppingList.ts.
+export type SyncedList = ShoppingList & { updated_at: string };
+export type SyncedListItem = ListItem;
+export function parseSyncedList(value: unknown): SyncedList | null {
+  const v = value as Partial<SyncedList> | null;
+  const list = parseShoppingList(value);
+  if (!v || !list || !isUtcTimestamp(list.created_at) || !isUtcTimestamp(v.updated_at)) return null;
+  return { ...list, updated_at: v.updated_at };
+}
+export const parseSyncedListItem = (value: unknown): SyncedListItem | null => parseListItem(value);

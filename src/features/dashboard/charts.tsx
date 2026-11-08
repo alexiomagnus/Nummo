@@ -37,11 +37,12 @@ export function DonutChart({ data, colors, active, onActive }: ChartProps) {
   const [width, onLayout] = useWidth();
   // Hover is only a preview. A clicked/tapped selection belongs to the dashboard and survives pointer exit.
   const [hovered, setHovered] = useState<number | null>(null);
-  const highlighted = active ?? hovered;
+  const highlighted = hovered ?? active;
   const focus = highlighted === null ? null : data.series[highlighted];
-  const amount = formatAmount(focus ? focus.total : data.total);
-  const share = focus ? (focus.total / data.total) * 100 : 0;
-  const caption = focus ? `${share > 0 && share < 1 ? '<1' : Math.round(share)}% · ${seriesLabel(focus, t)}` : t("totale");
+  const amount = focus ? formatAmount(focus.total) : '';
+  const share = focus && data.total > 0 ? (focus.total / data.total) * 100 : 0;
+  const caption = focus ? seriesLabel(focus, t) : '';
+  const percent = `${share > 0 && share < 1 ? '<1' : Math.round(share)}%`;
   const { size, outer, inner, centerSide, amountFontSize } = donutMetrics(width, amount);
   const segments: { d: string; color: string }[] = [];
   let angle = -Math.PI / 2;
@@ -62,20 +63,25 @@ export function DonutChart({ data, colors, active, onActive }: ChartProps) {
     <View onLayout={onLayout} style={styles.center}>
       {size > 0 && (
         <View style={{ position: 'relative', width: size, height: size }}>
-        <svg width={size} height={size} role="img" aria-label={t("Grafico ad anello delle spese per categoria: {p0}, {p1}", { p0: amount, p1: caption })}
+        <svg width={size} height={size} role="group" aria-label={t("Grafico ad anello delle spese per categoria: {p0}, {p1}", { p0: focus ? amount : formatAmount(data.total), p1: focus ? caption + ' · ' + percent : t('totale') })}
           onPointerLeave={() => setHovered(null)}>
           {segments.map((segment, index) => (
-            <path key={index} d={segment.d} fill={segment.color} stroke={colors.surface} strokeWidth={2}
+            <path key={index} role="button" tabIndex={0} aria-pressed={active === index}
+              aria-label={seriesLabel(data.series[index]!, t) + ': ' + formatAmount(data.series[index]!.total)}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onActive(active === index ? null : index); } }}
+              d={segment.d} fill={segment.color} stroke={colors.surface} strokeWidth={2}
               opacity={highlighted === null || highlighted === index ? 1 : 0.35} style={{ cursor: 'pointer', transition: 'opacity 150ms cubic-bezier(0.2, 0, 0, 1)' }}
               onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(index); }}
+              onPointerLeave={() => setHovered(null)}
               onClick={() => { setHovered(null); onActive(active === index ? null : index); }} />
           ))}
         </svg>
-        {centerSide >= 64 && <View pointerEvents="none" aria-hidden style={[styles.caption, {
+        {focus && centerSide >= 64 && <View pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.caption, {
           width: centerSide, height: centerSide, left: outer - centerSide / 2, top: outer - centerSide / 2,
         }]}>
-          <Text numberOfLines={1} style={[styles.captionText, { color: colors.text, fontSize: amountFontSize, lineHeight: amountFontSize * 1.3, fontWeight: '700' }]}>{amount}</Text>
           <Text numberOfLines={2} style={[styles.captionText, { color: colors.muted, fontSize: 14, lineHeight: 18 }]}>{caption}</Text>
+          <Text numberOfLines={1} style={[styles.captionText, { color: colors.text, fontSize: Math.min(amountFontSize, 32), lineHeight: Math.min(amountFontSize, 32) * 1.3, fontWeight: '700' }]}>{amount}</Text>
+          <Text style={[styles.captionText, { color: colors.muted, fontSize: 14, lineHeight: 18 }]}>{percent}</Text>
         </View>}
         </View>
       )}

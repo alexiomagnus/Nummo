@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { breakdown, categoryColorSlot, otherCategoriesKey, uncategorizedKey, periods, type ExpenseEntry } from '../src/domain/history.ts';
 import { expandOccurrences } from '../src/domain/history.ts';
-import { categoryPresentation, blockLayout, blockTileBounds, categoryPercent } from '../src/features/dashboard/categoryPresentation.ts';
+import { categoryPresentation, blockHeight, blockLayout, blockRadius, blockTileBounds, categoryPercent } from '../src/features/dashboard/categoryPresentation.ts';
 import { treemap } from '../src/features/dashboard/treemap.ts';
 
 const today = '2026-11-08';
@@ -126,4 +126,31 @@ test('blocchi: treemap proporzionale anche su mobile, gutter ridotti per i retta
       assert.ok(inside.w > 0 && inside.h > 0);
     }
   }
+});
+
+test('blocchi: squarified con molte categorie e importi molto diversi, aree esatte e altezza adattiva', () => {
+  // 12 categories from 1 cent to thousands of euros: the projection keeps 8 series (7 + «Altre»).
+  const categories = Array.from({ length: 12 }, (_, i) => ({ id: `c${i}`, label: `Categoria ${i}`, icon: null }));
+  const amounts = [500000, 120000, 40000, 9000, 2500, 800, 300, 120, 40, 10, 3, 1];
+  const entries = categories.map((category, i) => ({ id: category.id, amount_minor: amounts[i]!, description: category.label,
+    category_id: category.id, expense_date: today, recurrence: null, created_at: `${today}T10:00:00Z` }));
+  const { data } = categoryPresentation(breakdown(expandOccurrences(entries, today), categories, 'month', today));
+  assert.equal(data.series.length, 8);
+  for (const width of [288, 360, 600, 1100]) {
+    const layout = blockLayout(data.series, width);
+    assert.equal(layout.height, blockHeight(width));
+    assert.ok(layout.height >= 240 && layout.height <= 440);
+    for (const tile of layout.tiles) {
+      assert.ok(Math.abs(tile.w * tile.h / (width * layout.height) - tile.item.total / data.total) < 1e-6);
+      assert.ok(tile.x + tile.w <= width + 1e-9 && tile.y + tile.h <= layout.height + 1e-9);
+      const inside = blockTileBounds(tile);
+      assert.ok(inside.w > 0 && inside.h > 0);
+      assert.ok(blockRadius(inside, 12) <= Math.min(inside.w, inside.h) / 4);
+    }
+  }
+  // Squarified: equal values on a square canvas stay close to squares.
+  const even = treemap(Array.from({ length: 9 }, (_, i) => ({ item: i, value: 1 })), 300, 300);
+  for (const tile of even) assert.ok(Math.max(tile.w / tile.h, tile.h / tile.w) <= 2);
+  // Phones get a taller canvas than the same width ratio on desktop.
+  assert.ok(blockHeight(360) / 360 > blockHeight(1100) / 1100);
 });

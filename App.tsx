@@ -61,6 +61,8 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
   const { t } = useI18n();
   const theme = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Categories open from the account menu (below Settings): each request (a counter) opens their page in the workspace.
+  const [categoriesRequest, setCategoriesRequest] = useState(0);
   const session = useSession(!configMissing);
   const storageNote = t(demo || firestoreEmulator
     ? 'Spese e categorie negli emulatori locali Firestore.'
@@ -74,7 +76,8 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
   const account = session.status === 'signed-in'
-    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsOpen(true)} /> : null;
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsOpen(true)}
+      onOpenCategories={() => setCategoriesRequest((n) => n + 1)} /> : null;
 
   // Startup: while Auth restores the session (it waits for a network round trip) and the first data load, a placeholder
   // identical to the final screen is shown instead of the sign-in shell with a spinner. Only when the previous visit
@@ -100,7 +103,7 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
       {signedIn ? (
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
-            onReleased={() => setReleasedUid(session.user.uid)}
+            onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
             topActions={<>{themeToggle}{account}</>} />
         </View>

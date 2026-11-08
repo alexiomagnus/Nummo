@@ -33,6 +33,10 @@ export type ExpenseData = Readonly<{
   status_changes: readonly StatusChange[];
   // Fund that pays it (every occurrence of a series); null = «Senza fondo» (expenses saved before funds existed).
   fund_id: string | null;
+  // Shopping list registered by this expense (one-off only) and the names of the products actually bought, copied at
+  // registration so the expense stays complete even if the list changes or is deleted. null / [] for every other expense.
+  list_id: string | null;
+  list_items: readonly string[];
   source: 'web_app';
   schema_version: 1;
 }>;
@@ -96,7 +100,7 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   return { ok: true, data: {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: category?.id ?? null,
     expense_date: date, recurrence: draft.repeat && isRecurrence(draft.recurrence) ? draft.recurrence : null, price_changes, status_changes: [],
-    fund_id: fund?.id ?? null, source: 'web_app', schema_version: 1,
+    fund_id: fund?.id ?? null, list_id: null, list_items: [], source: 'web_app', schema_version: 1,
   } };
 }
 
@@ -137,5 +141,8 @@ export function dataOf(record: ExpenseData): ExpenseData {
   const { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, source, schema_version } = record;
   // Records read before funds existed may lack the field: they are «Senza fondo».
   const fund_id = record.fund_id ?? null;
-  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, source, schema_version };
+  // Likewise expenses saved before shopping lists existed have no list.
+  const list_id = record.list_id ?? null;
+  const list_items = record.list_items ?? [];
+  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, list_id, list_items, source, schema_version };
 }

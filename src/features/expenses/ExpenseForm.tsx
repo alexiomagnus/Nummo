@@ -31,6 +31,7 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
   const theme = useTheme();
   const notify = useSnackbar();
   const size = useSizeClass();
+  const desktop = size === 'expanded';
   const { submission } = store;
   const [draft, setDraft] = useState<ExpenseDraft>(() => newDraft());
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -103,7 +104,7 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
 
   const startDate = draft.date || todayInRome();
   const repeat = (
-    <View style={styles.repeat}>
+    <View style={[styles.repeat, desktop && styles.repeatDesktop]}>
       {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
         onChange={(fundId) => update({ fundId })} />}
       <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={startDate}
@@ -119,8 +120,8 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
 
   return (
     <View style={styles.page}>
-    <View style={styles.form}>
-      <ExpenseFields key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
+    <View style={[styles.form, desktop && styles.formDesktop]}>
+      <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
         extra={repeat} onCreateCategory={onCreateCategory} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
       {submission.status === 'rejected' && (
@@ -151,6 +152,8 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
 const styles = StyleSheet.create({
   page: { width: '100%' },
   form: { width: '100%', gap: spacing.lg },
+  formDesktop: { gap: spacing.md },
+  repeatDesktop: { gap: spacing.lg },
   // Compact, keyboard closed: the save bar sticks to the bottom of the scrolling area, above the navigation bar.
   sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, borderTopWidth: 0, boxShadow: 'none', zIndex: 1 } as unknown as ViewStyle,
   repeat: { gap: spacing.xl },

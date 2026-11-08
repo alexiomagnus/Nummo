@@ -4,10 +4,11 @@ import { test } from 'node:test';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { initializeAuth, connectAuthEmulator, signInWithCredential, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { initializeFirestore, connectFirestoreEmulator, doc, setDoc, getDocFromServer, getDocsFromServer, collection,
-  updateDoc, deleteDoc, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate } from 'firebase/firestore';
+  updateDoc, deleteDoc, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate, waitForPendingWrites } from 'firebase/firestore';
 import { createFirestoreStore } from '../../src/services/firestoreStore.ts';
 import { makeBackup, parseBackup } from '../../src/domain/backup.ts';
 import { todayInRome } from '../../src/domain/policy.ts';
+import { dataOf } from '../../src/domain/expense.ts';
 await import('../../scripts/seed-demo.ts');
 const projectId = 'demo-nummo';
 const suffix = randomUUID().slice(0, 8);
@@ -21,7 +22,7 @@ async function client(name: string, sub?: string, project = projectId) {
   return { app, auth, db, store: createFirestoreStore(db, auth.currentUser?.uid ?? 'demo-owner') };
 }
 const expense = () => ({ expense_id: randomUUID(), amount_minor: 1250, currency: 'EUR' as const, description: 'Caffè', category_id: null,
-  expense_date: todayInRome(), recurrence: null, price_changes: [], status_changes: [], fund_id: null, source: 'web_app' as const, schema_version: 1 as const });
+  expense_date: todayInRome(), recurrence: null, price_changes: [], status_changes: [], fund_id: null, list_id: null, list_items: [], source: 'web_app' as const, schema_version: 1 as const });
 const denied = (promise: Promise<unknown>) => assert.rejects(promise, (e: any) => e.code === 'permission-denied');
 const deadline = <T>(promise: Promise<T>): Promise<T> => {
   let timer: ReturnType<typeof setTimeout>;
@@ -72,7 +73,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     });
     await t.test('regole: campi, importi, date, revisioni e timestamp verificati sul server', async () => {
       // Raw documents in the stored shape: no `status_changes` unless a series has one (see firestoreStore).
-      const { expense_id, status_changes: _, fund_id: _fund, ...data } = expense();
+      const { expense_id, status_changes: _, fund_id: _fund, list_id: _list, list_items: _items, ...data } = expense();
       const valid = { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       for (const patch of [{ amount_minor: 1.5 }, { amount_minor: 0 }, { amount_minor: 10000000 }, { currency: 'USD' },
         { expense_date: '2025-02-30' }, { expense_date: '2099-01-01' }, { category_id: 'invalid' }, { recurrence: 'daily' },
@@ -87,7 +88,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     await t.test('piano prezzi: variazioni validate dalle regole, storico stabile dopo la modifica', async () => {
       const { expense_id, ...data } = expense();
       const series = { ...data, recurrence: 'yearly' as const, expense_date: '2025-03-12', amount_minor: 600, price_changes: [{ index: 1, amount_minor: 1200, once: false }] };
-      const { status_changes: _status, fund_id: _fund, ...storedSeries } = series;
+      const { status_changes: _status, fund_id: _fund, list_id: _list, list_items: _items, ...storedSeries } = series;
       const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       const change = { index: 2, amount_minor: 1500, once: true };
       const { price_changes: _, ...withoutField } = valid;
@@ -112,7 +113,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     await t.test('abbonamenti: stati validati dalle regole, campo assente compatibile, storico invariato', async () => {
       const { expense_id, ...data } = expense();
       const series = { ...data, recurrence: 'monthly' as const, expense_date: '2026-01-05', amount_minor: 999, status_changes: [] };
-      const { fund_id: _fund, ...storedSeries } = series;
+      const { fund_id: _fund, list_id: _list, list_items: _items, ...storedSeries } = series;
       const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       // Stored form: one string "date:status;…" (see subscription.ts / firestore.rules).
       const eight = Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';');
@@ -248,7 +249,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         await denied(setDoc(movementRef(randomUUID()), { ...rawMovement, ...patch }));
       }
       // Expenses: fund_id optional (absent = no fund), uuid when present; worst case 8 prices + 8 statuses + fund_id fits the Rules budget.
-      const { expense_id: _e, status_changes: _s, fund_id: _f, ...base } = expense();
+      const { expense_id: _e, status_changes: _s, fund_id: _f, list_id: _l, list_items: _li, ...base } = expense();
       const valid = { ...base, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       await denied(setDoc(ref(randomUUID()), { ...valid, fund_id: 'x' }));
       await denied(setDoc(ref(randomUUID()), { ...valid, fund_id: null }));
@@ -288,6 +289,96 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.equal(final.movements.filter((m) => m.id === importedMovement.id).length, 1);
       await owner.store.removeMovement(final.movements.find((m) => m.id === movementId)!);
       assert.equal((await getDocFromServer(movementRef(movementId))).exists(), false);
+    });
+    await t.test('liste: regole, prodotti in scrittura diretta, registrazione unica, modifica e ripristino all’eliminazione', async () => {
+      const listRef = (id: string) => doc(owner.db, 'users', uid, 'lists', id);
+      const itemRef = (id: string) => doc(owner.db, 'users', uid, 'listItems', id);
+      const listId = randomUUID();
+      owner.store.createList(listId, { name: `Spesa ${suffix}`, category_id: null }, [{ name: 'Pane', position: 0 }, { name: 'Latte', position: 1 }]);
+      await waitForPendingWrites(owner.db);
+      const itemsOf = async () => (await owner.store.exportSnapshot()).lists.find((l) => l.id === listId)!;
+      const created = await itemsOf();
+      assert.deepEqual(created.items.map((i) => [i.name, i.checked]), [['Pane', false], ['Latte', false]]);
+      // Ticking, adding, renaming and removing are plain writes (queued by the SDK, no revision).
+      const bread = { ...created.items[0]!, list_id: listId };
+      const milk = { ...created.items[1]!, list_id: listId };
+      owner.store.updateListItem(bread, { checked: true });
+      owner.store.addListItem(listId, 'Uova', 2);
+      owner.store.updateListItem(milk, { name: 'Latte intero' });
+      await waitForPendingWrites(owner.db);
+      const edited = await itemsOf();
+      assert.deepEqual(edited.items.map((i) => [i.name, i.checked]), [['Pane', true], ['Latte intero', false], ['Uova', false]]);
+      // Isolation and Rules on lists and items.
+      await denied(getDocsFromServer(collection(intruder.db, 'users', uid, 'lists')));
+      await denied(getDocsFromServer(collection(intruder.db, 'users', uid, 'listItems')));
+      await denied(setDoc(doc(intruder.db, 'users', uid, 'listItems', randomUUID()), { list_id: listId, name: 'x', checked: false, position: 0 }));
+      const rawList = { name: 'Lista', category_id: null, total_minor: null, expense_id: null, created_at: serverTimestamp(), updated_at: serverTimestamp() };
+      for (const patch of [{ name: '' }, { name: ' x' }, { name: 'x'.repeat(41) }, { total_minor: 0 }, { total_minor: 1.5 }, { total_minor: 10000000 },
+        { expense_id: 'x' }, { category_id: 'x' }, { extra: true }, { updated_at: Timestamp.fromMillis(1) }]) {
+        await denied(setDoc(listRef(randomUUID()), { ...rawList, ...patch }));
+      }
+      await denied(setDoc(listRef('not-a-uuid'), rawList));
+      await denied(updateDoc(listRef(listId), { created_at: Timestamp.fromMillis(1), updated_at: serverTimestamp() }));
+      const rawItem = { list_id: listId, name: 'Mele', checked: false, position: 3 };
+      for (const patch of [{ name: '' }, { name: 'a\nb' }, { name: 'x'.repeat(61) }, { checked: 'yes' }, { position: -1 }, { position: 1.5 }, { list_id: 'x' }, { extra: 1 }]) {
+        await denied(setDoc(itemRef(randomUUID()), { ...rawItem, ...patch }));
+      }
+      await denied(updateDoc(itemRef(bread.id), { list_id: randomUUID() }));
+      // Expenses: list_id + list_items both or neither, one-off only, names joined by '\n' without empty names.
+      const { expense_id: _e, status_changes: _s, fund_id: _f, list_id: _l, list_items: _li, ...base } = expense();
+      const valid = { ...base, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      await setDoc(ref(randomUUID()), { ...valid, list_id: randomUUID(), list_items: 'Pane\nLatte' });
+      await setDoc(ref(randomUUID()), { ...valid, list_id: randomUUID(), list_items: '' });
+      for (const patch of [{ list_id: randomUUID() }, { list_items: 'Pane' }, { list_id: 'x', list_items: 'Pane' }, { list_id: null, list_items: '' },
+        { list_id: randomUUID(), list_items: ['Pane'] }, { list_id: randomUUID(), list_items: '\nPane' }, { list_id: randomUUID(), list_items: 'Pane\n' },
+        { list_id: randomUUID(), list_items: 'Pane\n\nLatte' }, { list_id: randomUUID(), list_items: 'Pane\tx' }, { list_id: randomUUID(), list_items: 'x'.repeat(6101) },
+        { list_id: randomUUID(), list_items: 'Pane', recurrence: 'monthly' }]) {
+        await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
+      }
+      // Registration: one transaction creates the expense and archives the list; repeating it is harmless; a second one is refused.
+      const synced = { id: listId, name: created.name, category_id: null, total_minor: null, expense_id: null, created_at: created.created_at, updated_at: created.created_at };
+      const expenseId = randomUUID();
+      const { expense_id: _x, ...one } = expense();
+      const data = { ...one, amount_minor: 3250, description: created.name, list_id: listId, list_items: ['Pane'] };
+      await owner.store.registerList(synced, expenseId, data, true);
+      await owner.store.registerList(synced, expenseId, data, true);
+      await assert.rejects(owner.store.registerList(synced, randomUUID(), data), /già stata registrata/);
+      await assert.rejects(owner.store.registerList(synced, expenseId, { ...data, amount_minor: 1 }), /altra sessione/);
+      await assert.rejects(owner.store.registerList(synced, randomUUID(), { ...data, recurrence: 'monthly' }), /non valida/);
+      let snapshot = await owner.store.exportSnapshot();
+      assert.equal(snapshot.expenses.filter((e) => e.list_id === listId).length, 1);
+      const archived = snapshot.lists.find((l) => l.id === listId)!;
+      assert.deepEqual([archived.expense_id, archived.total_minor], [expenseId, 3250]);
+      assert.equal((await getDocFromServer(ref(expenseId))).data()!.list_items, 'Pane');
+      // Editing the expense keeps the link and the products; an archived list refuses checklist edits from the app.
+      const saved = snapshot.expenses.find((e) => e.id === expenseId)!;
+      await owner.store.updateExpense(saved, { ...dataOf(saved), amount_minor: 3300 });
+      assert.equal((await getDocFromServer(ref(expenseId))).data()!.list_items, 'Pane');
+      assert.throws(() => owner.store.updateList({ ...synced, expense_id: expenseId }, { name: 'x' }), /non valida/);
+      // Backup v4 round trip: the same file merges as identical, nothing added.
+      const file = parseBackup(JSON.parse(makeBackup(await owner.store.exportSnapshot())));
+      assert.ok(file.lists.some((l) => l.id === listId && l.items.length === 3));
+      const preview = await owner.store.previewImport(file);
+      assert.deepEqual([preview.merge.addLists.length, preview.merge.conflicts.length], [0, 0]);
+      // Deleting the expense brings the list back among the active ones in the same transaction.
+      snapshot = await owner.store.exportSnapshot();
+      await owner.store.removeExpense(snapshot.expenses.find((e) => e.id === expenseId)!);
+      assert.equal((await getDocFromServer(listRef(listId))).data()!.expense_id, null);
+      // Import of a new list with items: repeatable, one list and its items only.
+      const imported = { id: randomUUID(), name: `Importata ${suffix}`, category_id: null, total_minor: 1200, expense_id: null, created_at: '2026-01-02T00:00:00.000Z',
+        items: [{ id: randomUUID(), name: 'Sale', checked: true, position: 0 }] };
+      await owner.store.importRecords([], [], 'merge', [], [], [imported]);
+      await owner.store.importRecords([], [], 'merge', [], [], [imported]);
+      const after = await owner.store.exportSnapshot();
+      assert.equal(after.lists.filter((l) => l.id === imported.id).length, 1);
+      assert.deepEqual(after.lists.find((l) => l.id === imported.id)!.items.map((i) => i.name), ['Sale']);
+      // Deleting a list removes its items too.
+      const doomed = after.lists.find((l) => l.id === listId)!;
+      owner.store.removeList({ ...doomed, updated_at: doomed.created_at }, doomed.items.map((i) => ({ ...i, list_id: listId })));
+      await waitForPendingWrites(owner.db);
+      const final = await owner.store.exportSnapshot();
+      assert.equal(final.lists.some((l) => l.id === listId), false);
+      assert.equal((await getDocsFromServer(collection(owner.db, 'users', uid, 'listItems'))).docs.some((d) => d.data().list_id === listId), false);
     });
     await t.test('migrazione oltre il limite di accessi Rules: gruppi di categorie e spese ripetibili', async () => {
       const categories = Array.from({ length: 30 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));

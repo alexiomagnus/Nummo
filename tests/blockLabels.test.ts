@@ -26,13 +26,23 @@ test('etichette: grandi complete, medie nome/importo, basse almeno il nome, minu
   assert.equal(tiny.percent, false);
 });
 
-test('etichette: nome intero su più righe, nessun testo quando il nome non entra (la legenda lo mostra)', () => {
-  const narrow = blockLabelPlan(40, 60, text, measure);
-  assert.ok(narrow.name.length >= 2);
-  assert.equal(narrow.name.join(''), 'Alimentari');
+test('etichette: parole mai spezzate; nome a capo solo tra parole, altrimenti nessun testo (legenda e dettagli lo mostrano)', () => {
+  // «Alimentari» does not fit 40 px even at 11 px: blank, never «Alime/ntari».
+  assert.deepEqual(blockLabelPlan(40, 60, text, measure).name, []);
+  const wrapped = blockLabelPlan(110, 90, { ...text, name: 'Casa e bollette' }, measure);
+  assert.ok(wrapped.name.length === 2);
+  for (const line of wrapped.name) assert.ok(line.split(' ').every((word) => ['Casa', 'e', 'bollette'].includes(word)));
   const iconOnly = blockLabelPlan(40, 40, { ...text, name: 'Categoria con un nome molto lungo' }, measure);
   assert.deepEqual(iconOnly.name, []);
   assert.equal(iconOnly.usedHeight, 0);
+});
+
+test('etichette: la percentuale compare solo insieme all’importo, minimo 11 px', () => {
+  for (const width of [40, 64, 96, 120, 200]) for (const height of [20, 36, 56, 80, 140]) {
+    const plan = blockLabelPlan(width, height, text, measure);
+    if (plan.percent) assert.ok(plan.amount);
+    if (plan.name.length) assert.ok(plan.fontSize >= 11);
+  }
 });
 
 test('etichette: il testo si rimpicciolisce prima di spezzare una parola (mobile: Tecnologia, Alimentari)', () => {
@@ -40,7 +50,7 @@ test('etichette: il testo si rimpicciolisce prima di spezzare una parola (mobile
   for (const name of ['Tecnologia', 'Alimentari']) {
     const plan = blockLabelPlan(66, 60, { ...text, name }, measure);
     assert.deepEqual(plan.name, [name]);
-    assert.ok(plan.fontSize < 14 && plan.fontSize >= 10);
+    assert.ok(plan.fontSize < 14 && plan.fontSize >= 11);
   }
   // Roomy tiles keep the regular size.
   assert.equal(blockLabelPlan(240, 180, text, measure).fontSize, 14);
@@ -62,6 +72,8 @@ test('etichette: ogni riga e gruppo rientra nello spazio utile, senza caratteri 
       if (plan.name.length) {
         assert.equal(plan.name.join('').replace(/\s/gu, ''), name.replace(/\s/gu, ''));
         for (const line of plan.name) assert.ok(measure(line, plan.fontSize, '600') <= width - 2 * plan.padding);
+        const words = name.split(/\s+/u);
+        for (const line of plan.name) for (const word of line.split(' ')) assert.ok(words.includes(word), `${name}: ${line}`);
       }
       if (plan.amount) assert.ok(measure(text.amount, plan.fontSize, '400') <= width - 2 * plan.padding);
       if (plan.percent) assert.ok(measure(text.percent, plan.fontSize, '400') <= width - 2 * plan.padding);

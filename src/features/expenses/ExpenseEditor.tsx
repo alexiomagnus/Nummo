@@ -20,7 +20,8 @@ import { FundField, noFund, type FundChoice } from '../funds/FundField';
 const amountText = (minor: number) => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`;
 
 // `fundChoices` includes the record's own fund even when archived, so editing never drops it silently.
-export function ExpenseEditor({ record, categories, store, close, fundChoices = [] }: { record: ExpenseRecord; categories: readonly Category[]; store: ExpenseStore; close: () => void; fundChoices?: readonly FundChoice[] }) {
+// `listNote`: the expense registered a shopping list; 'linked' when that list still points at it (deleting it reopens the list).
+export function ExpenseEditor({ record, categories, store, close, fundChoices = [], listNote }: { record: ExpenseRecord; categories: readonly Category[]; store: ExpenseStore; close: () => void; fundChoices?: readonly FundChoice[]; listNote?: 'linked' | 'unlinked' }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const today = todayInRome();
@@ -49,7 +50,9 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
     if (!applied.ok) { setPriceError(applied.error); return; }
     setPriceError(null);
     setBusy(true);
-    try { if (await store.update(record, applied.data)) close(); } finally { setBusy(false); }
+    // The shopping-list link and the products bought are not edited here: they stay as registered.
+    const data = { ...applied.data, list_id: record.list_id ?? null, list_items: record.list_items ?? [] };
+    try { if (await store.update(record, data)) close(); } finally { setBusy(false); }
   };
   return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }}>
     <Dialog.Title>{record.recurrence ? t("Modifica serie") : t("Modifica spesa")}</Dialog.Title>
@@ -65,13 +68,15 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
         start={record.expense_date} recurrence={recurrence} disabled={busy} onScope={setScope}
         onRemove={(change) => setChanges((all) => all.filter((item) => item !== change))} />}
+      {listNote && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, paddingHorizontal: spacing.md }}>
+        {t("Spesa registrata da una lista: i prodotti acquistati restano invariati.")}</Text>}
       {priceError && <HelperText type="error" accessibilityRole="alert">{t(priceError)}</HelperText>}
       {store.error && <HelperText type="error">{t(store.error)}</HelperText>}
     </ScrollView></Dialog.ScrollArea>
     <Dialog.Actions style={{ flexWrap: 'wrap', gap: spacing.xs }}>
       {store.remove && <View style={{ flex: 1, alignItems: 'flex-start' }}><DeleteAction labeled disabled={busy} onOpenChange={setDeleting}
         name={series ? t("la serie {p0}", { p0: record.description }) : record.description}
-        description={[(series ? t("Eliminando questa ricorrenza si elimina l’intera serie. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
+        description={[(series ? t("Eliminando questa ricorrenza si elimina l’intera serie. ") : '') + (listNote === 'linked' ? t("La lista collegata tornerà tra quelle attive. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
         onDelete={async () => {
           setBusy(true);
           try {

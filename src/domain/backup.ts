@@ -4,29 +4,32 @@ import { categoryNameKey, validateImportedExpense } from './firestore.ts';
 import { expandOccurrences } from './history.ts';
 import { fundNameError, parseFund, parseMovement, type Fund, type Movement } from './funds.ts';
 import { todayInRome } from './policy.ts';
+import { parseListRecord, sameListRecord, sortItems, type ShoppingListRecord } from './shoppingList.ts';
 import { recurrenceLabels } from './recurrence.ts';
 
 // Two distinct outputs:
 // - CSV: a read-only table of the spending (one row per occurrence up to today) for spreadsheets. Never imported.
 // - JSON: the only backup/restore format, versioned so that later schema changes can migrate older files.
 
-export type ImportData = { expenses: ExpenseRecord[]; categories: Category[]; funds: Fund[]; movements: Movement[] };
+export type ImportData = { expenses: ExpenseRecord[]; categories: Category[]; funds: Fund[]; movements: Movement[]; lists: ShoppingListRecord[] };
 
 export const backupFormat = 'nummo-backup';
 // Bump when the file shape changes and add a reader for the old number to `readers`.
 // v2 adds `status_changes` (subscription pauses/cancellations); v1 files have none, so every series is active.
 // v3 adds funds, movements (income and transfers) and the expenses' `fund_id`; older files have no funds.
-export const backupVersion = 3;
+// v4 adds shopping lists (with their items) and the expenses' `list_id` / `list_items`; older files have no lists.
+export const backupVersion = 4;
 
 // --- JSON backup -----------------------------------------------------------------------------
 
 // Only what a restore needs: no Firestore bookkeeping (revision, updated_at, name_key), no account or
 // project identifiers. Output is deterministic (sorted) so that two exports of the same data are equal.
-export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[] }, now = new Date()): string {
+export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[] }, now = new Date()): string {
   const expenses = data.expenses.map((e) => ({
     id: e.id, amount_minor: e.amount_minor, currency: e.currency, description: e.description, category_id: e.category_id,
     expense_date: e.expense_date, recurrence: e.recurrence, price_changes: e.price_changes.map((c) => ({ index: c.index, amount_minor: c.amount_minor, once: c.once })),
     status_changes: e.status_changes.map((c) => ({ date: c.date, status: c.status })), fund_id: e.fund_id ?? null,
+    list_id: e.list_id ?? null, list_items: [...(e.list_items ?? [])],
     source: e.source, schema_version: e.schema_version, created_at: e.created_at,
   })).sort((a, b) => a.expense_date.localeCompare(b.expense_date) || a.id.localeCompare(b.id));
   const categories = data.categories.map((c) => ({ id: c.id, label: c.label, icon: c.icon })).sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
@@ -40,12 +43,24 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
   const movements = (data.movements ?? []).map((m) => ({
     id: m.id, kind: m.kind, amount_minor: m.amount_minor, date: m.date, to_fund_id: m.to_fund_id, from_fund_id: m.from_fund_id, note: m.note, created_at: m.created_at,
   })).sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
-  return JSON.stringify({ format: backupFormat, version: backupVersion, exported_at: now.toISOString(), categories, funds, movements, expenses }, null, 2);
+  const lists = (data.lists ?? []).map((l) => ({
+    id: l.id, name: l.name, category_id: l.category_id, total_minor: l.total_minor, expense_id: l.expense_id, created_at: l.created_at,
+    items: sortItems(l.items).map((i) => ({ id: i.id, name: i.name, checked: i.checked, position: i.position })),
+  })).sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
+  return JSON.stringify({ format: backupFormat, version: backupVersion, exported_at: now.toISOString(), categories, funds, movements, lists, expenses }, null, 2);
 }
 
 // Strict validation of the body shared by the file reader and the store. Anything invalid rejects the whole file.
-export function validateBackupData(rawExpenses: unknown, rawCategories: unknown, rawFunds: unknown = [], rawMovements: unknown = []): ImportData {
-  if (!Array.isArray(rawExpenses) || !Array.isArray(rawCategories) || !Array.isArray(rawFunds) || !Array.isArray(rawMovements)) throw new Error('Formato backup non riconosciuto.');
+export function validateBackupData(rawExpenses: unknown, rawCategories: unknown, rawFunds: unknown = [], rawMovements: unknown = [], rawLists: unknown = []): ImportData {
+  if (!Array.isArray(rawExpenses) || !Array.isArray(rawCategories) || !Array.isArray(rawFunds) || !Array.isArray(rawMovements) || !Array.isArray(rawLists)) throw new Error('Formato backup non riconosciuto.');
+  const lists: ShoppingListRecord[] = [];
+  const itemIds = new Set<string>();
+  for (const item of rawLists) {
+    const list = parseListRecord(item);
+    if (!list || Date.parse(list.created_at) > Date.now() || lists.some((l) => l.id === list.id) || list.items.some((i) => itemIds.has(i.id))) throw new Error('Liste nel backup non valide o duplicate.');
+    list.items.forEach((i) => itemIds.add(i.id));
+    lists.push({ ...list, created_at: new Date(list.created_at).toISOString() });
+  }
   const funds: Fund[] = [];
   for (const item of rawFunds) {
     const fund = parseFund(item);
@@ -77,7 +92,7 @@ export function validateBackupData(rawExpenses: unknown, rawCategories: unknown,
     validateImportedExpense(record);
     expenses.push({ ...record, created_at: new Date(record.created_at).toISOString() });
   }
-  return { expenses, categories, funds, movements };
+  return { expenses, categories, funds, movements, lists };
 }
 
 // One reader per supported version; each returns the current in-memory shape.
@@ -87,6 +102,8 @@ const readers: Record<number, (file: Record<string, unknown>) => ImportData> = {
   2: (file) => validateBackupData(file.expenses, file.categories),
   // v3: funds and movements; v1/v2 expenses have no `fund_id` (read as «Senza fondo») and the files no funds.
   3: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements),
+  // v4: shopping lists; older expenses have no `list_id` / `list_items` (not from a list) and the files no lists.
+  4: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
 };
 
 export function parseBackup(value: unknown): ImportData {
@@ -101,23 +118,26 @@ export function parseBackup(value: unknown): ImportData {
 // --- Import planning (pure; used for the preview and again by the store before writing) -----------
 
 export type ImportMode = 'merge' | 'replace';
-export type ImportConflict = Readonly<{ kind: 'expense' | 'category' | 'fund' | 'movement'; id: string; label: string }>;
+export type ImportConflict = Readonly<{ kind: 'expense' | 'category' | 'fund' | 'movement' | 'list'; id: string; label: string }>;
 export type ImportPlan = Readonly<{
   mode: ImportMode;
   addExpenses: ExpenseRecord[];
   addCategories: Category[];
   addFunds: Fund[];
   addMovements: Movement[];
+  addLists: ShoppingListRecord[];
   // Already saved and identical: skipped, never rewritten.
   sameExpenses: number;
   sameCategories: number;
   sameFunds: number;
   sameMovements: number;
+  sameLists: number;
   // 'replace' only: saved items that are not identical to a file item.
   removeExpenseIds: string[];
   removeCategoryIds: string[];
   removeFundIds: string[];
   removeMovementIds: string[];
+  removeListIds: string[];
   // 'merge' only: same ID (or same category name) with different content. Any conflict blocks the merge.
   conflicts: ImportConflict[];
   // Categories after the import ('merge' can exceed the application limit).
@@ -128,7 +148,7 @@ export type ImportPlan = Readonly<{
   missingFundReferences: number;
 }>;
 
-const expenseKeys = ['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'source', 'schema_version', 'created_at'] as const;
+const expenseKeys = ['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version', 'created_at'] as const;
 export function sameExpense(a: ExpenseRecord, b: ExpenseRecord): boolean {
   return expenseKeys.every((key) => sameFieldValue(a[key], b[key]));
 }
@@ -162,8 +182,8 @@ function planById<T extends { id: string }>(file: readonly T[], saved: readonly 
   return { add, identical, conflicts, remove };
 }
 
-export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & Partial<Pick<ImportData, 'funds' | 'movements'>>,
-  current: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[] }, mode: ImportMode): ImportPlan {
+export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & Partial<Pick<ImportData, 'funds' | 'movements' | 'lists'>>,
+  current: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[] }, mode: ImportMode): ImportPlan {
   const fileFunds = data.funds ?? [];
   const funds = planById(fileFunds, current.funds ?? [], sameFund, mode, (f) => f.name, 'fund');
   // A new fund whose name is already used by another saved fund would make two funds look alike: a merge conflict.
@@ -171,6 +191,7 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
     if ((current.funds ?? []).some((o) => o.id !== f.id && o.name.toLocaleLowerCase('it') === f.name.toLocaleLowerCase('it'))) funds.conflicts.push({ kind: 'fund', id: f.id, label: f.name });
   }
   const movements = planById(data.movements ?? [], current.movements ?? [], sameMovement, mode, (m) => m.note, 'movement');
+  const lists = planById(data.lists ?? [], current.lists ?? [], sameListRecord, mode, (l) => l.name, 'list');
   const savedExpenses = new Map(current.expenses.map((e) => [e.id, e]));
   const savedCategories = new Map(current.categories.map((c) => [c.id, c]));
   const fileExpenses = new Map(data.expenses.map((e) => [e.id, e]));
@@ -203,10 +224,10 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
   const finalCategories = new Set(mode === 'replace' ? fileCategories.keys() : [...savedCategories.keys(), ...fileCategories.keys()]);
   const finalFunds = new Set(mode === 'replace' ? fileFunds.map((f) => f.id) : [...(current.funds ?? []).map((f) => f.id), ...fileFunds.map((f) => f.id)]);
   return {
-    mode, addExpenses, addCategories, addFunds: funds.add, addMovements: movements.add,
-    sameExpenses, sameCategories, sameFunds: funds.identical, sameMovements: movements.identical,
-    removeExpenseIds, removeCategoryIds, removeFundIds: funds.remove, removeMovementIds: movements.remove,
-    conflicts: [...conflicts, ...funds.conflicts, ...movements.conflicts],
+    mode, addExpenses, addCategories, addFunds: funds.add, addMovements: movements.add, addLists: lists.add,
+    sameExpenses, sameCategories, sameFunds: funds.identical, sameMovements: movements.identical, sameLists: lists.identical,
+    removeExpenseIds, removeCategoryIds, removeFundIds: funds.remove, removeMovementIds: movements.remove, removeListIds: lists.remove,
+    conflicts: [...conflicts, ...funds.conflicts, ...movements.conflicts, ...lists.conflicts],
     categoryTotal: finalCategories.size,
     missingCategoryReferences: data.expenses.filter((e) => e.category_id !== null && !finalCategories.has(e.category_id)).length,
     missingFundReferences: data.expenses.filter((e) => e.fund_id && !finalFunds.has(e.fund_id)).length

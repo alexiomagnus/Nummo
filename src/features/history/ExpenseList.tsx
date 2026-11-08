@@ -18,6 +18,8 @@ type Props = {
   categories: readonly Category[];
   error: string | null;
   onEdit?: (expenseId: string) => void;
+  // Expenses that registered a shopping list → the products bought (marked «Lista spesa», listed in the details).
+  listItems?: ReadonlyMap<string, readonly string[]>;
 };
 
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -31,7 +33,7 @@ const formatDate = (date: string, locale: string) => dateFormat(locale).format(n
 // Filter values: every category, those without a (still existing) category, or one category ID.
 const ALL = 'all';
 
-export function ExpenseList({ occurrences, categories, error, onEdit }: Props) {
+export function ExpenseList({ occurrences, categories, error, onEdit, listItems }: Props) {
   const { t, locale, formatAmount } = useI18n();
   const theme = useTheme();
   const size = useSizeClass();
@@ -83,6 +85,12 @@ export function ExpenseList({ occurrences, categories, error, onEdit }: Props) {
           const category = categories.find((entry) => entry.id === item.category_id);
           const open = expanded.has(item.key);
           const detailsId = `expense-details-${item.key}`;
+          const products = listItems?.get(item.expenseId);
+          // Discreet mark (tonal chip with the lists icon) for expenses registered from a shopping list.
+          const listMark = products && <View style={[styles.listMark, { backgroundColor: theme.colors.secondaryContainer }]}>
+            <SvgIcon shape={iconShapes.checklist} size={14} color={theme.colors.onSecondaryContainer} />
+            <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>{t("Lista spesa")}</Text>
+          </View>;
           return (
             <Fragment key={item.key}>
               {heading && (
@@ -96,7 +104,10 @@ export function ExpenseList({ occurrences, categories, error, onEdit }: Props) {
               )}
               <View>
               <ListRow outlined icon={category?.icon ?? null} title={item.description}
-                meta={compact ? <Text variant="titleSmall" style={listRowStyles.amount}>{formatAmount(item.amount_minor)}</Text> : undefined}
+                meta={compact || listMark ? <>
+                  {compact && <Text variant="titleSmall" style={listRowStyles.amount}>{formatAmount(item.amount_minor)}</Text>}
+                  {listMark}
+                </> : undefined}
                 trailing={<>
                   {!compact && <Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>}
                   <IconButton style={listRowStyles.iconButton} aria-expanded={open} aria-controls={open ? detailsId : undefined}
@@ -120,6 +131,13 @@ export function ExpenseList({ occurrences, categories, error, onEdit }: Props) {
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
                     <Text variant="bodyMedium">{category?.label ?? t("Senza categoria")}</Text>
                   </View>
+                  {products && <View style={styles.products}>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Prodotti acquistati")}</Text>
+                    {products.length === 0 ? <Text variant="bodyMedium">{t("Nessun prodotto spuntato")}</Text>
+                      : <View role="list" accessibilityLabel={t("Prodotti acquistati")} style={styles.productList}>
+                        {products.map((name, i) => <Text key={i} role="listitem" variant="bodyMedium" style={styles.product}>{`• ${name}`}</Text>)}
+                      </View>}
+                  </View>}
                   {item.recurrence && <View style={styles.detailField}>
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
                     <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
@@ -159,5 +177,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md, paddingBottom: spacing.sm },
   detailField: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
   empty: { gap: spacing.sm },
+  listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
+  products: { flexBasis: '100%', gap: spacing.xs },
+  productList: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.lg, rowGap: 2 },
+  product: { minWidth: 140 },
   start: { alignSelf: 'flex-start' },
 });

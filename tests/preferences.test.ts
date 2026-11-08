@@ -66,3 +66,7 @@ test('icone: lo stile colorato sopravvive al salvataggio e non altera le altre s
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
   assert.equal(parsePreferences('{"iconStyle":"colorful","accent":"nope"}').accent, defaultPreferences.accent);
 });
+
+test('dashboard: preferenza Classifica migra a Barre', () => {
+  assert.equal(parsePreferences('{"dashboardChart":"ranking","dashboardPeriod":"year"}').dashboardChart, 'bars');
+});

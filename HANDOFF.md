@@ -1,9 +1,151 @@
 # HANDOFF — Nummo
 
-Aggiornamento: **8 novembre 2026, ore 20:02 (Europe/Rome)**. Gestionale personale solo web con Google Auth e
+Aggiornamento: **8 novembre 2026, ore 20:40 (Europe/Rome)**. Gestionale personale solo web con Google Auth e
 Firestore BYOF, accesso riservato all’UID in `config/owner`. Contesto stabile e comandi: `AGENTS.md`;
 configurazione: `README.md` e `docs/firebase-personale.md`; motivazioni architetturali: `docs/architecture.md`.
 Il codice e le verifiche sotto descrivono il checkout; requisiti e risultati storici non certificano il cloud.
+
+## Nuova spesa desktop più compatta — 8 novembre 2026
+
+- Solo la pagina Nuova spesa in classe expanded (≥1024 dp) attiva `dense` in ExpenseFields:
+  descrizione a due righe visibili, altezza minima 80 anziché 128 px, gap 12 anziché 16 px,
+  nessun margine aggiuntivo prima di Fondo/Ricorrente. Nel modulo desktop ridotti anche gap
+  del gruppo Fondo/Ricorrente (24→16 px) e fra campi e azioni (16→12 px).
+- Nessuna modifica al mobile, al layout medium, al dialogo di modifica o alla logica di invio.
+  Descrizioni lunghe ed eventuali campi aggiuntivi restano scorrevoli.
+- `npm run check` OK: typecheck, 303/303 test e build demo; `git diff --check` OK.
+  Chromium headless con fondo predefinito e saldo, tema scuro: Salva interamente visibile senza
+  scroll a 1536×696 (bottom 632, limite pannello 664) e 1280×720 (limite 688);
+  412×915 mantiene descrizione originale e Salva visibile. Nessun overflow orizzontale o errore JS.
+  Screenshot `/tmp/nummo-desktop-form-{1536,1280,412}.png`.
+- Solo emulatori demo dedicati usati nel collaudo; nessun cloud/deploy. Ricorrenze espanse, errori,
+  zoom elevato e dispositivi reali non collaudati in questa fase; in tali casi resta lo scorrimento.
+
+## Rimozione dettaglio del giorno — 8 novembre 2026
+
+- Eliminati il pulsante «Spese del …» dall'andamento e l'apertura dello stesso dettaglio con Invio.
+  Rimangono selezione del giorno e lettura di data/importo con mouse, tocco e frecce;
+  i dettagli per categoria restano disponibili. Rimossa la prop `onOpen` di TimeChart e aggiornata la Guida IT/EN.
+- `npm run check` OK: typecheck, 303/303 test e build demo; nessun deploy.
+
+## Blocchi della Dashboard — 8 novembre 2026 (non committato)
+
+- Treemap già *squarified* (Bruls et al.), proporzionale agli importi: ora l'ultimo blocco di ogni riga e l'ultima riga
+  aderiscono ai bordi (niente sforamenti per arrotondamento). Spazio tra blocchi 2 px, angoli `radius.tile` ridotti sui
+  blocchi sottili (`blockRadius`), altezza adattiva `blockHeight` (mobile 0,85×larghezza in 240–380 px, desktop 0,45× in 300–440).
+- Etichette (`blockLabels.ts`): parole mai spezzate né tagliate, 14 → 12 → 11 px; grandi nome+importo+quota, medie
+  nome+importo o solo nome, piccole nessun testo; quota solo insieme all'importo.
+- Interazione: pannello di dettaglio sotto il grafico ad altezza fissa (nome con colore, importo, quota, transazioni,
+  «Mostra transazioni»); passaggio del mouse/focus = anteprima, clic/tocco = selezione persistente, blocchi non
+  selezionati attenuati al 55%, transizioni di geometria e opacità da `motion.ts` (riduzione movimento globale).
+- Legenda compatta come tabella (`CategoryLegend compact`): due colonne uguali da 720 px, ordine dall'alto in basso, importo e quota in colonne fisse allineate a destra, righe separate da linea sottile; una colonna su mobile. Verificata in Chromium a 1280×900 scuro EN e 412×915 chiaro IT con tutte le categorie e «Altre» espandibile; rimossi
+  «Categoria principale» dal riepilogo e il pulsante «Tutte le categorie» dei Blocchi. Ciambella e Barre invariate,
+  calcoli e palette invariati. Guida e IT/EN aggiornati.
+- Verifiche: `npm run check` OK (typecheck, **303/303**, build demo), `git diff --check` OK; nuovi test su molte categorie
+  e importi da 0,01 € a 5.000 €, rapporti d'aspetto, parole intere. Chromium headless con emulatori dedicati
+  (39099/39280, config temporanea rimossa) e 12 categorie: 412×915 chiaro IT, 1280×900 scuro EN, 320×700 scuro IT,
+  nessuna eccezione né overflow orizzontale. Non verificati: tocco reale, screen reader, tastiera fisica sui blocchi.
+
+## Centro ciambella — 8 novembre 2026
+
+- Solo `dashboard/charts.tsx`: centro vuoto a riposo; al passaggio del mouse o alla selezione mostra
+  nome (massimo due righe), importo e quota della categoria. Hover temporaneo prioritario, all'uscita torna
+  la selezione persistente; secondo clic deseleziona. Rimosso il duplicato del dettaglio sotto la ciambella.
+- Riepilogo superiore, legenda, geometria delle fette e calcoli invariati. Conservate transizioni esistenti;
+  importo centrale dimensionato nel riquadro con tetto a 32 px.
+- `npm run check` OK: typecheck, 301/301 test e build demo; `git diff --check` OK.
+  Interazione e resa visuale di questa modifica non ricontrollate nel browser. Nessun deploy.
+
+## Testo andamento — 8 novembre 2026
+
+- Rimossa la didascalia «Spese giornaliere · giorni senza spese inclusi» sotto «Andamento nel tempo».
+- `npm run check` OK: typecheck, 301/301 test e build demo; nessuna modifica ai calcoli o deploy.
+
+## Ritocco barre e confronto — 8 novembre 2026
+
+- Barre Dashboard aumentate da 8 a 16 px (token `spacing.lg`).
+- Eliminato il messaggio «Confronto non disponibile»: quando il confronto non è calcolabile,
+  l'intero blocco viene omesso senza lasciare spazio vuoto. Percentuale e date restano visibili quando disponibili.
+- `npm run check` OK: typecheck, 301/301 test e build demo; `git diff --check` OK.
+  Nessuna nuova verifica visuale nel browser per questo ritocco, nessun deploy.
+
+## Ripristino Barre nella Dashboard — 8 novembre 2026 (non committato)
+
+- Sostituita Classifica con **Barre**: righe con icona/nome/importo, barre sottili arrotondate,
+  percentuale sul totale, transazioni e variazione significativa. Tutte le categorie, ordinate per spesa
+  decrescente; rimosso il menu di ordinamento. Scala delle lunghezze relativa alla categoria maggiore,
+  esplicitata nella vista; clic apre il dettaglio delle transazioni nel periodo.
+- Preferenza `ranking` migrata a `bars`; vecchie preferenze `bars` conservate. Blocchi › Tutte le categorie
+  apre Barre. Eliminato il componente transitorio `Ranking.tsx`; traduzioni, Guida, test preferenze
+  e istruzioni stabili aggiornati. Conservati riepilogo, Ciambella, Blocchi e andamento.
+- `npm run check` **OK**: typecheck, **301/301 test**, build demo; `git diff --check` OK.
+  Chromium headless, 14 categorie incl. 1 centesimo: **412×915 chiaro IT**, **1280×900 scuro EN**,
+  **320×740 scuro EN** senza overflow né eccezioni; dettaglio categoria con sole occorrenze del periodo
+  e dettaglio giorno da tastiera verificati. Screenshot `/tmp/bars-restore-*.png`.
+- Nessuna modifica a dati/servizi/Rules, nessun deploy. Suite emulator/hybrid non ripetute in questa fase
+  di sola presentazione (esiti precedenti sotto); nessuna prova su dispositivo fisico o screen reader.
+
+## Dashboard informativa — 8 novembre 2026 (non committato)
+
+- Riepilogo compatto con totale, conteggio delle occorrenze, categoria principale, confronto e date esplicite.
+  Confronto sui giorni civili precedenti di pari durata; assente con base zero o storico insufficiente.
+- Classifica completa al posto di Barre, con icone/colore, importo, quota, conteggio e variazioni significative.
+  Ordine per spesa (equivalente a percentuale) o transazioni. Preferenza salvata `bars` migrata a `ranking`.
+- Ciambella mobile max 280 px, totale centrale stabile, dettagli alla selezione e fette azionabili da tastiera.
+  Blocchi con label adattive esistenti, tutte le tessere nel Tab order, senza legenda duplicata e accesso
+  alla classifica completa. Categorie aggregate in Altre consultabili singolarmente dalla legenda della Ciambella.
+- Andamento SVG giornaliero sempre visibile: giorni a zero, nessun futuro, etichette adattive per spazio/periodo,
+  importo/data esatti con puntatore, tocco e tastiera. Dettagli di giorno/categoria in AppDialog con ListRow,
+  filtrati sul periodo, senza richieste al database. Nessuna dipendenza aggiunta.
+- IT/EN e Guida aggiornati; calcoli puri in `dashboard/insights.ts`. Nessuna modifica dati, servizi o Rules
+  per questa fase; preservate le modifiche preesistenti/contemporanee a fondi e liste.
+- Verifiche: `npm run check` (typecheck, **301/301**, build demo) passato; suite SDK/Rules **15/15** su
+  emulatori demo dedicati 49391/49392, suite `test:hybrid` **8/8**. Primo tentativo SDK eseguito con fixture
+  UI prive di indice categoryNames: due casi import falliti; ripetizione su emulatore pulito tutta verde.
+- Chromium headless: tre viste a **412×915 chiaro IT**, **1280×900 scuro EN**, **320×740 scuro EN**,
+  14 categorie sintetiche inclusa una da 1 centesimo: nessun overflow/errore JS; apertura giorno via Home/Invio
+  e categoria con sole due occorrenze del periodo verificata. Screenshot in `/tmp/dashboard-*.png`.
+  Successivi ritocchi minori (variazione in riga e densità etichette) ricontrollati con typecheck/test/build.
+- Limiti: emulazione, nessun dispositivo fisico/touch reale, screen reader o cloud; niente deploy.
+  Valori temporali sempre giornalieri (etichette meno dense sui periodi lunghi), non aggregati settimanalmente.
+  Lo storico non ha una data certificata d'inizio: confronto prudente, non garanzia di copertura completa.
+
+## Liste della spesa — 8 novembre, 20:40 (non committato)
+
+- **Implementato:** destinazione «Liste» al posto di «Categorie» (icona `checklist`); Categorie con tutte le funzioni in
+  una pagina aperta dalla voce **Categorie del menu account**, sotto Impostazioni (e da «Crea categoria» del modulo), «Fatto» torna alla
+  sezione di partenza. Pagina «Liste della spesa»: crea (`+ Nuova`), rinomina con categoria predefinita, duplica,
+  elimina; schede con acquistati/totali e barra di avanzamento; checklist con aggiunta, spunta, modifica ed eliminazione
+  dei prodotti, salvataggio automatico. In fondo «Totale spesa» (facoltativo) e «Registra spesa» anche con prodotti non
+  spuntati: conferma con importo obbligatorio, data (oggi), descrizione (nome lista), categoria (con «usa come
+  predefinita»), fondo (predefinito del browser) e spostamento dei non acquistati in una nuova lista. Una sola spesa
+  singola con `list_id` e prodotti acquistati, lista archiviata (sola lettura, duplicabile, «nuova lista con i non
+  acquistati»). In Spese chip tonale «Lista spesa» e prodotti nei dettagli espansi; modifica conserva il collegamento,
+  eliminazione riattiva la lista. Backup **v4**, Guida e IT/EN aggiornati. Decisioni: `docs/architecture.md`, «Liste della spesa».
+- **File:** `src/domain/shoppingList.ts`, `src/features/lists/*`, `policy.ts` (`listPolicy`), contratto/`expense.ts`/
+  `firestore.ts`/`backup.ts`, `firestoreStore.ts`, `firestore.rules`, `Workspace`, `App.tsx`, `SettingsDialog`,
+  `ExpenseList`, `ExpenseEditor`, `BackupActions`, `Guide`, `SvgIcon` (`checklist`, `copy`), `en.ts`; test nuovi
+  `tests/shoppingList.test.ts` e caso emulatore liste; fixture dei test esistenti con i due nuovi campi.
+- **Verifiche:** `npm run check` OK (typecheck, **294/294**, build demo); `git diff --check` OK. `test:emulator`
+  **15/15** su porte dedicate 39099/39280 con config temporanea in radice poi rimossa (gli emulatori dell'utente su
+  8180/4000 non sono stati toccati): Rules di liste/prodotti/campi lista delle spese, isolamento, scritture dirette,
+  registrazione idempotente e doppia registrazione rifiutata, modifica, eliminazione che riattiva la lista, backup v4
+  identico in unione, import ripetibile, eliminazione lista con prodotti; caso peggiore 8 prezzi + 8 stati + fondo ancora
+  accettato. L'ultima sistemazione UI (azioni sulla riga dell'avanzamento, categoria ereditata dalla nuova lista dei non
+  acquistati) è successiva alla suite emulatore ma non tocca dati né Rules. **Chromium headless** su build demo con
+  emulatori dedicati: 412×915 chiaro IT (creazione, 4 prodotti, 2 spuntati, totale 42,50 €, conferma, una spesa con
+  «Lista spesa» e Pane/Latte, fondo 100 → 57,50 €, budget residuo 157,50 €, nuova lista con Uova/Mele, archiviata,
+  menu account › Categorie › Fatto), 1280×900 scuro EN e 320×640: nessuna eccezione di pagina. Corretti durante il
+  collaudo: checklist che non si apriva dopo «Crea» e azioni d'intestazione fuori schermo a 412 px.
+- **Non verificato:** dispositivi reali/PWA installata e touch, tastiera virtuale, screen reader, uso offline reale in
+  negozio (coda SDK solo per costruzione), concorrenza tra due dispositivi sulla stessa lista, unione/sostituzione v4
+  dall'interfaccia, `test:hybrid`. A 320 px l'etichetta «Dashboard» della pillola resta troncata (preesistente).
+- **Limiti noti:** liste e prodotti «ultima scrittura vince» (spunte simultanee su due dispositivi: prevale l'ultima);
+  limite 100 prodotti per lista solo lato client; Rules senza verifica dell'esistenza di spesa/lista referenziate;
+  nomi di lista non unici; la lista archiviata non è modificabile (si duplica).
+- **Rules modificate e non pubblicate:** con le Rules cloud attuali le liste e le spese registrate da lista sono
+  rifiutate («Accesso negato»), il resto dell'app continua a funzionare (il listener delle liste non blocca spese e
+  fondi). Pubblicare le Rules solo con autorizzazione e prima della build che usa le liste.
 
 ## Icone a tema denaro — 8 novembre, 20:10 (non committato)
 
@@ -249,3 +391,25 @@ Precedenti build cloud/dry-run/header locali sono solo evidenza storica, non pro
    negato, due sessioni e ripristino, poi valutare Hosting. Nessuna pubblicazione attestata in questa fase.
 8. **Riproducibilità:** clone pulito con `npm ci` su Node LTS, audit aggiornato e scelta licenza.
    Paginazione, service worker e rafforzamento backup sono evoluzioni da valutare, non lavori già implementati.
+
+## Descrizioni riepilogo Fondi rimosse
+
+Eliminate le quattro diciture richieste dai riepiloghi (saldi, previsione fine mese, rinnovi aggiuntivi e descrizione
+entrate); rimossi i relativi testi inglesi inutilizzati. Importi e calcoli invariati. `git diff --check` OK.
+`npm run check` tentato: bloccato al typecheck dalle modifiche concorrenti in `Workspace.tsx` (props `listItems`
+e `listNote` non ancora presenti nei componenti destinatari); test/build non raggiunti da quel comando.
+
+## Dicitura senza budget rimossa
+
+Rimossa dalle schede fondo la riga «Speso nel mese: … · nessun budget», inclusa la variante previsionale.
+Indicatore dei fondi con budget invariato. `npm run check` OK: typecheck, 301/301 test e build demo; `git diff --check` OK.
+
+## Backup fittizio per collaudo — 8 novembre, 21:08
+
+Creati `docs/testing/nummo-test-casi-limite-2026-11-08.json` (backup v4, circa 76 kB) e relativa guida
+`docs/testing/README.md`: 89 spese/serie, 15 categorie, 6 fondi, 2 movimenti, 4 liste/112 prodotti.
+Dati TEST, date fisse all’8 novembre 2026, casi budget/saldo/ricorrenze/importi estremi/riferimenti mancanti e liste limite.
+File passato da `makeBackup`/`parseBackup`; piani import vuoto/identico/conflitto e risultati del dominio verificati con
+asserzioni temporanee. `npm run check` OK (typecheck, 303/303 test, build demo); `git diff --check` OK.
+Nessuna importazione/scrittura nel database o modifica al codice applicativo da questa fase; import UI e Rules
+con questo file non provati. Usare preferibilmente la demo; risultati attesi e precauzioni nella guida.

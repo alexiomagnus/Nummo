@@ -44,4 +44,7 @@ export const iconShapes = {
   swap: '<path d="M4 8h14m-3-3 3 3-3 3M20 16H6m3-3-3 3 3 3"/>',
   archive: '<rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V8.5M10 12h4"/>',
   star: '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
+  // Shopping lists (navigation, «Lista spesa» mark on expenses).
+  checklist: '<path d="m3.5 6.5 1.5 1.5 3-3M3.5 15.5 5 17l3-3M11 7h9.5M11 16h9.5"/>',
+  copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
 } as const;

@@ -137,7 +137,7 @@ test('contratto: schedule validato; spese vecchie senza campo restano valide; co
     source: 'web_app', schema_version: 1, created_at: '2025-03-12T10:00:00.000Z' };
   assert.deepEqual(parseExpenseRecord(stored)?.price_changes, []);
   assert.equal(parseExpenseRecord({ ...stored, price_changes: [{ index: 0 }] }), null);
-  const request = { ...stored, expense_id: '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13', price_changes: [makeChange(1, 1200, false)], status_changes: [], fund_id: null } as Record<string, unknown>;
+  const request = { ...stored, expense_id: '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13', price_changes: [makeChange(1, 1200, false)], status_changes: [], fund_id: null, list_id: null, list_items: [] } as Record<string, unknown>;
   delete request.id; delete request.created_at;
   assert.ok(parseExpenseRequest(request, new Date('2026-11-02T12:00:00Z')));
   delete request.price_changes;

@@ -1,0 +1,2554 @@
+{
+  "format": "nummo-backup",
+  "version": 4,
+  "exported_at": "2026-11-08T10:00:00.000Z",
+  "categories": [
+    {
+      "id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "label": "TEST Alimentari",
+      "icon": "cart"
+    },
+    {
+      "id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "label": "TEST Animali",
+      "icon": "paw"
+    },
+    {
+      "id": "51061b81-b7a4-463f-acf5-8282c0215f07",
+      "label": "TEST Caffè e tè",
+      "icon": "coffee"
+    },
+    {
+      "id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "label": "TEST Casa",
+      "icon": "house"
+    },
+    {
+      "id": "9eee72c1-4515-42bb-a0aa-6a19872e0f76",
+      "label": "TEST Categoria senza spese",
+      "icon": null
+    },
+    {
+      "id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "label": "TEST Formazione",
+      "icon": "graduation"
+    },
+    {
+      "id": "129784f2-bd8e-4a0a-accd-772e1d1d1237",
+      "label": "TEST Importo estremo",
+      "icon": "coin"
+    },
+    {
+      "id": "d421d61f-778b-4c07-afee-4606d835b9af",
+      "label": "TEST Nome molto lungo con accenti àèìòù",
+      "icon": "cloud"
+    },
+    {
+      "id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "label": "TEST Regali",
+      "icon": "gift"
+    },
+    {
+      "id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "label": "TEST Salute",
+      "icon": "cross"
+    },
+    {
+      "id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "label": "TEST Svago",
+      "icon": "gamepad"
+    },
+    {
+      "id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "label": "TEST Tecnologia",
+      "icon": "laptop"
+    },
+    {
+      "id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "label": "TEST Trasporti",
+      "icon": "car"
+    },
+    {
+      "id": "80cdb469-813a-4d2c-a0a6-61c6cd24c2e6",
+      "label": "TEST Varie",
+      "icon": "star"
+    },
+    {
+      "id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "label": "TEST Viaggi",
+      "icon": "train"
+    }
+  ],
+  "funds": [
+    {
+      "id": "4344b39d-026a-4e8b-ab23-716abed70746",
+      "name": "TEST Budget 80 percento",
+      "icon": "wallet",
+      "color": 2,
+      "initial_minor": 100000,
+      "start_date": "2026-11-01",
+      "recharges": [],
+      "budgets": [
+        {
+          "month": "2026-11",
+          "amount_minor": 10000
+        }
+      ],
+      "budget_exceptions": [],
+      "archived": false,
+      "created_at": "2024-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "24abe368-3795-4342-ae3d-0d18eecbbb4b",
+      "name": "TEST Budget raggiunto",
+      "icon": "wallet",
+      "color": 3,
+      "initial_minor": 100000,
+      "start_date": "2026-11-01",
+      "recharges": [],
+      "budgets": [
+        {
+          "month": "2026-11",
+          "amount_minor": 10000
+        }
+      ],
+      "budget_exceptions": [],
+      "archived": false,
+      "created_at": "2024-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "5a60db7c-acd3-423e-a54a-353d5588900b",
+      "name": "TEST Budget superato",
+      "icon": "wallet",
+      "color": 4,
+      "initial_minor": 100000,
+      "start_date": "2026-11-01",
+      "recharges": [],
+      "budgets": [
+        {
+          "month": "2026-11",
+          "amount_minor": 10000
+        }
+      ],
+      "budget_exceptions": [],
+      "archived": false,
+      "created_at": "2024-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "4ccd3552-101d-42dd-abaf-fbf42cbd728d",
+      "name": "TEST Fondo archiviato",
+      "icon": "wallet",
+      "color": 5,
+      "initial_minor": 50000,
+      "start_date": "2024-01-01",
+      "recharges": [
+        {
+          "month": "2024-01",
+          "amount_minor": 10000,
+          "day": 31,
+          "active": true
+        },
+        {
+          "month": "2024-03",
+          "amount_minor": 10000,
+          "day": 31,
+          "active": false
+        }
+      ],
+      "budgets": [],
+      "budget_exceptions": [],
+      "archived": true,
+      "created_at": "2024-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "name": "TEST Quotidiano",
+      "icon": "wallet",
+      "color": 0,
+      "initial_minor": 500000,
+      "start_date": "2026-01-01",
+      "recharges": [
+        {
+          "month": "2026-01",
+          "amount_minor": 50000,
+          "day": 31,
+          "active": true
+        }
+      ],
+      "budgets": [
+        {
+          "month": "2026-01",
+          "amount_minor": 40000
+        }
+      ],
+      "budget_exceptions": [
+        {
+          "month": "2026-11",
+          "amount_minor": 30000
+        },
+        {
+          "month": "2026-12",
+          "amount_minor": 0
+        }
+      ],
+      "archived": false,
+      "created_at": "2024-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "ae29c1d7-d09a-40ce-aed1-3da0d1bf99fe",
+      "name": "TEST Saldo negativo",
+      "icon": "wallet",
+      "color": 1,
+      "initial_minor": 1000,
+      "start_date": "2026-11-01",
+      "recharges": [],
+      "budgets": [],
+      "budget_exceptions": [],
+      "archived": false,
+      "created_at": "2024-01-01T09:00:00.000Z"
+    }
+  ],
+  "movements": [
+    {
+      "id": "dfe05bee-f0f8-49a1-a487-ac72f5082f43",
+      "kind": "income",
+      "amount_minor": 12345,
+      "date": "2026-11-02",
+      "to_fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "from_fund_id": null,
+      "note": "TEST entrata manuale",
+      "created_at": "2026-11-01T09:00:00.000Z"
+    },
+    {
+      "id": "9859ee9f-7984-4e9b-a08d-8068386d77dc",
+      "kind": "transfer",
+      "amount_minor": 5000,
+      "date": "2026-11-03",
+      "to_fund_id": "4344b39d-026a-4e8b-ab23-716abed70746",
+      "from_fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "note": "TEST trasferimento: non è entrata né spesa",
+      "created_at": "2026-11-01T09:00:00.000Z"
+    }
+  ],
+  "lists": [
+    {
+      "id": "024bf224-a962-4906-ac3a-12e15a4f0977",
+      "name": "TEST Lista da 100 prodotti",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "total_minor": null,
+      "expense_id": null,
+      "created_at": "2026-11-01T09:00:00.000Z",
+      "items": [
+        {
+          "id": "ddc49d5e-0091-46bf-a938-38319ff643f2",
+          "name": "Caffè, tè e biscotti \"integrali\"",
+          "checked": true,
+          "position": 0
+        },
+        {
+          "id": "fcf32017-c7e8-4d3d-aa1f-54eae946911a",
+          "name": "Prodotto 002",
+          "checked": true,
+          "position": 1
+        },
+        {
+          "id": "ee44809c-7b29-474e-a57d-fb8075231c20",
+          "name": "Prodotto 003",
+          "checked": true,
+          "position": 2
+        },
+        {
+          "id": "ab0d0125-acfb-4a3f-a838-b44de62bb378",
+          "name": "Prodotto 004",
+          "checked": true,
+          "position": 3
+        },
+        {
+          "id": "b9657eb2-eb35-4766-a425-76d28cd08c41",
+          "name": "Prodotto 005",
+          "checked": true,
+          "position": 4
+        },
+        {
+          "id": "962d1aa2-734f-4327-aafe-62a24cfd41d9",
+          "name": "Prodotto 006",
+          "checked": true,
+          "position": 5
+        },
+        {
+          "id": "8f3b6731-3cf3-43f3-a939-dd694c76995a",
+          "name": "Prodotto 007",
+          "checked": true,
+          "position": 6
+        },
+        {
+          "id": "7b0ab9b6-4577-4bbb-ac3b-ce2b43bca328",
+          "name": "Prodotto 008",
+          "checked": true,
+          "position": 7
+        },
+        {
+          "id": "02425756-6266-4f80-a316-a8cc8d4526c8",
+          "name": "Prodotto 009",
+          "checked": true,
+          "position": 8
+        },
+        {
+          "id": "b6f066d0-4e01-4755-a9e0-4b32ee6f4fe7",
+          "name": "Prodotto 010",
+          "checked": true,
+          "position": 9
+        },
+        {
+          "id": "f08ede3c-559a-49b6-a0c6-ad28dd4b2fa9",
+          "name": "Prodotto 011",
+          "checked": true,
+          "position": 10
+        },
+        {
+          "id": "d53e7667-d75b-4e52-a326-3a96f7b03e52",
+          "name": "Prodotto 012",
+          "checked": true,
+          "position": 11
+        },
+        {
+          "id": "406b5d97-a09f-453e-acc6-2603e3da1d55",
+          "name": "Prodotto 013",
+          "checked": true,
+          "position": 12
+        },
+        {
+          "id": "7451fbcb-c495-4d87-a0c6-147dfa5a8cc3",
+          "name": "Prodotto 014",
+          "checked": true,
+          "position": 13
+        },
+        {
+          "id": "1eacbb4b-5594-4e9e-a731-8df75d08faad",
+          "name": "Prodotto 015",
+          "checked": true,
+          "position": 14
+        },
+        {
+          "id": "7c366152-2d42-44b2-a99c-9b289e583977",
+          "name": "Prodotto 016",
+          "checked": true,
+          "position": 15
+        },
+        {
+          "id": "0cccd56a-b895-4d88-a846-eb46d1f5a4d9",
+          "name": "Prodotto 017",
+          "checked": true,
+          "position": 16
+        },
+        {
+          "id": "508e407b-cf6c-4237-a647-fffba43bf43b",
+          "name": "Prodotto 018",
+          "checked": true,
+          "position": 17
+        },
+        {
+          "id": "94646199-9541-47d5-a1bc-b55038ef7759",
+          "name": "Prodotto 019",
+          "checked": true,
+          "position": 18
+        },
+        {
+          "id": "94024c6d-29d6-4149-a99d-0367d84f08d0",
+          "name": "Prodotto 020",
+          "checked": true,
+          "position": 19
+        },
+        {
+          "id": "dacd604a-e958-4445-ae13-a3143942ad8c",
+          "name": "Prodotto 021",
+          "checked": true,
+          "position": 20
+        },
+        {
+          "id": "fd5f9755-0f53-44b5-ac9d-cba076af978e",
+          "name": "Prodotto 022",
+          "checked": true,
+          "position": 21
+        },
+        {
+          "id": "e10db5a2-f365-4fd8-a466-88beb652a8e4",
+          "name": "Prodotto 023",
+          "checked": true,
+          "position": 22
+        },
+        {
+          "id": "0c159e67-7569-42df-ab99-8b12dd6b1e6b",
+          "name": "Prodotto 024",
+          "checked": true,
+          "position": 23
+        },
+        {
+          "id": "c09bf629-e439-4ff3-ad5d-082564ac4d1e",
+          "name": "Prodotto 025",
+          "checked": true,
+          "position": 24
+        },
+        {
+          "id": "e362a93a-2b14-425d-af90-8c40349ee47b",
+          "name": "Prodotto 026",
+          "checked": true,
+          "position": 25
+        },
+        {
+          "id": "947fa92f-1d98-4e85-ad60-4403ef1a9520",
+          "name": "Prodotto 027",
+          "checked": true,
+          "position": 26
+        },
+        {
+          "id": "1c5dc87b-b231-4d5a-a12c-5e377054271e",
+          "name": "Prodotto 028",
+          "checked": true,
+          "position": 27
+        },
+        {
+          "id": "9de7faba-b1f2-4736-a538-23891bf6cf90",
+          "name": "Prodotto 029",
+          "checked": true,
+          "position": 28
+        },
+        {
+          "id": "d32bb2a7-3902-461d-a156-98a2ceef0721",
+          "name": "Prodotto 030",
+          "checked": true,
+          "position": 29
+        },
+        {
+          "id": "1ee7b055-9288-4acf-a07e-46589e0f4bfa",
+          "name": "Prodotto 031",
+          "checked": true,
+          "position": 30
+        },
+        {
+          "id": "8455d8e3-9fa9-47a5-a5c1-888c610e70a2",
+          "name": "Prodotto 032",
+          "checked": true,
+          "position": 31
+        },
+        {
+          "id": "1846c5da-042c-41fd-abad-aa35699293f8",
+          "name": "Prodotto 033",
+          "checked": true,
+          "position": 32
+        },
+        {
+          "id": "5f522411-1afa-4b08-a63c-26854180ab86",
+          "name": "Prodotto 034",
+          "checked": true,
+          "position": 33
+        },
+        {
+          "id": "340f0576-7c53-47f6-ac07-07a08b61e26b",
+          "name": "Prodotto 035",
+          "checked": true,
+          "position": 34
+        },
+        {
+          "id": "f0da6eee-713b-46a8-aac0-c045eebb2c85",
+          "name": "Prodotto 036",
+          "checked": true,
+          "position": 35
+        },
+        {
+          "id": "c2908b06-910b-42fa-aaa4-0268265fea6b",
+          "name": "Prodotto 037",
+          "checked": true,
+          "position": 36
+        },
+        {
+          "id": "7196e113-4c3d-42dd-a26c-38f396cb4aa5",
+          "name": "Prodotto 038",
+          "checked": true,
+          "position": 37
+        },
+        {
+          "id": "9a0a4b59-b7e8-4131-ad93-fc07dede3e10",
+          "name": "Prodotto 039",
+          "checked": true,
+          "position": 38
+        },
+        {
+          "id": "bc362202-308c-4f28-a3b9-fd8e561a34e3",
+          "name": "Prodotto 040",
+          "checked": true,
+          "position": 39
+        },
+        {
+          "id": "969b8b63-e427-4151-a2ba-1cc825a3ecdc",
+          "name": "Prodotto 041",
+          "checked": true,
+          "position": 40
+        },
+        {
+          "id": "d15956ce-9043-4bc1-a7b4-4a5b3f9d6c92",
+          "name": "Prodotto 042",
+          "checked": true,
+          "position": 41
+        },
+        {
+          "id": "744b9892-f115-4699-ae06-95bce8668ee5",
+          "name": "Prodotto 043",
+          "checked": true,
+          "position": 42
+        },
+        {
+          "id": "ccea3de7-ee1e-4234-aee9-e57ed80ecf14",
+          "name": "Prodotto 044",
+          "checked": true,
+          "position": 43
+        },
+        {
+          "id": "e6b92a1f-c133-4c3a-a7a5-2a62c8d6f019",
+          "name": "Prodotto 045",
+          "checked": true,
+          "position": 44
+        },
+        {
+          "id": "5af32fd8-dc7d-4683-a8b9-520c9ef4e5ff",
+          "name": "Prodotto 046",
+          "checked": true,
+          "position": 45
+        },
+        {
+          "id": "bfc766c9-fd6a-4ff2-ac0b-b84db879ba37",
+          "name": "Prodotto 047",
+          "checked": true,
+          "position": 46
+        },
+        {
+          "id": "4ae10800-3325-4937-a14b-b932cf1ed0b4",
+          "name": "Prodotto 048",
+          "checked": true,
+          "position": 47
+        },
+        {
+          "id": "58901a4a-0a27-4ab6-a3eb-d66045b886f0",
+          "name": "Prodotto 049",
+          "checked": true,
+          "position": 48
+        },
+        {
+          "id": "72405f2f-9687-4cac-ab5a-1909afb99d83",
+          "name": "Prodotto 050",
+          "checked": true,
+          "position": 49
+        },
+        {
+          "id": "75cc4689-54ce-4278-acb4-2ae675b73000",
+          "name": "Prodotto 051",
+          "checked": false,
+          "position": 50
+        },
+        {
+          "id": "cafbac3e-66f5-426f-af81-b0cb20fbb452",
+          "name": "Prodotto 052",
+          "checked": false,
+          "position": 51
+        },
+        {
+          "id": "8a0d5a22-1ae9-4005-a90b-1992961289c5",
+          "name": "Prodotto 053",
+          "checked": false,
+          "position": 52
+        },
+        {
+          "id": "5a4dbcc0-223a-4226-affa-437c6b1e36b2",
+          "name": "Prodotto 054",
+          "checked": false,
+          "position": 53
+        },
+        {
+          "id": "183f341a-181e-4a32-ae3c-f55aa66a3a42",
+          "name": "Prodotto 055",
+          "checked": false,
+          "position": 54
+        },
+        {
+          "id": "ecf155db-4996-4dce-aae8-27a83f466e67",
+          "name": "Prodotto 056",
+          "checked": false,
+          "position": 55
+        },
+        {
+          "id": "dfbf4c66-1f0f-415e-a979-7071327aec13",
+          "name": "Prodotto 057",
+          "checked": false,
+          "position": 56
+        },
+        {
+          "id": "6529f560-a7f7-402d-abba-ee3662eeae5d",
+          "name": "Prodotto 058",
+          "checked": false,
+          "position": 57
+        },
+        {
+          "id": "50338f39-6d34-4d4d-a802-94e556599121",
+          "name": "Prodotto 059",
+          "checked": false,
+          "position": 58
+        },
+        {
+          "id": "42d30ad7-b712-41ac-a062-cc4e4a5f7360",
+          "name": "Prodotto 060",
+          "checked": false,
+          "position": 59
+        },
+        {
+          "id": "41aa9dfb-cd4b-447d-a1cb-a8ce74b23a2d",
+          "name": "Prodotto 061",
+          "checked": false,
+          "position": 60
+        },
+        {
+          "id": "c096017c-0f10-49f5-a866-5c43ff71d3f4",
+          "name": "Prodotto 062",
+          "checked": false,
+          "position": 61
+        },
+        {
+          "id": "5f29cd5b-8360-4625-aef8-d60c2c4abaca",
+          "name": "Prodotto 063",
+          "checked": false,
+          "position": 62
+        },
+        {
+          "id": "02de0752-8073-476b-a1df-057baa93ccb8",
+          "name": "Prodotto 064",
+          "checked": false,
+          "position": 63
+        },
+        {
+          "id": "527adb4b-7fae-4f93-a3ad-ed6bfd1b778c",
+          "name": "Prodotto 065",
+          "checked": false,
+          "position": 64
+        },
+        {
+          "id": "d725ffa8-2d17-4267-ab99-ac7197665e9a",
+          "name": "Prodotto 066",
+          "checked": false,
+          "position": 65
+        },
+        {
+          "id": "5888d0f7-2c73-4b0f-a9e3-f0bdf1b2027b",
+          "name": "Prodotto 067",
+          "checked": false,
+          "position": 66
+        },
+        {
+          "id": "ff26f134-b9aa-4292-a886-493bebde366f",
+          "name": "Prodotto 068",
+          "checked": false,
+          "position": 67
+        },
+        {
+          "id": "e20a2bd7-9448-4d76-a025-f9fa4771232d",
+          "name": "Prodotto 069",
+          "checked": false,
+          "position": 68
+        },
+        {
+          "id": "08948b99-41ab-41c6-a8f7-b5e7ce7e665c",
+          "name": "Prodotto 070",
+          "checked": false,
+          "position": 69
+        },
+        {
+          "id": "76db8472-6009-4469-afcf-db56903e0158",
+          "name": "Prodotto 071",
+          "checked": false,
+          "position": 70
+        },
+        {
+          "id": "71397bce-23b2-4f57-a5b1-7b84549dc116",
+          "name": "Prodotto 072",
+          "checked": false,
+          "position": 71
+        },
+        {
+          "id": "f911106e-cc46-4dfa-a057-cc19e690df07",
+          "name": "Prodotto 073",
+          "checked": false,
+          "position": 72
+        },
+        {
+          "id": "e8c1a1cb-2f71-4b8f-a2a8-48dd52c7f770",
+          "name": "Prodotto 074",
+          "checked": false,
+          "position": 73
+        },
+        {
+          "id": "442fed5c-6003-408a-a470-7b77036cc486",
+          "name": "Prodotto 075",
+          "checked": false,
+          "position": 74
+        },
+        {
+          "id": "d0ba3736-63a7-4854-a440-eee7541bff08",
+          "name": "Prodotto 076",
+          "checked": false,
+          "position": 75
+        },
+        {
+          "id": "3556529a-abf9-4250-ac65-a21ff2dbc4d5",
+          "name": "Prodotto 077",
+          "checked": false,
+          "position": 76
+        },
+        {
+          "id": "c6869a4c-b80f-432d-afa9-90c2d326aa61",
+          "name": "Prodotto 078",
+          "checked": false,
+          "position": 77
+        },
+        {
+          "id": "1191bdb3-8f02-4f92-abf5-1c8e6881ec68",
+          "name": "Prodotto 079",
+          "checked": false,
+          "position": 78
+        },
+        {
+          "id": "04bc7523-97a9-4b15-a073-c6da59b681bc",
+          "name": "Prodotto 080",
+          "checked": false,
+          "position": 79
+        },
+        {
+          "id": "6411e8bb-8014-4f41-aec2-e52876112ba2",
+          "name": "Prodotto 081",
+          "checked": false,
+          "position": 80
+        },
+        {
+          "id": "2d30c014-ea45-43a4-ae4d-f05e98777f5c",
+          "name": "Prodotto 082",
+          "checked": false,
+          "position": 81
+        },
+        {
+          "id": "384d2c8a-676f-451d-ab11-525b1ad6cb81",
+          "name": "Prodotto 083",
+          "checked": false,
+          "position": 82
+        },
+        {
+          "id": "ea605ab8-b37b-49f0-a464-075fc0343722",
+          "name": "Prodotto 084",
+          "checked": false,
+          "position": 83
+        },
+        {
+          "id": "c20941c8-c990-411c-a088-50b3a4ebb417",
+          "name": "Prodotto 085",
+          "checked": false,
+          "position": 84
+        },
+        {
+          "id": "b5d47247-9e1e-4483-acb8-224ee2270e8c",
+          "name": "Prodotto 086",
+          "checked": false,
+          "position": 85
+        },
+        {
+          "id": "587fa8af-ad89-4fa7-a1f9-19e2046315dd",
+          "name": "Prodotto 087",
+          "checked": false,
+          "position": 86
+        },
+        {
+          "id": "68287e61-c8e1-41bb-a565-7045c53a268b",
+          "name": "Prodotto 088",
+          "checked": false,
+          "position": 87
+        },
+        {
+          "id": "845e6385-9f9d-4b36-a1da-3156aef08d67",
+          "name": "Prodotto 089",
+          "checked": false,
+          "position": 88
+        },
+        {
+          "id": "53268096-377a-4950-ab4d-023f4b4a1ad5",
+          "name": "Prodotto 090",
+          "checked": false,
+          "position": 89
+        },
+        {
+          "id": "293b8e41-ef26-4be7-a8bc-ee6c8738668d",
+          "name": "Prodotto 091",
+          "checked": false,
+          "position": 90
+        },
+        {
+          "id": "71221b27-403f-4445-af82-bc5c1fd4abf9",
+          "name": "Prodotto 092",
+          "checked": false,
+          "position": 91
+        },
+        {
+          "id": "7dda8603-18b2-44bb-a7ae-033d0c54e066",
+          "name": "Prodotto 093",
+          "checked": false,
+          "position": 92
+        },
+        {
+          "id": "c9929b7d-631e-458b-aff1-6d5707aef058",
+          "name": "Prodotto 094",
+          "checked": false,
+          "position": 93
+        },
+        {
+          "id": "fbbf6ec5-c54f-469f-aaf6-0bfa0502ce0e",
+          "name": "Prodotto 095",
+          "checked": false,
+          "position": 94
+        },
+        {
+          "id": "fa113af1-dd9a-4f85-a459-4f7dad263c15",
+          "name": "Prodotto 096",
+          "checked": false,
+          "position": 95
+        },
+        {
+          "id": "576ac492-3522-4bd9-a205-2f296569a836",
+          "name": "Prodotto 097",
+          "checked": false,
+          "position": 96
+        },
+        {
+          "id": "19511110-97ad-4d35-a331-6359d77a5ef1",
+          "name": "Prodotto 098",
+          "checked": false,
+          "position": 97
+        },
+        {
+          "id": "07062913-9faf-4b27-a151-7a31f8de526a",
+          "name": "Prodotto 099",
+          "checked": false,
+          "position": 98
+        },
+        {
+          "id": "01dc1bbb-0485-481b-a015-d9f9590a1d34",
+          "name": "Prodotto 100",
+          "checked": false,
+          "position": 99
+        }
+      ]
+    },
+    {
+      "id": "2ef0bef6-28d6-4e39-a69f-a1ec3e354f9f",
+      "name": "TEST Lista vuota",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "total_minor": null,
+      "expense_id": null,
+      "created_at": "2026-11-01T09:00:00.000Z",
+      "items": []
+    },
+    {
+      "id": "58ef7433-e192-497b-a7a6-e8b243f82796",
+      "name": "TEST Spesa già registrata",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "total_minor": 2345,
+      "expense_id": "8ba0ae34-49fd-4c3a-af6a-103ed49f0d42",
+      "created_at": "2026-11-01T09:00:00.000Z",
+      "items": [
+        {
+          "id": "e29959c7-b5ad-4121-abd9-9e2a3c59a7d8",
+          "name": "Caffè, tè e biscotti \"integrali\"",
+          "checked": true,
+          "position": 0
+        },
+        {
+          "id": "5af1fc6c-1c53-4701-a64a-c9d69a814dab",
+          "name": "Prodotto 002",
+          "checked": true,
+          "position": 1
+        },
+        {
+          "id": "d3a83502-bf24-478d-a9c7-ff31dfc345fc",
+          "name": "Prodotto 003",
+          "checked": true,
+          "position": 2
+        },
+        {
+          "id": "4ac4e193-32dc-48b3-af99-77179749343c",
+          "name": "Prodotto 004",
+          "checked": false,
+          "position": 3
+        }
+      ]
+    },
+    {
+      "id": "b6bb23fe-ceed-4812-aab2-50b48f7358a2",
+      "name": "TEST Spesa da completare",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "total_minor": 3456,
+      "expense_id": null,
+      "created_at": "2026-11-01T09:00:00.000Z",
+      "items": [
+        {
+          "id": "a63b1b2e-91bb-42f2-a392-339f666f21ae",
+          "name": "Caffè, tè e biscotti \"integrali\"",
+          "checked": true,
+          "position": 0
+        },
+        {
+          "id": "1579efa6-efde-48b1-a5de-65ecd3ab44be",
+          "name": "Prodotto 002",
+          "checked": true,
+          "position": 1
+        },
+        {
+          "id": "c8daedc1-700c-41cf-a0df-f11e8cad577a",
+          "name": "Prodotto 003",
+          "checked": true,
+          "position": 2
+        },
+        {
+          "id": "7888f899-d1bc-4670-af1a-9426a92499be",
+          "name": "Prodotto 004",
+          "checked": false,
+          "position": 3
+        },
+        {
+          "id": "5e9cbc97-d47e-4fb3-a3fb-67e6b77059ea",
+          "name": "Prodotto 005",
+          "checked": false,
+          "position": 4
+        },
+        {
+          "id": "c92a6045-bdbb-4954-a63c-dc65826c46b0",
+          "name": "Prodotto 006",
+          "checked": false,
+          "position": 5
+        },
+        {
+          "id": "040aaf18-40bd-49cc-aa75-1790d59137d8",
+          "name": "Prodotto 007",
+          "checked": false,
+          "position": 6
+        },
+        {
+          "id": "8385f2ce-3cfa-46b9-ad08-fc3109d5fba4",
+          "name": "Prodotto 008",
+          "checked": false,
+          "position": 7
+        }
+      ]
+    }
+  ],
+  "expenses": [
+    {
+      "id": "de3df9c8-19b2-4de8-a858-0b87758df7bd",
+      "amount_minor": 5000,
+      "currency": "EUR",
+      "description": "TEST Spesa storica fondo archiviato",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2024-02-29",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "4ccd3552-101d-42dd-abaf-fbf42cbd728d",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2024-02-29T09:00:00.000Z"
+    },
+    {
+      "id": "ea4e68ce-e230-47db-a35a-e85d062b689f",
+      "amount_minor": 4900,
+      "currency": "EUR",
+      "description": "TEST Annuale dal 29 febbraio",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2024-02-29",
+      "recurrence": "yearly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2024-02-29T09:00:00.000Z"
+    },
+    {
+      "id": "13789f80-d8f9-4422-a0af-31235dc1aa15",
+      "amount_minor": 799,
+      "currency": "EUR",
+      "description": "TEST Mensile con 8 cambi di stato",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2025-01-15",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [
+        {
+          "date": "2025-02-01",
+          "status": "paused"
+        },
+        {
+          "date": "2025-03-01",
+          "status": "active"
+        },
+        {
+          "date": "2025-04-01",
+          "status": "paused"
+        },
+        {
+          "date": "2025-05-01",
+          "status": "active"
+        },
+        {
+          "date": "2025-06-01",
+          "status": "paused"
+        },
+        {
+          "date": "2025-07-01",
+          "status": "active"
+        },
+        {
+          "date": "2025-08-01",
+          "status": "paused"
+        },
+        {
+          "date": "2025-09-01",
+          "status": "active"
+        }
+      ],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2025-01-15T09:00:00.000Z"
+    },
+    {
+      "id": "7d392a6d-2af8-4310-acdb-a702a93bdd18",
+      "amount_minor": 199,
+      "currency": "EUR",
+      "description": "TEST Mensile dal 31 con promo e 8 variazioni",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-01-31",
+      "recurrence": "monthly",
+      "price_changes": [
+        {
+          "index": 1,
+          "amount_minor": 999,
+          "once": false
+        },
+        {
+          "index": 2,
+          "amount_minor": 1099,
+          "once": false
+        },
+        {
+          "index": 3,
+          "amount_minor": 1199,
+          "once": false
+        },
+        {
+          "index": 4,
+          "amount_minor": 1299,
+          "once": true
+        },
+        {
+          "index": 5,
+          "amount_minor": 1399,
+          "once": false
+        },
+        {
+          "index": 6,
+          "amount_minor": 1499,
+          "once": false
+        },
+        {
+          "index": 7,
+          "amount_minor": 1599,
+          "once": false
+        },
+        {
+          "index": 8,
+          "amount_minor": 1699,
+          "once": false
+        }
+      ],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-01-31T09:00:00.000Z"
+    },
+    {
+      "id": "05102ef2-026d-49d5-a177-cbe711ec8527",
+      "amount_minor": 1299,
+      "currency": "EUR",
+      "description": "TEST Mensile annullato",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-05-01",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [
+        {
+          "date": "2026-10-07",
+          "status": "cancelled"
+        }
+      ],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-01T09:00:00.000Z"
+    },
+    {
+      "id": "dbf3b934-4e80-429f-a885-881b9c0ccc7f",
+      "amount_minor": 1599,
+      "currency": "EUR",
+      "description": "TEST Mensile in pausa",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-05-01",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [
+        {
+          "date": "2026-10-01",
+          "status": "paused"
+        }
+      ],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-01T09:00:00.000Z"
+    },
+    {
+      "id": "77c214e2-989b-452d-a7b6-413c6768bb2b",
+      "amount_minor": 125,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/1",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-05-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-02T09:00:00.000Z"
+    },
+    {
+      "id": "90724414-7057-4b90-a523-b76321e6d0bd",
+      "amount_minor": 362,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/2",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-05-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-03T09:00:00.000Z"
+    },
+    {
+      "id": "c8b886c6-6470-4b20-a239-3b7072bfca9f",
+      "amount_minor": 599,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/3",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-05-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-04T09:00:00.000Z"
+    },
+    {
+      "id": "a0746648-fcbe-4fca-a29f-668e72961442",
+      "amount_minor": 836,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/4",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-05-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-05T09:00:00.000Z"
+    },
+    {
+      "id": "09d3dd56-d5bd-45bd-a5f2-6423c23d1f8d",
+      "amount_minor": 1073,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/5",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-05-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-06T09:00:00.000Z"
+    },
+    {
+      "id": "73c195c7-58df-4477-a542-1153297a31b8",
+      "amount_minor": 1310,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/6",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-05-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-07T09:00:00.000Z"
+    },
+    {
+      "id": "d0de152d-95fb-44a2-add8-f23bc87dd4d7",
+      "amount_minor": 1547,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/7",
+      "category_id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "expense_date": "2026-05-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-08T09:00:00.000Z"
+    },
+    {
+      "id": "56368270-1664-4271-a02e-6a9b88a4769a",
+      "amount_minor": 1784,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/8",
+      "category_id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "expense_date": "2026-05-09",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-09T09:00:00.000Z"
+    },
+    {
+      "id": "4b4295be-6e61-4430-addb-16b335c5f9fe",
+      "amount_minor": 2021,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/9",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2026-05-10",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-10T09:00:00.000Z"
+    },
+    {
+      "id": "e198fcd4-fa98-42b9-ad1a-4ca3572d6710",
+      "amount_minor": 2258,
+      "currency": "EUR",
+      "description": "TEST Acquisto 5/10",
+      "category_id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "expense_date": "2026-05-11",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-05-11T09:00:00.000Z"
+    },
+    {
+      "id": "9b891636-2fef-4414-a03e-35717f569c10",
+      "amount_minor": 125,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/1",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-06-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-02T09:00:00.000Z"
+    },
+    {
+      "id": "921a4b91-4618-4519-a08b-14e36434d9b1",
+      "amount_minor": 362,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/2",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-06-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-03T09:00:00.000Z"
+    },
+    {
+      "id": "3924f03a-a674-4e5e-a060-68e47704e08c",
+      "amount_minor": 599,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/3",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-06-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-04T09:00:00.000Z"
+    },
+    {
+      "id": "3b036321-b2ac-48be-a51d-6daf9038503c",
+      "amount_minor": 836,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/4",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-06-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-05T09:00:00.000Z"
+    },
+    {
+      "id": "08650355-ebfb-488a-a7a7-4367f083406b",
+      "amount_minor": 1073,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/5",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-06-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-06T09:00:00.000Z"
+    },
+    {
+      "id": "ff420749-8ebd-4f9e-a316-9fa40ad10d6f",
+      "amount_minor": 1310,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/6",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-06-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-07T09:00:00.000Z"
+    },
+    {
+      "id": "a9690896-e6f8-4550-a107-5cff0ad0bb87",
+      "amount_minor": 1547,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/7",
+      "category_id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "expense_date": "2026-06-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-08T09:00:00.000Z"
+    },
+    {
+      "id": "7cb13c81-727e-456d-aecc-20c5f176892a",
+      "amount_minor": 1784,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/8",
+      "category_id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "expense_date": "2026-06-09",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-09T09:00:00.000Z"
+    },
+    {
+      "id": "47ef3dee-c6c2-493e-a568-025927f123de",
+      "amount_minor": 2021,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/9",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2026-06-10",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-10T09:00:00.000Z"
+    },
+    {
+      "id": "4dabb917-516f-49b0-ae27-20bf19afc2bf",
+      "amount_minor": 2258,
+      "currency": "EUR",
+      "description": "TEST Acquisto 6/10",
+      "category_id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "expense_date": "2026-06-11",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-06-11T09:00:00.000Z"
+    },
+    {
+      "id": "d8807768-7ca3-4b5a-a5ce-9019adfbfe3a",
+      "amount_minor": 125,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/1",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-07-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-02T09:00:00.000Z"
+    },
+    {
+      "id": "68a9fbb9-4e80-4ec4-a341-ae64710b3170",
+      "amount_minor": 362,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/2",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-07-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-03T09:00:00.000Z"
+    },
+    {
+      "id": "39c15198-2c71-4c67-aa24-7c2df9e834f4",
+      "amount_minor": 599,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/3",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-07-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-04T09:00:00.000Z"
+    },
+    {
+      "id": "a1a979ab-53bc-4d40-a617-666045422614",
+      "amount_minor": 836,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/4",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-07-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-05T09:00:00.000Z"
+    },
+    {
+      "id": "5b9988dd-85e3-4944-a697-c75cbbae0854",
+      "amount_minor": 1073,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/5",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-07-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-06T09:00:00.000Z"
+    },
+    {
+      "id": "e6706faa-963a-40fe-a37d-19d745a9a993",
+      "amount_minor": 1310,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/6",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-07-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-07T09:00:00.000Z"
+    },
+    {
+      "id": "ab7fa98f-d25e-4d35-a1dc-04abfa5752ff",
+      "amount_minor": 1547,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/7",
+      "category_id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "expense_date": "2026-07-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-08T09:00:00.000Z"
+    },
+    {
+      "id": "3bb0bf87-1156-48c5-a7da-3b4254dbd83b",
+      "amount_minor": 1784,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/8",
+      "category_id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "expense_date": "2026-07-09",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-09T09:00:00.000Z"
+    },
+    {
+      "id": "b93538f0-6192-40ad-ab73-7ce324a7e48e",
+      "amount_minor": 2021,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/9",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2026-07-10",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-10T09:00:00.000Z"
+    },
+    {
+      "id": "ec978cfb-2c4b-418e-ab89-4d0522e6c2ab",
+      "amount_minor": 2258,
+      "currency": "EUR",
+      "description": "TEST Acquisto 7/10",
+      "category_id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "expense_date": "2026-07-11",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-07-11T09:00:00.000Z"
+    },
+    {
+      "id": "8404cde3-10e7-47bd-adb1-4b5ab03a6c29",
+      "amount_minor": 125,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/1",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-08-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-02T09:00:00.000Z"
+    },
+    {
+      "id": "9759e9b7-670e-4db2-add9-f0549e3b4477",
+      "amount_minor": 362,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/2",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-08-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-03T09:00:00.000Z"
+    },
+    {
+      "id": "98336dd7-88bf-4a4b-a73d-9ab49cd162b1",
+      "amount_minor": 599,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/3",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-08-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-04T09:00:00.000Z"
+    },
+    {
+      "id": "e334de98-68d4-41cf-a4ea-29423bcf5ef2",
+      "amount_minor": 836,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/4",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-08-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-05T09:00:00.000Z"
+    },
+    {
+      "id": "7b1646a9-fd87-4718-a3bd-e69f34230626",
+      "amount_minor": 1073,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/5",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-08-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-06T09:00:00.000Z"
+    },
+    {
+      "id": "54c505e3-ac47-4e64-a8e3-978886edb4ac",
+      "amount_minor": 1310,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/6",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-08-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-07T09:00:00.000Z"
+    },
+    {
+      "id": "c1b3e37e-6969-42ce-aabd-b786fec27e73",
+      "amount_minor": 1547,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/7",
+      "category_id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "expense_date": "2026-08-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-08T09:00:00.000Z"
+    },
+    {
+      "id": "401785d5-0a37-4fa4-af0a-bb00e89de7be",
+      "amount_minor": 1784,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/8",
+      "category_id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "expense_date": "2026-08-09",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-09T09:00:00.000Z"
+    },
+    {
+      "id": "17070b37-56a7-4dbf-ad37-96a1a2792bd9",
+      "amount_minor": 2021,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/9",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2026-08-10",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-10T09:00:00.000Z"
+    },
+    {
+      "id": "1ab83599-6efe-47db-a300-d7c380fd89a7",
+      "amount_minor": 2258,
+      "currency": "EUR",
+      "description": "TEST Acquisto 8/10",
+      "category_id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "expense_date": "2026-08-11",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-08-11T09:00:00.000Z"
+    },
+    {
+      "id": "6800a2a1-594a-4643-a9c2-7d5ec2abd442",
+      "amount_minor": 125,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/1",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-09-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-02T09:00:00.000Z"
+    },
+    {
+      "id": "5d03ff5b-95ff-4107-aaba-a279368e9482",
+      "amount_minor": 362,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/2",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-09-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-03T09:00:00.000Z"
+    },
+    {
+      "id": "2e85e39a-ba96-430f-abb8-dd9a7b07e02a",
+      "amount_minor": 599,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/3",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-09-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-04T09:00:00.000Z"
+    },
+    {
+      "id": "53fc8ba0-6e39-4ec2-aee8-7608ff21eda0",
+      "amount_minor": 836,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/4",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-09-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-05T09:00:00.000Z"
+    },
+    {
+      "id": "3d66b3f9-adaf-42d7-a06d-172454b0f69e",
+      "amount_minor": 1073,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/5",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-09-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-06T09:00:00.000Z"
+    },
+    {
+      "id": "5d6793fe-70c1-404e-a2eb-3161432b2fbb",
+      "amount_minor": 1310,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/6",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-09-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-07T09:00:00.000Z"
+    },
+    {
+      "id": "9661dccb-61fb-43c7-a251-a222a06f5eca",
+      "amount_minor": 1547,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/7",
+      "category_id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "expense_date": "2026-09-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-08T09:00:00.000Z"
+    },
+    {
+      "id": "9389a85f-7a32-4811-a522-1c4fc0525dff",
+      "amount_minor": 1784,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/8",
+      "category_id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "expense_date": "2026-09-09",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-09T09:00:00.000Z"
+    },
+    {
+      "id": "2f38ea14-babe-4b62-a9e6-61174bfccb25",
+      "amount_minor": 2021,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/9",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2026-09-10",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-10T09:00:00.000Z"
+    },
+    {
+      "id": "4f80c566-7b12-4bdf-aba5-e24b6e976a1e",
+      "amount_minor": 2258,
+      "currency": "EUR",
+      "description": "TEST Acquisto 9/10",
+      "category_id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "expense_date": "2026-09-11",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-11T09:00:00.000Z"
+    },
+    {
+      "id": "0c6dfd13-8230-41e6-a890-7c88622d06d4",
+      "amount_minor": 125,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/1",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-10-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-02T09:00:00.000Z"
+    },
+    {
+      "id": "b7622246-0c5e-4a53-a1aa-9bbc6caed1cb",
+      "amount_minor": 362,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/2",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-10-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-03T09:00:00.000Z"
+    },
+    {
+      "id": "24484748-5b49-4624-ac13-49a259f12b53",
+      "amount_minor": 599,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/3",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-10-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-04T09:00:00.000Z"
+    },
+    {
+      "id": "d205ae05-c4d8-4667-ab47-2b085c4072f2",
+      "amount_minor": 250,
+      "currency": "EUR",
+      "description": "TEST Settimanale pausa oggi",
+      "category_id": "51061b81-b7a4-463f-acf5-8282c0215f07",
+      "expense_date": "2026-10-04",
+      "recurrence": "weekly",
+      "price_changes": [],
+      "status_changes": [
+        {
+          "date": "2026-11-08",
+          "status": "paused"
+        }
+      ],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-04T09:00:00.000Z"
+    },
+    {
+      "id": "1c96ae00-22e1-418c-a968-b00688a58440",
+      "amount_minor": 836,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/4",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-10-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-05T09:00:00.000Z"
+    },
+    {
+      "id": "02061d3c-9bd5-44f6-a8ad-f42bae10eafb",
+      "amount_minor": 1073,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/5",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-10-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-06T09:00:00.000Z"
+    },
+    {
+      "id": "29c1783d-f32e-41a4-aa41-12590c37122b",
+      "amount_minor": 1310,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/6",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-10-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-07T09:00:00.000Z"
+    },
+    {
+      "id": "99447286-3f3c-4125-ade2-18d65d03f5db",
+      "amount_minor": 1547,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/7",
+      "category_id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "expense_date": "2026-10-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-08T09:00:00.000Z"
+    },
+    {
+      "id": "f8f4c4e1-a170-47cb-ad24-c8b53738b019",
+      "amount_minor": 1784,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/8",
+      "category_id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "expense_date": "2026-10-09",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-09T09:00:00.000Z"
+    },
+    {
+      "id": "a08b0830-07e5-44f6-aaba-41f16a6b9d34",
+      "amount_minor": 2021,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/9",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2026-10-10",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-10T09:00:00.000Z"
+    },
+    {
+      "id": "8971445b-ba0f-4d28-aac0-5bae16c937ee",
+      "amount_minor": 2258,
+      "currency": "EUR",
+      "description": "TEST Acquisto 10/10",
+      "category_id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "expense_date": "2026-10-11",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-11T09:00:00.000Z"
+    },
+    {
+      "id": "a547d01e-da81-4c9c-ab5a-6435db1e2e39",
+      "amount_minor": 100,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 1",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-11-01",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-01T09:00:00.000Z"
+    },
+    {
+      "id": "c73d61c6-2bd2-4c1c-a260-22ccbe5ab25a",
+      "amount_minor": 988,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 9",
+      "category_id": "fb557d0b-48da-4543-a33e-286aa3b488c0",
+      "expense_date": "2026-11-01",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-01T09:00:00.000Z"
+    },
+    {
+      "id": "1414da3d-9e2b-44fb-ab7d-5a9b77483cc0",
+      "amount_minor": 4000,
+      "currency": "EUR",
+      "description": "TEST Spesa oltre il saldo",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-11-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "ae29c1d7-d09a-40ce-aed1-3da0d1bf99fe",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-02T09:00:00.000Z"
+    },
+    {
+      "id": "891a25ce-e7d8-4bc4-afbc-ca1b551d03ec",
+      "amount_minor": 1099,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 10",
+      "category_id": "218978e4-3902-4873-ab97-03b4d51093fb",
+      "expense_date": "2026-11-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-02T09:00:00.000Z"
+    },
+    {
+      "id": "89d7cd49-0947-4aa5-a5a3-7055801d955e",
+      "amount_minor": 211,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 2",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-11-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-02T09:00:00.000Z"
+    },
+    {
+      "id": "057eed6c-34e4-4472-a1eb-431292c66434",
+      "amount_minor": 10000,
+      "currency": "EUR",
+      "description": "TEST Budget esattamente raggiunto",
+      "category_id": "1bb6dd15-4b61-49ab-a74a-1152e7c6f333",
+      "expense_date": "2026-11-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "24abe368-3795-4342-ae3d-0d18eecbbb4b",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-03T09:00:00.000Z"
+    },
+    {
+      "id": "5bc899e0-535e-419e-a3c6-e05f977302e7",
+      "amount_minor": 8000,
+      "currency": "EUR",
+      "description": "TEST Budget al 80 percento",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-11-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "4344b39d-026a-4e8b-ab23-716abed70746",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-03T09:00:00.000Z"
+    },
+    {
+      "id": "5c419a32-84c0-4afc-a959-81f0402baffb",
+      "amount_minor": 322,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 3",
+      "category_id": "b33b0c34-32d9-4fe5-a1e4-f682ed596289",
+      "expense_date": "2026-11-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-03T09:00:00.000Z"
+    },
+    {
+      "id": "8aea285f-ffbb-40d6-a091-db5f973dcf55",
+      "amount_minor": 1210,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 11",
+      "category_id": "51061b81-b7a4-463f-acf5-8282c0215f07",
+      "expense_date": "2026-11-03",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-03T09:00:00.000Z"
+    },
+    {
+      "id": "8009c8b2-1bc5-4a2b-aa36-0b56a57b1e28",
+      "amount_minor": 433,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 4",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-11-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-04T09:00:00.000Z"
+    },
+    {
+      "id": "8578cf04-3776-409a-a4b7-df8e044474a7",
+      "amount_minor": 12500,
+      "currency": "EUR",
+      "description": "TEST Budget superato del 25 percento",
+      "category_id": "9ac08784-d8c1-4d5b-a369-6aaa6c210090",
+      "expense_date": "2026-11-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "5a60db7c-acd3-423e-a54a-353d5588900b",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-04T09:00:00.000Z"
+    },
+    {
+      "id": "8ba0ae34-49fd-4c3a-af6a-103ed49f0d42",
+      "amount_minor": 2345,
+      "currency": "EUR",
+      "description": "TEST Spesa da lista registrata",
+      "category_id": "afe673c2-dca4-409b-a868-1e9b03b67984",
+      "expense_date": "2026-11-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": "58ef7433-e192-497b-a7a6-e8b243f82796",
+      "list_items": [
+        "Caffè, tè e biscotti \"integrali\"",
+        "Prodotto 002",
+        "Prodotto 003"
+      ],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-04T09:00:00.000Z"
+    },
+    {
+      "id": "c42917a1-562a-4b63-a638-3cc5b1efd49c",
+      "amount_minor": 1321,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 12",
+      "category_id": "80cdb469-813a-4d2c-a0a6-61c6cd24c2e6",
+      "expense_date": "2026-11-04",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-04T09:00:00.000Z"
+    },
+    {
+      "id": "1c2c9e6f-4870-4980-a488-7e81a8fac30e",
+      "amount_minor": 544,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 5",
+      "category_id": "43653641-9c13-4aa7-a58c-db7e5b40d92e",
+      "expense_date": "2026-11-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-05T09:00:00.000Z"
+    },
+    {
+      "id": "e2f22d00-a581-421f-a399-091d747f0002",
+      "amount_minor": 456,
+      "currency": "EUR",
+      "description": "TEST Senza categoria e senza fondo",
+      "category_id": null,
+      "expense_date": "2026-11-05",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-05T09:00:00.000Z"
+    },
+    {
+      "id": "9c0bb395-b51e-40d0-a91c-73be100aba5d",
+      "amount_minor": 655,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 6",
+      "category_id": "f1eafcb5-1177-491f-ad1a-c0325b515455",
+      "expense_date": "2026-11-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-06T09:00:00.000Z"
+    },
+    {
+      "id": "baff706d-f760-455e-a622-1c6a2a1af784",
+      "amount_minor": 789,
+      "currency": "EUR",
+      "description": "TEST Riferimenti a categoria e fondo eliminati",
+      "category_id": "5ade9293-7cd3-4efa-a6db-57a30f4c7503",
+      "expense_date": "2026-11-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "681ce1cb-e11f-44a8-ad9e-11d75e3ae2f3",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-06T09:00:00.000Z"
+    },
+    {
+      "id": "f75b05dc-505f-45fd-a452-e426a05193b4",
+      "amount_minor": 321,
+      "currency": "EUR",
+      "description": "=1+1; TEST formula innocua, \"caffè\" àè",
+      "category_id": "51061b81-b7a4-463f-acf5-8282c0215f07",
+      "expense_date": "2026-11-06",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-06T09:00:00.000Z"
+    },
+    {
+      "id": "a9f25d5c-6f91-4a82-a8f4-d44d10b66599",
+      "amount_minor": 9999999,
+      "currency": "EUR",
+      "description": "TEST Importo massimo 99999,99 euro",
+      "category_id": "129784f2-bd8e-4a0a-accd-772e1d1d1237",
+      "expense_date": "2026-11-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-07T09:00:00.000Z"
+    },
+    {
+      "id": "de6cd7d5-beb2-465c-a603-a775bb3a2834",
+      "amount_minor": 766,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 7",
+      "category_id": "9e7e93cf-c81a-4e0a-a40f-d3be6f209528",
+      "expense_date": "2026-11-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-07T09:00:00.000Z"
+    },
+    {
+      "id": "0074753d-a2f8-4531-a373-9d35371654bd",
+      "amount_minor": 1,
+      "currency": "EUR",
+      "description": "TEST Un centesimo",
+      "category_id": "51061b81-b7a4-463f-acf5-8282c0215f07",
+      "expense_date": "2026-11-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-08T09:00:00.000Z"
+    },
+    {
+      "id": "3830437f-0f9e-4b98-ae8c-0cbf8333d4ab",
+      "amount_minor": 877,
+      "currency": "EUR",
+      "description": "TEST Categoria novembre 8",
+      "category_id": "3ca7f50f-13e1-44e4-a46b-efef4473359a",
+      "expense_date": "2026-11-08",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "927023ce-0f53-430c-a758-2f568ee3c9cf",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-08T09:00:00.000Z"
+    }
+  ]
+}

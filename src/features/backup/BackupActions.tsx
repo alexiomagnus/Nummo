@@ -67,7 +67,7 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
   const merge = preview?.merge;
   const replace = preview?.replace;
   const mergeBlocked = !!merge && merge.conflicts.length > 0;
-  const mergeEmpty = !!merge && merge.addExpenses.length === 0 && merge.addCategories.length === 0 && merge.addFunds.length === 0 && merge.addMovements.length === 0;
+  const mergeEmpty = !!merge && merge.addExpenses.length === 0 && merge.addCategories.length === 0 && merge.addFunds.length === 0 && merge.addMovements.length === 0 && merge.addLists.length === 0;
   const finish = () => { setPreview(null); setStatus(importedMessage); };
   return <Card title={t("Dati")}
     actions={onClose && <IconButton icon={icon(iconShapes.close)} style={styles.close} accessibilityLabel={t("Chiudi")} onPress={onClose} />}>
@@ -96,13 +96,15 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
           <Text variant="bodyLarge">{t("Già presenti e identici: {p0}", { p0: counts(merge.sameExpenses, merge.sameCategories) })}</Text>
           {(hasFunds(preview.data) || merge.addFunds.length + merge.sameFunds > 0) && <Text variant="bodyLarge">
             {t("Fondi nel backup: {p0} · da aggiungere: {p1}", { p0: fundCounts(preview.data.funds.length, preview.data.movements.length), p1: fundCounts(merge.addFunds.length, merge.addMovements.length) })}</Text>}
+          {(preview.data.lists.length > 0 || merge.sameLists > 0) && <Text variant="bodyLarge">
+            {t("Liste nel backup: {p0} · da aggiungere: {p1}", { p0: preview.data.lists.length, p1: merge.addLists.length })}</Text>}
           {merge.missingFundReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese o movimenti fanno riferimento a fondi che non saranno presenti: appariranno senza fondo.", { p0: merge.missingFundReferences })}</Text>}
           {merge.missingCategoryReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese fanno riferimento a categorie che non saranno presenti.", { p0: merge.missingCategoryReferences })}</Text>}
         </View>
       </>}
       {mergeEmpty && !mergeBlocked && <Text variant="bodyMedium" style={hint}>{t("Non c’è nulla da aggiungere: i dati del backup sono già presenti.")}</Text>}
       {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
-        await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements); finish();
+        await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists); finish();
       })}>{t("Unisci ai dati esistenti")}</Button>}
       <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
       <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
@@ -111,7 +113,9 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
       description={replace && t("Verranno eliminate {p0} spese e {p1} categorie attuali diverse dal backup e aggiunte {p2} spese e {p3} categorie. Prima di procedere viene scaricata una copia dei dati attuali (JSON). L’operazione non può essere annullata.",
         { p0: replace.removeExpenseIds.length, p1: replace.removeCategoryIds.length, p2: replace.addExpenses.length, p3: replace.addCategories.length })
         + (replace.removeFundIds.length + replace.removeMovementIds.length + replace.addFunds.length + replace.addMovements.length > 0
-          ? '\n\n' + t("Fondi e movimenti: {p0} eliminati, {p1} aggiunti.", { p0: replace.removeFundIds.length + replace.removeMovementIds.length, p1: replace.addFunds.length + replace.addMovements.length }) : '')}
+          ? '\n\n' + t("Fondi e movimenti: {p0} eliminati, {p1} aggiunti.", { p0: replace.removeFundIds.length + replace.removeMovementIds.length, p1: replace.addFunds.length + replace.addMovements.length }) : '')
+        + (replace.removeListIds.length + replace.addLists.length > 0
+          ? '\n\n' + t("Liste della spesa: {p0} eliminate, {p1} aggiunte.", { p0: replace.removeListIds.length, p1: replace.addLists.length }) : '')}
       onDismiss={() => setConfirmReplace(false)}
       onConfirm={async () => {
         if (!preview || busy) return false;
@@ -119,7 +123,7 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
         try {
           // Safety copy before the first deletion: the current data stays on disk if anything goes wrong.
           download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements);
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />

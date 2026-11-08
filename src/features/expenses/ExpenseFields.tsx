@@ -20,6 +20,8 @@ type Props = {
   categories: readonly Category[];
   dataState?: 'loading' | 'ready' | 'error';
   disabled?: boolean;
+  // Only the desktop new-expense page opts into a shorter, denser form.
+  dense?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
   // Shown as an action when there are no categories yet (opens the Categories section).
@@ -31,7 +33,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
 // Every field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, extra, onCreateCategory, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, onCreateCategory, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -40,7 +42,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
     value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
   })), [categories]);
   return (
-    <View style={styles.layout} aria-busy={dataState === 'loading'}>
+    <View style={[styles.layout, dense && styles.denseLayout]} aria-busy={dataState === 'loading'}>
       <View>
         <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
           <View style={[styles.amount, compact && styles.amountCompact]}>
@@ -58,7 +60,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       </View>
       <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
-          multiline numberOfLines={4} style={styles.description}
+          multiline numberOfLines={dense ? 2 : 4} style={[styles.description, dense && styles.denseDescription]}
           onChangeText={(value) => onChange('description', value)} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {(errors.description || length > 0) && <View style={styles.helperRow}>
@@ -84,13 +86,16 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
         <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
           disabled={disabled} error={errors.categoryId} />
       )}
-      {extra ? <View style={styles.extra}>{extra}</View> : null}
+      {extra ? <View style={[styles.extra, dense && styles.denseExtra]}>{extra}</View> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   layout: { gap: spacing.lg },
+  denseLayout: { gap: spacing.md },
+  denseDescription: { minHeight: 80 },
+  denseExtra: { marginTop: 0 },
   // Layout gap (16) + 8 = the 24 dp used between repeat and promo price.
   extra: { marginTop: spacing.sm },
   firstRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },

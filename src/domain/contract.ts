@@ -1,7 +1,7 @@
 // Shapes exchanged across trust boundaries (browser storage, Firestore, backups) and their
 // runtime checks. TypeScript types alone do not validate untrusted data.
 import { isValidDate, normalizeDescription, type ExpenseData, type ExpenseRequest } from './expense.ts';
-import { expensePolicy, todayInRome } from './policy.ts';
+import { expensePolicy, listPolicy, todayInRome } from './policy.ts';
 import { parsePriceChanges } from './pricing.ts';
 import { isRecurrence } from './recurrence.ts';
 import { parseStatusChanges } from './subscription.ts';
@@ -11,8 +11,17 @@ export type Receipt = Readonly<{ expense_id: string; created_at: string }>;
 
 const requestKeys = [
   'expense_id', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date',
-  'recurrence', 'price_changes', 'status_changes', 'fund_id', 'source', 'schema_version',
+  'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version',
 ] as const;
+
+// A product name of a shopping list: one line, normalised like a description, 1..60 characters.
+export function isListItemName(value: unknown): value is string {
+  return typeof value === 'string' && value !== '' && normalizeDescription(value) === value && Array.from(value).length <= listPolicy.maxItemLength;
+}
+function parseListItems(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  return Array.isArray(value) && value.length <= listPolicy.maxItems && value.every(isListItemName) ? [...value] : null;
+}
 
 // Field comparison that also handles the price schedule (an array of objects).
 export function sameFieldValue(a: unknown, b: unknown): boolean {
@@ -54,14 +63,19 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     && (v.recurrence === null || isRecurrence(v.recurrence))
     // Absent on records saved before funds existed (= no fund).
     && (v.fund_id === undefined || v.fund_id === null || (typeof v.fund_id === 'string' && v.fund_id !== ''))
+    // Absent on records saved before shopping lists existed (= not from a list). Only one-off expenses come from a list.
+    && (v.list_id === undefined || v.list_id === null || (typeof v.list_id === 'string' && v.list_id !== '' && v.recurrence === null))
     && v.source === 'web_app' && v.schema_version === 1;
   const price_changes = parsePriceChanges(v.price_changes);
   const status_changes = parseStatusChanges(v.status_changes);
-  if (!valid || !price_changes || !status_changes || (v.recurrence === null && status_changes.length > 0)) return null;
+  const list_items = parseListItems(v.list_items);
+  if (!valid || !price_changes || !status_changes || !list_items || (v.recurrence === null && status_changes.length > 0)) return null;
+  const list_id = (v.list_id as string | null | undefined) ?? null;
+  if (list_id === null && list_items.length > 0) return null;
   return {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: v.category_id as string | null,
     expense_date: v.expense_date as string, recurrence: v.recurrence as ExpenseData['recurrence'], price_changes, status_changes,
-    fund_id: (v.fund_id as string | null | undefined) ?? null, source: 'web_app', schema_version: 1,
+    fund_id: (v.fund_id as string | null | undefined) ?? null, list_id, list_items, source: 'web_app', schema_version: 1,
   };
 }
 
@@ -78,7 +92,8 @@ export function parseExpenseRecord(value: unknown): ExpenseRecord | null {
 export function parseExpenseRequest(value: unknown, now: Date): ExpenseRequest | null {
   const v = asObject(value);
   if (!v || Object.keys(v).length !== requestKeys.length || !requestKeys.every((key) => key in v)) return null;
-  if (!isUuid(v.expense_id) || (v.category_id !== null && !isUuid(v.category_id)) || (v.fund_id !== null && !isUuid(v.fund_id))) return null;
+  if (!isUuid(v.expense_id) || (v.category_id !== null && !isUuid(v.category_id)) || (v.fund_id !== null && !isUuid(v.fund_id))
+    || (v.list_id !== null && !isUuid(v.list_id))) return null;
   const data = readData(v);
   const today = todayInRome(now);
   if (!data || data.expense_date > today || data.status_changes.some((change) => change.date > today)) return null;

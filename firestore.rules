@@ -55,9 +55,17 @@ service cloud.firestore {
       return !('status_changes' in d) || (d.recurrence != null && d.status_changes is string && d.status_changes.size() <= 167
         && d.status_changes.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)(;[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)){0,7}'));
     }
+    // Shopping list registered by a one-off expense (mirrors src/domain/contract.ts): both fields or neither. The
+    // product names are ONE string joined by '\n' (1..60 characters each, up to 100: checked by the client decoder);
+    // here: size, no empty name (leading, trailing or double '\n') and no tab/CR. Absent on every other expense.
+    function listLink(d) {
+      return ('list_id' in d) == ('list_items' in d)
+        && (!('list_id' in d) || (uuid(d.list_id) && d.recurrence == null && d.list_items is string && d.list_items.size() <= 6100
+          && !d.list_items.matches('(?s)(\\n.*|.*\\n|.*\\n\\n.*|.*[\\r\\t].*)')));
+    }
     function expense(d) {
       return d.keys().hasAll(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
-        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
+        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
         && d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 9999999
         && d.currency == 'EUR' && d.description is string && d.description.size() > 0 && d.description.size() <= 100
         && d.description == d.description.trim() && !d.description.matches('.*[\\t\\r\\n].*')
@@ -69,7 +77,7 @@ service cloud.firestore {
         && priceChanges(d.price_changes) && (d.recurrence != null || d.price_changes.size() == 0) && statusChanges(d)
         && d.source == 'web_app' && d.schema_version == 1
         && d.created_at is timestamp && d.created_at <= request.time
-        && d.updated_at == request.time && d.revision is int;
+        && d.updated_at == request.time && d.revision is int && listLink(d);
     }
     function category(d, uid, id) {
       return d.keys().hasAll(['label', 'icon', 'name_key', 'revision', 'updated_at'])
@@ -113,6 +121,24 @@ service cloud.firestore {
         && d.note is string && d.note.size() <= 100 && d.note == d.note.trim() && !d.note.matches('.*[\\t\\r\\n].*')
         && d.created_at is timestamp && d.created_at <= request.time;
     }
+    // Shopping list (mirrors parseListData in src/domain/shoppingList.ts). Last write wins: no revision. expense_id is set
+    // by the registration transaction together with the expense, and cleared when that expense is deleted.
+    function shoppingList(d) {
+      return d.keys().hasAll(['name', 'category_id', 'total_minor', 'expense_id', 'created_at', 'updated_at'])
+        && d.keys().hasOnly(['name', 'category_id', 'total_minor', 'expense_id', 'created_at', 'updated_at'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 40 && d.name == d.name.trim() && !d.name.matches('.*[\\t\\r\\n].*')
+        && (d.category_id == null || uuid(d.category_id))
+        && (d.total_minor == null || (d.total_minor is int && d.total_minor > 0 && d.total_minor <= 9999999))
+        && (d.expense_id == null || uuid(d.expense_id))
+        && d.created_at is timestamp && d.created_at <= request.time && d.updated_at == request.time;
+    }
+    // Product of a list: one small document, so ticking it is a single write the SDK can queue offline.
+    function listItem(d) {
+      return d.keys().hasAll(['list_id', 'name', 'checked', 'position']) && d.keys().hasOnly(['list_id', 'name', 'checked', 'position'])
+        && uuid(d.list_id)
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 60 && d.name == d.name.trim() && !d.name.matches('.*[\\t\\r\\n].*')
+        && d.checked is bool && d.position is int && d.position >= 0 && d.position <= 999999999;
+    }
     match /config/owner {
       allow get: if request.auth != null && owner(request.auth.uid);
       allow write, list: if false;
@@ -147,6 +173,18 @@ service cloud.firestore {
       allow read: if owner(uid);
       allow create: if owner(uid) && uuid(id) && movement(request.resource.data);
       allow update: if false;
+      allow delete: if owner(uid);
+    }
+    match /users/{uid}/lists/{id} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && uuid(id) && shoppingList(request.resource.data);
+      allow update: if owner(uid) && shoppingList(request.resource.data) && request.resource.data.created_at == resource.data.created_at;
+      allow delete: if owner(uid);
+    }
+    match /users/{uid}/listItems/{id} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && uuid(id) && listItem(request.resource.data);
+      allow update: if owner(uid) && listItem(request.resource.data) && request.resource.data.list_id == resource.data.list_id;
       allow delete: if owner(uid);
     }
     match /users/{uid}/categoryNames/{key} {

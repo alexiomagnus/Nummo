@@ -19,9 +19,15 @@ export function categoryPresentation(source: Breakdown): { data: Breakdown; othe
   return { data: { ...source, series: [...named.slice(0, keep), group, ...(uncategorized ? [uncategorized] : [])] }, others };
 }
 
-export const blockGap = 3;
+// Inset per side: 2 px of surface between neighbouring tiles.
+export const blockGap = 1;
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+// Phones get a taller canvas (narrow width, squarer tiles); wide windows a flatter one that never dominates the page.
+export function blockHeight(width: number): number {
+  return Math.round(width < 600 ? clamp(width * 0.85, 240, 380) : clamp(width * 0.45, 300, 440));
+}
 export function blockLayout(series: readonly Series[], width: number) {
-  const height = Math.round(Math.min(Math.max(width * 0.5, 260), 460));
+  const height = blockHeight(width);
   const tiles = treemap(series.map((item) => ({ item, value: item.total })), width, height);
   return { height, tiles };
 }
@@ -31,6 +37,11 @@ export function blockLayout(series: readonly Series[], width: number) {
 export function blockTileBounds(tile: Rect): Rect {
   const inset = Math.min(blockGap, Math.min(tile.w, tile.h) * 0.1);
   return { x: tile.x + inset, y: tile.y + inset, w: tile.w - 2 * inset, h: tile.h - 2 * inset };
+}
+
+// Corner radius of a tile: the shared tile token, smaller for slivers so the rounding never eats the fill.
+export function blockRadius(bounds: Pick<Rect, 'w' | 'h'>, base: number): number {
+  return Math.max(0, Math.min(base, Math.min(bounds.w, bounds.h) / 4));
 }
 
 export function categoryPercent(part: number, total: number): string {

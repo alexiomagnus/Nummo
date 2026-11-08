@@ -470,3 +470,80 @@ personali, risparmi, contributi, stipendio). Niente metodi di pagamento, carte o
   trattano fondi e movimenti come le altre collezioni.
 - Non implementato: prelievi manuali diversi dalle spese, frequenze di ricarica non mensili, unicità del nome del fondo
   sul server (solo client), verifica server dell'esistenza del fondo referenziato, sincronizzazione del predefinito.
+
+## Liste della spesa (8 novembre 2026)
+
+Su richiesta, la destinazione «Liste» sostituisce «Categorie» nella navigazione; le categorie restano con tutte le
+funzioni in una pagina aperta dalla voce **Categorie del menu account** (sotto Impostazioni) (e dal modulo quando non ne esiste nessuna), con
+«Fatto» che riporta alla sezione di partenza. Non è un secondo livello di navigazione: la pagina non è tra le destinazioni.
+
+- **Modello** (`src/domain/shoppingList.ts`): `lists/{uuid}` con `name`, `category_id` predefinita (facoltativa),
+  `total_minor` scritto a mano (facoltativo, niente prezzi per prodotto), `expense_id` (null = lista attiva) e timestamp;
+  `listItems/{uuid}` in una collezione **piatta** con `list_id`, `name`, `checked`, `position`. Un documento per prodotto
+  rende la spunta una singola scrittura; la collezione piatta permette un solo listener per i conteggi di tutte le liste
+  (nessuna query collection group, Rules semplici). Alternativa scartata: prodotti come array nel documento della lista
+  (Rules senza cicli, conflitti tra spunte concorrenti, transazione per ogni tocco).
+- **Salvataggio automatico, ultima scrittura vince:** liste e prodotti non hanno revisione; creazione, rinomina,
+  spunta, totale ed eliminazione sono scritture semplici accodate dall'SDK (funzionano con segnale debole in negozio e
+  compaiono subito tramite listener), errori del server riportati nella pagina. È un'eccezione documentata alla regola
+  «modifiche in transazione con revisione», limitata a dati senza effetti economici. Cache in memoria: le scritture non
+  ancora inviate si perdono chiudendo la pagina (stesso limite delle altre scritture offline). Duplicazioni ed
+  eliminazioni di una lista con i suoi prodotti sono un unico batch.
+- **Registrazione = una sola spesa, in una transazione server**: crea la spesa singola (UUID scelto all'apertura della
+  conferma) con `list_id` e `list_items` (nomi dei soli prodotti spuntati, copiati) e imposta `expense_id` e
+  `total_minor` sulla lista, eventualmente anche la categoria predefinita. Ripetere dopo un esito incerto ritrova la
+  stessa spesa e non scrive nulla; una lista già registrata (altro dispositivo, doppio tocco) è rifiutata. Richiede
+  connessione e dati sincronizzati. Saldo e budget del fondo derivano dalla spesa come per ogni altra: sulla lista non
+  c'è denaro, quindi niente doppi conteggi.
+- **Spese:** `list_id` + `list_items` facoltativi, entrambi o nessuno, salvati solo se presenti (come `fund_id`), solo
+  per spese singole. In Firestore i nomi sono **una stringa unita da `\n`** (un controllo regex nelle Rules: niente nomi
+  vuoti, tab o CR, lunghezza ≤ 6100); quantità e lunghezze dei nomi sono verificate dal decoder client. Il budget delle
+  espressioni è stato rimisurato con l'emulatore (caso peggiore 8 prezzi + 8 stati + `fund_id` ancora accettato).
+  La modifica della spesa conserva collegamento e prodotti; l'eliminazione, nella stessa transazione, riporta la lista
+  tra quelle attive se puntava ancora a quella spesa. Una lista la cui spesa sparisce per altre vie (sostituzione da
+  backup) è mostrata come «spesa non più presente» e si può riattivare esplicitamente.
+- **Archivio:** una lista registrata è in sola lettura; si consulta, si duplica (prodotti non spuntati, rinumerati) o
+  genera una nuova lista con i prodotti non acquistati, anche direttamente dalla conferma. Le Rules non verificano
+  l'esistenza della spesa o della lista referenziata (come per i fondi).
+- **Backup v4:** `lists` con i prodotti annidati (array, senza `list_id`), spese con `list_id`/`list_items`; lettori
+  v1–v3 invariati (nessuna lista). Unione per ID con lista + prodotti confrontati insieme; importazione di una lista per
+  transazione (lista e prodotti insieme, ripetibile); la sostituzione elimina le liste diverse dal file con tutti i loro
+  prodotti e i prodotti orfani. CSV invariato: una spesa da lista è una riga come le altre.
+
+## Dashboard: riepilogo, classifica e andamento — 8 novembre 2026
+
+La Dashboard legge esclusivamente le occorrenze già espanse dal workspace (inclusi i pagamenti ricorrenti
+maturati). Riepilogo e classifica usano l'aggregazione completa; solo Ciambella e Blocchi mantengono la proiezione
+a otto serie. Classifica senza limite, ordinata per spesa o numero di transazioni: ordinare per percentuale
+equivarrebbe alla spesa. La preferenza storica `bars` viene letta come `ranking`.
+
+Il confronto usa i giorni civili effettivamente trascorsi nella finestra selezionata e gli altrettanti giorni
+immediatamente precedenti. Le date sono esposte: non è un confronto fra mesi di diversa durata. Si calcola
+solo con base positiva e una prima occorrenza antecedente o uguale all'inizio della finestra precedente;
+l'archivio non offre metadati che certifichino la completezza dello storico. Sotto l'1% le variazioni delle
+categorie sono omesse. Nessuna percentuale di crescita da zero.
+
+Andamento SVG giornaliero, con zeri e senza giorni futuri: densità delle etichette adattata alla larghezza,
+date brevi nei periodi corti e mesi/anni nei lunghi; la granularità dei valori resta giornaliera per non
+nascondere i picchi. Puntatore/tocco e frecce/Home/End selezionano il giorno, Invio o il pulsante aprono i
+dettagli. Giorni e categorie condividono un dialogo di sola lettura con ListRow: nessuna nuova lettura
+Firestore, modifica dei filtri della pagina Spese o scrittura. Blocchi senza legenda duplicata, accesso
+alla classifica completa anche per tessere minuscole; Ciambella mantiene totale centrale e dettaglio selezionato.
+
+## Ripristino Barre — 8 novembre 2026
+
+Su richiesta successiva la vista Classifica è sostituita da Barre (`bars`); la preferenza transitoria
+`ranking` viene letta come `bars`, mantenendo periodo, tema e lingua. Le barre usano tutte le categorie
+dell'aggregazione completa, ordinate per importo decrescente, senza menu di ordinamento e senza legenda
+duplicata. Riga con icona, nome, importo, barra sottile arrotondata, quota sul totale, conteggio e variazione
+significativa quando disponibile. Per rendere confrontabili anche molte categorie, la barra maggiore
+occupa tutta la larghezza: la scala relativa al massimo è dichiarata nella vista e nella Guida; la
+percentuale testuale resta sul totale. Clic o attivazione da tastiera apre le occorrenze del periodo.
+Si riutilizzano `IconTile`, `StateLayerPressable`, palette, token e `barTransition` con riduzione movimento
+globale. Riepilogo, Ciambella, Blocchi e andamento restano quelli della fase precedente.
+
+## Andamento senza dettaglio giornaliero — 8 novembre 2026
+
+Su richiesta successiva, rimosso il pulsante «Spese del …» e il collegamento da Invio alle transazioni
+del giorno. TimeChart conserva selezione e lettura esatta di data/importo, senza callback di apertura.
+Il dialogo delle transazioni resta accessibile dalle categorie. Guida aggiornata in entrambe le lingue.

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -13,43 +13,75 @@ import { seriesColor, type ChartColors } from './charts';
 import { seriesLabel } from './seriesLabel';
 
 type Props = { series: readonly Series[]; others: readonly Series[]; categories: readonly Category[]; total: number; colors: ChartColors;
-  active: number | null; onActive: (index: number | null) => void; showSeries?: boolean };
+  active: number | null; onActive: (index: number | null) => void; showSeries?: boolean; onOpen?: (key: string) => void;
+  // Under the treemap: a table of aligned rows, two equal columns on wide windows (read top to bottom), one on phones.
+  compact?: boolean };
 
-export function CategoryLegend({ series, others, categories, total, colors, active, onActive, showSeries = true }: Props) {
+// Two columns only when each keeps room for name, amount and share side by side.
+const twoColumnsFrom = 720;
+// Column-major split: the first column holds the largest categories, the order reads down then across.
+function columnsOf<T>(items: readonly T[], count: number): T[][] {
+  const size = Math.ceil(items.length / count);
+  return Array.from({ length: count }, (_, i) => items.slice(i * size, (i + 1) * size)).filter((column) => column.length > 0);
+}
+
+export function CategoryLegend({ series, others, categories, total, colors, active, onActive, showSeries = true, onOpen, compact = false }: Props) {
   const { t, formatAmount } = useI18n();
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
+  const [width, setWidth] = useState(0);
+  const columns = compact && width >= twoColumnsFrom ? 2 : 1;
   const icons = new Map(categories.map((category) => [category.id, category.icon] as const));
   const iconOf = (item: Series) => icons.get(item.key) ?? null;
   const content = (item: Series) => <>
     <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />
     {/* Icon before the name it belongs to; the slot is kept empty for synthetic series so names stay aligned. */}
     <View style={styles.icon}>{iconOf(item) && <CategoryGlyph icon={iconOf(item)!} size={24} color={theme.colors.onSurfaceVariant} />}</View>
-    <Text variant="bodyMedium" style={styles.label}>{seriesLabel(item, t)}</Text>
-    <View style={styles.numbers}>
+    <Text variant="bodyMedium" numberOfLines={compact ? 1 : undefined} style={compact ? styles.compactLabel : styles.label}>{seriesLabel(item, t)}</Text>
+    {compact ? <>
+      {/* Fixed right-aligned columns: amounts and shares line up from row to row. */}
+      <Text variant="bodyMedium" style={[styles.number, styles.amountColumn]}>{formatAmount(item.total)}</Text>
+      <Text variant="bodyMedium" style={[styles.number, styles.shareColumn, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
+    </> : <View style={styles.numbers}>
       <Text variant="bodyMedium" style={styles.number}>{formatAmount(item.total)}</Text>
       <Text variant="bodyMedium" style={[styles.number, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
-    </View>
-  </>;
-  return <View style={styles.legend}>
-    {showSeries && <View role="list" accessibilityLabel={t('Legenda: categorie, importi e percentuali')}>
-      {series.map((item, index) => <View key={item.key} nativeID={`dashboard-category-${item.key}`} role="listitem">
-        <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={radius.card}
-          onPress={() => onActive(active === index ? null : index)} aria-pressed={active === index}
-          accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
-          style={[styles.row, active === index && { backgroundColor: theme.colors.secondaryContainer }]}>
-          {content(item)}
-        </StateLayerPressable>
-      </View>)}
     </View>}
+  </>;
+  const divider = { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.outlineVariant };
+  // Compact table: equal columns, hairline between rows (none under the last row of a column).
+  const table = <T,>(items: readonly T[], row: (item: T, last: boolean) => ReactNode, label: string, id?: string) => (
+    <View nativeID={id} role="list" accessibilityLabel={label} style={styles.table}>
+      {columnsOf(items, columns).map((column, c) => <View key={c} style={styles.column}>
+        {column.map((item, i) => row(item, i === column.length - 1))}
+      </View>)}
+    </View>
+  );
+  const seriesRow = (item: Series, last: boolean) => {
+    const index = series.indexOf(item);
+    return <View key={item.key} nativeID={`dashboard-category-${item.key}`} role="listitem" style={compact && !last && divider}>
+      <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={compact ? radius.control : radius.card}
+        onPress={() => onActive(active === index ? null : index)} aria-pressed={active === index}
+        accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
+        style={[styles.row, compact && styles.compactRow, active === index && { backgroundColor: theme.colors.secondaryContainer }]}>
+        {content(item)}
+      </StateLayerPressable>
+    </View>;
+  };
+  const otherRow = (item: Series, last: boolean) => <View key={item.key} role="listitem" style={compact && !last && divider}>
+    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={compact ? radius.control : radius.card}
+      accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
+      onPress={() => onOpen?.(item.key)} style={[styles.row, compact && styles.compactRow]}>{content(item)}</StateLayerPressable>
+  </View>;
+  return <View style={styles.legend} onLayout={compact ? (event) => setWidth(event.nativeEvent.layout.width) : undefined}>
+    {showSeries && (compact ? table(series, seriesRow, t('Legenda: categorie, importi e percentuali'))
+      : <View role="list" accessibilityLabel={t('Legenda: categorie, importi e percentuali')}>{series.map((item) => seriesRow(item, false))}</View>)}
     {others.length > 0 && <>
       <Button mode="text" aria-expanded={expanded} aria-controls={expanded ? 'dashboard-other-categories' : undefined}
         onPress={() => { setExpanded(!expanded); onActive(series.findIndex((item) => item.key === otherCategoriesKey)); }}>
         {expanded ? t('Nascondi dettaglio di Altre') : t('Mostra dettaglio di Altre ({p0})', { p0: others.length })}
       </Button>
-      {expanded && <View nativeID="dashboard-other-categories" role="list" accessibilityLabel={t('Categorie incluse in Altre')}>
-        {others.map((item) => <View key={item.key} role="listitem" style={styles.row}>{content(item)}</View>)}
-      </View>}
+      {expanded && (compact ? table(others, otherRow, t('Categorie incluse in Altre'), 'dashboard-other-categories')
+        : <View nativeID="dashboard-other-categories" role="list" accessibilityLabel={t('Categorie incluse in Altre')}>{others.map((item) => otherRow(item, false))}</View>)}
     </>}
   </View>;
 }
@@ -59,6 +91,12 @@ const styles = StyleSheet.create({
   // With wrap, alignItems centres within each line; alignContent centres the lines in the minimum row height.
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.sm,
     minHeight: 48, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
+  table: { flexDirection: 'row', alignItems: 'flex-start', columnGap: spacing.xxl },
+  column: { flex: 1, minWidth: 0 },
+  compactRow: { minHeight: 44, paddingVertical: spacing.xs, flexWrap: 'nowrap', marginVertical: 2 },
+  compactLabel: { flex: 1, minWidth: 0 },
+  amountColumn: { flexShrink: 0, minWidth: 88 },
+  shareColumn: { flexShrink: 0, width: 40 },
   swatch: { width: 14, height: 14, borderRadius: 3 },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   label: { flexGrow: 1, flexBasis: 100, minWidth: 0 },

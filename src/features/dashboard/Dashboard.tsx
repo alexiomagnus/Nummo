@@ -14,12 +14,16 @@ import type { Category } from '../../domain/category';
 import { breakdown, periodLabels, periods, type Occurrence, type Period } from '../../domain/history';
 import { todayInRome } from '../../domain/policy';
 import { BarChart } from './BarChart';
+import { dashboardInsights } from './insights';
+import { TransactionDetails } from './TransactionDetails';
+import { TimeChart } from './TimeChart';
+import { seriesLabel } from './seriesLabel';
+import { otherCategoriesKey } from '../../domain/history';
 import { BlockChart } from './BlockChart';
 import { DonutChart, type ChartColors } from './charts';
 import { categoryPresentation, categoryPercent as percent } from './categoryPresentation';
 import { chartPalette } from '../../theme/chartPalette';
 import { CategoryLegend } from './CategoryLegend';
-import { DailyBreakdown } from './DailyBreakdown';
 import { donutLegendWidth, donutMaxSize } from './donutLayout';
 
 const chartLabels: Record<ChartType, string> = { donut: 'Ciambella', blocks: 'Blocchi', bars: 'Barre' };
@@ -32,23 +36,33 @@ type Props = { occurrences: readonly Occurrence[]; categories: readonly Category
 };
 
 export function Dashboard({ occurrences, categories, preferences, onChangePreferences }: Props) {
-  const { t, formatAmount } = useI18n();
+  const { t, formatAmount, formatDate, locale } = useI18n();
   const theme = useTheme();
   const size = useSizeClass();
   const sideBySide = size !== 'compact';
   const [chartWidth, setChartWidth] = useState(0);
   const chartSideBySide = chartWidth >= donutMaxSize + donutLegendWidth + spacing.lg;
   const { dashboardChart: chart, dashboardPeriod: period } = preferences;
-  const [showDays, setShowDays] = useState(false);
+  const [detail, setDetail] = useState<{ title: string; items: readonly Occurrence[] } | null>(null);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const source = useMemo(() => breakdown(occurrences, categories, period, todayInRome()), [occurrences, categories, period]);
   const { data, others } = useMemo(() => categoryPresentation(source), [source]);
+  const insights = useMemo(() => dashboardInsights(source, occurrences, categories, todayInRome()), [source, occurrences, categories]);
+  // Transactions per series in the period; the «Altre» group counts the categories it contains.
+  const counts = useMemo(() => new Map(insights.rows.map((row) => [row.key, row.count])), [insights.rows]);
+  const countOf = (key: string) => key === otherCategoriesKey ? others.reduce((sum, item) => sum + (counts.get(item.key) ?? 0), 0) : counts.get(key) ?? 0;
+  const openCategory = (key: string) => {
+    const series = data.series.find(item => item.key === key) ?? source.series.find(item => item.key === key);
+    const keys = key === otherCategoriesKey ? new Set(others.map(item => item.key)) : new Set([key]);
+    setDetail({ title: series ? seriesLabel(series, t) : t('Senza categoria'),
+      items: insights.current.filter(item => keys.has(insights.keyOf(item))) });
+  };
   const activeIndex = data.series.findIndex((series) => series.key === activeKey);
   const active = activeIndex < 0 ? null : activeIndex;
   const setActive = (index: number | null) => setActiveKey(index === null ? null : data.series[index]?.key ?? null);
   const colors: ChartColors = {
     series: theme.dark ? palette.dark : palette.light,
-    neutral: theme.dark ? '#898781' : '#a3a29c',
+    neutral: theme.colors.outline,
     surface: theme.colors.background,
     text: theme.colors.onSurface,
     muted: theme.colors.onSurfaceVariant,
@@ -58,12 +72,11 @@ export function Dashboard({ occurrences, categories, preferences, onChangePrefer
   const chartProps = { data, colors, active, onActive: setActive };
   const muted = { color: theme.colors.onSurfaceVariant };
   const legend = <CategoryLegend key={period} series={data.series} others={others} categories={categories} total={data.total}
-    colors={colors} active={active} onActive={setActive} showSeries={chart !== 'bars'} />;
+    colors={colors} active={active} onActive={setActive} onOpen={openCategory} />;
 
   const changePeriod = (value: Period | '') => { if (value) { onChangePreferences({ dashboardPeriod: value }); setActive(null); } };
   const changeChart = (value: ChartType | '') => { if (value) { onChangePreferences({ dashboardChart: value }); } };
 
-  const todayDate = todayInRome();
 
   return (
     <View style={styles.layout}>
@@ -86,43 +99,47 @@ export function Dashboard({ occurrences, categories, preferences, onChangePrefer
         )}
       </View>
 
-      {data.total === 0 ? (
-        <Text variant="bodyMedium" style={muted}>{t("Nessuna spesa in questo periodo.")}</Text>
-      ) : (
-        <>
-          <Card>
-            {chart !== 'donut' ? (
-              <View style={styles.chartRow}>
-                <View style={styles.totalHeading}>
-                  <Text variant="titleLarge" style={styles.total}>{formatAmount(data.total)}</Text>
-                  <Text style={[styles.totalCaption, muted]}>{t('totale')}</Text>
-                </View>
-                {chart === 'bars' ? <BarChart {...chartProps} categories={categories} />
-                  : <BlockChart data={data} colors={colors} active={active} onActive={setActive} percent={percent} />}
-                {(chart === 'blocks' || others.length > 0) && legend}
-              </View>
-            ) : (
-              <View onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
-                style={[styles.chartRow, chartSideBySide && styles.row]}>
-                <View style={styles.chartCol}><DonutChart {...chartProps} /></View>
-                <View style={chartSideBySide ? styles.legendCol : undefined}>{legend}</View>
-              </View>
-            )}
-          </Card>
+      <View style={styles.summary}>
+        <View style={styles.metric}>
+          <Text variant="labelMedium" style={muted}>{t('Totale nel periodo')}</Text>
+          <Text variant="headlineSmall" style={styles.total}>{formatAmount(source.total)}</Text>
+          <Text variant="bodySmall" style={muted}>{formatDate(insights.from)} – {formatDate(insights.to)}</Text>
+        </View>
+        <View style={styles.metric}>
+          <Text variant="labelMedium" style={muted}>{t('Transazioni')}</Text>
+          <Text variant="titleLarge">{source.count}</Text>
+        </View>
+      </View>
+      {insights.change !== null && <View style={{ gap: spacing.xs }}>
+        <Text variant="bodySmall" style={muted}>
+          {t('{p0} rispetto al periodo precedente', { p0: new Intl.NumberFormat(locale, { maximumFractionDigits: 0, signDisplay: 'always' }).format(insights.change) + '%' })}</Text>
+        <Text variant="bodySmall" style={muted}>
+          {formatDate(insights.previousFrom)} – {formatDate(insights.previousTo)}
+        </Text>
+      </View>}
 
-          <View style={styles.days}>
-            <Button mode="text" aria-expanded={showDays} aria-controls={showDays ? 'dashboard-days' : undefined}
-              onPress={() => setShowDays(!showDays)}>
-              {showDays ? t('Nascondi giorni con spese') : t('Mostra giorni con spese')}
-            </Button>
-          </View>
-          {showDays && <View nativeID="dashboard-days">
-            <Card style={styles.detailCard}>
-              <DailyBreakdown key={`${period}:${data.buckets[0]?.key}`} data={source} occurrences={occurrences} categories={categories} today={todayDate} />
-            </Card>
-          </View>}
-        </>
-      )}
+      {source.count === 0 ? <Text variant="bodyMedium" style={muted}>{t('Nessuna spesa in questo periodo.')}</Text> :
+        <Card>
+          {chart === 'bars' ? <BarChart rows={insights.rows} total={source.total} categories={categories} colors={colors} onOpen={openCategory} /> :
+            chart === 'blocks' ? <View style={styles.chartRow}>
+              <BlockChart data={data} colors={colors} active={active} onActive={setActive} percent={percent} countOf={countOf} onOpen={openCategory} />
+              {/* Every category, by amount, identified by colour; «Altre» expands to the categories it groups. */}
+              <CategoryLegend key={period} series={data.series} others={others} categories={categories} total={data.total}
+                colors={colors} active={active} onActive={setActive} onOpen={openCategory} compact />
+            </View> :
+            <View onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
+              style={[styles.chartRow, chartSideBySide && styles.row]}>
+              <View style={styles.chartCol}><View style={!sideBySide ? { width: '100%', maxWidth: 280, alignSelf: 'center' } : undefined}>
+                <DonutChart {...chartProps} />
+              </View>
+              {active !== null && <Button mode="text" onPress={() => openCategory(data.series[active]!.key)}>{t('Mostra transazioni')}</Button>}
+              </View>
+              <View style={chartSideBySide ? styles.legendCol : undefined}>{legend}</View>
+            </View>}
+        </Card>}
+      <Card><TimeChart key={period} days={insights.days} /></Card>
+      {detail && <TransactionDetails {...detail} categories={categories} onClose={() => setDetail(null)} />}
+
     </View>
   );
 }
@@ -132,13 +149,11 @@ const styles = StyleSheet.create({
   // Period on the left, chart type on the right; they wrap on narrow windows.
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.sm },
   select: { flexGrow: 1, flexBasis: 140, minWidth: 0 },
-  totalHeading: { alignSelf: 'flex-start', alignItems: 'flex-start', gap: spacing.xs },
-  totalCaption: { fontSize: 14, lineHeight: 18, textAlign: 'left' },
   total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   chartCol: { flex: 1, minWidth: 0, gap: spacing.sm },
   legendCol: { width: donutLegendWidth, flexShrink: 0 },
-  days: { alignItems: 'flex-start' },
-  detailCard: { width: '100%', gap: spacing.sm },
+  summary: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
+  metric: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
 });

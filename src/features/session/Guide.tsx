@@ -44,14 +44,20 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title={t("Organizzare le categorie")}>
-        {p(t("Nella pagina Categorie crei le tue categorie con un nome e, se vuoi, un'icona. Puoi rinominarle o eliminarle, oppure aggiungere quelle già pronte."))}
+        {p(t("Dal menu dell'account, alla voce Categorie, crei le tue categorie con un nome e, se vuoi, un'icona. Puoi rinominarle o eliminarle, oppure aggiungere quelle già pronte."))}
+      </Section>
+
+      <Section title={t("Liste della spesa")}>
+        {p(t("In Liste prepari le liste della spesa: aggiungi i prodotti e spuntali mentre li metti nel carrello. Puoi rinominare, duplicare ed eliminare le liste; ogni lista mostra quanti prodotti hai già preso. Le modifiche si salvano da sole."))}
+        {p(t("In fondo alla lista scrivi il totale dello scontrino, senza prezzi per i singoli prodotti, e tocca Registra spesa, anche se non hai spuntato tutto. Confermi descrizione, importo, categoria, fondo e data: viene creata una sola spesa con l'elenco dei prodotti acquistati, che incide su saldo e budget del fondo come ogni altra spesa."))}
+        {p(t("La lista registrata viene archiviata: puoi consultarla, duplicarla o creare una nuova lista con i prodotti non acquistati. In Spese queste spese sono segnate con Lista spesa e nei dettagli mostrano i prodotti; se elimini la spesa, la lista torna tra quelle attive."))}
       </Section>
 
       <Section title={t("Consultare le spese")}>
         {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; da qui modifichi o elimini una voce. Pagamenti ricorrenti raccoglie le spese che si ripetono."))}
-        {p(t("La Dashboard mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con grafici a ciambella, a blocchi o a barre e un elenco giornaliero espandibile."))}
-        {p(t("Grafico e periodo scelti vengono ricordati in questo browser. La lista dei giorni con spese è inizialmente nascosta: puoi mostrarla e nasconderla con il pulsante sotto il grafico."))}
-        {p(t("Puoi creare categorie senza un limite di numero. I grafici mostrano solo quelle con spese nel periodo: se sono molte, le meno rilevanti sono riunite in Altre, con dettaglio consultabile. Nei Blocchi, i rettangoli sono proporzionali agli importi e la legenda permette di consultare anche quelli troppo piccoli per contenere testo. Nelle Barre, nomi, importi e percentuali sono accanto a ogni barra."))}
+        {p(t("La Dashboard mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con riepilogo, ciambella, blocchi o barre e andamento giornaliero interattivo."))}
+        {p(t("Grafico e periodo scelti vengono ricordati in questo browser. Il confronto usa un intervallo precedente di pari durata, mostrato con le sue date, quando lo storico lo consente. L’andamento include i giorni senza spese fino a oggi."))}
+        {p(t("Puoi creare categorie senza un limite di numero. I grafici mostrano solo quelle con spese nel periodo: se sono molte, le meno rilevanti sono riunite in Altre, con dettaglio consultabile. Nei Blocchi, i rettangoli sono proporzionali agli importi e la legenda sotto il grafico elenca tutte le categorie; tocca un blocco per vederne importo, quota e transazioni. Le barre sono proporzionali alla categoria con spesa maggiore; le percentuali indicano la quota sul totale. Seleziona una categoria per consultarne le spese."))}
       </Section>
 
       <Section title={t("Spese ricorrenti e abbonamenti")}>

@@ -30,7 +30,7 @@ export function parsePreferences(raw: string | null): Preferences {
     font: oneOf(['google', 'system'], o.font, defaultPreferences.font),
     language: oneOf(['it', 'en'], o.language, defaultPreferences.language),
     iconStyle: oneOf(iconStyles, o.iconStyle, defaultPreferences.iconStyle),
-    dashboardChart: oneOf(chartTypes, o.dashboardChart, defaultPreferences.dashboardChart),
+    dashboardChart: oneOf(chartTypes, o.dashboardChart === 'ranking' ? 'bars' : o.dashboardChart, defaultPreferences.dashboardChart),
     dashboardPeriod: oneOf(periods, o.dashboardPeriod, defaultPreferences.dashboardPeriod),
   };
 }

@@ -14,8 +14,9 @@ Firestore è l'unica fonte di verità. Stato, problemi e verifiche correnti: `HA
 ## Architettura e directory
 
 `index.ts` → `App.tsx` (tema, lingua, sessione) → `AppShell` adattivo → `RemoteWorkspace` con key UID.
-Stato React locale e Context di presentazione, nessun router/store globale. Quattro destinazioni (Spese, Dashboard, Fondi, Categorie) e «Nuova spesa»
-come azione primaria: mai due navigazioni. Smartphone: pillola nel flusso del layout, destinazioni uguali
+Stato React locale e Context di presentazione, nessun router/store globale. Quattro destinazioni (Spese, Dashboard, Fondi, Liste) e «Nuova spesa»
+come azione primaria: mai due navigazioni. Categorie: pagina fuori dalle destinazioni, aperta dal menu account sotto Impostazioni (contatore
+`categoriesRequest` da `App.tsx`) o dal modulo, con ritorno alla sezione di partenza. Smartphone: pillola nel flusso del layout, destinazioni uguali
 con icona/etichetta (sotto 380 dp etichetta `labelSmall`), attiva su `primaryContainer`; pulsante tondo in `primary`, nascosto nella pagina Nuova.
 Desktop: rail/drawer con FAB. Con tastiera virtuale rilevata, la navigazione mobile si nasconde e
 le azioni del modulo tornano nel flusso; `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
@@ -24,18 +25,19 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 
 | Percorso | Responsabilità |
 | --- | --- |
-| `src/domain/` | Funzioni pure senza SDK: validazione, contratti, categorie, ricorrenze, prezzi per numero di rinnovo, stati degli abbonamenti (`subscription.ts`), fondi/ricariche/budget/saldi (`funds.ts`), storico, invio, decoder Firestore e backup/import/CSV. |
+| `src/domain/` | Funzioni pure senza SDK: validazione, contratti, categorie, ricorrenze, prezzi per numero di rinnovo, stati degli abbonamenti (`subscription.ts`), fondi/ricariche/budget/saldi (`funds.ts`), liste della spesa (`shoppingList.ts`), storico, invio, decoder Firestore e backup/import/CSV. |
 | `src/services/` | Configurazione pubblica a build, Auth e cache Firestore, listener, CRUD e transazioni con revisioni, export server-only e import per gruppi; selezione foto account. Con indizio di sessione, `initializeAuth` omette il resolver popup, passato esplicitamente a `signInWithPopup`. |
 | `src/features/session/` | Login Google popup, sessione SDK, logout dopo le scritture pendenti; guida pubblica statica `#guida` con history/link diretto/reload, senza letture o scritture dell'archivio. Il bootstrap Auth è in `App.tsx`. Errori login: solo codici `auth/...` validati, mai messaggi grezzi/token. |
 | `src/features/workspace/` | Composizione sezioni, listener e sincronizzazione; stato smontato al cambio UID. Avvio con attesa dati limitata a 4 s, modulo montato invisibile per conservare misure e bozza; sopra, il segnaposto `StartupWorkspace` (stessa pagina «Nuova spesa», `inert`) finché `onReleased` non lo rimuove. |
 | `src/features/expenses/` | Modulo, validazione, `ExpenseStore`, `useRemoteExpenses`, editor; nessun archivio locale applicativo nel percorso attivo. |
 | `src/features/categories/` | Categorie con ID stabili e nomi unici tramite indice `categoryNames`; cinque predefinite (Alimentari, Intrattenimento, Shopping, Tecnologia, Trasporti) create una volta per account/browser su archivio vuoto confermato dal server (`workspace/seedDefaults.ts`), altrimenti dal pulsante a lista vuota. `CategoryEditor` salva nome/icona insieme. Nessun limite applicativo al numero di categorie; unicità e validazione dei record restano obbligatorie. |
-| `src/features/history/`, `dashboard/` | Occorrenze calcolate fino a oggi, non materializzate nel database; pagina Spese in due viste a segmenti, spese singole (`ExpenseList`) e abbonamenti = serie ricorrenti (`SubscriptionList`, stati e storico pagamenti); tre grafici indipendenti (ciambella SVG DOM, blocchi/treemap puro, barre) su una proiezione comune (`categoryPresentation.ts`) e dettaglio giornaliero dai dati già caricati. |
+| `src/features/history/`, `dashboard/` | Occorrenze calcolate fino a oggi, non materializzate nel database; pagina Spese in due viste a segmenti, spese singole (`ExpenseList`) e abbonamenti = serie ricorrenti (`SubscriptionList`, stati e storico pagamenti); ciambella SVG DOM e blocchi/treemap puro su proiezione comune (`categoryPresentation.ts`), barre complete senza raggruppamenti, ordinate per spesa, lunghezza relativa alla categoria maggiore e quota sul totale esplicita, riepilogo e andamento SVG giornaliero (`insights.ts`). Confronto sui giorni precedenti di pari durata solo con base positiva e storico sufficiente; dettagli categoria in sola lettura sui dati già caricati; andamento con selezione del giorno e lettura di data/importo, senza apertura delle transazioni giornaliere. |
+| `src/features/lists/` | Liste della spesa: panoramica, checklist (`ListsPage`), dialoghi lista/prodotto, conferma `RegisterListDialog` (riusa `ExpenseFields`/`FundField`); `useRemoteLists` con scritture semplici accodate dall'SDK per liste e prodotti e registrazione in transazione server (una spesa + archiviazione). |
 | `src/features/funds/` | Pagina «Fondi e budget» (mese navigabile, effettivo/previsione), editor fondo, entrate/trasferimenti, assegnazione esplicita delle spese senza fondo, `FundField` del modulo spesa; `useRemoteFunds` con mutazioni solo in transazione server. |
 | `src/features/backup/` | CSV solo consultazione; JSON unico ripristino, riepilogo, unione senza sovrascritture o sostituzione con conferma/copia automatica. Nessun import CSV o adapter localStorage. |
 | `src/features/settings/`, `src/i18n/` | Aspetto, IT/EN, stile delle icone di categoria e scelte di dashboard (grafico, periodo) in `nummo.preferences.v1` nel browser; italiano iniziale. `I18nProvider` cambia lingua senza rimontare sessione/bozze; nessuna sincronizzazione Firebase. |
 | `src/components/`, `src/theme/` | Controlli Material 3, shell, icone, notifiche; palette e token condivisi, transizioni CSS in `motion.ts` e apertura dettagli con `Reveal`. `colors.panel`/`panelColor()` per pannelli desktop. |
-| `firestore.rules` | Accesso Google del solo UID in `config/owner` (amministrativo); namespace `users/{uid}` con `expenses/{uuid}` (con `fund_id` facoltativo), `categories/{uuid}`, `categoryNames/{name_key}`, `funds/{uuid}`, `movements/{uuid}` (immutabili); validazione di campi, tipi, importi, date, versioni e indici. |
+| `firestore.rules` | Accesso Google del solo UID in `config/owner` (amministrativo); namespace `users/{uid}` con `expenses/{uuid}` (con `fund_id` facoltativo), `categories/{uuid}`, `categoryNames/{name_key}`, `funds/{uuid}`, `movements/{uuid}` (immutabili), `lists/{uuid}` e `listItems/{uuid}` (senza revisione), spese con `list_id`/`list_items` facoltativi; validazione di campi, tipi, importi, date, versioni e indici. |
 | `scripts/` | Seed solo localhost; policy ambienti, runner hybrid, build cloud e pubblicazione solo Hosting. `measure-startup.mjs`: misura d'avvio in emulazione, procedura in `docs/avvio-prestazioni.md`. Config temporanea `.nummo-hybrid-<PID>.json` rimossa all'arresto: mai versionarla. |
 | `tests/` | Node runner per dominio/tema/i18n/config/strumenti; `emulator/` per SDK/Rules e `integration/` per lifecycle hybrid. |
 | `public/` | Modello HTML, manifest statico neutro, icone e font locali copiati nell'export; nessun service worker. `GlobalStyle` aggiorna theme-color e viewport via VisualViewport, senza reflow durante pinch zoom. Lo script inline `nummo-boot` di `index.html` legge solo valori di presentazione validati (`nummo.boot-theme.v1`, `nummo.session.hint.v1`) e ripiega sui colori statici. |
@@ -139,6 +141,10 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   `backupVersion` + lettore storico in `readers`.
   CSV: intestazioni italiane, `;` come separatore, virgola decimale, BOM, una riga per occorrenza fino a oggi,
   testi con formule neutralizzati dall'apostrofo e sempre quotati.
+- Liste della spesa: liste e prodotti salvati con scritture semplici (ultima vince, nessuna revisione); la registrazione è
+  l'unica scrittura economica, una transazione che crea **una** spesa singola con `list_id`/`list_items` (nomi spuntati,
+  in Firestore una stringa unita da `\n`, nel backup un array) e archivia la lista. Eliminare quella spesa riattiva la
+  lista nella stessa transazione; modificarla conserva collegamento e prodotti. Backup `backupVersion` 4.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
   `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
   contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.

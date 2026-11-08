@@ -97,13 +97,12 @@ export function FundsPage({ remote, expenses, today, canWrite, defaultFundId, on
       </View>
 
       {funds.length > 0 && <View style={styles.tiles}>
-        {tile(t("Disponibile ora"), formatAmount(overview.available), t("Somma dei saldi di tutti i fondi"), overview.available < 0 ? colors.error : undefined)}
-        {tile(overview.kind === 'past' ? t("Saldo a fine mese") : t("Saldo previsto a fine mese"), formatAmount(overview.closing),
-          overview.kind === 'past' ? undefined : t("Con ricariche e rinnovi in arrivo"))}
+        {tile(t("Disponibile ora"), formatAmount(overview.available), undefined, overview.available < 0 ? colors.error : undefined)}
+        {tile(overview.kind === 'past' ? t("Saldo a fine mese") : t("Saldo previsto a fine mese"), formatAmount(overview.closing))}
         {tile(forecast ? t("Spese previste") : t("Speso nel mese"), formatAmount(forecast ? overview.forecastSpent : overview.spent),
-          !forecast && overview.forecastSpent > 0 ? t("Altri {p0} in rinnovi previsti", { p0: formatAmount(overview.forecastSpent) }) : t("Trasferimenti esclusi"))}
+          !forecast && overview.forecastSpent > 0 ? undefined : t("Trasferimenti esclusi"))}
         {tile(forecast ? t("Entrate previste") : t("Entrate del mese"), formatAmount(forecast ? overview.forecastIncome : overview.income),
-          !forecast && overview.forecastIncome > 0 ? t("Altri {p0} in ricariche previste", { p0: formatAmount(overview.forecastIncome) }) : t("Ricariche ed entrate, trasferimenti esclusi"))}
+          !forecast && overview.forecastIncome > 0 ? t("Altri {p0} in ricariche previste", { p0: formatAmount(overview.forecastIncome) }) : undefined)}
       </View>}
       {overview.budget !== null && <View style={[styles.budget, { backgroundColor: colors.elevation.level1 }]}>
         <View style={styles.budgetHeader}>
@@ -243,10 +242,8 @@ function FundCard({ item, funds, open, isDefault, canWrite, inUse, onToggle, onE
           <Text variant="labelSmall" style={muted}>{t("saldo attuale")}</Text>
         </View>
       </View>
-      {item.budget !== null
-        ? <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })} spent={forecast ? item.forecastSpent : item.spent} budget={item.budget} state={item.state} forecast={forecast} />
-        : <Text variant="bodySmall" style={muted}>{forecast ? t("Spese previste nel mese: {p0} · nessun budget", { p0: formatAmount(item.forecastSpent) })
-          : t("Speso nel mese: {p0} · nessun budget", { p0: formatAmount(item.spent) })}</Text>}
+      {item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
+        spent={forecast ? item.forecastSpent : item.spent} budget={item.budget} state={item.state} forecast={forecast} />}
       <View style={styles.cardActions}>
         <Button mode="text" aria-expanded={open} aria-controls={open ? detailsId : undefined} onPress={onToggle}
           icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>

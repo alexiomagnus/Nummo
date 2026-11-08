@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { makeBackup, parseBackup, planImport } from '../src/domain/backup.ts';
+import { backupVersion, makeBackup, parseBackup, planImport } from '../src/domain/backup.ts';
 import type { ExpenseRecord } from '../src/domain/contract.ts';
 import { applyPriceEdit, dataOf, newDraft, validateDraft } from '../src/domain/expense.ts';
 import {
@@ -21,7 +21,7 @@ const movement = (n: number, patch: Partial<Movement>): Movement => ({
 });
 const expense = (n: number, patch: Partial<ExpenseRecord> = {}): ExpenseRecord => ({
   id: uuid(900 + n), amount_minor: 1000, currency: 'EUR', description: `Spesa ${n}`, category_id: null, expense_date: '2026-02-05',
-  recurrence: null, price_changes: [], status_changes: [], fund_id: uuid(1), source: 'web_app', schema_version: 1,
+  recurrence: null, price_changes: [], status_changes: [], fund_id: uuid(1), list_id: null, list_items: [], source: 'web_app', schema_version: 1,
   created_at: '2026-02-05T10:00:00.000Z', ...patch,
 });
 const university = fund(1, { name: 'Vita universitaria', initial_minor: 50000, recharges: [{ month: '2026-01', amount_minor: 30000, day: 1, active: true }],
@@ -223,7 +223,7 @@ test('backup v3: fondi, movimenti e fund_id ricostruiti; v2 letto senza fondi; c
   const movements = [movement(1, { note: 'Regalo' }), movement(2, { kind: 'transfer', from_fund_id: savings.id, to_fund_id: university.id })];
   const expenses = [expense(1), expense(2, { fund_id: null })];
   const file = JSON.parse(makeBackup({ expenses, categories: [], funds: [savings, university], movements }));
-  assert.equal(file.version, 3);
+  assert.equal(file.version, backupVersion);
   assert.deepEqual(Object.keys(file.funds[0]).sort(), ['archived', 'budget_exceptions', 'budgets', 'color', 'created_at', 'icon', 'id', 'initial_minor', 'name', 'recharges', 'start_date']);
   const restored = parseBackup(file);
   const byId = <T extends { id: string }>(items: readonly T[]) => [...items].sort((a, b) => a.id.localeCompare(b.id));

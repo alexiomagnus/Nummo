@@ -14,3 +14,11 @@ export function todayInRome(now = new Date()): string {
   const part = (type: string) => parts.find((item) => item.type === type)!.value;
   return `${part('year')}-${part('month')}-${part('day')}`;
 }
+
+// Shopping lists (mirrored by firestore.rules). Item names are joined by '\n' in the expense that registers a list.
+export const listPolicy = {
+  maxNameLength: 40,
+  maxItemLength: 60,
+  maxItems: 100,
+  maxPosition: 999_999_999,
+} as const;
