@@ -158,7 +158,6 @@ type DetailProps = {
 function ListDetail({ list, items, state, expense, remote, categories, fundChoices, defaultFundId, canRegister, notify, onCreateCategory, onBack, onEdit, onOpen }: DetailProps) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
-  const compact = useSizeClass() === 'compact';
   const editable = state === 'active';
   const { done, total } = progress(items);
   const remaining = total - done;
@@ -265,15 +264,16 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
           ))}
         </View>}
 
-      {editable && <View style={[styles.checkout, { backgroundColor: colors.elevation.level1 }]}>
-        <View>
-          <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Totale spesa")} value={totalText} inputMode="decimal"
-            placeholder="0,00" error={Boolean(totalError)} left={leadingIcon(iconShapes.euro)} accessibilityLabel={t("Totale spesa in euro, facoltativo")}
-            onChangeText={(value) => { setTotalText(value); setTotalError(null); }} onBlur={saveTotal} onSubmitEditing={saveTotal} />
-          {totalError && <HelperText type="error" accessibilityRole="alert">{t(totalError)}</HelperText>}
-        </View>
-        <View style={[styles.checkoutActions, compact && styles.checkoutCompact]}>
-          <Button mode="contained" disabled={!canRegister} onPress={() => { saveTotal(); remote.clearError(); setRegistering(true); }}
+      {editable && <View style={styles.checkout}>
+        <View style={styles.addRow}>
+          <View style={styles.grow}>
+            <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Totale spesa")} value={totalText} inputMode="decimal"
+              placeholder="0,00" error={Boolean(totalError)} left={leadingIcon(iconShapes.euro)} accessibilityLabel={t("Totale spesa in euro, facoltativo")}
+              onChangeText={(value) => { setTotalText(value); setTotalError(null); }} onBlur={saveTotal} onSubmitEditing={saveTotal} />
+            {totalError && <HelperText type="error" accessibilityRole="alert">{t(totalError)}</HelperText>}
+          </View>
+          <Button mode="contained" disabled={!canRegister} style={styles.addButton} contentStyle={styles.addContent}
+            onPress={() => { saveTotal(); remote.clearError(); setRegistering(true); }}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.check} size={size} color={color} />}>{t("Registra spesa")}</Button>
         </View>
         {!canRegister && <Text variant="bodySmall" style={muted}>{t("La registrazione richiede la connessione e dati sincronizzati.")}</Text>}
@@ -326,7 +326,5 @@ const styles = StyleSheet.create({
   box: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   dim: { opacity: 0.6 },
   iconButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
-  checkout: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
-  checkoutActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  checkoutCompact: { flexDirection: 'column', alignItems: 'stretch' },
+  checkout: { gap: spacing.sm },
 });
