@@ -18,7 +18,7 @@ type Props = Omit<PressableProps, 'style' | 'children'> & {
 // Pressable with hover/pressed state layers; keyboard focus is drawn by the global :focus-visible ring.
 export function StateLayerPressable({ layerColor, radius = 0, bleed = 0, style, children, disabled, ...rest }: Props) {
   return (
-    <Pressable {...rest} disabled={disabled}
+    <Pressable {...rest} {...{ dataSet: { focusRing: 'control' } }} disabled={disabled}
       style={(state) => [{ overflow: bleed ? 'visible' : 'hidden', borderRadius: radius, opacity: disabled ? 0.38 : 1 }, fillTransition, typeof style === 'function' ? style(state as State) : style]}>
       {(raw) => {
         const state = raw as State;

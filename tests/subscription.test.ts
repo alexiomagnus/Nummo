@@ -123,14 +123,14 @@ test('contratto e Firestore: campo assente = attivo, forma compatta, valori inva
   assert.deepEqual(parseExpenseRecord(record)?.status_changes, []);
   assert.equal(parseExpenseRecord({ ...record, recurrence: null, status_changes: changes }), null);
   const { id: _, created_at: __, ...data } = record;
-  const request = { ...data, expense_id: '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13', status_changes: changes };
+  const request = { ...data, expense_id: '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13', status_changes: changes, fund_id: null };
   assert.ok(parseExpenseRequest(request, new Date('2026-05-01T12:00:00Z')));
   assert.equal(parseExpenseRequest(request, new Date('2026-04-19T12:00:00Z')), null);
 });
 
 test('modifica della serie: il modulo conserva gli stati; diventando singola li azzera', () => {
   const series = entry({ status_changes: [paused('2026-02-10')] });
-  const data = { ...series, currency: 'EUR', source: 'web_app', schema_version: 1, price_changes: [], status_changes: [] } as unknown as ExpenseData;
+  const data = { ...series, currency: 'EUR', source: 'web_app', schema_version: 1, price_changes: [], status_changes: [], fund_id: null } as unknown as ExpenseData;
   const kept = applyPriceEdit(series, { ...data, description: 'Nuovo nome' }, { shownAmount: 999, scope: 'future', changes: [] }, '2026-03-01');
   assert.deepEqual(kept.ok && kept.data.status_changes, [paused('2026-02-10')]);
   const oneOff = applyPriceEdit(series, { ...data, recurrence: null }, { shownAmount: 999, scope: 'future', changes: [] }, '2026-03-01');
@@ -139,10 +139,10 @@ test('modifica della serie: il modulo conserva gli stati; diventando singola li 
 
 test('backup v2 e CSV: stati conservati, v1 letto come attivo, identici saltati, CSV solo pagamenti effettivi', () => {
   const record = { id: '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13', amount_minor: 999, currency: 'EUR' as const, description: 'Streaming', category_id: null,
-    expense_date: '2026-01-05', recurrence: 'monthly' as const, price_changes: [], status_changes: [paused('2026-02-10')],
+    expense_date: '2026-01-05', recurrence: 'monthly' as const, price_changes: [], status_changes: [paused('2026-02-10')], fund_id: null,
     source: 'web_app' as const, schema_version: 1 as const, created_at: '2026-01-05T10:00:00.000Z' };
   const file = JSON.parse(makeBackup({ expenses: [record], categories: [] }));
-  assert.equal(file.version, 2);
+  assert.equal(file.version, 3);
   const restored = parseBackup(file);
   assert.deepEqual(restored.expenses[0]!.status_changes, record.status_changes);
   assert.equal(planImport(restored, { expenses: [record], categories: [] }, 'merge').sameExpenses, 1);

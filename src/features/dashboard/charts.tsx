@@ -35,7 +35,10 @@ function useWidth(): [number, (event: LayoutChangeEvent) => void] {
 export function DonutChart({ data, colors, active, onActive }: ChartProps) {
   const { t, formatAmount } = useI18n();
   const [width, onLayout] = useWidth();
-  const focus = active === null ? null : data.series[active];
+  // Hover is only a preview. A clicked/tapped selection belongs to the dashboard and survives pointer exit.
+  const [hovered, setHovered] = useState<number | null>(null);
+  const highlighted = active ?? hovered;
+  const focus = highlighted === null ? null : data.series[highlighted];
   const amount = formatAmount(focus ? focus.total : data.total);
   const share = focus ? (focus.total / data.total) * 100 : 0;
   const caption = focus ? `${share > 0 && share < 1 ? '<1' : Math.round(share)}% · ${seriesLabel(focus, t)}` : t("totale");
@@ -60,11 +63,12 @@ export function DonutChart({ data, colors, active, onActive }: ChartProps) {
       {size > 0 && (
         <View style={{ position: 'relative', width: size, height: size }}>
         <svg width={size} height={size} role="img" aria-label={t("Grafico ad anello delle spese per categoria: {p0}, {p1}", { p0: amount, p1: caption })}
-          onMouseLeave={() => onActive(null)}>
+          onPointerLeave={() => setHovered(null)}>
           {segments.map((segment, index) => (
             <path key={index} d={segment.d} fill={segment.color} stroke={colors.surface} strokeWidth={2}
-              opacity={active === null || active === index ? 1 : 0.35} style={{ cursor: 'pointer', transition: 'opacity 150ms cubic-bezier(0.2, 0, 0, 1)' }}
-              onMouseEnter={() => onActive(index)} onClick={() => onActive(active === index ? null : index)} />
+              opacity={highlighted === null || highlighted === index ? 1 : 0.35} style={{ cursor: 'pointer', transition: 'opacity 150ms cubic-bezier(0.2, 0, 0, 1)' }}
+              onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(index); }}
+              onClick={() => { setHovered(null); onActive(active === index ? null : index); }} />
           ))}
         </svg>
         {centerSide >= 64 && <View pointerEvents="none" aria-hidden style={[styles.caption, {

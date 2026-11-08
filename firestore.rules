@@ -57,11 +57,13 @@ service cloud.firestore {
     }
     function expense(d) {
       return d.keys().hasAll(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
-        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
+        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
         && d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 9999999
         && d.currency == 'EUR' && d.description is string && d.description.size() > 0 && d.description.size() <= 100
         && d.description == d.description.trim() && !d.description.matches('.*[\\t\\r\\n].*')
         && (d.category_id == null || uuid(d.category_id))
+        // Optional like status_changes: absent = no fund, so records written under older Rules stay valid.
+        && (!('fund_id' in d) || uuid(d.fund_id))
         && d.expense_date is string && validDate(d.expense_date)
         && d.recurrence in [null, 'weekly', 'monthly', 'yearly']
         && priceChanges(d.price_changes) && (d.recurrence != null || d.price_changes.size() == 0) && statusChanges(d)
@@ -74,9 +76,42 @@ service cloud.firestore {
         && d.keys().hasOnly(['label', 'icon', 'name_key', 'revision', 'updated_at'])
         && d.label is string && d.label.size() > 0 && d.label.size() <= 40 && d.label == d.label.trim()
         && !d.label.matches('.*[\\t\\r\\n].*')
-        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'star', 'gamepad', 'bag', 'box', 'house', 'bulb', 'car', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'train', 'bus', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'graduation', 'sofa', 'beer', 'cake', 'laptop', 'piggy', 'cross', 'tree', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
+        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'star', 'gamepad', 'bag', 'box', 'house', 'bulb', 'car', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'wallet', 'bank', 'cash', 'safe', 'growth', 'train', 'bus', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'graduation', 'sofa', 'beer', 'cake', 'laptop', 'piggy', 'cross', 'tree', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
         && d.name_key == nameKey(d.label) && d.revision is int && d.updated_at == request.time
         && getAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(d.name_key)).data.category_id == id;
+    }
+    // Fund (mirrors parseFundData in src/domain/funds.ts). Schedules are compact strings, one regex each:
+    // recharges "YYYY-MM:amount:day:a|p;…", budgets and exceptions "YYYY-MM:amount;…", 0..24 entries, possibly empty.
+    // Order, month ranges and "not before the start" are checked by the client decoder.
+    function fund(d) {
+      return d.keys().hasAll(['name', 'icon', 'color', 'initial_minor', 'start_date', 'recharges', 'budgets', 'budget_exceptions', 'archived', 'created_at', 'updated_at', 'revision'])
+        && d.keys().hasOnly(['name', 'icon', 'color', 'initial_minor', 'start_date', 'recharges', 'budgets', 'budget_exceptions', 'archived', 'created_at', 'updated_at', 'revision'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 40 && d.name == d.name.trim() && !d.name.matches('.*[\\t\\r\\n].*')
+        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'star', 'gamepad', 'bag', 'box', 'house', 'bulb', 'car', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'wallet', 'bank', 'cash', 'safe', 'growth', 'train', 'bus', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'graduation', 'sofa', 'beer', 'cake', 'laptop', 'piggy', 'cross', 'tree', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
+        && d.color is int && d.color >= 0 && d.color <= 11
+        && d.initial_minor is int && d.initial_minor >= 0 && d.initial_minor <= 999999999
+        && d.start_date is string && validDate(d.start_date)
+        && d.recharges is string && d.recharges.size() <= 600
+        && d.recharges.matches('([0-9]{4}-[0-9]{2}:[0-9]{1,7}:[0-9]{1,2}:[ap](;[0-9]{4}-[0-9]{2}:[0-9]{1,7}:[0-9]{1,2}:[ap]){0,23})?')
+        && d.budgets is string && d.budgets.size() <= 400
+        && d.budgets.matches('([0-9]{4}-[0-9]{2}:[0-9]{1,7}(;[0-9]{4}-[0-9]{2}:[0-9]{1,7}){0,23})?')
+        && d.budget_exceptions is string && d.budget_exceptions.size() <= 400
+        && d.budget_exceptions.matches('([0-9]{4}-[0-9]{2}:[0-9]{1,7}(;[0-9]{4}-[0-9]{2}:[0-9]{1,7}){0,23})?')
+        && d.archived is bool
+        && d.created_at is timestamp && d.created_at <= request.time
+        && d.updated_at == request.time && d.revision is int;
+    }
+    // Income (money added to to_fund_id) or transfer (from_fund_id → to_fund_id, one atomic document). Immutable.
+    function movement(d) {
+      return d.keys().hasAll(['kind', 'amount_minor', 'date', 'to_fund_id', 'from_fund_id', 'note', 'created_at'])
+        && d.keys().hasOnly(['kind', 'amount_minor', 'date', 'to_fund_id', 'from_fund_id', 'note', 'created_at'])
+        && d.kind in ['income', 'transfer']
+        && d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 999999999
+        && d.date is string && validDate(d.date)
+        && uuid(d.to_fund_id)
+        && (d.kind == 'income' ? d.from_fund_id == null : uuid(d.from_fund_id) && d.from_fund_id != d.to_fund_id)
+        && d.note is string && d.note.size() <= 100 && d.note == d.note.trim() && !d.note.matches('.*[\\t\\r\\n].*')
+        && d.created_at is timestamp && d.created_at <= request.time;
     }
     match /config/owner {
       allow get: if request.auth != null && owner(request.auth.uid);
@@ -98,6 +133,21 @@ service cloud.firestore {
         && (request.resource.data.name_key == resource.data.name_key
           || !existsAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(resource.data.name_key)));
       allow delete: if owner(uid) && !existsAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(resource.data.name_key));
+    }
+    match /users/{uid}/funds/{id} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && uuid(id) && fund(request.resource.data) && request.resource.data.revision == 1;
+      allow update: if owner(uid) && fund(request.resource.data)
+        && request.resource.data.created_at == resource.data.created_at
+        && request.resource.data.start_date == resource.data.start_date
+        && request.resource.data.revision == resource.data.revision + 1;
+      allow delete: if owner(uid);
+    }
+    match /users/{uid}/movements/{id} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && uuid(id) && movement(request.resource.data);
+      allow update: if false;
+      allow delete: if owner(uid);
     }
     match /users/{uid}/categoryNames/{key} {
       allow read: if owner(uid);

@@ -41,7 +41,7 @@ export function BarChart({ data, colors, active, onActive, categories }: ChartPr
 
 const styles = StyleSheet.create({
   bars: { gap: spacing.sm },
-  barRow: { padding: spacing.sm, gap: spacing.md, minHeight: 88 },
+  barRow: { padding: spacing.sm, gap: spacing.md, minHeight: 88, justifyContent: 'center' },
   barSummary: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm },
   category: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexGrow: 1, flexBasis: 120, minWidth: 0 },
   barLabel: { flex: 1, minWidth: 0 },

@@ -56,11 +56,12 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
 
 const styles = StyleSheet.create({
   legend: { gap: spacing.sm, minWidth: 0 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm,
+  // With wrap, alignItems centres within each line; alignContent centres the lines in the minimum row height.
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.sm,
     minHeight: 48, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
   swatch: { width: 14, height: 14, borderRadius: 3 },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   label: { flexGrow: 1, flexBasis: 100, minWidth: 0 },
-  numbers: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginLeft: 'auto' },
+  numbers: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.md, marginLeft: 'auto' },
   number: { fontVariant: ['tabular-nums'], textAlign: 'right' },
 });

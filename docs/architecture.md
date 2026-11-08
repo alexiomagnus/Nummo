@@ -428,3 +428,45 @@ Un abbonamento è una spesa ricorrente: nessuna nuova collezione né duplicazion
   azzera, come il piano prezzi.
 - Non implementato: data di effetto scelta dall'utente (solo oggi), più di 8 cambi di stato per serie (oltre si crea
   una nuova serie), nuovo ciclo dalla data di riattivazione.
+
+## Fondi e budget (8 novembre 2026)
+
+Su richiesta, una quarta destinazione «Fondi» (pagina «Fondi e budget») gestisce disponibilità separate (soldi
+personali, risparmi, contributi, stipendio). Niente metodi di pagamento, carte o conti.
+
+- **Quattro grandezze distinte** (`src/domain/funds.ts`): *saldo* = iniziale + ricariche maturate + entrate +
+  trasferimenti ricevuti − inviati − occorrenze pagate delle spese del fondo; *ricarica* = denaro aggiunto ogni mese;
+  *budget* = limite del mese, che non aggiunge né toglie denaro e non blocca le spese; *speso* = occorrenze pagate del
+  mese. Il budget non speso resta nel saldo e non si somma al mese dopo.
+- **Ricariche calcolate, non materializzate**, come le occorrenze delle spese ricorrenti: al massimo una per mese, nel
+  giorno scelto limitato alla fine del mese (31 → 30/28), mai prima di `start_date`, contata solo quando la data è ≤ oggi.
+  Essendo una funzione pura del piano salvato, non può duplicarsi per riavvii, più dispositivi o sincronizzazioni, una
+  ricarica prevista non risulta mai accreditata e i mesi senza accesso sono comunque contati. Alternativa scartata:
+  documenti di ricarica scritti dal client (scrittura automatica in effect, idempotenza da reimplementare, conflitti tra
+  dispositivi), contraria alle convenzioni del progetto.
+- **Modifiche senza riscrivere il passato:** il piano `recharges` è una cronologia `{ month, amount_minor, day, active }`.
+  Se la ricarica del mese corrente è già maturata la modifica vale dal mese successivo, altrimenti già da questo mese;
+  le voci precedenti restano. Disattivare = voce `active: false` (sospensione). Il budget ricorrente `budgets` cambia dal
+  mese corrente; le eccezioni `budget_exceptions` valgono per un mese corrente o futuro (0 = nessun budget). Massimo 24
+  voci per piano. `start_date` non cambia dopo la creazione (Rules); il saldo iniziale è correggibile e ricalcola tutto.
+- **Movimenti** `movements/{uuid}`: entrata (`to_fund_id`) o trasferimento (`from_fund_id` → `to_fund_id`) in **un solo
+  documento**, quindi atomico; immutabili (si possono eliminare). Creati in transazione con ID scelto all'apertura del
+  dialogo: ripetere la stessa richiesta non crea un secondo movimento. I trasferimenti sono esclusi da entrate e spese
+  complessive. Date non future.
+- **Spese:** `fund_id` facoltativo, salvato solo se presente (come `status_changes`), quindi le spese esistenti e quelle
+  senza fondo hanno la stessa forma accettata dalle Rules precedenti. Il fondo è una proprietà della serie: cambiarlo
+  sposta anche i pagamenti già effettuati (avviso nell'editor). Misurato con l'emulatore il caso peggiore 8 prezzi +
+  8 stati + `fund_id`: accettato.
+- **Migrazione:** nessuna modifica automatica. Le spese senza fondo (o con fondo inesistente) non incidono su alcun
+  saldo, restano nello «speso» complessivo e sono offerte per l'assegnazione esplicita a un fondo (transazioni a gruppi
+  di 100 sulle revisioni viste). Un fondo con movimenti o spese collegate si archiva (resta nel totale disponibile e
+  nello storico, esce dalle scelte); eliminazione solo se nulla vi fa riferimento, verificata sui dati caricati.
+- **Mesi navigabili:** dal primo mese di un fondo a 12 mesi avanti. Mesi passati effettivi; mese corrente effettivo più
+  rinnovi e ricariche ancora attesi; mesi futuri come previsione (ricariche del piano e rinnovi delle serie attive).
+- **Fondo predefinito** del modulo per account e browser (`nummo.defaultFund.v1.<uid>`), non sincronizzato.
+- **Firestore:** `funds/{uuid}` con piani come stringhe compatte validate da una regex ciascuna e decodificate/validate
+  dal client; aggiornamenti in transazione sulla revisione. **Backup `version: 3`** con `funds`, `movements` e
+  `fund_id` per spesa; v1/v2 letti senza fondi. Il CSV aggiunge la colonna finale «Fondo». Unione/sostituzione
+  trattano fondi e movimenti come le altre collezioni.
+- Non implementato: prelievi manuali diversi dalle spese, frequenze di ricarica non mensili, unicità del nome del fondo
+  sul server (solo client), verifica server dell'esistenza del fondo referenziato, sincronizzazione del predefinito.

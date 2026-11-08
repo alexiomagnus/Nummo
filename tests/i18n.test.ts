@@ -95,7 +95,7 @@ test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', (
 });
 
 test('abbonamenti: stati e azioni tradotti, nomi delle serie mai tradotti', () => {
-  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Abbonamenti', 'Subscriptions'],
+  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Pagamenti ricorrenti', 'Recurring payments'],
     ['Metti in pausa', 'Pause'], ['Riattiva', 'Resume'], ['Annulla abbonamento', 'Cancel subscription']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
@@ -109,4 +109,11 @@ test('dashboard: mostra e nascondi giorni tradotti in entrambe le lingue', () =>
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
   }
+});
+
+test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
+  assert.equal(translate('it', 'Impossibile unire il backup'), 'Impossibile unire il backup');
+  assert.equal(translate('en', 'Impossibile unire il backup'), 'Cannot merge backup');
+  assert.equal(translate('it', '{p0} elementi sono diversi dai dati salvati.', { p0: 2 }), '2 elementi sono diversi dai dati salvati.');
+  assert.equal(translate('en', '{p0} elementi sono diversi dai dati salvati.', { p0: 2 }), '2 items differ from your saved data.');
 });

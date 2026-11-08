@@ -24,7 +24,8 @@ const headlineFormat = (locale: string) => new Intl.DateTimeFormat(locale, { wee
 
 // Outlined read-only field showing the chosen date («Oggi», «Ieri» or the date); opens the modal date picker.
 // An empty `value` means today (resolved at save time), as in the draft.
-export function DateField({ value, error, disabled, onChange }: { value: string; error?: boolean; disabled?: boolean; onChange: (date: string) => void }) {
+// `name` overrides the accessible name of the field (default: the expense date).
+export function DateField({ value, error, disabled, name, onChange }: { value: string; error?: boolean; disabled?: boolean; name?: string; onChange: (date: string) => void }) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const today = todayInRome();
@@ -32,7 +33,7 @@ export function DateField({ value, error, disabled, onChange }: { value: string;
   return (
     <>
       <Pressable style={styles.field} {...{ dataSet: { focusRing: 'field' } }} disabled={disabled} onPress={() => setOpen(true)} accessibilityRole="button" aria-haspopup="dialog" aria-expanded={open}
-        aria-disabled={disabled} aria-invalid={Boolean(error)} accessibilityLabel={t("Data della spesa: {p0}. Cambia data", { p0: shown })}>
+        aria-disabled={disabled} aria-invalid={Boolean(error)} accessibilityLabel={name ? t("{p0}: {p1}. Cambia data", { p0: name, p1: shown }) : t("Data della spesa: {p0}. Cambia data", { p0: shown })}>
         {/* Keep the decorative input and calendar icon outside hit-testing and keyboard focus. */}
         <div inert>
           <TextInput outlineStyle={inputOutline} label={t("Data")} value={shown} mode="outlined" readOnly focusable={false} error={error}

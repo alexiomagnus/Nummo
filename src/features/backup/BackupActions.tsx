@@ -39,7 +39,7 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
   };
   const exportCsvFile = () => run(async () => {
     const data = await backend.exportSnapshot();
-    download('nummo-transazioni.csv', exportCsv(data.expenses, data.categories), 'text/csv;charset=utf-8');
+    download('nummo-transazioni.csv', exportCsv(data.expenses, data.categories, undefined, data.funds), 'text/csv;charset=utf-8');
     notify("CSV delle transazioni esportato.");
   });
   const exportBackup = () => run(async () => {
@@ -61,11 +61,13 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
   };
   const icon = (shape: string) => ({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape} size={size} color={color} />;
   const counts = (expenses: number, categories: number) => t("{p0} spese · {p1} categorie", { p0: expenses, p1: categories });
+  const fundCounts = (funds: number, movements: number) => t("{p0} fondi · {p1} movimenti", { p0: funds, p1: movements });
+  const hasFunds = (data: ImportData) => data.funds.length + data.movements.length > 0;
   const hint = { color: theme.colors.onSurfaceVariant };
   const merge = preview?.merge;
   const replace = preview?.replace;
   const mergeBlocked = !!merge && merge.conflicts.length > 0;
-  const mergeEmpty = !!merge && merge.addExpenses.length === 0 && merge.addCategories.length === 0;
+  const mergeEmpty = !!merge && merge.addExpenses.length === 0 && merge.addCategories.length === 0 && merge.addFunds.length === 0 && merge.addMovements.length === 0;
   const finish = () => { setPreview(null); setStatus(importedMessage); };
   return <Card title={t("Dati")}
     actions={onClose && <IconButton icon={icon(iconShapes.close)} style={styles.close} accessibilityLabel={t("Chiudi")} onPress={onClose} />}>
@@ -83,26 +85,33 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
       </View>
     </View>
     {preview && merge && replace && <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
-      <Text variant="titleSmall">{t("Riepilogo del ripristino")}</Text>
-      <Text variant="bodyMedium" style={hint}>{t("File: {p0}", { p0: preview.file })}</Text>
-      <View style={styles.lines}>
-        <Text variant="bodyLarge">{t("Nel backup: {p0}", { p0: counts(preview.data.expenses.length, preview.data.categories.length) })}</Text>
-        <Text variant="bodyLarge">{t("Da aggiungere: {p0}", { p0: counts(merge.addExpenses.length, merge.addCategories.length) })}</Text>
-        <Text variant="bodyLarge">{t("Già presenti e identici: {p0}", { p0: counts(merge.sameExpenses, merge.sameCategories) })}</Text>
-        {merge.missingCategoryReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese fanno riferimento a categorie che non saranno presenti.", { p0: merge.missingCategoryReferences })}</Text>}
-      </View>
-      {merge.conflicts.length > 0 && <Text variant="bodyMedium" style={{ color: theme.colors.error }}>
-        {t("{p0} elementi del backup sono in conflitto con i dati esistenti. Non si possono unire.", { p0: merge.conflicts.length })}</Text>}
+      <Text variant="titleSmall">{mergeBlocked ? t("Impossibile unire il backup") : t("Riepilogo del ripristino")}</Text>
+      {mergeBlocked ? <Text variant="bodyMedium" style={hint}>
+        {t("{p0} elementi sono diversi dai dati salvati.", { p0: merge.conflicts.length })}
+      </Text> : <>
+        <Text variant="bodyMedium" style={hint}>{t("File: {p0}", { p0: preview.file })}</Text>
+        <View style={styles.lines}>
+          <Text variant="bodyLarge">{t("Nel backup: {p0}", { p0: counts(preview.data.expenses.length, preview.data.categories.length) })}</Text>
+          <Text variant="bodyLarge">{t("Da aggiungere: {p0}", { p0: counts(merge.addExpenses.length, merge.addCategories.length) })}</Text>
+          <Text variant="bodyLarge">{t("Già presenti e identici: {p0}", { p0: counts(merge.sameExpenses, merge.sameCategories) })}</Text>
+          {(hasFunds(preview.data) || merge.addFunds.length + merge.sameFunds > 0) && <Text variant="bodyLarge">
+            {t("Fondi nel backup: {p0} · da aggiungere: {p1}", { p0: fundCounts(preview.data.funds.length, preview.data.movements.length), p1: fundCounts(merge.addFunds.length, merge.addMovements.length) })}</Text>}
+          {merge.missingFundReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese o movimenti fanno riferimento a fondi che non saranno presenti: appariranno senza fondo.", { p0: merge.missingFundReferences })}</Text>}
+          {merge.missingCategoryReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese fanno riferimento a categorie che non saranno presenti.", { p0: merge.missingCategoryReferences })}</Text>}
+        </View>
+      </>}
       {mergeEmpty && !mergeBlocked && <Text variant="bodyMedium" style={hint}>{t("Non c’è nulla da aggiungere: i dati del backup sono già presenti.")}</Text>}
-      <Button disabled={busy || !enabled || mergeBlocked || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
-        await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge'); finish();
-      })}>{t("Unisci ai dati esistenti")}</Button>
+      {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
+        await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements); finish();
+      })}>{t("Unisci ai dati esistenti")}</Button>}
       <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
       <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
     </View>}
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
       description={replace && t("Verranno eliminate {p0} spese e {p1} categorie attuali diverse dal backup e aggiunte {p2} spese e {p3} categorie. Prima di procedere viene scaricata una copia dei dati attuali (JSON). L’operazione non può essere annullata.",
-        { p0: replace.removeExpenseIds.length, p1: replace.removeCategoryIds.length, p2: replace.addExpenses.length, p3: replace.addCategories.length })}
+        { p0: replace.removeExpenseIds.length, p1: replace.removeCategoryIds.length, p2: replace.addExpenses.length, p3: replace.addCategories.length })
+        + (replace.removeFundIds.length + replace.removeMovementIds.length + replace.addFunds.length + replace.addMovements.length > 0
+          ? '\n\n' + t("Fondi e movimenti: {p0} eliminati, {p1} aggiunti.", { p0: replace.removeFundIds.length + replace.removeMovementIds.length, p1: replace.addFunds.length + replace.addMovements.length }) : '')}
       onDismiss={() => setConfirmReplace(false)}
       onConfirm={async () => {
         if (!preview || busy) return false;
@@ -110,7 +119,7 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
         try {
           // Safety copy before the first deletion: the current data stays on disk if anything goes wrong.
           download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace');
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />

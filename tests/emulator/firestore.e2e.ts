@@ -21,7 +21,7 @@ async function client(name: string, sub?: string, project = projectId) {
   return { app, auth, db, store: createFirestoreStore(db, auth.currentUser?.uid ?? 'demo-owner') };
 }
 const expense = () => ({ expense_id: randomUUID(), amount_minor: 1250, currency: 'EUR' as const, description: 'Caffè', category_id: null,
-  expense_date: todayInRome(), recurrence: null, price_changes: [], status_changes: [], source: 'web_app' as const, schema_version: 1 as const });
+  expense_date: todayInRome(), recurrence: null, price_changes: [], status_changes: [], fund_id: null, source: 'web_app' as const, schema_version: 1 as const });
 const denied = (promise: Promise<unknown>) => assert.rejects(promise, (e: any) => e.code === 'permission-denied');
 const deadline = <T>(promise: Promise<T>): Promise<T> => {
   let timer: ReturnType<typeof setTimeout>;
@@ -72,7 +72,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     });
     await t.test('regole: campi, importi, date, revisioni e timestamp verificati sul server', async () => {
       // Raw documents in the stored shape: no `status_changes` unless a series has one (see firestoreStore).
-      const { expense_id, status_changes: _, ...data } = expense();
+      const { expense_id, status_changes: _, fund_id: _fund, ...data } = expense();
       const valid = { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       for (const patch of [{ amount_minor: 1.5 }, { amount_minor: 0 }, { amount_minor: 10000000 }, { currency: 'USD' },
         { expense_date: '2025-02-30' }, { expense_date: '2099-01-01' }, { category_id: 'invalid' }, { recurrence: 'daily' },
@@ -87,7 +87,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     await t.test('piano prezzi: variazioni validate dalle regole, storico stabile dopo la modifica', async () => {
       const { expense_id, ...data } = expense();
       const series = { ...data, recurrence: 'yearly' as const, expense_date: '2025-03-12', amount_minor: 600, price_changes: [{ index: 1, amount_minor: 1200, once: false }] };
-      const { status_changes: _status, ...storedSeries } = series;
+      const { status_changes: _status, fund_id: _fund, ...storedSeries } = series;
       const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       const change = { index: 2, amount_minor: 1500, once: true };
       const { price_changes: _, ...withoutField } = valid;
@@ -112,7 +112,8 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     await t.test('abbonamenti: stati validati dalle regole, campo assente compatibile, storico invariato', async () => {
       const { expense_id, ...data } = expense();
       const series = { ...data, recurrence: 'monthly' as const, expense_date: '2026-01-05', amount_minor: 999, status_changes: [] };
-      const valid = { ...series, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      const { fund_id: _fund, ...storedSeries } = series;
+      const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       // Stored form: one string "date:status;…" (see subscription.ts / firestore.rules).
       const eight = Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';');
       for (const patch of [{ status_changes: '2026-03-10:stopped' }, { status_changes: '10/03/2026:paused' }, { status_changes: '' },
@@ -202,6 +203,91 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.equal(all.find((r) => r.id === expense_id)?.amount_minor, 1250);
       assert.equal(all.filter((r) => r.id === expense_id).length, 1);
       assert.deepEqual(all.find((r) => r.id === expense_id)?.price_changes, records[0]!.price_changes);
+    });
+    await t.test('fondi: regole, revisioni, movimenti idempotenti, fund_id nelle spese e assegnazione esplicita', async () => {
+      const fundRef = (id: string) => doc(owner.db, 'users', uid, 'funds', id);
+      const movementRef = (id: string) => doc(owner.db, 'users', uid, 'movements', id);
+      const today = todayInRome();
+      const month = today.slice(0, 7);
+      const data = { name: `Vita ${suffix}`, icon: 'graduation' as const, color: 2, initial_minor: 50000, start_date: today,
+        recharges: [{ month, amount_minor: 30000, day: 1, active: true }], budgets: [{ month, amount_minor: 25000 }], budget_exceptions: [], archived: false };
+      const stored = { name: data.name, icon: data.icon, color: 2, initial_minor: 50000, start_date: today, recharges: `${month}:30000:1:a`,
+        budgets: `${month}:25000`, budget_exceptions: '', archived: false, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      for (const patch of [{ name: '' }, { name: ' x' }, { color: 12 }, { initial_minor: -1 }, { initial_minor: 1.5 }, { start_date: '2099-01-01' },
+        { recharges: '2026-01:0:1:x' }, { recharges: [] }, { budgets: '2026-01:1;' }, { icon: 'nope' }, { archived: 'no' }, { revision: 2 }, { extra: 1 },
+        { recharges: Array.from({ length: 25 }, (_, i) => `20${String(30 + i)}-01:1:1:a`).join(';') }]) {
+        await denied(setDoc(fundRef(randomUUID()), { ...stored, ...patch }));
+      }
+      for (const c of [intruder, anonymous]) await denied(setDoc(doc(c.db, 'users', uid, 'funds', randomUUID()), stored));
+      const id = randomUUID();
+      await owner.store.saveFund(id, data);
+      const raw = (await getDocFromServer(fundRef(id))).data()!;
+      assert.equal(raw.recharges, `${month}:30000:1:a`);
+      let saved = (await second.store.exportSnapshot()).funds.find((f) => f.id === id)!;
+      assert.deepEqual(saved.recharges, data.recharges);
+      await owner.store.saveFund(id, { ...data, archived: true }, saved);
+      await assert.rejects(second.store.saveFund(id, { ...data, name: 'Altro' }, saved), /altra sessione/);
+      saved = (await owner.store.exportSnapshot()).funds.find((f) => f.id === id)!;
+      assert.deepEqual([saved.archived, saved.revision], [true, 2]);
+      await assert.rejects(owner.store.saveFund(id, { ...data, start_date: '2025-01-01' }, saved), /data di inizio/);
+      await denied(updateDoc(fundRef(id), { start_date: '2025-01-01', revision: 3, updated_at: serverTimestamp() }));
+      await owner.store.saveFund(id, { ...data, archived: false }, saved);
+      // Movements: one document each, created once even when the same request is repeated; immutable afterwards.
+      const other = randomUUID();
+      await owner.store.saveFund(other, { ...data, name: `Risparmi ${suffix}`, recharges: [], budgets: [] });
+      const transfer = { kind: 'transfer' as const, amount_minor: 20000, date: today, to_fund_id: id, from_fund_id: other, note: 'Per l’affitto' };
+      const movementId = randomUUID();
+      await owner.store.createMovement(movementId, transfer);
+      await owner.store.createMovement(movementId, transfer);
+      await assert.rejects(owner.store.createMovement(movementId, { ...transfer, amount_minor: 1 }), /altra sessione/);
+      assert.equal((await owner.store.exportSnapshot()).movements.filter((m) => m.id === movementId).length, 1);
+      await denied(updateDoc(movementRef(movementId), { amount_minor: 1 }));
+      const rawMovement = { kind: 'income', amount_minor: 100, date: today, to_fund_id: id, from_fund_id: null, note: '', created_at: serverTimestamp() };
+      for (const patch of [{ kind: 'gift' }, { amount_minor: 0 }, { from_fund_id: id }, { kind: 'transfer', from_fund_id: id }, { to_fund_id: 'x' },
+        { date: '2099-01-01' }, { note: ' x' }, { extra: true }]) {
+        await denied(setDoc(movementRef(randomUUID()), { ...rawMovement, ...patch }));
+      }
+      // Expenses: fund_id optional (absent = no fund), uuid when present; worst case 8 prices + 8 statuses + fund_id fits the Rules budget.
+      const { expense_id: _e, status_changes: _s, fund_id: _f, ...base } = expense();
+      const valid = { ...base, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      await denied(setDoc(ref(randomUUID()), { ...valid, fund_id: 'x' }));
+      await denied(setDoc(ref(randomUUID()), { ...valid, fund_id: null }));
+      const eight = Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';');
+      await setDoc(ref(randomUUID()), { ...valid, recurrence: 'monthly', expense_date: '2026-01-05', fund_id: id, status_changes: eight,
+        price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
+      const withFund = { ...expense(), fund_id: id };
+      await owner.store.createExpense(withFund);
+      assert.equal((await getDocFromServer(ref(withFund.expense_id))).data()!.fund_id, id);
+      const orphan = expense();
+      await owner.store.createExpense(orphan);
+      assert.ok(!('fund_id' in (await getDocFromServer(ref(orphan.expense_id))).data()!), 'campo omesso senza fondo');
+      // Explicit migration of expenses without a fund, on the revisions seen.
+      const before = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === orphan.expense_id)!;
+      assert.equal(before.fund_id, null);
+      assert.equal(await owner.store.assignFund([before], other), 1);
+      await assert.rejects(owner.store.assignFund([before], id), /altra sessione/);
+      const after = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === orphan.expense_id)!;
+      assert.deepEqual([after.fund_id, after.revision, after.amount_minor, after.created_at], [other, 2, before.amount_minor, before.created_at]);
+      // Back to «no fund» from the editor: the stored field is removed.
+      const { id: _i, created_at: _c, revision: _r, updated_at: _u, ...afterData } = after;
+      await owner.store.updateExpense(after, { ...afterData, fund_id: null });
+      assert.ok(!('fund_id' in (await getDocFromServer(ref(orphan.expense_id))).data()!));
+      // Backup v3 round trip of funds and movements, then a merge of the same file skips everything.
+      const snapshot = await owner.store.exportSnapshot();
+      const file = parseBackup(JSON.parse(makeBackup(snapshot)));
+      assert.ok(file.funds.some((f) => f.id === id) && file.movements.some((m) => m.id === movementId));
+      const preview = await owner.store.previewImport(file);
+      assert.deepEqual([preview.merge.addFunds.length, preview.merge.addMovements.length, preview.merge.conflicts.length], [0, 0, 0]);
+      const imported = { ...data, name: `Importato ${suffix}` };
+      const importedFund = { ...imported, id: randomUUID(), created_at: '2026-01-02T00:00:00.000Z' };
+      const importedMovement = { id: randomUUID(), kind: 'income' as const, amount_minor: 700, date: today, to_fund_id: importedFund.id, from_fund_id: null, note: '', created_at: '2026-01-03T00:00:00.000Z' };
+      await owner.store.importRecords([], [], 'merge', [importedFund], [importedMovement]);
+      await owner.store.importRecords([], [], 'merge', [importedFund], [importedMovement]);
+      const final = await owner.store.exportSnapshot();
+      assert.equal(final.funds.find((f) => f.id === importedFund.id)?.created_at, importedFund.created_at);
+      assert.equal(final.movements.filter((m) => m.id === importedMovement.id).length, 1);
+      await owner.store.removeMovement(final.movements.find((m) => m.id === movementId)!);
+      assert.equal((await getDocFromServer(movementRef(movementId))).exists(), false);
     });
     await t.test('migrazione oltre il limite di accessi Rules: gruppi di categorie e spese ripetibili', async () => {
       const categories = Array.from({ length: 30 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));

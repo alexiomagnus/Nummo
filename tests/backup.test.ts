@@ -9,7 +9,7 @@ import type { Category } from '../src/domain/category.ts';
 const id = '11111111-1111-4111-8111-111111111111';
 const categoryId = '22222222-2222-4222-8222-222222222222';
 const record: ExpenseRecord = { id, amount_minor: 1250, currency: 'EUR', description: 'Caffè "buono"; sì', category_id: categoryId,
-  expense_date: '2025-01-31', recurrence: 'monthly', price_changes: [], status_changes: [], source: 'web_app', schema_version: 1, created_at: '2025-01-31T12:00:00.000Z' };
+  expense_date: '2025-01-31', recurrence: 'monthly', price_changes: [], status_changes: [], fund_id: null, source: 'web_app', schema_version: 1, created_at: '2025-01-31T12:00:00.000Z' };
 const categories: Category[] = [{ id: categoryId, label: 'Caffè', icon: 'coffee' }];
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const expense = (n: number, extra: Partial<ExpenseRecord> = {}): ExpenseRecord => ({ ...record, id: uuid(n), recurrence: null, description: `Spesa ${n}`, ...extra });
@@ -33,11 +33,11 @@ function readCsv(text: string): string[][] {
 
 test('CSV: BOM, intestazioni italiane, separatore ;, CRLF, importo con virgola e testi quotati', () => {
   const csv = exportCsv([record], categories, '2025-02-28');
-  assert.ok(csv.startsWith('﻿Data;Descrizione;Categoria;Importo;Valuta;Ricorrenza\r\n'));
+  assert.ok(csv.startsWith('﻿Data;Descrizione;Categoria;Importo;Valuta;Ricorrenza;Fondo\r\n'));
   const rows = readCsv(csv.slice(1));
-  assert.deepEqual(rows[0], ['Data', 'Descrizione', 'Categoria', 'Importo', 'Valuta', 'Ricorrenza']);
-  assert.deepEqual(rows[1], ['2025-01-31', 'Caffè "buono"; sì', 'Caffè', '12,50', 'EUR', 'Mensile']);
-  assert.ok(rows.every((r) => r.length === 6));
+  assert.deepEqual(rows[0], ['Data', 'Descrizione', 'Categoria', 'Importo', 'Valuta', 'Ricorrenza', 'Fondo']);
+  assert.deepEqual(rows[1], ['2025-01-31', 'Caffè "buono"; sì', 'Caffè', '12,50', 'EUR', 'Mensile', '']);
+  assert.ok(rows.every((r) => r.length === 7));
   assert.ok(csv.endsWith('\r\n'));
 });
 
@@ -56,7 +56,7 @@ test('CSV: serie ricorrente espansa per occorrenza, senza duplicati né rinnovi 
   assert.equal(rows.length, expandOccurrences([series], '2025-04-30').length);
   assert.equal(readCsv(exportCsv([series], categories, '2025-01-30')).length, 1);
   // A one-off expense is a single row without recurrence.
-  assert.deepEqual(readCsv(exportCsv([expense(2, { amount_minor: 5 })], categories, '2025-02-28'))[1], ['2025-01-31', 'Spesa 2', 'Caffè', '0,05', 'EUR', '']);
+  assert.deepEqual(readCsv(exportCsv([expense(2, { amount_minor: 5 })], categories, '2025-02-28'))[1], ['2025-01-31', 'Spesa 2', 'Caffè', '0,05', 'EUR', '', '']);
 });
 
 test('CSV: ordinato per data, categoria eliminata lasciata vuota, importi grandi e centesimi a una cifra', () => {
@@ -82,11 +82,11 @@ test('JSON: schema versionato, solo dati di ripristino, nessun identificativo di
   const synced = [{ ...record, revision: 3, updated_at: record.created_at }];
   const syncedCategories = [{ ...categories[0]!, revision: 2, updated_at: record.created_at, name_key: categoryNameKey('Caffè') }];
   const file = JSON.parse(makeBackup({ expenses: synced, categories: syncedCategories }, new Date('2025-03-01T10:00:00Z')));
-  assert.deepEqual(Object.keys(file), ['format', 'version', 'exported_at', 'categories', 'expenses']);
+  assert.deepEqual(Object.keys(file), ['format', 'version', 'exported_at', 'categories', 'funds', 'movements', 'expenses']);
   assert.equal(file.format, 'nummo-backup');
   assert.equal(file.version, backupVersion);
   assert.equal(file.exported_at, '2025-03-01T10:00:00.000Z');
-  assert.deepEqual(Object.keys(file.expenses[0]).sort(), ['amount_minor', 'category_id', 'created_at', 'currency', 'description', 'expense_date', 'id', 'price_changes', 'recurrence', 'schema_version', 'source', 'status_changes']);
+  assert.deepEqual(Object.keys(file.expenses[0]).sort(), ['amount_minor', 'category_id', 'created_at', 'currency', 'description', 'expense_date', 'fund_id', 'id', 'price_changes', 'recurrence', 'schema_version', 'source', 'status_changes']);
   assert.deepEqual(Object.keys(file.categories[0]).sort(), ['icon', 'id', 'label']);
   const text = JSON.stringify(file);
   for (const forbidden of ['revision', 'updated_at', 'name_key', 'uid', 'project', 'token', 'origin']) assert.ok(!text.includes(forbidden), forbidden);
@@ -121,7 +121,7 @@ test('JSON: versioni — le più recenti e i formati estranei sono rifiutati con
   }
   // Files written by earlier builds carry extra fields: they are ignored, not trusted.
   const legacy = { ...body, version: 1, origin: { project_id: 'p', uid: 'u' }, expenses: [{ ...record, revision: 4, updated_at: 'x' }], categories: [{ ...categories[0], name_key: 'n-caffè', revision: 1 }] };
-  assert.deepEqual(parseBackup(legacy), { expenses: [record], categories });
+  assert.deepEqual(parseBackup(legacy), { expenses: [record], categories, funds: [], movements: [] });
 });
 
 test('JSON: validazione rigorosa — duplicati, importi, date, UUID, formato dati, senza limite categorie', () => {

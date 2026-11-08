@@ -15,6 +15,8 @@ export type ExpenseDraft = {
   promo: boolean;
   promoAmount: string;
   promoAfter: string;
+  // Fund that pays the expense ('' = none).
+  fundId: string;
 };
 
 export type ExpenseData = Readonly<{
@@ -29,6 +31,8 @@ export type ExpenseData = Readonly<{
   price_changes: readonly PriceChange[];
   // Pause/cancel/resume history of a series (see subscription.ts); always empty for one-off expenses.
   status_changes: readonly StatusChange[];
+  // Fund that pays it (every occurrence of a series); null = «Senza fondo» (expenses saved before funds existed).
+  fund_id: string | null;
   source: 'web_app';
   schema_version: 1;
 }>;
@@ -38,7 +42,7 @@ export type FieldErrors = Partial<Record<keyof ExpenseDraft, string>>;
 export type Validation = { ok: true; data: ExpenseData } | { ok: false; errors: FieldErrors };
 
 export function newDraft(): ExpenseDraft {
-  return { amount: '', description: '', categoryId: '', date: '', repeat: false, recurrence: '', promo: false, promoAmount: '', promoAfter: '' };
+  return { amount: '', description: '', categoryId: '', date: '', repeat: false, recurrence: '', promo: false, promoAmount: '', promoAfter: '', fundId: '' };
 }
 
 // Parse digit strings, never multiply a floating-point monetary value.
@@ -59,7 +63,8 @@ export function normalizeDescription(value: string): string {
   return value.normalize('NFC').trim().replace(/\s+/gu, ' ');
 }
 
-export function validateDraft(draft: ExpenseDraft, categories: readonly Category[], now = new Date()): Validation {
+// `funds`: the funds that may pay a new or edited expense; a chosen fund must be one of them.
+export function validateDraft(draft: ExpenseDraft, categories: readonly Category[], now = new Date(), funds: readonly { id: string }[] = []): Validation {
   const errors: FieldErrors = {};
   const amount = parseAmountMinor(draft.amount);
   if (amount === null) errors.amount = draft.amount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo.';
@@ -71,6 +76,8 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   // Category is optional, but a chosen one must still exist.
   const category = draft.categoryId ? categories.find((item) => item.id === draft.categoryId) : undefined;
   if (draft.categoryId && !category) errors.categoryId = 'La categoria scelta non esiste più.';
+  const fund = draft.fundId ? funds.find((item) => item.id === draft.fundId) : undefined;
+  if (draft.fundId && !fund) errors.fundId = 'Il fondo scelto non esiste più.';
   const date = draft.date || todayInRome(now);
   if (!isValidDate(date) || date < expensePolicy.minDate || date > todayInRome(now)) {
     errors.date = 'Inserisci una data valida dal 01/01/2000 a oggi (AAAA-MM-GG).';
@@ -89,7 +96,7 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   return { ok: true, data: {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: category?.id ?? null,
     expense_date: date, recurrence: draft.repeat && isRecurrence(draft.recurrence) ? draft.recurrence : null, price_changes, status_changes: [],
-    source: 'web_app', schema_version: 1,
+    fund_id: fund?.id ?? null, source: 'web_app', schema_version: 1,
   } };
 }
 
@@ -128,5 +135,7 @@ export function currentPrice(expense: Pick<ExpenseData, 'amount_minor' | 'expens
 // The savable fields of a stored record (drops id, timestamps and Firestore bookkeeping).
 export function dataOf(record: ExpenseData): ExpenseData {
   const { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, source, schema_version } = record;
-  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, source, schema_version };
+  // Records read before funds existed may lack the field: they are «Senza fondo».
+  const fund_id = record.fund_id ?? null;
+  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, source, schema_version };
 }

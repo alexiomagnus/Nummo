@@ -17,17 +17,15 @@ import { BarChart } from './BarChart';
 import { BlockChart } from './BlockChart';
 import { DonutChart, type ChartColors } from './charts';
 import { categoryPresentation, categoryPercent as percent } from './categoryPresentation';
+import { chartPalette } from '../../theme/chartPalette';
 import { CategoryLegend } from './CategoryLegend';
 import { DailyBreakdown } from './DailyBreakdown';
 import { donutLegendWidth, donutMaxSize } from './donutLayout';
 
 const chartLabels: Record<ChartType, string> = { donut: 'Ciambella', blocks: 'Blocchi', bars: 'Barre' };
 
-// Existing validated 12-colour palette; slots follow category IDs, labels disambiguate repeated colours.
-const palette = {
-  light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948', '#0e9fb8', '#7a9400', '#a846b3', '#a85a1c'],
-  dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767', '#1fa0bd', '#7f9d00', '#b85bc2', '#b86a2a'],
-};
+// Existing validated 12-colour palette (shared with the funds); slots follow category IDs, labels disambiguate repeated colours.
+const palette = chartPalette;
 
 type Props = { occurrences: readonly Occurrence[]; categories: readonly Category[];
   preferences: DashboardPreferences; onChangePreferences: (change: Partial<DashboardPreferences>) => void;

@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { HelperText, Portal } from 'react-native-paper';
+import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
@@ -15,16 +15,20 @@ import { spacing } from '../../theme/tokens';
 import { ExpenseFields } from './ExpenseFields';
 import { PriceChangeField } from './PriceSchedule';
 import type { ExpenseStore } from './expenseStore';
+import { FundField, noFund, type FundChoice } from '../funds/FundField';
 
 const amountText = (minor: number) => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`;
 
-export function ExpenseEditor({ record, categories, store, close }: { record: ExpenseRecord; categories: readonly Category[]; store: ExpenseStore; close: () => void }) {
+// `fundChoices` includes the record's own fund even when archived, so editing never drops it silently.
+export function ExpenseEditor({ record, categories, store, close, fundChoices = [] }: { record: ExpenseRecord; categories: readonly Category[]; store: ExpenseStore; close: () => void; fundChoices?: readonly FundChoice[] }) {
   const { t } = useI18n();
+  const { colors } = useTheme();
   const today = todayInRome();
   // For a series the amount field is the price of the next renewal; the first payment's price stays untouched.
   const shownAmount = useMemo(() => currentPrice(record, today), [record, today]);
   const [draft, setDraft] = useState<ExpenseDraft>({ ...newDraft(), amount: amountText(shownAmount),
-    description: record.description, categoryId: record.category_id ?? '', date: record.expense_date === todayInRome() ? '' : record.expense_date, repeat: record.recurrence !== null, recurrence: record.recurrence ?? '' });
+    description: record.description, categoryId: record.category_id ?? '', date: record.expense_date === todayInRome() ? '' : record.expense_date, repeat: record.recurrence !== null, recurrence: record.recurrence ?? '',
+    fundId: record.fund_id && fundChoices.some((c) => c.fund.id === record.fund_id) ? record.fund_id : fundChoices.length ? noFund : '' });
   const [changes, setChanges] = useState<readonly PriceChange[]>(record.price_changes);
   const [scope, setScope] = useState<PriceScope>('future');
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -36,7 +40,8 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
   const next = series && draft.repeat ? nextRenewal(record.expense_date, recurrence, today) : null;
   const save = async () => {
     if (busy || deleting || !store.update) return;
-    const result = validateDraft(draft, categories);
+    const funds = fundChoices.map((choice) => choice.fund);
+    const result = validateDraft({ ...draft, fundId: draft.fundId === noFund ? '' : draft.fundId }, categories, undefined, funds);
     const missing = draft.categoryId ? {} : { categoryId: "Seleziona una categoria." };
     if (!result.ok) { setErrors({ ...result.errors, ...missing }); return; }
     if (!draft.categoryId) { setErrors(missing); return; }
@@ -50,6 +55,12 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
     <Dialog.Title>{record.recurrence ? t("Modifica serie") : t("Modifica spesa")}</Dialog.Title>
     <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
       <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}
+        extra={fundChoices.length > 0 ? <View style={{ gap: spacing.xs }}>
+          <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}
+            onChange={(fundId) => { setDraft((d) => ({ ...d, fundId })); setErrors((e) => ({ ...e, fundId: undefined })); }} />
+          {series && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, paddingHorizontal: spacing.md }}>
+            {t("Il fondo vale per tutti i pagamenti della serie, anche quelli già effettuati.")}</Text>}
+        </View> : undefined}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
         start={record.expense_date} recurrence={recurrence} disabled={busy} onScope={setScope}

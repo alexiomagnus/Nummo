@@ -14,7 +14,7 @@ type Props<T extends string> = {
   disabled?: boolean;
 };
 
-// Material 3 segmented button (single choice): 40 dp pill, 1 dp outline, selected segment = secondary container + check.
+// Material 3 segmented button: at least 40 dp, growing for wrapped labels; selected = secondary container + check.
 export function SegmentedButtons<T extends string>({ options, value, onChange, label, error, disabled }: Props<T>) {
   const { colors } = useTheme();
   const border = error ? colors.error : colors.outline;
@@ -26,10 +26,13 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
         return (
           <StateLayerPressable key={option.value} disabled={disabled} layerColor={color} onPress={() => onChange(option.value)}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled} accessibilityLabel={option.label}
-            style={[styles.segment, index > 0 && { borderLeftWidth: 1, borderLeftColor: border },
+            style={[styles.segment,
+              index === 0 && styles.firstSegment,
+              index === options.length - 1 && styles.lastSegment,
+              index > 0 && { borderLeftWidth: 1, borderLeftColor: border },
               selected && { backgroundColor: colors.secondaryContainer }]}>
             {selected && <SvgIcon shape={iconShapes.check} size={18} color={color} />}
-            <Text variant="labelLarge" numberOfLines={1} style={{ color }}>{option.label}</Text>
+            <Text variant="labelLarge" style={[styles.label, { color }]}>{option.label}</Text>
           </StateLayerPressable>
         );
       })}
@@ -38,6 +41,10 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', height: 40, borderWidth: 1, borderRadius: radius.pill, overflow: 'hidden' },
-  segment: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.md },
+  row: { flexDirection: 'row', minHeight: 40, borderWidth: 1, borderRadius: radius.pill, overflow: 'hidden' },
+  segment: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  label: { flexShrink: 1, minWidth: 0, textAlign: 'center' },
+  firstSegment: { borderTopLeftRadius: radius.pill, borderBottomLeftRadius: radius.pill },
+  lastSegment: { borderTopRightRadius: radius.pill, borderBottomRightRadius: radius.pill },
 });

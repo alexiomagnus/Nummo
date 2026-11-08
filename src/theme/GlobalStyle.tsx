@@ -22,6 +22,10 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       * { scrollbar-width: thin; scrollbar-color: ${colors.outline} transparent; }
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }
+      /* Keep focus within the actual control: outer rings are clipped by pills, menus and scroll containers. */
+      [data-focus-ring='control']:focus-visible { outline-offset: -3px; }
+      /* Paper puts keyboard focus on an inner ripple, while its outer Surface owns the rounded shape. */
+      [data-testid$='-container'] > [role='button']:focus-visible { border-radius: inherit; outline-offset: -3px; }
       input:focus-visible, textarea:focus-visible { outline: none; }
       /* Colour Paper's own outline and label: a second ring cannot follow its floating-label notch. */
       [data-focus-ring='field']:focus-visible { outline: none; }

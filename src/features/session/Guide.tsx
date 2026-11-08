@@ -48,7 +48,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title={t("Consultare le spese")}>
-        {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; da qui modifichi o elimini una voce. Abbonamenti raccoglie le spese che si ripetono."))}
+        {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; da qui modifichi o elimini una voce. Pagamenti ricorrenti raccoglie le spese che si ripetono."))}
         {p(t("La Dashboard mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con grafici a ciambella, a blocchi o a barre e un elenco giornaliero espandibile."))}
         {p(t("Grafico e periodo scelti vengono ricordati in questo browser. La lista dei giorni con spese è inizialmente nascosta: puoi mostrarla e nasconderla con il pulsante sotto il grafico."))}
         {p(t("Puoi creare categorie senza un limite di numero. I grafici mostrano solo quelle con spese nel periodo: se sono molte, le meno rilevanti sono riunite in Altre, con dettaglio consultabile. Nei Blocchi, i rettangoli sono proporzionali agli importi e la legenda permette di consultare anche quelli troppo piccoli per contenere testo. Nelle Barre, nomi, importi e percentuali sono accanto a ogni barra."))}
@@ -57,8 +57,15 @@ export function Guide({ onBack }: { onBack: () => void }) {
       <Section title={t("Spese ricorrenti e abbonamenti")}>
         {p(t("Una spesa può ripetersi ogni settimana, mese o anno: la inserisci una volta sola e compare a ogni scadenza maturata."))}
         {p(t("Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com'erano. Prossimi rinnovi mostra le scadenze in arrivo."))}
-        {p(t("In Abbonamenti ogni serie mostra importo, frequenza, prossimo rinnovo e stato (Attivo, In pausa o Annullato). Aprendo i dettagli trovi lo storico dei pagamenti, quanti ne sono stati effettuati e il totale speso, anche per gli abbonamenti annullati."))}
+        {p(t("In Pagamenti ricorrenti ogni serie mostra importo, frequenza, prossimo rinnovo e stato (Attivo, In pausa o Annullato). Aprendo i dettagli trovi lo storico dei pagamenti, quanti ne sono stati effettuati e il totale speso, anche per gli abbonamenti annullati."))}
         {p(t("Puoi mettere in pausa, annullare o riattivare un abbonamento: la scelta vale dai rinnovi successivi a oggi, i rinnovi che cadono mentre è in pausa o annullato non vengono conteggiati e i pagamenti già registrati non cambiano. Alla riattivazione i rinnovi riprendono dalle date originali. La Dashboard e l'esportazione CSV includono sempre i pagamenti effettuati degli abbonamenti."))}
+      </Section>
+
+      <Section title={t("Fondi")}>
+        {p(t("Un fondo è una disponibilità separata, ad esempio soldi personali, risparmi, un contributo della famiglia o uno stipendio. Ha un saldo iniziale, un'icona e un colore; in Nuova spesa scegli quale fondo paga, e puoi indicarne uno predefinito."))}
+        {p(t("Un fondo può ricevere una ricarica mensile in un giorno scelto: viene accreditata una sola volta per mese, solo quando la data è arrivata, anche se non apri l'app. Puoi cambiarne importo e giorno, o sospenderla: le modifiche valgono per le scadenze successive. Puoi anche aggiungere denaro a mano o trasferirlo tra fondi; i trasferimenti non contano come entrate né come spese."))}
+        {p(t("Il budget mensile è un limite di spesa, distinto dal saldo: mostra quanto hai speso e quanto resta, avvisa quando ti avvicini o lo superi, ma non blocca le spese. Può essere ricorrente, con eccezioni per singoli mesi; ciò che non spendi resta nel saldo e non si somma al budget del mese dopo. Puoi consultare i mesi passati e quelli futuri, questi ultimi come previsione."))}
+        {p(t("Le spese registrate prima dei fondi restano senza fondo e non incidono su nessun saldo, finché non scegli di assegnarle. Un fondo con movimenti si archivia invece di essere eliminato, così lo storico resta."))}
       </Section>
 
       <Section title={t("Esportare i dati")}>

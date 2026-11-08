@@ -37,19 +37,25 @@ import { BackupActions, download } from '../backup/BackupActions';
 import { getDatabase } from '../../services/firebase';
 import { createFirestoreStore, type FirestoreStore } from '../../services/firestoreStore';
 import type { ExpenseStore } from '../expenses/expenseStore';
+import { FundsPage } from '../funds/FundsPage';
+import { useRemoteFunds, type RemoteFunds } from '../funds/useRemoteFunds';
+import { readDefaultFund, writeDefaultFund } from '../funds/defaultFund';
+import type { FundChoice } from '../funds/FundField';
+import { monthOf, monthOverview } from '../../domain/funds';
 
 const forecastDays = 30;
-type Section = 'expense' | 'list' | 'dashboard' | 'categories';
+type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'categories';
 // «Nuova spesa» is the primary action (FAB), not a destination: one primary navigation only.
 const destinations: readonly Destination<Section>[] = [
   { value: 'list', label: 'Spese', icon: iconShapes.list },
   { value: 'dashboard', label: 'Dashboard', icon: iconShapes.chart },
+  { value: 'funds', label: 'Fondi', icon: iconShapes.wallet },
   { value: 'categories', label: 'Categorie', icon: iconShapes.tag },
 ];
 // The Spese page has two views: one-off expenses and subscriptions (every recurring series), never both.
 type ListView = 'expenses' | 'subscriptions';
-const listViews = [{ value: 'expenses', label: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', categories: 'Categorie' };
+const listViews = [{ value: 'expenses', label: 'Spese' }, { value: 'subscriptions', label: 'Pagamenti ricorrenti' }] as const;
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', funds: 'Fondi', categories: 'Categorie' };
 
 const startGateMs = 4000;
 
@@ -64,6 +70,7 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   const backend = useMemo(() => createFirestoreStore(getDatabase(), uid), [uid]);
   const store = useRemoteExpenses(backend, storageNote);
   const categoryState = useRemoteCategories(backend);
+  const fundState = useRemoteFunds(backend);
   const [section, setSection] = useState<Section>('expense');
   const [online, setOnline] = useState(navigator.onLine);
   const [today, setToday] = useState(todayInRome());
@@ -77,9 +84,10 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   const subscriptions = useMemo(() => subscriptionSummaries(store.expenses, today), [store.expenses, today]);
   const renewals = useMemo(() => upcomingRenewals(store.expenses, today), [store.expenses, today]);
   const soon = useMemo(() => forecastOccurrences(store.expenses, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [store.expenses, today]);
-  const pending = Boolean(store.sync?.pending || categoryState.sync.pending);
-  const cached = Boolean(store.sync?.fromCache || categoryState.sync.fromCache);
-  const ready = store.ready && categoryState.ready;
+  const pending = Boolean(store.sync?.pending || categoryState.sync.pending || fundState.sync.pending);
+  const cached = Boolean(store.sync?.fromCache || categoryState.sync.fromCache || fundState.sync.fromCache);
+  // Funds are part of the archive: the form waits for them too, so the fund field never appears late.
+  const ready = store.ready && categoryState.ready && fundState.ready;
   const synchronized = ready && !pending && !cached && online;
   const error = store.error || categoryState.error;
   const status = describeSync({ ready, online, pending, cached, error });
@@ -100,7 +108,8 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
       fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
       actions={<><SyncChip status={status} />{topActions}</>}>
       <Sections dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences} uid={uid} section={section} onNavigate={setSection} backend={backend} store={store} categoryState={categoryState} starting={!released}
-        occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon} online={online} synchronized={synchronized} error={error} />
+        occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon} online={online} synchronized={synchronized} error={error}
+        fundState={fundState} today={today} />
     </AppShell>
   );
 }
@@ -134,15 +143,25 @@ type SectionsProps = DashboardSettingsProps & {
   subscriptions: ReturnType<typeof subscriptionSummaries>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
+  fundState: RemoteFunds; today: string;
 };
 
-function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
   const [showBackup, setShowBackup] = useState(false);
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
   const [listView, setListView] = useState<ListView>('expenses');
+  const [defaultFundId, setDefaultFundId] = useState(() => readDefaultFund(uid));
+  const changeDefaultFund = (id: string) => { setDefaultFundId(id); writeDefaultFund(uid, id); };
+  // Balance now and remaining budget of this month, for the fund field of the forms (same figures as the Funds page).
+  const fundSummary = useMemo(() => monthOverview({ funds: fundState.funds, movements: fundState.movements, expenses: store.expenses }, monthOf(today), today),
+    [fundState.funds, fundState.movements, store.expenses, today]);
+  const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, balance: item.balance, remaining: item.remaining });
+  const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary]);
+  const editorFundChoices = editing ? fundSummary.funds.filter((item) => !item.fund.archived || item.fund.id === editing.fund_id).map(choiceOf) : [];
+  const fundsError = fundState.ready ? null : fundState.error;
   // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
   const oneOff = useMemo(() => occurrences.filter((item) => item.recurrence === null), [occurrences]);
   const edit = (id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null);
@@ -195,8 +214,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
       {starting && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
       <View style={[styles.grow, starting && styles.invisible]} aria-hidden={starting || undefined} pointerEvents={starting ? 'none' : 'auto'}>
-        <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')}
-          store={{ ...store, ready: store.ready && hasUsableCategorySnapshot(categoryState), error: store.error || categoryState.error }} />
+        <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')} fundChoices={fundChoices} defaultFundId={defaultFundId}
+          store={{ ...store, ready: store.ready && hasUsableCategorySnapshot(categoryState) && fundState.ready, error: store.error || categoryState.error || fundsError }} />
       </View>
     </View>
     {section === 'list' && !starting && (
@@ -215,7 +234,9 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         </>}
       </View>
     )}
-    {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} />}
+    {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} />}
+    {section === 'funds' && !starting && <FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
+      defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} />}
     {section === 'dashboard' && !starting && <Dashboard occurrences={occurrences} categories={categoryState.categories}
       preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} />}
     {section === 'categories' && !starting && <>

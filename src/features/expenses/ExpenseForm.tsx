@@ -15,10 +15,18 @@ import type { ExpenseStore } from './expenseStore';
 import { PromoField } from './PriceSchedule';
 import { RepeatField } from './RepeatField';
 import { todayInRome } from '../../domain/policy';
+import { FundField, noFund, type FundChoice } from '../funds/FundField';
 
-type Props = { categories: readonly Category[]; store: ExpenseStore; onCreateCategory?: () => void };
+// `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
+type Props = { categories: readonly Category[]; store: ExpenseStore; onCreateCategory?: () => void; fundChoices?: readonly FundChoice[]; defaultFundId?: string };
 
-export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
+// The draft keeps '' until the user picks a fund: the default fund (if still available) applies meanwhile, also after a save.
+export function resolveFund(chosen: string, choices: readonly FundChoice[], defaultFundId = ''): string {
+  if (chosen) return chosen;
+  return choices.some((choice) => choice.fund.id === defaultFundId) ? defaultFundId : '';
+}
+
+export function ExpenseForm({ categories, store, onCreateCategory, fundChoices = [], defaultFundId }: Props) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -56,7 +64,12 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
   }, [submission.status]);
   // A category deleted in the other section simply stops being selected.
   const categoryId = categories.some((category) => category.id === draft.categoryId) ? draft.categoryId : '';
-  const current = { ...draft, categoryId };
+  // Likewise a fund archived or deleted elsewhere; «Nessun fondo» stays an explicit choice.
+  const pickedFund = resolveFund(draft.fundId, fundChoices, defaultFundId);
+  const fundValue = pickedFund === noFund || fundChoices.some((choice) => choice.fund.id === pickedFund) ? pickedFund : '';
+  const current = { ...draft, categoryId, fundId: fundValue === noFund ? '' : fundValue };
+  const funds = fundChoices.map((choice) => choice.fund);
+  const fundMissing = fundChoices.length > 0 && fundValue === '' ? { fundId: "Scegli il fondo che paga la spesa, oppure Nessun fondo." } : {};
 
   const update = (patch: Partial<ExpenseDraft>) => {
     setDraft((previous) => ({ ...previous, ...patch }));
@@ -70,19 +83,19 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
   // Leaving a field empty is not an error yet: missing values are reported on save.
   const validateField = (field: BaseField) => {
     if (!current[field].trim()) return;
-    const result = validateDraft(current, categories);
+    const result = validateDraft(current, categories, undefined, funds);
     setErrors((previous) => ({ ...previous, [field]: result.ok ? undefined : result.errors[field] }));
   };
   const categoryMissing = categories.length === 0 ? "Crea prima una categoria nella sezione Categorie." : "Seleziona una categoria.";
   const save = () => {
     // Today is resolved here, at save time, so a form left open past midnight is not stale.
-    const result = validateDraft(current, categories);
+    const result = validateDraft(current, categories, undefined, funds);
     if (!result.ok) {
-      setErrors({ ...result.errors, ...(current.categoryId ? {} : { categoryId: categoryMissing }) });
+      setErrors({ ...result.errors, ...(current.categoryId ? {} : { categoryId: categoryMissing }), ...fundMissing });
       return;
     }
-    if (!current.categoryId) {
-      setErrors({ categoryId: categoryMissing });
+    if (!current.categoryId || fundMissing.fundId) {
+      setErrors({ ...(current.categoryId ? {} : { categoryId: categoryMissing }), ...fundMissing });
       return;
     }
     store.submit(result.data);
@@ -91,6 +104,8 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
   const startDate = draft.date || todayInRome();
   const repeat = (
     <View style={styles.repeat}>
+      {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
+        onChange={(fundId) => update({ fundId })} />}
       <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={startDate}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })} />

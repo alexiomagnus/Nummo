@@ -14,9 +14,9 @@ Firestore è l'unica fonte di verità. Stato, problemi e verifiche correnti: `HA
 ## Architettura e directory
 
 `index.ts` → `App.tsx` (tema, lingua, sessione) → `AppShell` adattivo → `RemoteWorkspace` con key UID.
-Stato React locale e Context di presentazione, nessun router/store globale. Tre destinazioni (Spese, Dashboard, Categorie) e «Nuova spesa»
-come azione primaria: mai due navigazioni. Smartphone: pillola nel flusso del layout, tre destinazioni uguali
-con icona/etichetta, attiva su `primaryContainer`; pulsante tondo in `primary`, nascosto nella pagina Nuova.
+Stato React locale e Context di presentazione, nessun router/store globale. Quattro destinazioni (Spese, Dashboard, Fondi, Categorie) e «Nuova spesa»
+come azione primaria: mai due navigazioni. Smartphone: pillola nel flusso del layout, destinazioni uguali
+con icona/etichetta (sotto 380 dp etichetta `labelSmall`), attiva su `primaryContainer`; pulsante tondo in `primary`, nascosto nella pagina Nuova.
 Desktop: rail/drawer con FAB. Con tastiera virtuale rilevata, la navigazione mobile si nasconde e
 le azioni del modulo tornano nel flusso; `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
 Barre sticky in fondo a uno scroller: pubblicarne l'altezza con `reserveScrollPadding` (`viewport.ts`), applicata
@@ -24,17 +24,18 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 
 | Percorso | Responsabilità |
 | --- | --- |
-| `src/domain/` | Funzioni pure senza SDK: validazione, contratti, categorie, ricorrenze, prezzi per numero di rinnovo, stati degli abbonamenti (`subscription.ts`), storico, invio, decoder Firestore e backup/import/CSV. |
+| `src/domain/` | Funzioni pure senza SDK: validazione, contratti, categorie, ricorrenze, prezzi per numero di rinnovo, stati degli abbonamenti (`subscription.ts`), fondi/ricariche/budget/saldi (`funds.ts`), storico, invio, decoder Firestore e backup/import/CSV. |
 | `src/services/` | Configurazione pubblica a build, Auth e cache Firestore, listener, CRUD e transazioni con revisioni, export server-only e import per gruppi; selezione foto account. Con indizio di sessione, `initializeAuth` omette il resolver popup, passato esplicitamente a `signInWithPopup`. |
 | `src/features/session/` | Login Google popup, sessione SDK, logout dopo le scritture pendenti; guida pubblica statica `#guida` con history/link diretto/reload, senza letture o scritture dell'archivio. Il bootstrap Auth è in `App.tsx`. Errori login: solo codici `auth/...` validati, mai messaggi grezzi/token. |
 | `src/features/workspace/` | Composizione sezioni, listener e sincronizzazione; stato smontato al cambio UID. Avvio con attesa dati limitata a 4 s, modulo montato invisibile per conservare misure e bozza; sopra, il segnaposto `StartupWorkspace` (stessa pagina «Nuova spesa», `inert`) finché `onReleased` non lo rimuove. |
 | `src/features/expenses/` | Modulo, validazione, `ExpenseStore`, `useRemoteExpenses`, editor; nessun archivio locale applicativo nel percorso attivo. |
 | `src/features/categories/` | Categorie con ID stabili e nomi unici tramite indice `categoryNames`; cinque predefinite (Alimentari, Intrattenimento, Shopping, Tecnologia, Trasporti) create una volta per account/browser su archivio vuoto confermato dal server (`workspace/seedDefaults.ts`), altrimenti dal pulsante a lista vuota. `CategoryEditor` salva nome/icona insieme. Nessun limite applicativo al numero di categorie; unicità e validazione dei record restano obbligatorie. |
 | `src/features/history/`, `dashboard/` | Occorrenze calcolate fino a oggi, non materializzate nel database; pagina Spese in due viste a segmenti, spese singole (`ExpenseList`) e abbonamenti = serie ricorrenti (`SubscriptionList`, stati e storico pagamenti); tre grafici indipendenti (ciambella SVG DOM, blocchi/treemap puro, barre) su una proiezione comune (`categoryPresentation.ts`) e dettaglio giornaliero dai dati già caricati. |
+| `src/features/funds/` | Pagina «Fondi e budget» (mese navigabile, effettivo/previsione), editor fondo, entrate/trasferimenti, assegnazione esplicita delle spese senza fondo, `FundField` del modulo spesa; `useRemoteFunds` con mutazioni solo in transazione server. |
 | `src/features/backup/` | CSV solo consultazione; JSON unico ripristino, riepilogo, unione senza sovrascritture o sostituzione con conferma/copia automatica. Nessun import CSV o adapter localStorage. |
 | `src/features/settings/`, `src/i18n/` | Aspetto, IT/EN, stile delle icone di categoria e scelte di dashboard (grafico, periodo) in `nummo.preferences.v1` nel browser; italiano iniziale. `I18nProvider` cambia lingua senza rimontare sessione/bozze; nessuna sincronizzazione Firebase. |
-| `src/components/`, `src/theme/` | Controlli Material 3, shell, icone, notifiche; palette da tinta/modalità e token condivisi. `colors.panel`/`panelColor()` per pannelli desktop. |
-| `firestore.rules` | Accesso Google del solo UID in `config/owner` (amministrativo); namespace `users/{uid}` con `expenses/{uuid}`, `categories/{uuid}`, `categoryNames/{name_key}`; validazione di campi, tipi, importi, date, versioni e indici. |
+| `src/components/`, `src/theme/` | Controlli Material 3, shell, icone, notifiche; palette e token condivisi, transizioni CSS in `motion.ts` e apertura dettagli con `Reveal`. `colors.panel`/`panelColor()` per pannelli desktop. |
+| `firestore.rules` | Accesso Google del solo UID in `config/owner` (amministrativo); namespace `users/{uid}` con `expenses/{uuid}` (con `fund_id` facoltativo), `categories/{uuid}`, `categoryNames/{name_key}`, `funds/{uuid}`, `movements/{uuid}` (immutabili); validazione di campi, tipi, importi, date, versioni e indici. |
 | `scripts/` | Seed solo localhost; policy ambienti, runner hybrid, build cloud e pubblicazione solo Hosting. `measure-startup.mjs`: misura d'avvio in emulazione, procedura in `docs/avvio-prestazioni.md`. Config temporanea `.nummo-hybrid-<PID>.json` rimossa all'arresto: mai versionarla. |
 | `tests/` | Node runner per dominio/tema/i18n/config/strumenti; `emulator/` per SDK/Rules e `integration/` per lifecycle hybrid. |
 | `public/` | Modello HTML, manifest statico neutro, icone e font locali copiati nell'export; nessun service worker. `GlobalStyle` aggiorna theme-color e viewport via VisualViewport, senza reflow durante pinch zoom. Lo script inline `nummo-boot` di `index.html` legge solo valori di presentazione validati (`nummo.boot-theme.v1`, `nummo.session.hint.v1`) e ripiega sui colori statici. |
@@ -46,7 +47,7 @@ predefinito nel repository. `functions/` può contenere `.env` personali ignorat
 né cancellarli senza conferma. Backend storico recuperabile da `fe759d5`, adapter localStorage da `e2b84d3`.
 Gli SVG in `docs/design/logo-concepts/` sono studi separati: non integrarli senza richiesta esplicita.
 Chiavi `localStorage` dell'app: `nummo.preferences.v1`, `nummo.boot-theme.v1`, `nummo.session.hint.v1`,
-`nummo.defaultCategories.v1.<uid>`; nessun dato di spesa. L'indizio di sessione serve solo alla presentazione
+`nummo.defaultCategories.v1.<uid>`, `nummo.defaultFund.v1.<uid>` (solo ID del fondo predefinito); nessun dato di spesa. L'indizio di sessione serve solo alla presentazione
 (segnaposto d'avvio, connessioni anticipate): non concede mai accesso, l'app attende sempre Firebase Auth.
 Aggiornare `Guide.tsx` quando cambiano le funzioni descritte; non presentare l’app come aperta a registrazioni.
 La splash Android usa colori/icone statici del manifest, non il tema o accento scelti nell’app.
@@ -111,8 +112,14 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   Estendere `tests/i18n.test.ts` per nuovi casi; verificare entrambe le lingue,
   persistenza della scelta e conservazione delle bozze. Non riscrivere UI senza necessità.
 - Stati degli abbonamenti: si scrive solo il cambio di oggi, valido dalle occorrenze successive; mai alterare pagamenti
-  già maturati. In Firestore `status_changes` è una stringa compatta e solo se non vuoto (budget di 1000 espressioni
-  delle Rules quasi esaurito: rimisurare con l'emulatore ogni nuovo controllo sulle spese); nel backup è un array.
+  già maturati. In Firestore `status_changes` è una stringa compatta e solo se non vuoto; nel backup è un array.
+  Rimisurare con l'emulatore il budget di espressioni delle Rules a ogni nuovo controllo sulle spese.
+- Fondi: saldo, ricarica, budget e speso restano grandezze distinte (`src/domain/funds.ts`). Ricariche **calcolate**
+  dal piano come le occorrenze (una per mese, giorno limitato alla fine del mese, contata solo se ≤ oggi): mai scritte
+  come documenti né in render/effect. Modifiche a ricarica/budget solo da ora in poi (mai il passato); `start_date` del
+  fondo immutabile. Trasferimento = un solo documento, escluso da entrate e spese. Piani in Firestore come stringhe
+  compatte (`recharges`, `budgets`, `budget_exceptions`), nel backup come array. Spese senza `fund_id` = «Senza fondo»,
+  assegnate solo su richiesta esplicita; un fondo con movimenti o spese si archivia, non si elimina.
 - Importi in centesimi interi; data civile Europe/Rome, timestamp Firestore server in
   UTC. Data vuota = oggi alla validazione. Limiti client in `policy.ts`, corrispettivi
   in Rules da aggiornare e testare insieme (le Rules non importano TypeScript).
@@ -138,8 +145,9 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   `Button` (unico pulsante), `ListRow`/`IconTile` (riga di Spese e Categorie), `ChoiceChips`,
   `SegmentedButtons`, `SwitchRow`/`M3Switch`, `SelectField` (menu a tendina), `DateField` (picker modale), `Card`,
   `StateLayerPressable` per componenti Material 3 personalizzati.
-  Raggi (`radius`: controlli 20, campi/card 16, dialog 28, `pill`), `inputOutline` (per ogni `TextInput` outlined) e `layout` da `src/theme/tokens.ts`. Font e spessore icone (`typefaces`, `iconStroke`) dai token; font in `public/fonts/`. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
+  Raggi (`radius`: controlli 20, pulsanti/campi/card 16, dialog 28, `pill`), `inputOutline` (per ogni `TextInput` outlined) e `layout` da `src/theme/tokens.ts`. Font e spessore icone (`typefaces`, `iconStroke`) dai token; font in `public/fonts/`. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
   esiti temporanei con `useSnackbar()`; layout per classe di finestra con `useSizeClass()`.
+  Per le animazioni riusare `motion`/`motion.ts` e `Reveal`, rispettando `prefers-reduced-motion` e `theme.animation.scale`.
 - Paper `Menu` montato chiuso mette il focus sul proprio anchor (web): mai un `Menu` per riga di una lista
   (la pagina salta all'ultima riga); usare un solo menu con anchor a coordinate, come `ExpenseList`.
   `MenuSelect` per selettori compatti (ordina/filtri), `FieldIcon` per icone decorative dei campi.

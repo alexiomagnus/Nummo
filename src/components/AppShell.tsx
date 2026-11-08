@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { Logo } from './Logo';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import { Animated, Easing, ScrollView, StyleSheet, useWindowDimensions, View, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layerTransition } from '../theme/motion';
@@ -169,6 +169,10 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
     }).start(({ finished }) => { if (finished && !visible) setMounted(false); });
   }, [visible, progress, reduceMotion]);
   const action = fab ?? lastFab.current;
+  // Four destinations on the narrowest phones (≈ 360 dp and below): a smaller label without tracking, so «Dashboard» and
+  // «Categorie» fit whole instead of being truncated.
+  const { width } = useWindowDimensions();
+  const tight = destinations.length > 3 && width < 380;
   return (
     <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }, hidden && styles.hidden]}>
       <View role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
@@ -180,7 +184,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
               aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
               style={[styles.pillItem, active && { backgroundColor: colors.primaryContainer }]}>
               <SvgIcon shape={item.icon} size={24} color={color} />
-              <Text variant="labelMedium" numberOfLines={1} style={{ color, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
+              <Text variant={tight ? 'labelSmall' : 'labelMedium'} numberOfLines={1} style={{ color, fontWeight: active ? '700' : '500', ...(tight ? { letterSpacing: 0 } : null) }}>{item.label}</Text>
             </StateLayerPressable>
           );
         })}

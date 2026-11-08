@@ -7,6 +7,7 @@ export const categoryIconLabels = {
   star: 'stella', gamepad: 'videogioco', bag: 'borsa della spesa', box: 'pacco',
   house: 'casa', bulb: 'lampadina', car: 'auto', gift: 'regalo', shirt: 'maglietta',
   paw: 'zampa', dumbbell: 'manubrio', coin: 'moneta',
+  wallet: 'portafoglio', bank: 'banca', cash: 'contanti', safe: 'cassaforte', growth: 'investimenti',
   train: 'treno',
   bus: 'autobus',
   bike: 'bicicletta',
