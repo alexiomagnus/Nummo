@@ -13,10 +13,11 @@ Firestore è l'unica fonte di verità. Stato, problemi e verifiche correnti: `HA
 
 ## Architettura e directory
 
-`index.ts` → `App.tsx` (tema, lingua, sessione) → `AppShell` adattivo → `RemoteWorkspace` con key UID.
+`index.ts` → `App.tsx` (tema, lingua, sessione) → `RemoteWorkspace` con key UID → `AppShell` adattivo.
 Stato React locale e Context di presentazione, nessun router/store globale. Quattro destinazioni (Spese, Dashboard, Fondi, Liste) e «Nuova spesa»
-come azione primaria: mai due navigazioni. Categorie: pagina fuori dalle destinazioni, aperta dal menu account sotto Impostazioni (contatore
-`categoriesRequest` da `App.tsx`) o dal modulo, con ritorno alla sezione di partenza. Smartphone: pillola nel flusso del layout, destinazioni uguali
+come azione primaria: mai due navigazioni. Impostazioni, Categorie e Importa ed esporta: pagine del menu account fuori dalle destinazioni (contatori
+`settingsRequest`/`categoriesRequest`/`backupRequest` da `App.tsx`; Categorie anche dal modulo), «Fatto» torna alla sezione di partenza.
+Da disconnessi Impostazioni sostituisce la schermata di accesso. Nessun dialogo per le impostazioni. Smartphone: pillola nel flusso del layout, destinazioni uguali
 con icona/etichetta (sotto 380 dp etichetta `labelSmall`), attiva su `primaryContainer`; pulsante tondo in `primary`, nascosto nella pagina Nuova.
 Desktop: rail/drawer con FAB. Con tastiera virtuale rilevata, la navigazione mobile si nasconde e
 le azioni del modulo tornano nel flusso; `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
@@ -35,7 +36,7 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 | `src/features/lists/` | Liste della spesa: panoramica, checklist (`ListsPage`), dialoghi lista/prodotto, conferma `RegisterListDialog` (riusa `ExpenseFields`/`FundField`); `useRemoteLists` con scritture semplici accodate dall'SDK per liste e prodotti e registrazione in transazione server (una spesa + archiviazione). |
 | `src/features/funds/` | Pagina «Fondi e budget» (mese navigabile, effettivo/previsione), editor fondo, entrate/trasferimenti, assegnazione esplicita delle spese senza fondo, `FundField` del modulo spesa; `useRemoteFunds` con mutazioni solo in transazione server. |
 | `src/features/backup/` | Pagina «Importa ed esporta» dal menu account sotto Categorie, fuori dalle destinazioni; azioni mantenute montate per conservare anteprima e operazioni al cambio sezione. CSV solo consultazione; JSON unico ripristino, riepilogo, unione senza sovrascritture o sostituzione con conferma/copia automatica. Nessun import CSV o adapter localStorage. |
-| `src/features/settings/`, `src/i18n/` | Aspetto, IT/EN, stile delle icone di categoria e scelte di dashboard (grafico, periodo) in `nummo.preferences.v1` nel browser; italiano iniziale. `I18nProvider` cambia lingua senza rimontare sessione/bozze; nessuna sincronizzazione Firebase. |
+| `src/features/settings/`, `src/i18n/` | Pagina `SettingsPage` (sezioni in due colonne da medium); aspetto, IT/EN, stile delle icone di categoria e scelte di dashboard (grafico, periodo) in `nummo.preferences.v1` nel browser; italiano iniziale. `I18nProvider` cambia lingua senza rimontare sessione/bozze; nessuna sincronizzazione Firebase. |
 | `src/components/`, `src/theme/` | Controlli Material 3, shell, icone, notifiche; palette e token condivisi, transizioni CSS in `motion.ts` e apertura dettagli con `Reveal`. `colors.panel`/`panelColor()` per pannelli desktop. |
 | `firestore.rules` | Accesso Google del solo UID in `config/owner` (amministrativo); namespace `users/{uid}` con `expenses/{uuid}` (con `fund_id` facoltativo), `categories/{uuid}`, `categoryNames/{name_key}`, `funds/{uuid}`, `movements/{uuid}` (immutabili), `lists/{uuid}` e `listItems/{uuid}` (senza revisione), spese con `list_id`/`list_items` facoltativi; validazione di campi, tipi, importi, date, versioni e indici. |
 | `scripts/` | Seed solo localhost; policy ambienti, runner hybrid, build cloud e pubblicazione solo Hosting. `measure-startup.mjs`: misura d'avvio in emulazione, procedura in `docs/avvio-prestazioni.md`. Config temporanea `.nummo-hybrid-<PID>.json` rimossa all'arresto: mai versionarla. |
@@ -60,7 +61,7 @@ La splash Android usa colori/icone statici del manifest, non il tema o accento s
 TypeScript 6 strict/noUncheckedIndexedAccess, Expo 58/Metro, React 19.3, RN 0.88, RN Web 0.21,
 Paper 5, Firebase JS SDK 13 (app/auth/firestore), Firebase CLI 15. Versioni risolte nel lockfile;
 non aggiungere dipendenze senza richiesta. Solo target web. Node `^22.18 || ^24.3 || ^26` (preferire LTS), npm;
-Java per emulatori. Risultati effettivamente eseguiti e limiti: `HANDOFF.md`.
+Java per emulatori. La tabella descrive gli script del repository; esecuzioni verificate e limiti sono in `HANDOFF.md`.
 
 | Comando | Uso |
 | --- | --- |
@@ -158,6 +159,8 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
 - Paper `Menu` montato chiuso mette il focus sul proprio anchor (web): mai un `Menu` per riga di una lista
   (la pagina salta all'ultima riga); usare un solo menu con anchor a coordinate, come `ExpenseList`.
   `MenuSelect` per selettori compatti (ordina/filtri), `FieldIcon` per icone decorative dei campi.
+  `SelectField` e `MenuSelect` tengono il pulsante fuori dal `Menu`, con anchor a coordinate misurate all'apertura:
+  nessun focus al montaggio chiuso; alla chiusura restituiscono il focus con `preventScroll`.
   Nei campi-azione (`SelectField`, `DateField`) il `Pressable` esterno è l'unico
   bersaglio: input e icone decorativi in un contenitore DOM `inert`. Il solo
   `pointerEvents="none"` sul contenitore non neutralizza le Surface Paper interne.

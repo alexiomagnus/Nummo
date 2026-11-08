@@ -29,6 +29,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState({ x: 0, y: 0 });
   const [width, setWidth] = useState(0);
   const [maxHeight, setMaxHeight] = useState(MENU_MAX_HEIGHT);
   const anchorRef = useRef<ComponentRef<typeof Pressable>>(null);
@@ -39,38 +40,43 @@ export function SelectField<T extends string>({ label, options, value, onChange,
   const menuWidth = Math.min(width, Math.max(0, windowWidth - insets.left - insets.right - 2 * SCREEN_MARGIN));
   // Open: cap the height to the room below the field (inner scroll for the rest); with little room Paper moves the menu up.
   const openMenu = () => {
-    anchorRef.current?.measureInWindow((_x, y, _w, h) => {
+    anchorRef.current?.measureInWindow((x, y, _w, h) => {
+      setAnchor({ x, y: y + h });
       const below = windowHeight - insets.bottom - (y + h) - SCREEN_MARGIN;
       setMaxHeight(Math.min(MENU_MAX_HEIGHT, below >= MENU_MIN_HEIGHT ? below : viewportHeight));
       setOpen(true);
     });
   };
+  const closeMenu = () => {
+    setOpen(false);
+    // Coordinate anchors leave focus restoration to us; never scroll the surrounding dialog.
+    if (anchorRef.current instanceof HTMLElement) anchorRef.current.focus({ preventScroll: true });
+  };
   const current = options.find((option) => option.value === value);
   return (
     <View>
-      <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom"
+      <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+        {...{ dataSet: { focusRing: 'field' } }}
+        accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled} aria-invalid={Boolean(error)}
+        accessibilityLabel={`${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`}>
+        {/* `inert` excludes every descendant, including Paper surfaces that restore pointer events. */}
+        <div inert>
+          <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false}
+            error={Boolean(error)} aria-disabled={disabled} showSoftInputOnFocus={false}
+            left={current?.icon ? <TextInput.Icon icon={() => current.icon} forceTextInputFocus={false} tabIndex={-1} aria-hidden /> : undefined}
+            right={<TextInput.Icon icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />} forceTextInputFocus={false} tabIndex={-1} aria-hidden />} />
+        </div>
+      </Pressable>
+      <Menu visible={open} onDismiss={closeMenu} anchorPosition="bottom"
         contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: menuHeight, borderRadius: radius.card,
           width: menuWidth, paddingVertical: spacing.xs, overflow: 'hidden' }}
-        anchor={
-          <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-            {...{ dataSet: { focusRing: 'field' } }}
-            accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled} aria-invalid={Boolean(error)}
-            accessibilityLabel={`${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`}>
-            {/* `inert` excludes every descendant, including Paper surfaces that restore pointer events. */}
-            <div inert>
-              <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false}
-                error={Boolean(error)} aria-disabled={disabled} showSoftInputOnFocus={false}
-                left={current?.icon ? <TextInput.Icon icon={() => current.icon} forceTextInputFocus={false} tabIndex={-1} aria-hidden /> : undefined}
-                right={<TextInput.Icon icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />} forceTextInputFocus={false} tabIndex={-1} aria-hidden />} />
-            </div>
-          </Pressable>
-        }>
+        anchor={anchor}>
         <ScrollView style={{ maxHeight: Math.max(0, menuHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">
         {options.map((option) => {
           const selected = option.value === value;
           return (
             <StateLayerPressable key={option.value} layerColor={colors.onSurface} radius={itemRadius} accessibilityRole="menuitem" style={[styles.item, selected && { backgroundColor: colors.secondaryContainer }]}
-              onPress={() => { setOpen(false); onChange(option.value); }} accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}>
+              onPress={() => { closeMenu(); onChange(option.value); }} accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}>
               {option.icon && <View style={styles.icon}>{option.icon}</View>}
               <Text variant="bodyLarge" numberOfLines={1} style={[styles.itemLabel, selected && { color: colors.onSecondaryContainer }]}>{option.label}</Text>
               <View style={styles.check}>{selected && <SvgIcon shape={iconShapes.check} size={20} color={colors.onSecondaryContainer} />}</View>

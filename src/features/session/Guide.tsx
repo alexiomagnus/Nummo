@@ -55,6 +55,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
       <Section title={t("Consultare le spese")}>
         {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; da qui modifichi o elimini una voce. Pagamenti ricorrenti raccoglie le spese che si ripetono."))}
+        {p(t("L’elenco mostra 50 spese alla volta: Mostra altre spese estende la lista. Ricerca, ordinamento e riepiloghi mensili considerano sempre tutti i risultati."))}
         {p(t("La Dashboard mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con riepilogo, ciambella, blocchi o barre e andamento giornaliero interattivo."))}
         {p(t("Grafico e periodo scelti vengono ricordati in questo browser. Il confronto usa un intervallo precedente di pari durata, mostrato con le sue date, quando lo storico lo consente. L’andamento include i giorni senza spese fino a oggi."))}
         {p(t("Puoi creare categorie senza un limite di numero. I grafici mostrano solo quelle con spese nel periodo: se sono molte, le meno rilevanti sono riunite in Altre, con dettaglio consultabile. Nei Blocchi, i rettangoli sono proporzionali agli importi e la legenda sotto il grafico elenca tutte le categorie; tocca un blocco per vederne importo, quota e transazioni. Le barre sono proporzionali alla categoria con spesa maggiore; le percentuali indicano la quota sul totale. Seleziona una categoria per consultarne le spese."))}

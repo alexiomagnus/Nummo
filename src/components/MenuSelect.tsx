@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Menu, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,6 +26,18 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState({ x: 0, y: 0 });
+  const anchorRef = useRef<ComponentRef<typeof View>>(null);
+  const openMenu = () => anchorRef.current?.measureInWindow((x, y, _width, height) => {
+    setAnchor({ x, y: y + height });
+    setOpen(true);
+  });
+  const closeMenu = () => {
+    setOpen(false);
+    if (anchorRef.current instanceof HTMLElement) {
+      anchorRef.current.querySelector<HTMLElement>('button, [role="button"]')?.focus({ preventScroll: true });
+    }
+  };
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const maxHeight = Math.max(0, Math.min(360, height - insets.top - insets.bottom - 2 * spacing.lg));
@@ -35,26 +47,27 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
   const current = options.find((option) => option.value === value);
   return (
     <View style={style}>
-      <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom"
+      <View ref={anchorRef}>
+        <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
+          aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
+          onPress={openMenu} style={[styles.field, { borderColor: colors.outline }]}>
+          {showIcon && <SvgIcon shape={icon} size={20} color={colors.onSurfaceVariant} />}
+          <View style={styles.text}>
+            <Text variant="labelSmall" style={{ color: colors.onSurfaceVariant }}>{label}</Text>
+            <Text variant="bodyMedium" numberOfLines={1}>{current?.label ?? ''}</Text>
+          </View>
+          <SvgIcon shape={iconShapes.chevronDown} size={20} color={colors.onSurfaceVariant} />
+        </StateLayerPressable>
+      </View>
+      <Menu visible={open} onDismiss={closeMenu} anchorPosition="bottom"
         contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight, maxWidth, borderRadius: radius.control,
           paddingVertical: spacing.xs, overflow: 'hidden' }}
-        anchor={
-          <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
-            aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
-            onPress={() => setOpen(true)} style={[styles.field, { borderColor: colors.outline }]}>
-            {showIcon && <SvgIcon shape={icon} size={20} color={colors.onSurfaceVariant} />}
-            <View style={styles.text}>
-              <Text variant="labelSmall" style={{ color: colors.onSurfaceVariant }}>{label}</Text>
-              <Text variant="bodyMedium" numberOfLines={1}>{current?.label ?? ''}</Text>
-            </View>
-            <SvgIcon shape={iconShapes.chevronDown} size={20} color={colors.onSurfaceVariant} />
-          </StateLayerPressable>
-        }>
+        anchor={anchor}>
         {/* A maxHeight on Paper's surface alone does not make custom rows scrollable. */}
         <ScrollView style={{ maxHeight: Math.max(0, maxHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">
         {options.map((option) => (
           <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
-            onPress={() => { setOpen(false); onChange(option.value); }}
+            onPress={() => { closeMenu(); onChange(option.value); }}
             accessibilityLabel={`${option.label}${option.value === value ? t(", selezionato") : ''}`}>
             <Text variant="bodyLarge" numberOfLines={1} style={styles.itemLabel}>{option.label}</Text>
             {/* Fixed slot on every row: the check always sits at the right edge, whatever the label length. */}

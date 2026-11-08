@@ -12,6 +12,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { inputOutline, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
+import { expenseMonths } from './expenseMonths';
 
 type Props = {
   occurrences: readonly Occurrence[];
@@ -24,32 +25,40 @@ type Props = {
 
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const monthFormat = (locale: string) => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const monthOf = (date: string, locale: string) => {
-  const name = monthFormat(locale).format(new Date(`${date.slice(0, 7)}-01T00:00:00Z`));
+const monthLabel = (month: string, formatter: Intl.DateTimeFormat, locale: string) => {
+  const name = formatter.format(new Date(`${month}-01T00:00:00Z`));
   return name.charAt(0).toLocaleUpperCase(locale) + name.slice(1);
 };
-const formatDate = (date: string, locale: string) => dateFormat(locale).format(new Date(`${date}T00:00:00Z`));
 
 // Filter values: every category, those without a (still existing) category, or one category ID.
 const ALL = 'all';
+const pageSize = 50;
 
 export function ExpenseList({ occurrences, categories, error, onEdit, listItems }: Props) {
-  const { t, locale, formatAmount } = useI18n();
+  const { t, locale } = useI18n();
+  const dates = useMemo(() => dateFormat(locale), [locale]);
+  const months = useMemo(() => monthFormat(locale), [locale]);
+  const amounts = useMemo(() => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }), [locale]);
+  const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
+  const formatAmount = (minor: number) => amounts.format(minor / 100);
   const theme = useTheme();
   const size = useSizeClass();
   const compact = size === 'compact';
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortOption>('date-desc');
   const [categoryFilter, setCategoryFilter] = useState<string>(ALL);
+  const [visibleCount, setVisibleCount] = useState(pageSize);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   // A deleted category leaves expenses pointing at a missing ID: they count as uncategorised.
   const known = useMemo(() => new Set(categories.map((category) => category.id)), [categories]);
+  const categoryById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const filter = categoryFilter === ALL || known.has(categoryFilter) ? categoryFilter : ALL;
   const results = useMemo(() => {
     const scoped = filter === ALL ? occurrences
       : occurrences.filter((item) => item.category_id === filter);
     return searchAndSort(scoped, query, sort);
   }, [occurrences, known, filter, query, sort]);
+  const summaries = useMemo(() => expenseMonths(results), [results]);
   const byDate = sort === 'date-desc' || sort === 'date-asc';
   const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]) }));
   const categoryChoices = [{ value: ALL, label: t("Tutte le categorie") }, ...categories.map((category) => ({ value: category.id, label: category.label }))];
@@ -58,12 +67,14 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
     <>
       <View style={styles.toolbar}>
         <TextInput outlineStyle={inputOutline} label={t("Cerca per nome")} accessibilityLabel={t("Cerca per nome")} mode="outlined" value={query}
-          onChangeText={setQuery} autoCorrect={false} style={styles.search}
+          onChangeText={(value) => { setQuery(value); setVisibleCount(pageSize); }} autoCorrect={false} style={styles.search}
           left={leadingIcon(iconShapes.search)}
-          right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => setQuery('')}
+          right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => { setQuery(''); setVisibleCount(pageSize); }}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
-        <MenuSelect label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort} onChange={setSort} style={styles.select} />
-        <MenuSelect label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter} onChange={setCategoryFilter} style={styles.select} />
+        <MenuSelect label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
+          onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
+        <MenuSelect label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
+          onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
       </View>
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>
@@ -73,16 +84,12 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
     <View style={styles.root}>
       {filters}
       <View role="list">
-        {results.map((item, index) => {
-          const month = monthOf(item.date, locale);
-          const heading = byDate && (index === 0 || monthOf(results[index - 1]!.date, locale) !== month);
-          const inMonth = heading ? results.filter((entry) => monthOf(entry.date, locale) === month) : [];
-          const monthTotal = inMonth.reduce((sum, entry) => sum + entry.amount_minor, 0);
-          const monthCount = `${inMonth.length} ${inMonth.length === 1 ? t("spesa") : t("spese")}`;
-          // Dividers only between rows: none after the last row of a month group (the next heading separates it) or of the list.
-          const next = results[index + 1];
-          const lastOfGroup = !next || (byDate && monthOf(next.date, locale) !== month);
-          const category = categories.find((entry) => entry.id === item.category_id);
+        {results.slice(0, visibleCount).map((item, index) => {
+          const month = item.date.slice(0, 7);
+          const heading = byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== month);
+          const summary = summaries.get(month)!;
+          const monthCount = `${summary.count} ${summary.count === 1 ? t("spesa") : t("spese")}`;
+          const category = categoryById.get(item.category_id ?? '');
           const open = expanded.has(item.key);
           const detailsId = `expense-details-${item.key}`;
           const products = listItems?.get(item.expenseId);
@@ -96,10 +103,10 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
               {heading && (
                 <View style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
                   <View style={styles.monthLabel}>
-                    <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{month}</Text>
+                    <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{monthLabel(month, months, locale)}</Text>
                     <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>{monthCount}</Text>
                   </View>
-                  <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmount(monthTotal)}</Text>
+                  <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmount(summary.total)}</Text>
                 </View>
               )}
               <View>
@@ -111,7 +118,7 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
                 trailing={<>
                   {!compact && <Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>}
                   <IconButton style={listRowStyles.iconButton} aria-expanded={open} aria-controls={open ? detailsId : undefined}
-                    accessibilityLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: formatDate(item.date, locale) })}
+                    accessibilityLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: formatDate(item.date) })}
                     icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
                     onPress={() => setExpanded((previous) => {
                       const next = new Set(previous);
@@ -125,7 +132,7 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
                   style={[styles.details, { borderColor: theme.colors.outlineVariant }]}>
                   <View style={styles.detailField}>
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Data")}</Text>
-                    <Text variant="bodyMedium">{formatDate(item.date, locale)}</Text>
+                    <Text variant="bodyMedium">{formatDate(item.date)}</Text>
                   </View>
                   <View style={styles.detailField}>
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
@@ -152,10 +159,16 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
         {occurrences.length > 0 && results.length === 0 && (
           <View style={styles.empty}>
             <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>
-            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); }}>{t("Azzera filtri")}</Button></View>
+            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); setVisibleCount(pageSize); }}>{t("Azzera filtri")}</Button></View>
           </View>
         )}
       </View>
+      {results.length > visibleCount && <View style={styles.empty}>
+        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }} accessibilityLiveRegion="polite">
+          {t("Mostrate {p0} di {p1} spese", { p0: visibleCount, p1: results.length })}
+        </Text>
+        <View style={styles.start}><Button mode="outlined" onPress={() => setVisibleCount((count) => count + pageSize)}>{t("Mostra altre spese")}</Button></View>
+      </View>}
     </View>
   );
 }

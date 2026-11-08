@@ -1,18 +1,47 @@
 # HANDOFF — Nummo
 
-Aggiornamento: **8 novembre 2026, sera (Europe/Rome)**. Gestionale personale di spese solo web, Google Auth e
+Aggiornamento: **8 novembre 2026, correzione focus e prestazioni sul checkout `d5170ee` con modifiche locali (Europe/Rome)**.
+Gestionale personale di spese solo web, Google Auth e
 Firestore BYOF, accesso riservato all'UID in `config/owner`. Contesto stabile, architettura e comandi: `AGENTS.md`;
 motivazioni: `docs/architecture.md`; configurazione: `README.md`, `docs/firebase-personale.md`.
 Questo file descrive il checkout: risultati emulati non certificano cloud, dispositivi reali o pubblicazione.
 
+## Ultima fase — focus dei selettori e apertura Spese (non committata)
+
+- **Diagnosi riprodotta:** montando «Nuovo fondo», Paper `Menu` chiuso metteva il focus sul selettore Mese:
+  scorrimento automatico di 253 px. `SelectField` e `MenuSelect` ora usano anchor a coordinate e ripristino esplicito
+  del focus con `preventScroll`; il dialogo parte a scroll zero, anche alla riapertura.
+- **Spese:** rimossi formattatori `Intl` ricreati per riga e scansioni ripetute dell'elenco per ciascun mese.
+  Riepiloghi in un passaggio (`expenseMonths.ts`), categorie indicizzate, formattatori riusati per lingua.
+  Prime 50 righe, altre 50 con «Mostra altre spese»; ricerca/ordinamento/riepiloghi restano completi.
+  Cambio ricerca/filtro/ordine riparte da 50. Guida e traduzioni IT/EN aggiornate; motivazioni in `docs/architecture.md`.
+- **Misura Chromium headless:** 240 spese TEST su 24 mesi, 412×915, CPU 4×, tre aperture effettive della sezione:
+  prima **4052/4024/4146 ms**, dopo **629/549/541 ms** (mediana 4052 → 549 ms).
+  Il confronto misura l'apertura con tutte le righe prima e le prime 50 dopo; tutte le 240 restano consultabili.
+  Sono dati emulati, non una misura sul dispositivo o sull'archivio personale dell'utente.
+- **Verifiche attuali:** `npm run check` **OK**, typecheck, **305/305** test e build demo con endpoint espliciti
+  Auth 39099/Firestore 39280. Due regressioni sui riepiloghi (mesi/anni, filtri, totali, ordine e input intatti),
+  casi i18n estesi. Browser: selezione mese, Escape e focus ripristinato senza scroll, ordinamento, ricerca,
+  espansione fino a tutte le 240 righe; layout 320×740 chiaro IT e 1280×900 scuro EN senza overflow orizzontale,
+  dialogo in cima e prime 50 righe/traduzioni verificate. Controllo diff OK. Nessuna modifica a servizi/Rules o dati reali.
+
 ## Git
 
-- Ramo `main`, HEAD **`5a42ef1`** (8 novembre 2026, 21:41 +01:00), allineato al riferimento locale `origin/main`
-  (nessun fetch: stato remoto non verificato).
-- **Non committato:** dettaglio lista (`ListsPage.tsx`), «Totale spesa» e «Registra spesa» sulla stessa riga come
-  «Aggiungi prodotto», senza riquadro né rientro (anche su mobile). `npm run check` OK (303/303, build demo);
-  resa nel browser non verificata.
-- Commit recenti: `5a42ef1` pagina Importa ed esporta, ritocchi Dashboard/Fondi/Liste, backup fittizio standard;
+- **Ritocco successivo (non committato):** rimossa l'icona di spunta dal pulsante «Registra spesa» nel dettaglio
+  lista (`ListsPage.tsx`). `npm run check` OK: typecheck, 305/305 test e build demo; resa browser non ricontrollata.
+
+- Ramo `main`, HEAD **`d5170ee`** (8 novembre 2026, 21:49 +01:00): dettaglio lista con «Totale spesa» e «Registra spesa» sulla
+  stessa riga. Riferimento `origin/main` non ricontrollato (nessun fetch).
+- **Non committato — pagina Impostazioni:** il dialogo `SettingsDialog` diventa `SettingsPage.tsx`, pagina del
+  workspace aperta dal menu account (contatore `settingsRequest` da `App.tsx`, come Categorie/Importa ed esporta),
+  con «Fatto» che torna alla sezione d'origine e «Ripristina» in fondo. Sezioni impilate su mobile, in due colonne
+  da medium in su. Da disconnessi l'icona Impostazioni sostituisce la schermata di accesso fino a «Fatto».
+- **Non committato — sprite pixel `wifi`, `music`, `film` ridisegnati** (`categoryPixelGlyphs.ts`, stessi ID e tinte):
+  wifi con due archi spessi e punto, due note unite piene, pellicola verticale con fori e due fotogrammi, come negli
+  altri stili. Non viste nell'app con categorie reali; prove visive pregresse sotto.
+- **Revisione documentale precedente:** riesaminati codice, script, Rules, documentazione e Git; aggiornati solo questi due
+  documenti, conservando le modifiche applicative preesistenti e la rinomina già nell'indice. Nessun commit o deploy.
+- Commit recenti: `d5170ee` riga checkout liste; `5a42ef1` pagina Importa ed esporta, ritocchi Dashboard/Fondi/Liste, backup fittizio standard;
   `296407b` liste della spesa, backup v4, Dashboard informativa, backup fittizio limite; `85fb9aa` fondi e budget,
   icone a tema denaro; `96777ac` transizioni e ricerca abbonamenti; `112ebcb` stati abbonamenti, backup v2, tre stili
   icone, predefiniti, avvio. I titoli dei commit non descrivono interamente il contenuto.
@@ -60,13 +89,14 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 
 ## Problemi aperti e limitazioni
 
-- **Rules cloud non allineate:** ultima pubblicazione registrata il 6 novembre 2026 (`a30a988`). Le Rules locali
+- **Allineamento Rules cloud da verificare:** ultima pubblicazione documentata il 6 novembre 2026 (`a30a988`). Le Rules locali
   successive (stati abbonamenti, fondi/movimenti/`fund_id`, liste/`list_id`, icone `wallet`/`bank`/`cash`/`safe`/
-  `growth`) non risultano pubblicate: in cloud queste scritture verrebbero rifiutate («Accesso negato»). Pubblicare
-  solo con autorizzazione e **prima** di distribuire la build. Stato cloud non riverificato in questa revisione.
+  `growth`) non hanno una pubblicazione documentata. Se la release fosse ancora quella registrata, le nuove scritture
+  sarebbero rifiutate («Accesso negato»). Stato cloud non interrogato: confrontare le Rules distribuite e, se necessario,
+  pubblicarle solo con autorizzazione **prima** della pubblicazione Hosting.
 - **Compatibilità icone:** decoder/import rifiutano ID rimossi (`receipt`, `phone`, `bed`, `ticket`, `briefcase`,
   `droplet`, `wrench`, `pill`, `book`, `plane`, `scissors`, `baby`, `flame`, `wine`, `umbrella`, `leaf`, `shield`,
-  `ellipsis`; verificato che non sono in `categoryIcons`). Vecchi record possono bloccare categorie e backup;
+  `ellipsis`; prova locale: tutti i 18 ID sono rifiutati da decoder categorie e lettore backup). Vecchi record possono bloccare categorie e backup;
   presenza nei dati personali non verificata, nessun adapter.
 - **Rules:** budget di 1000 espressioni stretto (rimisurare a ogni nuovo controllo sulle spese); non verificano
   esistenza di fondo/lista referenziati, unicità dei nomi di fondo (solo client), ordine/date degli stati.
@@ -82,32 +112,45 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   integralmente. Licenza assente; audit dipendenze non aggiornato. Nessun lint configurato.
 - Richieste pregresse senza contesto sufficiente (scritta «minimale» senza testo, colori attivi mobile/rail): chiarire
   con l'utente prima di intervenire.
+- **Documentazione d'uso parzialmente storica:** README indica ancora Spese → «Dati» per i backup e non elenca Fondi/Liste;
+  `docs/architecture.md` conserva sezioni poi superate (classifica, dettaglio giornaliero, totale centrale ciambella).
+  Per il comportamento attuale usare codice e questo stato; riallineamento fuori dalla presente revisione di due file.
 
 ## Verifiche
 
-**Eseguite in questa revisione** su HEAD `5a42ef1` pulito, dipendenze già installate, Node 26.13.0, npm 12.2.2, Java 21.0.13:
+**Revisione documentale precedente** sulla base `d5170ee`, prima della correzione focus/prestazioni, dipendenze già installate,
+Node 26.13.0, npm 12.2.2, Java 21.0.13:
 
 | Comando | Esito |
 | --- | --- |
-| `npm run check` | **OK**: typecheck, **303/303** test, export demo `dist-demo/` (488 moduli, bundle 2,4 MB). |
+| `npm run check` | **OK**: typecheck, **303/303** test, export demo `dist-demo/` (435 moduli, bundle 2,4 MB). |
+| `npm run check:env` | **OK**: policy dei file di sviluppo; non certifica servizi o credenziali. |
 | `git diff --check` | **OK**. |
-| `AUTH_PORT=39099 FIRESTORE_PORT=39280 npm run test:emulator -- --config .nummo-docs-review.json` | **15/15** (SDK/Rules, CRUD, conflitti, stati, fondi, liste, import v4). Config temporanea in radice, UI disattivata, rimossa dopo la suite; emulatori dell'utente su 8180/4000 non toccati. |
+| `AUTH_PORT=39099 FIRESTORE_PORT=39280 npm run test:emulator -- --config .nummo-docs-review.json` | **15/15** (SDK/Rules, CRUD, conflitti, stati, fondi, liste, import v4). Porte dedicate anche per Hub/log/websocket, UI disattivata; config temporanea rimossa dopo la suite. |
 | `npm run test:hybrid` | **8/8** (lifecycle runner, Firestore demo reale, Expo simulato). |
+| Prova locale decoder/import con ID icona rimossi | **OK**: 45 icone attive, 18 ID storici rifiutati da entrambi. Nessun dato personale letto. |
+
+Le suite hybrid ed emulatori sono state rieseguite fuori dalla sandbox dopo i primi tentativi falliti
+(avvio test hybrid; binding porte emulatori). Solo dati demo isolati, nessun arresto dei servizi utente.
+I `PERMISSION_DENIED` nei casi negativi delle Rules sono attesi; non costituiscono un fallimento della suite.
 
 **Evidenza delle fasi precedenti (stesso giorno, non ripetuta qui):** Chromium headless su build demo con emulatori
-dedicati per fondi, liste, Dashboard, modulo desktop compatto e pagina Importa ed esporta (412×915, 1280×900, 320 px,
-IT/EN, chiaro/scuro): nessun overflow o errore JS. Riepilogo/esiti del ripristino, centro ciambella, Blocchi senza
+dedicati per fondi, liste, Dashboard, modulo desktop compatto, Importa ed esporta e nuova pagina Impostazioni
+(412×915 chiaro IT, 1280×900 scuro EN, 320×740 scuro IT): nessun overflow o errore JS riportato.
+Per Impostazioni riportati accesso da connessi/disconnessi e ritorno con «Fatto»; sprite pixel visti in anteprima
+24/48/72 px chiaro/scuro. Queste prove non sono state ripetute nella revisione documentale.
+Riepilogo/esiti del ripristino, centro ciambella, Blocchi senza
 testo e rimozioni di testi verificati solo da typecheck/test/build. Misure d'avvio: `docs/avvio-prestazioni.md`.
 
-**Non eseguiti:** `npm ci`/clone pulito, `check:env`, `check:hybrid`, avvio interattivo dev/demo, build/preview cloud,
-dry-run/deploy, audit, browser, import UI dei backup fittizi, dispositivi reali, touch, tastiera virtuale reale,
+**Ancora non verificati nell'ultima fase:** `npm ci`/clone pulito, `check:hybrid`, avvio interattivo dev/demo, build/preview cloud,
+dry-run/deploy, audit, import UI dei backup fittizi, dispositivi reali, touch, tastiera virtuale reale,
 screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-1. **Rules e compatibilità prima di distribuire** (con autorizzazione): decidere conservazione o migrazione esplicita
-   degli ID icona rimossi, con regressioni decoder/import; poi pubblicare le Rules (`--only firestore:rules`,
-   `--project ID`) e verificarle in sola lettura; infine valutare `npm run deploy:hosting`.
+1. **Rules e compatibilità prima di distribuire** (con autorizzazione per il cloud): decidere conservazione o migrazione
+   esplicita degli ID icona rimossi, con regressioni decoder/import; confrontare le Rules cloud e, se necessario,
+   pubblicarle (`--only firestore:rules`, `--project ID`) verificando poi la release; infine valutare `npm run deploy:hosting`.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione v4 dall'interfaccia, riepilogo ed esiti del ripristino, eccezioni di budget e
    sospensione ricarica, dialoghi Fondi/Liste a 320 px e in landscape, CSV in foglio di calcolo reale.
@@ -119,5 +162,6 @@ screen reader, concorrenza tra due dispositivi.
 5. **Avvio/guida:** misurare rete su `#guida`; procedura `docs/avvio-prestazioni.md` su dispositivo e rete lenta;
    popup dopo logout/scadenza, Safari/Firefox/Edge.
 6. **Riproducibilità:** `npm ci` da clone pulito su Node LTS, audit aggiornato, scelta della licenza.
+   Riallineare README e sezioni superate di `docs/architecture.md` alle funzioni attuali, preservandone le decisioni valide.
    Unicità server dei nomi fondo, sincronizzazione del predefinito, paginazione e service worker sono evoluzioni da
    valutare, non lavori pianificati né implementati.

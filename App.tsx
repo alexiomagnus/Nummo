@@ -9,7 +9,7 @@ import { IconStyleProvider } from './src/components/CategoryGlyph';
 import { ThemeIcon } from './src/components/ThemeIcon';
 import { SvgIcon, iconShapes } from './src/components/SvgIcon';
 import type { Preferences } from './src/features/settings/preferences';
-import { SettingsDialog } from './src/features/settings/SettingsDialog';
+import { SettingsPage } from './src/features/settings/SettingsPage';
 import { usePreferences } from './src/features/settings/usePreferences';
 import { SignIn, leaveGuide } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
@@ -60,8 +60,10 @@ type RootProps = {
 function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPreferences }: RootProps) {
   const { t } = useI18n();
   const theme = useTheme();
+  // Signed out, Settings replaces the sign-in screen until «Fatto».
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Categories open from the account menu (below Settings): each request (a counter) opens their page in the workspace.
+  // Account menu pages (Settings, Categories, import/export): each request (a counter) opens its page in the workspace.
+  const [settingsRequest, setSettingsRequest] = useState(0);
   const [categoriesRequest, setCategoriesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const session = useSession(!configMissing);
@@ -70,14 +72,14 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
     : 'Spese e categorie nel tuo progetto Firebase personale.') + ' ' + t(persistentCache
       ? 'Cache offline SDK abilitata dove supportata: usa un dispositivo fidato.'
       : 'Cache in memoria: le scritture offline non sopravvivono alla chiusura.');
-  const settings = <SettingsDialog visible={settingsOpen} preferences={preferences} dark={dark} onChange={onChangePreferences}
-    onReset={onResetPreferences} onDismiss={() => setSettingsOpen(false)} />;
+  const settings = (onDone: () => void) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
+    onReset={onResetPreferences} onDone={onDone} />;
   const themeToggle = (
     <IconButton size={24} style={styles.touch} icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
   const account = session.status === 'signed-in'
-    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsOpen(true)}
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenCategories={() => setCategoriesRequest((n) => n + 1)}
       onOpenBackup={() => setBackupRequest((n) => n + 1)} /> : null;
 
@@ -87,7 +89,7 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
   const [hint] = useState(() => readSessionHint());
   const [releasedUid, setReleasedUid] = useState<string | null>(null);
   useEffect(() => {
-    if (session.status === 'signed-in') writeSessionHint(backendMode === 'cloud' ? 'cloud' : 'local');
+    if (session.status === 'signed-in') { writeSessionHint(backendMode === 'cloud' ? 'cloud' : 'local'); setSettingsOpen(false); }
     else if (session.status === 'signed-out') writeSessionHint(null);
   }, [session.status]);
   const signedIn = session.status === 'signed-in';
@@ -101,11 +103,11 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
           <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{t(session.error)}</Text>
         </View>
       ) : null}
-      {settings}
       {signedIn ? (
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
             onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} backupRequest={backupRequest}
+            settingsRequest={settingsRequest} renderSettings={settings}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
             topActions={<>{themeToggle}{account}</>} />
         </View>
@@ -120,14 +122,15 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
         <AppShell actions={<>{themeToggle}<IconButton style={styles.touch} accessibilityLabel={t('Impostazioni')}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.settings} size={size} color={color} />}
           onPress={() => setSettingsOpen(true)} /></>} brand={{ label: t("accesso"), onPress: leaveGuide }}>
-          {configMissing && (
+          {configMissing && !settingsOpen && (
             <Card title={t("Configurazione Firebase mancante")}>
               <Text variant="bodyMedium">
                 {t("Mancano: ")}{missingFirebaseConfig.join(', ')}{t(". Copia `.env.example` in `.env.local`, compila i valori e riavvia Expo.")}</Text>
             </Card>
           )}
-          {session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
-          {session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} />}
+          {settingsOpen && settings(() => setSettingsOpen(false))}
+          {!settingsOpen && session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
+          {!settingsOpen && session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} />}
         </AppShell>
       ) : null}
     </>

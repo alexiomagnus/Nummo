@@ -1,5 +1,8 @@
 // Italian source messages are stable UI keys. Never pass user-authored names to t().
 export const english: Readonly<Record<string, string>> = {
+  "Mostra altre spese": "Show more expenses",
+  "Mostrate {p0} di {p1} spese": "Showing {p0} of {p1} expenses",
+  "L’elenco mostra 50 spese alla volta: Mostra altre spese estende la lista. Ricerca, ordinamento e riepiloghi mensili considerano sempre tutti i risultati.": "The list shows 50 expenses at a time: Show more expenses extends it. Search, sorting and monthly summaries always use all results.",
   "Importa ed esporta": "Import and export",
   "Lunghezza delle barre relativa alla categoria con spesa maggiore.": "Bar lengths are relative to the highest-spending category.",
   "La Dashboard mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con riepilogo, ciambella, blocchi o barre e andamento giornaliero interattivo.": "The Dashboard shows spending by category for this month, last month or the last 3, 6 or 12 months, with a summary, donut, blocks or bars and an interactive daily trend.",

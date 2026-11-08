@@ -23,6 +23,8 @@ test('lingue: testo italiano, inglese, parametri e fallback senza alterare i dat
   assert.equal(t('Una frase sconosciuta'), 'Una frase sconosciuta');
   assert.equal(t('constructor'), 'constructor');
   assert.equal(t('__proto__'), '__proto__');
+  assert.equal(t('Mostra altre spese'), 'Show more expenses');
+  assert.equal(translate('en', 'Mostrate {p0} di {p1} spese', { p0: 50, p1: 240 }), 'Showing 50 of 240 expenses');
 });
 
 test('errori dominio: validazione e CSV tradotti nel punto di presentazione', () => {

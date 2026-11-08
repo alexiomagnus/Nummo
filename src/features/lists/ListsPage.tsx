@@ -273,8 +273,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
             {totalError && <HelperText type="error" accessibilityRole="alert">{t(totalError)}</HelperText>}
           </View>
           <Button mode="contained" disabled={!canRegister} style={styles.addButton} contentStyle={styles.addContent}
-            onPress={() => { saveTotal(); remote.clearError(); setRegistering(true); }}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.check} size={size} color={color} />}>{t("Registra spesa")}</Button>
+            onPress={() => { saveTotal(); remote.clearError(); setRegistering(true); }}>{t("Registra spesa")}</Button>
         </View>
         {!canRegister && <Text variant="bodySmall" style={muted}>{t("La registrazione richiede la connessione e dati sincronizzati.")}</Text>}
       </View>}

@@ -559,3 +559,15 @@ BackupActions resta montato e nascosto fuori dalla pagina per preservare antepri
 il montaggio non legge né scrive dati. Conferme, sincronizzazione richiesta, preflight, copia automatica
 e operazioni server restano quelle esistenti. CSV rimane solo esportazione, JSON esportazione/ripristino.
 La bozza del modulo resta montata e la pagina viene smontata con il workspace al cambio UID.
+
+## Focus dei selettori e apertura Spese — 8 novembre 2026
+
+`SelectField` e `MenuSelect` usano pulsanti esterni e anchor a coordinate: Paper richiama il focus sull'anchor
+anche al primo montaggio chiuso, facendo scorrere i dialoghi fino ai selettori più in basso. Il focus viene
+restituito esplicitamente solo alla chiusura, con `preventScroll`, conservando l'accesso da tastiera.
+
+Spese calcola i riepiloghi mensili in un passaggio sui risultati filtrati, con chiavi civili `YYYY-MM` e
+formattatori `Intl` riusati per lingua. Monta inizialmente 50 righe; «Mostra altre spese» ne aggiunge 50.
+Ricerca, ordinamento e riepiloghi lavorano sull'intero insieme; cambiare ricerca/filtro/ordine torna alle prime 50.
+È un limite al rendering, senza paginazione Firestore o modifica ai dati: evita di montare subito centinaia di
+controlli Paper dopo un'importazione. Tutti i risultati restano consultabili, senza nuove dipendenze.
