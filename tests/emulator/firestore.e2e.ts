@@ -6,7 +6,7 @@ import { initializeAuth, connectAuthEmulator, signInWithCredential, GoogleAuthPr
 import { initializeFirestore, connectFirestoreEmulator, doc, setDoc, getDocFromServer, getDocsFromServer, collection,
   updateDoc, deleteDoc, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate } from 'firebase/firestore';
 import { createFirestoreStore } from '../../src/services/firestoreStore.ts';
-import { exportCsv, parseCsvImport } from '../../src/domain/backup.ts';
+import { makeBackup, parseBackup } from '../../src/domain/backup.ts';
 import { todayInRome } from '../../src/domain/policy.ts';
 await import('../../scripts/seed-demo.ts');
 const projectId = 'demo-nummo';
@@ -149,11 +149,17 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const cats = [{ id: randomUUID(), label: `Migrata ${suffix}`, icon: null }];
       const records = [{ ...payload, id: expense_id, category_id: cats[0]!.id, recurrence: 'monthly' as const,
         expense_date: '2025-01-31', price_changes: [{ index: 1, amount_minor: 1500, once: false }], created_at: '2025-01-01T00:00:00.000Z' }];
-      const csv = parseCsvImport(exportCsv(records, cats));
-      await owner.store.importRecords(csv.expenses, csv.categories);
-      await owner.store.importRecords(csv.expenses, csv.categories);
+      const backup = parseBackup(JSON.parse(makeBackup({ expenses: records, categories: cats })));
+      await owner.store.importRecords(backup.expenses, backup.categories);
+      await owner.store.importRecords(backup.expenses, backup.categories);
       await owner.store.importRecords(records, cats);
-      await assert.rejects(owner.store.importRecords([{ ...records[0]!, amount_minor: 1 }], cats));
+      const preview = await owner.store.previewImport(backup);
+      assert.deepEqual([preview.merge.addExpenses.length, preview.merge.sameExpenses, preview.merge.conflicts.length], [0, 1, 0]);
+      await assert.rejects(owner.store.importRecords([{ ...records[0]!, amount_minor: 1 }], cats), /Importazione bloccata: 1 elementi/);
+      // A category with the same name but another ID also blocks the merge, before any write.
+      const before = (await owner.store.exportSnapshot()).expenses.length;
+      await assert.rejects(owner.store.importRecords([{ ...(({ expense_id, ...data }) => ({ ...data, id: expense_id }))(expense()), created_at: '2025-02-01T00:00:00.000Z' }], [{ id: randomUUID(), label: cats[0]!.label, icon: null }]), /Importazione bloccata/);
+      assert.equal((await owner.store.exportSnapshot()).expenses.length, before);
       const all = (await owner.store.exportSnapshot()).expenses;
       assert.equal(all.find((r) => r.id === expense_id)?.created_at, records[0]!.created_at);
       assert.equal(all.find((r) => r.id === expense_id)?.amount_minor, 1250);
@@ -183,6 +189,13 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       snapshot = await owner.store.exportSnapshot();
       assert.equal(snapshot.expenses.length, 1);
       assert.equal(snapshot.categories.length, 1);
+      // Identical items are skipped, not deleted and rewritten: the revision did not move.
+      assert.deepEqual([snapshot.expenses[0]!.revision, snapshot.categories[0]!.revision], [1, 1]);
+      // Full JSON round trip of what is saved: export, parse, replace again, same archive.
+      const restored = parseBackup(JSON.parse(makeBackup(snapshot)));
+      await owner.store.importRecords(restored.expenses, restored.categories, 'replace');
+      const after = await owner.store.exportSnapshot();
+      assert.deepEqual(after.expenses.map((r) => [r.id, r.created_at, r.revision]), snapshot.expenses.map((r) => [r.id, r.created_at, r.revision]));
       // The old name is free again after the replacement.
       await owner.store.saveCategory(randomUUID(), `Gruppo ${suffix} 0`, null);
     });

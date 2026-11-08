@@ -62,8 +62,8 @@ recuperabili dal commit `e2b84d3`): l'unica importazione resta quella da file JS
    manuale dell'emulatore in esecuzione (specificare progetto/config corretti).
 2. (Rimosso) L'esame dei dati del browser non esiste più: i vecchi dati localStorage
    vanno esportati prima con una versione precedente (commit `e2b84d3`) e importati da JSON.
-3. Anteprima con conteggi, progetto e UID destinatario, poi conferma esplicita.
-   Niente associazione automatica all'account che effettua login.
+3. Riepilogo con conteggi (aggiunte, già presenti, conflitti), poi conferma esplicita; il
+   destinatario è sempre l'account che ha effettuato il login. Il backup non contiene UID né progetto.
 4. Preflight di tutti gli ID, nomi e payload contro il server. Se esistono con valori
    diversi, nessuna scrittura. Le transazioni ricontrollano ogni gruppo per coprire
    modifiche concorrenti: 8 categorie (limite accessi Rules) o 200 spese.
@@ -77,8 +77,8 @@ recuperabili dal commit `e2b84d3`): l'unica importazione resta quella da file JS
    rifiutati, non riparati silenziosamente. Categorie già eliminate possono lasciare
    riferimenti orfani, come prima; non vengono ricreate inventando nomi.
 7. Confrontare backup prima/dopo: numero di serie e categorie, somma dei centesimi,
-   ID e date. Il CSV conta le occorrenze; non confrontare il suo numero di righe con
-   il numero di serie nel JSON.
+   ID e date. Il CSV (solo consultazione) conta le occorrenze; non confrontare il suo numero
+   di righe con il numero di serie nel JSON.
 
 Per un vero foglio storico non disponibile in questa sessione: fare prima una copia
 manuale; il suo schema e la conversione richiedono analisi dedicata, non un importatore

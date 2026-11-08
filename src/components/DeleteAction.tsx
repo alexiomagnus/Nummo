@@ -14,6 +14,8 @@ type DialogProps = {
   // Overrides the default «Eliminare {name}?».
   title?: string;
   description?: string;
+  // Overrides the confirm button text («Elimina») for destructive actions that are not plain deletions.
+  confirmLabel?: string;
   onDismiss: () => void;
   onConfirm: () => boolean | Promise<boolean>;
 };
@@ -21,7 +23,7 @@ type DialogProps = {
 // Confirmation for every irreversible deletion (M3 basic dialog): small error-coloured icon,
 // left-aligned title and consequences, actions at the bottom right (full width on phones).
 // Escape cancels; the safe action («Annulla») takes the initial focus.
-export function DeleteDialog({ visible, name, title, description, onDismiss, onConfirm }: DialogProps) {
+export function DeleteDialog({ visible, name, title, description, confirmLabel, onDismiss, onConfirm }: DialogProps) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -49,8 +51,8 @@ export function DeleteDialog({ visible, name, title, description, onDismiss, onC
           <View style={[styles.actions, compact && styles.actionsCompact]}>
             <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={onDismiss}>{t("Annulla")}</Button>
             <Button mode="contained" buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy} contentStyle={styles.button}
-              accessibilityLabel={t("Conferma eliminazione di {p0}", { p0: name })}
-              onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{t("Elimina")}</Button>
+              accessibilityLabel={confirmLabel ?? t("Conferma eliminazione di {p0}", { p0: name })}
+              onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{confirmLabel ?? t("Elimina")}</Button>
           </View>
         </View>
       </Dialog>

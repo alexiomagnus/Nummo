@@ -25,7 +25,8 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   `category.ts`, `recurrence.ts`, `pricing.ts` (piano prezzi per numero di rinnovo),
   `history.ts`, `submission.ts` riutilizzati;
   `firestore.ts` valida i record sincronizzati e genera le chiavi nome categoria;
-  `backup.ts` valida le importazioni, genera JSON e CSV protetto da formule.
+  `backup.ts`: JSON di backup versionato (`makeBackup`/`parseBackup`, un lettore per versione), piano di importazione
+  (`planImport`: aggiunte, identici, conflitti, sostituzioni) e CSV delle transazioni (`exportCsv`, sola consultazione).
 - `src/services/backendConfig.ts`: modalità (`emulator|hybrid|cloud`) e env pubbliche a build, niente segreti;
   configurazioni miste → `missingFirebaseConfig` (l'app non avvia la sessione).
   `firebase.ts`: Auth e inizializzazione Firestore/cache; `firestoreStore.ts`: listener,
@@ -34,11 +35,14 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   scritture pendenti; `Guide.tsx`: guida pubblica statica («Cos'è Nummo e come funziona?»), aperta da `SignIn`
   su `#guida` (history, link diretto e ricarica; nessuna richiesta Firebase, nessun router). Testo da aggiornare quando
   cambiano le funzioni descritte; non presentare l'app come aperta a registrazioni. UI/errori account e stato smontati al cambio UID.
+  `signInError.ts` mostra solo codici `auth/...` validati (mai messaggi grezzi/token); `src/services/sessionProfile.ts`
+  sceglie la foto account (Google prima del generico Firebase, stringhe vuote ignorate).
 - `src/features/expenses/`: modulo/validazione, `ExpenseStore`, `useRemoteExpenses`,
   `ExpenseEditor`. Nessun hook di spese locali nel percorso attivo.
 - `src/features/categories/`: `useRemoteCategories`, impostazioni, icone. ID stabili,
   unicità nomi tramite transazioni e indice `categoryNames`. Predefinite aggiunte da
-  azione esplicita. Limite applicativo di 10 categorie (non imposto dalle Rules);
+  azione esplicita. Modifica di nome e icona in `CategoryEditor` (`AppDialog`, una transazione);
+  creazione/eliminazione nella pagina. Limite applicativo di 10 categorie (non imposto dalle Rules);
   gli archivi esistenti oltre limite restano leggibili. Nessun salvataggio in localStorage.
 - `src/features/settings/`: preferenze di aspetto e lingua (`preferences.ts` puro, `usePreferences`
   su localStorage, `SettingsDialog` dal menu account o dall'ingranaggio prima del login). `src/theme/palette.ts` genera
@@ -51,11 +55,14 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
 - `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
   fino a oggi, non materializzate nel database. Ciambella SVG DOM, blocchi con layout
   treemap puro e dettaglio giornaliero da occorrenze già caricate; solo web.
-- `src/features/backup/`: download CSV/JSON e importazione esplicita da file CSV/JSON di Nummo.
-  Aggiunta senza sovrascritture oppure sostituzione distruttiva con conferma dedicata;
-  entrambe per gruppi, non atomiche sull'intero archivio. Nessun adapter attivo per i vecchi dati localStorage.
+- `src/features/backup/`: «Esporta transazioni (CSV)» solo per consultare (mai importabile); «Scarica backup (JSON)» e
+  «Importa backup (JSON)» sono l'unico ripristino. Riepilogo prima della conferma; unione bloccata dai conflitti
+  (stesso ID o nome con contenuto diverso), sostituzione distruttiva con conferma e copia automatica dei dati attuali.
+  Entrambe per gruppi, non atomiche sull'intero archivio. Nessun import CSV né adapter per vecchi dati localStorage.
 - `src/components/`: controlli Material 3 condivisi, shell adattiva, icone e notifiche;
   `src/features/workspace/`: composizione delle sezioni, listener e stato di sincronizzazione.
+  All'apertura la pagina attende i primi dati (spinner; modulo montato e invisibile per conservare misure e bozza),
+  rilasciata da dati pronti, errore o 4 s: mai un blocco permanente.
 - `firestore.rules`: proprietario da `config/owner` (solo amministratore), provider
   Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
@@ -63,7 +70,7 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   `dev-hybrid.ts`/`hybridRunner.ts` (avvio, riuso verificato e arresto dei servizi hybrid),
   `check-hybrid.ts`/`hybridPreflight.ts` (raggiungibilità locale),
   `build-cloud.ts`, `envPolicy.ts` (ambienti), `deploy-hosting.ts` (pubblicazione solo Hosting).
-- `public/`: copiato dall'export: modello `index.html`, manifest con colori statici,
+- `public/`: copiato dall'export: modello `index.html`, manifest con colori statici e neutri (`#121212`: la splash di Android non segue accento/tema scelti),
   icone PNG/SVG (anche maskable e apple-touch), font locali. `GlobalStyle` aggiorna
   `theme-color` su `colors.background` e l'altezza visibile tramite `viewport.ts`
   (VisualViewport, senza reflow durante pinch zoom); CSS iniziale in `index.html`.
@@ -166,10 +173,13 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
   secondo archivio. Modifiche/eliminazioni/categorie online in transazione con la
   revisione vista all'apertura; conflitti espliciti. Salvataggi incerte: verifica in
   lettura, mai nuovo ID automatico. Conservare le copie di recupero visibili.
-- Importazione sempre esplicita, file originali intatti, preflight più gruppi ripetibili;
-  la modalità aggiunta non sovrascrive, la sostituzione elimina prima i dati salvati
-  e richiede conferma. Non promettere atomicità dell'intero archivio. Backup server-only, nessun dato privato
-  inserito nei log. JSON mantiene originali, CSV neutralizza formule e quota i campi.
+- Importazione sempre esplicita, file originali intatti, preflight completo (file + dati del server) prima della prima
+  scrittura, poi gruppi ripetibili; elementi identici saltati, mai riscritti. L'unione non sovrascrive; la sostituzione
+  elimina solo ciò che differisce dal file e richiede conferma. Non promettere atomicità dell'intero archivio.
+  Backup server-only, nessun dato privato inserito nei log. JSON: solo dati di ripristino (niente UID/progetto, revisioni,
+  `updated_at`, `name_key`), ordinato e deterministico; nuova forma → nuovo `backupVersion` + lettore in `readers`.
+  CSV: intestazioni italiane, `;` come separatore, virgola decimale, BOM, una riga per occorrenza fino a oggi,
+  testi con formule neutralizzati dall'apostrofo e sempre quotati.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
   `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
   contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.

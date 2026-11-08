@@ -150,5 +150,5 @@ test('contratto: schedule validato; spese vecchie senza campo restano valide; co
 test('CSV: ogni occorrenza esporta il prezzo che aveva', () => {
   const record = { ...entry({ price_changes: [makeChange(1, 1200, false)] }), currency: 'EUR' as const, category_id: null, source: 'web_app' as const, schema_version: 1 as const };
   const csv = exportCsv([record as never], [], '2026-12-31');
-  assert.ok(csv.includes('"6.00","600"') && csv.includes('"12.00","1200"'));
+  assert.ok(csv.includes(';6,00;EUR;') && csv.includes(';12,00;EUR;'));
 });

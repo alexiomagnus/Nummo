@@ -2,7 +2,7 @@ import {
   collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
   Timestamp, writeBatch, type Firestore, type DocumentData, type QuerySnapshot,
 } from 'firebase/firestore';
-import { parseImport } from '../domain/backup.ts';
+import { planImport, sameCategory, sameExpense, validateBackupData, type ImportData, type ImportMode } from '../domain/backup.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../domain/contract.ts';
 import { categoryLimitMessage, categoryNameError, maxCategories, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
@@ -23,6 +23,14 @@ export function createFirestoreStore(db: Firestore, uid: string) {
   const categories = collection(db, 'users', uid, 'categories');
   const names = collection(db, 'users', uid, 'categoryNames');
   const conflict = () => new Error('I dati sono cambiati in un’altra sessione. Riapri la modifica e riprova.');
+  // Reads the saved archive from the server for a restore plan. Refuses while writes are pending.
+  async function readArchive() {
+    const [e, c] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories)]);
+    const savedExpenses = parseSnapshot(e, parseSyncedExpense);
+    const savedCategories = parseSnapshot(c, parseSyncedCategory);
+    if (savedExpenses.pending || savedCategories.pending) throw new Error('Attendi le scritture pendenti prima di importare.');
+    return { expenses: savedExpenses.records, categories: savedCategories.records };
+  }
   return {
     watchExpenses(next: (value: SnapshotState<SyncedExpense>) => void, error: (reason: Error) => void) {
       return onSnapshot(expenses, { includeMetadataChanges: true }, (s) => {
@@ -101,31 +109,38 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       if (expenseState.pending || categoryState.pending) throw new Error('Attendi la sincronizzazione prima di esportare.');
       return { expenses: expenseState.records, categories: categoryState.records };
     },
-    // 'merge' only adds (identical duplicates skipped, conflicts block). 'replace' first deletes every saved expense and category.
-    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: 'merge' | 'replace' = 'merge') {
-      const checked = parseImport({ format: 'nummo-backup', version: 1, expenses: records, categories: categoryRecords });
-      records = checked.expenses; categoryRecords = checked.categories;
-      // Preflight the whole destination before writing. Each chunk rechecks its IDs in a transaction.
-      const [e, c] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories)]);
-      const savedExpenses = parseSnapshot(e, parseSyncedExpense);
-      const savedCategories = parseSnapshot(c, parseSyncedCategory);
-      if (savedExpenses.pending || savedCategories.pending) throw new Error('Attendi le scritture pendenti prima di importare.');
+    // Preview for the import dialog: what each mode would do, computed on the current server data. No writes.
+    async previewImport(data: ImportData) {
+      const current = await readArchive();
+      return { merge: planImport(data, current, 'merge'), replace: planImport(data, current, 'replace') };
+    },
+    // 'merge' only adds (identical items skipped; any conflict blocks the whole import before the first write).
+    // 'replace' makes the archive equal to the file: it removes saved items that differ from the file, then adds the rest.
+    // Nothing is written until the file and the plan have been validated against the server data.
+    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge') {
+      const checked = validateBackupData(records, categoryRecords);
+      const current = await readArchive();
+      const plan = planImport(checked, current, mode);
+      if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi del backup sono diversi da quelli già salvati con lo stesso ID o nome. Nessun dato è stato modificato.`);
+      if (mode === 'merge' && plan.categoryTotal > maxCategories) throw new Error(`Con questo file le categorie sarebbero ${plan.categoryTotal}. ${categoryLimitMessage}`);
       if (mode === 'replace') {
         const savedNames = await getDocsFromServer(names);
+        const removedCategories = current.categories.filter((c) => plan.removeCategoryIds.includes(c.id));
         try {
-          for (let i = 0; i < savedExpenses.records.length; i += 200) {
+          for (let i = 0; i < plan.removeExpenseIds.length; i += 200) {
             const batch = writeBatch(db);
-            for (const r of savedExpenses.records.slice(i, i + 200)) batch.delete(doc(expenses, r.id));
+            for (const id of plan.removeExpenseIds.slice(i, i + 200)) batch.delete(doc(expenses, id));
             await batch.commit();
           }
           // Same group size as the import (Rules: one existsAfter per category delete); each lock goes with its category.
-          for (let i = 0; i < savedCategories.records.length; i += 8) {
+          for (let i = 0; i < removedCategories.length; i += 8) {
             const batch = writeBatch(db);
-            for (const r of savedCategories.records.slice(i, i + 8)) { batch.delete(doc(categories, r.id)); batch.delete(doc(names, r.name_key)); }
+            for (const r of removedCategories.slice(i, i + 8)) { batch.delete(doc(categories, r.id)); batch.delete(doc(names, r.name_key)); }
             await batch.commit();
           }
           // Orphan name locks (no category any more) would block names of the new categories.
-          const remaining = savedNames.docs.filter((d) => !savedCategories.records.some((r) => r.name_key === d.id));
+          const keptKeys = new Set(current.categories.filter((c) => !plan.removeCategoryIds.includes(c.id)).map((c) => c.name_key));
+          const remaining = savedNames.docs.filter((d) => !keptKeys.has(d.id) && !removedCategories.some((r) => r.name_key === d.id));
           for (let i = 0; i < remaining.length; i += 200) {
             const batch = writeBatch(db);
             for (const d of remaining.slice(i, i + 200)) batch.delete(d.ref);
@@ -135,24 +150,13 @@ export function createFirestoreStore(db: Firestore, uid: string) {
           throw new Error('Sostituzione interrotta durante l’eliminazione: alcuni dati precedenti potrebbero essere già stati eliminati. Ripeti la sostituzione con lo stesso file. ' + (reason instanceof Error ? reason.message : ''));
         }
       }
-      if (mode === 'merge') {
-        const total = new Set([...savedCategories.records.map((r) => r.id), ...categoryRecords.map((r) => r.id)]).size;
-        if (total > maxCategories) throw new Error(`Con questo file le categorie sarebbero ${total}. ${categoryLimitMessage}`);
-      }
-      if (mode === 'merge') for (const r of records) {
-        const previous = savedExpenses.records.find((p) => p.id === r.id);
-        if (previous && Object.entries(r).some(([key, value]) => !sameFieldValue(previous[key as keyof ExpenseRecord], value))) throw conflict();
-      }
-      if (mode === 'merge') for (const r of categoryRecords) {
-        const previous = savedCategories.records.find((p) => p.id === r.id || p.name_key === categoryNameKey(r.label));
-        if (previous && (previous.id !== r.id || previous.label !== r.label || previous.icon !== r.icon)) throw conflict();
-      }
       const chunks: { records: readonly ExpenseRecord[]; categoryRecords: readonly Category[] }[] = [];
       // At most 16 getAfter calls + cached owner lookup per category chunk (Rules limit: 20).
-      for (let i = 0; i < categoryRecords.length; i += 8) chunks.push({ records: [], categoryRecords: categoryRecords.slice(i, i + 8) });
-      for (let i = 0; i < records.length; i += 200) chunks.push({ records: records.slice(i, i + 200), categoryRecords: [] });
+      for (let i = 0; i < plan.addCategories.length; i += 8) chunks.push({ records: [], categoryRecords: plan.addCategories.slice(i, i + 8) });
+      for (let i = 0; i < plan.addExpenses.length; i += 200) chunks.push({ records: plan.addExpenses.slice(i, i + 200), categoryRecords: [] });
       try {
         for (const { records, categoryRecords } of chunks) {
+          // Each group rechecks its IDs inside the transaction: an item saved meanwhile must be identical or the import stops.
           await runTransaction(db, async (tx) => {
             const expenseDocs = await Promise.all(records.map((r) => tx.get(doc(expenses, r.id))));
             const categoryDocs = await Promise.all(categoryRecords.map((r) => tx.get(doc(categories, r.id))));
@@ -161,7 +165,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
               const existing = expenseDocs[i]!;
               if (existing.exists()) {
                 const parsed = parseSyncedExpense(decode(existing.data(), existing.id));
-                if (!parsed || Object.entries(r).some(([key, value]) => !sameFieldValue(parsed[key as keyof ExpenseRecord], value))) throw conflict();
+                if (!parsed || !sameExpense(parsed, r)) throw conflict();
               } else {
                 const { id, created_at, ...data } = r;
                 tx.set(doc(expenses, id), { ...data, created_at: Timestamp.fromDate(new Date(created_at)), updated_at: serverTimestamp(), revision: 1 });
@@ -172,7 +176,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
               const key = categoryNameKey(r.label);
               if (existing.exists()) {
                 const parsed = parseSyncedCategory(decode(existing.data(), existing.id));
-                if (!parsed || parsed.label !== r.label || parsed.icon !== r.icon) throw conflict();
+                if (!parsed || !sameCategory(parsed, r)) throw conflict();
               } else {
                 if (lockDocs[i]!.exists() && lockDocs[i]!.data()!.category_id !== r.id) throw conflict();
                 tx.set(doc(categories, r.id), { label: r.label, icon: r.icon, name_key: key, revision: 1, updated_at: serverTimestamp() });

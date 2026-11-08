@@ -58,7 +58,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title={t("Esportare i dati")}>
-        {p(t("Dal pulsante Dati della pagina Spese scarichi un file CSV, che si apre con Excel o Google Sheets. Sono disponibili anche un backup completo in JSON e l'importazione da file CSV o JSON esportati da Nummo. Servono la connessione e la sincronizzazione completata."))}
+        {p(t("Dal pulsante Dati della pagina Spese esporti le transazioni in CSV, da aprire con Excel, LibreOffice o Google Fogli, e scarichi il backup completo in JSON. Solo il backup JSON si può importare di nuovo per ripristinare i dati, con riepilogo prima della conferma. Servono la connessione e la sincronizzazione completata."))}
       </Section>
 
       <Section title={t("Dove sono i dati")}>

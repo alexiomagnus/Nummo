@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { AppShell, type Destination } from '../../components/AppShell';
 import { Card } from '../../components/Card';
@@ -26,7 +26,7 @@ import { useRemoteExpenses } from '../expenses/useRemoteExpenses';
 import { ExpenseList } from '../history/ExpenseList';
 import { UpcomingRenewals } from '../history/UpcomingRenewals';
 import { makeBackup } from '../../domain/backup';
-import { backendMode, firebaseWebConfig, firestoreEmulator } from '../../services/backendConfig';
+import { backendMode, firestoreEmulator } from '../../services/backendConfig';
 import { BackupActions, download } from '../backup/BackupActions';
 import { getDatabase } from '../../services/firebase';
 import { createFirestoreStore, type FirestoreStore } from '../../services/firestoreStore';
@@ -41,6 +41,8 @@ const destinations: readonly Destination<Section>[] = [
   { value: 'categories', label: 'Categorie', icon: iconShapes.tag },
 ];
 const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', categories: 'Categorie' };
+
+const startGateMs = 4000;
 
 // Keyed by UID in App: every listener, draft and view is discarded on account change.
 export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string; storageNote: string; topActions?: ReactNode }) {
@@ -66,24 +68,34 @@ export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string;
   const synchronized = ready && !pending && !cached && online;
   const error = store.error || categoryState.error;
   const status = describeSync({ ready, online, pending, cached, error });
+  // The first screen waits for what it needs (both first snapshots, usable categories) so it does not appear
+  // piece by piece. Released for good by an error or after a few seconds: never a permanent block (offline, slow link).
+  const [released, setReleased] = useState(false);
+  const dataReady = ready && hasUsableCategorySnapshot(categoryState);
+  useEffect(() => {
+    if (released) return;
+    if (dataReady || error) { setReleased(true); return; }
+    const timer = setTimeout(() => setReleased(true), startGateMs);
+    return () => clearTimeout(timer);
+  }, [released, dataReady, error]);
   return (
     <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={setSection}
       fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
       actions={<><SyncChip status={status} />{topActions}</>}>
-      <Sections section={section} onNavigate={setSection} backend={backend} uid={uid} store={store} categoryState={categoryState}
+      <Sections section={section} onNavigate={setSection} backend={backend} store={store} categoryState={categoryState} starting={!released}
         occurrences={occurrences} renewals={renewals} soon={soon} online={online} synchronized={synchronized} error={error} />
     </AppShell>
   );
 }
 
 type SectionsProps = {
-  section: Section; onNavigate: (section: Section) => void; backend: FirestoreStore; uid: string; store: ExpenseStore;
+  section: Section; onNavigate: (section: Section) => void; backend: FirestoreStore; store: ExpenseStore;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
-  online: boolean; synchronized: boolean; error: string | null;
+  online: boolean; synchronized: boolean; error: string | null; starting: boolean;
 };
 
-function Sections({ section, onNavigate, backend, uid, store, categoryState, occurrences, renewals, soon, online, synchronized, error }: SectionsProps) {
+function Sections({ section, onNavigate, backend, store, categoryState, occurrences, renewals, soon, online, synchronized, error, starting }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -100,22 +112,27 @@ function Sections({ section, onNavigate, backend, uid, store, categoryState, occ
       <Card style={[styles.alert, { backgroundColor: theme.colors.errorContainer }]}>
         <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{store.recovery.length === 1 ? t("Una spesa in attesa non risulta confermata") : t("{p0} spese in attesa non risultano confermate", { p0: store.recovery.length })} {t(" sul server. Scaricane una copia prima di chiudere o uscire.")}</Text>
         <View style={styles.start}>
-          <Button mode="contained" buttonColor={theme.colors.error} textColor={theme.colors.onError} onPress={() => download('nummo-spese-da-recuperare.json', makeBackup({ expenses: store.recovery!, categories: categoryState.categories }, { project_id: firebaseWebConfig.projectId, uid }), 'application/json')}>{t("Scarica spese da recuperare")}</Button>
+          <Button mode="contained" buttonColor={theme.colors.error} textColor={theme.colors.onError} onPress={() => download('nummo-spese-da-recuperare.json', makeBackup({ expenses: store.recovery!, categories: categoryState.categories }), 'application/json')}>{t("Scarica spese da recuperare")}</Button>
         </View>
       </Card>
     )}
     {backendMode === 'hybrid' && firestoreEmulator && (
       <HybridConnectionNotice waiting={!synchronized && !error} endpoint={firestoreEmulator} />
     )}
+    {starting && section !== 'expense' && <View style={styles.starting}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
+    {/* The form stays mounted at full size (labels measured, draft kept, title in place) while the first data arrives; it is only invisible. */}
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
-      <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')}
-        store={{ ...store, ready: store.ready && hasUsableCategorySnapshot(categoryState), error: store.error || categoryState.error }} />
+      {starting && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
+      <View style={[styles.grow, starting && styles.invisible]} aria-hidden={starting || undefined} pointerEvents={starting ? 'none' : 'auto'}>
+        <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')}
+          store={{ ...store, ready: store.ready && hasUsableCategorySnapshot(categoryState), error: store.error || categoryState.error }} />
+      </View>
     </View>
-    {section === 'list' && (
+    {section === 'list' && !starting && (
       <View style={styles.list}>
         {/* Kept mounted while hidden so a pending import preview is not lost on close. */}
         <View style={showBackup ? undefined : styles.hidden}>
-          <BackupActions backend={backend} uid={uid} enabled={synchronized} onClose={() => setShowBackup(false)} />
+          <BackupActions backend={backend} enabled={synchronized} onClose={() => setShowBackup(false)} />
         </View>
         <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
         <ExpenseList occurrences={occurrences} categories={categoryState.categories} error={error}
@@ -123,8 +140,8 @@ function Sections({ section, onNavigate, backend, uid, store, categoryState, occ
       </View>
     )}
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} />}
-    {section === 'dashboard' && <Dashboard occurrences={occurrences} categories={categoryState.categories} />}
-    {section === 'categories' && <>
+    {section === 'dashboard' && !starting && <Dashboard occurrences={occurrences} categories={categoryState.categories} />}
+    {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}
         notify={notify}
@@ -140,6 +157,9 @@ const styles = StyleSheet.create({
   // Pages fill the main area (the shell already caps the width); only the form is a narrow column.
   list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
+  invisible: { opacity: 0 },
+  starting: { alignItems: 'center', padding: spacing.xxl },
+  startingOverlay: { position: 'absolute', top: spacing.xxl, left: 0, right: 0, alignItems: 'center', zIndex: 1 },
   grow: { flexGrow: 1 },
   alert: { padding: spacing.lg, borderRadius: radius.card },
   start: { alignSelf: 'flex-start' },

@@ -155,25 +155,34 @@ Le transazioni richiedono rete: [documentazione Firebase](https://firebase.googl
 
 ## Esportazione e migrazione
 
-CSV UTF-8 con BOM, CRLF, separatore virgola e quoting RFC 4180: occorrenze fino a oggi,
-ID serie/occorrenza, data ISO, importo decimale con punto e centesimi interi, valuta,
-descrizione, ID/nome categoria, ricorrenza e timestamp. Dal 7 novembre 2026 include anche
-`expense_data` e `category_data` (JSON nelle celle) per ripristinare serie, piano prezzi,
-testi originali e icone senza confondere occorrenze e spese. L'importatore valida tutte
-le righe e la coerenza con le colonne leggibili, deduplica le serie per ID e usa lo stesso
-preflight/transazioni del JSON. Le categorie senza spese restano nel solo backup JSON.
-I CSV precedenti sono accettati solo per spese singole e testi non ambigui; con ricorrenze
-o protezioni da formula non reversibili viene richiesto JSON/nuovo CSV. Un apostrofo anteposto ai testi
-che iniziano con `=`, `+`, `-`, `@` anche dopo spazi/controlli limita l'interpretazione
-come formule. Il JSON mantiene i testi originali senza questa trasformazione.
+Dall'8 novembre 2026 CSV e JSON hanno scopi separati (decisione: il CSV con JSON incorporato era un backup
+mascherato, illeggibile in un foglio; due formati di ripristino raddoppiavano validazione e test).
 
-JSON versione 1: origine (progetto/UID), data export, tutte le spese/serie, categorie
-e metadati di revisione. Gli indici dei nomi si ricostruiscono durante l'importazione;
-configurazione amministrativa e token non sono dati da esportare. Esportazioni dal
-server, disabilitate con scritture pendenti o cache non verificata; nessun backup
-silenziosamente parziale da cache. Le due collezioni sono lette separatamente:
-fermare le modifiche nelle altre sessioni durante un backup, che non è uno snapshot
-atomico dell'intero database. Guida alla migrazione e limiti in `migrazione-byof.md`.
+- **CSV, solo consultazione.** UTF-8 con BOM, CRLF, `;` come separatore e virgola decimale (Excel/LibreOffice in
+  locale italiano; date ISO leggibili ovunque). Colonne `Data;Descrizione;Categoria;Importo;Valuta;Ricorrenza`.
+  Una riga per occorrenza fino a oggi, al prezzo di quel rinnovo: le serie sono espanse una volta, mai ripetute, e i
+  rinnovi futuri non compaiono. Nessun ID, timestamp, centesimi o JSON incorporato. Testi sempre quotati; con `=`, `+`,
+  `-`, `@` iniziali (anche dopo spazi/controlli) ricevono un apostrofo. L'importazione CSV e il suo codice di
+  compatibilità sono stati rimossi: i CSV vecchi non si importano.
+- **JSON, unico backup.** `{ format: 'nummo-backup', version, exported_at, categories, expenses }`: solo i campi che il
+  ripristino usa (ID, importi, date, ricorrenze, piano prezzi, `created_at`, categorie con icona). Niente UID/progetto,
+  `revision`, `updated_at`, `name_key`: le revisioni ripartono da 1 e gli indici dei nomi si ricostruiscono. Output
+  ordinato, quindi due export degli stessi dati coincidono. `parseBackup` sceglie il lettore dalla versione (`readers`):
+  una versione più recente è rifiutata con messaggio dedicato; un cambio di schema richiede nuovo numero e lettore
+  per il precedente. I file della versione 1 scritti da build precedenti (con `origin`, `revision`…) restano leggibili: i
+  campi extra sono ignorati.
+- **Ripristino.** `planImport` (puro) confronta file e dati del server: aggiunte, identici (saltati), conflitti e
+  riferimenti a categorie assenti. *Unisci*: ogni conflitto (stesso ID con contenuto diverso, stesso nome con ID
+  diverso) o più di 10 categorie blocca prima della prima scrittura. *Sostituisci*: elimina solo gli elementi diversi
+  dal file, poi aggiunge; la UI scarica prima una copia dei dati attuali. Il piano è ricalcolato dallo store prima di
+  scrivere e ogni gruppo ricontrolla i propri ID in transazione. Rules e schema invariati; non esiste atomicità
+  sull'intero archivio (limiti di gruppo delle Rules): un errore a metà lascia uno stato intermedio, riparabile
+  ripetendo lo stesso file.
+
+Esportazioni dal server, disabilitate con scritture pendenti o cache non verificata; nessun backup
+silenziosamente parziale da cache. Le due collezioni sono lette separatamente: fermare le modifiche nelle altre
+sessioni durante un backup, che non è uno snapshot atomico dell'intero database. Configurazione amministrativa e
+token non sono dati da esportare. Guida alla migrazione e limiti in `migrazione-byof.md`.
 
 ## Configurazioni e legacy
 

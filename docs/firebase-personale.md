@@ -131,18 +131,25 @@ persistenza); non basta attivare questa opzione. Vedi le
 
 ## Backup e passaggio dai vecchi dati
 
-Spese → Backup JSON per tutte le entità, Esporta CSV per le occorrenze fino a oggi.
-Durante il backup evita modifiche da altre sessioni. In Excel/Sheets importa il CSV
-come UTF-8, separatore virgola e punto decimale; `amount_minor` resta intero in ogni
-locale. I testi sospetti di formula sono protetti da apostrofo.
+Da Spese → «Dati» ci sono due cose distinte:
 
-Importa CSV o JSON legge file Nummo fino a 5 MB, controlla dati e duplicati, richiede conferma del progetto
-ed esegue gruppi ripetibili. Non elimina gli originali. Conserva i backup fuori dalla
-cartella del sito. Il CSV nuovo conserva serie, prezzi e categorie utilizzate nelle colonne
-`expense_data`/`category_data`: mantenerle insieme alle colonne delle occorrenze, senza modificarle.
-I vecchi CSV di sole spese singole sono importabili; quelli con ricorrenze o testi protetti
-ambigui richiedono il JSON o una nuova esportazione. Il JSON conserva anche le categorie
-senza spese ed è il formato consigliato per il backup completo. Procedura completa e vecchio emulatore in
+- **Esporta transazioni (CSV)**: tabella per consultare e analizzare le spese, una riga per ogni occorrenza fino a oggi
+  (un abbonamento compare una volta per rinnovo, al prezzo di quel rinnovo). Colonne: Data, Descrizione, Categoria,
+  Importo, Valuta, Ricorrenza. UTF-8 con BOM, separatore `;` e virgola decimale (formato italiano); se il foglio è in
+  un'altra lingua, importa il file scegliendo `;` come separatore. I testi che iniziano con `=`, `+`, `-`, `@` hanno un
+  apostrofo iniziale contro le formule. Non è un backup e **non si può importare**.
+- **Scarica backup (JSON)**: tutte le spese, categorie e ricorrenze con gli ID e i prezzi programmati, senza UID,
+  progetto o altri dati dell'account. Il file ha formato e versione (`nummo-backup`, `version`). È l'unico formato di ripristino.
+
+**Importa backup (JSON)** legge file fino a 5 MB, valida ogni elemento (un solo errore rifiuta l'intero file), confronta
+il contenuto con i dati salvati sul server e mostra un riepilogo: elementi nel backup, da aggiungere, già presenti e
+identici, conflitti. «Unisci ai dati esistenti» aggiunge soltanto ciò che manca; un conflitto (stesso ID o stesso nome
+categoria con contenuto diverso) o il superamento del limite di categorie blocca l'unione prima di qualsiasi scrittura.
+«Sostituisci tutti i dati» rende l'archivio uguale al file: elimina solo ciò che differisce, aggiunge il resto e prima
+scarica da solo una copia JSON dei dati attuali. Ogni operazione è ripetibile con lo stesso file; non è atomica
+sull'intero archivio (i gruppi sono confermati uno alla volta), quindi in caso di errore ripeti il ripristino.
+Durante il backup evita modifiche da altre sessioni. Conserva i backup fuori dalla cartella del sito. I CSV
+esportati da versioni precedenti non sono più importabili: usa un backup JSON. Procedura completa e vecchio emulatore in
 [migrazione-byof.md](migrazione-byof.md).
 
 ## Pubblicazione su Firebase Hosting

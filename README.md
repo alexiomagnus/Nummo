@@ -16,7 +16,7 @@ sicurezza del progetto sono una tua responsabilità (vedi [Sicurezza](#sicurezza
 - **Nuova spesa** con importo, data, descrizione e categoria; **Spese** con ricerca, filtri, modifica ed eliminazione.
 - **Ricorrenze** settimanali, mensili e annuali, con prezzo promozionale per i primi rinnovi e riepilogo dei prossimi rinnovi.
 - **Categorie** personalizzabili, con icone, e **Dashboard** con totali e grafici.
-- **Backup**: esportazione CSV e JSON, importazione da file CSV o JSON esportati da Nummo.
+- **Dati**: esportazione delle transazioni in CSV (per Excel/LibreOffice) e backup completo in JSON, l'unico formato importabile per il ripristino.
 - Tema chiaro/scuro e colori personalizzabili; layout per smartphone, tablet e desktop.
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
@@ -163,7 +163,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 - L'accesso è riservato all'UID in `config/owner`, creato solo dalla Console: l'app non può nominare il proprietario.
 - Le regole in `firestore.rules` sono la vera protezione dei dati (la `apiKey` è pubblica). Pubblicale prima dell'uso e non usare la modalità test.
 - `.env.local`, `.env.production.local`, `.firebaserc` ed `emulator-data/` sono ignorati da Git: non versionarli e non pubblicarli. Non inserire chiavi di servizio nel frontend.
-- **Backup**: da Spese → «Dati» scarichi CSV e JSON; fallo con regolarità e conservali fuori dal sito. Firestore non è un backup.
+- **Backup**: da Spese → «Dati» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
 - Cache su disco (`EXPO_PUBLIC_FIRESTORE_CACHE=persistent`) solo su dispositivi fidati: contiene dati personali anche dopo il logout.
 - Costi, quote, fatturazione e conformità del progetto Firebase sono a tuo carico. Il software è fornito senza garanzie.
 

@@ -10,7 +10,7 @@ import { otherCategoriesKey, uncategorizedKey, periodLabels, sortLabels } from '
 import { categoryIconLabels, defaultCategories, categoryNameError } from '../src/domain/category.ts';
 import { recurrenceLabels } from '../src/domain/recurrence.ts';
 import { newDraft, validateDraft } from '../src/domain/expense.ts';
-import { parseCsvImport } from '../src/domain/backup.ts';
+import { parseBackup } from '../src/domain/backup.ts';
 
 const t = (text: string) => translate('en', text);
 
@@ -31,11 +31,16 @@ test('errori dominio: validazione e CSV tradotti nel punto di presentazione', ()
     assert.equal(t(validation.errors.description!), 'Enter a description.');
   }
   assert.equal(t(categoryNameError('', [])!), 'Enter a category name.');
-  assert.throws(() => parseCsvImport('not,a,nummo,csv'), (error: unknown) => {
-    assert.equal(error instanceof Error && t(error.message), 'Unrecognised CSV format. Use a CSV exported by Nummo.');
+  assert.throws(() => parseBackup({ format: 'other' }), (error: unknown) => {
+    assert.equal(error instanceof Error && t(error.message), 'Unrecognised backup format.');
     return true;
   });
-  assert.equal(t('Riga CSV 7: Usa al massimo 150 caratteri.'), 'CSV row 7: Use no more than 150 characters.');
+  assert.throws(() => parseBackup({ format: 'nummo-backup', version: 99 }), (error: unknown) => {
+    assert.match(error instanceof Error ? t(error.message) : '', /newer version of Nummo/);
+    return true;
+  });
+  assert.equal(t('Importazione bloccata: 2 elementi del backup sono diversi da quelli già salvati con lo stesso ID o nome. Nessun dato è stato modificato.'),
+    'Import blocked: 2 items in the backup differ from those already saved with the same ID or name. No data was changed.');
   assert.equal(t('Il file contiene 11 categorie. Puoi creare al massimo 10 categorie.'), 'The file contains 11 categories. You can create up to 10 categories.');
   assert.equal(t('Importazione interrotta: alcuni gruppi potrebbero essere già confermati. Originali intatti; ripeti lo stesso backup dopo aver risolto il problema. Spesa non valida.'),
     'Import interrupted: some batches may already have been confirmed. Originals are intact; import the same backup again after resolving the issue. Invalid expense.');
