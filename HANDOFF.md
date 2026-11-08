@@ -1,12 +1,24 @@
 # HANDOFF — Nummo
 
-Aggiornamento: **8 novembre 2026, correzione focus e prestazioni sul checkout `d5170ee` con modifiche locali (Europe/Rome)**.
+Aggiornamento: **8 novembre 2026, pubblicazione Rules produzione su HEAD `b97758d` (Europe/Rome)**.
 Gestionale personale di spese solo web, Google Auth e
 Firestore BYOF, accesso riservato all'UID in `config/owner`. Contesto stabile, architettura e comandi: `AGENTS.md`;
 motivazioni: `docs/architecture.md`; configurazione: `README.md`, `docs/firebase-personale.md`.
 Questo file descrive il checkout: risultati emulati non certificano cloud, dispositivi reali o pubblicazione.
 
-## Ultima fase — focus dei selettori e apertura Spese (non committata)
+## Produzione — Rules pubblicate e verificate
+
+- Lettura live del progetto `nummo-6b6e2`: release Firestore aggiornata **6 novembre 2026, 15:45:05 UTC**;
+  contenuto diverso dal file locale, senza regole per fondi, movimenti, liste e prodotti. L'app attuale legge queste
+  collezioni; il rifiuto spiega il blocco del modulo. `deploy:hosting` pubblica solo il sito, non le Rules.
+- Pubblicate con autorizzazione tramite `npx firebase deploy --only firestore:rules --project nummo-6b6e2`.
+  Release aggiornata **8 novembre 2026, 21:23:01 UTC** (22:23 Europe/Rome): riletta via API e confrontata,
+  contenuto identico al file locale; presenti fondi, movimenti, liste e prodotti. Hosting non ripubblicato.
+  Nessun dato privato, UID o documento proprietario letto/modificato; nessuna modifica applicativa in questa diagnosi.
+- Su HEAD corrente: `npm run check` **OK** (305/305, typecheck e build demo), suite emulatori dedicati **15/15**.
+  Config temporanea rimossa, emulatori arrestati. CRUD cloud e verifica sul browser di produzione non eseguiti.
+
+## Fase precedente — focus dei selettori e apertura Spese (integrata in `b97758d`)
 
 - **Diagnosi riprodotta:** montando «Nuovo fondo», Paper `Menu` chiuso metteva il focus sul selettore Mese:
   scorrimento automatico di 253 px. `SelectField` e `MenuSelect` ora usano anchor a coordinate e ripristino esplicito
@@ -27,16 +39,16 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 
 ## Git
 
-- **Ritocco successivo (non committato):** rimossa l'icona di spunta dal pulsante «Registra spesa» nel dettaglio
+- **Ritocco integrato in `b97758d`:** rimossa l'icona di spunta dal pulsante «Registra spesa» nel dettaglio
   lista (`ListsPage.tsx`). `npm run check` OK: typecheck, 305/305 test e build demo; resa browser non ricontrollata.
 
-- Ramo `main`, HEAD **`d5170ee`** (8 novembre 2026, 21:49 +01:00): dettaglio lista con «Totale spesa» e «Registra spesa» sulla
-  stessa riga. Riferimento `origin/main` non ricontrollato (nessun fetch).
-- **Non committato — pagina Impostazioni:** il dialogo `SettingsDialog` diventa `SettingsPage.tsx`, pagina del
+- Ramo `main`, HEAD **`b97758d`**: correzioni focus/prestazioni, Impostazioni come pagina, sprite pixel e pulsante
+  Registra spesa senza spunta. `d5170ee` aveva allineato totale e pulsante nel dettaglio lista. Riferimento `origin/main` non ricontrollato (nessun fetch).
+- **Integrato in HEAD — pagina Impostazioni:** il dialogo `SettingsDialog` diventa `SettingsPage.tsx`, pagina del
   workspace aperta dal menu account (contatore `settingsRequest` da `App.tsx`, come Categorie/Importa ed esporta),
   con «Fatto» che torna alla sezione d'origine e «Ripristina» in fondo. Sezioni impilate su mobile, in due colonne
   da medium in su. Da disconnessi l'icona Impostazioni sostituisce la schermata di accesso fino a «Fatto».
-- **Non committato — sprite pixel `wifi`, `music`, `film` ridisegnati** (`categoryPixelGlyphs.ts`, stessi ID e tinte):
+- **Integrato in HEAD — sprite pixel `wifi`, `music`, `film` ridisegnati** (`categoryPixelGlyphs.ts`, stessi ID e tinte):
   wifi con due archi spessi e punto, due note unite piene, pellicola verticale con fori e due fotogrammi, come negli
   altri stili. Non viste nell'app con categorie reali; prove visive pregresse sotto.
 - **Revisione documentale precedente:** riesaminati codice, script, Rules, documentazione e Git; aggiornati solo questi due
@@ -89,11 +101,6 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 
 ## Problemi aperti e limitazioni
 
-- **Allineamento Rules cloud da verificare:** ultima pubblicazione documentata il 6 novembre 2026 (`a30a988`). Le Rules locali
-  successive (stati abbonamenti, fondi/movimenti/`fund_id`, liste/`list_id`, icone `wallet`/`bank`/`cash`/`safe`/
-  `growth`) non hanno una pubblicazione documentata. Se la release fosse ancora quella registrata, le nuove scritture
-  sarebbero rifiutate («Accesso negato»). Stato cloud non interrogato: confrontare le Rules distribuite e, se necessario,
-  pubblicarle solo con autorizzazione **prima** della pubblicazione Hosting.
 - **Compatibilità icone:** decoder/import rifiutano ID rimossi (`receipt`, `phone`, `bed`, `ticket`, `briefcase`,
   `droplet`, `wrench`, `pill`, `book`, `plane`, `scissors`, `baby`, `flame`, `wine`, `umbrella`, `leaf`, `shield`,
   `ellipsis`; prova locale: tutti i 18 ID sono rifiutati da decoder categorie e lettore backup). Vecchi record possono bloccare categorie e backup;
@@ -148,9 +155,9 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-1. **Rules e compatibilità prima di distribuire** (con autorizzazione per il cloud): decidere conservazione o migrazione
-   esplicita degli ID icona rimossi, con regressioni decoder/import; confrontare le Rules cloud e, se necessario,
-   pubblicarle (`--only firestore:rules`, `--project ID`) verificando poi la release; infine valutare `npm run deploy:hosting`.
+1. **Collaudo produzione e compatibilità:** dopo la pubblicazione Rules verificata sopra, ricaricare l’app e verificare
+   caricamento e sincronizzazione. Per prove CRUD cloud serve autorizzazione. Decidere conservazione o migrazione
+   esplicita degli ID icona rimossi, con regressioni decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione v4 dall'interfaccia, riepilogo ed esiti del ripristino, eccezioni di budget e
    sospensione ricarica, dialoghi Fondi/Liste a 320 px e in landscape, CSV in foglio di calcolo reale.
