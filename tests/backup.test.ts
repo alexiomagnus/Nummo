@@ -9,7 +9,7 @@ import type { Category } from '../src/domain/category.ts';
 const id = '11111111-1111-4111-8111-111111111111';
 const categoryId = '22222222-2222-4222-8222-222222222222';
 const record: ExpenseRecord = { id, amount_minor: 1250, currency: 'EUR', description: 'Caffè "buono"; sì', category_id: categoryId,
-  expense_date: '2025-01-31', recurrence: 'monthly', price_changes: [], source: 'web_app', schema_version: 1, created_at: '2025-01-31T12:00:00.000Z' };
+  expense_date: '2025-01-31', recurrence: 'monthly', price_changes: [], status_changes: [], source: 'web_app', schema_version: 1, created_at: '2025-01-31T12:00:00.000Z' };
 const categories: Category[] = [{ id: categoryId, label: 'Caffè', icon: 'coffee' }];
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const expense = (n: number, extra: Partial<ExpenseRecord> = {}): ExpenseRecord => ({ ...record, id: uuid(n), recurrence: null, description: `Spesa ${n}`, ...extra });
@@ -86,7 +86,7 @@ test('JSON: schema versionato, solo dati di ripristino, nessun identificativo di
   assert.equal(file.format, 'nummo-backup');
   assert.equal(file.version, backupVersion);
   assert.equal(file.exported_at, '2025-03-01T10:00:00.000Z');
-  assert.deepEqual(Object.keys(file.expenses[0]).sort(), ['amount_minor', 'category_id', 'created_at', 'currency', 'description', 'expense_date', 'id', 'price_changes', 'recurrence', 'schema_version', 'source']);
+  assert.deepEqual(Object.keys(file.expenses[0]).sort(), ['amount_minor', 'category_id', 'created_at', 'currency', 'description', 'expense_date', 'id', 'price_changes', 'recurrence', 'schema_version', 'source', 'status_changes']);
   assert.deepEqual(Object.keys(file.categories[0]).sort(), ['icon', 'id', 'label']);
   const text = JSON.stringify(file);
   for (const forbidden of ['revision', 'updated_at', 'name_key', 'uid', 'project', 'token', 'origin']) assert.ok(!text.includes(forbidden), forbidden);
@@ -124,7 +124,7 @@ test('JSON: versioni — le più recenti e i formati estranei sono rifiutati con
   assert.deepEqual(parseBackup(legacy), { expenses: [record], categories });
 });
 
-test('JSON: validazione rigorosa — duplicati, importi, date, UUID, formato dati e limite categorie', () => {
+test('JSON: validazione rigorosa — duplicati, importi, date, UUID, formato dati, senza limite categorie', () => {
   const value = { format: 'nummo-backup', version: 1, expenses: [record], categories };
   for (const invalid of [{ ...value, expenses: [record, record] }, { ...value, categories: [categories[0], categories[0]] },
     { ...value, categories: [categories[0], { ...categories[0], id: uuid(5) }] },
@@ -138,7 +138,9 @@ test('JSON: validazione rigorosa — duplicati, importi, date, UUID, formato dat
   assert.equal(value.expenses[0], record);
   const many = (count: number) => Array.from({ length: count }, (_, i) => ({ id: uuid(100 + i), label: `Cat ${i}`, icon: null }));
   assert.equal(parseBackup({ ...value, expenses: [], categories: many(10) }).categories.length, 10);
-  assert.throws(() => parseBackup({ ...value, expenses: [], categories: many(11) }), /al massimo 10 categorie/);
+  for (const count of [3, 10, 15, 20, 30, 101]) {
+    assert.equal(parseBackup({ ...value, expenses: [], categories: many(count) }).categories.length, count);
+  }
   // The store validates with the same function: one source of truth.
   assert.throws(() => validateBackupData([{ ...record, amount_minor: -1 }], []));
 });
@@ -161,7 +163,7 @@ test('anteprima: backup su archivio vuoto aggiunge tutto; sullo stesso archivio 
   }
 });
 
-test('anteprima unisci: conflitti per stesso ID, stesso nome con ID diverso e limite categorie bloccano senza scritture previste', () => {
+test('anteprima unisci: conflitti per stesso ID, stesso nome con ID diverso bloccano senza scritture previste', () => {
   const data = { expenses: [record, expense(2)], categories };
   const current = { expenses: [{ ...record, amount_minor: 1 }], categories: [{ id: uuid(60), label: 'caffè', icon: null }] };
   const plan = planImport(data, current, 'merge');

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { occurrenceDates } from '../src/domain/recurrence.ts';
 import {
-  breakdown, bucketsFor, expandOccurrences, searchAndSort, type ExpenseEntry,
+  breakdown, categoryColorSlot, bucketsFor, expandOccurrences, searchAndSort, type ExpenseEntry,
 } from '../src/domain/history.ts';
 
 const entry = (over: Partial<ExpenseEntry>): ExpenseEntry => ({
@@ -63,7 +63,7 @@ test('aggregazione: totali in centesimi, fuori periodo esclusi, colore legato al
   assert.equal(result.total, 1550);
   assert.equal(result.count, 3);
   assert.deepEqual(result.series.map((s) => [s.label, s.slot, s.total]),
-    [['Cat 1', 1, 1000], ['Altre categorie', 12, 300], ['Senza categoria', null, 250]]);
+    [['Senza categoria', null, 250], ['Cat 1', categoryColorSlot('c1'), 1000], ['Cat 12', categoryColorSlot('c12'), 300]]);
   assert.equal(result.totals[0], 1000);
   assert.equal(result.totals[1], 550);
 });

@@ -1,16 +1,17 @@
 import {
-  collection, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
+  collection, deleteField, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
   Timestamp, writeBatch, type Firestore, type DocumentData, type QuerySnapshot,
 } from 'firebase/firestore';
 import { planImport, sameCategory, sameExpense, validateBackupData, type ImportData, type ImportMode } from '../domain/backup.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../domain/contract.ts';
-import { categoryLimitMessage, categoryNameError, maxCategories, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
+import { categoryNameError, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
+import { decodeStatusChanges, encodeStatusChanges } from '../domain/subscription.ts';
 import { categoryNameKey, parseSyncedCategory, parseSyncedExpense, type SyncedCategory, type SyncedExpense } from '../domain/firestore.ts';
 
 export type SnapshotState<T> = { records: T[]; fromCache: boolean; pending: boolean; pendingIds: string[] };
 function decode(data: DocumentData, id: string) {
-  return { ...data, id, created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : data.created_at,
+  return { ...data, ...('status_changes' in data ? { status_changes: decodeStatusChanges(data.status_changes) } : {}), id, created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : data.created_at,
     updated_at: data.updated_at instanceof Timestamp ? data.updated_at.toDate().toISOString() : data.updated_at };
 }
 function parseSnapshot<T>(snapshot: QuerySnapshot, parse: (value: unknown) => T | null): SnapshotState<T> {
@@ -18,6 +19,13 @@ function parseSnapshot<T>(snapshot: QuerySnapshot, parse: (value: unknown) => T 
   if (records.some((item) => !item)) throw new Error('Archivio non valido: esportazione e modifiche bloccate.');
   return { records: records as T[], fromCache: snapshot.metadata.fromCache, pending: snapshot.metadata.hasPendingWrites, pendingIds: snapshot.docs.filter((d) => d.metadata.hasPendingWrites).map((d) => d.id) };
 }
+// `status_changes` is stored (encoded as one string) only when a series has one: records without it (every
+// one-off expense and series never paused) keep the exact shape that Rules published before statuses accept.
+function stored<T extends Pick<ExpenseData, 'status_changes'>>(data: T) {
+  const { status_changes, ...rest } = data;
+  return status_changes.length ? { ...rest, status_changes: encodeStatusChanges(status_changes) } : rest;
+}
+
 export function createFirestoreStore(db: Firestore, uid: string) {
   const expenses = collection(db, 'users', uid, 'expenses');
   const categories = collection(db, 'users', uid, 'categories');
@@ -53,7 +61,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       if (!parseExpenseRequest(request, new Date())) throw new Error('Spesa non valida.');
       const { expense_id, ...data } = request;
       // One stable document ID; SDK owns the queue/retries. No application retry queue.
-      await setDoc(doc(expenses, expense_id), { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 });
+      await setDoc(doc(expenses, expense_id), { ...stored(data), created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 });
       const saved = await getDocFromServer(doc(expenses, expense_id));
       const record = saved.exists() ? parseSyncedExpense(decode(saved.data(), saved.id)) : null;
       if (!record || Object.entries(data).some(([key, value]) => !sameFieldValue(record[key as keyof ExpenseData], value))) throw new Error('Conferma non valida.');
@@ -65,7 +73,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
         const ref = doc(expenses, previous.id);
         const current = await tx.get(ref);
         if (!current.exists() || current.data().revision !== previous.revision) throw conflict();
-        tx.update(ref, { ...data, revision: previous.revision + 1, updated_at: serverTimestamp() });
+        tx.update(ref, { ...stored(data), ...(data.status_changes.length ? {} : { status_changes: deleteField() }), revision: previous.revision + 1, updated_at: serverTimestamp() });
       });
     },
     async removeExpense(previous: SyncedExpense) {
@@ -122,7 +130,6 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       const current = await readArchive();
       const plan = planImport(checked, current, mode);
       if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi del backup sono diversi da quelli già salvati con lo stesso ID o nome. Nessun dato è stato modificato.`);
-      if (mode === 'merge' && plan.categoryTotal > maxCategories) throw new Error(`Con questo file le categorie sarebbero ${plan.categoryTotal}. ${categoryLimitMessage}`);
       if (mode === 'replace') {
         const savedNames = await getDocsFromServer(names);
         const removedCategories = current.categories.filter((c) => plan.removeCategoryIds.includes(c.id));
@@ -168,7 +175,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
                 if (!parsed || !sameExpense(parsed, r)) throw conflict();
               } else {
                 const { id, created_at, ...data } = r;
-                tx.set(doc(expenses, id), { ...data, created_at: Timestamp.fromDate(new Date(created_at)), updated_at: serverTimestamp(), revision: 1 });
+                tx.set(doc(expenses, id), { ...stored(data), created_at: Timestamp.fromDate(new Date(created_at)), updated_at: serverTimestamp(), revision: 1 });
               }
             });
             categoryRecords.forEach((r, i) => {

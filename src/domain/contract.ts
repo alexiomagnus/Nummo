@@ -4,13 +4,14 @@ import { isValidDate, normalizeDescription, type ExpenseData, type ExpenseReques
 import { expensePolicy, todayInRome } from './policy.ts';
 import { parsePriceChanges } from './pricing.ts';
 import { isRecurrence } from './recurrence.ts';
+import { parseStatusChanges } from './subscription.ts';
 
 export type ExpenseRecord = Readonly<ExpenseData & { id: string; created_at: string }>;
 export type Receipt = Readonly<{ expense_id: string; created_at: string }>;
 
 const requestKeys = [
   'expense_id', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date',
-  'recurrence', 'price_changes', 'source', 'schema_version',
+  'recurrence', 'price_changes', 'status_changes', 'source', 'schema_version',
 ] as const;
 
 // Field comparison that also handles the price schedule (an array of objects).
@@ -53,10 +54,11 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     && (v.recurrence === null || isRecurrence(v.recurrence))
     && v.source === 'web_app' && v.schema_version === 1;
   const price_changes = parsePriceChanges(v.price_changes);
-  if (!valid || !price_changes) return null;
+  const status_changes = parseStatusChanges(v.status_changes);
+  if (!valid || !price_changes || !status_changes || (v.recurrence === null && status_changes.length > 0)) return null;
   return {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: v.category_id as string | null,
-    expense_date: v.expense_date as string, recurrence: v.recurrence as ExpenseData['recurrence'], price_changes,
+    expense_date: v.expense_date as string, recurrence: v.recurrence as ExpenseData['recurrence'], price_changes, status_changes,
     source: 'web_app', schema_version: 1,
   };
 }
@@ -76,6 +78,7 @@ export function parseExpenseRequest(value: unknown, now: Date): ExpenseRequest |
   if (!v || Object.keys(v).length !== requestKeys.length || !requestKeys.every((key) => key in v)) return null;
   if (!isUuid(v.expense_id) || (v.category_id !== null && !isUuid(v.category_id))) return null;
   const data = readData(v);
-  if (!data || data.expense_date > todayInRome(now)) return null;
+  const today = todayInRome(now);
+  if (!data || data.expense_date > today || data.status_changes.some((change) => change.date > today)) return null;
   return { ...data, expense_id: v.expense_id };
 }

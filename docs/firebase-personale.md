@@ -144,7 +144,7 @@ Da Spese → «Dati» ci sono due cose distinte:
 **Importa backup (JSON)** legge file fino a 5 MB, valida ogni elemento (un solo errore rifiuta l'intero file), confronta
 il contenuto con i dati salvati sul server e mostra un riepilogo: elementi nel backup, da aggiungere, già presenti e
 identici, conflitti. «Unisci ai dati esistenti» aggiunge soltanto ciò che manca; un conflitto (stesso ID o stesso nome
-categoria con contenuto diverso) o il superamento del limite di categorie blocca l'unione prima di qualsiasi scrittura.
+categoria con contenuto diverso) blocca l'unione prima di qualsiasi scrittura.
 «Sostituisci tutti i dati» rende l'archivio uguale al file: elimina solo ciò che differisce, aggiunge il resto e prima
 scarica da solo una copia JSON dei dati attuali. Ogni operazione è ripetibile con lo stesso file; non è atomica
 sull'intero archivio (i gruppi sono confermati uno alla volta), quindi in caso di errore ripeti il ripristino.

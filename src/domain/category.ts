@@ -6,7 +6,7 @@ export const categoryIconLabels = {
   coffee: 'caffè', heart: 'cuore',
   star: 'stella', gamepad: 'videogioco', bag: 'borsa della spesa', box: 'pacco',
   house: 'casa', bulb: 'lampadina', car: 'auto', gift: 'regalo', shirt: 'maglietta',
-  paw: 'zampa', dumbbell: 'manubrio', phone: 'telefono', coin: 'moneta',
+  paw: 'zampa', dumbbell: 'manubrio', coin: 'moneta',
   train: 'treno',
   bus: 'autobus',
   bike: 'bicicletta',
@@ -15,19 +15,13 @@ export const categoryIconLabels = {
   music: 'musica',
   film: 'cinema',
   camera: 'fotocamera',
-  wrench: 'chiave inglese',
   graduation: 'istruzione',
-  briefcase: 'lavoro',
   sofa: 'divano',
-  droplet: 'acqua',
   beer: 'birra',
   cake: 'dolce',
   laptop: 'computer',
-  receipt: 'ricevuta',
   piggy: 'risparmio',
-  ticket: 'biglietto',
   cross: 'salute',
-  bed: 'viaggi e hotel',
   tree: 'natura',
   sparkles: 'svago',
   tv: 'televisione',
@@ -46,11 +40,6 @@ export function normalizeCategoryName(name: string): string {
   return name.normalize('NFC').trim().replace(/\s+/gu, ' ');
 }
 
-// Client-side only: Firestore Rules cannot count a collection. Archives that already exceed it stay readable.
-// Below the 12 dashboard colour slots (history.ts), so every category always has its own colour.
-export const maxCategories = 10;
-export const categoryLimitMessage = `Puoi creare al massimo ${maxCategories} categorie.`;
-
 export function categoryNameError(name: string, categories: readonly Category[]): string | null {
   const label = normalizeCategoryName(name);
   if (!label) return 'Inserisci il nome della categoria.';
@@ -61,10 +50,11 @@ export function categoryNameError(name: string, categories: readonly Category[])
   return null;
 }
 
-// Seeded only for a browser that has never stored categories.
+// Created once for a new, empty archive (seedDefaults.ts), or on request from an empty Categories page.
 export const defaultCategories: readonly { label: string; icon: CategoryIcon }[] = [
-  { label: 'Spesa', icon: 'cart' },
-  { label: 'Ristorazione', icon: 'pasta' },
-  { label: 'Uscita', icon: 'popcorn' },
+  { label: 'Alimentari', icon: 'cart' },
+  { label: 'Intrattenimento', icon: 'popcorn' },
   { label: 'Shopping', icon: 'shirt' },
+  { label: 'Tecnologia', icon: 'laptop' },
+  { label: 'Trasporti', icon: 'bus' },
 ];

@@ -10,7 +10,6 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
-import { maxCategories } from '../../domain/category';
 import type { FirestoreStore } from '../../services/firestoreStore';
 import { message } from '../expenses/useRemoteExpenses';
 const importedMessage = 'Importazione completata con successo';
@@ -65,7 +64,7 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
   const hint = { color: theme.colors.onSurfaceVariant };
   const merge = preview?.merge;
   const replace = preview?.replace;
-  const mergeBlocked = !!merge && (merge.conflicts.length > 0 || merge.categoryTotal > maxCategories);
+  const mergeBlocked = !!merge && merge.conflicts.length > 0;
   const mergeEmpty = !!merge && merge.addExpenses.length === 0 && merge.addCategories.length === 0;
   const finish = () => { setPreview(null); setStatus(importedMessage); };
   return <Card title={t("Dati")}
@@ -93,9 +92,7 @@ export function BackupActions({ backend, enabled, onClose }: { backend: Firestor
         {merge.missingCategoryReferences > 0 && <Text variant="bodyMedium" style={hint}>{t("{p0} spese fanno riferimento a categorie che non saranno presenti.", { p0: merge.missingCategoryReferences })}</Text>}
       </View>
       {merge.conflicts.length > 0 && <Text variant="bodyMedium" style={{ color: theme.colors.error }}>
-        {t("{p0} elementi del backup sono in conflitto con i dati esistenti (stesso ID o nome, contenuto diverso), ad esempio: {p1}. Non si possono unire.", { p0: merge.conflicts.length, p1: merge.conflicts.slice(0, 3).map((c) => c.label).join(', ') })}</Text>}
-      {merge.categoryTotal > maxCategories && <Text variant="bodyMedium" style={{ color: theme.colors.error }}>
-        {t("Unendo il backup le categorie sarebbero {p0}: il limite è {p1}.", { p0: merge.categoryTotal, p1: maxCategories })}</Text>}
+        {t("{p0} elementi del backup sono in conflitto con i dati esistenti. Non si possono unire.", { p0: merge.conflicts.length })}</Text>}
       {mergeEmpty && !mergeBlocked && <Text variant="bodyMedium" style={hint}>{t("Non c’è nulla da aggiungere: i dati del backup sono già presenti.")}</Text>}
       <Button disabled={busy || !enabled || mergeBlocked || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
         await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge'); finish();

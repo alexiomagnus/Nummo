@@ -31,8 +31,8 @@ export function DateField({ value, error, disabled, onChange }: { value: string;
   const shown = t(labelOf(value || today, today, locale));
   return (
     <>
-      <Pressable disabled={disabled} onPress={() => setOpen(true)} accessibilityRole="button" aria-haspopup="dialog" aria-expanded={open}
-        aria-disabled={disabled} accessibilityLabel={t("Data della spesa: {p0}. Cambia data", { p0: shown })}>
+      <Pressable style={styles.field} {...{ dataSet: { focusRing: 'field' } }} disabled={disabled} onPress={() => setOpen(true)} accessibilityRole="button" aria-haspopup="dialog" aria-expanded={open}
+        aria-disabled={disabled} aria-invalid={Boolean(error)} accessibilityLabel={t("Data della spesa: {p0}. Cambia data", { p0: shown })}>
         {/* Keep the decorative input and calendar icon outside hit-testing and keyboard focus. */}
         <div inert>
           <TextInput outlineStyle={inputOutline} label={t("Data")} value={shown} mode="outlined" readOnly focusable={false} error={error}
@@ -131,6 +131,7 @@ function Calendar({ selected, month, onMonth, onPick }: { selected: string; mont
 }
 
 const styles = StyleSheet.create({
+  field: { borderRadius: radius.input },
   dialog: { maxWidth: 360 },
   scrollArea: { minHeight: 0, paddingHorizontal: 0, marginTop: 0, marginBottom: 0, borderTopWidth: 0, borderBottomWidth: 0 },
   headline: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing.lg, gap: spacing.lg },

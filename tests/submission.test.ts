@@ -6,7 +6,7 @@ import { submissionReducer as reduce, type Submission } from '../src/domain/subm
 const request: ExpenseRequest = {
   expense_id: 'b0c59cdd-a69d-467c-a17f-d07c2444f716', amount_minor: 1200,
   currency: 'EUR', category_id: 'groceries', expense_date: '2026-11-02',
-  description: 'Spesa', recurrence: null, price_changes: [], source: 'web_app', schema_version: 1,
+  description: 'Spesa', recurrence: null, price_changes: [], status_changes: [], source: 'web_app', schema_version: 1,
 };
 const sending = (): Submission => reduce({ status: 'draft' }, { type: 'send', request });
 

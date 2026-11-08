@@ -8,7 +8,9 @@ import { formatCivilDate, formatCurrency, translate } from '../src/i18n/translat
 import { seriesLabel } from '../src/features/dashboard/seriesLabel.ts';
 import { otherCategoriesKey, uncategorizedKey, periodLabels, sortLabels } from '../src/domain/history.ts';
 import { categoryIconLabels, defaultCategories, categoryNameError } from '../src/domain/category.ts';
+import { iconStyleText } from '../src/components/categoryIconSets.ts';
 import { recurrenceLabels } from '../src/domain/recurrence.ts';
+import { statusLabels } from '../src/domain/subscription.ts';
 import { newDraft, validateDraft } from '../src/domain/expense.ts';
 import { parseBackup } from '../src/domain/backup.ts';
 
@@ -41,7 +43,6 @@ test('errori dominio: validazione e CSV tradotti nel punto di presentazione', ()
   });
   assert.equal(t('Importazione bloccata: 2 elementi del backup sono diversi da quelli già salvati con lo stesso ID o nome. Nessun dato è stato modificato.'),
     'Import blocked: 2 items in the backup differ from those already saved with the same ID or name. No data was changed.');
-  assert.equal(t('Il file contiene 11 categorie. Puoi creare al massimo 10 categorie.'), 'The file contains 11 categories. You can create up to 10 categories.');
   assert.equal(t('Importazione interrotta: alcuni gruppi potrebbero essere già confermati. Originali intatti; ripeti lo stesso backup dopo aver risolto il problema. Spesa non valida.'),
     'Import interrupted: some batches may already have been confirmed. Originals are intact; import the same backup again after resolving the issue. Invalid expense.');
 });
@@ -59,6 +60,13 @@ test('grafici: tradurre solo aggregati sintetici, mai categorie dell’utente', 
   assert.equal(seriesLabel({ key: otherCategoriesKey, label: 'Altre categorie' }, t), 'Other categories');
   assert.equal(seriesLabel({ key: 'user-category', label: 'Senza categoria' }, t), 'Senza categoria');
   assert.equal(seriesLabel({ key: 'user-category', label: 'Spesa' }, t), 'Spesa');
+  assert.equal(seriesLabel({ key: 'user-category', label: 'Altre categorie' }, t), 'Altre categorie');
+  assert.equal(t('Mostra dettaglio di Altre ({p0})').includes('Other'), true);
+  for (const [it, en] of [['Ciambella', 'Donut'], ['Blocchi', 'Blocks'], ['Barre', 'Bars']] as const) {
+    assert.equal(translate('it', it), it);
+    assert.equal(translate('en', it), en);
+  }
+  assert.equal(translate('en', 'Mostra dettaglio di Altre ({p0})', { p0: 23 }), 'Show Other category details (23)');
 });
 
 test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', () => {
@@ -67,8 +75,8 @@ test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', (
     assert.ok(target.trim(), source);
     assert.deepEqual(placeholders(source), placeholders(target), source);
   }
-  for (const label of [...Object.values(periodLabels), ...Object.values(sortLabels), ...Object.values(recurrenceLabels),
-    ...Object.values(categoryIconLabels), ...defaultCategories.map((category) => category.label)]) {
+  for (const label of [...Object.values(periodLabels), ...Object.values(sortLabels), ...Object.values(recurrenceLabels), ...Object.values(statusLabels),
+    ...Object.values(categoryIconLabels), ...Object.values(iconStyleText).map((text) => text.label), ...defaultCategories.map((category) => category.label)]) {
     assert.ok(Object.hasOwn(english, label), `Traduzione mancante: ${label}`);
   }
   const files = (directory: string): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
@@ -83,5 +91,22 @@ test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', (
       ts.forEachChild(node, visit);
     };
     visit(source);
+  }
+});
+
+test('abbonamenti: stati e azioni tradotti, nomi delle serie mai tradotti', () => {
+  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Abbonamenti', 'Subscriptions'],
+    ['Metti in pausa', 'Pause'], ['Riattiva', 'Resume'], ['Annulla abbonamento', 'Cancel subscription']] as const) {
+    assert.equal(translate('it', it), it);
+    assert.equal(translate('en', it), en);
+  }
+  assert.equal(translate('en', 'In pausa dal {p0}', { p0: '10 Feb 2026' }), 'Paused since 10 Feb 2026');
+  assert.equal(translate('en', 'Mostra tutti i pagamenti ({p0})', { p0: 30 }), 'Show all payments (30)');
+});
+
+test('dashboard: mostra e nascondi giorni tradotti in entrambe le lingue', () => {
+  for (const [it, en] of [['Mostra giorni con spese', 'Show days with expenses'], ['Nascondi giorni con spese', 'Hide days with expenses']] as const) {
+    assert.equal(translate('it', it), it);
+    assert.equal(translate('en', it), en);
   }
 });

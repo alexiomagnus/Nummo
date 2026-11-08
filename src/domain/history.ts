@@ -1,6 +1,7 @@
 import type { Category } from './category.ts';
 import { nextRenewal, priceAt, type PriceChange } from './pricing.ts';
 import { occurrenceDates, type Recurrence } from './recurrence.ts';
+import { currentStatus, nextPaidRenewal, statusAt, type StatusChange, type SubscriptionStatus } from './subscription.ts';
 
 // Structural subset of a stored expense, so the domain does not depend on storage.
 export type ExpenseEntry = Readonly<{
@@ -8,6 +9,8 @@ export type ExpenseEntry = Readonly<{
   expense_date: string; recurrence: Recurrence | null; created_at: string;
   // Absent on expenses saved before price schedules existed.
   price_changes?: readonly PriceChange[];
+  // Absent on expenses saved before subscription statuses existed (= always active).
+  status_changes?: readonly StatusChange[];
 }>;
 export type Occurrence = Readonly<{
   key: string; expenseId: string; date: string; amount_minor: number;
@@ -21,12 +24,17 @@ function toOccurrence(entry: ExpenseEntry, date: string, index: number): Occurre
   };
 }
 
-// A recurring expense counts once per occurrence up to today, at the price it had on that occurrence;
+// Renewals that fall while a series is paused or cancelled are never paid; the start (occurrence 0) always is.
+function paid(entry: ExpenseEntry, date: string, index: number): boolean {
+  return index === 0 || statusAt(entry.status_changes ?? [], date) === 'active';
+}
+
+// A recurring expense counts once per paid occurrence up to today, at the price it had on that occurrence;
 // future ones are not spending yet (see forecastOccurrences).
 export function expandOccurrences(entries: readonly ExpenseEntry[], today: string): Occurrence[] {
   return entries.flatMap((entry) => {
     const dates = entry.recurrence ? occurrenceDates(entry.expense_date, entry.recurrence, today) : [entry.expense_date];
-    return dates.flatMap((date, index) => (date <= today ? [toOccurrence(entry, date, index)] : []));
+    return dates.flatMap((date, index) => (date <= today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
 
@@ -35,20 +43,50 @@ export function forecastOccurrences(entries: readonly ExpenseEntry[], today: str
   return entries.flatMap((entry) => {
     if (!entry.recurrence) return [];
     const dates = occurrenceDates(entry.expense_date, entry.recurrence, until);
-    return dates.flatMap((date, index) => (date > today ? [toOccurrence(entry, date, index)] : []));
+    return dates.flatMap((date, index) => (date > today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
 
-// The next renewal of every recurring expense, soonest first. `previous` is the price of the
+// The next renewal of every active recurring expense, soonest first. `previous` is the price of the
 // occurrence before it, so a scheduled change can be pointed out.
 export type Renewal = Readonly<{ occurrence: Occurrence; previous: number }>;
 export function upcomingRenewals(entries: readonly ExpenseEntry[], today: string): Renewal[] {
   return entries.flatMap((entry) => {
-    const next = nextRenewal(entry.expense_date, entry.recurrence, today);
+    const next = nextPaidRenewal(entry.expense_date, entry.recurrence, entry.status_changes ?? [], today);
     if (!next) return [];
     const changes = entry.price_changes ?? [];
     return [{ occurrence: toOccurrence(entry, next.date, next.index), previous: priceAt(entry.amount_minor, changes, next.index - 1) }];
   }).sort((a, b) => a.occurrence.date.localeCompare(b.occurrence.date) || a.occurrence.key.localeCompare(b.occurrence.key));
+}
+
+// ---- Subscriptions (recurring series) ----
+
+export type SubscriptionSummary = Readonly<{
+  entry: ExpenseEntry; status: SubscriptionStatus;
+  // Price of the next paid renewal; for paused/cancelled series, the price of the next calendar slot.
+  amount_minor: number;
+  next: { index: number; date: string } | null;
+  // Paid occurrences up to today, newest first; `total` is exactly their sum (same figures as the dashboard).
+  payments: Occurrence[]; total: number;
+}>;
+
+export function subscriptionSummary(entry: ExpenseEntry, today: string): SubscriptionSummary {
+  const payments = expandOccurrences([entry], today).reverse();
+  const changes = entry.status_changes ?? [];
+  const slot = nextRenewal(entry.expense_date, entry.recurrence, today);
+  return {
+    entry, status: currentStatus(changes), next: nextPaidRenewal(entry.expense_date, entry.recurrence, changes, today),
+    amount_minor: slot ? priceAt(entry.amount_minor, entry.price_changes ?? [], slot.index) : entry.amount_minor,
+    payments, total: payments.reduce((sum, item) => sum + item.amount_minor, 0),
+  };
+}
+
+const statusOrder: Record<SubscriptionStatus, number> = { active: 0, paused: 1, cancelled: 2 };
+// Active first (soonest renewal first), then paused, then cancelled; alphabetical within a group.
+export function subscriptionSummaries(entries: readonly ExpenseEntry[], today: string): SubscriptionSummary[] {
+  return entries.filter((entry) => entry.recurrence !== null).map((entry) => subscriptionSummary(entry, today))
+    .sort((a, b) => statusOrder[a.status] - statusOrder[b.status] || (a.next?.date ?? '').localeCompare(b.next?.date ?? '')
+      || a.entry.description.localeCompare(b.entry.description) || a.entry.id.localeCompare(b.entry.id));
 }
 
 export function addDays(date: string, days: number): string {
@@ -118,19 +156,15 @@ export function bucketsFor(period: Period, today: string): Bucket[] {
 
 export const otherCategoriesKey = '__other';
 export const uncategorizedKey = '__none';
-// Matches the 12 validated categorical slots (Dashboard palette): 12 categories + "Altre categorie".
-export const maxNamedCategories = 12;
-
 export type Series = Readonly<{ key: string; label: string; slot: number | null; total: number; values: number[] }>;
 export type Breakdown = Readonly<{ buckets: Bucket[]; series: Series[]; totals: number[]; total: number; count: number }>;
 
-// Colour follows the category (its position in the user's list), never its rank by amount.
-export function seriesKeyOf(categoryId: string | null, categories: readonly Category[]): { key: string; label: string; slot: number | null } {
-  if (categoryId === null) return { key: uncategorizedKey, label: 'Senza categoria', slot: null };
-  const index = categories.findIndex((category) => category.id === categoryId);
-  if (index === -1) return { key: uncategorizedKey, label: 'Senza categoria', slot: null };
-  if (index >= maxNamedCategories) return { key: otherCategoriesKey, label: 'Altre categorie', slot: maxNamedCategories };
-  return { key: categories[index]!.id, label: categories[index]!.label, slot: index };
+// A category keeps its colour across periods, sorting, renaming and insertion/deletion of other categories.
+// A finite palette must repeat; labels and amounts remain the primary identification.
+export function categoryColorSlot(id: string): number {
+  let hash = 2166136261;
+  for (const char of id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  return (hash >>> 0) % 12;
 }
 
 export function breakdown(items: readonly Occurrence[], categories: readonly Category[], period: Period, today: string): Breakdown {
@@ -138,12 +172,15 @@ export function breakdown(items: readonly Occurrence[], categories: readonly Cat
   const from = buckets[0]!.from;
   const to = buckets[buckets.length - 1]!.to;
   const seriesMap = new Map<string, { key: string; label: string; slot: number | null; values: number[] }>();
+  const categoryMap = new Map(categories.map((category) => [category.id, category]));
   let count = 0;
   for (const item of items) {
     if (item.date < from || item.date > to) continue;
     const index = buckets.findIndex((bucket) => item.date >= bucket.from && item.date <= bucket.to);
     if (index === -1) continue;
-    const info = seriesKeyOf(item.category_id, categories);
+    const category = categoryMap.get(item.category_id ?? '');
+    const info = category ? { key: category.id, label: category.label, slot: categoryColorSlot(category.id) }
+      : { key: uncategorizedKey, label: 'Senza categoria', slot: null };
     let series = seriesMap.get(info.key);
     if (!series) {
       series = { ...info, values: buckets.map(() => 0) };
@@ -152,9 +189,8 @@ export function breakdown(items: readonly Occurrence[], categories: readonly Cat
     series.values[index]! += item.amount_minor;
     count++;
   }
-  // Stable legend/stack order: list order, then "Altre", then "Senza categoria".
-  const order = (s: { slot: number | null }) => (s.slot === null ? Number.MAX_SAFE_INTEGER : s.slot);
-  const series = [...seriesMap.values()].sort((a, b) => order(a) - order(b))
+  // Only contributing categories appear; keep every category separate in the domain.
+  const series = [...seriesMap.values()].sort((a, b) => a.key.localeCompare(b.key))
     .map((s) => ({ ...s, total: s.values.reduce((sum, value) => sum + value, 0) }));
   const totals = buckets.map((_, index) => series.reduce((sum, s) => sum + s.values[index]!, 0));
   return { buckets, series, totals, total: totals.reduce((sum, value) => sum + value, 0), count };

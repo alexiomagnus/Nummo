@@ -3,15 +3,17 @@ import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { layout, radius, spacing } from '../theme/tokens';
 import type { CategoryIcon } from '../domain/category';
-import { CategoryGlyph } from './CategoryGlyph';
+import { CategoryGlyph, useIconStyle } from './CategoryGlyph';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Fixed-size slot showing a category glyph (or a neutral placeholder): keeps every row aligned.
 export function IconTile({ icon, size = 36 }: { icon: CategoryIcon | null; size?: number }) {
   const { colors } = useTheme();
+  // The filled colourful and pixel drawings need a little more room than thin outlines to read at list size.
+  const glyph = size - (useIconStyle() === 'minimal' ? 16 : 12);
   return (
     <View style={[styles.tile, { width: size, height: size }]}>
-      {icon ? <CategoryGlyph icon={icon} size={size - 16} color={colors.onSurfaceVariant} /> : <SvgIcon shape={iconShapes.tag} size={size - 18} color={colors.onSurfaceVariant} />}
+      {icon ? <CategoryGlyph icon={icon} size={glyph} color={colors.onSurfaceVariant} /> : <SvgIcon shape={iconShapes.tag} size={size - 18} color={colors.onSurfaceVariant} />}
     </View>
   );
 }

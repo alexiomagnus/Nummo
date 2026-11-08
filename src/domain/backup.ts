@@ -1,4 +1,4 @@
-import { categoryNameError, isCategoryIcon, maxCategories, normalizeCategoryName, categoryLimitMessage, type Category } from './category.ts';
+import { categoryNameError, isCategoryIcon, normalizeCategoryName, type Category } from './category.ts';
 import { isUuid, parseExpenseRecord, sameFieldValue, type ExpenseRecord } from './contract.ts';
 import { categoryNameKey, validateImportedExpense } from './firestore.ts';
 import { expandOccurrences } from './history.ts';
@@ -13,7 +13,8 @@ export type ImportData = { expenses: ExpenseRecord[]; categories: Category[] };
 
 export const backupFormat = 'nummo-backup';
 // Bump when the file shape changes and add a reader for the old number to `readers`.
-export const backupVersion = 1;
+// v2 adds `status_changes` (subscription pauses/cancellations); v1 files have none, so every series is active.
+export const backupVersion = 2;
 
 // --- JSON backup -----------------------------------------------------------------------------
 
@@ -23,6 +24,7 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
   const expenses = data.expenses.map((e) => ({
     id: e.id, amount_minor: e.amount_minor, currency: e.currency, description: e.description, category_id: e.category_id,
     expense_date: e.expense_date, recurrence: e.recurrence, price_changes: e.price_changes.map((c) => ({ index: c.index, amount_minor: c.amount_minor, once: c.once })),
+    status_changes: e.status_changes.map((c) => ({ date: c.date, status: c.status })),
     source: e.source, schema_version: e.schema_version, created_at: e.created_at,
   })).sort((a, b) => a.expense_date.localeCompare(b.expense_date) || a.id.localeCompare(b.id));
   const categories = data.categories.map((c) => ({ id: c.id, label: c.label, icon: c.icon })).sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
@@ -32,7 +34,6 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
 // Strict validation of the body shared by the file reader and the store. Anything invalid rejects the whole file.
 export function validateBackupData(rawExpenses: unknown, rawCategories: unknown): ImportData {
   if (!Array.isArray(rawExpenses) || !Array.isArray(rawCategories)) throw new Error('Formato backup non riconosciuto.');
-  if (rawCategories.length > maxCategories) throw new Error(`Il file contiene ${rawCategories.length} categorie. ${categoryLimitMessage}`);
   const expenses: ExpenseRecord[] = [];
   const categories: Category[] = [];
   const expenseIds = new Set<string>();
@@ -54,7 +55,9 @@ export function validateBackupData(rawExpenses: unknown, rawCategories: unknown)
 
 // One reader per supported version; each returns the current in-memory shape.
 const readers: Record<number, (file: Record<string, unknown>) => ImportData> = {
+  // v1 expenses have no `status_changes`: the record parser reads the missing field as "always active".
   1: (file) => validateBackupData(file.expenses, file.categories),
+  2: (file) => validateBackupData(file.expenses, file.categories),
 };
 
 export function parseBackup(value: unknown): ImportData {
@@ -88,7 +91,7 @@ export type ImportPlan = Readonly<{
   missingCategoryReferences: number;
 }>;
 
-const expenseKeys = ['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'source', 'schema_version', 'created_at'] as const;
+const expenseKeys = ['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'source', 'schema_version', 'created_at'] as const;
 export function sameExpense(a: ExpenseRecord, b: ExpenseRecord): boolean {
   return expenseKeys.every((key) => sameFieldValue(a[key], b[key]));
 }

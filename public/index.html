@@ -8,16 +8,54 @@
     <meta name="theme-color" content="#F5FBF5" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0F1511" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
+    <script id="nummo-boot">
+      // Prima del bundle, solo presentazione: sfondo del tema scelto (scritto da GlobalStyle) invece dello schema
+      // predefinito, e connessioni anticipate verso Google se l'ultima visita era una sessione cloud.
+      // Nessun dato: ogni valore è validato e ogni errore ripiega sui colori statici sotto.
+      (function () {
+        try {
+          var root = document.documentElement;
+          var theme = JSON.parse(localStorage.getItem('nummo.boot-theme.v1') || 'null');
+          if (theme && theme.v === 1) {
+            var dark = theme.mode === 'dark' || (theme.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+            var color = dark ? theme.dark : theme.light;
+            if (typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)) {
+              root.style.setProperty('--nummo-boot-bg', color);
+              root.style.colorScheme = dark ? 'dark' : 'light';
+              var tags = document.head.querySelectorAll('meta[name="theme-color"]');
+              for (var i = 0; i < tags.length; i++) {
+                if (i === 0) { tags[i].removeAttribute('media'); tags[i].setAttribute('content', color); } else tags[i].remove();
+              }
+            }
+          }
+          if (localStorage.getItem('nummo.session.hint.v1') === 'cloud') {
+            ['https://identitytoolkit.googleapis.com', 'https://securetoken.googleapis.com', 'https://firestore.googleapis.com'].forEach(function (href) {
+              var link = document.createElement('link');
+              link.rel = 'preconnect'; link.href = href; link.crossOrigin = '';
+              document.head.appendChild(link);
+            });
+          }
+        } catch (error) { /* storage negato o valori non validi: resta il fondo statico */ }
+      })();
+    </script>
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preload" href="/fonts/GoogleSans-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Nummo</title>
     <style id="expo-reset">
       html, body { height: 100%; }
-      body { overflow: hidden; margin: 0; background: #F5FBF5; color: #171D19; }
-      @media (prefers-color-scheme: dark) { body { background: #0F1511; color: #DEE4DD; } }
+      body { overflow: hidden; margin: 0; background: var(--nummo-boot-bg, #F5FBF5); color: #171D19; }
+      @media (prefers-color-scheme: dark) { body { background: var(--nummo-boot-bg, #0F1511); color: #DEE4DD; } }
       #root { display: flex; height: var(--nummo-viewport-height, 100%); flex: 1; }
       @supports (height: 100dvh) { #root { height: var(--nummo-viewport-height, 100dvh); } }
+      /* Dichiarato qui (non dopo il mount di React) e con il file già in preload: il primo rendering usa subito il font. */
+      @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+        src: url('/fonts/GoogleSans-latin-ext.woff2') format('woff2');
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+      @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+        src: url('/fonts/GoogleSans-latin.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
     </style>
   </head>
   <body>

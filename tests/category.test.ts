@@ -17,3 +17,10 @@ test('ogni icona ammessa ha un glifo vettoriale e viceversa', () => {
   assert.deepEqual(Object.keys(categoryGlyphs).sort(), [...categoryIcons].sort());
   for (const [name, shape] of Object.entries(categoryGlyphs)) assert.match(shape, /^<(path|circle|rect)/, name);
 });
+
+
+test('nessun limite al numero: nuovi nomi validi anche con cento categorie, duplicati ancora rifiutati', () => {
+  const categories = Array.from({ length: 100 }, (_, i) => ({ id: `cat-${i}`, label: `Categoria ${i}`, icon: null }));
+  assert.equal(categoryNameError('Nuova categoria', categories), null);
+  assert.match(categoryNameError('Categoria 99', categories) ?? '', /già/);
+});

@@ -48,13 +48,17 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title={t("Consultare le spese")}>
-        {p(t("In Spese trovi l'elenco raggruppato per mese, con ricerca per nome, ordinamento e filtro per categoria. Da qui modifichi o elimini una voce."))}
-        {p(t("La Dashboard mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con grafici a ciambella o a blocchi e un elenco giornaliero espandibile."))}
+        {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; da qui modifichi o elimini una voce. Abbonamenti raccoglie le spese che si ripetono."))}
+        {p(t("La Dashboard mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con grafici a ciambella, a blocchi o a barre e un elenco giornaliero espandibile."))}
+        {p(t("Grafico e periodo scelti vengono ricordati in questo browser. La lista dei giorni con spese è inizialmente nascosta: puoi mostrarla e nasconderla con il pulsante sotto il grafico."))}
+        {p(t("Puoi creare categorie senza un limite di numero. I grafici mostrano solo quelle con spese nel periodo: se sono molte, le meno rilevanti sono riunite in Altre, con dettaglio consultabile. Nei Blocchi, i rettangoli sono proporzionali agli importi e la legenda permette di consultare anche quelli troppo piccoli per contenere testo. Nelle Barre, nomi, importi e percentuali sono accanto a ogni barra."))}
       </Section>
 
       <Section title={t("Spese ricorrenti e abbonamenti")}>
         {p(t("Una spesa può ripetersi ogni settimana, mese o anno: la inserisci una volta sola e compare a ogni scadenza maturata."))}
         {p(t("Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com'erano. Prossimi rinnovi mostra le scadenze in arrivo."))}
+        {p(t("In Abbonamenti ogni serie mostra importo, frequenza, prossimo rinnovo e stato (Attivo, In pausa o Annullato). Aprendo i dettagli trovi lo storico dei pagamenti, quanti ne sono stati effettuati e il totale speso, anche per gli abbonamenti annullati."))}
+        {p(t("Puoi mettere in pausa, annullare o riattivare un abbonamento: la scelta vale dai rinnovi successivi a oggi, i rinnovi che cadono mentre è in pausa o annullato non vengono conteggiati e i pagamenti già registrati non cambiano. Alla riattivazione i rinnovi riprendono dalle date originali. La Dashboard e l'esportazione CSV includono sempre i pagamenti effettuati degli abbonamenti."))}
       </Section>
 
       <Section title={t("Esportare i dati")}>

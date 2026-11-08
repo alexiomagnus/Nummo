@@ -8,13 +8,19 @@ import {
   persistentMultipleTabManager, waitForPendingWrites, type Firestore,
 } from 'firebase/firestore';
 import { authEmulator, firebaseWebConfig, firestoreEmulator, persistentCache } from './backendConfig';
+import { readSessionHint } from './sessionHint';
 import { profilePhotoURL } from './sessionProfile';
 
 let services: { auth: Auth; db: Firestore } | undefined;
 function getServices() {
   if (services) return services;
   const app = initializeApp(firebaseWebConfig);
-  const auth = initializeAuth(app, { persistence: browserLocalPersistence, popupRedirectResolver: browserPopupRedirectResolver });
+  // On mobile browsers a popup resolver given here is initialised eagerly (Google's gapi script and an iframe) and the
+  // saved session is restored only afterwards. Restoring needs none of it, so when the last visit ended signed in the
+  // resolver is only supplied at sign-in (below), where the SDK initialises it on demand.
+  const auth = initializeAuth(app, readSessionHint() === null
+    ? { persistence: browserLocalPersistence, popupRedirectResolver: browserPopupRedirectResolver }
+    : { persistence: browserLocalPersistence });
   const db = initializeFirestore(app, {
     localCache: persistentCache && typeof indexedDB !== 'undefined'
       ? persistentLocalCache({ tabManager: persistentMultipleTabManager() }) : memoryLocalCache(),
@@ -25,6 +31,11 @@ function getServices() {
   return services;
 }
 export const getDatabase = (): Firestore => getServices().db;
+// Starts the SDK at import time: restoring the saved session waits for a network round trip, which then overlaps
+// the first render instead of starting after it. Initialisation errors are reported by useSession, as before.
+export function warmUpServices(): void {
+  try { getServices(); } catch { /* reported when the session is watched */ }
+}
 export type SessionUser = Readonly<{ uid: string; email: string | null; photoURL: string | null }>;
 const toSessionUser = (user: User | null): SessionUser | null => user && {
   uid: user.uid, email: user.email,
@@ -34,7 +45,7 @@ export function watchSession(listener: (user: SessionUser | null) => void): () =
   return onAuthStateChanged(getServices().auth, (user) => listener(toSessionUser(user)));
 }
 export async function signInWithGoogle(): Promise<void> {
-  await signInWithPopup(getServices().auth, new GoogleAuthProvider());
+  await signInWithPopup(getServices().auth, new GoogleAuthProvider(), browserPopupRedirectResolver);
 }
 export async function signOutUser(): Promise<void> {
   // Do not strand acknowledged-in-the-UI operations under a different account.

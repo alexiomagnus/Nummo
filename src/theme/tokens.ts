@@ -101,3 +101,6 @@ export const iconStroke = 1.5;
 
 // Material 3 emphasized-decelerate / standard easings and durations (ms).
 export const motion = { short: 150, medium: 250, easing: [0.2, 0, 0, 1] as const };
+
+// Neutral chart content/state-layer colors; tile text follows the selected page mode.
+export const chartTextColors = { dark: '#000000', light: '#FFFFFF' } as const;

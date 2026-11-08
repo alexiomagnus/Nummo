@@ -28,8 +28,9 @@ service cloud.firestore {
     }
     // Price schedule of a series (mirrors src/domain/pricing.ts): at most 8 changes (more exceed the 1000-expression limit), each
     // {index 1..999, amount_minor, once}. Rules have no loops, so the list is checked by position.
+    // Exactly these three keys (hasOnly + size). A non-map entry makes keys() fail, which denies the write.
     function priceChange(c) {
-      return c is map && c.keys().hasAll(['index', 'amount_minor', 'once']) && c.keys().hasOnly(['index', 'amount_minor', 'once'])
+      return c.keys().hasOnly(['index', 'amount_minor', 'once']) && c.size() == 3
         && c.index is int && c.index >= 1 && c.index <= 999
         && c.amount_minor is int && c.amount_minor > 0 && c.amount_minor <= 9999999 && c.once is bool;
     }
@@ -45,16 +46,25 @@ service cloud.firestore {
         && changeAt(l, 6)
         && changeAt(l, 7);
     }
+    // Subscription status history (mirrors src/domain/subscription.ts), stored as ONE string
+    // "YYYY-MM-DD:status;…" (1..8 entries): a single regex keeps it within the 1000-expression budget, which
+    // eight price changes already nearly fill (a list of maps cost more per entry than a price change).
+    // Optional: absent on every record that never changed status, so writes valid under older Rules stay
+    // valid. Only for series. Increasing dates and "not in the future" are checked by the client decoder.
+    function statusChanges(d) {
+      return !('status_changes' in d) || (d.recurrence != null && d.status_changes is string && d.status_changes.size() <= 167
+        && d.status_changes.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)(;[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)){0,7}'));
+    }
     function expense(d) {
       return d.keys().hasAll(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
-        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
+        && d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
         && d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 9999999
         && d.currency == 'EUR' && d.description is string && d.description.size() > 0 && d.description.size() <= 100
         && d.description == d.description.trim() && !d.description.matches('.*[\\t\\r\\n].*')
         && (d.category_id == null || uuid(d.category_id))
         && d.expense_date is string && validDate(d.expense_date)
         && d.recurrence in [null, 'weekly', 'monthly', 'yearly']
-        && priceChanges(d.price_changes) && (d.recurrence != null || d.price_changes.size() == 0)
+        && priceChanges(d.price_changes) && (d.recurrence != null || d.price_changes.size() == 0) && statusChanges(d)
         && d.source == 'web_app' && d.schema_version == 1
         && d.created_at is timestamp && d.created_at <= request.time
         && d.updated_at == request.time && d.revision is int;
@@ -64,7 +74,7 @@ service cloud.firestore {
         && d.keys().hasOnly(['label', 'icon', 'name_key', 'revision', 'updated_at'])
         && d.label is string && d.label.size() > 0 && d.label.size() <= 40 && d.label == d.label.trim()
         && !d.label.matches('.*[\\t\\r\\n].*')
-        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'star', 'gamepad', 'bag', 'box', 'house', 'bulb', 'car', 'gift', 'shirt', 'paw', 'dumbbell', 'phone', 'coin', 'train', 'bus', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'wrench', 'graduation', 'briefcase', 'sofa', 'droplet', 'beer', 'cake', 'laptop', 'receipt', 'piggy', 'ticket', 'cross', 'bed', 'tree', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
+        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'star', 'gamepad', 'bag', 'box', 'house', 'bulb', 'car', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'train', 'bus', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'graduation', 'sofa', 'beer', 'cake', 'laptop', 'piggy', 'cross', 'tree', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
         && d.name_key == nameKey(d.label) && d.revision is int && d.updated_at == request.time
         && getAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(d.name_key)).data.category_id == id;
     }

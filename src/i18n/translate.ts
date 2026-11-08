@@ -22,11 +22,6 @@ export function translate(language: Language, message: string, values: Values = 
       const match = entry.pattern.exec(source);
       if (!match) continue;
       const captured = Object.fromEntries(entry.names.map((name, index) => [name, match[index + 1]!]));
-      // These error templates include another application error as their last value.
-      if (/^(Il file contiene|Con questo file)/.test(entry.source)) {
-        const last = entry.names[entry.names.length - 1]!;
-        captured[last] = translate(language, captured[last]!);
-      }
       target = interpolate(entry.target, captured);
       break;
     }

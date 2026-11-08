@@ -21,7 +21,7 @@ async function client(name: string, sub?: string, project = projectId) {
   return { app, auth, db, store: createFirestoreStore(db, auth.currentUser?.uid ?? 'demo-owner') };
 }
 const expense = () => ({ expense_id: randomUUID(), amount_minor: 1250, currency: 'EUR' as const, description: 'Caffè', category_id: null,
-  expense_date: todayInRome(), recurrence: null, price_changes: [], source: 'web_app' as const, schema_version: 1 as const });
+  expense_date: todayInRome(), recurrence: null, price_changes: [], status_changes: [], source: 'web_app' as const, schema_version: 1 as const });
 const denied = (promise: Promise<unknown>) => assert.rejects(promise, (e: any) => e.code === 'permission-denied');
 const deadline = <T>(promise: Promise<T>): Promise<T> => {
   let timer: ReturnType<typeof setTimeout>;
@@ -71,7 +71,8 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.equal((await getDocFromServer(ref(data.id))).exists(), false);
     });
     await t.test('regole: campi, importi, date, revisioni e timestamp verificati sul server', async () => {
-      const { expense_id, ...data } = expense();
+      // Raw documents in the stored shape: no `status_changes` unless a series has one (see firestoreStore).
+      const { expense_id, status_changes: _, ...data } = expense();
       const valid = { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       for (const patch of [{ amount_minor: 1.5 }, { amount_minor: 0 }, { amount_minor: 10000000 }, { currency: 'USD' },
         { expense_date: '2025-02-30' }, { expense_date: '2099-01-01' }, { category_id: 'invalid' }, { recurrence: 'daily' },
@@ -86,7 +87,8 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     await t.test('piano prezzi: variazioni validate dalle regole, storico stabile dopo la modifica', async () => {
       const { expense_id, ...data } = expense();
       const series = { ...data, recurrence: 'yearly' as const, expense_date: '2025-03-12', amount_minor: 600, price_changes: [{ index: 1, amount_minor: 1200, once: false }] };
-      const valid = { ...series, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      const { status_changes: _status, ...storedSeries } = series;
+      const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       const change = { index: 2, amount_minor: 1500, once: true };
       const { price_changes: _, ...withoutField } = valid;
       for (const patch of [{ price_changes: [{ ...change, index: 0 }] }, { price_changes: [{ ...change, index: 1000 }] }, { price_changes: [{ ...change, amount_minor: 0 }] },
@@ -106,6 +108,41 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.equal(updated.amount_minor, 600);
       assert.deepEqual(updated.price_changes, next.price_changes);
       await owner.store.removeExpense(updated);
+    });
+    await t.test('abbonamenti: stati validati dalle regole, campo assente compatibile, storico invariato', async () => {
+      const { expense_id, ...data } = expense();
+      const series = { ...data, recurrence: 'monthly' as const, expense_date: '2026-01-05', amount_minor: 999, status_changes: [] };
+      const valid = { ...series, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      // Stored form: one string "date:status;…" (see subscription.ts / firestore.rules).
+      const eight = Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';');
+      for (const patch of [{ status_changes: '2026-03-10:stopped' }, { status_changes: '10/03/2026:paused' }, { status_changes: '' },
+        { status_changes: '2026-03-10:paused;' }, { status_changes: [{ date: '2026-03-10', status: 'paused' }] }, { status_changes: `${eight};2026-09-15:cancelled` },
+        { recurrence: null, price_changes: [], status_changes: '2026-03-10:paused' }]) {
+        await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
+      }
+      // Worst case for the expression budget: eight statuses together with eight price changes.
+      const { status_changes: _, ...legacy } = valid;
+      await setDoc(ref(randomUUID()), { ...legacy, status_changes: eight, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
+      await setDoc(ref(randomUUID()), legacy);
+      await owner.store.createExpense({ expense_id, ...series });
+      const raw = (await getDocFromServer(ref(expense_id))).data()!;
+      assert.ok(!('status_changes' in raw), 'campo omesso quando vuoto');
+      const saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.deepEqual(saved.status_changes, []);
+      const paused = { ...series, status_changes: [{ date: '2026-03-10', status: 'paused' as const }] };
+      await owner.store.updateExpense(saved, paused);
+      const afterPause = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.deepEqual(afterPause.status_changes, paused.status_changes);
+      assert.equal((await getDocFromServer(ref(expense_id))).data()!.status_changes, '2026-03-10:paused');
+      assert.equal(afterPause.revision, saved.revision + 1);
+      // Back to no status at all (same-day resume): the stored field is removed.
+      await owner.store.updateExpense(afterPause, series);
+      assert.ok(!('status_changes' in (await getDocFromServer(ref(expense_id))).data()!));
+      await assert.rejects(owner.store.updateExpense(afterPause, paused), /cambiati in un’altra sessione/);
+      const file = parseBackup(JSON.parse(makeBackup({ expenses: [afterPause], categories: [] })));
+      assert.deepEqual(file.expenses[0]!.status_changes, paused.status_changes);
+      const latest = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      await owner.store.removeExpense(latest);
     });
     await t.test('categorie uniche, rinomina, icone, conflitti ed eliminazione atomica', async () => {
       const id = randomUUID();
@@ -167,16 +204,23 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.deepEqual(all.find((r) => r.id === expense_id)?.price_changes, records[0]!.price_changes);
     });
     await t.test('migrazione oltre il limite di accessi Rules: gruppi di categorie e spese ripetibili', async () => {
-      const categories = Array.from({ length: 9 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));
+      const categories = Array.from({ length: 30 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));
       const records = Array.from({ length: 205 }, () => { const { expense_id, ...data } = expense(); return { ...data, id: expense_id, created_at: '2025-01-01T00:00:00.000Z' }; });
-      // Replace first: the archive already holds other categories and the limit is 10.
+      // Exercise multiple category batches without a category-count limit.
       await owner.store.importRecords(records, categories, 'replace');
       await owner.store.importRecords(records, categories);
       const snapshot = await owner.store.exportSnapshot();
       assert.equal(snapshot.expenses.filter((r) => records.some((e) => e.id === r.id)).length, 205);
-      assert.equal(snapshot.categories.filter((r) => categories.some((c) => c.id === r.id)).length, 9);
-      // Over the 10-category limit the whole file is refused before any write.
-      await assert.rejects(owner.store.importRecords([], Array.from({ length: 2 }, (_, i) => ({ id: randomUUID(), label: `Oltre ${suffix} ${i}`, icon: null }))), /al massimo 10 categorie/);
+      assert.equal(snapshot.categories.filter((r) => categories.some((c) => c.id === r.id)).length, 30);
+      const extra = Array.from({ length: 30 }, (_, i) => ({ id: randomUUID(), label: `Extra ${suffix} ${i}`, icon: null }));
+      await owner.store.importRecords([], extra);
+      await owner.store.importRecords([], extra);
+      const id = randomUUID();
+      await owner.store.saveCategory(id, `Creata oltre trenta ${suffix}`, null);
+      const all = await owner.store.exportSnapshot();
+      assert.equal(all.categories.length, 61);
+      assert.ok(all.categories.some((c) => c.id === id));
+      assert.equal(parseBackup(JSON.parse(makeBackup(all))).categories.length, 61);
     });
     await t.test('importazione che sostituisce: elimina i dati precedenti e importa solo il file, ripetibile', async () => {
       const cats = [{ id: randomUUID(), label: `Sostituita ${suffix}`, icon: null }];

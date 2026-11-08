@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
@@ -12,19 +12,25 @@ import { SyncChip } from '../../components/SyncChip';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, radius, spacing } from '../../theme/tokens';
 import { describeSync, hasUsableCategorySnapshot } from './syncStatus';
+import { seededKey, shouldSeedDefaultCategories } from './seedDefaults';
 import { HybridConnectionNotice } from './HybridConnectionNotice';
-import { addDays, expandOccurrences, forecastOccurrences, upcomingRenewals } from '../../domain/history';
+import { addDays, expandOccurrences, forecastOccurrences, subscriptionSummaries, upcomingRenewals } from '../../domain/history';
+import { dataOf } from '../../domain/expense';
+import { setStatus, type SubscriptionStatus } from '../../domain/subscription';
+import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
 import { defaultCategories } from '../../domain/category';
 import { CategorySettings } from '../categories/CategorySettings';
 import { useRemoteCategories } from '../categories/useRemoteCategories';
+import type { DashboardPreferences } from '../settings/preferences';
 import { Dashboard } from '../dashboard/Dashboard';
 import { ExpenseForm } from '../expenses/ExpenseForm';
 import { ExpenseEditor } from '../expenses/ExpenseEditor';
 import { useRemoteExpenses } from '../expenses/useRemoteExpenses';
 import { ExpenseList } from '../history/ExpenseList';
 import { UpcomingRenewals } from '../history/UpcomingRenewals';
+import { SubscriptionList } from '../history/SubscriptionList';
 import { makeBackup } from '../../domain/backup';
 import { backendMode, firestoreEmulator } from '../../services/backendConfig';
 import { BackupActions, download } from '../backup/BackupActions';
@@ -40,12 +46,20 @@ const destinations: readonly Destination<Section>[] = [
   { value: 'dashboard', label: 'Dashboard', icon: iconShapes.chart },
   { value: 'categories', label: 'Categorie', icon: iconShapes.tag },
 ];
+// The Spese page has two views: one-off expenses and subscriptions (every recurring series), never both.
+type ListView = 'expenses' | 'subscriptions';
+const listViews = [{ value: 'expenses', label: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti' }] as const;
 const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', categories: 'Categorie' };
 
 const startGateMs = 4000;
 
 // Keyed by UID in App: every listener, draft and view is discarded on account change.
-export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string; storageNote: string; topActions?: ReactNode }) {
+type DashboardSettingsProps = {
+  dashboardPreferences: DashboardPreferences;
+  onChangeDashboardPreferences: (change: Partial<DashboardPreferences>) => void;
+};
+
+export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dashboardPreferences, onChangeDashboardPreferences }: { uid: string; storageNote: string; topActions?: ReactNode; onReleased?: () => void } & DashboardSettingsProps) {
   const { t } = useI18n();
   const backend = useMemo(() => createFirestoreStore(getDatabase(), uid), [uid]);
   const store = useRemoteExpenses(backend, storageNote);
@@ -60,6 +74,7 @@ export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string;
     return () => { clearInterval(timer); window.removeEventListener('online', change); window.removeEventListener('offline', change); window.removeEventListener('focus', change); };
   }, []);
   const occurrences = useMemo(() => expandOccurrences(store.expenses, today), [store.expenses, today]);
+  const subscriptions = useMemo(() => subscriptionSummaries(store.expenses, today), [store.expenses, today]);
   const renewals = useMemo(() => upcomingRenewals(store.expenses, today), [store.expenses, today]);
   const soon = useMemo(() => forecastOccurrences(store.expenses, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [store.expenses, today]);
   const pending = Boolean(store.sync?.pending || categoryState.sync.pending);
@@ -78,30 +93,86 @@ export function RemoteWorkspace({ uid, storageNote, topActions }: { uid: string;
     const timer = setTimeout(() => setReleased(true), startGateMs);
     return () => clearTimeout(timer);
   }, [released, dataReady, error]);
+  // Tells the app that the real screen is ready to replace the startup placeholder (App.tsx).
+  useEffect(() => { if (released) onReleased?.(); }, [released]);
   return (
     <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={setSection}
       fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
       actions={<><SyncChip status={status} />{topActions}</>}>
-      <Sections section={section} onNavigate={setSection} backend={backend} store={store} categoryState={categoryState} starting={!released}
-        occurrences={occurrences} renewals={renewals} soon={soon} online={online} synchronized={synchronized} error={error} />
+      <Sections dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences} uid={uid} section={section} onNavigate={setSection} backend={backend} store={store} categoryState={categoryState} starting={!released}
+        occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon} online={online} synchronized={synchronized} error={error} />
     </AppShell>
   );
 }
 
-type SectionsProps = {
-  section: Section; onNavigate: (section: Section) => void; backend: FirestoreStore; store: ExpenseStore;
+// The «Nuova spesa» screen as the real workspace shows it before its data arrives (same shell, same form with
+// its fields disabled, same header slots), drawn while Firebase Auth restores the session and the first
+// snapshots load, so the layout stays put and only the data appears. It reads nothing and writes nothing.
+const idleStore: ExpenseStore = {
+  expenses: [], ready: false, error: null, submission: { status: 'draft' }, submit: () => {}, retry: () => {}, startNew: () => {}, storageNote: '',
+};
+const loadingSync = describeSync({ ready: false, online: true, pending: false, cached: false, error: null });
+
+export function StartupWorkspace({ topActions }: { topActions?: ReactNode }) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  return (
+    <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected="expense" onSelect={() => {}}
+      fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
+      actions={<><SyncChip status={loadingSync} />{topActions}
+        {/* Where the account avatar will appear: the buttons beside it do not move. */}
+        <View style={styles.avatarSlot}><View style={[styles.avatarDot, { backgroundColor: colors.primaryContainer }]} /></View></>}>
+      <PageHeader title={t(headings.expense)} />
+      <View style={styles.grow}><View style={styles.grow}><ExpenseForm categories={[]} store={idleStore} /></View></View>
+    </AppShell>
+  );
+}
+
+type SectionsProps = DashboardSettingsProps & {
+  uid: string; section: Section; onNavigate: (section: Section) => void; backend: FirestoreStore; store: ExpenseStore;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
+  subscriptions: ReturnType<typeof subscriptionSummaries>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
 };
 
-function Sections({ section, onNavigate, backend, store, categoryState, occurrences, renewals, soon, online, synchronized, error, starting }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
   const [showBackup, setShowBackup] = useState(false);
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
+  const [listView, setListView] = useState<ListView>('expenses');
+  // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
+  const oneOff = useMemo(() => occurrences.filter((item) => item.recurrence === null), [occurrences]);
+  const edit = (id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null);
+  // Only today's change is written: past occurrences never change (see subscription.ts). Confirmed by the server transaction.
+  const changeStatus = async (id: string, status: SubscriptionStatus) => {
+    const record = store.expenses.find((r) => r.id === id);
+    if (!record || !store.update) return false;
+    const changes = setStatus(record.status_changes, status, todayInRome());
+    if (!changes) { notify("Troppe variazioni di stato per questo abbonamento: per continuare creane uno nuovo."); return false; }
+    const saved = await store.update(record, { ...dataOf(record), status_changes: changes });
+    if (saved) notify(status === 'paused' ? "Abbonamento messo in pausa." : status === 'cancelled' ? "Abbonamento annullato." : "Abbonamento riattivato.");
+    return saved;
+  };
   const heading = t(headings[section]);
+  const addDefaults = () => backend.importRecords([], defaultCategories.map((c) => ({ ...c, label: t(c.label), id: crypto.randomUUID() })))
+    .then(() => notify("Categorie predefinite aggiunte.")).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
+  // A new account (empty archive confirmed by the server) starts with the default categories, once per browser.
+  const seedAttempted = useRef(false);
+  const seedable = shouldSeedDefaultCategories({ online, error,
+    categories: { ready: categoryState.ready, count: categoryState.categories.length, ...categoryState.sync },
+    expenses: { ready: store.ready, count: store.expenses.length, fromCache: Boolean(store.sync?.fromCache), pending: Boolean(store.sync?.pending) } });
+  useEffect(() => {
+    if (!seedable || seedAttempted.current) return;
+    seedAttempted.current = true;
+    try {
+      if (localStorage.getItem(seededKey(uid))) return;
+      localStorage.setItem(seededKey(uid), new Date().toISOString());
+    } catch { /* Storage unavailable: the in-memory guard still prevents repeats; the explicit button remains. */ }
+    void addDefaults();
+  }, [seedable]);
   return <>
     <PageHeader title={heading}
       action={section === 'list' ? (
@@ -134,21 +205,24 @@ function Sections({ section, onNavigate, backend, store, categoryState, occurren
         <View style={showBackup ? undefined : styles.hidden}>
           <BackupActions backend={backend} enabled={synchronized} onClose={() => setShowBackup(false)} />
         </View>
-        <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
-        <ExpenseList occurrences={occurrences} categories={categoryState.categories} error={error}
-          onEdit={(id) => setEditing(store.expenses.find((r) => r.id === id) ?? null)} />
+        <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
+          options={listViews.map((view) => ({ ...view, label: t(view.label) }))} />
+        {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} />}
+        {listView === 'subscriptions' && <>
+          <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
+          <SubscriptionList subscriptions={subscriptions} categories={categoryState.categories} error={error}
+            canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} />
+        </>}
       </View>
     )}
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} />}
-    {section === 'dashboard' && !starting && <Dashboard occurrences={occurrences} categories={categoryState.categories} />}
+    {section === 'dashboard' && !starting && <Dashboard occurrences={occurrences} categories={categoryState.categories}
+      preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} />}
     {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}
         notify={notify}
-        onAddDefaults={categoryState.categories.length === 0 ? () => {
-          void backend.importRecords([], defaultCategories.map((c) => ({ ...c, label: t(c.label), id: crypto.randomUUID() })))
-            .then(() => notify("Categorie predefinite aggiunte.")).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
-        } : undefined} canAddDefaults={synchronized} />
+        onAddDefaults={categoryState.categories.length === 0 ? () => { void addDefaults(); } : undefined} canAddDefaults={synchronized} />
     </>}
   </>;
 }
@@ -161,6 +235,8 @@ const styles = StyleSheet.create({
   starting: { alignItems: 'center', padding: spacing.xxl },
   startingOverlay: { position: 'absolute', top: spacing.xxl, left: 0, right: 0, alignItems: 'center', zIndex: 1 },
   grow: { flexGrow: 1 },
+  avatarSlot: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  avatarDot: { width: 36, height: 36, borderRadius: 18 },
   alert: { padding: spacing.lg, borderRadius: radius.card },
   start: { alignSelf: 'flex-start' },
 });

@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
-import { categoryLimitMessage, categoryNameError, maxCategories, type Category, type CategoryIcon } from '../../domain/category';
+import { categoryNameError, type Category, type CategoryIcon } from '../../domain/category';
 import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
@@ -41,7 +41,7 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
   const [nameError, setNameError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Category | null>(null);
   const create = async () => {
-    const validationError = categories.length >= maxCategories ? categoryLimitMessage : categoryNameError(name, categories);
+    const validationError = categoryNameError(name, categories);
     setNameError(validationError);
     if (!ready || validationError) return;
     setBusy(true);

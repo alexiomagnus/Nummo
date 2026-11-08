@@ -1,8 +1,10 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
+import { useKeyboardOpen } from '../../components/AppShell';
 import { Button } from '../../components/Button';
+import { reserveScrollPadding } from '../../theme/viewport';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
@@ -30,6 +32,18 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
   const busy = submission.status === 'sending' || submission.status === 'uncertain';
   const dataState = store.ready ? 'ready' : store.error ? 'error' : 'loading';
   const enabled = dataState === 'ready' && !busy;
+  // Compact: the save bar sticks to the bottom of the page. While the keyboard is open it goes back to the end of the
+  // form, so it cannot cover a field in the little room left above the keyboard (it stays reachable by scrolling).
+  const keyboard = useKeyboardOpen();
+  const sticky = size === 'compact' && !keyboard;
+  const footerRef = useRef<ComponentRef<typeof View>>(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+  // A sticky bar covers what the browser scrolls into view: reserve its height on the page's scroll container.
+  useEffect(() => {
+    const element = footerRef.current as unknown as Parameters<typeof reserveScrollPadding>[0];
+    if (!sticky || !element || typeof getComputedStyle === 'undefined') return;
+    return reserveScrollPadding(element, footerHeight, (node) => getComputedStyle(node as unknown as Element).overflowY);
+  }, [sticky, footerHeight]);
 
   // The draft is cleared only after a verified confirmation (no sending happens here).
   useEffect(() => {
@@ -97,7 +111,8 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{t(submission.message)}</HelperText>
       )}
-      <View style={[styles.footer, size === 'compact' && [styles.sticky, { backgroundColor: theme.colors.background }]]}>
+      <View ref={footerRef} onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
+        style={[styles.footer, sticky && [styles.sticky, { backgroundColor: theme.colors.background }]]}>
         {submission.status === 'uncertain' ? (
           <>
             <Text accessibilityRole="alert">
@@ -121,8 +136,7 @@ export function ExpenseForm({ categories, store, onCreateCategory }: Props) {
 const styles = StyleSheet.create({
   page: { width: '100%' },
   form: { width: '100%', gap: spacing.lg },
-  // Compact: the save bar sticks to the bottom of the scrolling area, so it stays above the
-  // virtual keyboard (the viewport uses dynamic height) and above the navigation bar.
+  // Compact, keyboard closed: the save bar sticks to the bottom of the scrolling area, above the navigation bar.
   sticky: { position: 'sticky', bottom: 0, marginHorizontal: -spacing.md, marginBottom: -spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, borderTopWidth: 0, boxShadow: 'none', zIndex: 1 } as unknown as ViewStyle,
   repeat: { gap: spacing.xl },
   footer: { gap: spacing.md },

@@ -1,12 +1,13 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { Logo } from './Logo';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layout, motion, radius, shape, spacing, stateOpacity } from '../theme/tokens';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
+import { observeVirtualKeyboard } from '../theme/viewport';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon } from './SvgIcon';
@@ -27,6 +28,16 @@ type Props<T extends string> = {
   children: ReactNode;
 };
 
+// Virtual keyboard open (inferred, see viewport.ts). Pages read it to give the fields the room left above the keyboard.
+const KeyboardContext = createContext(false);
+export const useKeyboardOpen = () => useContext(KeyboardContext);
+
+function useVirtualKeyboard(): boolean {
+  const [open, setOpen] = useState(false);
+  useEffect(() => (typeof window === 'undefined' ? undefined : observeVirtualKeyboard(window, setOpen)), []);
+  return open;
+}
+
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
 // standing drawer (expanded). The content scrolls inside the shell, nothing is position: fixed.
 export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, brand, children }: Props<T>) {
@@ -34,6 +45,17 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const { colors } = theme;
   const size = useSizeClass();
   const reduceMotion = useReducedMotion();
+  const keyboard = useVirtualKeyboard();
+  // The layout above the keyboard changes (navigation hidden, save bar back in the flow): bring the focused field back
+  // into view once it has settled. `nearest` honours the scroll padding reserved by sticky bars.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const frame = requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (keyboard && active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [keyboard]);
   const pageProgress = useRef(new Animated.Value(1)).current;
   const previousSection = useRef(selected);
   // Animate the existing content container: changing its key would discard the expense draft.
@@ -56,7 +78,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     scroller.current?.scrollTo({ y: 0, animated: false });
   }, [onSelect]);
   const hasNav = Boolean(destinations?.length);
-  const bottomBar = hasNav && size === 'compact';
+  // While typing, the navigation bar would take room from the fields above the keyboard: it is hidden (still mounted,
+  // so its state and the round action survive) and comes back when the keyboard closes.
+  const navMounted = hasNav && size === 'compact';
+  const bottomBar = navMounted && !keyboard;
   // Compact: floating toolbar (destinations pill + round primary action) in the layout flow, above the bottom inset.
   const barHeight = layout.floatingBar + spacing.md * 2 + insets.bottom;
   const showFab = bottomBar && fab && selected !== fab.target;
@@ -101,14 +126,16 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelBg }]} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
+              <KeyboardContext.Provider value={keyboard}>
               <Animated.View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }, {
                 opacity: pageProgress,
                 transform: [{ translateY: pageProgress.interpolate({ inputRange: [0, 1], outputRange: [spacing.sm, 0] }) }],
               }]}>{children}</Animated.View>
+              </KeyboardContext.Provider>
             </ThemeProvider>
           </ScrollView>
         </View>
-        {bottomBar && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} fab={showFab ? fab : undefined} />}
+        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} fab={showFab ? fab : undefined} hidden={!bottomBar} />}
       </SnackbarProvider>
     </View>
   );
@@ -123,7 +150,7 @@ function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boo
 type Fab<T extends string> = { label: string; icon: string; target: T };
 type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
-function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab }: NavProps<T> & { bottomInset: number }) {
+function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab, hidden }: NavProps<T> & { bottomInset: number; hidden: boolean }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
@@ -142,7 +169,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   }, [visible, progress, reduceMotion]);
   const action = fab ?? lastFab.current;
   return (
-    <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }]}>
+    <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }, hidden && styles.hidden]}>
       <View role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
         {destinations.map((item) => {
           const active = item.value === selected;
@@ -244,6 +271,8 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, minWidth: 0 },
   content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', flexGrow: 1, gap: spacing.xl },
   floating: { flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.md },
+  // display: none also removes it from the accessibility tree and the Tab order while the keyboard is open.
+  hidden: { display: 'none' },
   pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: spacing.xs, gap: spacing.xs },
   pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill },
   actionSlot: { height: layout.floatingBar, overflow: 'hidden' },

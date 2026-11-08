@@ -35,6 +35,15 @@ Le categorie valide già in cache sono utilizzabili subito (resta visibile lo st
 I campi bloccati usano sola lettura e trigger disabilitati, preservando i contorni anche nel
 tema scuro; bozza e modulo rimangono montati. Nessun ritardo artificiale o scrittura all'avvio.
 
+Avvio dell'app (8 novembre 2026; misure e procedure in `avvio-prestazioni.md`). Il primo fotogramma usa lo sfondo
+del tema scelto (`nummo.boot-theme.v1`, scritto da `GlobalStyle`, letto da uno script inline di `index.html`), e
+`@font-face`/preload del font stanno nell'HTML. Se la visita precedente era una sessione (`nummo.session.hint.v1`,
+solo presentazione, mai accesso) si mostra `StartupWorkspace`, la pagina «Nuova spesa» con campi disabilitati, sopra la
+schermata reale finché dati o errore (o i 4 s) la rilasciano; così guscio e modulo non cambiano durante il ripristino della
+sessione. Con l'indizio, Auth è inizializzato senza `popupRedirectResolver` (l'SDK su mobile lo inizializza subito e
+aspetta gapi/iframe prima di ripristinare l'utente) e il resolver è passato al solo `signInWithPopup`; gli SDK partono
+all'import (`warmUpServices`). Motivazioni e limiti (prova solo emulata, popup reale non provato dopo logout): vedi il documento.
+
 ## Schema e proprietà
 
 | Percorso | Contenuto |
@@ -63,8 +72,11 @@ escapati; le regole verificano l'associazione reciproca con `getAfter`. Un clien
 può creare una categoria senza prenotarne il nome, rubare un indice, o lasciarlo
 orfano dopo una rinomina/eliminazione. Le regole controllano tipi/campi, limiti,
 icone, revisioni, timestamp e date; le normalizzazioni Unicode complete appartengono
-al dominio e i decoder rifiutano archivi non conformi. Le predefinite si aggiungono
-con un'azione esplicita quando la lista è vuota, mai tramite un effetto di lettura.
+al dominio e i decoder rifiutano archivi non conformi. Le cinque predefinite (Alimentari, Intrattenimento, Shopping, Tecnologia, Trasporti)
+si creano una sola volta, in un effetto del workspace, quando spese e categorie sono entrambe vuote
+in snapshot del server senza scritture pendenti né errori; un marcatore `localStorage` per UID
+impedisce di ricrearle dopo che l'utente le elimina. In ogni altro caso restano disponibili
+con il pulsante della lista vuota. Il tentativo è una scrittura sola, non un invio nel render.
 Eliminare una categoria non altera le spese: i riferimenti mancanti appaiono senza
 categoria, preservando la semantica precedente.
 
@@ -121,6 +133,69 @@ aperti, con stato indipendente per chiave di occorrenza. La matita apre l'editor
 «Elimina» è solo nell'editor, con conferma e revisione del record vista all'apertura.
 Per una ricorrenza elimina l'intera serie; non salva prima le modifiche della bozza.
 
+Categorie senza limite numerico applicativo: rimossi i controlli di creazione e importazione;
+le Rules già non contano le categorie. Schema e backup v1 invariati, nessuna migrazione dati.
+`breakdown` conserva tutte le categorie con spese nel periodo, senza raggruppamenti, e tratta
+null/riferimenti orfani come «Senza categoria». Le categorie inutilizzate non compaiono nei grafici.
+`categoryPresentation` produce la stessa proiezione per ciambella, blocchi e barre: oltre otto serie,
+principali per importo + «Altre categorie», lasciando «Senza categoria» distinta. È un budget visivo,
+non un limite dati: la legenda espande tutti i membri di Altre con percentuali sul totale completo.
+I gruppi non entrano in Firestore o nei backup. I colori derivano dall’ID su 12 slot esistenti:
+restano stabili tra periodi/ordinamenti/rinomine ma possono ripetersi, con etichette sempre disponibili.
+Tre modalità esplicite: Ciambella (`donut`), Blocchi (`blocks`, treemap recuperata da `d2fbe15`),
+Barre (`bars`, estratte dal precedente fallback). Blocchi conserva sempre rettangoli proporzionali,
+anche su mobile: gutter ridotti sulle tessere sottili senza espandere l’area nelle tessere vicine;
+contenuto interno solo se leggibile, dettagli completi nella legenda collegata via `aria-describedby`.
+Etichette adattive (`blockLabels.ts`): misura Canvas nel font scelto, padding e altezza utile;
+Icona di categoria da 24 px sulle tessere di almeno 40×40 px, con spazio riservato;
+nello spazio restante nome completo (a capo), poi importo/percentuale. Font 14/12 px, mai ridotto sotto 12; ricalcolo dopo caricamento font.
+I dettagli completi sono visibili selezionando una tessera con tocco/focus e nella legenda.
+Testo e icone bianchi nel tema scuro, `onSurface` nel tema chiaro, indipendenti dal riempimento categoriale;
+niente opacità sulle tessere non selezionate, contorno per la selezione. Geometrie, importi e altri grafici invariati.
+Le tessere sotto 48 px non aggiungono minuscoli bersagli al percorso Tab: i controlli della legenda restano disponibili.
+Barre mostra nomi/importi/percentuali una volta sola; la legenda aggiunge soltanto l’eventuale dettaglio di Altre.
+Le tre scelte sono persistite nello stesso campo browser; `blocks` già salvato resta Blocchi. Menu compatto mobile,
+chip a capo su desktop; nessun cambio automatico di visualizzazione al ridimensionamento.
+
+Dashboard: grafico e periodo sono preferenze di presentazione in `nummo.preferences.v1`,
+insieme a tema e lingua; caricati da `App` e passati alla dashboard senza un secondo stato persistente.
+Vecchie preferenze o valori invalidi usano ciambella/mese corrente. Se lo storage è negato,
+le scelte restano nella sessione; nessun dato Firebase aggiunto. «Ripristina» nelle impostazioni
+ripristina anche queste scelte. La lista giorni parte nascosta a ogni mount della dashboard;
+«Mostra giorni con spese» / «Nascondi giorni con spese» controlla solo la visibilità locale.
+
+Stile delle icone di categoria (8 novembre 2026): preferenza di visualizzazione `iconStyle` (`minimal` | `colorful` | `pixel`) in
+`nummo.preferences.v1`, con le altre scelte di aspetto; predefinito `minimal`, mancante o invalido ricade su `minimal`.
+Non entra in Firestore, backup, CSV o Rules: gli ID icona salvati restano gli stessi, cambia solo il disegno. Il minimale
+è il set outline originale (`categoryGlyphs.ts`, invariato); il colorato (`categoryColorGlyphs.ts`) ridisegna le stesse icone (40 dall'8 novembre 2026, dopo la rimozione di `wrench`, `briefcase`, `droplet`, `phone`, `bed`, `ticket` e `receipt`)
+con forme piene a due toni e contorno, senza emoji Unicode né raster, per un aspetto uguale su ogni piattaforma.
+Colori: nove tinte (`theme/iconPalette.ts`) assegnate **per significato** (cibo, trasporti, salute, svago…), non per categoria
+dell'utente né per gradimento; indipendenti dall'accento scelto. Ruoli per disegno: base `b`, tinta `t`, inchiostro `i`,
+sul-base `o` e linea `l` (tratti liberi, chiari nel tema scuro dove il contorno scuro si confonde col fondo). Ogni coppia
+usata è controllata da test per contrasto (base e linee ≥3:1 sulle superfici di ogni accento e modo, inchiostro su tinta
+≥4,5:1). Architettura: `categoryIconSets.ts` (puro) è l'unico punto che associa ID, stile e tema a un disegno, con fallback
+colorato → outline → segnaposto tag e nessun errore per ID ignoti; `CategoryGlyph` è l'unico componente che lo disegna e legge
+lo stile da `IconStyleProvider`, posto sopra `PaperProvider` perché dialoghi e menu in portale lo ereditino. Nessun
+componente delle pagine conosce lo stile. Eccezioni consapevoli: `IconTile` usa 24 px invece di 20 per il colorato (i disegni
+pieni lo richiedono per leggersi). Su richiesta dell'utente (8 novembre 2026) le icone sono nelle tessere di
+`BlockChart`, sopra le etichette, e non nella legenda (`CategoryLegend`), che conserva colore, nome, importo e percentuale.
+Le serie sintetiche (Altre categorie, Senza categoria) non hanno icona. Le tessere troppo piccole restano identificabili
+nella legenda; quelle con spazio per la sola icona possono mostrarla senza testo. Le Barre mantengono l'icona nella riga.
+Le icone di navigazione e azione non seguono lo stile. Le icone restano
+decorative (`accessible={false}`): il nome della categoria è sempre accanto o nell'etichetta del controllo. Nessun lampeggio
+all'avvio: la preferenza è letta in modo sincrono con le altre e le icone compaiono solo dopo il montaggio di React.
+
+Stile pixel art (8 novembre 2026): terzo valore di `iconStyle`, aggiunto senza toccare gli altri due set. Ogni categoria ha uno
+sprite in `categoryPixelGlyphs.ts`: righe di caratteri (`.` vuoto, `i` inchiostro, `b` base, `t` tinta, `o` sul-base) su una griglia
+di al più 12×12 celle, centrata su una tela 12×12 e mostrata a 24×24 (due pixel per cella). `spriteMarkup` (puro) unisce le celle
+uguali di una riga in un solo tratto per colore e disegna senza antialiasing (`shape-rendering="crispEdges"`), con gli stessi ruoli
+colore e le stesse nove tinte per significato del colorato: nessun hex, nessun raster, nessuna dipendenza. Scelta della griglia 12:
+con 24 px la cella resta di due pixel interi, quindi i bordi sono netti; una griglia 16 darebbe celle da 1,5 px sfocate. Per lo
+stesso motivo `CategoryGlyph` aggancia la dimensione al multiplo di 12 più vicino solo in questo stile (`glyphSize`: 20 → 24,
+26 → 24), e `IconTile` usa 24 px come per il colorato. Nel tema scuro l'inchiostro è scuro quanto la pagina: i dettagli sottili
+sono quindi in `b`/`t` e ogni sprite deve avere almeno dieci celle piene (test). Fallback pixel → colorato → outline →
+segnaposto; stessi ID, nessuna modifica a Firestore, Rules, backup o CSV. Etichetta «Pixel art» tradotta in en.ts.
+
 Dashboard, dettaglio giornaliero (8 novembre 2026): elenco compatto dei giorni con
 spese per tutti i periodi (anche 3/6/12 mesi), dal più recente, sette iniziali con
 espansione esplicita. Senza titolo/intestazione mensile: il mese è nella data di ogni
@@ -146,6 +221,15 @@ accessibile completa anche quando il nome viene troncato visivamente.
 | Installazione Android (manifest + icone) | Manifest e icone presenti (6 nov 2026); installabilità non provata su dispositivo; niente service worker |
 | Apertura a freddo senza rete | Non implementata: manca il service worker; cache dati ≠ disponibilità offline del bundle |
 | Firebase Hosting | Configurato in `firebase.json` e `npm run deploy:hosting` (solo Hosting); nessuna pubblicazione eseguita |
+
+**Tastiera virtuale (8 novembre 2026).** Nessuna API web la segnala ovunque (`navigator.virtualKeyboard` solo Chromium
+e con contenuto sovrapposto), quindi è dedotta: campo di testo attivo e viewport visibile sotto l'80% del più alto
+osservato alla stessa larghezza (`observeVirtualKeyboard`). Copre sia `interactive-widget=resizes-content` (Chrome
+Android) sia il solo visual viewport (iOS), ignora pinch zoom e barre del browser. Durante la digitazione la pillola mobile
+si nasconde e le azioni del modulo escono dallo sticky: nel poco spazio sopra la tastiera nessun elemento fisso deve
+coprire i campi. Scartati: offset fissi per dispositivo, solo focus (una tastiera fisica nasconderebbe la navigazione),
+sticky con soli margini (lo spazio utile resterebbe circa metà). Lo scroll padding delle barre sticky vale solo in
+navigazione da tastiera perché i `Menu` Paper mettono il focus sull'anchor al montaggio.
 
 La persistenza web supportata e le differenze RN sono documentate da
 [Firebase offline](https://firebase.google.com/docs/firestore/manage-data/enable-offline),
@@ -173,7 +257,7 @@ mascherato, illeggibile in un foglio; due formati di ripristino raddoppiavano va
   campi extra sono ignorati.
 - **Ripristino.** `planImport` (puro) confronta file e dati del server: aggiunte, identici (saltati), conflitti e
   riferimenti a categorie assenti. *Unisci*: ogni conflitto (stesso ID con contenuto diverso, stesso nome con ID
-  diverso) o più di 10 categorie blocca prima della prima scrittura. *Sostituisci*: elimina solo gli elementi diversi
+  diverso) blocca prima della prima scrittura. *Sostituisci*: elimina solo gli elementi diversi
   dal file, poi aggiunge; la UI scarica prima una copia dei dati attuali. Il piano è ricalcolato dallo store prima di
   scrivere e ogni gruppo ricontrolla i propri ID in transazione. Rules e schema invariati; non esiste atomicità
   sull'intero archivio (limiti di gruppo delle Rules): un errore a metà lascia uno stato intermedio, riparabile
@@ -279,8 +363,8 @@ deve avere una voce inglese; testano copertura dei richiami statici e parametri.
 La lingua aggiorna anche guida, accessibilità e `html.lang`; `it-IT`/`en-GB` determinano
 la visualizzazione di date e importi EUR. Nessuna chiave React dipende dalla lingua:
 sessione, listener e bozze rimangono montati. Non si traducono dati utente, schemi,
-CSV/JSON, né si cambia il fuso di business Europe/Rome. Solo l'aggiunta esplicita
-delle categorie predefinite ne crea i nomi nella lingua scelta.
+CSV/JSON, né si cambia il fuso di business Europe/Rome. Solo la creazione
+delle categorie predefinite (automatica o esplicita) ne scrive i nomi nella lingua scelta.
 
 ## Piano prezzi delle spese ricorrenti (5 novembre 2026)
 
@@ -298,12 +382,49 @@ elenca le variazioni `{ index, amount_minor, once }`:
   futuri»): le occorrenze maturate non cambiano. «Tutti i futuri» sostituisce le variazioni
   future programmate; una variazione uguale al prezzo già in vigore non viene salvata.
 - Previsioni (`forecastOccurrences`, `upcomingRenewals`): calcolate, mai nei totali, nella
-  dashboard o negli export; mostrate nella card «Prossimi rinnovi» della sezione Spese.
+  dashboard o negli export; mostrate nella card «Prossimi rinnovi» della vista Abbonamenti (dall'8 novembre).
 - Rules: gli elementi della lista si controllano per posizione (niente cicli) e il limite di
   1000 espressioni per richiesta fissa il massimo a **8 variazioni per serie** (con 10 la
   creazione fallisce). Le Rules vanno ripubblicate dove già distribuite; per le spese
   singole `price_changes` deve essere vuoto.
-- Il formato backup resta `version: 1`: il campo è additivo, i backup precedenti si importano
-  con `[]`. Il confronto tra record usa `sameFieldValue` (uguaglianza per valore).
+- Il formato backup restava `version: 1` (campo additivo, backup precedenti importati con `[]`);
+  dall'8 novembre è `version: 2` per gli stati degli abbonamenti (sezione dedicata). Il confronto tra record usa `sameFieldValue` (uguaglianza per valore).
 - Non implementato: variazioni programmate aggiunte in modifica (si possono solo rimuovere),
   correzione del prezzo di un pagamento già maturato, più di 8 variazioni.
+
+## Abbonamenti: vista separata e stati (8 novembre 2026)
+
+Su richiesta, la pagina Spese ha due viste in un controllo segmentato (`SegmentedButtons`): **Spese** (solo spese
+singole, `recurrence === null`) e **Abbonamenti** (ogni serie ricorrente, `SubscriptionList`, con «Prossimi rinnovi»).
+Un abbonamento è una spesa ricorrente: nessuna nuova collezione né duplicazione, gli stessi documenti `expenses`.
+
+- **Stati** `active` | `paused` | `cancelled` in `status_changes` (`src/domain/subscription.ts`): cronologia
+  `{ date, status }` a date strettamente crescenti, massimo 8; assente = sempre attivo. Si scrive solo il cambio di
+  oggi; vale per le occorrenze **successive** al giorno del cambio (`statusAt` usa `<`), quindi pausa, annullamento e
+  riattivazione non toccano mai un pagamento già mostrato, nemmeno quello di oggi. Due cambi nello stesso giorno si
+  sostituiscono (pausa e riattivazione lo stesso giorno = nessuna voce).
+- Scelte dell'utente: alla riattivazione vale il **ciclo originale** (prossima data del calendario della serie, numeri
+  di occorrenza e piano prezzi invariati; i rinnovi saltati non si recuperano); **l'annullamento è riattivabile**.
+  Pausa e annullamento differiscono per significato ed etichetta, non per calcolo.
+- `expandOccurrences`, previsioni e `upcomingRenewals` saltano le occorrenze non attive (l'occorrenza 0 è sempre
+  pagata): elenco, dashboard, CSV e riepiloghi derivano dalla stessa funzione, senza doppi conteggi. La dashboard
+  include sempre i pagamenti effettuati degli abbonamenti; le intestazioni mensili della vista Spese contano solo le
+  spese singole.
+- **Firestore:** `status_changes` è salvato come **una stringa** `"AAAA-MM-GG:stato;…"` e solo se non vuoto.
+  Motivo misurato con l'emulatore: con 8 variazioni di prezzo il budget di 1000 espressioni era già quasi pieno; una
+  lista di mappe costava più di una variazione di prezzo per voce e anche un solo stato lo superava. La stringa si
+  valida con una sola regex. Anche `priceChange` è stato alleggerito (`hasOnly` + `size() == 3` al posto di
+  `is map` + `hasAll` + `hasOnly`, stessa semantica). Dopo le modifiche passano tutte le combinazioni da 0 a 8 prezzi
+  × 0 a 8 stati, ma il margine resta stretto: misurare di nuovo ogni nuovo controllo sulle spese. Le Rules verificano
+  forma, serie e numero di voci; ordine delle date e «non nel futuro» li verifica il decoder del client, che blocca
+  l'archivio se non validi (stesso criterio dei duplicati nel piano prezzi).
+- **Compatibilità:** un documento senza il campo ha la forma accettata dalle Rules precedenti, quindi creare e
+  modificare spese singole e serie mai sospese funziona anche prima di ripubblicare le Rules; servono le nuove Rules
+  solo per pausa/annullamento. Pubblicazione Rules separata e autorizzata.
+- **Backup `version: 2`** con `status_changes` come array leggibile (sempre presente, anche vuoto). I file v1 si
+  leggono come «sempre attivo». Un'app precedente rifiuta i v2 («versione più recente») invece di perdere gli stati
+  in silenzio.
+- La modifica della serie (`ExpenseEditor` → `applyPriceEdit`) conserva gli stati; trasformarla in spesa singola li
+  azzera, come il piano prezzi.
+- Non implementato: data di effetto scelta dall'utente (solo oggi), più di 8 cambi di stato per serie (oltre si crea
+  una nuova serie), nuovo ciclo dalla data di riattivazione.

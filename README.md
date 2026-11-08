@@ -17,7 +17,7 @@ sicurezza del progetto sono una tua responsabilità (vedi [Sicurezza](#sicurezza
 - **Ricorrenze** settimanali, mensili e annuali, con prezzo promozionale per i primi rinnovi e riepilogo dei prossimi rinnovi.
 - **Categorie** personalizzabili, con icone, e **Dashboard** con totali e grafici.
 - **Dati**: esportazione delle transazioni in CSV (per Excel/LibreOffice) e backup completo in JSON, l'unico formato importabile per il ripristino.
-- Tema chiaro/scuro e colori personalizzabili; layout per smartphone, tablet e desktop.
+- Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.

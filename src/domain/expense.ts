@@ -2,6 +2,7 @@ import type { Category } from './category.ts';
 import { expensePolicy, todayInRome } from './policy.ts';
 import { changePrice, makeChange, maxPromoAfter, nextRenewal, priceAt, type PriceChange, type PriceScope } from './pricing.ts';
 import { isRecurrence, type Recurrence } from './recurrence.ts';
+import type { StatusChange } from './subscription.ts';
 
 export type ExpenseDraft = {
   amount: string;
@@ -26,6 +27,8 @@ export type ExpenseData = Readonly<{
   recurrence: Recurrence | null;
   // amount_minor is the price of the first occurrence; later prices come from this schedule.
   price_changes: readonly PriceChange[];
+  // Pause/cancel/resume history of a series (see subscription.ts); always empty for one-off expenses.
+  status_changes: readonly StatusChange[];
   source: 'web_app';
   schema_version: 1;
 }>;
@@ -85,7 +88,7 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   if (amount === null || Object.keys(errors).length > 0) return { ok: false, errors };
   return { ok: true, data: {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: category?.id ?? null,
-    expense_date: date, recurrence: draft.repeat && isRecurrence(draft.recurrence) ? draft.recurrence : null, price_changes,
+    expense_date: date, recurrence: draft.repeat && isRecurrence(draft.recurrence) ? draft.recurrence : null, price_changes, status_changes: [],
     source: 'web_app', schema_version: 1,
   } };
 }
@@ -105,11 +108,12 @@ export type PriceEdit = Readonly<{
 
 // Data to save when editing an existing expense. A recurring series keeps the first occurrence's
 // price and everything already due; a new price applies from the next renewal only (or just to it).
-export function applyPriceEdit(previous: Pick<ExpenseData, 'amount_minor' | 'expense_date' | 'recurrence'>, data: ExpenseData, edit: PriceEdit, today: string): { ok: true; data: ExpenseData } | { ok: false; error: string } {
-  if (!previous.recurrence || !data.recurrence) return { ok: true, data: { ...data, price_changes: [] } };
+export function applyPriceEdit(previous: Pick<ExpenseData, 'amount_minor' | 'expense_date' | 'recurrence'> & { status_changes?: readonly StatusChange[] }, data: ExpenseData, edit: PriceEdit, today: string): { ok: true; data: ExpenseData } | { ok: false; error: string } {
+  if (!previous.recurrence || !data.recurrence) return { ok: true, data: { ...data, price_changes: [], status_changes: [] } };
   const next = nextRenewal(previous.expense_date, data.recurrence, today);
   if (!next) return { ok: false, error: 'Non ci sono rinnovi futuri a cui applicare il prezzo.' };
-  const withBase = { ...data, amount_minor: previous.amount_minor };
+  // The form never edits the status: pauses and cancellations of the series are kept as they are.
+  const withBase = { ...data, amount_minor: previous.amount_minor, status_changes: previous.status_changes ?? [] };
   if (data.amount_minor === edit.shownAmount) return { ok: true, data: { ...withBase, price_changes: edit.changes } };
   const changes = changePrice(previous.amount_minor, edit.changes, next.index, data.amount_minor, edit.scope);
   return changes ? { ok: true, data: { ...withBase, price_changes: changes } } : { ok: false, error: 'Troppe variazioni di prezzo: rimuovi quelle programmate che non servono.' };
@@ -119,4 +123,10 @@ export function applyPriceEdit(previous: Pick<ExpenseData, 'amount_minor' | 'exp
 export function currentPrice(expense: Pick<ExpenseData, 'amount_minor' | 'expense_date' | 'recurrence'> & { price_changes?: readonly PriceChange[] }, today: string): number {
   const next = nextRenewal(expense.expense_date, expense.recurrence, today);
   return next ? priceAt(expense.amount_minor, expense.price_changes ?? [], next.index) : expense.amount_minor;
+}
+
+// The savable fields of a stored record (drops id, timestamps and Firestore bookkeeping).
+export function dataOf(record: ExpenseData): ExpenseData {
+  const { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, source, schema_version } = record;
+  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, source, schema_version };
 }

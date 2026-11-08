@@ -148,7 +148,8 @@ const styles = StyleSheet.create({
   search: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
   select: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
   root: { gap: spacing.lg },
-  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, paddingTop: 40, paddingBottom: spacing.md },
+  // The first month already sits below the root gap (lg) plus lg of padding; later months get the same total (xxl = 2 × lg) from the previous row.
+  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, paddingTop: spacing.xxl, paddingBottom: spacing.md },
   firstMonth: { paddingTop: spacing.lg },
   monthLabel: { flex: 1, minWidth: 0, gap: spacing.xs },
   monthName: { fontWeight: '700', fontSize: 15, lineHeight: 22 },

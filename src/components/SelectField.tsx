@@ -3,7 +3,7 @@ import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Menu, Text, TextInput, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { inputOutline, layout, radius, spacing } from '../theme/tokens';
+import { inputOutline, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -24,7 +24,6 @@ const MENU_MIN_HEIGHT = 192; // below this much room, Paper shifts the menu up i
 const SCREEN_MARGIN = 16;
 // Selected/hover highlight is inset in the menu and rounded like the keyboard focus ring (GlobalStyle: 12).
 const itemRadius = 12;
-const fieldLabelGap = layout.controlHeight - layout.fieldBoxHeight;
 
 export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
   const { t } = useI18n();
@@ -54,10 +53,11 @@ export function SelectField<T extends string>({ label, options, value, onChange,
           width: menuWidth, paddingVertical: spacing.xs, overflow: 'hidden' }}
         anchor={
           <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-            accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled}
+            {...{ dataSet: { focusRing: 'field' } }}
+            accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled} aria-invalid={Boolean(error)}
             accessibilityLabel={`${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`}>
             {/* `inert` excludes every descendant, including Paper surfaces that restore pointer events. */}
-            <div inert style={{ marginTop: -fieldLabelGap }}>
+            <div inert>
               <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false}
                 error={Boolean(error)} aria-disabled={disabled} showSoftInputOnFocus={false}
                 left={current?.icon ? <TextInput.Icon icon={() => current.icon} forceTextInputFocus={false} tabIndex={-1} aria-hidden /> : undefined}
@@ -85,9 +85,8 @@ export function SelectField<T extends string>({ label, options, value, onChange,
 }
 
 const styles = StyleSheet.create({
-  // Paper's 56 dp input reserves 6 dp above the outline for the floating label. The pressable (focus ring, press) must
-  // hug the visible outline (fieldBoxHeight), so the input is pulled up by that gap and the pressable pushed down by it.
-  anchor: { borderRadius: radius.input, marginTop: fieldLabelGap },
+  // The shared keyboard focus style colours Paper's own outline without moving the input or its label.
+  anchor: { borderRadius: radius.input },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.md, marginHorizontal: spacing.xs },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },

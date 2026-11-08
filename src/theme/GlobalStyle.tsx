@@ -1,29 +1,44 @@
 import { useEffect } from 'react';
 import { useTheme } from 'react-native-paper';
-import { observeViewportHeight } from './viewport';
+import { bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
+import type { Accent, ColorMode } from './palette';
+import { observeViewportHeight, stickyBottomProperty } from './viewport';
 
-// Web-only rules RN Web cannot express: the self-hosted font, visible keyboard focus, dynamic
+// Web-only rules RN Web cannot express: the font family (the @font-face rules live in public/index.html, so the font
+// is available from the first render), visible keyboard focus, dynamic
 // viewport height (virtual keyboard friendly), reduced motion and the browser/system bar colour
 // (`theme-color` follows `colors.background`, the colour of the top bar and navigation bar).
-export function GlobalStyle() {
+type Props = { mode: BootTheme['mode']; accent: Accent; colorMode: ColorMode };
+
+export function GlobalStyle({ mode, accent, colorMode }: Props) {
   const { colors, dark, fonts } = useTheme();
   const family = fonts.bodyMedium.fontFamily;
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'nummo-global';
     style.textContent = `
-      @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
-        src: url('/fonts/GoogleSans-latin-ext.woff2') format('woff2');
-        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-      @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
-        src: url('/fonts/GoogleSans-latin.woff2') format('woff2');
-        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
       body { overflow: hidden; margin: 0; font-family: ${family}; background: ${colors.background}; color-scheme: ${dark ? 'dark' : 'light'}; }
       /* Slim scrollbars (no scrollbar-gutter: on RN Web views, which clip with overflow hidden, it shrinks their content). */
       * { scrollbar-width: thin; scrollbar-color: ${colors.outline} transparent; }
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }
       input:focus-visible, textarea:focus-visible { outline: none; }
+      /* Colour Paper's own outline and label: a second ring cannot follow its floating-label notch. */
+      [data-focus-ring='field']:focus-visible { outline: none; }
+      html[data-input='key'] [data-focus-ring='field']:focus-visible [data-testid='text-input-outline'] {
+        border-color: ${colors.primary} !important; border-width: 2px !important;
+      }
+      html[data-input='key'] [data-focus-ring='field']:focus-visible [data-testid$='-label-inactive'] {
+        color: ${colors.primary} !important;
+      }
+      html[data-input='key'] [data-focus-ring='field'][aria-invalid='true']:focus-visible [data-testid='text-input-outline'] {
+        border-color: ${colors.error} !important;
+      }
+      html[data-input='key'] [data-focus-ring='field'][aria-invalid='true']:focus-visible [data-testid$='-label-inactive'] {
+        color: ${colors.error} !important;
+      }
+      /* Tab must not land a field under a sticky bottom bar (see reserveScrollPadding in viewport.ts). */
+      html[data-input='key'] [style*='${stickyBottomProperty}'] { scroll-padding-bottom: var(${stickyBottomProperty}); }
       /* Menu items sit flush with the menu edge: draw the ring inside, rounded, so it is not clipped or square. */
       [role='menuitem']:focus-visible { outline-offset: -3px; border-radius: 12px; }
       /* Programmatic focus on load (Paper Menu anchors) must not draw a ring: only after a real key press. */
@@ -33,7 +48,11 @@ export function GlobalStyle() {
       }`;
     document.head.appendChild(style);
     return () => { style.remove(); };
-  }, [colors.background, colors.primary, colors.outline, dark, family]);
+  }, [colors.background, colors.primary, colors.error, colors.outline, dark, family]);
+  // The next start paints this scheme's background before the bundle runs (boot script in index.html).
+  useEffect(() => {
+    try { localStorage.setItem(bootThemeKey, JSON.stringify(makeBootTheme({ theme: mode, accent, colorMode }))); } catch { /* storage denied */ }
+  }, [mode, accent, colorMode]);
   useEffect(() => {
     const root = document.documentElement;
     const stop = observeViewportHeight(window, (height) => root.style.setProperty('--nummo-viewport-height', `${height}px`));

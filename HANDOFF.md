@@ -1,312 +1,232 @@
 # HANDOFF — Nummo
 
-Aggiornamento: **8 novembre 2026**, riorganizzazione di esportazione CSV e backup/ripristino JSON
-(modifiche **non ancora committate**). Progetto personale web BYOF: Google Auth e Firestore, accesso riservato al proprietario.
-Architettura, comandi e convenzioni: `AGENTS.md`; configurazione personale:
-`README.md` e `docs/firebase-personale.md`. Le specifiche storiche non attestano lo stato corrente.
+Aggiornamento: **8 novembre 2026, ore 17:38 (Europe/Rome)**. Gestionale personale solo web, Google Auth e Firestore BYOF;
+accesso riservato all’UID amministrativo in `config/owner`. Architettura, convenzioni e comandi:
+`AGENTS.md`; configurazione: `README.md` e `docs/firebase-personale.md`; decisioni: `docs/architecture.md`.
+Ultima fase: pagina Spese divisa in Spese/Abbonamenti con stati degli abbonamenti (sezione «Abbonamenti» sotto).
+Requisiti e registri storici non attestano implementazione o pubblicazione.
 
-## Stato Git e attività in corso
+## Git e lavoro da preservare
 
-- Ramo `main`; ultimo commit **`cad1cc8`** — `fix(ui): make mobile backup actions full width` (8 novembre), allineato a `origin/main`.
-  Sopra di esso l'albero contiene la fase «CSV/JSON» qui sotto, **non committata** (nessun commit senza richiesta).
-  Per HEAD e sincronizzazione correnti controllare Git. Esiste anche il ramo remoto
-  `backend-firebase` (storico, `b440e59`), non più base di lavoro.
-- La fase «dialoghi e mobile» è **committata** (`98d2e1b`, `af3113e`, `cad1cc8`). Attività in corso:
-  la fase «Esportazione e backup» sotto, implementata e verificata con test, da collaudare nel browser.
-- Al momento della revisione era in esecuzione una sessione `npm run dev` **dell'utente**
-  (Firestore emulato su 8180 per `nummo-6b6e2`, Expo su 8081, lock `.firebase/hybrid.lock`):
-  non fermarla né rimuovere il lock. Le cartelle `.firebase/hybrid-*` sono staging/copie
-  precedenti dei suoi export (ignorate da Git).
-- Gli ultimi interventi sono confermati «funziona» dall'utente (conferma distinta dal
-  collaudo diretto dell'agente). Nessuna scrittura dati cloud né pubblicazione dell'app in
-  questa fase. Restano aperti compatibilità dati e collaudi sotto elencati.
+- Ramo `main`, HEAD **`d2fbe15`**, «Refactor backup import/export functionality and enhance error handling»,
+  8 novembre 2026, 06:57 +01:00. Uguale al riferimento locale `origin/main`; nessun fetch, remoto non verificato.
+- Albero ampiamente modificato già all’inizio: UI, dominio, servizi, Rules, test e documentazione, con nuovi file
+  non tracciati. Le novità descritte sotto sono presenti nel checkout, ma non tutte in HEAD. Nessun commit o deployment qui.
+  Prima di riprendere leggere `git status` e `git diff`; preservare il lavoro preesistente.
+- HEAD traccia erroneamente `.nummo-hybrid-97110.json`, già eliminata nell’albero; presente anche
+  `.nummo-hybrid-12312.json` non tracciata. `.gitignore` non copre queste config temporanee.
+  Non reinserire quella eliminata né cancellare config, lock, staging o copie `previous` di runner utente.
+- Il precedente passaggio segnalava hybrid su 8180/4000 ed Expo su 8081, con materiale di recupero in
+  `.firebase/`. Stato dei processi **non riconfermato**: `ss` è limitato dal sandbox (`Operation not permitted`).
+  Ispezionare prima di riavviare o ripulire; i test di questa revisione usano porte/dati separati.
 
-## Fase corrente — esportazione CSV e backup JSON (non committata)
+## Implementato nel checkout
 
-Richiesta: separare il CSV (consultazione) dal JSON (unico backup/ripristino), senza compatibilità con i vecchi CSV.
+Riscontro nel codice e nei test automatici; non equivale a collaudo cloud o su telefono.
 
-- **CSV** (`exportCsv`): `Data;Descrizione;Categoria;Importo;Valuta;Ricorrenza`, BOM, CRLF, `;` e virgola
-  decimale (Excel/LibreOffice in italiano), una riga per occorrenza fino a oggi al prezzo di quel rinnovo, nessun
-  ID/timestamp/JSON incorporato. Formule neutralizzate con apostrofo; testi sempre quotati. Non importabile.
-- **JSON** (`makeBackup`/`parseBackup`): `nummo-backup` versione 1 (numero invariato: forma compatibile), ma ora solo
-  campi di ripristino — **rimossi** `origin` (UID/progetto), `revision`, `updated_at`, `name_key`; output ordinato e
-  deterministico; lettori per versione in `readers`, versione più recente rifiutata con messaggio dedicato.
-  I file v1 già scaricati (con campi extra) si importano ancora: i campi extra sono ignorati.
-- **Ripristino**: `planImport` puro (aggiunte, identici, conflitti, categorie mancanti, totale categorie) usato per il
-  riepilogo e dallo store (`previewImport`, `importRecords`) prima di scrivere. Unione bloccata da qualsiasi conflitto
-  (stesso ID con contenuto diverso o stesso nome con ID diverso) o da >10 categorie. Sostituzione: elimina solo ciò che
-  differisce dal file (gli identici non vengono toccati, revisioni invariate), poi aggiunge; la UI scarica prima una copia
-  JSON dei dati attuali (`nummo-backup-prima-del-ripristino.json`). `DeleteDialog` ha il nuovo `confirmLabel`.
-- **Rimosso**: `parseCsvImport`, lettore CSV, colonne tecniche, relative traduzioni e test; scelta file solo `.json`
-  (un `.csv` dà un messaggio esplicito). Il pulsante recupero «Scarica spese da recuperare» usa lo stesso JSON.
-- **UI** (`BackupActions`): due gruppi con testo informativo — «Esporta transazioni (CSV)» e «Scarica backup (JSON)» /
-  «Importa backup (JSON)» — e riepilogo del ripristino con «Unisci ai dati esistenti», «Sostituisci tutti i dati», «Annulla».
-  Guida pubblica, `en.ts`, README e `docs/` aggiornati (`architecture.md` ha la decisione e le motivazioni).
-- Rules, schema Firestore e dipendenze **non modificati**.
-- Su richiesta dell'utente rimossi i due testi descrittivi sotto «Consulta le spese» e «Backup completo»
-  (restano titoli e pulsanti); eliminate anche le due voci in `en.ts`.
-- **Diagnosi apertura su Pixel 8** (video dell'utente, app dalla Home, tema scuro, accento ambra; 8 nov): la
-  sequenza è splash Android (sfondo `#0F1511`, icona menta, dal manifest statico) → header con spinner mentre
-  la splash svanisce → `Nuova spesa` con campi senza etichette, «Caricamento…» in Categoria, controlli
-  disabilitati, avatar «A» e icona di sincronizzazione → campi completi. Circa 1,3 s dal tocco alla schermata
-  stabile. Disallineamenti misurati sul video: splash (15,20,16) contro sfondo app (21,16,15), icona menta contro
-  accento ambra; header da disconnesso (tema + impostazioni) a loggato (sync + tema + avatar). Prove emulate su
-  Chromium (non Android): font Google Sans richiesto solo dopo il mount di React (FOUT), nessun indicatore prima
-  del bundle da 2,2 MB.
-- **Correzioni applicate (8 nov, dopo la diagnosi):** (1) `manifest.webmanifest` con `background_color`/`theme_color`
-  neutri `#121212` al posto del verde `#0F1511`; l'icona della splash resta quella menta (cambiarla richiede un asset
-  nuovo). Android aggiorna il WebAPK dal manifest solo periodicamente o dopo reinstallazione. (2) `RemoteWorkspace`:
-  all'apertura mostra uno spinner finché i primi dati (spese, categorie utilizzabili) sono pronti, con il modulo
-  montato a dimensione piena ma invisibile (etichette misurate, bozza e titolo fermi); rilascio definitivo con dati
-  pronti, errore o dopo 4 s (`startGateMs`). Le altre sezioni attendono lo stesso rilascio. Nuova voce `en.ts`.
-  **Verifica emulata** (Chromium 412×915, sessione salvata, emulatori demo su porte alternative, rete con latenza e
-  CPU 3×, poi arrestati): niente scheletro con etichette mancanti, titolo fermo, modulo completo in un solo passo.
-  **Non provato su Pixel 8**; non toccati header da disconnesso→loggato (sole icone che cambiano), foto avatar
-  (la «A» resta finché l'immagine non è caricata), font Google Sans richiesto dopo il mount né loader prima del bundle.
+- Login Google popup, sessione SDK, logout dopo scritture pendenti, isolamento al cambio UID, avatar con fallback;
+  errori login IT/EN con codici validati. Guida pubblica statica `#guida` con history e reload.
+- CRUD spese con UUID stabile, conferma server, conflitti per revisione, verifica degli esiti incerti e copie di recupero
+  in memoria. Bozza conservata tra sezioni; elenco con ricerca, filtri, ordinamento e riepiloghi mensili.
+- Ricorrenze settimanali/mensili/annuali, promozioni e prezzi per numero di rinnovo; modifiche dal prossimo rinnovo,
+  singolo o futuri, senza riscrivere il passato. Massimo otto variazioni; storico e prossimi rinnovi calcolati,
+  nessun job o addebito automatico. Eliminare una ricorrenza elimina l’intera serie. Ogni serie è un abbonamento:
+  stati Attivo/In pausa/Annullato con storico pagamenti nella vista Abbonamenti (vedi sotto).
+- Categorie sincronizzate, nomi unici, editor nome/icona transazionale, nessun limite numerico applicativo;
+  **40 icone** in tre stili (`minimal`, `colorful`, `pixel`), scelta solo di presentazione.
+  Categoria obbligatoria nel modulo; null/riferimenti orfani ammessi nell’archivio, mostrati come «Senza categoria».
+  Cinque predefinite create una volta per UID/browser su entrambe le collezioni vuote e confermate dal server;
+  disponibili anche dal pulsante a lista vuota, con nomi nella lingua corrente.
+- Dashboard: mese corrente/precedente, ultimi 3/6/12 mesi; Ciambella, Blocchi e Barre con proiezione comune di massimo
+  otto serie e «Altre categorie» virtuale. Aggregazione completa preservata; colori stabili per ID su 12 slot,
+  legenda con dettaglio completo e icone (le tessere dei Blocchi ne sono prive). Dettaglio giornaliero con sette giorni iniziali ed espansione,
+  senza giorni vuoti o futuri; oggi, se presente, è collocato dopo gli altri giorni visibili.
+- UI Material 3 adattiva, tre destinazioni e azione Nuova spesa, dialoghi condivisi, temi chiaro/scuro/sistema,
+  sei tinte, monocolore/palette e font locale Google Sans/Sistema. IT/EN anche prima del login;
+  lingua, aspetto, stile icone e scelte dashboard persistono nel browser, senza rimontare sessione/bozze.
+- CSV solo consultazione: occorrenze fino a oggi al rispettivo prezzo, BOM/CRLF, `;`, virgola decimale,
+  intestazioni italiane e testi quotati con formule neutralizzate. **Nessun import CSV.** JSON `nummo-backup` **v2**
+  (stati degli abbonamenti; v1 letto come «sempre attivo») è l’unico ripristino: lettura server-only, categorie vuote incluse, metadati Firestore e UID/progetto esclusi;
+  ordinamento deterministico salvo `exported_at`, vecchi v1 con campi extra leggibili, versioni future rifiutate.
+  File UI massimo 5 MB; unione senza sovrascritture o sostituzione confermata con download della copia attuale.
+- Avvio: tema prima del bundle, preload font, safe area iniziale, SDK anticipati; indizio di sessione solo visivo,
+  segnaposto decorativo `StartupWorkspace` durante Auth e caricamento dati. Il gate dati termina per disponibilità,
+  errore o dopo 4 s; non limita il tempo di ripristino Auth. Procedura e misure in `docs/avvio-prestazioni.md`.
+- Ambienti demo/hybrid/cloud separati; runner hybrid verifica Firestore prima di Expo e protegge export/persistenza;
+  build produzione isolata, script di pubblicazione limitato a Hosting.
 
-## Fase precedente — dialoghi e mobile (committata)
+## Modifiche recenti e stato
 
-- Dati su smartphone: pulsanti in colonna, ciascuno largo quanto l'area dei contenuti
-  (ora CSV/JSON/Importa JSON, vedi sopra). Desktop conserva i pulsanti affiancati.
-- **Avvio hybrid ripristinato (8 nov, recupero autorizzato):** Java Firestore PID
-  17767 era rimasto attivo su 8180 dopo la morte del gestore PID 17700 e dell'Hub.
-  Export diretto tramite lo stesso endpoint locale della CLI, prima di ogni arresto;
-  ripristino su emulatore isolato e confronto SHA-256 di percorsi/campi di tutti i
-  **29 documenti**: 8 spese, 10 categorie, 10 indici nomi e configurazione proprietario.
-  Nessuna variazione durante export; ripristino identico. Processo residuo arrestato
-  con SIGTERM, senza forzatura. Archivio recuperato predisposto in `emulator-data/`.
-  Copie native e precedenti conservate in `.firebase/recovery-7au5sZ/` (ignorata da Git).
-  Provato `BROWSER=none npm run dev -- --port 18081`: Firestore riconosciuto, tutti i
-  campi ancora identici e Metro pronto. Un solo Ctrl+C: export riuscito e promozione
-  completata, precedente archivio in `.firebase/hybrid-qTNrTt/previous`.
-  Servizi della prova arrestati; utente può ora eseguire `npm run dev` nel suo terminale.
-  Nessun cloud/OAuth, modifica del runner o test app aggiuntivo in questa fase operativa.
-- Spese su tutte le larghezze, PC incluso: numero di spese sotto il nome del mese
-  nella colonna sinistra, totale separato sulla destra. Nessun riepilogo congiunto
-  «4 spese · importo» nelle intestazioni mensili.
-- Conferme di eliminazione su smartphone: Annulla sopra, Elimina sotto;
-  disposizione desktop invariata, modifica comune a tutte le conferme `DeleteDialog`.
-  `npm run check` ripetuto: typecheck, 206 test e build demo OK.
-- **Touch Categoria/Data:** dopo la segnalazione (centro Categoria apre il menu,
-  freccia no), sostituito il contenitore `pointerEvents="none"` con DOM `inert` in
-  `SelectField` e `DateField`. Le icone Paper non possono più intercettare eventi
-  o focus: l'unico bersaglio è il `Pressable` esterno, anche nell'editor che riusa
-  `ExpenseFields`. Disattivato anche `forceTextInputFocus` nelle icone di SelectField.
-  Catena individuata nei sorgenti installati: Surface riabilita gli eventi web e
-  PressResponder interno ne ferma la propagazione. Layout e logica menu invariati.
-  `npm run check` OK: typecheck, **206 test**, build demo. Nessuna modifica dati/Rules,
-  test emulatori non ripetuti. Browser ritentato e indisponibile: collaudo touch reale
-  ancora necessario su centro/freccia/icona sinistra, Categoria e Data, creazione/editor,
-  controlli disabilitati e apertura con Invio/Spazio da tastiera.
-- **Login:** l'utente aveva segnalato «Accesso non riuscito. Riprova.» dopo
-  i tentativi sulla foto. Il testo generico nascondeva i codici non mappati;
-  `signInError.ts` ora conserva un codice `auth/...` validato nel messaggio IT/EN,
-  senza messaggi grezzi/token/customData. Popup annullati restano silenziosi e le
-  spiegazioni già presenti sono preservate. Causa del login e legame con foto non
-  confermati; dopo questa modifica l'utente conferma il funzionamento. Nessuna modifica
-  a credenziali o configurazione cloud. `check:env` OK; `npm run check` OK:
-  **206 test**, typecheck ed export demo. OAuth reale non riprodotto dall'agente.
-- Avatar account: l'utente segnala foto assente anche dopo reload completo; causa
-  effettiva non confermata, browser diagnostico indisponibile. `sessionProfile.ts`
-  privilegia la foto del provider Google rispetto a quella generica Firebase e ignora
-  stringhe vuote (prima `??` poteva nascondere l'alternativa). Foto circolare 36 px
-  con `<img>` web diretto, `referrerPolicy="no-referrer"`, senza preloader RN Web.
-  Il menu distingue caricamento, URL assente e download fallito, con «Riprova foto»
-  dopo errore; iniziale come fallback. Menu rimontato al cambio UID/URL.
-  Nessun nuovo scope, servizio o dato Firestore. Successiva conferma generale
-  dell'utente; caricamento reale non osservato direttamente dall'agente.
-  `npm run check` dopo la correzione: typecheck, **203 test** ed export demo OK;
-  nuovi casi per precedenza Google, stringhe vuote e foto assente. Rendering/caricamento
-  della foto e retry nel browser ancora da collaudare.
-  Test emulatori non ripetuti per questa modifica ai soli metadati di presentazione;
-  accesso dati, autorizzazione e Rules invariati.
-- Menu account: voci Impostazioni/Esci estese alla larghezza effettiva del menu,
-  con margine interno e angoli coerenti col focus; hover/ripple ritagliati sui bordi
-  arrotondati. Rimosso il limite fisso di larghezza delle voci Paper in questo menu.
-  Resa del passaggio del mouse da collaudare nel browser.
-  `npm run check` ripetuto dopo la correzione: typecheck, 200 test e build demo OK.
-- Categorie: matita → `CategoryEditor` con `AppDialog`, nome e icona in area
-  scorrevole e Annulla/Salva esterni allo scroll. Rimossa la modifica inline;
-  selezionare un'icona cambia solo la bozza. `updateCategory` salva nome e icona
-  nella stessa transazione esistente, validando il record/revisione aperti;
-  duplicati/conflitti visibili nel dialogo, controlli/chiusura bloccati durante l'attesa.
-  Creazione ed eliminazione restano nella pagina. Nessuna modifica alle Rules.
-  Pulsanti Annulla e Salva della stessa larghezza (96), riducibili su finestre strette.
-  `npm run check` ripetuto anche dopo rimozione frase e ampliamento pulsante: OK,
-  typecheck, 200 test ed export demo; resa visiva ancora da collaudare.
-- Stato sincronizzato con spunta cerchiata al posto della nuvola. Descrizione delle
-  spese multilinea, quattro righe e altezza minima 128, condivisa da creazione/editor;
-  limite e normalizzazione del testo salvato invariati. Nessuna modifica ai dati.
-- Verificato nel codice il tema automatico già presente: `useColorScheme()` segue
-  `prefers-color-scheme`, con preferenza `system` iniziale. Rimossa su richiesta la
-  frase esplicativa da Impostazioni; scelte manuali chiaro/scuro conservate. Cambio reale del tema
-  dispositivo da collaudare nel browser.
-- `AppDialog` condiviso da Impostazioni, editor, calendario e conferme: superficie
-  dedicata più distinguibile, contorno e scrim neutro; sfondo dei campi coerente col
-  dialogo. Colori di menu e navigazione conservati.
-- Tutti i dialoghi limitati all'altezza visibile e alle safe area; calendario e
-  conferme ora scorrevoli, azioni esterne allo scroll. Editor con azioni a capo se
-  necessario; celle calendario adattate alla larghezza su schermi stretti.
-- CSS iniziale con sfondo chiaro/scuro e altezza dinamica prima del bundle.
-  `viewport.ts` aggiorna il layout su resize di VisualViewport/finestra, anche con
-  tastiera; durante pinch zoom non forza reflow. Meta viewport con richiesta
-  `interactive-widget=resizes-content`, fallback senza API su `innerHeight`.
-- Sono correzioni ai vincoli individuati nel codice: **non ancora collaudate nel
-  browser o sul telefono**. Browser CUA tentato: «The browser access host is unavailable».
-  Non identificata una causa unica per il problema generico di apertura mobile segnalato.
+- **Abbonamenti (8 novembre, non committato).** Pagina Spese con `SegmentedButtons` Spese | Abbonamenti (larghezza
+  piena della pagina su mobile e desktop). Spese: solo spese singole, stessi filtri/ricerca/ordinamento, intestazioni
+  mensili senza abbonamenti. Abbonamenti (`src/features/history/SubscriptionList.tsx`): ogni serie ricorrente con importo
+  del prossimo rinnovo, frequenza, prossimo rinnovo o data di pausa/annullamento e badge di stato (icona + testo);
+  dettagli espandibili con pagamenti effettuati, totale speso, inizio e storico (12 più recenti, poi «Mostra tutti»);
+  azioni Metti in pausa / Riattiva / Annulla abbonamento, disabilitate senza sincronizzazione completa, conferma dopo
+  la transazione server e snackbar. «Prossimi rinnovi» spostato in questa vista. Nessuna nuova collezione: gli
+  abbonamenti sono le stesse spese ricorrenti.
+  Dominio `src/domain/subscription.ts` (stati, `setStatus`, codifica), occorrenze/previsioni/rinnovi che saltano i
+  periodi non attivi in `history.ts`, `subscriptionSummaries`, `dataOf`; campo `status_changes` in contratto, editor
+  (conservato), servizio (stringa compatta, omessa se vuota, `deleteField` al ritorno a vuoto), Rules, backup v2;
+  icone UI `pause`/`play`; Guida e `en.ts` aggiornati. Dettagli e motivazioni: `docs/architecture.md`, sezione
+  «Abbonamenti: vista separata e stati».
+  **Le Rules modificate non sono pubblicate:** finché il cloud usa le precedenti, spese e serie senza stati funzionano
+  (forma invariata), mentre pausa/annullamento vengono rifiutati con «Accesso negato».
 
-## Funzionalità presenti nel codice
+- **Pizza colorata:** ridisegnata l’icona indicata dall’utente con fetta triangolare, bordo della crosta chiuso
+  e tre condimenti leggibili. ID e palette arancione invariati; anteprima verificata a 24/96 px su chiaro/scuro.
+  `npm run check` passato: typecheck, 259 test e build demo; collaudo nell’app non eseguito qui.
 
-- CRUD spese, ricerca, filtri categoria e ordinamento; elenco a colonna singola con
-  dettagli espandibili per occorrenza. Eliminazione solo dall'editor, con conferma
-  della versione aperta e conflitto esplicito; per ricorrenze elimina tutta la serie.
-- Ricorrenze settimanali/mensili/annuali, prezzi promozionali e variazioni dal prossimo
-  rinnovo (singolo o futuri), storico preservato e riepilogo prossimi rinnovi.
-  Occorrenze calcolate, senza job né addebiti automatici.
-- Categorie sincronizzate, nomi unici, rinomina e 47 icone. Quattro predefinite solo su
-  richiesta; l'elenco proposto di 12 non è implementato. Limite applicativo di **10**,
-  non imposto dalle Rules; archivi già più grandi leggibili, import oltre limite rifiutato.
-  Categoria obbligatoria nel modulo; dominio/archivio ammettono null e riferimenti orfani.
-- Dashboard con ciambella e blocchi (treemap su desktop, impilati su contenitori stretti),
-  periodi inclusi mese scorso e ultimi 3/6/12 mesi, palette a 12 slot e aggregato «Altre categorie».
-  Legenda della ciambella disposta in base alla larghezza effettiva del contenitore.
-  Dettaglio giornaliero: sette giorni con spese iniziali, «Mostra tutti/meno», un giorno
-  espanso alla volta; oggi in fondo ai giorni visibili, futuro escluso. L'helper supporta
-  giorni vuoti, **la UI attuale non offre questa opzione**. Nessuna lettura aggiuntiva.
-- CSV delle transazioni (sola consultazione) e backup JSON server-only; importazione solo JSON con riepilogo:
-  unione che si ferma sui conflitti oppure **sostituzione di spese e categorie** con conferma distruttiva e copia
-  automatica dei dati attuali. JSON conserva anche le categorie senza spese; file UI massimo 5 MB.
-- UI adattiva Material 3, navigazione mobile flottante, chiaro/scuro, sei tinte,
-  monocolore/palette, font locale Google Sans o Sistema; guida pubblica statica `#guida`.
-  Italiano/inglese da Impostazioni anche prima del login; italiano iniziale, preferenza
-  browser `nummo.preferences.v1`, date/importi `it-IT`/`en-GB`, EUR. Provider senza remount
-  per lingua; nomi/descrizioni salvati e formati backup preservati.
+- **Carrello colorato:** aggiunto contorno nero a manico, cestello e ruote dell’icona indicata dall’utente,
+  mantenendo i riempimenti verdi. Colore dedicato in `iconPalette.ts`, applicato solo al carrello colorato.
+  Anteprima controllata a 24/96 px su chiaro/scuro; `npm run check` passato alle 17:24 (259 test, typecheck,
+  build demo). Questo esito supera il blocco transitorio del typecheck riportato sotto; nessun collaudo nell’app qui.
 
-## Modifiche recenti rilevanti
+- **Icona maglietta pixel art:** sprite `shirt` ridisegnato e ridotto a 6×8 celle, centrato nel canvas 12×12
+  (sagoma 12×16 px quando il componente è 24 px), con spalle più strette,
+  maniche che sporgono una sola cella per lato, scollo e dettagli in tinta; ID e palette invariati. Anteprima SVG verificata a 24/96 px su chiaro/scuro.
+  Test icone dedicati **9/9** passati; anteprima chiaro/scuro verificata, collaudo nell’app non eseguito qui.
+  Il `npm run check` della revisione delle spalle era **bloccato al typecheck** da modifiche concorrenti al contratto `status_changes`
+  (campo richiesto mancante nei test e tipi opzionali incompatibili nei test prezzi). Test completi/build non eseguiti
+  in questo tentativo; i 259 test e la build precedenti restano evidenza della revisione precedente.
 
-| Commit | Contenuto verificato nei sorgenti |
+- **Ultima modifica dashboard:** icone spostate dalla legenda alle tessere dei Blocchi, rispettando lo stile scelto;
+  spazio riservato sopra le etichette, omissione sulle tessere sotto 40×40 px. Legenda con colore, nome e valori.
+  `npm run check` passato dopo la modifica: typecheck, 259 test e build demo; resa nel browser da verificare.
+
+- **Non committate:** categorie senza limite e nuovi predefiniti; grafici separati e proiezione comune;
+  stili colorato/pixel con preferenze e test; ottimizzazioni d’avvio e script di misura; icone nelle tessere dei Blocchi, legenda senza icone;
+  selezione/deselezione Blocchi anche da tastiera; focus dei campi Data/Categoria e viewport mobile.
+  Implementazione presente e check automatici passati; accettazione visiva ancora parziale.
+- **Tastiera virtuale in Nuova spesa (8 novembre, non committato):** prima, con tastiera aperta, barra superiore,
+  «Salva» sticky e pillola lasciavano ai campi 263 px su 503 (412×915 emulato) e Descrizione finiva sotto «Salva»:
+  toccarla premeva il pulsante. Ora `observeVirtualKeyboard` (`viewport.ts`: campo di testo attivo + viewport visibile
+  < 80% del massimo alla stessa larghezza, zoom ignorato) alimenta `KeyboardContext` in `AppShell`: pillola nascosta
+  (`display: none`, resta montata), campo attivo riportato in vista; `ExpenseForm` toglie lo sticky a «Salva», che resta
+  in fondo al modulo. Con tastiera chiusa lo sticky pubblica la sua altezza (`reserveScrollPadding`) e `GlobalStyle` la
+  applica come scroll padding **solo** con `data-input='key'`: Tab non porta più Categoria sotto «Salva» a 320×568.
+  **Verificato in Chromium headless** (tastiera emulata riducendo il viewport, come `resizes-content`) a 320/360/412,
+  safe area 24/24, tablet 800, desktop 1280 e landscape 740: campi mai coperti, modulo scorrevole, ripristino alla
+  chiusura, apertura in cima, salvataggio confermato in Firestore emulato a 412 e 320, Spese/Dashboard/Categorie invariate.
+  **Da provare su dispositivo:** tastiere reali Android/iOS (iOS sposta solo il visual viewport), app da Home, Gboard
+  fluttuante/divisa, rotazione con tastiera aperta (il riferimento si azzera: la pillola può restare visibile).
+  L'icona «grafico» vicino a Descrizione citata dall'utente è con ogni probabilità quella di Dashboard nella pillola
+  (unica icona `chart` in quella pagina); screenshot non ricevuto, non confermato.
+- Rimosse rispetto a HEAD le icone `receipt`, `phone`, `bed`, `ticket`, `briefcase`, `droplet`, `wrench`
+  anche da catalogo e Rules locali. **Distribuzione delle Rules correnti non verificata**; nessuna pubblicazione qui.
+  Disegni e sprite sono stati rivisti; il precedente handoff riporta campioni SVG e prove SSR del focus,
+  non un collaudo completo nell’app. Provare anche le sagome pixel meno riviste (`bike`, `car`, `paw`, `gamepad`).
+- Ultimi commit utili: `d2fbe15` separa CSV/JSON e introduce piano import; `cad1cc8` azioni backup mobile;
+  `af3113e` bersagli touch/intestazioni; `98d2e1b` dialoghi/editor/avatar; `31a5d3b` IT/EN; `6a27536` runner hybrid.
+  Non risultano altre attività assegnate deducibili dal solo repository: la coda sotto è proposta operativa.
+
+## Decisioni e motivazioni
+
+- BYOF sostituisce Sheets/callable: una fonte di verità, coda/cache/retry SDK e revisioni contro conflitti silenziosi.
+  Prezzi per indice di rinnovo preservano lo storico; massimo otto variazioni per i limiti di valutazione Rules.
+- JSON unico ripristino: il CSV espanso perde ID, piani e categorie vuote. Preflight completo, identici saltati,
+  gruppi di otto categorie o 200 spese per rispettare le Rules; dopo interruzione ripetere lo stesso file.
+  Ogni gruppo di aggiunte è transazionale, **l’intero ripristino non è atomico**.
+- Abbonamenti: un cambio di stato vale dalle occorrenze successive al giorno in cui è fatto, per non alterare
+  mai lo storico; riattivazione sul ciclo originale e annullamento riattivabile (scelte dell’utente). In Firestore
+  stringa compatta perché il budget di 1000 espressioni delle Rules era già quasi esaurito da 8 variazioni di prezzo.
+- Proiezione grafica e stile icone restano presentazione: il budget visuale non limita archivio o aggregazioni.
+  Il segnaposto d’avvio migliora la continuità visiva, senza promettere dati pronti altrettanto prima.
+
+## Problemi aperti e limiti
+
+- **Dashboard irraggiungibile (risolto alle 17:45):** `CategoryLegend.tsx` (modifica concorrente delle 17:26) usava
+  `categories` senza riceverla tra le props: `ReferenceError` al render, l’app si smontava cliccando Dashboard e il
+  typecheck falliva. Corretto aggiungendo `categories` alla destrutturazione (prop già dichiarata e passata da
+  `Dashboard.tsx`). Resta da decidere se la legenda debba mostrare le icone: l’ultima voce «Ultima modifica dashboard»
+  descrive una legenda senza icone, mentre il file del 17:26 le reintroduce (ora le mostrano sia legenda sia tessere).
+  Su richiesta dell’utente (17:50) nella legenda l’icona sta a sinistra del nome: colore → icona → nome → importi;
+  slot vuoto per le serie sintetiche. `npm run check` OK (272 test); resa non ricontrollata nel browser.
+  Su richiesta (17:48) **nessuna icona sulle tessere dei Blocchi**: solo nome/importo/percentuale, che riprendono
+  tutto lo spazio della tessera; le icone restano solo nella legenda. `BlockChart` non riceve più `categories`.
+- **Abbonamenti:** Rules non pubblicate (vedi sopra); stato solo con effetto da oggi (nessuna data scelta); massimo 8
+  cambi di stato per serie (poi messaggio: crearne una nuova); margine stretto sul budget Rules, da rimisurare a ogni
+  nuovo controllo sulle spese. Le Rules non verificano ordine delle date né «non nel futuro» (lo fa il decoder).
+  Un’app di versione precedente rifiuta i backup v2.
+- **Compatibilità icone:** i sette ID sopra e gli undici rimossi in precedenza (`pill`, `book`, `plane`, `scissors`,
+  `baby`, `flame`, `wine`, `umbrella`, `leaf`, `shield`, `ellipsis`) sono rifiutati da decoder/import correnti.
+  Vecchi record possono bloccare categorie e backup; nessun adapter, presenza nei dati personali non verificata qui.
+- **Guida:** il componente non legge l’archivio, ma `App.tsx` chiama `warmUpServices()` all’import con config valida,
+  anche su `#guida`. Il requisito di assenza di richieste Firebase non è garantito; traffico non misurato.
+- Backup legge le collezioni separatamente, senza snapshot globale. In sostituzione il piano ricalcolato non viene
+  rimostrato e i batch di eliminazione non ricontrollano le revisioni: evitare modifiche concorrenti.
+  Download automatico, interruzione/ripresa nel browser e apertura CSV in Excel/LibreOffice restano da provare.
+- Contrasto 4,5:1 delle etichette Blocchi non garantito; icone, grafici, touch/focus, dialoghi, IT/EN e bozze senza
+  collaudo visivo completo. Due schede possono confliggere sui nomi dei predefiniti; un nuovo browser su archivio
+  svuotato può ricrearli. La guardia locale viene scritta prima del tentativo: dopo errore usare il pulsante esplicito.
+- **Layout mobile (diagnosi in emulazione dell'8 novembre, non corretti):** il `MenuSelect` Categoria di Spese, allineato a
+  destra, sborda durante l'animazione di apertura di Paper e Chrome mobile allarga il layout viewport (412×915 → 586×1302)
+  finché il menu resta aperto: probabile causa della navigazione «sollevata». Doppio scroll annidato nei menu con poco
+  spazio (landscape); a 320 px riga di creazione categoria e etichetta «Dashboard» della pillola sbordano; il menu
+  Categoria di Nuova spesa può coprire la pillola. In landscape 740×360 Nuova spesa si apre già scorsa: il `Menu` Paper
+  montato chiuso mette il focus sull'anchor (preesistente, confermato sulla build precedente).
+- Popup Google reale con resolver differito, revoca sessione, storage negato, Pixel 8, Android/iOS da Home,
+  Safari/Firefox/Edge, safe area, densità frazionarie e screen reader da verificare.
+- Nessun service worker o garanzia d’avvio offline a freddo; splash Android statica. Recuperi dei rifiuti solo in memoria;
+  cache persistente può restare dopo logout, guasto disco non provato. Collezioni caricate integralmente.
+  Editor senza correzione prezzi maturati o aggiunta di variazioni programmate (rimozione disponibile).
+  Colori attivi mobile/rail ancora da decidere; licenza assente. Audit storico: 29 segnalazioni, non audit corrente.
+
+## Verifiche di questa revisione
+
+**Fase abbonamenti (fino alle 17:37),** Node 26.13.0, Java 21.0.13, porte 39099/39280 con config temporanea rimossa;
+servizi utente su 8180/4000/8081 intatti:
+
+| Comando | Risultato |
 | --- | --- |
-| non committato | Fase CSV/JSON: CSV italiano di sola consultazione, JSON versionato e minimo, piano di importazione con conflitti, import CSV rimosso. |
-| `cad1cc8` (8 nov) | Dati su smartphone: pulsanti CSV/JSON/Importa a larghezza piena (`BackupActions`). |
-| `af3113e` (8 nov) | Bersagli touch di `SelectField`/`DateField` (`inert`), intestazioni mensili di Spese con conteggio e totale separati, conferme di eliminazione su mobile impilate. |
-| `98d2e1b` (8 nov) | `AppDialog` unificato, `CategoryEditor`, avatar Google e diagnostica login (`signInError.ts`, `sessionProfile.ts`), viewport mobile (`viewport.ts`), stato sincronizzato con spunta, descrizione multilinea. |
-| `31a5d3b` (8 nov) | Italiano/inglese; Spese espandibili ed eliminazione nell'editor; dettaglio giornaliero, blocchi/treemap e ciambella adattiva; limite categorie e importazione sostitutiva. |
-| `6a27536` (8 nov) | `npm run dev` avvia/riusa Firestore locale prima di Expo; demo separata in `dev:demo`; test lifecycle e avviso hybrid dopo 10 s senza conferma. |
-| `3b1edac` (8 nov) | CSV ripristinabile, nuovi periodi dashboard, gestione caricamento/errori categorie; rimozione di 11 icone anche dalle Rules. |
-| `738b68b`, `baa352e` (6 nov) | Scorrimento dei menu lunghi, focus interno e rimozione riepilogo da Spese. |
+| `npm run check` (dopo la correzione di `CategoryLegend.tsx`, 17:45) | **OK**: typecheck, 272/272 test, build demo. Prima della correzione si fermava al typecheck. |
+| `npm test` | **272/272**, inclusi `tests/subscription.test.ts` (13 casi: stati, pausa/riattivazione/annullamento, storico invariato, riepiloghi = dashboard, separazione senza doppi conteggi, contratto, codifica, editor, backup v1/v2, CSV) e i18n. |
+| `npm run build:demo` | **OK** (567 moduli). |
+| `npm run test:emulator` (porte alternative) | **13/13**, nuovo caso abbonamenti: Rules su stati validi/invalidi, campo assente compatibile, 8 stati + 8 prezzi, omissione/rimozione del campo, conflitto di revisione, round trip backup. |
+| Sonda Rules temporanea | Tutte le combinazioni 0–8 prezzi × 0–8 stati accettate dopo l’ottimizzazione (prima fallivano già 8 prezzi + lista vuota). |
+| Chromium headless su build demo con emulatori | **30/31 controlli**: viste e segmenti, esclusione reciproca, ordine e badge, storico/numero/totale di una serie annullata con pausa intermedia, pausa → riattiva (stesso giorno, campo rimosso) → annulla salvati in Firestore, mobile 412×915 chiaro IT e desktop 1280×900 scuro EN. Fallito solo il controllo Dashboard per l’errore di `CategoryLegend.tsx`, poi corretto: ripetuta su desktop 1280×900 con Blocchi e Barre, Dashboard visibile, nessuna eccezione, totale 12 mesi 440,30 € coerente con pagamenti di serie attive, in pausa e annullate (calcolato a mano). La ripetizione mobile si è fermata alla schermata di accesso (sessione della sonda non ancora ripristinata), quindi non verificata. |
+| `git diff --check` | **OK**. |
 
-## Decisioni tecniche e motivazioni
+Non eseguiti in questa fase: `test:hybrid`, dispositivi reali, cloud, screen reader, tastiera.
 
-- BYOF sostituisce Sheets/callable per mantenere un'unica fonte di verità. Motivazioni
-  in `docs/architecture.md` e `docs/migrazione-byof.md`; `recap.md` resta storico.
-  Backend recuperabile dalla storia Git (`fe759d5`), adapter localStorage da `e2b84d3`.
-- SDK responsabile di cache/coda/retry; UUID stabile e conferma server, transazioni
-  con revisione per modifiche/eliminazioni. Nessun secondo archivio di sincronizzazione.
-- Prezzi indicizzati per numero di rinnovo: storico invariato e massimo otto variazioni
-  per serie per il limite di valutazione delle Rules.
-- Import per gruppi di 8 categorie o 200 spese per i limiti delle Rules, ripetibile ma
-  non atomico sull'archivio. La sostituzione può lasciare dati parzialmente eliminati
-  dopo un errore: la UI scarica prima una copia dei dati attuali; ripetere lo stesso file per il recupero.
-  Un solo formato di ripristino (JSON) invece di due: meno validazione duplicata; il CSV non è un backup perché
-  espande le occorrenze e non conserva ID, piano prezzi né categorie vuote. Il JSON resta alla versione 1 perché la
-  forma è compatibile; un futuro cambio incompatibile richiede `backupVersion` 2 e un lettore per la 1.
-  Export da collezioni separate: sospendere modifiche concorrenti durante il backup.
-- Ambienti scelti dagli script; build cloud isolata dai dotenv di sviluppo. Hosting e
-  Rules si pubblicano separatamente. Manifest e cache SDK non garantiscono avvio offline.
-- Runner hybrid: riuso solo con identità progetto/PID/endpoint verificata; arresta solo
-  processi propri. Export in staging, promozione dopo successo, copia precedente e lock;
-  export fallito/interruzione forzata richiedono ispezione prima di rimuovere il lock.
-  Proprietario locale da predisporre esplicitamente, mai copiato automaticamente dal cloud.
+**Revisione documentale precedente (17:07).** Dipendenze già presenti; Node **26.13.0**, npm **12.2.2**, Java **21.0.13**.
 
-## Verifiche e confini dell'evidenza
-
-Ambiente: Linux, Node **26.13.0**, npm **12.2.2**, Java **21.0.13** (versioni rilette l'8 nov),
-dipendenze già installate. Esiti della fase CSV/JSON (8 nov), sul codice non committato sopra `cad1cc8`:
-
-| Verifica | Risultato |
+| Comando | Risultato |
 | --- | --- |
-| `npm run check` | **OK**: typecheck, **210/210 test**, export web demo in `dist-demo/`. Nuovi test in `tests/backup.test.ts`: CSV (intestazioni, `;`, virgola decimale, assenza di dati tecnici, serie espansa senza duplicati né rinnovi futuri, prezzi per rinnovo, formule), JSON (schema minimo, round trip fedele e ripetibile, versioni, validazione, limite categorie) e `planImport` (unione, conflitti, sostituzione, riferimenti mancanti). Warning `NO_COLOR`/`FORCE_COLOR` non bloccante. |
-| Suite SDK/Rules | **OK: 12/12** su emulatori demo con config temporanea nella radice (porte Auth/Firestore 19199/19280, hub 19440, logging 19450, websocket 19151; la sessione `npm run dev` dell'utente su 8180 non è stata toccata, config rimossa). Il test di migrazione ora fa il round trip JSON, verifica `previewImport`, il blocco per conflitto d'ID o di nome prima di ogni scrittura e che la sostituzione ripetuta non riscriva gli identici (revisione invariata). `PERMISSION_DENIED` attesi nei casi negativi. |
-| `npm run check:env` | **OK** sulla configurazione di sviluppo presente; valori non riportati. |
-| Fixture in memoria | **OK**: `cart` valido; tutte le 11 icone rimosse rifiutate da `parseSyncedCategory` e dal backup (la verifica risale a prima della rinomina `parseImport` → `parseBackup`, stessa validazione). Nessuna scrittura. |
+| `npm run check` | **OK**: typecheck, **259/259** test (rieseguito dopo le modifiche concorrenti alla tastiera), export demo in `dist-demo/` (bundle circa 2,2 MB). |
+| `npm run check:env` | **OK**, policy dei file dotenv di sviluppo. |
+| `AUTH_PORT=39099 FIRESTORE_PORT=39280 npm run test:emulator -- --config .nummo-docs-emulator.json` | **12/12**: SDK/Rules, autorizzazione, CRUD, conflitti, offline e import/round trip JSON. Config temporanea derivata da `firebase.json`, UI disattivata, porte separate; rimossa a fine test. |
+| `npm run test:hybrid` | **8/8**: avvio/riuso, rifiuto progetto o servizio estraneo, arresto/export, persistenza e guasti; Firestore demo reale, Expo simulato, dati temporanei. |
+| `git diff --check` | **OK**. |
 
-**Registrate nel precedente HANDOFF, non ripetute in questa fase documentale:**
+Le suite con porte locali inizialmente bloccate da `listen EPERM` nel sandbox sono passate con autorizzazione
+fuori dal sandbox. Le suite SDK/Rules e hybrid precedono le sole modifiche concorrenti a tastiera/UI;
+il check finale le include. Non è evidenza di porte occupate o bug applicativo. Gli errori `PERMISSION_DENIED` nei casi
+negativi della suite Rules sono attesi. Nessun accesso al cloud o modifica ai servizi utente effettuati qui.
 
-- `npm run test:hybrid`: **8/8** (7 scenari + contenitore), Firestore demo reale ed Expo
-  simulato: avvio, riuso/rifiuto progetto diverso, segnali, persistenza, guasti e servizio sconosciuto.
-- Avvio Expo reale con il vecchio nome `dev:hybrid`, poi rinominato `dev`: riuso di
-  Firestore preesistente e arresto selettivo riusciti; nessun login/salvataggio provato.
-- Chromium con emulatori (2 nov: CRUD, due schede, offline/reload, recupero e backup/import)
-  e UI simulata (6 nov); dry-run Hosting/build cloud e fallback/manifest/header locali (6 nov).
-  Login Google con Firestore emulato dichiarato riuscito dall'utente, non verifica corrente dell'agente.
+**Evidenza precedente, non ripetuta:** prove Chromium con emulatori (CRUD/offline/icone), recupero hybrid,
+SSR del focus, build cloud/dry-run/header locali e misure d’avvio descritte in `docs/avvio-prestazioni.md`.
+Quel documento riporta il segnaposto circa 500–1300 ms prima in emulazione; tempo pronto circa invariato
+con CPU ×4 a caldo e primo testo 100–300 ms più tardi. Non certifica rete reale o Pixel 8.
+**Non eseguiti qui:** `npm ci`/clone pulito, avvio interattivo dev/demo, `check:hybrid`, build/preview cloud,
+dry-run/deploy, audit, misure d’avvio, browser o dispositivi reali. Nessun lint configurato.
 
-**Pubblicazioni:** `a30a988` registra Rules pubblicate il 6 novembre, 15:45 UTC,
-allora confrontate con il file locale. Le Rules successive restringono le icone e la loro
-pubblicazione non risulta documentata. Nessuna pubblicazione Hosting risulta nelle fonti
-esaminate: non dimostra l'assenza di un sito remoto. Stato remoto non interrogato.
+## Prossime attività, per priorità
 
-**Non eseguiti qui:** la nuova UI dei dati nel browser, l'apertura del CSV in Excel/LibreOffice/Google Fogli
-(il formato è verificato solo con un lettore di test), `npm ci`/clone pulito, avvio dev/demo, test hybrid,
-build/preview cloud, dry-run/deploy, `npm audit`, browser o dispositivi.
-Nessun lint configurato. Accesso browser ritentato in questa fase e indisponibile;
-gli eventi simulati non dimostrano il comportamento della tastiera reale o la resa visiva.
-
-## Problemi aperti e limitazioni
-
-- **Backup/ripristino da collaudare nel browser** (solo dati demo): schermata Dati su smartphone e desktop, riepilogo,
-  unione con conflitto, sostituzione con scarico automatico della copia, errore di rete a metà, file `.csv`/non JSON.
-- CSV pensato per il formato italiano (`;` + virgola decimale): in un foglio con impostazioni inglesi va importato
-  scegliendo `;` come separatore. Intestazioni sempre italiane, anche con interfaccia inglese. L'apostrofo contro le
-  formule resta visibile nella cella. Compatibilità con Excel/LibreOffice reali non provata.
-- Ripristino non atomico (limiti Rules su gruppi); dopo un errore a metà serve ripetere lo stesso file. Il riepilogo
-  è calcolato al momento della scelta del file: lo store lo ricalcola prima di scrivere, ma non lo mostra di nuovo.
-- I CSV scaricati in passato non sono più importabili (voluto); i JSON v1 precedenti sì.
-
-- **Compatibilità icone confermata su fixture:** `pill`, `book`, `plane`, `scissors`,
-  `baby`, `flame`, `wine`, `umbrella`, `leaf`, `shield`, `ellipsis` non sono più accettate.
-  Record/backup precedenti con questi valori bloccano lettura categorie/import ed export
-  completo. Nessun adapter presente; presenza nei dati personali non verificata.
-- UI recente e due lingue da collaudare nel browser: persistenza della lingua, cambio
-  con bozza/errori/calendario aperti, grafici con nomi/importi lunghi, menu bassi/rotazione,
-  tastiera/focus, editor e avviso hybrid. Nuovo avvio sul Pixel 8, rete lenta/tema scuro
-  e barra Salva mobile senza separatore non ricollaudati sul dispositivo.
-- OAuth/cloud reale, Android/iOS, Safari/Firefox/Edge, schermata Home, safe area,
-  screen reader e flusso tastiera completo non verificati. Contrasti dei token testati,
-  accessibilità complessiva non certificata. Lifecycle runner provato solo su Linux.
-- Nessun service worker; avvio offline a freddo non garantito. Recupero rifiuti solo in
-  memoria e per pending osservati; cache persistente può restare dopo logout. Storage
-  negato/private browsing, revoca/scadenza token e guasto disco non collaudati.
-- Collezioni lette integralmente; backup non atomico. Editor senza correzione dei prezzi
-  maturati né aggiunta di variazioni programmate (rimozione di quelle esistenti disponibile).
-  Mobile usa `primaryContainer` per destinazione attiva, rail/drawer `secondaryContainer`:
-  uniformità cromatica da decidere. Licenza assente.
-- Audit storico: 29 segnalazioni (25 moderate, 4 alte, catena `@grpc/grpc-js`);
-  conteggio non aggiornato, da non trattare come audit corrente.
-
-## Prossime attività, in ordine
-
-1. **Commit e collaudo della fase CSV/JSON** (su richiesta dell'utente): provare in `dev:demo` esportazione CSV in un
-   foglio di calcolo reale, backup, unione con conflitto e sostituzione con dati demo; poi `npm run check` e
-   `test:emulator` prima del commit.
-2. **Compatibilità dati prima della distribuzione:** decidere preservazione degli ID
-   icona o migrazione esplicita; aggiungere regressioni sui decoder/import. Non alterare
-   dati personali né ripubblicare Rules senza autorizzazione.
-3. **Collaudo UI isolato:** `npm run emulators`, `npm run emulators:seed`, `npm run dev:demo`.
-   Preservare emulatori utente, usando porte alternative come in `AGENTS.md`. Provare
-   prima i nuovi dialoghi in chiaro/scuro e l'apertura mobile a freddo, con barre browser
-   aperte/chiuse, tastiera su importo/descrizione, zoom e rotazione; controllare azioni
-   sempre raggiungibili, scorrimento interno e ripristino dell'altezza alla chiusura tastiera.
-   Nell'editor categorie verificare Annulla senza scritture, nome/icona insieme,
-   duplicati, nessuna icona, attesa/errori e conflitto da seconda scheda senza perdere la bozza.
-   Poi verificare
-   Italiano/English prima/dopo login, reload e bozze mantenute; nomi utente invariati;
-   mobile 412×915 e desktop, ciambella a 600/640/768 px, blocchi, almeno otto giorni,
-   cambio periodo, editor/prezzi, backup/import (anche sostituzione, solo dati demo).
-4. **Hybrid/cloud e dispositivi, previa autorizzazione per risorse reali:** verificare
-   avvio `npm run dev`, proprietario locale e categoria/spesa con Google; avviso al fermo
-   Firestore. Controllare poi Auth/domini, proprietario/Rules remoti, CRUD e account estraneo
-   negato, seconda sessione e ripristino backup. Build/preview e possibile anteprima Hosting
-   con `deploy:hosting`, quindi Android/iOS e login da schermata Home.
-5. **Distribuzione/manutenzione:** provare `npm ci` e guida da clone pulito su Node LTS,
-   scegliere licenza, aggiornare audit e valutare aggiornamenti compatibili senza `--force`.
-   Paginazione, backup più robusto e service worker richiedono una necessità confermata.
+0. **Legenda della Dashboard:** decidere se tenere le icone nella legenda oltre che nelle tessere dei Blocchi; provare la
+   Dashboard anche su mobile.
+1. **Compatibilità prima della distribuzione:** decidere conservazione ID icona o migrazione esplicita; aggiungere
+   regressioni decoder/import. Dati personali e pubblicazione Rules richiedono autorizzazione separata.
+2. **Collaudo UI in demo:** tre stili e legenda, focus Tab/Invio/Spazio di Data/Categoria, secondo clic Blocchi,
+   contrasto e grafici con molte categorie/importi piccoli; poi IT/EN, reload/bozze, dialoghi, touch, zoom e rotazione.
+3. **Avvio e guida:** seguire `docs/avvio-prestazioni.md` su Pixel 8 reale, verificare popup dopo logout/scadenza,
+   splash/tema e rete lenta; misurare richieste su `#guida` e correggere il bootstrap se richiesto.
+4. **Igiene Git, fase separata:** ignorare config temporanee e confermare la rimozione di quella tracciata;
+   preservare runner e dati di recupero, rivedere tutti i file nuovi prima di eventuali commit richiesti.
+5. **Backup e concorrenza in demo:** CSV in foglio reale; JSON unione/conflitti/sostituzione con copia automatica,
+   interruzione/ripresa e file invalidi; creazione predefiniti da due schede.
+6. **Cloud/dispositivi solo con autorizzazione:** pubblicare le Rules (abbonamenti e icone) prima di distribuire la
+   build con gli stati; controllare owner/Rules/domini, CRUD, account estraneo negato,
+   due sessioni e ripristino; allineare Rules e poi valutare Hosting. Nessuna pubblicazione Hosting attestata qui.
+7. **Riproducibilità:** installazione e guida da clone pulito su Node LTS, audit aggiornato e licenza.
+   Paginazione, service worker e rafforzamento backup sono evoluzioni da valutare, non lavori già implementati.

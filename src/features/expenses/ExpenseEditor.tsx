@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
+import { HelperText, Portal } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
@@ -20,7 +20,6 @@ const amountText = (minor: number) => `${Math.floor(minor / 100)}.${String(minor
 
 export function ExpenseEditor({ record, categories, store, close }: { record: ExpenseRecord; categories: readonly Category[]; store: ExpenseStore; close: () => void }) {
   const { t } = useI18n();
-  const { colors } = useTheme();
   const today = todayInRome();
   // For a series the amount field is the price of the next renewal; the first payment's price stays untouched.
   const shownAmount = useMemo(() => currentPrice(record, today), [record, today]);
@@ -55,7 +54,6 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
         start={record.expense_date} recurrence={recurrence} disabled={busy} onScope={setScope}
         onRemove={(change) => setChanges((all) => all.filter((item) => item !== change))} />}
-      {series && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{t("Le modifiche valgono per tutte le occorrenze.")}</Text>}
       {priceError && <HelperText type="error" accessibilityRole="alert">{t(priceError)}</HelperText>}
       {store.error && <HelperText type="error">{t(store.error)}</HelperText>}
     </ScrollView></Dialog.ScrollArea>

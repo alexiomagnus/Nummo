@@ -3,6 +3,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button } from '../../components/Button';
+import { CategoryGlyph } from '../../components/CategoryGlyph';
+import { iconStyles, iconStyleText } from '../../components/categoryIconSets';
+import type { CategoryIcon } from '../../domain/category';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { accentLabels, accents, buildScheme, type ColorMode } from '../../theme/palette';
@@ -27,6 +30,8 @@ const modeOptions: { value: ColorMode; label: string }[] = [
 const fontOptions: { value: FontChoice; label: string }[] = [
   { value: 'google', label: 'Google Sans' }, { value: 'system', label: 'Sistema' },
 ];
+// Sample of four categories, drawn in each style whatever the chosen one is.
+const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'bus'];
 
 // Display settings, opened from the account menu or the sign-in screen. Every change applies at once and is kept in
 // this browser; nothing here touches expense data.
@@ -70,6 +75,24 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
                 })}
               </View>
             </Section>
+            <Section title={t("Stile delle icone")}>
+              <View style={styles.styleCards} role="radiogroup" aria-label={t("Stile delle icone")}>
+                {iconStyles.map((style) => {
+                  const selected = style === preferences.iconStyle;
+                  return (
+                    <StateLayerPressable key={style} layerColor={colors.onSurface} radius={radius.card} accessibilityRole="radio"
+                      aria-checked={selected} accessibilityLabel={`${t(iconStyleText[style].label)}${selected ? t(", selezionato") : ''}`}
+                      onPress={() => onChange({ iconStyle: style })}
+                      style={[styles.styleCard, { borderColor: selected ? colors.primary : colors.outlineVariant, backgroundColor: selected ? colors.primaryContainer : 'transparent' }]}>
+                      <View style={styles.preview} aria-hidden>
+                        {iconPreview.map((icon) => <CategoryGlyph key={icon} icon={icon} size={24} style={style} />)}
+                      </View>
+                      <Text variant="labelLarge" style={{ color: selected ? colors.onPrimaryContainer : colors.onSurface }}>{t(iconStyleText[style].label)}</Text>
+                    </StateLayerPressable>
+                  );
+                })}
+              </View>
+            </Section>
             <Section title={t("Carattere")}>
               <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
             </Section>
@@ -102,6 +125,9 @@ const styles = StyleSheet.create({
   area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
   content: { paddingVertical: spacing.sm, gap: spacing.xl },
   section: { gap: spacing.md },
+  styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  styleCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
+  preview: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minHeight: 32, marginBottom: spacing.xs },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   swatch: { minHeight: layout.minTouch, minWidth: layout.minTouch, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.sm, borderWidth: 2, borderRadius: radius.control },
   dots: { flexDirection: 'row', alignItems: 'center' },
