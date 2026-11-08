@@ -21,6 +21,8 @@ Architettura, comandi e convenzioni: `AGENTS.md`; configurazione personale:
 
 ## Fase corrente — dialoghi e mobile
 
+- Dati su smartphone: CSV, JSON e Importa CSV o JSON in colonna, ciascun pulsante
+  largo quanto l'area dei contenuti. Desktop conserva i pulsanti affiancati.
 - **Avvio hybrid ripristinato (8 nov, recupero autorizzato):** Java Firestore PID
   17767 era rimasto attivo su 8180 dopo la morte del gestore PID 17700 e dell'Hub.
   Export diretto tramite lo stesso endpoint locale della CLI, prima di ogni arresto;

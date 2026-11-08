@@ -8,6 +8,7 @@ import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, radius, spacing } from '../../theme/tokens';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { exportCsv, makeBackup, parseCsvImport, parseImport, type ImportData } from '../../domain/backup';
 import { firebaseWebConfig } from '../../services/backendConfig';
 import type { FirestoreStore } from '../../services/firestoreStore';
@@ -23,6 +24,7 @@ export function download(name: string, content: string, type: string) {
 export function BackupActions({ backend, uid, enabled, onClose }: { backend: FirestoreStore; uid: string; enabled: boolean; onClose?: () => void }) {
   const { t } = useI18n();
   const theme = useTheme();
+  const compact = useSizeClass() === 'compact';
   const notify = useSnackbar();
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
@@ -53,7 +55,7 @@ export function BackupActions({ backend, uid, enabled, onClose }: { backend: Fir
   return <Card title={t("Dati")}
     actions={onClose && <IconButton icon={icon(iconShapes.close)} style={styles.close} accessibilityLabel={t("Chiudi")} onPress={onClose} />}>
     <View style={styles.group}>
-      <View style={styles.buttons}>
+      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
         <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(true)}>CSV</Button>
         <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportData(false)}>JSON</Button>
         <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={busy} onPress={pick}>{t("Importa CSV o JSON")}</Button>
@@ -89,5 +91,6 @@ const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   close: { margin: 0, width: layout.minTouch, height: layout.minTouch },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   preview: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.md, marginTop: spacing.md },
 });
