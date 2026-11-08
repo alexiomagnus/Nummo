@@ -56,12 +56,13 @@ export function SelectField<T extends string>({ label, options, value, onChange,
           <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
             accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled}
             accessibilityLabel={`${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`}>
-            <View pointerEvents="none" style={styles.field}>
+            {/* `inert` excludes every descendant, including Paper surfaces that restore pointer events. */}
+            <div inert style={{ marginTop: -fieldLabelGap }}>
               <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false}
                 error={Boolean(error)} aria-disabled={disabled} showSoftInputOnFocus={false}
-                left={current?.icon ? <TextInput.Icon icon={() => current.icon} tabIndex={-1} aria-hidden /> : undefined}
-                right={<TextInput.Icon icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />} tabIndex={-1} aria-hidden />} />
-            </View>
+                left={current?.icon ? <TextInput.Icon icon={() => current.icon} forceTextInputFocus={false} tabIndex={-1} aria-hidden /> : undefined}
+                right={<TextInput.Icon icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />} forceTextInputFocus={false} tabIndex={-1} aria-hidden />} />
+            </div>
           </Pressable>
         }>
         <ScrollView style={{ maxHeight: Math.max(0, menuHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">
@@ -87,7 +88,6 @@ const styles = StyleSheet.create({
   // Paper's 56 dp input reserves 6 dp above the outline for the floating label. The pressable (focus ring, press) must
   // hug the visible outline (fieldBoxHeight), so the input is pulled up by that gap and the pressable pushed down by it.
   anchor: { borderRadius: radius.input, marginTop: fieldLabelGap },
-  field: { marginTop: -fieldLabelGap },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.md, marginHorizontal: spacing.xs },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },

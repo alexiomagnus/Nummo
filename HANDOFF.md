@@ -1,6 +1,6 @@
 # HANDOFF — Nummo
 
-Aggiornamento: **8 novembre 2026**, foto Google nell'avatar e ritocchi editor categorie.
+Aggiornamento: **8 novembre 2026**, recupero emulatore e ripristino avvio hybrid.
 Progetto personale web BYOF: Google Auth e Firestore, accesso riservato al proprietario.
 Architettura, comandi e convenzioni: `AGENTS.md`; configurazione personale:
 `README.md` e `docs/firebase-personale.md`. Le specifiche storiche non attestano lo stato corrente.
@@ -21,6 +21,36 @@ Architettura, comandi e convenzioni: `AGENTS.md`; configurazione personale:
 
 ## Fase corrente — dialoghi e mobile
 
+- **Avvio hybrid ripristinato (8 nov, recupero autorizzato):** Java Firestore PID
+  17767 era rimasto attivo su 8180 dopo la morte del gestore PID 17700 e dell'Hub.
+  Export diretto tramite lo stesso endpoint locale della CLI, prima di ogni arresto;
+  ripristino su emulatore isolato e confronto SHA-256 di percorsi/campi di tutti i
+  **29 documenti**: 8 spese, 10 categorie, 10 indici nomi e configurazione proprietario.
+  Nessuna variazione durante export; ripristino identico. Processo residuo arrestato
+  con SIGTERM, senza forzatura. Archivio recuperato predisposto in `emulator-data/`.
+  Copie native e precedenti conservate in `.firebase/recovery-7au5sZ/` (ignorata da Git).
+  Provato `BROWSER=none npm run dev -- --port 18081`: Firestore riconosciuto, tutti i
+  campi ancora identici e Metro pronto. Un solo Ctrl+C: export riuscito e promozione
+  completata, precedente archivio in `.firebase/hybrid-qTNrTt/previous`.
+  Servizi della prova arrestati; utente può ora eseguire `npm run dev` nel suo terminale.
+  Nessun cloud/OAuth, modifica del runner o test app aggiuntivo in questa fase operativa.
+- Spese su tutte le larghezze, PC incluso: numero di spese sotto il nome del mese
+  nella colonna sinistra, totale separato sulla destra. Nessun riepilogo congiunto
+  «4 spese · importo» nelle intestazioni mensili.
+- Conferme di eliminazione su smartphone: Annulla sopra, Elimina sotto;
+  disposizione desktop invariata, modifica comune a tutte le conferme `DeleteDialog`.
+  `npm run check` ripetuto: typecheck, 206 test e build demo OK.
+- **Touch Categoria/Data:** dopo la segnalazione (centro Categoria apre il menu,
+  freccia no), sostituito il contenitore `pointerEvents="none"` con DOM `inert` in
+  `SelectField` e `DateField`. Le icone Paper non possono più intercettare eventi
+  o focus: l'unico bersaglio è il `Pressable` esterno, anche nell'editor che riusa
+  `ExpenseFields`. Disattivato anche `forceTextInputFocus` nelle icone di SelectField.
+  Catena individuata nei sorgenti installati: Surface riabilita gli eventi web e
+  PressResponder interno ne ferma la propagazione. Layout e logica menu invariati.
+  `npm run check` OK: typecheck, **206 test**, build demo. Nessuna modifica dati/Rules,
+  test emulatori non ripetuti. Browser ritentato e indisponibile: collaudo touch reale
+  ancora necessario su centro/freccia/icona sinistra, Categoria e Data, creazione/editor,
+  controlli disabilitati e apertura con Invio/Spazio da tastiera.
 - **Login:** l'utente aveva segnalato «Accesso non riuscito. Riprova.» dopo
   i tentativi sulla foto. Il testo generico nascondeva i codici non mappati;
   `signInError.ts` ora conserva un codice `auth/...` validato nel messaggio IT/EN,
@@ -142,7 +172,7 @@ con dipendenze già installate:
 
 | Verifica | Risultato |
 | --- | --- |
-| `npm run check` | **OK**, ultima esecuzione dopo la diagnostica login: typecheck, **206/206 test**, export web demo in `dist-demo/`. Inclusi foto profilo, diagnostica login IT/EN, contrasti delle superfici/dialoghi e resize con eventi simulati. Warning `NO_COLOR`/`FORCE_COLOR` non bloccante. |
+| `npm run check` | **OK**, ultima esecuzione dopo il riepilogo mensile su PC/mobile: typecheck, **206/206 test**, export web demo in `dist-demo/`. Inclusi foto profilo, diagnostica login IT/EN, contrasti delle superfici/dialoghi e resize con eventi simulati. Warning `NO_COLOR`/`FORCE_COLOR` non bloccante. |
 | Suite SDK/Rules | **OK: 12/12** per l'editor categorie; assert aggiunti su nome/icona aggiornati insieme e revisione incrementata una sola volta dopo rifiuto del conflitto obsoleto. Test demo fuori sandbox (bind inizialmente negato), porte Auth/Firestore 19199/19280, hub 19440, logging 19450 e websocket 19151 perché 8180 occupata. Config temporanea rimossa, emulatori test arrestati; istanze personali preservate. `PERMISSION_DENIED` attesi nei casi negativi. |
 | `npm run check:env` | **OK** sulla configurazione di sviluppo presente; valori non riportati. |
 | Fixture in memoria | **OK**: `cart` valido; tutte le 11 icone rimosse rifiutate sia da `parseSyncedCategory` sia da `parseImport`. Nessuna scrittura. |

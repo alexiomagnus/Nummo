@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   title: { flex: 1 },
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
-  actionsCompact: { flexDirection: 'column-reverse', alignItems: 'stretch' },
+  actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
   button: { paddingHorizontal: spacing.xs, minHeight: 40 },
 });
 

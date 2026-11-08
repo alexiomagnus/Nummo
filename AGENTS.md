@@ -181,6 +181,9 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
 - Paper `Menu` montato chiuso mette il focus sul proprio anchor (web): mai un `Menu` per riga di una lista
   (la pagina salta all'ultima riga); usare un solo menu con anchor a coordinate, come `ExpenseList`.
   `MenuSelect` per selettori compatti (ordina/filtri), `FieldIcon` per icone decorative dei campi.
+  Nei campi-azione (`SelectField`, `DateField`) il `Pressable` esterno è l'unico
+  bersaglio: input e icone decorativi in un contenitore DOM `inert`. Il solo
+  `pointerEvents="none"` sul contenitore non neutralizza le Surface Paper interne.
 - Accessibilità `role`/`aria-*`: RN Web 0.21 ignora `accessibilityState` nel DOM.
   TextInput Paper: `readonly`, non `disabled`, quando si verifica sola lettura.
 - Icone UI SVG inline, categorie glifi outline 24×24 in `categoryGlyphs.ts` via

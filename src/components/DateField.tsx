@@ -33,10 +33,11 @@ export function DateField({ value, error, disabled, onChange }: { value: string;
     <>
       <Pressable disabled={disabled} onPress={() => setOpen(true)} accessibilityRole="button" aria-haspopup="dialog" aria-expanded={open}
         aria-disabled={disabled} accessibilityLabel={t("Data della spesa: {p0}. Cambia data", { p0: shown })}>
-        <View pointerEvents="none">
+        {/* Keep the decorative input and calendar icon outside hit-testing and keyboard focus. */}
+        <div inert>
           <TextInput outlineStyle={inputOutline} label={t("Data")} value={shown} mode="outlined" readOnly focusable={false} error={error}
             aria-disabled={disabled} showSoftInputOnFocus={false} left={leadingIcon(iconShapes.calendar)} />
-        </View>
+        </div>
       </Pressable>
       <DatePickerDialog visible={open} value={value} onDismiss={() => setOpen(false)}
         onConfirm={(date) => { setOpen(false); onChange(date); }} />

@@ -76,6 +76,7 @@ export function ExpenseList({ occurrences, categories, error, onEdit }: Props) {
           const heading = byDate && (index === 0 || monthOf(results[index - 1]!.date, locale) !== month);
           const inMonth = heading ? results.filter((entry) => monthOf(entry.date, locale) === month) : [];
           const monthTotal = inMonth.reduce((sum, entry) => sum + entry.amount_minor, 0);
+          const monthCount = `${inMonth.length} ${inMonth.length === 1 ? t("spesa") : t("spese")}`;
           // Dividers only between rows: none after the last row of a month group (the next heading separates it) or of the list.
           const next = results[index + 1];
           const lastOfGroup = !next || (byDate && monthOf(next.date, locale) !== month);
@@ -86,10 +87,11 @@ export function ExpenseList({ occurrences, categories, error, onEdit }: Props) {
             <Fragment key={item.key}>
               {heading && (
                 <View style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
-                  <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>
-                    {month}
-                  </Text>
-                  <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{`${inMonth.length} ${inMonth.length === 1 ? t("spesa") : t("spese")} · ${formatAmount(monthTotal)}`}</Text>
+                  <View style={styles.monthLabel}>
+                    <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{month}</Text>
+                    <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>{monthCount}</Text>
+                  </View>
+                  <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmount(monthTotal)}</Text>
                 </View>
               )}
               <View>
@@ -146,9 +148,10 @@ const styles = StyleSheet.create({
   search: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
   select: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
   root: { gap: spacing.lg },
-  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 40, paddingBottom: spacing.md },
+  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, paddingTop: 40, paddingBottom: spacing.md },
   firstMonth: { paddingTop: spacing.lg },
-  monthName: { flex: 1, fontWeight: '700', fontSize: 15, lineHeight: 22 },
+  monthLabel: { flex: 1, minWidth: 0, gap: spacing.xs },
+  monthName: { fontWeight: '700', fontSize: 15, lineHeight: 22 },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
   rowAmount: { minWidth: 96, textAlign: 'right', marginRight: spacing.md },
   details: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth,
