@@ -1,5 +1,5 @@
 import { MD3DarkTheme, MD3LightTheme, configureFonts, type MD3Theme } from 'react-native-paper';
-import { buildScheme } from './palette';
+import { buildScheme, dialogColors } from './palette';
 import { paperRoundness, typefaces } from './tokens';
 import type { Preferences } from '../features/settings/preferences';
 
@@ -12,6 +12,7 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
     ...base.colors,
     // Page panel: a touch lighter than the background (lowest container in light, low in dark).
     panel: dark ? s.surfaceContainerLow : s.surfaceContainerLowest,
+    ...dialogColors(s, dark),
   };
   return {
     ...base,
@@ -39,3 +40,4 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
 
 // Reads the custom `panel` colour added by `createTheme` (Paper's colour type cannot be augmented).
 export const panelColor = (colors: object): string => (colors as { panel?: string }).panel ?? 'transparent';
+export const dialogColor = (colors: object): string => (colors as { dialog: string }).dialog;

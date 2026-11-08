@@ -6,10 +6,10 @@ import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { radius, spacing } from '../../theme/tokens';
 
-type Props = { value: CategoryIcon | null; onChange: (icon: CategoryIcon | null) => void };
+type Props = { value: CategoryIcon | null; onChange: (icon: CategoryIcon | null) => void; disabled?: boolean };
 
 // Tapping the selected icon removes it: icons are optional.
-export function IconPicker({ value, onChange }: Props) {
+export function IconPicker({ value, onChange, disabled }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   return (
@@ -17,7 +17,7 @@ export function IconPicker({ value, onChange }: Props) {
       {categoryIcons.map((icon) => {
         const selected = icon === value;
         return (
-          <StateLayerPressable key={icon} bleed={4} layerColor={colors.onSurface} radius={radius.control} onPress={() => onChange(selected ? null : icon)}
+          <StateLayerPressable key={icon} bleed={4} layerColor={colors.onSurface} radius={radius.control} disabled={disabled} aria-disabled={disabled} onPress={() => onChange(selected ? null : icon)}
             accessibilityRole="button" aria-pressed={selected}
             accessibilityLabel={t("Icona {p0}{p1}", { p0: t(categoryIconLabels[icon]), p1: selected ? t(", selezionata") : '' })}
             style={[styles.cell, {

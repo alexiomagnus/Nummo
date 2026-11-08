@@ -1,8 +1,9 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native';
-import { Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { AppDialog as Dialog } from './AppDialog';
 import { Button } from './Button';
 import { leadingIcon } from './FieldIcon';
 import { expensePolicy, todayInRome } from '../domain/policy';
@@ -60,14 +61,18 @@ function DatePickerDialog({ visible, value, onDismiss, onConfirm }: { visible: b
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
-        <View style={styles.headline} accessibilityLiveRegion="polite">
-          <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Seleziona data")}</Text>
-          <Text variant="headlineMedium" style={styles.headlineText}>{headlineFormat(locale).format(new Date(`${picked}T00:00:00Z`))}</Text>
-        </View>
-        <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
-        <View style={styles.body}>
-          <Calendar selected={picked} month={month} onMonth={setMonth} onPick={setPicked} />
-        </View>
+        <Dialog.ScrollArea style={styles.scrollArea}>
+          <ScrollView keyboardShouldPersistTaps="handled">
+            <View style={styles.headline} accessibilityLiveRegion="polite">
+              <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Seleziona data")}</Text>
+              <Text variant="headlineMedium" style={styles.headlineText}>{headlineFormat(locale).format(new Date(`${picked}T00:00:00Z`))}</Text>
+            </View>
+            <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
+            <View style={styles.body}>
+              <Calendar selected={picked} month={month} onMonth={setMonth} onPick={setPicked} />
+            </View>
+          </ScrollView>
+        </Dialog.ScrollArea>
         <Dialog.Actions>
           <Button onPress={onDismiss}>{t("Annulla")}</Button>
           <Button onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
@@ -125,7 +130,8 @@ function Calendar({ selected, month, onMonth, onPick }: { selected: string; mont
 }
 
 const styles = StyleSheet.create({
-  dialog: { width: '92%', maxWidth: 360, alignSelf: 'center' },
+  dialog: { maxWidth: 360 },
+  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginTop: 0, marginBottom: 0, borderTopWidth: 0, borderBottomWidth: 0 },
   headline: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing.lg, gap: spacing.lg },
   headlineText: { textTransform: 'capitalize' },
   divider: { height: 1 },
@@ -135,5 +141,5 @@ const styles = StyleSheet.create({
   nav: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: `${100 / 7}%`, height: 44, alignItems: 'center', justifyContent: 'center' },
-  day: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  day: { width: '100%', maxWidth: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 });

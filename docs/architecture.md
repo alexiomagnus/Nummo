@@ -229,6 +229,30 @@ originale a valori fissi. Ogni combinazione è verificata a ≥ 4,5:1 (testo) e 
 ospitato in `public/fonts/`: nessuna richiesta a Google a runtime. Le icone usano un
 unico spessore di linea (`iconStroke`, 1,5).
 
+### Dialoghi e viewport mobile (8 novembre 2026)
+
+`AppDialog` condivide superficie dedicata, contorno e limiti di viewport/safe area tra
+Impostazioni, editor spese/categorie, calendario e conferme. Il ruolo `dialog` usa la superficie più
+chiara dei contenitori in scuro e bianca in chiaro, con scrim nero; non cambia i colori
+di menu e navigazione. Il tema interno allinea `background` al dialogo per le etichette
+dei campi outlined. Contenuti lunghi scorrono, con azioni fuori dall'area scorrevole.
+
+Il CSS in `public/index.html` imposta sfondo e altezza dinamica prima del bundle.
+`GlobalStyle` mantiene `--nummo-viewport-height` con `viewport.ts`: la tastiera può
+ridurre il [viewport visibile](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport)
+senza ridurre quello del layout. Si osservano resize di finestra e VisualViewport,
+ignorando il pinch zoom per non ridisporre la pagina durante l'ingrandimento;
+fallback su `innerHeight` senza API. Il meta viewport richiede anche
+`interactive-widget=resizes-content` ai browser che lo supportano.
+Test di contrasto per tutte le tinte/modalità e test degli eventi simulati passati;
+tastiera, barre browser e apertura su telefono reale restano da collaudare.
+
+La matita in Categorie apre `CategoryEditor` al posto dell'editor nella riga.
+Nome e icona restano una bozza fino a «Salva», che li aggiorna insieme tramite
+`saveCategory` nella transazione esistente, con la revisione vista all'apertura.
+Annullamento senza scritture; errori e duplicati visibili nel dialogo, chiusura e
+controlli bloccati durante il salvataggio. La creazione rimane nella pagina.
+
 ## Lingua dell'interfaccia (8 novembre 2026)
 
 Italiano e inglese, scelti in Impostazioni anche prima del login; italiano iniziale.

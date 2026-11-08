@@ -1,7 +1,8 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Dialog, HelperText, Portal, Text, useTheme } from 'react-native-paper';
+import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
+import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
 import type { Category } from '../../domain/category';
@@ -10,7 +11,7 @@ import { applyPriceEdit, currentPrice, newDraft, validateDraft, type ExpenseDraf
 import { todayInRome } from '../../domain/policy';
 import { nextRenewal, type PriceChange, type PriceScope } from '../../domain/pricing';
 import { isRecurrence } from '../../domain/recurrence';
-import { layout, radius, spacing } from '../../theme/tokens';
+import { spacing } from '../../theme/tokens';
 import { ExpenseFields } from './ExpenseFields';
 import { PriceChangeField } from './PriceSchedule';
 import type { ExpenseStore } from './expenseStore';
@@ -46,9 +47,9 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
     setBusy(true);
     try { if (await store.update(record, applied.data)) close(); } finally { setBusy(false); }
   };
-  return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }} style={{ maxWidth: layout.maxForm, alignSelf: 'center', width: '92%', maxHeight: '90%', borderRadius: radius.dialog }}>
+  return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }}>
     <Dialog.Title>{record.recurrence ? t("Modifica serie") : t("Modifica spesa")}</Dialog.Title>
-    <Dialog.ScrollArea style={{ paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
+    <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
       <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
@@ -58,7 +59,7 @@ export function ExpenseEditor({ record, categories, store, close }: { record: Ex
       {priceError && <HelperText type="error" accessibilityRole="alert">{t(priceError)}</HelperText>}
       {store.error && <HelperText type="error">{t(store.error)}</HelperText>}
     </ScrollView></Dialog.ScrollArea>
-    <Dialog.Actions>
+    <Dialog.Actions style={{ flexWrap: 'wrap', gap: spacing.xs }}>
       {store.remove && <View style={{ flex: 1, alignItems: 'flex-start' }}><DeleteAction labeled disabled={busy} onOpenChange={setDeleting}
         name={series ? t("la serie {p0}", { p0: record.description }) : record.description}
         description={[(series ? t("Eliminando questa ricorrenza si elimina l’intera serie. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}

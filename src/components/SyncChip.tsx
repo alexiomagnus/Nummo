@@ -9,7 +9,7 @@ import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 const icons: Record<SyncKind, string> = {
-  loading: iconShapes.sync, synced: iconShapes.cloudCheck, pending: iconShapes.sync,
+  loading: iconShapes.sync, synced: iconShapes.checkCircle, pending: iconShapes.sync,
   cached: iconShapes.cloudOff, offline: iconShapes.cloudOff, error: iconShapes.alert,
 };
 

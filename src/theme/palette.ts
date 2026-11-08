@@ -7,6 +7,12 @@ export const accents = ['mint', 'blue', 'violet', 'rose', 'amber', 'graphite'] a
 export type Accent = (typeof accents)[number];
 export type ColorMode = 'mono' | 'palette';
 
+// Modal surfaces have their own role: changing them must not recolour navigation or menus.
+export const dialogColors = (scheme: Scheme, dark: boolean) => ({
+  dialog: dark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLowest,
+  backdrop: dark ? '#000000A3' : '#00000066',
+});
+
 export const accentLabels: Record<Accent, string> = {
   mint: 'Menta', blue: 'Blu', violet: 'Viola', rose: 'Rosa', amber: 'Ambra', graphite: 'Grafite',
 };

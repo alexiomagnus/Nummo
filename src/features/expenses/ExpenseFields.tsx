@@ -58,6 +58,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       </View>
       <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
+          multiline numberOfLines={4} style={styles.description}
           onChangeText={(value) => onChange('description', value)} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {(errors.description || length > 0) && <View style={styles.helperRow}>
@@ -99,6 +100,7 @@ const styles = StyleSheet.create({
   amountCompact: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
   date: { width: 200, flexShrink: 0 },
   text: { fontSize: 18 },
+  description: { minHeight: 128 },
   amountText: { fontSize: 28, fontWeight: '600', fontVariant: ['tabular-nums'] },
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },

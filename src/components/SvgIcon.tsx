@@ -18,7 +18,7 @@ export const iconShapes = {
   chart: '<path d="M4 20V10m6 10V4m6 16v-7M3 20h18"/>',
   tag: '<path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="8.5" r="1"/>',
   logout: '<path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5M15 8l4 4-4 4M19 12H9"/>',
-  cloudCheck: '<path d="M7 18a4.5 4.5 0 0 1-.5-8.97A6 6 0 0 1 18 10.5 3.75 3.75 0 0 1 17.25 18H7Z"/><path d="m9.5 13.5 2 2 3.5-4"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',
   cloudOff: '<path d="M3 3l18 18M7 18a4.5 4.5 0 0 1-1.6-8.7M9.5 5.6A6 6 0 0 1 18 10.5 3.75 3.75 0 0 1 20 15M12 18H7"/>',
   sync: '<path d="M20 11a8 8 0 0 0-14-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14 4.5l2-2M20 20v-4.5h-4.5"/>',
   alert: '<path d="M12 3 2 20h20L12 3ZM12 10v4M12 17.5h.01"/>',

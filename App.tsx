@@ -65,7 +65,7 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
   const account = session.status === 'signed-in'
-    ? <AccountMenu email={session.user.email} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsOpen(true)} /> : null;
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsOpen(true)} /> : null;
 
   if (session.status === 'signed-in') {
     return (

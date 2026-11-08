@@ -116,7 +116,11 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await denied(setDoc(doc(owner.db, 'users', uid, 'categoryNames', c.name_key), { category_id: randomUUID() }));
       await owner.store.saveCategory(id, `Bevande ${suffix}`, 'cart', c);
       await assert.rejects(second.store.saveCategory(id, 'Vecchio', null, c), /altra sessione/);
+      const openedRevision = c.revision;
       c = (await owner.store.exportSnapshot()).categories.find((c) => c.id === id)!;
+      assert.equal(c.label, `Bevande ${suffix}`);
+      assert.equal(c.icon, 'cart');
+      assert.equal(c.revision, openedRevision + 1);
       await denied(deleteDoc(doc(owner.db, 'users', uid, 'categories', id)));
       await owner.store.removeCategory(c);
       await owner.store.saveCategory(randomUUID(), `Bevande ${suffix}`, null);

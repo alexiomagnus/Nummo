@@ -25,7 +25,6 @@ export function useRemoteCategories(backend: FirestoreStore) {
     categories, ready, error, sync,
     createCategory: (name: string, icon: CategoryIcon | null) => mutate(() => backend.saveCategory(crypto.randomUUID(), name, icon)),
     deleteCategory: (id: string) => mutate(() => backend.removeCategory(find(id))),
-    changeIcon: (id: string, icon: CategoryIcon | null, expected: Category) => mutate(() => { const c = parseSyncedCategory(expected); if (!c) throw new Error('Categoria non valida.'); return backend.saveCategory(id, c.label, icon, c); }),
-    rename: (id: string, name: string, expected: Category) => mutate(() => { const c = parseSyncedCategory(expected); if (!c) throw new Error('Categoria non valida.'); return backend.saveCategory(id, name, c.icon, c); }),
+    updateCategory: (id: string, name: string, icon: CategoryIcon | null, expected: Category) => mutate(() => { const c = parseSyncedCategory(expected); if (!c || c.id !== id) throw new Error('Categoria non valida.'); return backend.saveCategory(id, name, icon, c); }),
   };
 }

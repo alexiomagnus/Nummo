@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { accents, buildScheme } from '../src/theme/palette.ts';
+import { accents, buildScheme, dialogColors } from '../src/theme/palette.ts';
 import { sizeClassOf, type Scheme } from '../src/theme/tokens.ts';
 
 // WCAG 2.x relative luminance and contrast ratio.
@@ -16,7 +16,7 @@ function contrast(a: string, b: string): number {
   return (light! + 0.05) / (dark! + 0.05);
 }
 
-const surfaces: (keyof Scheme)[] = ['background', 'surface', 'surfaceContainerLow', 'surfaceContainer', 'surfaceContainerHigh'];
+const surfaces: (keyof Scheme)[] = ['background', 'surface', 'surfaceContainerLowest', 'surfaceContainerLow', 'surfaceContainer', 'surfaceContainerHigh', 'surfaceContainerHighest'];
 // Text/background pairs actually used by the UI (AA: 4.5:1).
 const textPairs: [keyof Scheme, keyof Scheme][] = [
   ['onPrimary', 'primary'], ['onPrimaryContainer', 'primaryContainer'], ['onSecondaryContainer', 'secondaryContainer'],
@@ -27,6 +27,14 @@ const textPairs: [keyof Scheme, keyof Scheme][] = [
 for (const [accent, mode, name] of accents.flatMap((a) => (['mono', 'palette'] as const).flatMap((m) => (['light', 'dark'] as const).map((n) => [a, m, n] as const)))) {
   const scheme = buildScheme(accent, mode, name === 'dark');
   const label = `${accent}/${mode}/${name}`;
+  test(`dialogo ${label}: testo leggibile e contorno distinguibile`, () => {
+    const modal = dialogColors(scheme, name === 'dark');
+    assert.notEqual(modal.dialog, scheme.background);
+    for (const text of ['onSurface', 'onSurfaceVariant', 'primary', 'error'] as const) {
+      assert.ok(contrast(scheme[text], modal.dialog) >= 4.5, `${text} sul dialogo`);
+    }
+    assert.ok(contrast(scheme.outline, modal.dialog) >= 3, 'contorno sul dialogo');
+  });
   test(`tema ${label}: testo su superfici ≥ 4,5:1`, () => {
     for (const surface of surfaces) {
       for (const text of ['onSurface', 'onSurfaceVariant', 'primary', 'error'] as const) {

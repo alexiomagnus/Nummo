@@ -22,7 +22,10 @@ type Props = {
 
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const monthFormat = (locale: string) => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const monthOf = (date: string, locale: string) => monthFormat(locale).format(new Date(`${date.slice(0, 7)}-01T00:00:00Z`));
+const monthOf = (date: string, locale: string) => {
+  const name = monthFormat(locale).format(new Date(`${date.slice(0, 7)}-01T00:00:00Z`));
+  return name.charAt(0).toLocaleUpperCase(locale) + name.slice(1);
+};
 const formatDate = (date: string, locale: string) => dateFormat(locale).format(new Date(`${date}T00:00:00Z`));
 
 // Filter values: every category, those without a (still existing) category, or one category ID.

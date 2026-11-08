@@ -126,7 +126,7 @@ function Sections({ section, onNavigate, backend, uid, store, categoryState, occ
     {section === 'dashboard' && <Dashboard occurrences={occurrences} categories={categoryState.categories} />}
     {section === 'categories' && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
-        onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onChangeIcon={categoryState.changeIcon} onRename={categoryState.rename}
+        onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}
         notify={notify}
         onAddDefaults={categoryState.categories.length === 0 ? () => {
           void backend.importRecords([], defaultCategories.map((c) => ({ ...c, label: t(c.label), id: crypto.randomUUID() })))

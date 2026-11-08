@@ -1,7 +1,8 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Dialog, IconButton, Portal, Text, useTheme } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { IconButton, Portal, Text, useTheme } from 'react-native-paper';
+import { AppDialog as Dialog } from './AppDialog';
 import { Button } from './Button';
 import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
@@ -34,13 +35,17 @@ export function DeleteDialog({ visible, name, title, description, onDismiss, onC
   }, [visible, busy, onDismiss]);
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={() => { if (!busy) onDismiss(); }} style={{ width: '92%', maxWidth: 400, alignSelf: 'center', borderRadius: radius.dialog }}>
-        <View role="alertdialog" aria-label={title ?? t("Eliminare {p0}?", { p0: name })}>
-          <View style={styles.header}>
-            <SvgIcon shape={iconShapes.trash} size={24} color={colors.error} />
-            <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>{title ?? t("Eliminare {p0}?", { p0: name })}</Text>
-          </View>
-          {(description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? t("L’operazione non può essere annullata.")}</Text>}
+      <Dialog visible={visible} onDismiss={() => { if (!busy) onDismiss(); }} style={{ maxWidth: 400 }}>
+        <View role="alertdialog" aria-label={title ?? t("Eliminare {p0}?", { p0: name })} style={styles.container}>
+          <Dialog.ScrollArea style={styles.scrollArea}>
+            <ScrollView keyboardShouldPersistTaps="handled">
+              <View style={styles.header}>
+                <SvgIcon shape={iconShapes.trash} size={24} color={colors.error} />
+                <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>{title ?? t("Eliminare {p0}?", { p0: name })}</Text>
+              </View>
+              {(description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? t("L’operazione non può essere annullata.")}</Text>}
+            </ScrollView>
+          </Dialog.ScrollArea>
           <View style={[styles.actions, compact && styles.actionsCompact]}>
             <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={onDismiss}>{t("Annulla")}</Button>
             <Button mode="contained" buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy} contentStyle={styles.button}
@@ -54,6 +59,8 @@ export function DeleteDialog({ visible, name, title, description, onDismiss, onC
 }
 
 const styles = StyleSheet.create({
+  container: { flexShrink: 1, minHeight: 0 },
+  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0, borderTopWidth: 0, borderBottomWidth: 0 },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl },
   title: { flex: 1 },
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },

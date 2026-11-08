@@ -1,6 +1,7 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Dialog, Portal, Text, useTheme } from 'react-native-paper';
+import { Portal, Text, useTheme } from 'react-native-paper';
+import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button } from '../../components/Button';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
@@ -34,7 +35,7 @@ export function SettingsDialog({ visible, preferences, dark, onChange, onReset, 
   const { colors } = useTheme();
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={{ width: '92%', maxWidth: layout.maxForm, alignSelf: 'center', maxHeight: '90%', borderRadius: radius.dialog }}>
+      <Dialog visible={visible} onDismiss={onDismiss}>
         <Dialog.Title style={styles.title}>{t("Impostazioni")}</Dialog.Title>
         <Dialog.ScrollArea style={styles.area}>
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
   action: { minHeight: 52, paddingHorizontal: spacing.md },
   actionLabel: { fontSize: 15, lineHeight: 22 },
   // Paper's scroll area draws a line above and below: none, spacing separates the parts.
-  area: { paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
+  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
   content: { paddingVertical: spacing.sm, gap: spacing.xl },
   section: { gap: spacing.md },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

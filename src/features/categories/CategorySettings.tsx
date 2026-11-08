@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useState } from 'react';
 import { useSizeClass } from '../../theme/useSizeClass';
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
@@ -13,6 +13,7 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { inputOutline, layout, spacing } from '../../theme/tokens';
 import { IconPicker } from './IconPicker';
+import { CategoryEditor } from './CategoryEditor';
 
 type Props = {
   categories: readonly Category[];
@@ -24,13 +25,10 @@ type Props = {
   canAddDefaults: boolean;
   onCreate: (name: string, icon: CategoryIcon | null) => boolean | Promise<boolean>;
   onDelete: (id: string) => boolean | Promise<boolean>;
-  onChangeIcon: (id: string, icon: CategoryIcon | null, expected: Category) => boolean | Promise<boolean>;
-  onRename: (id: string, name: string, expected: Category) => boolean | Promise<boolean>;
+  onUpdate: (id: string, name: string, icon: CategoryIcon | null, expected: Category) => boolean | Promise<boolean>;
 };
 
-type Editing = { id: string; name: string; error: string | null; original: Category };
-
-export function CategorySettings({ categories, error, ready, notify, onAddDefaults, canAddDefaults, onCreate, onDelete, onChangeIcon, onRename }: Props) {
+export function CategorySettings({ categories, error, ready, notify, onAddDefaults, canAddDefaults, onCreate, onDelete, onUpdate }: Props) {
   const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -41,19 +39,7 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
   const [icon, setIcon] = useState<CategoryIcon | null>(null);
   const [choosingIcon, setChoosingIcon] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Editing | null>(null);
-  const saveRename = async () => {
-    if (!editing) return;
-    const others = categories.filter((category) => category.id !== editing.id);
-    const validationError = categoryNameError(editing.name, others);
-    if (validationError) {
-      setEditing({ ...editing, error: validationError });
-      return;
-    }
-    if (!ready) return;
-    setBusy(true);
-    try { if (await onRename(editing.id, editing.name, editing.original)) { setEditing(null); notify("Categoria rinominata."); } } finally { setBusy(false); }
-  };
+  const [editing, setEditing] = useState<Category | null>(null);
   const create = async () => {
     const validationError = categories.length >= maxCategories ? categoryLimitMessage : categoryNameError(name, categories);
     setNameError(validationError);
@@ -84,7 +70,7 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
           accessibilityLabel={t("Icona della categoria, facoltativa")} style={styles.create} contentStyle={styles.createContent}>{t("Icona")}</Button>
         <Button mode="contained" style={styles.create} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>
       </View>
-      {choosingIcon && <IconPicker value={icon} onChange={setIcon} />}
+      {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={!ready} />}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
   );
@@ -111,30 +97,21 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
               <ListRow key={category.id} divider={index < shown.length - 1} icon={category.icon} title={category.label}
                 trailing={<>
                   <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
-                    selected={isEditing} aria-expanded={isEditing} accessibilityLabel={t("Modifica {p0}", { p0: category.label })}
-                    onPress={() => setEditing(isEditing ? null : { id: category.id, name: category.label, error: null, original: category })} />
+                    disabled={!ready} selected={isEditing} aria-haspopup="dialog" aria-expanded={isEditing} accessibilityLabel={t("Modifica {p0}", { p0: category.label })}
+                    onPress={() => setEditing(category)} />
                   <DeleteAction name={category.label} title={t("Eliminare la categoria {p0}?", { p0: category.label })} description=""
                     onDelete={() => onDelete(category.id)} />
-                </>}>
-            {isEditing && editing && (
-              <View style={styles.editor}>
-                    <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome")} value={editing.name} autoFocus
-                      accessibilityLabel={t("Nuovo nome per {p0}", { p0: category.label })} error={Boolean(editing.error)} disabled={!ready}
-                      onChangeText={(next) => setEditing({ ...editing, name: next, error: null })} onSubmitEditing={saveRename} />
-                    {editing.error && <HelperText type="error" accessibilityRole="alert">{t(editing.error)}</HelperText>}
-                    <View style={styles.actions}>
-                      <Button onPress={() => setEditing(null)}>{t("Annulla")}</Button>
-                      <Button disabled={!ready} mode="contained" onPress={saveRename}>{t("Salva nome")}</Button>
-                    </View>
-                    <IconPicker value={category.icon}
-                      onChange={async (next) => { if (ready && await onChangeIcon(category.id, next, editing.original)) { setEditing(null); notify("Icona aggiornata."); } }} />
-                  </View>
-                )}
-              </ListRow>
+                </>} />
             );
           })}
         </View>
         {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
+        {editing && <CategoryEditor record={editing} categories={categories} ready={ready} error={error}
+          onSave={async (id, nextName, nextIcon, expected) => {
+            const saved = await onUpdate(id, nextName, nextIcon, expected);
+            if (saved) notify("Categoria aggiornata.");
+            return saved;
+          }} close={() => setEditing(null)} />}
       </View>
   );
 }
@@ -152,6 +129,4 @@ const styles = StyleSheet.create({
   createContent: { height: '100%' },
   empty: { gap: spacing.sm },
   start: { alignSelf: 'flex-start', marginTop: spacing.sm },
-  editor: { paddingBottom: spacing.md, gap: spacing.sm },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm },
 });

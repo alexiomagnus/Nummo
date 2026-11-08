@@ -38,7 +38,8 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   `ExpenseEditor`. Nessun hook di spese locali nel percorso attivo.
 - `src/features/categories/`: `useRemoteCategories`, impostazioni, icone. ID stabili,
   unicità nomi tramite transazioni e indice `categoryNames`. Predefinite aggiunte da
-  azione esplicita. Nessun salvataggio in localStorage.
+  azione esplicita. Limite applicativo di 10 categorie (non imposto dalle Rules);
+  gli archivi esistenti oltre limite restano leggibili. Nessun salvataggio in localStorage.
 - `src/features/settings/`: preferenze di aspetto e lingua (`preferences.ts` puro, `usePreferences`
   su localStorage, `SettingsDialog` dal menu account o dall'ingranaggio prima del login). `src/theme/palette.ts` genera
   gli schemi da tinta e modalità; `createTheme` li riceve da `App.tsx` e aggiunge `colors.panel`
@@ -48,9 +49,13 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   Lingua iniziale `it`, salvata in `nummo.preferences.v1`, solo nel browser; nessuna
   sincronizzazione Firebase. Il provider cambia valore senza rimontare sessione o bozze.
 - `src/features/history/`, `dashboard/`: logica/grafici esistenti; occorrenze calcolate
-  fino a oggi, non materializzate nel database. Grafici SVG DOM, solo web.
+  fino a oggi, non materializzate nel database. Ciambella SVG DOM, blocchi con layout
+  treemap puro e dettaglio giornaliero da occorrenze già caricate; solo web.
 - `src/features/backup/`: download CSV/JSON e importazione esplicita da file CSV/JSON di Nummo.
-  Nessun adapter attivo per i vecchi dati localStorage.
+  Aggiunta senza sovrascritture oppure sostituzione distruttiva con conferma dedicata;
+  entrambe per gruppi, non atomiche sull'intero archivio. Nessun adapter attivo per i vecchi dati localStorage.
+- `src/components/`: controlli Material 3 condivisi, shell adattiva, icone e notifiche;
+  `src/features/workspace/`: composizione delle sezioni, listener e stato di sincronizzazione.
 - `firestore.rules`: proprietario da `config/owner` (solo amministratore), provider
   Google, namespace `users/{uid}`, campi/tipi/importi/date/versioni/indici verificati.
   `users/{uid}/expenses/{uuid}` e `categories/{uuid}` contengono le entità.
@@ -60,7 +65,9 @@ Navigazione: 3 destinazioni (Spese, Dashboard, Categorie) + «Nuova spesa» come
   `build-cloud.ts`, `envPolicy.ts` (ambienti), `deploy-hosting.ts` (pubblicazione solo Hosting).
 - `public/`: copiato dall'export: modello `index.html`, manifest con colori statici,
   icone PNG/SVG (anche maskable e apple-touch), font locali. `GlobalStyle` aggiorna
-  `theme-color` su `colors.background`; nessun service worker.
+  `theme-color` su `colors.background` e l'altezza visibile tramite `viewport.ts`
+  (VisualViewport, senza reflow durante pinch zoom); CSS iniziale in `index.html`.
+  Nessun service worker.
 - `firebase.json`: `firestore` (Rules), `hosting` (`dist/`, fallback SPA su `/index.html`, cache lunga solo per
   `/_expo/static/**`, `no-cache` per HTML/manifest, senza COOP/COEP: romperebbero il popup Google) ed `emulators`.
 - `emulator-data/`: dati persistenti dell'emulatore personale (`emulators:real`),
@@ -159,10 +166,13 @@ nel dominio/servizi testati direttamente. Non usare enum o parameter properties.
   secondo archivio. Modifiche/eliminazioni/categorie online in transazione con la
   revisione vista all'apertura; conflitti espliciti. Salvataggi incerte: verifica in
   lettura, mai nuovo ID automatico. Conservare le copie di recupero visibili.
-- Importazione sempre esplicita, originali intatti, preflight più gruppi ripetibili;
-  non promettere atomicità dell'intero archivio. Backup server-only, nessun dato privato
+- Importazione sempre esplicita, file originali intatti, preflight più gruppi ripetibili;
+  la modalità aggiunta non sovrascrive, la sostituzione elimina prima i dati salvati
+  e richiede conferma. Non promettere atomicità dell'intero archivio. Backup server-only, nessun dato privato
   inserito nei log. JSON mantiene originali, CSV neutralizza formule e quota i campi.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
+  `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
+  contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.
   `Button` (unico pulsante), `ListRow`/`IconTile` (riga di Spese e Categorie), `ChoiceChips`,
   `SegmentedButtons`, `SwitchRow`/`M3Switch`, `SelectField` (menu a tendina), `DateField` (picker modale), `Card`,
   `StateLayerPressable` per componenti Material 3 personalizzati.

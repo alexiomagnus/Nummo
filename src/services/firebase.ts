@@ -8,6 +8,7 @@ import {
   persistentMultipleTabManager, waitForPendingWrites, type Firestore,
 } from 'firebase/firestore';
 import { authEmulator, firebaseWebConfig, firestoreEmulator, persistentCache } from './backendConfig';
+import { profilePhotoURL } from './sessionProfile';
 
 let services: { auth: Auth; db: Firestore } | undefined;
 function getServices() {
@@ -24,8 +25,11 @@ function getServices() {
   return services;
 }
 export const getDatabase = (): Firestore => getServices().db;
-export type SessionUser = Readonly<{ uid: string; email: string | null }>;
-const toSessionUser = (user: User | null): SessionUser | null => user && { uid: user.uid, email: user.email };
+export type SessionUser = Readonly<{ uid: string; email: string | null; photoURL: string | null }>;
+const toSessionUser = (user: User | null): SessionUser | null => user && {
+  uid: user.uid, email: user.email,
+  photoURL: profilePhotoURL(user),
+};
 export function watchSession(listener: (user: SessionUser | null) => void): () => void {
   return onAuthStateChanged(getServices().auth, (user) => listener(toSessionUser(user)));
 }

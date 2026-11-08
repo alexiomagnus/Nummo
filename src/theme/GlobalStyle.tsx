@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useTheme } from 'react-native-paper';
+import { observeViewportHeight } from './viewport';
 
 // Web-only rules RN Web cannot express: the self-hosted font, visible keyboard focus, dynamic
 // viewport height (virtual keyboard friendly), reduced motion and the browser/system bar colour
@@ -17,8 +18,6 @@ export function GlobalStyle() {
       @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
         src: url('/fonts/GoogleSans-latin.woff2') format('woff2');
         unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-      html, body, #root { height: 100%; }
-      @supports (height: 100dvh) { html, body, #root { height: 100dvh; } }
       body { overflow: hidden; margin: 0; font-family: ${family}; background: ${colors.background}; color-scheme: ${dark ? 'dark' : 'light'}; }
       /* Slim scrollbars (no scrollbar-gutter: on RN Web views, which clip with overflow hidden, it shrinks their content). */
       * { scrollbar-width: thin; scrollbar-color: ${colors.outline} transparent; }
@@ -35,6 +34,11 @@ export function GlobalStyle() {
     document.head.appendChild(style);
     return () => { style.remove(); };
   }, [colors.background, colors.primary, colors.outline, dark, family]);
+  useEffect(() => {
+    const root = document.documentElement;
+    const stop = observeViewportHeight(window, (height) => root.style.setProperty('--nummo-viewport-height', `${height}px`));
+    return () => { stop(); root.style.removeProperty('--nummo-viewport-height'); };
+  }, []);
   useEffect(() => {
     const root = document.documentElement;
     const onKey = (event: KeyboardEvent) => { if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key !== 'Shift') root.dataset.input = 'key'; };
