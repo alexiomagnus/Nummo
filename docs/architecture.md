@@ -4,6 +4,44 @@ Aggiornamento: 2 novembre 2026. La richiesta BYOF sostituisce la direzione Sheet
 `recap.md` v0.4, conservata come specifica originale. Analisi della base e piano
 incrementale: [migrazione-byof.md](migrazione-byof.md).
 
+## Salvataggio Nuova spesa nel flusso (9 novembre 2026)
+
+Il pulsante Salva e il recupero degli esiti incerti seguono sempre tutti i campi
+nel normale scorrimento, anche su smartphone. Rimossa la barra sticky mobile:
+copriva ricorrenza e prezzo promozionale quando il modulo superava lo spazio
+disponibile. Per salvare un modulo lungo si scorre fino alla fine; nessuna azione
+si sovrappone ai campi, con o senza tastiera. La navigazione mobile continua a
+nascondersi quando si apre la tastiera virtuale.
+
+## Barra di navigazione Android dell'app installata (9 novembre 2026)
+
+I colori statici `background_color` e `theme_color` del manifest sono entrambi lo sfondo scuro predefinito
+`#0F1511`: nessun passaggio statico chiaro/scuro fra i due. È un ripiego statico, non un manifest dinamico
+per tema: con tema chiaro o altro accento la splash può differire dalla pagina. La precedente attribuzione
+esatta dei colori delle barre alle versioni Android proveniva da fonti non ufficiali e non è provata sul Pixel.
+La [documentazione Chrome](https://developer.chrome.com/docs/lighthouse/pwa/splash-screen) conferma che la splash
+è generata dal manifest; la pagina non ne controlla l'animazione di uscita. Il meta `theme-color` runtime segue
+il tema, ma il risultato sulle barre native dipende anche da Chrome, Android e dall'installazione.
+`viewport-fit=cover` e safe area restano attivi, senza altezze Android hardcoded; la
+[guida edge-to-edge](https://developer.chrome.com/docs/css-ui/edge-to-edge) descrive viewport e insets del browser,
+non garantisce lo stesso comportamento per ogni WebAPK. Test installati ancora necessari.
+
+Prima del paint React, `GlobalStyle` aggiorna insieme sfondo di `html`/`body`, variabile del boot,
+`color-scheme` inline sulla radice e un solo meta `theme-color`, rimuovendo i media statici.
+Lo schema inline del boot prima restava quello dell'avvio anche dopo il cambio tema.
+Il viewport ignora misure da documento nascosto e rimisura su `visibilitychange`/`pageshow`, senza timer,
+per non affidarsi a un resize alla ripresa. Questo corregge una lacuna del lifecycle verificata in test,
+non dimostra la causa dei ritagli nelle animazioni del launcher.
+
+## Icona monocromatica di installazione (9 novembre 2026)
+
+Il manifest separa gli scopi `any`, `maskable` e `monochrome`. La silhouette
+`public/icons/icon-monochrome.svg` riusa le forme del logo con riempimento opaco e
+sfondo trasparente; scala 0,77 (+6,9% rispetto alla favicon), entro l'area sicura.
+Logo principale, favicon, PNG normali/maskable/Apple e colori di avvio restano invariati.
+Lo scopo standard non garantisce il trasferimento al layer Android del WebAPK:
+supporto e procedura di collaudo sono in [icone-installazione.md](icone-installazione.md).
+
 ## Flusso attivo
 
 ```text
@@ -38,9 +76,11 @@ tema scuro; bozza e modulo rimangono montati. Nessun ritardo artificiale o scrit
 Avvio dell'app (8 novembre 2026; misure e procedure in `avvio-prestazioni.md`). Il primo fotogramma usa lo sfondo
 del tema scelto (`nummo.boot-theme.v1`, scritto da `GlobalStyle`, letto da uno script inline di `index.html`), e
 `@font-face`/preload del font stanno nell'HTML. Se la visita precedente era una sessione (`nummo.session.hint.v1`,
-solo presentazione, mai accesso) si mostra `StartupWorkspace`, la pagina «Nuova spesa» con campi disabilitati, sopra la
-schermata reale finché dati o errore (o i 4 s) la rilasciano; così guscio e modulo non cambiano durante il ripristino della
-sessione. Con l'indizio, Auth è inizializzato senza `popupRedirectResolver` (l'SDK su mobile lo inizializza subito e
+solo presentazione, mai accesso) si mostra `StartupWorkspace`, shell di «Nuova spesa» e indicatore di caricamento, sopra la
+schermata reale finché dati o errore (o i 4 s) la rilasciano. Il segnaposto non disegna un modulo con dati fittizi.
+Anche dopo il rilascio, il modulo resta montato ma invisibile e `inert` finché i suoi dati non sono utilizzabili;
+un errore viene esposto, la navigazione resta disponibile. Non si aggiungono ritardi o animazioni d'ingresso.
+Con l'indizio, Auth è inizializzato senza `popupRedirectResolver` (l'SDK su mobile lo inizializza subito e
 aspetta gapi/iframe prima di ripristinare l'utente) e il resolver è passato al solo `signInWithPopup`; gli SDK partono
 all'import (`warmUpServices`). Motivazioni e limiti (prova solo emulata, popup reale non provato dopo logout): vedi il documento.
 
@@ -160,7 +200,7 @@ chip a capo su desktop; nessun cambio automatico di visualizzazione al ridimensi
 Dashboard: grafico e periodo sono preferenze di presentazione in `nummo.preferences.v1`,
 insieme a tema e lingua; caricati da `App` e passati alla dashboard senza un secondo stato persistente.
 Vecchie preferenze o valori invalidi usano ciambella/mese corrente. Se lo storage è negato,
-le scelte restano nella sessione; nessun dato Firebase aggiunto. «Ripristina» nelle impostazioni
+le scelte restano nella sessione; nessun dato Firebase aggiunto. «Ripristina predefiniti» nelle impostazioni
 ripristina anche queste scelte. La lista giorni parte nascosta a ogni mount della dashboard;
 «Mostra giorni con spese» / «Nascondi giorni con spese» controlla solo la visibilità locale.
 
@@ -225,9 +265,13 @@ accessibile completa anche quando il nome viene troncato visivamente.
 **Tastiera virtuale (8 novembre 2026).** Nessuna API web la segnala ovunque (`navigator.virtualKeyboard` solo Chromium
 e con contenuto sovrapposto), quindi è dedotta: campo di testo attivo e viewport visibile sotto l'80% del più alto
 osservato alla stessa larghezza (`observeVirtualKeyboard`). Copre sia `interactive-widget=resizes-content` (Chrome
-Android) sia il solo visual viewport (iOS), ignora pinch zoom e barre del browser. Durante la digitazione la pillola mobile
-si nasconde e le azioni del modulo escono dallo sticky: nel poco spazio sopra la tastiera nessun elemento fisso deve
-coprire i campi. Scartati: offset fissi per dispositivo, solo focus (una tastiera fisica nasconderebbe la navigazione),
+Android) sia il solo visual viewport (iOS), ignora pinch zoom e barre del browser. Dal 9 novembre il tocco su un campo
+scrivibile anticipa la scomparsa della barra prima dei resize; se la tastiera non viene confermata entro 800 ms,
+la barra torna visibile. Dopo la conferma resta nascosta anche al blur finché il viewport non recupera almeno il 95%
+dell'altezza, evitando ricomparse durante la chiusura. Il solo focus da tastiera fisica non anticipa l'apertura.
+Durante la digitazione la pillola mobile
+si nasconde; dal 9 novembre le azioni di Nuova spesa restano sempre nel flusso (vedi decisione sopra): nel poco spazio
+sopra la tastiera nessun elemento fisso deve coprire i campi. Scartati: offset fissi per dispositivo, solo focus (una tastiera fisica nasconderebbe la navigazione),
 sticky con soli margini (lo spazio utile resterebbe circa metà). Lo scroll padding delle barre sticky vale solo in
 navigazione da tastiera perché i `Menu` Paper mettono il focus sull'anchor al montaggio.
 
@@ -288,8 +332,15 @@ readiness REST; altrimenti avvia il solo Firestore con import da `emulator-data/
 Questo evita di scambiare un altro servizio/progetto per il database previsto.
 `check:hybrid` resta disponibile per il solo controllo TCP manuale (1,5 s).
 
-I figli hanno gruppi di processo separati: Ctrl+C attende l'export Firestore prima
+Su POSIX i figli hanno gruppi di processo separati: Ctrl+C attende l'export Firestore prima
 di terminare eventuali discendenti rimasti, senza segnalare emulatori preesistenti.
+Su Windows (9 novembre 2026) i figli condividono la console; il runner richiede un export
+esplicito via REST al proprio Firestore prima di arrestarne l'albero con `taskkill /T`.
+Non si affida a `child.kill('SIGINT')`, che su Windows termina il processo senza il
+gestore di export della CLI. Export/validazione falliti conservano lock e staging;
+gli errori di cleanup mantengono visibile anche la causa iniziale. Percorsi dell'archivio
+validati con `relative` e separatori della piattaforma. Il test Windows invoca il
+gestore tramite IPC; Ctrl+C interattivo e crash CLI con discendenti richiedono prove dedicate.
 L'export è in staging, promosso solo dopo successo con copia dell'archivio precedente;
 un lock impedisce due gestioni concorrenti dello stesso archivio. Errori di export
 conservano il lock per richiedere recupero esplicito. Nessun bootstrap automatico
@@ -571,3 +622,40 @@ formattatori `Intl` riusati per lingua. Monta inizialmente 50 righe; «Mostra al
 Ricerca, ordinamento e riepiloghi lavorano sull'intero insieme; cambiare ricerca/filtro/ordine torna alle prime 50.
 È un limite al rendering, senza paginazione Firestore o modifica ai dati: evita di montare subito centinaia di
 controlli Paper dopo un'importazione. Tutti i risultati restano consultabili, senza nuove dipendenze.
+
+
+## Prestazioni delle righe e animazioni web (9 novembre 2026)
+
+ExpenseList mantiene lo stato dei dettagli e la progressione di 50 righe nel genitore;
+ExpenseRow memoizzato riusa righe e formatter durante le interazioni locali. I riepiloghi
+continuano a includere tutto il risultato filtrato. SubscriptionList riusa il formatter
+di data per lingua e indicizza le categorie. Nessun cambiamento alle query Firestore.
+La transizione di sezione usa Web Animations API sul contenitore esistente: 250 ms,
+opacity/transform, cancellazione al cleanup, rispetto di reduced motion e animation.scale;
+nessun rimontaggio del modulo. Senza API il cambio ? immediato. Reveal dura 250 ms.
+
+## Overlay condivisi: menu, fogli dal basso e dialoghi (9 novembre 2026)
+
+Video da smartphone Android (Nuova spesa): il menu Categoria copriva «Salva» e la pillola di navigazione, si apriva
+scalando da zero e si chiudeva con una dissolvenza di 250 ms in cui la pagina traspariva dalle voci; il calendario
+usciva con 220 ms di dissolvenza decelerata, lasciando il contenuto semitrasparente quando lo scrim era già sparito.
+Cause nel codice: Paper `Menu` (scala X/Y da 0 + opacità, chiusura solo opacità) e Paper `Modal` (opacità con
+`Easing.out`), più un'altezza del menu calcolata fino al bordo dello schermo, ignorando la navigazione mobile.
+La sovrapposizione non dipende dalle transizioni (misurata ad animazione conclusa: con 10 categorie a 412×915 il menu
+arrivava al bordo superiore della pillola). Trasparenze e spostamenti erano invece animazioni JS di Paper che,
+dal codice, nemmeno il movimento ridotto del sistema disattivava (vedi `animation.scale` sotto).
+
+Decisione: un solo livello `Overlay.tsx` sostituisce Paper `Menu` e `Modal` nell'app.
+- `usePresence`: montaggio nascosto, transizione CSS su `opacity`/`transform` dopo due frame, smontaggio dopo
+  l'uscita; superfici opache entro 100 ms all'ingresso, uscita sulla curva accelerata (stanno piene, poi spariscono).
+- Smartphone: `SelectField` e `MenuSelect` aprono un foglio modale dal basso (M3), sopra scrim e navigazione,
+  con lista scorrevole, titolo, Escape, scrim e trascinamento della maniglia; mai menu sotto i pulsanti o la pillola.
+- Da medium: menu ancorato sotto il campo, o sopra se sotto non c'è spazio per almeno 192 dp, sempre entro
+  viewport/safe area; 4 dp di scorrimento e scala 0,96 → 1 dal lato del campo.
+- `AppDialog`: stessa impaginazione dei sottocomponenti Paper; scala 0,92 → 1 e opacità rapida all'ingresso, uscita
+  in 100 ms prima dello scrim. Ora anche gli editor montati già visibili hanno l'ingresso animato.
+- Focus alla prima voce all'apertura e ritorno all'elemento d'origine con `preventScroll`; overlay chiusi non
+  montano nulla, quindi nessun furto di focus o scorrimento al montaggio dei dialoghi.
+- Movimento ridotto da `useReducedMotion()`: `PaperProvider`, ricevendo un tema, forza `animation.scale` a 1 e
+  ignora quello di `createTheme`. Le animazioni interne di Paper (es. etichette dei campi) non lo rispettano.
+Nessuna nuova dipendenza, nessuna modifica a dati, servizi o Rules.

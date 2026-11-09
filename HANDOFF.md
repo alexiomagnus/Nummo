@@ -1,10 +1,379 @@
 # HANDOFF — Nummo
 
-Aggiornamento: **8 novembre 2026, pubblicazione Rules produzione su HEAD `b97758d` (Europe/Rome)**.
+## Overlay condivisi: selettori, menu e dialoghi senza glitch — 9 novembre 2026
+
+- Fonte: video `C:\Users\aless\Downloads\video_2026-11-09_02-16-22.mp4` (69 fotogrammi esaminati, Nuova spesa su
+  Android). Cause nel codice: Paper `Menu` (scala da zero, chiusura con dissolvenza lunga), Paper `Modal` (uscita
+  decelerata: contenuto semitrasparente oltre lo scrim), altezza del menu Categoria calcolata fino al bordo dello
+  schermo ignorando la pillola. `PaperProvider` con tema esplicito forza `animation.scale` a 1: il movimento ridotto
+  impostato da `createTheme` non arriva a Paper (preesistente, anche per animazioni Paper interne non sostituite).
+- Nuovo `src/components/Overlay.tsx` (`usePresence`, `AnchoredMenu`, `BottomSheet`, `Scrim`): transizioni CSS solo
+  opacity/transform, superfici opache entro 100 ms, uscita accelerata, Escape, focus alla prima voce e ritorno con
+  `preventScroll`, nulla montato da chiusi. `SelectField`/`MenuSelect`: foglio dal basso su compact, menu ancorato
+  sotto/sopra da medium; `AccountMenu` sul menu ancorato; `AppDialog` con modale propria (Title/Content/ScrollArea/
+  Actions Paper invariati). Geometria pura in `menuGeometry.ts` (`menuVerticalPlacement`, `sheetDragOutcome`), helper
+  `transitions` in `motion.ts`, token `motion.fade/exit/exitEasing`, traduzione «Chiudi menu». Logica, dati, servizi,
+  Rules e dipendenze invariati. Aggiornati AGENTS.md e docs/architecture.md.
+- Verifiche: `npm run check` con script-shell Git Bash **OK** (typecheck, **319/319**, build demo 590 moduli).
+  Chrome headless (CDP) su build demo prima/dopo con emulatori dedicati (Auth 39199, Firestore 39380, Hub 39417;
+  39400 era occupata da altro processo, non toccato), 10 categorie demo aggiunte nell'emulatore, touch emulato.
+  Prima, 412×915: menu fino a y 840 (pillola da 839), contenuto semitrasparente ~140 ms in apertura e chiusura,
+  coda del calendario sotto 0,3 di opacità per ~120 ms. Dopo: foglio opaco in ogni frame (0 frame parziali), calendario
+  in chiusura 11 frame parziali, ultimo visibile ~70 ms dopo l'avvio dell'uscita; menu ancorati a 820×1000 e
+  1280×900 sotto il campo ed entro il viewport; 320×740 e 412×915 senza overflow orizzontale; Escape e scelta
+  restituiscono il focus al campo; viewport ridotto al 55% con campo Importo a fuoco (sostituto della tastiera):
+  pillola nascosta, foglio entro l'area visibile; selettore Mese dentro «Nuovo fondo»: foglio sopra il dialogo,
+  scroll del dialogo invariato; movimento ridotto emulato: apertura/chiusura immediate. Nessun errore JS.
+  Config temporanea `.nummo-overlay-review.json` rimossa, emulatori propri arrestati; hybrid utente su 8180 non toccato.
+- Non verificati: tastiera virtuale reale Android/iOS, trascinamento della maniglia su touch reale, screen reader,
+  Safari/Firefox, telefono dello screenshot. Rimasto di Paper: animazione delle etichette dei `TextInput` (non
+  disattivata dal movimento ridotto per il problema di `animation.scale`). Possibile correzione separata: ripassare
+  il tema con `ThemeProvider` dentro `PaperProvider` in `App.tsx` (non fatta: file modificato da un'altra sessione).
+  Nessun commit o deploy.
+
+## Ripristino discreto nelle impostazioni — 9 novembre 2026
+
+- `SettingsPage`: rimosso il pulsante pieno finale. «Ripristina predefiniti» è ora
+  un Button text subito sotto le opzioni Stile delle icone, con icona rotate-ccw
+  SVG e `colors.secondary`, senza sfondo, bordi o contenitori aggiuntivi.
+  Spaziatura della sezione esistente, target minimo 48 dp e feedback Paper.
+  Callback onReset e preferenze predefinite invariati; traduzione EN e caso i18n aggiornati.
+- `npm run check` con script-shell Git Bash OK: typecheck, 319/319 test, build demo
+  (590 moduli). Resa browser/Pixel non verificata. Nessun commit o deploy.
+
+## Avvio web, temi e ripresa PWA — 9 novembre 2026
+
+- Analisi del codice effettivo, manifest, HTML, GlobalStyle, safe area e startup. Video indicato
+  `C:\Users\aless\Downloads\video_2026-11-09_02-16-26.mp4` non disponibile: `Test-Path` false,
+  ffprobe «No such file or directory». Nessun fotogramma esaminato. Browser access host e pipe nativa
+  risultano indisponibili; nessuna verifica visiva eseguita. Non attribuire il logo sovrapposto o i
+  ritagli del launcher a una causa dimostrata. Nel codice non esiste una splash centrale col logo:
+  c'è il logo nella testata; la splash installata è generata da Chrome/Android dal manifest.
+- Cause dimostrate e correzioni: `StartupWorkspace` disegnava un secondo modulo con categorie vuote;
+  ora mostra shell e caricamento. Il limite di 4 s liberava anche il modulo incompleto: ora libera
+  la navigazione, mentre il modulo reale resta misurabile ma invisibile e `inert` finché mancano
+  spese/categorie utilizzabili/fondi (gli errori restano esposti). Conservate bozze e blocchi d'invio.
+- `GlobalStyle`/`bootTheme`: lo schema inline di html rimaneva quello del boot dopo un cambio tema;
+  ora canvas html/body, variabile boot, color-scheme e unico meta theme-color seguono il tema prima
+  del paint. HTML colora anche la radice. Regressione testata su cambio scuro/chiaro/scuro e meta assente.
+- Manifest: allineato theme_color a background_color scuro già presente (#0F1511), eliminando la
+  discordanza statica. Non promette adattamento della splash al tema chiaro o alle tinte personali.
+  Corrette in architecture.md le affermazioni non dimostrate sulle singole versioni Android.
+- `observeViewportHeight`: mancavano i segnali di ripresa; ora ignora misure da pagina nascosta e
+  rimisura su visibilitychange/pageshow anche senza resize. Test di Home/multitasking simulati,
+  cleanup, tastiera, rotazione e zoom. È una lacuna dimostrata, non una riproduzione dei glitch Pixel.
+- Verifiche: `npm.cmd --script-shell="C:\Program Files\Git\bin\bash.exe" run check` OK:
+  typecheck, **316/316 test**, build demo (588 moduli); `check:env` OK. Un errore di tipo nel nuovo
+  fake DOM del test è stato corretto prima dell'esecuzione finale verde. Nessuna nuova libreria,
+  modifica a servizi/Rules/dati, commit o deploy. Suite SDK/emulatori e hybrid non rieseguite
+  (nessuna modifica ai relativi percorsi).
+- Matrice residua Pixel 8: primo avvio = logica boot testata, splash nativa da provare;
+  riapertura in memoria = nessun rimontaggio introdotto, da provare; Home e multitasking = lifecycle
+  testato con eventi simulati, animazioni native da provare; cambio tema = DOM e palette testati,
+  contrasto delle barre da provare; rete lenta = corretto il rilascio prematuro dal codice, nessuna
+  prova browser di throttling. Necessari Android/Chrome/launcher/versione installata e video allegato.
+  I colori del manifest possono richiedere aggiornamento del WebAPK: nessuna pubblicazione eseguita.
+
+## Navigazione durante apertura/chiusura tastiera — 9 novembre 2026
+
+- Segnalato flash della pillola mobile durante l'apertura della tastiera in Liste
+  e Nuova spesa. Nel codice la scomparsa attendeva una riduzione del viewport del
+  20%; inoltre il blur ripristinava la barra prima della fine della chiusura.
+- `observeVirtualKeyboard`: il pointerdown touch su un campo scrivibile anticipa
+  la scomparsa prima dei resize. Se non segue conferma dal viewport entro 800 ms,
+  torna visibile (tastiera fisica/focus impedito). Dopo conferma resta nascosta
+  anche al blur finché l'altezza non recupera il 95% del riferimento. Mouse, focus
+  da tastiera, campi readonly, sole barre browser e pinch zoom non confermano
+  l'apertura. Listener e timer rimossi al cleanup.
+- Estesi i test per apertura anticipata, primi resize, blur e chiusura graduale,
+  mancata apertura con barre browser e cleanup. `npm run check` con script-shell
+  Git Bash OK: typecheck, 314/314 test, build demo (589 moduli); diff check OK.
+  Aggiornati AGENTS.md e docs/architecture.md. Nessuna modifica a dati/Rules.
+  Animazione su telefono reale non verificata; nessun commit o deploy.
+
+## Nuova spesa senza barra Salva sovrapposta — 9 novembre 2026
+
+- Screenshot mobile: la barra sticky «Salva» copre parte del prezzo promozionale
+  nel modulo ricorrente. `ExpenseForm.tsx`: azioni sempre nel normale flusso dopo
+  tutti i campi, raggiungibili scorrendo; eliminati sticky, sfondo sovrapposto,
+  misura della barra e relativo scroll padding. Anche «Verifica sul server» segue
+  il modulo. Validazione, invio e conservazione della bozza invariati.
+- Aggiornati AGENTS.md e decisione in docs/architecture.md. Nessun nuovo testo UI;
+  la guida non descriveva la posizione della barra e non richiede modifiche.
+- `npm run check` con script-shell Git Bash OK: typecheck, 313/313 test, build demo
+  (587 moduli); `git diff --check` OK. Resa mobile/browser non verificata in questa
+  fase (host browser/pipe nativa indisponibili al precedente tentativo).
+  Nessuna modifica ai dati/Rules, nessun commit o deploy.
+
+## Stabilità campo Totale spesa — 9 novembre 2026
+
+- Segnalato ancora un flash del campo «Totale spesa» alle spunte. Il campo non
+  dipende da `canRegister`: la correzione del pulsante non ne copriva il rendering.
+- `AppShell`: tema del pannello memorizzato con `useMemo`, per non pubblicare un
+  nuovo oggetto tema ai controlli Paper a ogni snapshot della checklist.
+- `ListsPage`: campo estratto in `ListTotalField` memoizzato, callback di modifica
+  e salvataggio stabili; `useRemoteLists.updateList` mantiene identità stabile a
+  backend invariato. Le spunte non cambiano le props del campo; importo, errori,
+  cambio lingua/tema e modifiche remote del totale continuano ad aggiornarlo.
+  Conservati salvataggio al blur/Invio e prima dell'apertura della conferma.
+  Nessuna modifica a query, scritture SDK, Rules o dati.
+- `npm run check` con script-shell Git Bash OK: typecheck, 312/312 test, build
+  demo (585 moduli); `git diff --check` OK. Diagnosi del repaint dal codice,
+  flash non riprodotto né verificato visivamente: host browser e pipe nativa
+  Computer Use indisponibili. Da confermare sul dispositivo segnalato.
+  Nessun commit o deploy.
+
+## Allineamento menu Categoria — 9 novembre 2026
+
+- Screenshot utente: il menu «Tutte le categorie» in Spese appare sotto Ordina.
+  Nel codice Paper il fallback al bordo destro sottrae la larghezza del menu
+  all'ancora; le nostre ancore a coordinate hanno larghezza zero, quindi il
+  fallback può spostare l'intero menu a sinistra del campo.
+- `MenuSelect` e `SelectField`: posizione orizzontale e larghezza imposte anche
+  sul contenitore esterno del Menu, con limiti viewport/safe area calcolati da
+  `menuGeometry.ts`. Conservati ancore a coordinate, focus senza scroll e scelta.
+- Due test di geometria per 320/412 px, misure frazionarie, safe area e campi
+  più larghi del viewport. `npm run check` con script-shell Git Bash OK:
+  typecheck, 312/312 test, build demo (588 moduli). `git diff --check` OK.
+  Resa browser e dispositivo dello screenshot non verificate in questa fase.
+  Nessuna modifica ai dati/Rules, nessun commit o deploy.
+
+## Pulsante Registra spesa stabile — 9 novembre 2026
+
+- Rimossa su richiesta la scritta «La registrazione richiede la connessione e dati
+  sincronizzati» dalla pagina Liste e dal dialogo, insieme alla traduzione EN inutilizzata.
+- Causa del lampeggio nel codice: ogni spunta accodata dall'SDK rende temporaneamente
+  `canRegister` falso; il pulsante passava dal colore primario al colore disabilitato
+  e viceversa. La precedente correzione dell'altezza della nota non risolveva questo cambio.
+- `ListsPage.tsx`: «Registra spesa» resta attivo perché apre solo il dialogo.
+  `RegisterListDialog.tsx` conserva sia la disabilitazione della conferma sia il controllo
+  nel gestore di invio finché i dati non sono sincronizzati; nessuna modifica a servizi o Rules.
+- `npm run check` con script-shell Git Bash OK: typecheck, 310/310 test, build demo
+  (588 moduli). `git diff --check` OK. Lampeggio non riverificato in browser o su
+  dispositivo reale. Nessun commit o deploy.
+
+## Stabilità checklist Liste — 9 novembre 2026
+
+- Analisi del lampeggio segnalato quando si spunta un prodotto: la scrittura SDK
+  rende temporaneamente `canRegister` falso, inserendo una nota sotto il pulsante;
+  alla conferma la nota scompariva, cambiando altezza alla pagina.
+- `ListsPage.tsx`: indicazione «La registrazione richiede la connessione e dati
+  sincronizzati» sempre presente, senza inserimento/rimozione a ogni spunta.
+  Disabilitazione durante scritture pendenti e stato sincronizzazione invariati.
+- `npm run check` con script-shell Git Bash OK: typecheck, 310/310 test, build demo
+  (584 moduli). Primo tentativo bloccato da un errore di tipo in AppShell, modificato
+  in parallelo nella workspace e poi risolto esternamente; AppShell non modificato
+  in questa fase. Resa browser e sintomo esatto sul dispositivo non verificati.
+  Nessun commit o deploy.
+
+## Legenda senza linee e conteggio discreto — 9 novembre 2026
+
+- `CategoryLegend.tsx`: rimossi i divisori orizzontali nella tabella categorie
+  della Dashboard, compreso il dettaglio di Altre; conservati spaziatura,
+  selezione, colori e colonne importo/percentuale.
+- `TransactionDetails.tsx`: conteggio transazioni da `titleLarge` grassetto a
+  `bodyMedium`, più piccolo e subordinato al titolo categoria.
+- `npm run check` con script-shell Git Bash OK: typecheck, 306/306 test e build demo.
+  Resa browser non ricontrollata; nessun commit o deploy.
+
+## Divisori dettaglio transazioni — 9 novembre 2026
+
+- `TransactionDetails.tsx`: rimossi i bordi superiore/inferiore di Paper ScrollArea
+  e il divisore sotto l'ultima ListRow. I bordi di area e ultima riga si sovrapponevano
+  nel dettaglio categoria della Dashboard; ora i divisori sono solo tra transazioni.
+- Controllati gli altri usi di ScrollArea e ListRow: gli altri dialoghi azzerano
+  già i bordi; Categorie, dettaglio giornaliero, storico pagamenti e prodotti lista
+  escludono già il divisore finale. Le righe Spese/Abbonamenti hanno contorni propri.
+  Nei movimenti Fondi il bordo inferiore non si sovrappone a un bordo ScrollArea.
+- `npm run check` con script-shell Git Bash OK: typecheck, 306/306 test, build demo.
+  Resa sul telefono non riverificata; nessun commit o deploy.
+
+## Larghezza menu dei selettori — 9 novembre 2026
+
+- Analisi dei selettori condivisi: `MenuSelect` dimensionava il menu sul contenuto;
+  coinvolti Periodo/Grafico in Dashboard e Ordina/Categoria in Spese. Ora misura
+  il campo e applica la stessa larghezza al menu, entro il limite sicuro del viewport;
+  le righe consentono il restringimento delle etichette con spunta a destra.
+- `SelectField` aveva già la larghezza del campo: verificati gli usi in modulo
+  spesa, fondo, trasferimenti/entrate, eccezioni di budget, assegnazione fondo e
+  dialogo lista. Aggiornata anche la misura all'apertura per usare quella corrente.
+  Menu account e menu di azioni non sono selettori e restano dimensionati al contenuto.
+- `npm run check` con script-shell Git Bash OK: typecheck, 306/306 test e build demo.
+  `git diff --check` OK. Resa browser/telefono non verificata (strumenti UI non
+  disponibili nella fase corrente). Nessun commit o deploy.
+
+## Evidenza Ripristina — 9 novembre 2026
+
+- `SettingsPage.tsx`: «Ripristina» ora usa il pulsante pieno primario, larghezza
+  minima 192 dp e altezza minima 56 dp, mantenendo la posizione a fine pagina.
+- `npm run check` con script-shell Git Bash OK: typecheck, 306/306 test e build demo.
+  Verifica visiva non ripetuta; nessun commit o deploy.
+
+## Pulsanti dialogo lista — 9 novembre 2026
+
+- `ListDialogs.tsx`: «Annulla» e «Crea»/«Salva» nel dialogo lista condividono una
+  larghezza minima di 96 dp, per evitare il pulsante primario stretto mostrato nella
+  foto mobile. Nessun cambiamento alla registrazione o ai dati.
+- `npm run check` con script-shell Git Bash OK: typecheck, 306/306 test, build demo.
+  Resa su telefono non riverificata; nessun commit o deploy.
+
+## Azione Nuova lista — 9 novembre 2026
+
+- `ListsPage.tsx`: pulsante «Nuova lista» spostato dalla riga del titolo a una riga
+  dedicata sotto «Liste della spesa», allineata a sinistra prima dell'elenco.
+- Verifiche: `npm run check` con script-shell Git Bash OK (typecheck, 306/306 test,
+  build demo). Nessuna modifica ai servizi o alle Rules; nessun commit o deploy.
+  Resa browser non ricontrollata (strumenti UI indisponibili nella fase corrente).
+
+## Layout Impostazioni desktop — 9 novembre 2026
+
+- Screenshot utente Windows 11, 1920×1080: il flex basis di 420 dp permetteva tre
+  colonne nella prima riga e due nella successiva, con palette isolata a capo.
+- `SettingsPage.tsx`: contenuto a tutta larghezza interna della card (limite iniziale
+  di 1120 dp rimosso su richiesta dopo il secondo screenshot), due colonne uguali
+  solo con almeno 872 dp effettivi della pagina (misurati con `onLayout`), altrimenti
+  una. Lingua/Tema e Colore/Carattere affiancati; stili icona a larghezza intera.
+  Preservata la modifica preesistente dell'anteprima Trasporti a `train`.
+- `npm.cmd --script-shell="C:\Program Files\Git\bin\bash.exe" run check` OK:
+  typecheck, 306/306 test, build demo (587 moduli). `git diff --check` OK.
+  Verifica visiva browser non eseguita: host Browser Use e pipe Computer Use
+  indisponibili. Da controllare resa a 1920×1080, zoom Windows/browser e mobile;
+  il numero di pollici del monitor non determina la larghezza CSS disponibile.
+- Nessun accesso cloud, commit o deploy.
+
+## Correzione runner Windows e recupero export — 9 novembre 2026
+
+- Sessione `.firebase/hybrid-3zr7jR`: CLI e runner terminati, Firestore Java ancora
+  raggiungibile su 8180. Export locale esplicito salvato in `recovery/`, validato e
+  copiato in `emulator-data` senza sovrascrivere archivi esistenti. Originale conservato.
+  Arrestato solo l'albero Java identificato della sessione; lock conservato come
+  `.firebase/hybrid.lock.stale-14728`. Nessun accesso al cloud o lettura dei record nei log.
+- `scripts/hybridRunner.ts`: processi senza console separata su Windows, export
+  esplicito dall'emulatore posseduto prima dell'arresto del relativo albero con taskkill;
+  validazione percorsi tramite `relative`/`sep`, lock conservato anche su errori di cleanup,
+  errore originale di Expo non più nascosto dall'eventuale errore di export.
+- Test aggiunti per percorsi esterni e crash Expo con persistenza al riavvio. Harness
+  Windows usa IPC per invocare il gestore SIGINT: non equivale al Ctrl+C da tastiera.
+  La prova del discendente orfano dopo crash CLI resta specifica POSIX; su Windows il
+  caso di errore iniziale usa una CLI senza figli. Linux non riverificato in questa fase.
+- Verifiche Windows/Node 24.13.1: `npm run check` con script-shell Git Bash **OK**
+  (typecheck, **306/306**, build demo), `test:hybrid` **9/9**, `test:emulator` **15/15**
+  su porte 39099/39280 e Hub dedicato. Config `.nummo-windows-review.json` rimossa;
+  emulatori demo arrestati. Nessun commit o deploy. Da verificare `npm run dev`
+  interattivo/Expo reale e Ctrl+C nel PowerShell dell'utente; il crash originario di
+  Expo non è diagnosticabile dal solo messaggio di export precedente.
+
+## Recupero lock hybrid — 9 novembre 2026
+
+Lock abbandonato del PID 11972: processo assente e nessun listener sulle porte
+8180/4400/8081 al controllo. Sessione `.firebase/hybrid-NFkRZS` senza `export` o
+`previous`; `emulator-data` assente. Lock rinominato, senza cancellarlo, in
+`.firebase/hybrid.lock.stale-20261109-011900`. Nessun riavvio o recupero dati eseguito;
+il prossimo avvio partirà senza archivio locale precedente. Nessuna modifica al runner.
+
+Aggiornamento: **9 novembre 2026, variante icona monocromatica su base `a7230de` (Europe/Rome)**.
 Gestionale personale di spese solo web, Google Auth e
 Firestore BYOF, accesso riservato all'UID in `config/owner`. Contesto stabile, architettura e comandi: `AGENTS.md`;
 motivazioni: `docs/architecture.md`; configurazione: `README.md`, `docs/firebase-personale.md`.
 Questo file descrive il checkout: risultati emulati non certificano cloud, dispositivi reali o pubblicazione.
+
+## Fase attuale — icona monocromatica (non pubblicata)
+
+- Aggiunta `public/icons/icon-monochrome.svg`, stesse forme del logo con riempimento nero
+  opaco e sfondo trasparente; scala 0,77 contro 0,72 della favicon (+6,9%), entro il
+  cerchio sicuro di raggio 40%. Manifest: nuova voce separata `monochrome`, SVG `sizes: any`.
+- Logo principale, favicon, PNG any/maskable/Apple, HTML e colori di splash/tema invariati.
+  Nessuno script di generazione delle icone di installazione trovato nel repository;
+  nessuna nuova dipendenza. Dettagli/fonti e collaudo: `docs/icone-installazione.md`.
+- Il protocollo WebAPK corrente di Chromium indica ancora MONOCHROME come non usato;
+  Android 16 QPR2 può generare icone a tema automaticamente. Non è dimostrato che
+  Chrome/Pixel Launcher usino il nuovo SVG, né che risolva il contrasto sul Pixel 8.
+- Controlli asset: percorsi/dimensioni PNG, manifest e scopi, geometria SVG uguale al logo,
+  riempimento opaco, limite conservativo del raggio 23,902/64 < 25,6/64; PNG esistenti
+  completamente opachi e invariati. Export demo: manifest e tutti gli asset icona
+  copiati identici ai sorgenti.
+- Verifiche su Windows, Node 24.13.1: dipendenze assenti all'avvio; `npm.cmd ci --ignore-scripts`
+  completato da lockfile fuori sandbox dopo errore di accesso alla cache. Nessuna modifica a package/lockfile.
+  `npm.cmd run check`: typecheck OK, test **304/305**, si ferma prima della build.
+  Fallisce il test preesistente `hybrid: promuove solo export completi e conserva la versione precedente`:
+  `validateArchive` confronta un percorso `resolve()` Windows con `resolve(path) + '/'`
+  (`scripts/hybridRunner.ts`), codice non modificato. Non dichiarare check verde.
+  Build demo eseguita separatamente con Git Bash come script-shell: **OK**, 587 moduli;
+  fuori sandbox per consentire la creazione della configurazione Expo. `git diff --check` OK.
+  La verifica automatica degli asset non prova il rendering/installazione su Android.
+- Nessun deploy o test su Pixel 8. Prossimo passo: verifica dell'icona effettivamente
+  installata, temi/palette, confronto con icone a tema disattivate e splash.
+- Git prima delle modifiche: pulito, `main` a `a7230de`, allineato al riferimento locale
+  `origin/main` (nessun fetch). Quel commit ha già rimosso `.nummo-hybrid-12312.json`:
+  la nota storica sotto e il passo di rimozione dall'indice sono superati; manca il glob in `.gitignore`.
+
+## Fase attuale — icone di categoria (non pubblicata, Rules locali cambiate)
+
+- Su richiesta dell'utente **eliminati del tutto gli ID `car`, `bus`, `tree`** (auto, autobus, natura): rimossi da
+  `categoryIconLabels`, glifi minimali, disegni colorati, sprite pixel, traduzioni EN e dalle due liste `icon in [...]`
+  di `firestore.rules`. Icone attive: **42**. Come per i 18 ID storici, decoder e import ora li rifiutano.
+- Predefinita «Trasporti» → `train` (scelta dell'utente); anteprima stili in Impostazioni → `train`.
+- **Rischio produzione:** archivi con categorie `bus` (probabile: era la predefinita di Trasporti), `car` o `tree`
+  risulteranno bloccati con il nuovo client e le nuove Rules rifiuteranno modifiche che conservano quell'ID.
+  Non verificato sui dati personali; nessun adapter o migrazione. Le Rules **non** sono ripubblicate: farlo
+  (separatamente, con autorizzazione) solo insieme all'Hosting e dopo aver cambiato le icone nell'archivio.
+- Sprite pixel `popcorn` ridisegnato due volte (la prima versione giudicata confusa dall'utente). Attuale 11×12:
+  cupola di chicchi `t` con solo contorno esterno, che trabocca oltre il bordo di una vaschetta alta e dritta a righe
+  verticali sottili `b`/`o`, nessun puntino interno. Vista in anteprima a 24/48/120 px chiaro/scuro, non nell'app.
+  Dopo il secondo ridisegno: typecheck OK, `npm test` **306/306** (nel frattempo l'altra sessione ha toccato i test hybrid).
+- Backup fittizi `docs/testing/`: `Demo · Trasporti` `bus` → `train`, `TEST Trasporti` `car` → `fuel`; entrambi
+  letti da `parseBackup` (8 e 15 categorie).
+- Verifiche: typecheck OK; test **304/305** (unico fallimento il preesistente `hybridRunner` Windows sopra);
+  `test:emulator` **15/15** su porte dedicate (Auth 39099, Firestore 39280, config temporanea rimossa);
+  `build:demo` OK con `--script-shell` Git Bash; `git diff --check` OK. Nessun commit o deploy.
+- **Fondi, eccezioni del budget nascoste di base** (`FundEditor.tsx`): «Eccezioni per singoli mesi» diventa un
+  pulsante outlined a scomparsa (chevron, `aria-expanded`, come «Scegli un'icona»), chiuso a ogni apertura del dialogo.
+  Da chiuso, se esistono eccezioni future, mostra «Eccezioni programmate: N» (nuova traduzione EN). Dati e salvataggio
+  invariati. Typecheck OK, test **306/306**, `build:demo` OK; resa browser e 320 px non verificate.
+- Poi, su richiesta, **tutta la sezione budget è a scomparsa**: pulsante «Budget mensile» chiuso di base che contiene
+  interruttore «Budget ricorrente» (nuova etichetta), importo ed eccezioni, queste ultime di nuovo visibili subito
+  all'apertura della sezione (il pulsante interno delle eccezioni è stato tolto su richiesta). Da chiuso mostra
+  «Budget ricorrente: €X» se attivo e il conteggio delle eccezioni; un errore sull'importo al salvataggio riapre la
+  sezione. Nuove traduzioni EN. Typecheck OK, test **306/306**, `build:demo` OK; resa browser non verificata.
+- **Pillola mobile, indicatore scorrevole e trascinamento** (stile Liquid Glass richiesto, resa Material 3 Expressive):
+  `AppShell.tsx` disegna un solo indicatore `primaryContainer` che scorre tra le destinazioni con la molla
+  `spatialSpring` (stiffness 380, smorzamento 0,8, nuovo token in `tokens.ts`). Tenendo premuto e scorrendo
+  orizzontalmente sulla pillola l'indicatore segue il dito, leggermente ingrandito, l'etichetta sotto il dito si evidenzia,
+  e al rilascio si apre quella destinazione; il click che segue il gesto viene soppresso, i movimenti piccoli o verticali
+  restano tocchi. Pointer event DOM sul nodo della pillola (`touch-action: none`), geometria pura in
+  `src/components/navIndicator.ts` con `tests/navIndicator.test.ts`. Su «Nuova spesa» l'indicatore sfuma e ricompare sul
+  posto. Ridotto movimento: salti senza molla. Tastiera e lettori di schermo invariati (pulsanti, `aria-current`).
+- Verifiche: typecheck OK, test **310/310**, `build:demo` OK, `git diff --check` OK. **Chrome headless (CDP)** su build demo
+  con emulatori dedicati (Auth 39099, Firestore 39280, config temporanea rimossa ed emulatori arrestati), touch emulato:
+  412×915 chiaro e 320×740 scuro — tocco su Dashboard, trascinamento touch Dashboard→Liste, trascinamento mouse
+  Liste→Spese, tocco con tremolio di 4 px (resta tocco su Fondi), trascinamento riportato al punto di partenza (nessun
+  cambio), Nuova spesa (indicatore nascosto) e ritorno: tutti corretti, nessun overflow né errore JS. Corretto lo strato
+  «premuto» che restava sulla voce di partenza durante il gesto. Non provato su telefono reale né Safari/iOS.
+- **Barra di navigazione Android dell'app installata:** segnalata non integrata col tema. Fonti pubbliche (nessuna
+  documentazione ufficiale Chrome): nell'app installata Chrome la colora dal manifest, fissato all'installazione e non
+  modificabile dalla pagina; fino ad Android 14 `theme_color`, da Android 15 `background_color`. Nessun campo manifest
+  chiaro/scuro risulta supportato su Android, quindi **solo tema scuro** (ripiego accettato dall'utente):
+  `background_color` `#121212` → `#0F1511` (sfondo scuro Menta predefinito; gli altri accenti differiscono di pochi
+  livelli). `theme_color` resta chiaro per non scurire la barra di stato all'avvio in tema chiaro: su Android ≤ 14 la
+  barra resta chiara. In Chrome (scheda) `viewport-fit=cover`, già presente, porta la pagina sotto la barra gestuale
+  (Chrome 135+). Effetto solo dopo **deploy Hosting** (non eseguito) e aggiornamento del WebAPK (periodico o
+  reinstallazione). Build demo: manifest copiato identico; test **310/310**. Non verificato su dispositivo.
+- **Menu `MenuSelect` con etichette troncate su telefono** (segnalazione: «Importo più …» nel menu Ordina).
+  Causa: la modifica non committata che posiziona il menu (`menuGeometry.ts`, altra sessione) gli dava la larghezza
+  esatta del campo, mezza riga su telefono. Correzione in `MenuSelect.tsx`: clone nascosto delle righe che misura la
+  larghezza naturale (testo `nowrap`, non `numberOfLines`, che con RN Web sottostima `max-content`; +2 px perché
+  `onLayout` arrotonda), larghezza = max(campo, voce più lunga) entro i margini di `menuHorizontalBounds`; clone in un
+  box 0×0 ritagliato. Scoperto anche che l'animazione d'apertura del `Menu` Paper parte spostata a destra di metà
+  larghezza: un menu sul campo destro usciva dallo schermo per qualche frame e Chrome mobile allargava la pagina
+  (innerWidth 412 → 501, persistente). `#root` in `public/index.html` ora ha `overflow: clip` (ripiego `hidden`).
+  Nuovo test in `tests/menuGeometry.test.ts`. Typecheck OK, test **314/314**, `build:demo` OK.
+  Chrome headless (CDP), emulatori su porte dedicate 39199/39380 (le 39280/39400 erano occupate da un altro processo,
+  non toccato; per errore il seed demo idempotente `config/owner` è stato eseguito anche sul Firestore su 39280):
+  Ordina/Categoria/Periodo/Grafico a 412 chiaro, 320 scuro, 360 chiaro — nessuna etichetta troncata (confronto
+  `Range` vs riquadro), menu entro i margini, viewport invariato, nessun errore JS; il controllo riproduce il difetto
+  sulla versione precedente («Importo più alto/basso» 116/133 px in 108 px). Config temporanea rimossa, emulatori
+  arrestati. Restano troncati, fuori dai menu: il valore del campo chiuso «Tutte le categorie» a ≤ 360 px e «Dashboard»
+  nella pillola a 320–360 px (già noto).
 
 ## Produzione — Rules pubblicate e verificate
 
@@ -68,7 +437,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   filtro categoria, ordinamento, raggruppamento mensile) e «Pagamenti ricorrenti» (serie, ricerca normalizzata,
   stati Attivo/In pausa/Annullato, storico pagamenti, prossimi rinnovi). Ricorrenze settimanali/mensili/annuali con
   fino a otto variazioni di prezzo per numero di rinnovo; i pagamenti maturati non vengono mai riscritti.
-- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 45 icone in tre stili
+- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 42 icone in tre stili
   (minimale, colorato, pixel); cinque predefinite su archivio vuoto confermato dal server.
 - **Fondi e budget** (destinazione «Fondi»): saldo iniziale, ricarica mensile calcolata, budget mensile con eccezioni,
   entrate e trasferimenti immutabili, archiviazione, fondo predefinito per browser, mesi navigabili
@@ -103,7 +472,8 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 
 - **Compatibilità icone:** decoder/import rifiutano ID rimossi (`receipt`, `phone`, `bed`, `ticket`, `briefcase`,
   `droplet`, `wrench`, `pill`, `book`, `plane`, `scissors`, `baby`, `flame`, `wine`, `umbrella`, `leaf`, `shield`,
-  `ellipsis`; prova locale: tutti i 18 ID sono rifiutati da decoder categorie e lettore backup). Vecchi record possono bloccare categorie e backup;
+  `ellipsis`; prova locale: tutti i 18 ID sono rifiutati da decoder categorie e lettore backup), più `car`, `bus`,
+  `tree` rimossi il 9 novembre (`bus` era la predefinita di Trasporti). Vecchi record possono bloccare categorie e backup;
   presenza nei dati personali non verificata, nessun adapter.
 - **Rules:** budget di 1000 espressioni stretto (rimisurare a ogni nuovo controllo sulle spese); non verificano
   esistenza di fondo/lista referenziati, unicità dei nomi di fondo (solo client), ordine/date degli stati.

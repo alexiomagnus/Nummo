@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseProjectEnv } from '@expo/env';
 import { FIREBASE_KEYS, devFileProblems } from './envPolicy.ts';
@@ -66,7 +66,7 @@ export async function inspectHybridEmulator(project: string, endpoint: Endpoint,
 type Exit = { code: number | null; signal?: NodeJS.Signals | null; error?: Error };
 type Managed = { child: ChildProcess; done: Promise<Exit>; result?: Exit };
 function launch(command: string[], root: string, env: NodeJS.ProcessEnv, output?: (text: string) => void): Managed {
-  const child = spawn(command[0]!, command.slice(1), { cwd: root, env, detached: true,
+  const child = spawn(command[0]!, command.slice(1), { cwd: root, env, detached: process.platform !== 'win32', windowsHide: true,
     stdio: output ? ['ignore', 'pipe', 'pipe'] : 'inherit' });
   const managed: Managed = { child, done: new Promise<Exit>((done) => {
     child.once('error', (error) => done({ code: null, error }));
@@ -82,6 +82,17 @@ function launch(command: string[], root: string, env: NodeJS.ProcessEnv, output?
 
 async function stop(managed: Managed | undefined, timeout: number): Promise<void> {
   if (!managed) return;
+  if (process.platform === 'win32') {
+    if (!managed.result && managed.child.pid) {
+      const killer = spawn('taskkill.exe', ['/PID', String(managed.child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+      await new Promise<void>((done, reject) => {
+        killer.once('error', reject);
+        killer.once('exit', (code) => code === 0 || managed.result ? done() : reject(new Error('Arresto dei processi hybrid non riuscito.')));
+      });
+    }
+    await managed.done;
+    return;
+  }
   if (!managed.result) {
     // Signal only the CLI first: Java must remain alive until export completes.
     managed.child.kill('SIGINT');
@@ -102,7 +113,9 @@ export function validateArchive(path: string): boolean {
     const metadata = json(join(path, 'firebase-export-metadata.json'));
     if (Object.keys(metadata).some((key) => !['version', 'firestore'].includes(key))) throw new Error('Archivio multi-servizio.');
     const file = metadata.firestore?.metadata_file;
-    if (typeof file !== 'string' || !resolve(path, file).startsWith(resolve(path) + '/')) throw new Error('Metadati non validi.');
+    if (typeof file !== 'string') throw new Error('Metadati non validi.');
+    const inside = relative(resolve(path), resolve(path, file));
+    if (!inside || inside === '..' || inside.startsWith('..' + sep) || isAbsolute(inside)) throw new Error('Metadati non validi.');
     if (!existsSync(resolve(path, file))) throw new Error('Export incompleto.');
     return true;
   } catch {
@@ -130,6 +143,7 @@ export async function runHybrid(options: Options): Promise<void> {
   let emulator: Managed | undefined, expo: Managed | undefined;
   let session: string | undefined, configPath: string | undefined, lock: string | undefined;
   let ready = false, exported = false, stopping = false, recoveryRequired = false;
+  let primaryError: unknown;
   let signalStop!: () => void;
   const interrupted = new Promise<void>((done) => { signalStop = () => { stopping = true; done(); }; });
   process.on('SIGINT', signalStop); process.on('SIGTERM', signalStop);
@@ -182,16 +196,41 @@ export async function runHybrid(options: Options): Promise<void> {
     if (result && (result.service === 'Firestore' || result.result.error || result.result.code !== 0)) {
       throw new Error(`${result.service} terminato (codice ${result.result.code ?? result.result.signal ?? 'errore'}). Arresto dei soli processi gestiti.`);
     }
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
     try {
+      if (emulator && ready) recoveryRequired = true;
+      // Windows kill('SIGINT') terminates the CLI without its export-on-exit handler.
+      // Save through the owned emulator before stopping its process tree.
+      if (process.platform === 'win32' && emulator && ready && !emulator.result) {
+        const target = join(session!, 'export');
+        mkdirSync(target, { recursive: true });
+        const response = await fetch(`http://${endpoint.host}:${endpoint.port}/emulator/v1/projects/${project}:export`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ database: `projects/${project}/databases/(default)`, export_directory: target, export_name: 'firestore_export' }),
+          signal: AbortSignal.timeout(45000), redirect: 'error',
+        });
+        if (!response.ok) throw new Error(`Export locale fallito: HTTP ${response.status}. Lock conservato.`);
+        writeFileSync(join(target, 'firebase-export-metadata.json'), JSON.stringify({ firestore: {
+          path: 'firestore_export', metadata_file: 'firestore_export/firestore_export.overall_export_metadata',
+        } }));
+        exported = validateArchive(target);
+      }
       try { await stop(expo, 5000); } finally { await stop(emulator, 60000); }
       if (emulator && ready) {
         recoveryRequired = true;
-        if (!exported || emulator.result?.code !== 0) throw new Error(`Export Firestore non confermato. Archivio precedente intatto; verifica ${session} prima di riavviare. Lock conservato per evitare un riavvio con dati precedenti.`);
+        if (!exported || (process.platform !== 'win32' && emulator.result?.code !== 0)) throw new Error(`${primaryError instanceof Error ? primaryError.message + '\n' : ''}Export Firestore non confermato. Archivio precedente intatto; verifica ${session} prima di riavviare. Lock conservato per evitare un riavvio con dati precedenti.`);
         promoteArchive(join(root, 'emulator-data'), join(session!, 'export'), join(session!, 'previous'));
         recoveryRequired = false;
         console.log(`Hybrid: dati salvati in emulator-data/. Copia precedente conservata in ${session}/previous, se presente.`);
       }
+    } catch (cleanupError) {
+      if (primaryError instanceof Error && cleanupError instanceof Error && !cleanupError.message.includes(primaryError.message)) {
+        throw new Error(`${primaryError.message}\n${cleanupError.message}`);
+      }
+      throw cleanupError;
     } finally {
       if (configPath) rmSync(configPath, { force: true });
       if (lock && !recoveryRequired) rmSync(lock, { force: true });

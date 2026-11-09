@@ -8,7 +8,7 @@ const base = { online: true, error: null, categories: part, expenses: part };
 
 test('categorie predefinite: cinque nomi con le icone scelte, tutte valide', () => {
   assert.deepEqual(defaultCategories.map((c) => [c.label, c.icon]), [
-    ['Alimentari', 'cart'], ['Intrattenimento', 'popcorn'], ['Shopping', 'shirt'], ['Tecnologia', 'laptop'], ['Trasporti', 'bus']]);
+    ['Alimentari', 'cart'], ['Intrattenimento', 'popcorn'], ['Shopping', 'shirt'], ['Tecnologia', 'laptop'], ['Trasporti', 'train']]);
   assert.ok(defaultCategories.every((c) => isCategoryIcon(c.icon)));
 });
 

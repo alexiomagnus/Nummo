@@ -25,7 +25,7 @@ Riprodotta in emulazione, identica alla segnalazione dal Pixel 8:
 | Font richiesto solo dopo il mount di React (`@font-face` iniettato da un effetto): prima il testo usa il font di ripiego | **Confermata** (richiesta a 421 ms prima, a ≈ 10 ms ora) | Sì |
 | Attesa dei primi snapshot Firestore (connessione + token) | Confermata, inevitabile | No, solo mascherabile |
 | Bundle unico da 2,2 MB (437 KB con Brotli) | Pesa solo all'avvio a freddo dopo un deploy; da riapertura la cache HTTP lo serve in ≈ 10 ms | **Non ottimizzato**: nessuna evidenza che sia il collo di bottiglia in riapertura |
-| Splash Android: colore e icona statici del manifest | Confermata | No: il manifest non segue tema/accento; resta neutro `#121212` |
+| Splash Android: colore e icona statici del manifest | Confermata | No: il manifest non segue tema/accento; dal 9 novembre 2026 `#0F1511` (sfondo scuro Menta, prima `#121212`), usato da Android 15+ anche per la barra di navigazione dell’app installata |
 | Ripresa dell'app già in memoria da «Recenti» | Gestita da Android/Chrome | No: nessun avvio da rifare |
 
 ## Correzioni
@@ -115,7 +115,7 @@ Build `cloud` pubblicata solo con autorizzazione (`deploy:hosting -- --channel a
 ## Limiti rimasti
 
 - Nessuna misura su dispositivo reale né su rete mobile reale; effetto di `preconnect` e della rimozione di gapi non quantificato.
-- Splash Android: sfondo `#121212` e icona statici (WebAPK aggiornato dal manifest solo periodicamente o dopo reinstallazione).
+- Splash Android: sfondo `#0F1511` (prima `#121212`) e icona statici (WebAPK aggiornato dal manifest solo periodicamente o dopo reinstallazione).
   Con tema chiaro la transizione splash scura → pagina chiara resta visibile.
 - Indizio presente ma sessione scaduta o revocata: il segnaposto compare e poi lascia il posto alla schermata di accesso (verificato
   in emulazione, 1 cambio di schermata). Primo accesso o logout: nessun segnaposto.

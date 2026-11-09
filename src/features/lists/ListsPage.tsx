@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { ActivityIndicator, HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -107,9 +107,11 @@ export function ListsPage({ remote, categories, expenses, fundChoices, defaultFu
 
   return (
     <View style={styles.root}>
-      <PageHeader title={t("Liste della spesa")} action={
+      <PageHeader title={t("Liste della spesa")} />
+      <View style={styles.start}>
         <Button mode="contained" onPress={() => setEditing('new')} accessibilityLabel={t("Nuova lista")}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{compact ? t("Nuova") : t("Nuova lista")}</Button>} />
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{compact ? t("Nuova") : t("Nuova lista")}</Button>
+      </View>
       {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
       {!remote.ready && !remote.error && <View style={styles.loading}><ActivityIndicator accessibilityLabel={t("Caricamento delle liste")} /></View>}
       {remote.ready && remote.lists.length === 0 && <View style={[styles.empty, { backgroundColor: colors.elevation.level1 }]}>
@@ -180,12 +182,14 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
     if (!problem && remote.addItem(list.id, name)) setName('');
   };
   // Saved when the field is left (or Enter): '' clears the total, an invalid amount is not saved.
-  const saveTotal = () => {
+  const updateList = remote.updateList;
+  const saveTotal = useCallback(() => {
     const minor = totalText.trim() === '' ? null : parseAmountMinor(totalText);
     if (totalText.trim() !== '' && minor === null) { setTotalError("Importo non valido (es. 12,50)."); return; }
     setTotalError(null);
-    if (minor !== list.total_minor) remote.updateList(list, { total_minor: minor });
-  };
+    if (minor !== list.total_minor) updateList(list, { total_minor: minor });
+  }, [totalText, list, updateList]);
+  const changeTotal = useCallback((value: string) => { setTotalText(value); setTotalError(null); }, []);
   const copy = (onlyUnchecked: boolean) => {
     const id = remote.createList({ name: list.name, category_id: list.category_id }, { listId: list.id, onlyUnchecked });
     if (id) { notify(onlyUnchecked ? "Nuova lista creata con i prodotti non acquistati." : "Lista duplicata."); onOpen(id); }
@@ -266,16 +270,11 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
 
       {editable && <View style={styles.checkout}>
         <View style={styles.addRow}>
-          <View style={styles.grow}>
-            <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Totale spesa")} value={totalText} inputMode="decimal"
-              placeholder="0,00" error={Boolean(totalError)} left={leadingIcon(iconShapes.euro)} accessibilityLabel={t("Totale spesa in euro, facoltativo")}
-              onChangeText={(value) => { setTotalText(value); setTotalError(null); }} onBlur={saveTotal} onSubmitEditing={saveTotal} />
-            {totalError && <HelperText type="error" accessibilityRole="alert">{t(totalError)}</HelperText>}
-          </View>
-          <Button mode="contained" disabled={!canRegister} style={styles.addButton} contentStyle={styles.addContent}
+          <ListTotalField value={totalText} error={totalError} onChange={changeTotal} onSave={saveTotal} />
+          {/* Opening the dialog does not write an expense; only its confirmation requires synchronised data. */}
+          <Button mode="contained" style={styles.addButton} contentStyle={styles.addContent}
             onPress={() => { saveTotal(); remote.clearError(); setRegistering(true); }}>{t("Registra spesa")}</Button>
         </View>
-        {!canRegister && <Text variant="bodySmall" style={muted}>{t("La registrazione richiede la connessione e dati sincronizzati.")}</Text>}
       </View>}
 
       {!editable && remaining > 0 && <View style={styles.start}>
@@ -297,6 +296,20 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
     </View>
   );
 }
+
+// Checklist writes change progress and synchronisation, not this field. Keep its
+// Paper label/outline out of those renders while preserving editing and locale changes.
+const ListTotalField = memo(function ListTotalField({ value, error, onChange, onSave }: {
+  value: string; error: string | null; onChange: (value: string) => void; onSave: () => void;
+}) {
+  const { t } = useI18n();
+  return <View style={styles.grow}>
+    <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Totale spesa")} value={value} inputMode="decimal"
+      placeholder="0,00" error={Boolean(error)} left={leadingIcon(iconShapes.euro)} accessibilityLabel={t("Totale spesa in euro, facoltativo")}
+      onChangeText={onChange} onBlur={onSave} onSubmitEditing={onSave} />
+    {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
+  </View>;
+});
 
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },

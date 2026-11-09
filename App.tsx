@@ -83,8 +83,8 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
       onOpenCategories={() => setCategoriesRequest((n) => n + 1)}
       onOpenBackup={() => setBackupRequest((n) => n + 1)} /> : null;
 
-  // Startup: while Auth restores the session (it waits for a network round trip) and the first data load, a placeholder
-  // identical to the final screen is shown instead of the sign-in shell with a spinner. Only when the previous visit
+  // Startup: while Auth restores the session and the first data load, the workspace shell shows loading status.
+  // No duplicate form with fake empty data. Only when the previous visit
   // ended signed in; it grants nothing, the real screen still needs the session.
   const [hint] = useState(() => readSessionHint());
   const [releasedUid, setReleasedUid] = useState<string | null>(null);
@@ -95,7 +95,7 @@ function Root({ dark, onToggleTheme, preferences, onChangePreferences, onResetPr
   const signedIn = session.status === 'signed-in';
   const showStartup = (session.status === 'loading' && hint !== null) || (signedIn && releasedUid !== session.user.uid);
 
-  // One fixed list of slots: the placeholder keeps its place (and its measured fields) from «loading» to «signed in».
+  // One fixed list of slots: the placeholder keeps its place from «loading» to «signed in».
   return (
     <>
       {signedIn && session.error ? (

@@ -47,18 +47,17 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
       <Text variant="bodyMedium" style={[styles.number, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
     </View>}
   </>;
-  const divider = { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.outlineVariant };
-  // Compact table: equal columns, hairline between rows (none under the last row of a column).
-  const table = <T,>(items: readonly T[], row: (item: T, last: boolean) => ReactNode, label: string, id?: string) => (
+  // Compact table: equal columns; spacing separates rows without divider lines.
+  const table = <T,>(items: readonly T[], row: (item: T) => ReactNode, label: string, id?: string) => (
     <View nativeID={id} role="list" accessibilityLabel={label} style={styles.table}>
       {columnsOf(items, columns).map((column, c) => <View key={c} style={styles.column}>
-        {column.map((item, i) => row(item, i === column.length - 1))}
+        {column.map((item) => row(item))}
       </View>)}
     </View>
   );
-  const seriesRow = (item: Series, last: boolean) => {
+  const seriesRow = (item: Series) => {
     const index = series.indexOf(item);
-    return <View key={item.key} nativeID={`dashboard-category-${item.key}`} role="listitem" style={compact && !last && divider}>
+    return <View key={item.key} nativeID={`dashboard-category-${item.key}`} role="listitem">
       <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={compact ? radius.control : radius.card}
         onPress={() => onActive(active === index ? null : index)} aria-pressed={active === index}
         accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
@@ -67,21 +66,21 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
       </StateLayerPressable>
     </View>;
   };
-  const otherRow = (item: Series, last: boolean) => <View key={item.key} role="listitem" style={compact && !last && divider}>
+  const otherRow = (item: Series) => <View key={item.key} role="listitem">
     <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={compact ? radius.control : radius.card}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
       onPress={() => onOpen?.(item.key)} style={[styles.row, compact && styles.compactRow]}>{content(item)}</StateLayerPressable>
   </View>;
   return <View style={styles.legend} onLayout={compact ? (event) => setWidth(event.nativeEvent.layout.width) : undefined}>
     {showSeries && (compact ? table(series, seriesRow, t('Legenda: categorie, importi e percentuali'))
-      : <View role="list" accessibilityLabel={t('Legenda: categorie, importi e percentuali')}>{series.map((item) => seriesRow(item, false))}</View>)}
+      : <View role="list" accessibilityLabel={t('Legenda: categorie, importi e percentuali')}>{series.map(seriesRow)}</View>)}
     {others.length > 0 && <>
       <Button mode="text" aria-expanded={expanded} aria-controls={expanded ? 'dashboard-other-categories' : undefined}
         onPress={() => { setExpanded(!expanded); onActive(series.findIndex((item) => item.key === otherCategoriesKey)); }}>
         {expanded ? t('Nascondi dettaglio di Altre') : t('Mostra dettaglio di Altre ({p0})', { p0: others.length })}
       </Button>
       {expanded && (compact ? table(others, otherRow, t('Categorie incluse in Altre'), 'dashboard-other-categories')
-        : <View nativeID="dashboard-other-categories" role="list" accessibilityLabel={t('Categorie incluse in Altre')}>{others.map((item) => otherRow(item, false))}</View>)}
+        : <View nativeID="dashboard-other-categories" role="list" accessibilityLabel={t('Categorie incluse in Altre')}>{others.map(otherRow)}</View>)}
     </>}
   </View>;
 }

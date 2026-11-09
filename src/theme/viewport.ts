@@ -6,8 +6,9 @@ export function visibleViewportHeight(layoutHeight: number, visual?: { height: n
   return Number.isFinite(height) && height > 0 ? Math.round(height) : null;
 }
 
-// Virtual keyboard: no web API reports it everywhere, so it is inferred. It is open while a text field has focus and the
-// visible viewport is clearly shorter than the tallest one seen at the same width (resizes-content shrinks the layout
+// Virtual keyboard: no web API reports it everywhere, so it is inferred. A text field with focus and a visibly shorter
+// viewport confirms it; touch entry anticipates opening and recovered height confirms closing even after blur.
+// The reference is the tallest viewport seen at the same width (resizes-content shrinks the layout
 // viewport, iOS only the visual one; both are covered). A rotation or window resize changes the width and resets the
 // reference; browser bars and pinch zoom stay below the threshold or are ignored.
 export const keyboardHeightRatio = 0.8;
@@ -40,9 +41,30 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   let reference: KeyboardReference | null = null;
   let height: number | null = null;
   let open = false;
-  const evaluate = () => {
-    const next = height !== null && keyboardOpen(reference, height, isTextEntry(doc.activeElement as FocusTarget));
+  let opening = false;
+  let confirmed = false;
+  let openingTimer: ReturnType<typeof setTimeout> | undefined;
+  const publish = (next: boolean) => {
     if (next !== open) { open = next; update(open); }
+  };
+  const evaluate = () => {
+    const detected = height !== null && keyboardOpen(reference, height, isTextEntry(doc.activeElement as FocusTarget));
+    if (detected) { confirmed = true; opening = false; clearTimeout(openingTimer); }
+    // Blur often precedes the keyboard's closing animation. Keep navigation out
+    // of the shrinking viewport until it has almost recovered its full height.
+    const closing = confirmed && height !== null && reference !== null && height < reference.tallest * 0.95;
+    const next = opening || detected || closing;
+    if (!next) confirmed = false;
+    publish(next);
+  };
+  const touchEntry = (event: PointerEvent) => {
+    if (event.pointerType !== 'touch' || !isTextEntry(event.target as FocusTarget)) return;
+    // Hide before the first viewport resize, not halfway through the animation.
+    opening = true;
+    publish(true);
+    clearTimeout(openingTimer);
+    // A hardware keyboard or a prevented focus may leave the viewport unchanged.
+    openingTimer = setTimeout(() => { opening = false; evaluate(); }, 800);
   };
   const resize = () => {
     const measured = visibleViewportHeight(target.innerHeight, visual);
@@ -61,12 +83,15 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   visual?.addEventListener('resize', resize);
   doc.addEventListener('focusin', focusChange);
   doc.addEventListener('focusout', focusChange);
+  doc.addEventListener('pointerdown', touchEntry, true);
   return () => {
     clearTimeout(pending);
+    clearTimeout(openingTimer);
     target.removeEventListener('resize', resize);
     visual?.removeEventListener('resize', resize);
     doc.removeEventListener('focusin', focusChange);
     doc.removeEventListener('focusout', focusChange);
+    doc.removeEventListener('pointerdown', touchEntry, true);
   };
 }
 
@@ -89,16 +114,23 @@ export function reserveScrollPadding(element: ScrollHost | null, height: number,
 
 export function observeViewportHeight(target: Window, update: (height: number) => void): () => void {
   const visual = target.visualViewport;
+  const doc = target.document;
   let previous: number | null = null;
   const resize = () => {
+    // Background windows may report transient dimensions during Android task transitions.
+    if (doc?.visibilityState === 'hidden') return;
     const height = visibleViewportHeight(target.innerHeight, visual);
     if (height !== null && height !== previous) { previous = height; update(height); }
   };
   resize();
   target.addEventListener('resize', resize);
   visual?.addEventListener('resize', resize);
+  doc?.addEventListener('visibilitychange', resize);
+  target.addEventListener('pageshow', resize);
   return () => {
     target.removeEventListener('resize', resize);
     visual?.removeEventListener('resize', resize);
+    doc?.removeEventListener('visibilitychange', resize);
+    target.removeEventListener('pageshow', resize);
   };
 }

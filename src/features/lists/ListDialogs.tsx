@@ -10,7 +10,7 @@ import type { Category } from '../../domain/category';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listNameError } from '../../domain/shoppingList';
 import { useI18n } from '../../i18n/I18nProvider';
-import { inputOutline, spacing } from '../../theme/tokens';
+import { inputOutline, layout, spacing } from '../../theme/tokens';
 
 const none = 'none';
 
@@ -44,8 +44,8 @@ export function ListEditor({ record, categories, onSave, close }: {
       <SelectField label={t("Categoria predefinita")} options={options} value={categoryId} onChange={setCategoryId} />
     </Dialog.Content>
     <Dialog.Actions>
-      <Button onPress={close}>{t("Annulla")}</Button>
-      <Button mode="contained" onPress={save}>{record ? t("Salva") : t("Crea")}</Button>
+      <Button style={styles.listAction} onPress={close}>{t("Annulla")}</Button>
+      <Button style={styles.listAction} mode="contained" onPress={save}>{record ? t("Salva") : t("Crea")}</Button>
     </Dialog.Actions>
   </Dialog></Portal>;
 }
@@ -85,6 +85,7 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
 const styles = StyleSheet.create({
   dialog: { maxWidth: 480 },
   content: { gap: spacing.md },
+  listAction: { minWidth: layout.minTouch * 2 },
   actions: { flexWrap: 'wrap', gap: spacing.xs },
   grow: { flex: 1, alignItems: 'flex-start' },
 });

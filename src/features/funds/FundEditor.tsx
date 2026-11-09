@@ -60,6 +60,8 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
   const [exceptions, setExceptions] = useState<BudgetChange[]>((record?.budget_exceptions ?? []).filter((c) => c.month >= monthOf(today)));
   const [exceptionMonth, setExceptionMonth] = useState(monthOf(today));
   const [exceptionAmount, setExceptionAmount] = useState('');
+  const [showBudget, setShowBudget] = useState(false);
+  const budgetMinorPreview = parseAmountMinor(budgetAmount);
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const blocked = busy || !ready;
@@ -87,6 +89,8 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
     if (rechargeOn && (day < 1 || day > 31)) next.rechargeDay = 'Indica un giorno da 1 a 31.';
     const budgetMinor = parseAmountMinor(budgetAmount);
     if (budgetOn && budgetMinor === null) next.budgetAmount = budgetAmount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo del budget.';
+    // A budget error must not stay hidden inside the collapsed section.
+    if (next.budgetAmount) setShowBudget(true);
     if (Object.keys(next).length) { setErrors(next); return; }
     const start = record?.start_date ?? (startDate || today);
     const base = { start_date: start, recharges: record?.recharges ?? [], budgets: record?.budgets ?? [] };
@@ -168,8 +172,17 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
             {record && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
               {t("Le modifiche valgono dalla prossima scadenza: gli accrediti già ricevuti non cambiano.")}</Text>}
           </View>
+          {/* Budget and its exceptions are optional: collapsed by default, with a summary so active settings are never invisible. */}
           <View style={styles.section}>
-            <SwitchRow label={t("Budget mensile")} supporting={t("Limite di spesa del mese: non aggiunge denaro al fondo e non blocca le spese.")}
+            <Button mode="outlined" disabled={blocked} onPress={() => setShowBudget(!showBudget)} aria-expanded={showBudget} style={styles.start}
+              icon={({ size, color: c }) => <SvgIcon shape={showBudget ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={c} />}>
+              {t("Budget mensile")}</Button>
+            {!showBudget && budgetOn && budgetMinorPreview !== null && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+              {t("Budget ricorrente: {p0}", { p0: formatAmount(budgetMinorPreview) })}</Text>}
+            {!showBudget && exceptions.length > 0 && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+              {t("Eccezioni programmate: {p0}", { p0: exceptions.length })}</Text>}
+            {showBudget && <>
+            <SwitchRow label={t("Budget ricorrente")} supporting={t("Limite di spesa del mese: non aggiunge denaro al fondo e non blocca le spese.")}
               value={budgetOn} disabled={blocked} onChange={setBudgetOn} />
             {budgetOn && <View>
               <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo del budget")} value={budgetAmount} inputMode="decimal" placeholder="0,00"
@@ -204,6 +217,7 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
             {field('exception')}
             <Button mode="contained-tonal" disabled={blocked} onPress={addException} style={styles.start}
               icon={({ size, color: c }) => <SvgIcon shape={iconShapes.plus} size={size} color={c} />}>{t("Aggiungi eccezione")}</Button>
+            </>}
           </View>
           {field('form')}
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}

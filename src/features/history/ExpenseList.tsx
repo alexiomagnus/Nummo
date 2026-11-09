@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, memo, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -39,8 +39,6 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
   const dates = useMemo(() => dateFormat(locale), [locale]);
   const months = useMemo(() => monthFormat(locale), [locale]);
   const amounts = useMemo(() => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }), [locale]);
-  const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
-  const formatAmount = (minor: number) => amounts.format(minor / 100);
   const theme = useTheme();
   const size = useSizeClass();
   const compact = size === 'compact';
@@ -57,7 +55,7 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
     const scoped = filter === ALL ? occurrences
       : occurrences.filter((item) => item.category_id === filter);
     return searchAndSort(scoped, query, sort);
-  }, [occurrences, known, filter, query, sort]);
+  }, [occurrences, filter, query, sort]);
   const summaries = useMemo(() => expenseMonths(results), [results]);
   const byDate = sort === 'date-desc' || sort === 'date-asc';
   const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]) }));
@@ -85,14 +83,46 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
       {filters}
       <View role="list">
         {results.slice(0, visibleCount).map((item, index) => {
+          return <ExpenseRow key={item.key} item={item} index={index}
+            heading={byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== item.date.slice(0, 7))}
+            summary={summaries.get(item.date.slice(0, 7))!} category={categoryById.get(item.category_id ?? '')}
+            products={listItems?.get(item.expenseId)} open={expanded.has(item.key)} setExpanded={setExpanded}
+            compact={compact} dates={dates} months={months} amounts={amounts} onEdit={onEdit} />;
+        })}
+        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna spesa.")}</Text>}
+        {occurrences.length > 0 && results.length === 0 && (
+          <View style={styles.empty}>
+            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>
+            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); setVisibleCount(pageSize); }}>{t("Azzera filtri")}</Button></View>
+          </View>
+        )}
+      </View>
+      {results.length > visibleCount && <View style={styles.empty}>
+        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }} accessibilityLiveRegion="polite">
+          {t("Mostrate {p0} di {p1} spese", { p0: visibleCount, p1: results.length })}
+        </Text>
+        <View style={styles.start}><Button mode="outlined" onPress={() => setVisibleCount((count) => count + pageSize)}>{t("Mostra altre spese")}</Button></View>
+      </View>}
+    </View>
+  );
+}
+
+// Stable props let expanding one detail or appending a page leave existing rows alone.
+const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, open, setExpanded,
+  compact, dates, months, amounts, onEdit }: {
+  item: Occurrence; index: number; heading: boolean; summary: { count: number; total: number };
+  category?: Category; products?: readonly string[]; open: boolean;
+  setExpanded: Dispatch<SetStateAction<ReadonlySet<string>>>; compact: boolean;
+  dates: Intl.DateTimeFormat; months: Intl.DateTimeFormat; amounts: Intl.NumberFormat;
+  onEdit?: (id: string) => void;
+}) {
+  const { t, locale } = useI18n();
+  const theme = useTheme();
+  const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
+  const formatAmount = (minor: number) => amounts.format(minor / 100);
           const month = item.date.slice(0, 7);
-          const heading = byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== month);
-          const summary = summaries.get(month)!;
           const monthCount = `${summary.count} ${summary.count === 1 ? t("spesa") : t("spese")}`;
-          const category = categoryById.get(item.category_id ?? '');
-          const open = expanded.has(item.key);
           const detailsId = `expense-details-${item.key}`;
-          const products = listItems?.get(item.expenseId);
           // Discreet mark (tonal chip with the lists icon) for expenses registered from a shopping list.
           const listMark = products && <View style={[styles.listMark, { backgroundColor: theme.colors.secondaryContainer }]}>
             <SvgIcon shape={iconShapes.checklist} size={14} color={theme.colors.onSecondaryContainer} />
@@ -154,24 +184,7 @@ export function ExpenseList({ occurrences, categories, error, onEdit, listItems 
               </View>
             </Fragment>
           );
-        })}
-        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna spesa.")}</Text>}
-        {occurrences.length > 0 && results.length === 0 && (
-          <View style={styles.empty}>
-            <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>
-            <View style={styles.start}><Button mode="outlined" onPress={() => { setQuery(''); setCategoryFilter(ALL); setVisibleCount(pageSize); }}>{t("Azzera filtri")}</Button></View>
-          </View>
-        )}
-      </View>
-      {results.length > visibleCount && <View style={styles.empty}>
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }} accessibilityLiveRegion="polite">
-          {t("Mostrate {p0} di {p1} spese", { p0: visibleCount, p1: results.length })}
-        </Text>
-        <View style={styles.start}><Button mode="outlined" onPress={() => setVisibleCount((count) => count + pageSize)}>{t("Mostra altre spese")}</Button></View>
-      </View>}
-    </View>
-  );
-}
+});
 
 const styles = StyleSheet.create({
   // Search grows twice as much as each selector; everything wraps naturally when space runs out.

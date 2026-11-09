@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ExpenseData } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { copyItems, itemsOf, nextPosition, type ShoppingListData } from '../../domain/shoppingList';
@@ -23,9 +23,12 @@ export function useRemoteLists(backend: FirestoreStore) {
   }, (e) => { setItems([]); setItemsReady(false); setError(message(e)); }), [backend]);
   useEffect(() => backend.onQueuedWriteError((reason) => setError(message(reason))), [backend]);
   // Synchronous validation errors (the UI validates first, so these are the last guard).
-  const run = (action: () => void) => {
+  const run = useCallback((action: () => void) => {
     try { action(); setError(null); return true; } catch (e) { setError(message(e)); return false; }
-  };
+  }, []);
+  // Keep the total field's save handler stable while checklist snapshots arrive.
+  const updateList = useCallback((list: SyncedList, change: Partial<Pick<ShoppingListData, 'name' | 'category_id' | 'total_minor'>>) =>
+    run(() => backend.updateList(list, change)), [backend, run]);
   const byList = useMemo(() => {
     const map = new Map<string, SyncedListItem[]>();
     for (const list of lists) map.set(list.id, itemsOf(list.id, items));
@@ -42,7 +45,7 @@ export function useRemoteLists(backend: FirestoreStore) {
       const copied = from ? copyItems(itemsFor(from.listId), from.onlyUnchecked) : [];
       return run(() => backend.createList(id, data, copied)) ? id : null;
     },
-    updateList: (list: SyncedList, change: Partial<Pick<ShoppingListData, 'name' | 'category_id' | 'total_minor'>>) => run(() => backend.updateList(list, change)),
+    updateList,
     reopenList: (list: SyncedList) => run(() => backend.reopenList(list)),
     removeList: (list: SyncedList) => run(() => backend.removeList(list, itemsFor(list.id))),
     addItem: (listId: string, name: string) => run(() => backend.addListItem(listId, name, nextPosition(itemsFor(listId)))),

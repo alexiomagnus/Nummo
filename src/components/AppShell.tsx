@@ -1,11 +1,12 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { Logo } from './Logo';
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, ScrollView, StyleSheet, useWindowDimensions, View, type ScrollViewInstance } from 'react-native';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Animated, Easing, ScrollView, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layerTransition } from '../theme/motion';
-import { layout, motion, radius, shape, spacing, stateOpacity } from '../theme/tokens';
+import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
+import { isHorizontalDrag, pillGeometry, slotAt } from './navIndicator';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { observeVirtualKeyboard } from '../theme/viewport';
@@ -57,21 +58,20 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     });
     return () => cancelAnimationFrame(frame);
   }, [keyboard]);
-  const pageProgress = useRef(new Animated.Value(1)).current;
+  const page = useRef<ComponentRef<typeof View>>(null);
   const previousSection = useRef(selected);
-  // Animate the existing content container: changing its key would discard the expense draft.
+  // Animate the existing DOM container: no per-frame React/JS updates or remount of drafts.
   useLayoutEffect(() => {
     const changed = previousSection.current !== selected;
     previousSection.current = selected;
-    pageProgress.stopAnimation();
-    if (!changed || reduceMotion) { pageProgress.setValue(1); return; }
-    pageProgress.setValue(0);
-    const animation = Animated.timing(pageProgress, {
-      toValue: 1, duration: motion.long, easing: Easing.bezier(...motion.enter), useNativeDriver: false,
-    });
-    animation.start();
-    return () => animation.stop();
-  }, [selected, reduceMotion, pageProgress]);
+    const node = page.current as unknown as HTMLElement | null;
+    if (!changed || reduceMotion || theme.animation.scale === 0 || !node?.animate) return;
+    const animation = node.animate([
+      { opacity: 0, transform: `translateY(${spacing.sm}px)` },
+      { opacity: 1, transform: 'translateY(0)' },
+    ], { duration: motion.medium * theme.animation.scale, easing: `cubic-bezier(${motion.enter.join(',')})` });
+    return () => animation.cancel();
+  }, [selected, reduceMotion, theme.animation.scale]);
   const insets = useSafeAreaInsets();
   const scroller = useRef<ScrollViewInstance>(null);
   const select = useCallback((value: T) => {
@@ -93,7 +93,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // Inside the panel, `background` is the panel colour so outlined-field label notches and sticky bars blend in.
   // On phones and tablets there is no lighter panel (desktop only): the page sits on the plain background.
   const panelBg = !showPanel ? colors.background : panelColor(colors);
-  const panelTheme = { ...theme, colors: { ...colors, background: panelBg } };
+  const panelTheme = useMemo(() => ({ ...theme, colors: { ...colors, background: panelBg } }), [theme, colors, panelBg]);
   const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: padding, marginBottom: padding };
 
   return (
@@ -128,10 +128,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
               <KeyboardContext.Provider value={keyboard}>
-              <Animated.View role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }, {
-                opacity: pageProgress,
-                transform: [{ translateY: pageProgress.interpolate({ inputRange: [0, 1], outputRange: [spacing.sm, 0] }) }],
-              }]}>{children}</Animated.View>
+              <View ref={page} role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
               </KeyboardContext.Provider>
             </ThemeProvider>
           </ScrollView>
@@ -173,16 +170,22 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   // «Categorie» fit whole instead of being truncated.
   const { width } = useWindowDimensions();
   const tight = destinations.length > 3 && width < 380;
+  const index = destinations.findIndex((item) => item.value === selected);
+  const { pill, indicator, focus } = useSlidingIndicator(destinations, index, onSelect, reduceMotion);
+  const shownIndex = focus ?? index;
   return (
     <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }, hidden && styles.hidden]}>
-      <View role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
-        {destinations.map((item) => {
-          const active = item.value === selected;
+      <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
+        {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
+            the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}
+        {indicator && <Animated.View pointerEvents="none" style={[styles.indicator, indicator.style, { backgroundColor: colors.primaryContainer }]} />}
+        {destinations.map((item, i) => {
+          const active = i === shownIndex;
           const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
           return (
-            <StateLayerPressable key={item.value} layerColor={color} radius={radius.pill} accessibilityRole="button"
-              aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
-              style={[styles.pillItem, active && { backgroundColor: colors.primaryContainer }]}>
+            <StateLayerPressable key={item.value} layerColor={focus === null ? color : 'transparent'} radius={radius.pill} accessibilityRole="button"
+              aria-current={item.value === selected ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
+              style={[styles.pillItem, active && !indicator && { backgroundColor: colors.primaryContainer }]}>
               <SvgIcon shape={item.icon} size={24} color={color} />
               <Text variant={tight ? 'labelSmall' : 'labelMedium'} numberOfLines={1} style={{ color, fontWeight: active ? '700' : '500', ...(tight ? { letterSpacing: 0 } : null) }}>{item.label}</Text>
             </StateLayerPressable>
@@ -205,6 +208,143 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
       )}
     </View>
   );
+}
+
+const pillPadding = spacing.xs;
+const pillGap = spacing.xs;
+
+// Sliding active indicator of the compact pill, with drag-to-switch: press anywhere on the pill and slide horizontally,
+// the indicator follows the finger (slightly lifted), the destination under it is highlighted, and releasing opens it.
+// Taps, keyboard and screen readers keep using the item buttons; the drag is only a shortcut. Moves use the M3 Expressive
+// spatial spring; with reduced motion the indicator jumps. Web only: native pointer events on the pill's DOM node.
+function useSlidingIndicator<T extends string>(destinations: readonly Destination<T>[], index: number, onSelect: (value: T) => void, reduceMotion: boolean) {
+  const count = destinations.length;
+  const ref = useRef<ComponentRef<typeof View>>(null);
+  const [width, setWidth] = useState(0);
+  const [focus, setFocus] = useState<number | null>(null);
+  const position = useRef(new Animated.Value(Math.max(index, 0))).current;
+  const shown = useRef(new Animated.Value(index >= 0 ? 1 : 0)).current;
+  const lift = useRef(new Animated.Value(0)).current;
+  const dragging = useRef(false);
+  const goal = useRef<number | null>(index >= 0 ? index : null);
+  // Latest values for the native listeners, which are attached once.
+  const latest = useRef({ destinations, index, onSelect, reduceMotion });
+  latest.current = { destinations, index, onSelect, reduceMotion };
+
+  const moveTo = useCallback((target: number) => {
+    goal.current = target;
+    position.stopAnimation();
+    if (latest.current.reduceMotion) position.setValue(target);
+    else Animated.spring(position, { toValue: target, ...spatialSpring, useNativeDriver: false }).start();
+  }, [position]);
+  const fade = useCallback((value: 0 | 1) => {
+    Animated.timing(shown, { toValue: value, duration: latest.current.reduceMotion ? 0 : motion.short, easing: Easing.bezier(...motion.easing), useNativeDriver: false }).start();
+  }, [shown]);
+  const setLift = useCallback((value: 0 | 1) => {
+    if (latest.current.reduceMotion) lift.setValue(value);
+    else Animated.spring(lift, { toValue: value, ...spatialSpring, useNativeDriver: false }).start();
+  }, [lift]);
+
+  // Selection changed from outside (tap, brand, primary action): slide there. Coming back from a screen without an active
+  // destination (new expense) the indicator appears in place instead of travelling from the old one.
+  const wasShown = useRef(index >= 0);
+  useEffect(() => {
+    if (dragging.current) return;
+    if (index < 0) { goal.current = null; wasShown.current = false; fade(0); return; }
+    if (!wasShown.current) { position.stopAnimation(); position.setValue(index); goal.current = index; }
+    else if (goal.current !== index) moveTo(index);
+    wasShown.current = true;
+    fade(1);
+  }, [index, moveTo, fade, position]);
+
+  useEffect(() => {
+    const node = ref.current as unknown as HTMLElement | null;
+    if (!node || typeof node.addEventListener !== 'function') return;
+    node.style.touchAction = 'none'; // the browser must not scroll or navigate back while the finger slides on the pill
+    node.style.userSelect = 'none';
+    let start: { id: number; x: number; y: number } | null = null;
+    let active = false;
+    let swallowClick = false;
+    const at = (clientX: number) => {
+      const rect = node.getBoundingClientRect();
+      return slotAt(clientX - rect.left, rect.width, latest.current.destinations.length, pillPadding, pillGap);
+    };
+    const down = (event: PointerEvent) => {
+      swallowClick = false;
+      if (event.button !== 0 || !event.isPrimary) return;
+      start = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    };
+    const move = (event: PointerEvent) => {
+      if (!start || event.pointerId !== start.id) return;
+      if (!active) {
+        if (!isHorizontalDrag(event.clientX - start.x, event.clientY - start.y)) return;
+        active = true;
+        dragging.current = true;
+        try { node.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ }
+        position.stopAnimation();
+        fade(1);
+        setLift(1);
+      }
+      event.preventDefault();
+      const value = at(event.clientX);
+      position.setValue(value);
+      setFocus(Math.round(value));
+    };
+    const end = (event: PointerEvent, commit: boolean) => {
+      if (!start || event.pointerId !== start.id) return;
+      start = null;
+      if (!active) return;
+      active = false;
+      dragging.current = false;
+      swallowClick = commit; // the click that follows a drag must not also press the button under the finger
+      setFocus(null);
+      setLift(0);
+      const { destinations: items, index: current, onSelect: select } = latest.current;
+      const target = commit ? Math.round(at(event.clientX)) : current;
+      if (target < 0) { fade(0); return; }
+      moveTo(target);
+      const item = items[target];
+      if (commit && item && target !== current) select(item.value);
+    };
+    const up = (event: PointerEvent) => end(event, true);
+    const cancel = (event: PointerEvent) => end(event, false);
+    const click = (event: MouseEvent) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      event.stopPropagation();
+      event.preventDefault();
+    };
+    node.addEventListener('pointerdown', down);
+    node.addEventListener('pointermove', move);
+    node.addEventListener('pointerup', up);
+    node.addEventListener('pointercancel', cancel);
+    node.addEventListener('click', click, true);
+    return () => {
+      node.removeEventListener('pointerdown', down);
+      node.removeEventListener('pointermove', move);
+      node.removeEventListener('pointerup', up);
+      node.removeEventListener('pointercancel', cancel);
+      node.removeEventListener('click', click, true);
+    };
+  }, [position, moveTo, fade, setLift]);
+
+  const geometry = pillGeometry(width, count, pillPadding, pillGap);
+  const indicator = geometry ? {
+    style: {
+      width: geometry.slot,
+      opacity: shown,
+      transform: [
+        { translateX: Animated.multiply(position, geometry.step) },
+        { scaleX: lift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) },
+        { scaleY: lift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] }) },
+      ],
+    },
+  } : null;
+  return {
+    pill: { ref, onLayout: (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width) },
+    indicator,
+    focus,
+  };
 }
 
 function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavProps<T>) {
@@ -279,6 +419,7 @@ const styles = StyleSheet.create({
   // display: none also removes it from the accessibility tree and the Tab order while the keyboard is open.
   hidden: { display: 'none' },
   pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: spacing.xs, gap: spacing.xs },
+  indicator: { position: 'absolute', left: pillPadding, top: pillPadding, height: layout.floatingBar - pillPadding * 2, borderRadius: radius.pill },
   pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill },
   actionSlot: { height: layout.floatingBar, overflow: 'hidden' },
   roundAction: { width: layout.floatingBar, height: layout.floatingBar, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },

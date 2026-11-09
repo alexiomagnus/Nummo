@@ -44,10 +44,12 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Nummo</title>
     <style id="expo-reset">
-      html, body { height: 100%; }
+      html, body { height: 100%; background: var(--nummo-boot-bg, #F5FBF5); }
       body { overflow: hidden; margin: 0; background: var(--nummo-boot-bg, #F5FBF5); color: #171D19; }
-      @media (prefers-color-scheme: dark) { body { background: var(--nummo-boot-bg, #0F1511); color: #DEE4DD; } }
-      #root { display: flex; height: var(--nummo-viewport-height, 100%); flex: 1; }
+      @media (prefers-color-scheme: dark) { html, body { background: var(--nummo-boot-bg, #0F1511); } body { color: #DEE4DD; } }
+      /* clip: the app scrolls inside its own containers; a menu animating in from beyond the right edge (Paper Menu)
+         must not widen the page, which Chrome on Android would then keep zoomed out. hidden is the fallback. */
+      #root { display: flex; height: var(--nummo-viewport-height, 100%); flex: 1; overflow: hidden; overflow: clip; }
       @supports (height: 100dvh) { #root { height: var(--nummo-viewport-height, 100dvh); } }
       /* Dichiarato qui (non dopo il mount di React) e con il file già in preload: il primo rendering usa subito il font. */
       @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;

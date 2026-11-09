@@ -1,14 +1,17 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Menu, Text, useTheme } from 'react-native-paper';
 import { radius, spacing } from '../theme/tokens';
+import { AnchoredMenu, type MenuAnchor } from './Overlay';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut: () => void; onOpenSettings: () => void; onOpenCategories: () => void; onOpenBackup: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, categories, import/export and the sign-out action.
+// Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
+// `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
 export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenCategories, onOpenBackup }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -16,12 +19,15 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
   const [photoLoaded, setPhotoLoaded] = useState(false);
   const [photoFailed, setPhotoFailed] = useState(false);
   const [photoAttempt, setPhotoAttempt] = useState(0);
+  const [anchor, setAnchor] = useState<MenuAnchor>({ x: 0, y: 0, width: 0, height: 0 });
+  const trigger = useRef<ComponentRef<typeof View>>(null);
+  const openMenu = () => trigger.current?.measureInWindow((x, y, width, height) => { setAnchor({ x, y, width, height }); setOpen(true); });
   return (
-    <Menu visible={open} onDismiss={() => setOpen(false)} anchorPosition="bottom" contentStyle={[styles.menu, { backgroundColor: colors.elevation.level2 }]}
-      anchor={
+    <>
+      <View ref={trigger}>
         <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} bleed={4} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`Account${email ? `: ${email}` : ''}`}
-          onPress={() => setOpen(true)} style={styles.trigger}>
+          onPress={openMenu} style={styles.trigger}>
           <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>
             <Text variant="titleSmall" style={{ color: colors.onPrimaryContainer }}>{(email ?? 'N').charAt(0).toUpperCase()}</Text>
             {photoURL && !photoFailed && <img key={photoAttempt} src={photoURL} alt="" aria-hidden draggable={false}
@@ -30,7 +36,8 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: photoLoaded ? 1 : 0, transition: 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' }} />}
           </View>
         </StateLayerPressable>
-      }>
+      </View>
+      <AnchoredMenu visible={open} onDismiss={() => setOpen(false)} anchor={anchor} align="end" label="Account" contentStyle={styles.menu}>
       <View style={styles.info}>
         <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Account Google")}</Text>
         <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? t("Account senza e-mail")}</Text>
@@ -55,7 +62,8 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
       <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
         onPress={() => { setOpen(false); onSignOut(); }} />
-    </Menu>
+      </AnchoredMenu>
+    </>
   );
 }
 

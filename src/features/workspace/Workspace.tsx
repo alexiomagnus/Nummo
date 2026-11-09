@@ -146,12 +146,7 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   );
 }
 
-// The «Nuova spesa» screen as the real workspace shows it before its data arrives (same shell, same form with
-// its fields disabled, same header slots), drawn while Firebase Auth restores the session and the first
-// snapshots load, so the layout stays put and only the data appears. It reads nothing and writes nothing.
-const idleStore: ExpenseStore = {
-  expenses: [], ready: false, error: null, submission: { status: 'draft' }, submit: () => {}, retry: () => {}, startNew: () => {}, storageNote: '',
-};
+// The shell is available during Auth restoration; do not draw a second form with fake empty data.
 const loadingSync = describeSync({ ready: false, online: true, pending: false, cached: false, error: null });
 
 export function StartupWorkspace({ topActions }: { topActions?: ReactNode }) {
@@ -164,7 +159,7 @@ export function StartupWorkspace({ topActions }: { topActions?: ReactNode }) {
         {/* Where the account avatar will appear: the buttons beside it do not move. */}
         <View style={styles.avatarSlot}><View style={[styles.avatarDot, { backgroundColor: colors.primaryContainer }]} /></View></>}>
       <PageHeader title={t(headings.expense)} />
-      <View style={styles.grow}><View style={styles.grow}><ExpenseForm categories={[]} store={idleStore} /></View></View>
+      <View style={styles.starting}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>
     </AppShell>
   );
 }
@@ -194,6 +189,9 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary]);
   const editorFundChoices = editing ? fundSummary.funds.filter((item) => !item.fund.archived || item.fund.id === editing.fund_id).map(choiceOf) : [];
   const fundsError = fundState.ready ? null : fundState.error;
+  // Releasing the startup cover after 4 seconds enables navigation, not incomplete form controls.
+  const formLoading = starting || (!store.error && !categoryState.error && !fundsError &&
+    !(store.ready && hasUsableCategorySnapshot(categoryState) && fundState.ready));
   // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
   const oneOff = useMemo(() => occurrences.filter((item) => item.recurrence === null), [occurrences]);
   const edit = (id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null);
@@ -248,11 +246,11 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     {starting && section !== 'expense' && <View style={styles.starting}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
     {/* The form stays mounted at full size (labels measured, draft kept, title in place) while the first data arrives; it is only invisible. */}
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
-      {starting && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
-      <View style={[styles.grow, starting && styles.invisible]} aria-hidden={starting || undefined} pointerEvents={starting ? 'none' : 'auto'}>
+      {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
+      <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
         <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')} fundChoices={fundChoices} defaultFundId={defaultFundId}
           store={{ ...store, ready: store.ready && hasUsableCategorySnapshot(categoryState) && fundState.ready, error: store.error || categoryState.error || fundsError }} />
-      </View>
+      </div>
     </View>
     {section === 'list' && !starting && (
       <View style={styles.list}>
@@ -291,7 +289,6 @@ const styles = StyleSheet.create({
   // Pages fill the main area (the shell already caps the width); only the form is a narrow column.
   list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
-  invisible: { opacity: 0 },
   starting: { alignItems: 'center', padding: spacing.xxl },
   startingOverlay: { position: 'absolute', top: spacing.xxl, left: 0, right: 0, alignItems: 'center', zIndex: 1 },
   grow: { flexGrow: 1 },

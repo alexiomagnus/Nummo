@@ -37,9 +37,7 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   bulb: { hue: 'amber', shape: `<path ${B} d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/><rect ${T} x="9.5" y="16" width="5" height="2.2" rx="1"/><path ${L} d="M10.5 21h3"/><path stroke="{o}" d="M9.8 8.3a2.6 2.6 0 0 1 2-1.7"/>` },
   wifi: { hue: 'blue', shape: `<path stroke="{b}" stroke-width="2.4" d="M3 9.5a14 14 0 0 1 18 0M6 13a9.5 9.5 0 0 1 12 0M9 16.5a5 5 0 0 1 6 0"/><circle fill="{l}" stroke="none" cx="12" cy="20" r="1.6"/>` },
   // Transport
-  car: { hue: 'teal', shape: `<path ${B} d="M4 17v-5l2-5h12l2 5v5H4Z"/><path ${T} d="M6.8 8h10.4l1.4 3.5H5.4L6.8 8Z"/><path ${L} d="M6 17v2M18 17v2"/>${dot(7.5, 14.5, 2.4)}${dot(16.5, 14.5, 2.4)}` },
   train: { hue: 'teal', shape: `<rect ${B} x="5" y="3.5" width="14" height="13" rx="3"/><rect ${T} x="7.2" y="6.2" width="9.6" height="5" rx="1"/><path ${L} d="M9 16.5 7 20.5M15 16.5l2 4"/>${dot(9, 14, 2.4)}${dot(15, 14, 2.4)}` },
-  bus: { hue: 'teal', shape: `<rect ${B} x="4" y="3.5" width="16" height="14" rx="2.5"/><rect ${T} x="6.2" y="6" width="11.6" height="5" rx="1"/><path ${L} d="M7 17.5V20M17 17.5V20"/>${dot(8, 14.5, 2.4)}${dot(16, 14.5, 2.4)}` },
   bike: { hue: 'teal', shape: `<circle ${T} cx="6" cy="16" r="3.5"/><circle ${T} cx="18" cy="16" r="3.5"/><path stroke="{b}" stroke-width="2.2" d="M6 16l4-8h5l3 8M12.5 12.5H9"/><path ${L} d="M10 8 8.5 6H7"/>` },
   fuel: { hue: 'teal', shape: `<path ${B} d="M5 20V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15H5Z"/><rect ${T} x="6.8" y="6" width="5.4" height="4" rx=".8"/><path ${L} d="M4 20h11M14 8l3 2.5V16a1.5 1.5 0 0 0 3 0V9l-3-3"/>` },
   // Leisure and culture
@@ -65,7 +63,6 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   heartpulse: { hue: 'red', shape: `<path ${B} d="M12 20.5s-8.5-5-8.5-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8.5 2.5c0 6-8.5 11-8.5 11Z"/><path stroke="{o}" d="M7 12.5h2.5l1.5-2.5 2 5 1.5-2.5H17"/>` },
   cross: { hue: 'red', shape: `<path ${B} d="M9 3.5h6v5.5h5.5v6H15v5.5H9V15H3.5V9H9V3.5Z"/>` },
   dumbbell: { hue: 'green', shape: `<path ${L} stroke-width="2" d="M8 12h8"/><rect ${B} x="5.5" y="5.5" width="4.5" height="13" rx="1.6"/><rect ${T} x="2.2" y="8.5" width="3.8" height="7" rx="1.3"/><rect ${B} x="14" y="5.5" width="4.5" height="13" rx="1.6"/><rect ${T} x="18" y="8.5" width="3.8" height="7" rx="1.3"/>` },
-  tree: { hue: 'green', shape: `<path ${L} stroke-width="2" d="M12 21v-5"/><path ${B} d="M12 3.5c-4 0-6.5 3-6.5 6 0 2 1 3.5 2.5 4.5H6.5c-1 1.5 0 3 2 3h7c2 0 3-1.5 2-3H16c1.5-1 2.5-2.5 2.5-4.5 0-3-2.5-6-6.5-6Z"/><path stroke="{o}" d="M9 9.2a3.4 3.4 0 0 1 2-2.4"/>` },
   paw: { hue: 'orange', shape: `<circle ${B} cx="4.3" cy="11.2" r="2.1" stroke-width="1.2"/><circle ${B} cx="8.8" cy="6.6" r="2.1" stroke-width="1.2"/><circle ${B} cx="15.2" cy="6.6" r="2.1" stroke-width="1.2"/><circle ${B} cx="19.7" cy="11.2" r="2.1" stroke-width="1.2"/><path ${B} stroke-width="1.2" d="M12 11.8c-3.3 0-6.2 3.2-5.4 5.8.6 2 2.8 1.9 5.4 1.9s4.8.1 5.4-1.9c.8-2.6-2.1-5.8-5.4-5.8Z"/><path ${T} stroke-width="1.2" d="M9.2 16.4c.5-1.2 1.4-1.9 2.4-1.9"/>` },
   star: { hue: 'amber', shape: `<path ${B} d="m12 3.5 2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.9l-5.3 2.7 1-5.8-4.2-4.1 5.9-.9L12 3.5Z"/>` },
 };

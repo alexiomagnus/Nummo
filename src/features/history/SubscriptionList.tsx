@@ -27,7 +27,6 @@ type Props = {
 // Latest payments shown at first in the history; the rest on request (a weekly series grows quickly).
 const historyPreview = 12;
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-const formatDate = (date: string, locale: string) => dateFormat(locale).format(new Date(`${date}T00:00:00Z`));
 
 export function StatusBadge({ status }: { status: SubscriptionStatus }) {
   const { t } = useI18n();
@@ -48,6 +47,9 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
+  const dates = useMemo(() => dateFormat(locale), [locale]);
+  const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
+  const categoryById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const [complete, setComplete] = useState<ReadonlySet<string>>(() => new Set());
   const [busy, setBusy] = useState<string | null>(null);
@@ -79,14 +81,14 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
       {subscriptions.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento corrisponde alla ricerca.")}</Text>}
       <View role="list">
         {subscriptions.map(({ entry, status, amount_minor, next, payments, total }) => {
-          const category = categories.find((item) => item.id === entry.category_id);
+          const category = categoryById.get(entry.category_id ?? '');
           const open = expanded.has(entry.id);
           const all = complete.has(entry.id);
           const detailsId = `subscription-details-${entry.id}`;
           const since = entry.status_changes?.[entry.status_changes.length - 1]?.date;
           const frequency = entry.recurrence ? t(recurrenceLabels[entry.recurrence]) : '';
-          const when = status === 'active' ? (next ? t("Prossimo rinnovo {p0}", { p0: formatDate(next.date, locale) }) : '')
-            : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since, locale) }) : '';
+          const when = status === 'active' ? (next ? t("Prossimo rinnovo {p0}", { p0: formatDate(next.date) }) : '')
+            : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
           const shown = all ? payments : payments.slice(0, historyPreview);
           const working = busy === entry.id;
           const amount = <Text variant={compact ? 'titleSmall' : 'titleMedium'}
@@ -111,8 +113,8 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
                     <Field label={t("Pagamenti effettuati")} value={String(payments.length)} />
                     <Field label={t("Totale speso")} value={formatAmount(total)} />
                     <Field label={t("Categoria")} value={category?.label ?? t("Senza categoria")} />
-                    <Field label={t("Inizio")} value={formatDate(entry.expense_date, locale)} />
-                    <Field label={t("Prossimo rinnovo")} value={next ? formatDate(next.date, locale) : t("Nessuno")} />
+                    <Field label={t("Inizio")} value={formatDate(entry.expense_date)} />
+                    <Field label={t("Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
                   </View>
                   <View style={[styles.actions, compact && styles.compactActions]}>
                     {status === 'active' && <Button compact={compact} mode="outlined" disabled={!canChange || working} loading={working}
@@ -134,7 +136,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
                     <View role="list">
                       {shown.map((payment, index) => (
                         <View key={payment.key} role="listitem" style={[styles.payment, index < shown.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant }]}>
-                          <Text variant="bodyMedium">{formatDate(payment.date, locale)}</Text>
+                          <Text variant="bodyMedium">{formatDate(payment.date)}</Text>
                           <Text variant="bodyMedium" style={listRowStyles.amount}>{formatAmount(payment.amount_minor)}</Text>
                         </View>
                       ))}

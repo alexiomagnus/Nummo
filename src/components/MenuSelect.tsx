@@ -1,12 +1,15 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useRef, useState, type ComponentRef } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Menu, Text, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
 import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
+import { AnchoredMenu, BottomSheet, type MenuAnchor } from './Overlay';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
+
+// onLayout reports whole pixels: a label a fraction wider than the rounded measure would still be ellipsized.
+const measureSlack = 2;
 
 export type MenuOption<T extends string> = { value: T; label: string };
 
@@ -20,31 +23,36 @@ type Props<T extends string> = {
   style?: StyleProp<ViewStyle>;
 };
 
-// Compact single-choice selector: a 50 dp field showing the caption and the current value,
-// opening a Material 3 menu. Used where chips would eat too much width (sort, filters).
+// Compact single-choice selector: a 50 dp field showing the caption and the current value. Used where chips would eat
+// too much width (sort, filters). On phones the choices open in a modal bottom sheet, as in SelectField; from medium
+// width in a Material 3 menu below the field (or above it when there is no room), which returns focus to the field.
 export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const compact = useSizeClass() === 'compact';
   const [open, setOpen] = useState(false);
-  const [anchor, setAnchor] = useState({ x: 0, y: 0 });
+  const [anchor, setAnchor] = useState<MenuAnchor>({ x: 0, y: 0, width: 0, height: 0 });
   const anchorRef = useRef<ComponentRef<typeof View>>(null);
-  const openMenu = () => anchorRef.current?.measureInWindow((x, y, _width, height) => {
-    setAnchor({ x, y: y + height });
-    setOpen(true);
-  });
-  const closeMenu = () => {
-    setOpen(false);
-    if (anchorRef.current instanceof HTMLElement) {
-      anchorRef.current.querySelector<HTMLElement>('button, [role="button"]')?.focus({ preventScroll: true });
-    }
+  const openMenu = () => {
+    if (compact) { setOpen(true); return; }
+    anchorRef.current?.measureInWindow((x, y, width, height) => { setAnchor({ x, y, width, height }); setOpen(true); });
   };
-  const { height, width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const maxHeight = Math.max(0, Math.min(360, height - insets.top - insets.bottom - 2 * spacing.lg));
-  const maxWidth = Math.max(0, width - insets.left - insets.right - 2 * spacing.lg);
+  const closeMenu = () => setOpen(false);
+  // Natural width of the widest row, measured off-screen while the menu is closed: the menu is at least as wide as the
+  // field and grows to show whole labels («Importo più basso» next to a half-width field), within the viewport margins.
+  const [contentWidth, setContentWidth] = useState(0);
   // On phones the leading icon is dropped to leave room for the value.
-  const showIcon = useSizeClass() !== 'compact';
+  const showIcon = !compact;
   const current = options.find((option) => option.value === value);
+  const rows = options.map((option) => (
+    <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
+      onPress={() => { closeMenu(); onChange(option.value); }}
+      accessibilityLabel={`${option.label}${option.value === value ? t(", selezionato") : ''}`}>
+      <Text variant="bodyLarge" numberOfLines={1} style={styles.itemLabel}>{option.label}</Text>
+      {/* Fixed slot on every row: the check always sits at the right edge, whatever the label length. */}
+      <View style={styles.check}>{option.value === value && <SvgIcon shape={iconShapes.check} size={24} color={colors.onSurface} />}</View>
+    </StateLayerPressable>
+  ));
   return (
     <View style={style}>
       <View ref={anchorRef}>
@@ -59,23 +67,21 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
           <SvgIcon shape={iconShapes.chevronDown} size={20} color={colors.onSurfaceVariant} />
         </StateLayerPressable>
       </View>
-      <Menu visible={open} onDismiss={closeMenu} anchorPosition="bottom"
-        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight, maxWidth, borderRadius: radius.control,
-          paddingVertical: spacing.xs, overflow: 'hidden' }}
-        anchor={anchor}>
-        {/* A maxHeight on Paper's surface alone does not make custom rows scrollable. */}
-        <ScrollView style={{ maxHeight: Math.max(0, maxHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">
-        {options.map((option) => (
-          <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
-            onPress={() => { closeMenu(); onChange(option.value); }}
-            accessibilityLabel={`${option.label}${option.value === value ? t(", selezionato") : ''}`}>
-            <Text variant="bodyLarge" numberOfLines={1} style={styles.itemLabel}>{option.label}</Text>
-            {/* Fixed slot on every row: the check always sits at the right edge, whatever the label length. */}
-            <View style={styles.check}>{option.value === value && <SvgIcon shape={iconShapes.check} size={24} color={colors.onSurface} />}</View>
-          </StateLayerPressable>
-        ))}
-        </ScrollView>
-      </Menu>
+      {/* Measuring copy of the rows: same paddings, gap and check slot, no width limit; never visible nor focusable.
+          The zero-size clipping box keeps it from widening the page (horizontal overflow) next to the right edge. */}
+      <View aria-hidden pointerEvents="none" style={styles.measureBox}>
+        <View style={styles.measure} onLayout={({ nativeEvent }) => setContentWidth(Math.ceil(nativeEvent.layout.width) + measureSlack)}>
+          {options.map((option) => (
+            <View key={option.value} style={styles.item}>
+              <Text variant="bodyLarge" style={styles.nowrap}>{option.label}</Text>
+              <View style={styles.check} />
+            </View>
+          ))}
+        </View>
+      </View>
+      {compact
+        ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
+        : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={Math.max(anchor.width, contentWidth)} label={label}>{rows}</AnchoredMenu>}
     </View>
   );
 }
@@ -86,8 +92,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   text: { flex: 1, minWidth: 0 },
-  // Room for the check on every item, so the menu is always as wide as its longest label plus the check.
-  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl, minHeight: 48, minWidth: 112, paddingHorizontal: spacing.lg },
+  // Rows fit the field width; long labels shrink while the check keeps its fixed slot.
+  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl, minHeight: 48, minWidth: 0, paddingHorizontal: spacing.lg },
   itemLabel: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' },
   check: { width: 24, height: 24 },
+  // max-content: the rows keep their natural width instead of wrapping inside the (narrower) field container.
+  measureBox: { position: 'absolute', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', opacity: 0 },
+  // No numberOfLines here: RN Web line clamping understates the max-content width of the label.
+  nowrap: { whiteSpace: 'nowrap' } as unknown as TextStyle,
+  measure: { position: 'absolute', left: 0, top: 0, width: 'max-content', visibility: 'hidden' } as unknown as ViewStyle,
 });

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { test } from 'node:test';
 import { accents, buildScheme } from '../src/theme/palette.ts';
-import { bootThemeKey, makeBootTheme } from '../src/theme/bootTheme.ts';
+import { applyDocumentTheme, bootThemeKey, makeBootTheme } from '../src/theme/bootTheme.ts';
 import { parseSessionHint, readSessionHint, sessionHintKey, writeSessionHint } from '../src/services/sessionHint.ts';
 import { initialSafeAreaMetrics } from '../src/theme/initialMetrics.ts';
 
@@ -26,6 +26,31 @@ function boot(items: Record<string, string>, { systemDark = false, brokenStorage
   return { vars, root, tags, links };
 }
 const stored = (mode: 'system' | 'light' | 'dark') => JSON.stringify(makeBootTheme({ theme: mode, accent: 'amber', colorMode: 'mono' }));
+
+test('tema runtime: cambia anche canvas e schema inline del boot, con un unico meta senza media', () => {
+  const tags: { content: string; media?: string; removeAttribute: (key: string) => void; remove: () => void }[] = [];
+  const makeTag = () => {
+    const tag: (typeof tags)[number] = { content: '', media: 'prefers-color-scheme', removeAttribute: () => { delete tag.media; }, remove: () => { tags.splice(tags.indexOf(tag), 1); } };
+    return tag;
+  };
+  tags.push(makeTag(), makeTag());
+  const values = new Map<string, string>();
+  const style = { colorScheme: 'light', backgroundColor: '', setProperty: (key: string, value: string) => values.set(key, value) };
+  const doc = { documentElement: { style }, head: { querySelectorAll: () => [...tags], appendChild: (tag: ReturnType<typeof makeTag>) => { tags.push(tag); return tag; } }, createElement: makeTag };
+  for (const dark of [true, false, true]) {
+    const background = buildScheme('amber', 'palette', dark).background;
+    applyDocumentTheme(doc as unknown as Document, background, dark);
+    assert.equal(style.colorScheme, dark ? 'dark' : 'light');
+    assert.equal(style.backgroundColor, background);
+    assert.equal(values.get('--nummo-boot-bg'), background);
+    assert.equal(tags.length, 1);
+    assert.equal(tags[0]!.media, undefined);
+    assert.equal(tags[0]!.content, background);
+  }
+  tags.length = 0;
+  applyDocumentTheme(doc as unknown as Document, '#0F1511', true);
+  assert.equal(tags.length, 1, 'crea il meta anche se assente');
+});
 
 test('avvio: lo schema salvato coincide con il tema reale per ogni tinta e modalità', () => {
   for (const accent of accents) for (const colorMode of ['mono', 'palette'] as const) {

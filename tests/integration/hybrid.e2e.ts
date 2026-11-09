@@ -28,9 +28,9 @@ function session(root: string, mode = '') {
   let output = '';
   const env = { ...process.env };
   for (const key of Object.keys(env)) if (key.startsWith('EXPO_PUBLIC_') || key === 'EXPO_NO_DOTENV') delete env[key];
-  const child = spawn(process.execPath, [join(repo, 'tests/integration/hybrid-child.ts'), root, mode], { env, stdio: ['ignore','pipe','pipe'] });
-  child.stdout.on('data', (data: Buffer) => { output += data.toString(); });
-  child.stderr.on('data', (data: Buffer) => { output += data.toString(); });
+  const child = spawn(process.execPath, [join(repo, 'tests/integration/hybrid-child.ts'), root, mode], { env, stdio: ['ignore','pipe','pipe','ipc'] });
+  child.stdout!.on('data', (data: Buffer) => { output += data.toString(); });
+  child.stderr!.on('data', (data: Buffer) => { output += data.toString(); });
   const done = new Promise<number | null>((resolve) => child.on('exit', resolve));
   return { child, done, get output() { return output; }, async waitFor(text: string) {
     const until = Date.now() + 100000;
@@ -41,7 +41,8 @@ function session(root: string, mode = '') {
     }
     throw new Error(`Timeout ${text}:\n${output}`);
   }, async stop() {
-    child.kill('SIGINT');
+    if (process.platform === 'win32') child.send('stop');
+    else child.kill('SIGINT');
     let timer: ReturnType<typeof setTimeout> | undefined;
     try { return await Promise.race([done, new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error(`Timeout arresto:\n${output}`)),75000);})]); }
     finally { clearTimeout(timer); }
@@ -102,6 +103,17 @@ test('hybrid lifecycle: avvio, riuso, Ctrl+C, persistenza e guasti senza toccare
       assert.equal((await request('users/fixture-owner/expenses/fixture-expense')).fields.amount_minor.integerValue,'1250');
       assert.equal(await first.stop(),0); first=undefined;
     });
+    await t.test('Expo fallisce: export salvato e causa iniziale visibile', async () => {
+      first = session(root, 'expo-failure');
+      assert.equal(await first.done, 1);
+      assert.match(first.output, /Expo terminato \(codice 19\)/);
+      assert.doesNotMatch(first.output, /Export Firestore non confermato/);
+      assert.equal(existsSync(join(root, '.firebase/hybrid.lock')), false);
+      first = undefined;
+      first = session(root); await first.waitFor('TEST_EXPO_READY');
+      assert.equal((await request('users/fixture-owner/expenses/fixture-expense')).fields.amount_minor.integerValue, '1250');
+      assert.equal(await first.stop(), 0); first = undefined;
+    });
     await t.test('errore di avvio: messaggio, originali identici, nessuna porta/lock orfani', async () => {
       const before=digest(join(root,'emulator-data'));
       first=session(root,'failure'); assert.equal(await first.done,1);
@@ -109,7 +121,7 @@ test('hybrid lifecycle: avvio, riuso, Ctrl+C, persistenza e guasti senza toccare
       assert.equal(digest(join(root,'emulator-data')),before);
       assert.equal(await inspectHybridEmulator(project,{host:'127.0.0.1',port}),false);
       assert.equal(existsSync(join(root,'.firebase/hybrid.lock')),false);
-      await assert.rejects(probeEndpoint({ host:'127.0.0.1', port:Number(readFileSync(join(root,'orphan-port'),'utf8')) }));
+      if (process.platform !== 'win32') await assert.rejects(probeEndpoint({ host:'127.0.0.1', port:Number(readFileSync(join(root,'orphan-port'),'utf8')) }));
     });
     await t.test('servizio sconosciuto sulla porta: rifiuto senza arrestarlo o toccare i dati', async () => {
       const server=createHttpServer((_req,res)=>res.end('{}'));

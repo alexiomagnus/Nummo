@@ -18,9 +18,13 @@ Stato React locale e Context di presentazione, nessun router/store globale. Quat
 come azione primaria: mai due navigazioni. Impostazioni, Categorie e Importa ed esporta: pagine del menu account fuori dalle destinazioni (contatori
 `settingsRequest`/`categoriesRequest`/`backupRequest` da `App.tsx`; Categorie anche dal modulo), «Fatto» torna alla sezione di partenza.
 Da disconnessi Impostazioni sostituisce la schermata di accesso. Nessun dialogo per le impostazioni. Smartphone: pillola nel flusso del layout, destinazioni uguali
-con icona/etichetta (sotto 380 dp etichetta `labelSmall`), attiva su `primaryContainer`; pulsante tondo in `primary`, nascosto nella pagina Nuova.
-Desktop: rail/drawer con FAB. Con tastiera virtuale rilevata, la navigazione mobile si nasconde e
-le azioni del modulo tornano nel flusso; `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
+con icona/etichetta (sotto 380 dp etichetta `labelSmall`), attiva su `primaryContainer`: un solo indicatore che scorre con la molla
+`spatialSpring` (M3 Expressive) e segue il dito trascinato sulla pillola, aprendo la destinazione al rilascio (pointer event DOM,
+geometria pura in `navIndicator.ts`, click successivo al trascinamento soppresso); pulsante tondo in `primary`, nascosto nella pagina Nuova.
+Desktop: rail/drawer con FAB. Le azioni di Nuova spesa sono sempre nel flusso, dopo tutti i campi, senza barra sticky.
+La navigazione mobile si nasconde già al tocco su un campo scrivibile (anticipo con scadenza se non segue la tastiera)
+e, dopo conferma dal viewport, resta nascosta durante la chiusura fino al recupero dell'altezza;
+il solo focus da tastiera fisica non la nasconde. `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
 Barre sticky in fondo a uno scroller: pubblicarne l'altezza con `reserveScrollPadding` (`viewport.ts`), applicata
 come scroll padding solo in navigazione da tastiera fisica (il focus programmatico dei `Menu` Paper non deve scorrere).
 
@@ -29,7 +33,7 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 | `src/domain/` | Funzioni pure senza SDK: validazione, contratti, categorie, ricorrenze, prezzi per numero di rinnovo, stati degli abbonamenti (`subscription.ts`), fondi/ricariche/budget/saldi (`funds.ts`), liste della spesa (`shoppingList.ts`), storico, invio, decoder Firestore e backup/import/CSV. |
 | `src/services/` | Configurazione pubblica a build, Auth e cache Firestore, listener, CRUD e transazioni con revisioni, export server-only e import per gruppi; selezione foto account. Con indizio di sessione, `initializeAuth` omette il resolver popup, passato esplicitamente a `signInWithPopup`. |
 | `src/features/session/` | Login Google popup, sessione SDK, logout dopo le scritture pendenti; guida pubblica statica `#guida` con history/link diretto/reload, senza letture o scritture dell'archivio. Il bootstrap Auth è in `App.tsx`. Errori login: solo codici `auth/...` validati, mai messaggi grezzi/token. |
-| `src/features/workspace/` | Composizione sezioni, listener e sincronizzazione; stato smontato al cambio UID. Avvio con attesa dati limitata a 4 s, modulo montato invisibile per conservare misure e bozza; sopra, il segnaposto `StartupWorkspace` (stessa pagina «Nuova spesa», `inert`) finché `onReleased` non lo rimuove. |
+| `src/features/workspace/` | Composizione sezioni, listener e sincronizzazione; stato smontato al cambio UID. Copertura iniziale limitata a 4 s; `StartupWorkspace` mostra shell e caricamento, senza un secondo modulo fittizio. Il modulo reale resta montato per conservare misure e bozza, invisibile e `inert` finché mancano i dati necessari; il limite di attesa libera la navigazione, non i campi incompleti. |
 | `src/features/expenses/` | Modulo, validazione, `ExpenseStore`, `useRemoteExpenses`, editor; nessun archivio locale applicativo nel percorso attivo. |
 | `src/features/categories/` | Categorie con ID stabili e nomi unici tramite indice `categoryNames`; cinque predefinite (Alimentari, Intrattenimento, Shopping, Tecnologia, Trasporti) create una volta per account/browser su archivio vuoto confermato dal server (`workspace/seedDefaults.ts`), altrimenti dal pulsante a lista vuota. `CategoryEditor` salva nome/icona insieme. Nessun limite applicativo al numero di categorie; unicità e validazione dei record restano obbligatorie. |
 | `src/features/history/`, `dashboard/` | Occorrenze calcolate fino a oggi, non materializzate nel database; pagina Spese in due viste a segmenti, spese singole (`ExpenseList`) e abbonamenti = serie ricorrenti (`SubscriptionList`, stati e storico pagamenti); ciambella SVG DOM e blocchi/treemap puro su proiezione comune (`categoryPresentation.ts`), barre complete senza raggruppamenti, ordinate per spesa, lunghezza relativa alla categoria maggiore e quota sul totale esplicita, riepilogo e andamento SVG giornaliero (`insights.ts`). Variazione per categoria nelle Barre sui giorni precedenti di pari durata, solo con base positiva e storico sufficiente, nessun confronto globale; dettagli categoria in sola lettura sui dati già caricati; andamento con selezione del giorno e lettura di data/importo, senza apertura delle transazioni giornaliere. |
@@ -37,7 +41,7 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 | `src/features/funds/` | Pagina «Fondi e budget» (mese navigabile, effettivo/previsione), editor fondo, entrate/trasferimenti, assegnazione esplicita delle spese senza fondo, `FundField` del modulo spesa; `useRemoteFunds` con mutazioni solo in transazione server. |
 | `src/features/backup/` | Pagina «Importa ed esporta» dal menu account sotto Categorie, fuori dalle destinazioni; azioni mantenute montate per conservare anteprima e operazioni al cambio sezione. CSV solo consultazione; JSON unico ripristino, riepilogo, unione senza sovrascritture o sostituzione con conferma/copia automatica. Nessun import CSV o adapter localStorage. |
 | `src/features/settings/`, `src/i18n/` | Pagina `SettingsPage` (sezioni in due colonne da medium); aspetto, IT/EN, stile delle icone di categoria e scelte di dashboard (grafico, periodo) in `nummo.preferences.v1` nel browser; italiano iniziale. `I18nProvider` cambia lingua senza rimontare sessione/bozze; nessuna sincronizzazione Firebase. |
-| `src/components/`, `src/theme/` | Controlli Material 3, shell, icone, notifiche; palette e token condivisi, transizioni CSS in `motion.ts` e apertura dettagli con `Reveal`. `colors.panel`/`panelColor()` per pannelli desktop. |
+| `src/components/`, `src/theme/` | Controlli Material 3, shell, icone, notifiche; palette e token condivisi, transizioni CSS in `motion.ts` e apertura dettagli con `Reveal`; overlay condivisi in `Overlay.tsx` (menu, fogli, base di `AppDialog`). `colors.panel`/`panelColor()` per pannelli desktop. |
 | `firestore.rules` | Accesso Google del solo UID in `config/owner` (amministrativo); namespace `users/{uid}` con `expenses/{uuid}` (con `fund_id` facoltativo), `categories/{uuid}`, `categoryNames/{name_key}`, `funds/{uuid}`, `movements/{uuid}` (immutabili), `lists/{uuid}` e `listItems/{uuid}` (senza revisione), spese con `list_id`/`list_items` facoltativi; validazione di campi, tipi, importi, date, versioni e indici. |
 | `scripts/` | Seed solo localhost; policy ambienti, runner hybrid, build cloud e pubblicazione solo Hosting. `measure-startup.mjs`: misura d'avvio in emulazione, procedura in `docs/avvio-prestazioni.md`. Config temporanea `.nummo-hybrid-<PID>.json` rimossa all'arresto: mai versionarla. |
 | `tests/` | Node runner per dominio/tema/i18n/config/strumenti; `emulator/` per SDK/Rules e `integration/` per lifecycle hybrid. |
@@ -151,16 +155,24 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
   contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.
   `Button` (unico pulsante), `ListRow`/`IconTile` (riga di Spese e Categorie), `ChoiceChips`,
-  `SegmentedButtons`, `SwitchRow`/`M3Switch`, `SelectField` (menu a tendina), `DateField` (picker modale), `Card`,
+  `SegmentedButtons`, `SwitchRow`/`M3Switch`, `SelectField` (foglio dal basso su smartphone, menu da medium), `DateField` (picker modale), `Card`,
   `StateLayerPressable` per componenti Material 3 personalizzati.
   Raggi (`radius`: controlli 20, pulsanti/campi/card 16, dialog 28, `pill`), `inputOutline` (per ogni `TextInput` outlined) e `layout` da `src/theme/tokens.ts`. Font e spessore icone (`typefaces`, `iconStroke`) dai token; font in `public/fonts/`. Colori solo dai token (`src/theme/`, `useTheme()`), niente hex sparsi;
   esiti temporanei con `useSnackbar()`; layout per classe di finestra con `useSizeClass()`.
-  Per le animazioni riusare `motion`/`motion.ts` e `Reveal`, rispettando `prefers-reduced-motion` e `theme.animation.scale`.
-- Paper `Menu` montato chiuso mette il focus sul proprio anchor (web): mai un `Menu` per riga di una lista
-  (la pagina salta all'ultima riga); usare un solo menu con anchor a coordinate, come `ExpenseList`.
+  Per le animazioni riusare `motion`/`motion.ts` (`transitions` per durate/curve per proprietà) e `Reveal`, rispettando
+  `prefers-reduced-motion` con `useReducedMotion()`: `theme.animation.scale` non è affidabile, perché `PaperProvider`
+  con un tema esplicito lo forza sempre a 1.
+- Overlay (`Overlay.tsx`, unico livello per menu, fogli e dialoghi): mai Paper `Menu` o `Modal`/`Dialog` diretti.
+  `usePresence` + transizioni CSS solo su `transform`/`opacity`; superfici opache in pochi frame all'ingresso
+  (`motion.fade`), uscita con `motion.exitEasing` senza copie semitrasparenti sulla pagina; con movimento ridotto
+  montaggio/smontaggio immediati. Escape chiude; il focus va alla prima voce e torna all'elemento d'origine con
+  `preventScroll`. Chiusi non montano nulla (nessun focus al montaggio). `AppDialog` conserva Title/Content/ScrollArea/
+  Actions di Paper. `SelectField`/`MenuSelect`: `BottomSheet` su compact (sopra navigazione e scrim, lista scorrevole,
+  trascinamento della maniglia), `AnchoredMenu` da medium (sotto il campo o sopra se manca spazio, geometria pura in
+  `menuGeometry.ts`); `AccountMenu` usa `AnchoredMenu` allineato a destra; `Menu.Item` Paper solo come riga.
   `MenuSelect` per selettori compatti (ordina/filtri), `FieldIcon` per icone decorative dei campi.
-  `SelectField` e `MenuSelect` tengono il pulsante fuori dal `Menu`, con anchor a coordinate misurate all'apertura:
-  nessun focus al montaggio chiuso; alla chiusura restituiscono il focus con `preventScroll`.
+  Il menu di `MenuSelect` è largo max(campo, voce più lunga misurata da un clone nascosto) entro i margini dello schermo:
+  mai etichette troncate per un campo stretto. `#root` ha `overflow: clip`: overlay in movimento non allargano la pagina.
   Nei campi-azione (`SelectField`, `DateField`) il `Pressable` esterno è l'unico
   bersaglio: input e icone decorativi in un contenitore DOM `inert`. Il solo
   `pointerEvents="none"` sul contenitore non neutralizza le Surface Paper interne.

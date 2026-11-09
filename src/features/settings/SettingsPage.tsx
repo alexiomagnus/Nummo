@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
@@ -12,7 +13,6 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { accentLabels, accents, buildScheme, type ColorMode } from '../../theme/palette';
 import { layout, radius, spacing } from '../../theme/tokens';
-import { useSizeClass } from '../../theme/useSizeClass';
 import type { FontChoice, Preferences, ThemeChoice } from './preferences';
 
 type Props = {
@@ -33,7 +33,7 @@ const fontOptions: { value: FontChoice; label: string }[] = [
   { value: 'google', label: 'Google Sans' }, { value: 'system', label: 'Sistema' },
 ];
 // Sample of four categories, drawn in each style whatever the chosen one is.
-const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'bus'];
+const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 
 // Display settings page, opened from the account menu (or the sign-in screen), outside the main destinations.
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
@@ -41,10 +41,12 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'bus'];
 export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const wide = useSizeClass() !== 'compact';
-  const section = [styles.section, wide && styles.sectionWide];
+  const [contentWidth, setContentWidth] = useState(0);
+  // Measure the actual page: the desktop navigation and browser zoom reduce its usable width.
+  const wide = contentWidth >= 2 * 420 + spacing.xxl;
+  const section = [styles.section, wide && { width: (contentWidth - spacing.xxl) / 2 }];
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
       <PageHeader title={t("Impostazioni")} action={
         <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}
           onPress={onDone}>{t("Fatto")}</Button>} />
@@ -80,7 +82,10 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
             })}
           </View>
         </Card>
-        <Card title={t("Stile delle icone")} style={section}>
+        <Card title={t("Carattere")} style={section}>
+          <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
+        </Card>
+        <Card title={t("Stile delle icone")} style={styles.section}>
           <View style={styles.styleCards} role="radiogroup" aria-label={t("Stile delle icone")}>
             {iconStyles.map((style) => {
               const selected = style === preferences.iconStyle;
@@ -97,12 +102,12 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
               );
             })}
           </View>
-        </Card>
-        <Card title={t("Carattere")} style={section}>
-          <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
+          <Button mode="text" textColor={colors.secondary} style={styles.start} onPress={onReset}
+            icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
+            {t("Ripristina predefiniti")}
+          </Button>
         </Card>
       </View>
-      <View style={styles.start}><Button mode="outlined" onPress={onReset}>{t("Ripristina")}</Button></View>
     </View>
   );
 }
@@ -111,8 +116,6 @@ const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: layout.sectionGap },
   section: { width: '100%' },
-  // Two columns from ~2 × 420 dp of content; a lone last section takes the whole row.
-  sectionWide: { width: 'auto', flexGrow: 1, flexBasis: 420, minWidth: 0 },
   start: { alignSelf: 'flex-start' },
   styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   styleCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },

@@ -11,7 +11,7 @@ const keyframes = {
 };
 const style = {
   animationKeyframes: keyframes,
-  animationDuration: `${motion.long}ms`,
+  animationDuration: `${motion.medium}ms`,
   animationTimingFunction: `cubic-bezier(${motion.enter.join(', ')})`,
   animationFillMode: 'both',
 } as ViewStyle;

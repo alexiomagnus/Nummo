@@ -78,7 +78,6 @@ export function RegisterListDialog({ list, items, categories, fundChoices, defau
         <SwitchRow label={t("Sposta i non acquistati in una nuova lista")} supporting={remaining === 1 ? t("1 prodotto non spuntato") : t("{p0} prodotti non spuntati", { p0: remaining })}
           value={move} disabled={busy} onChange={setMove} />
       )}
-      {!canRegister && <HelperText type="info">{t("La registrazione richiede la connessione e dati sincronizzati.")}</HelperText>}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {attempted && error && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
         {t("Puoi riprovare: se la spesa era già stata salvata non verrà duplicata.")}</Text>}

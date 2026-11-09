@@ -1,9 +1,10 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { HelperText, Menu, Text, TextInput, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { inputOutline, radius, spacing } from '../theme/tokens';
+import { useSizeClass } from '../theme/useSizeClass';
+import { AnchoredMenu, BottomSheet, type MenuAnchor } from './Overlay';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -17,45 +18,40 @@ type Props<T extends string> = {
   disabled?: boolean;
 };
 
-// Material 3 exposed dropdown menu: an outlined text field (label, trailing arrow) that opens a menu as wide as the field.
-// The field is read-only and not focusable itself: the surrounding button owns focus, press and accessibility.
-const MENU_MAX_HEIGHT = 360;
-const MENU_MIN_HEIGHT = 192; // below this much room, Paper shifts the menu up instead (it then fits whole)
-const SCREEN_MARGIN = 16;
-// Selected/hover highlight is inset in the menu and rounded like the keyboard focus ring (GlobalStyle: 12).
+// Material 3 exposed dropdown: an outlined text field (label, trailing arrow). On phones the choices open in a modal
+// bottom sheet (long lists, never over the navigation or the form's buttons); from medium width in a menu as wide as
+// the field, below it or above when there is no room. The field is read-only and not focusable itself: the surrounding
+// button owns focus, press and accessibility; the overlay returns focus to it without scrolling.
+// Selected/hover highlight is inset in the list and rounded like the keyboard focus ring (GlobalStyle: 12).
 const itemRadius = 12;
 
 export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const compact = useSizeClass() === 'compact';
   const [open, setOpen] = useState(false);
-  const [anchor, setAnchor] = useState({ x: 0, y: 0 });
-  const [width, setWidth] = useState(0);
-  const [maxHeight, setMaxHeight] = useState(MENU_MAX_HEIGHT);
+  const [anchor, setAnchor] = useState<MenuAnchor>({ x: 0, y: 0, width: 0, height: 0 });
   const anchorRef = useRef<ComponentRef<typeof Pressable>>(null);
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const viewportHeight = Math.max(0, windowHeight - insets.top - insets.bottom - 2 * SCREEN_MARGIN);
-  const menuHeight = Math.min(maxHeight, viewportHeight);
-  const menuWidth = Math.min(width, Math.max(0, windowWidth - insets.left - insets.right - 2 * SCREEN_MARGIN));
-  // Open: cap the height to the room below the field (inner scroll for the rest); with little room Paper moves the menu up.
   const openMenu = () => {
-    anchorRef.current?.measureInWindow((x, y, _w, h) => {
-      setAnchor({ x, y: y + h });
-      const below = windowHeight - insets.bottom - (y + h) - SCREEN_MARGIN;
-      setMaxHeight(Math.min(MENU_MAX_HEIGHT, below >= MENU_MIN_HEIGHT ? below : viewportHeight));
-      setOpen(true);
-    });
+    if (compact) { setOpen(true); return; }
+    anchorRef.current?.measureInWindow((x, y, width, height) => { setAnchor({ x, y, width, height }); setOpen(true); });
   };
-  const closeMenu = () => {
-    setOpen(false);
-    // Coordinate anchors leave focus restoration to us; never scroll the surrounding dialog.
-    if (anchorRef.current instanceof HTMLElement) anchorRef.current.focus({ preventScroll: true });
-  };
+  const closeMenu = () => setOpen(false);
   const current = options.find((option) => option.value === value);
+  const rows = options.map((option) => {
+    const selected = option.value === value;
+    return (
+      <StateLayerPressable key={option.value} layerColor={colors.onSurface} radius={itemRadius} accessibilityRole="menuitem" style={[styles.item, selected && { backgroundColor: colors.secondaryContainer }]}
+        onPress={() => { closeMenu(); onChange(option.value); }} accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}>
+        {option.icon && <View style={styles.icon}>{option.icon}</View>}
+        <Text variant="bodyLarge" numberOfLines={1} style={[styles.itemLabel, selected && { color: colors.onSecondaryContainer }]}>{option.label}</Text>
+        <View style={styles.check}>{selected && <SvgIcon shape={iconShapes.check} size={20} color={colors.onSecondaryContainer} />}</View>
+      </StateLayerPressable>
+    );
+  });
   return (
     <View>
-      <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu}
         {...{ dataSet: { focusRing: 'field' } }}
         accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled} aria-invalid={Boolean(error)}
         accessibilityLabel={`${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`}>
@@ -67,24 +63,9 @@ export function SelectField<T extends string>({ label, options, value, onChange,
             right={<TextInput.Icon icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />} forceTextInputFocus={false} tabIndex={-1} aria-hidden />} />
         </div>
       </Pressable>
-      <Menu visible={open} onDismiss={closeMenu} anchorPosition="bottom"
-        contentStyle={{ backgroundColor: colors.elevation.level2, maxHeight: menuHeight, borderRadius: radius.card,
-          width: menuWidth, paddingVertical: spacing.xs, overflow: 'hidden' }}
-        anchor={anchor}>
-        <ScrollView style={{ maxHeight: Math.max(0, menuHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">
-        {options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <StateLayerPressable key={option.value} layerColor={colors.onSurface} radius={itemRadius} accessibilityRole="menuitem" style={[styles.item, selected && { backgroundColor: colors.secondaryContainer }]}
-              onPress={() => { closeMenu(); onChange(option.value); }} accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}>
-              {option.icon && <View style={styles.icon}>{option.icon}</View>}
-              <Text variant="bodyLarge" numberOfLines={1} style={[styles.itemLabel, selected && { color: colors.onSecondaryContainer }]}>{option.label}</Text>
-              <View style={styles.check}>{selected && <SvgIcon shape={iconShapes.check} size={20} color={colors.onSecondaryContainer} />}</View>
-            </StateLayerPressable>
-          );
-        })}
-        </ScrollView>
-      </Menu>
+      {compact
+        ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
+        : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={anchor.width} label={label} contentStyle={styles.menu}>{rows}</AnchoredMenu>}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
   );
@@ -93,6 +74,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
 const styles = StyleSheet.create({
   // The shared keyboard focus style colours Paper's own outline without moving the input or its label.
   anchor: { borderRadius: radius.input },
+  menu: { borderRadius: radius.card },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.md, marginHorizontal: spacing.xs },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },

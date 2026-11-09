@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { useTheme } from 'react-native-paper';
-import { bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
+import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
 import { observeViewportHeight, stickyBottomProperty } from './viewport';
 
@@ -13,7 +13,7 @@ type Props = { mode: BootTheme['mode']; accent: Accent; colorMode: ColorMode };
 export function GlobalStyle({ mode, accent, colorMode }: Props) {
   const { colors, dark, fonts } = useTheme();
   const family = fonts.bodyMedium.fontFamily;
-  useEffect(() => {
+  useLayoutEffect(() => {
     const style = document.createElement('style');
     style.id = 'nummo-global';
     style.textContent = `
@@ -70,13 +70,8 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
     window.addEventListener('pointerdown', onPointer, true);
     return () => { window.removeEventListener('keydown', onKey, true); window.removeEventListener('pointerdown', onPointer, true); };
   }, []);
-  useEffect(() => {
-    // The static tags in index.html are per OS scheme; the user's theme may differ, so keep a single untargeted tag.
-    const tags = Array.from(document.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
-    const meta = tags[0] ?? document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'theme-color' }));
-    tags.slice(1).forEach((tag) => tag.remove());
-    meta.removeAttribute('media');
-    meta.content = colors.background;
-  }, [colors.background]);
+  useLayoutEffect(() => {
+    applyDocumentTheme(document, colors.background, dark);
+  }, [colors.background, dark]);
   return null;
 }

@@ -54,3 +54,16 @@ test('hybrid: promuove solo export completi e conserva la versione precedente', 
     assert.equal(readFileSync(join(backup, 'firestore_export/data'), 'utf8'), 'vecchio');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('hybrid: metadati fuori dalla cartella export sono rifiutati', () => {
+  const root = mkdtempSync(join(tmpdir(), 'nummo-containment-test-'));
+  try {
+    const stage = join(root, 'stage');
+    mkdirSync(stage);
+    writeFileSync(join(root, 'outside'), 'test');
+    for (const file of ['../outside', join(root, 'outside'), '.']) {
+      writeFileSync(join(stage, 'firebase-export-metadata.json'), JSON.stringify({ firestore: { metadata_file: file } }));
+      assert.throws(() => validateArchive(stage), /Originali conservati/);
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

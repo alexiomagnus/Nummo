@@ -101,7 +101,16 @@ export const iconStroke = 1.5;
 
 // Material 3 emphasized-decelerate / standard easings and durations (ms).
 // `enter` is the emphasized-decelerate curve for things that appear (fast start, soft landing); `easing` for state changes.
-export const motion = { short: 150, medium: 250, long: 300, easing: [0.2, 0, 0, 1] as const, enter: [0.05, 0.7, 0.1, 1] as const };
+// Overlays: `fade` makes an entering surface opaque quickly (its transform keeps easing); `exitEasing` (emphasized
+// accelerate) holds a leaving surface solid and then removes it at once, `exit` is the slide-out of a bottom sheet.
+export const motion = {
+  fade: 100, short: 150, exit: 200, medium: 250, long: 300,
+  easing: [0.2, 0, 0, 1] as const, enter: [0.05, 0.7, 0.1, 1] as const, exitEasing: [0.3, 0, 0.8, 0.15] as const,
+};
+
+// Material 3 Expressive spatial spring (default speed: stiffness 380, damping ratio 0.8, slight overshoot) for things that
+// move, such as the navigation indicator. Expressed as RN Animated.spring parameters: damping = ratio · 2·√(stiffness·mass).
+export const spatialSpring = { stiffness: 380, damping: 0.8 * 2 * Math.sqrt(380), mass: 1 } as const;
 
 // Neutral chart content/state-layer colors; tile text follows the selected page mode.
 export const chartTextColors = { dark: '#000000', light: '#FFFFFF' } as const;
