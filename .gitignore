@@ -17,3 +17,6 @@ emulator-data/
 
 # Alias/progetti Firebase personali della CLI (mai versionati)
 .firebaserc
+
+# Config temporanea del runner hybrid (rimossa all'arresto, mai versionata)
+.nummo-hybrid-*.json

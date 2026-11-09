@@ -12,7 +12,12 @@
   index.html live referenzia `index-338dc5fa….js` (HTTP 200), manifest `theme_color` `#121212`.
   Login, caricamento dati, CRUD cloud e resa su Pixel/PWA reale non verificati. I client già aperti vanno ricaricati:
   quelli vecchi rifiutano lo schema 2 delle prove gratuite.
-- Igiene Git ancora aperta: `.nummo-hybrid-14940.json` resta tracciato e `.gitignore` non ha `.nummo-hybrid-*.json`.
+- Igiene Git (10 novembre): `.nummo-hybrid-*.json` in `.gitignore`, `.nummo-hybrid-14940.json` tolto dall'indice con
+  `git rm --cached` (file conservato su disco). Superato il punto 4 delle «Prossime attività» in fondo.
+- **Hybrid orfano rilevato (10 novembre), non toccato:** runner PID 41530 terminato, ma Firestore Java PID 41656 su 8180
+  ed Expo PID 105884 su 8081 ancora attivi; `.firebase/hybrid.lock` punta a 41530, sessione `hybrid-pjXRdr` senza
+  export, config `.nummo-hybrid-41530.json` rimasta. Eventuali dati scritti in locale dalle 15:07 del 9 novembre sono
+  solo nella memoria del processo Java: esportarli esplicitamente in una cartella nuova prima di arrestarlo.
 
 ## Rules pubblicate e issue #8 chiusa — 9 novembre 2026
 
