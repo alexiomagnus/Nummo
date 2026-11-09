@@ -171,7 +171,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const { width } = useWindowDimensions();
   const tight = destinations.length > 3 && width < 380;
   const index = destinations.findIndex((item) => item.value === selected);
-  const { pill, indicator, focus } = useSlidingIndicator(destinations, index, onSelect, reduceMotion);
+  const { pill, indicator, focus, suppressPressed } = useSlidingIndicator(destinations, index, onSelect, reduceMotion);
   const shownIndex = focus ?? index;
   return (
     <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }, hidden && styles.hidden]}>
@@ -184,6 +184,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
           const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
           return (
             <StateLayerPressable key={item.value} layerColor={focus === null ? color : 'transparent'} radius={radius.pill} accessibilityRole="button"
+              suppressPressed={suppressPressed}
               aria-current={item.value === selected ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
               style={[styles.pillItem, active && !indicator && { backgroundColor: colors.primaryContainer }]}>
               <SvgIcon shape={item.icon} size={24} color={color} />
@@ -222,6 +223,9 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
   const ref = useRef<ComponentRef<typeof View>>(null);
   const [width, setWidth] = useState(0);
   const [focus, setFocus] = useState<number | null>(null);
+  // Keep a completed/cancelled drag suppressed until the next press: restoring the colour at pointerup can otherwise
+  // reveal the origin's still-pressed layer for a frame, followed by its 100 ms fade. Hover feedback stays independent.
+  const [suppressPressed, setSuppressPressed] = useState(false);
   const position = useRef(new Animated.Value(Math.max(index, 0))).current;
   const shown = useRef(new Animated.Value(index >= 0 ? 1 : 0)).current;
   const lift = useRef(new Animated.Value(0)).current;
@@ -272,6 +276,7 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
     const down = (event: PointerEvent) => {
       swallowClick = false;
       if (event.button !== 0 || !event.isPrimary) return;
+      setSuppressPressed(false);
       start = { id: event.pointerId, x: event.clientX, y: event.clientY };
     };
     const move = (event: PointerEvent) => {
@@ -280,6 +285,7 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
         if (!isHorizontalDrag(event.clientX - start.x, event.clientY - start.y)) return;
         active = true;
         dragging.current = true;
+        setSuppressPressed(true);
         try { node.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ }
         position.stopAnimation();
         fade(1);
@@ -308,6 +314,13 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
     };
     const up = (event: PointerEvent) => end(event, true);
     const cancel = (event: PointerEvent) => end(event, false);
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        // A keyboard activation is a new gesture, not the synthetic click left over from the drag.
+        swallowClick = false;
+        setSuppressPressed(false);
+      }
+    };
     const click = (event: MouseEvent) => {
       if (!swallowClick) return;
       swallowClick = false;
@@ -318,12 +331,14 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
     node.addEventListener('pointermove', move);
     node.addEventListener('pointerup', up);
     node.addEventListener('pointercancel', cancel);
+    node.addEventListener('keydown', keydown);
     node.addEventListener('click', click, true);
     return () => {
       node.removeEventListener('pointerdown', down);
       node.removeEventListener('pointermove', move);
       node.removeEventListener('pointerup', up);
       node.removeEventListener('pointercancel', cancel);
+      node.removeEventListener('keydown', keydown);
       node.removeEventListener('click', click, true);
     };
   }, [position, moveTo, fade, setLift]);
@@ -344,6 +359,7 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
     pill: { ref, onLayout: (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width) },
     indicator,
     focus,
+    suppressPressed,
   };
 }
 

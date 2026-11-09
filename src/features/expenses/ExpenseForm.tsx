@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -11,6 +11,7 @@ import type { Category } from '../../domain/category';
 import { ExpenseFields, type BaseField } from './ExpenseFields';
 import type { ExpenseStore } from './expenseStore';
 import { PromoField } from './PriceSchedule';
+import { TrialField } from './TrialField';
 import { RepeatField } from './RepeatField';
 import { todayInRome } from '../../domain/policy';
 import { FundField, noFund, type FundChoice } from '../funds/FundField';
@@ -24,7 +25,9 @@ export function resolveFund(chosen: string, choices: readonly FundChoice[], defa
   return choices.some((choice) => choice.fund.id === defaultFundId) ? defaultFundId : '';
 }
 
-export function ExpenseForm({ categories, store, onCreateCategory, fundChoices = [], defaultFundId }: Props) {
+export const ExpenseForm = memo(ExpenseFormView);
+
+function ExpenseFormView({ categories, store, onCreateCategory, fundChoices = [], defaultFundId }: Props) {
   const { t } = useI18n();
   const notify = useSnackbar();
   const size = useSizeClass();
@@ -45,7 +48,7 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
     setDraft(newDraft());
     setErrors({});
     setFormKey((key) => key + 1);
-    notify("Spesa salvata e confermata da Firestore.");
+    notify(submission.request.first_payment_date ? "Abbonamento salvato." : "Spesa salvata e confermata da Firestore.");
     store.startNew();
   }, [submission.status]);
   // A category deleted in the other section simply stops being selected.
@@ -88,6 +91,7 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
   };
 
   const startDate = draft.date || todayInRome();
+  const billingStart = draft.trial && draft.firstPaymentDate ? draft.firstPaymentDate : startDate;
   const repeat = (
     <View style={[styles.repeat, desktop && styles.repeatDesktop]}>
       {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
@@ -95,9 +99,11 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
       <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={startDate}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })} />
+      {draft.repeat && <TrialField enabled={draft.trial} firstPaymentDate={draft.firstPaymentDate} startDate={startDate}
+        error={errors.firstPaymentDate} disabled={!enabled} onChange={update} />}
       {draft.repeat && draft.recurrence && (
         <PromoField value={draft.promo} amount={draft.promoAmount} after={draft.promoAfter} firstAmount={draft.amount}
-          recurrence={draft.recurrence} startDate={startDate} disabled={!enabled}
+          recurrence={draft.recurrence} startDate={billingStart} disabled={!enabled}
           errors={{ amount: errors.promoAmount, after: errors.promoAfter }} onChange={update} />
       )}
     </View>

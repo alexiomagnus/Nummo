@@ -25,7 +25,7 @@ const headlineFormat = (locale: string) => new Intl.DateTimeFormat(locale, { wee
 // Outlined read-only field showing the chosen date («Oggi», «Ieri» or the date); opens the modal date picker.
 // An empty `value` means today (resolved at save time), as in the draft.
 // `name` overrides the accessible name of the field (default: the expense date).
-export function DateField({ value, error, disabled, name, onChange }: { value: string; error?: boolean; disabled?: boolean; name?: string; onChange: (date: string) => void }) {
+export function DateField({ value, error, disabled, name, label, minDate = expensePolicy.minDate, maxDate = todayInRome(), onChange }: { value: string; error?: boolean; disabled?: boolean; name?: string; label?: string; minDate?: string; maxDate?: string; onChange: (date: string) => void }) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const today = todayInRome();
@@ -36,19 +36,19 @@ export function DateField({ value, error, disabled, name, onChange }: { value: s
         aria-disabled={disabled} aria-invalid={Boolean(error)} accessibilityLabel={name ? t("{p0}: {p1}. Cambia data", { p0: name, p1: shown }) : t("Data della spesa: {p0}. Cambia data", { p0: shown })}>
         {/* Keep the decorative input and calendar icon outside hit-testing and keyboard focus. */}
         <div inert>
-          <TextInput outlineStyle={inputOutline} label={t("Data")} value={shown} mode="outlined" readOnly focusable={false} error={error}
+          <TextInput outlineStyle={inputOutline} label={label ?? t("Data")} value={shown} mode="outlined" readOnly focusable={false} error={error}
             aria-disabled={disabled} showSoftInputOnFocus={false} left={leadingIcon(iconShapes.calendar)} />
         </div>
       </Pressable>
-      <DatePickerDialog visible={open} value={value} onDismiss={() => setOpen(false)}
+      <DatePickerDialog visible={open} value={value} minDate={minDate} maxDate={maxDate} onDismiss={() => setOpen(false)}
         onConfirm={(date) => { setOpen(false); onChange(date); }} />
     </>
   );
 }
 
 // Material 3 modal date picker: headline with the pending date, month grid, Annulla / OK. Days outside the allowed
-// range (2000-01-01 … today) are disabled, so no invalid date can be picked.
-function DatePickerDialog({ visible, value, onDismiss, onConfirm }: { visible: boolean; value: string; onDismiss: () => void; onConfirm: (date: string) => void }) {
+// range are disabled; the default remains 2000-01-01 … today for ordinary expenses.
+function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfirm }: { visible: boolean; value: string; minDate: string; maxDate: string; onDismiss: () => void; onConfirm: (date: string) => void }) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const today = todayInRome();
@@ -71,20 +71,20 @@ function DatePickerDialog({ visible, value, onDismiss, onConfirm }: { visible: b
             </View>
             <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
             <View style={styles.body}>
-              <Calendar selected={picked} month={month} onMonth={setMonth} onPick={setPicked} />
+              <Calendar selected={picked} month={month} minDate={minDate} maxDate={maxDate} onMonth={setMonth} onPick={setPicked} />
             </View>
           </ScrollView>
         </Dialog.ScrollArea>
         <Dialog.Actions>
           <Button onPress={onDismiss}>{t("Annulla")}</Button>
-          <Button onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
+          <Button disabled={picked < minDate || picked > maxDate} onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
   );
 }
 
-function Calendar({ selected, month, onMonth, onPick }: { selected: string; month: string; onMonth: (month: string) => void; onPick: (date: string) => void }) {
+function Calendar({ selected, month, minDate, maxDate, onMonth, onPick }: { selected: string; month: string; minDate: string; maxDate: string; onMonth: (month: string) => void; onPick: (date: string) => void }) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const today = todayInRome();
@@ -94,8 +94,8 @@ function Calendar({ selected, month, onMonth, onPick }: { selected: string; mont
   const days = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
   const cells = Array.from({ length: Math.ceil((lead + days) / 7) * 7 }, (_, index) => (index < lead || index >= lead + days ? null : iso(year, monthIndex, index - lead + 1)));
   const shift = (delta: number) => onMonth(iso(year, monthIndex + delta, 1).slice(0, 7));
-  const canPrev = iso(year, monthIndex, 1) > expensePolicy.minDate;
-  const canNext = iso(year, monthIndex + 1, 1) <= today;
+  const canPrev = iso(year, monthIndex, 1) > minDate;
+  const canNext = iso(year, monthIndex + 1, 1) <= maxDate;
   const nav = (label: string, shape: string, enabled: boolean, onPress: () => void) => (
     <StateLayerPressable layerColor={colors.onSurface} radius={radius.pill} disabled={!enabled} onPress={onPress}
       accessibilityRole="button" accessibilityLabel={label} style={styles.nav}>
@@ -114,7 +114,7 @@ function Calendar({ selected, month, onMonth, onPick }: { selected: string; mont
         {cells.map((date, index) => {
           if (!date) return <View key={index} style={styles.cell} />;
           const active = date === selected;
-          const allowed = date >= expensePolicy.minDate && date <= today;
+          const allowed = date >= minDate && date <= maxDate;
           return (
             <View key={index} style={styles.cell}>
               <StateLayerPressable layerColor={active ? colors.onPrimary : colors.onSurface} radius={radius.pill} disabled={!allowed}

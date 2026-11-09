@@ -1,14 +1,14 @@
 # Backup dimostrativo con casi limite
 
 File: [`nummo-test-casi-limite-2026-11-08.json`](nummo-test-casi-limite-2026-11-08.json).
-Dati interamente fittizi, formato `nummo-backup` **v4** della versione corrente del repository:
+Dati interamente fittizi, formato `nummo-backup` **v5** della versione corrente del repository:
 89 spese/serie, 15 categorie, 6 fondi, 2 movimenti, 4 liste con 112 prodotti. Circa 76 kB.
 Non è compatibile con versioni dell’app che leggono solo backup v1/v2/v3.
 
 ## Come usarlo
 
 1. Preferire la demo locale con le Rules del checkout. In un archivio personale fare prima un backup JSON.
-2. Da **Spese → Dati → Importa backup (JSON)** scegliere il file e **Unisci ai dati esistenti**.
+2. Da **menu account → Importa ed esporta → Importa backup (JSON)** scegliere il file e **Unisci ai dati esistenti**.
    Categorie, fondi, liste e descrizioni sono riconoscibili dal prefisso `TEST` (eccetto il testo di prova CSV).
    L’unione aggiunge comunque dati all’archivio: non selezionare Sostituisci su dati personali da conservare.
 3. I due riferimenti a una categoria e a un fondo inesistenti sono intenzionali: una spesa deve apparire senza
@@ -59,7 +59,7 @@ inclusi perché renderebbero inutilizzabile l’intero backup.
 
 ## Spese standard di un utente comune
 
-File: [`nummo-spese-standard-2026-11-08.json`](nummo-spese-standard-2026-11-08.json), backup v4.
+File: [`nummo-spese-standard-2026-11-08.json`](nummo-spese-standard-2026-11-08.json), backup v5.
 Profilo fittizio di una persona che vive in affitto: **66 spese singole e 6 pagamenti ricorrenti**, da settembre
 all’8 novembre 2026, in 8 categorie. Supermercato, bar, pranzi, bollette, autobus, carburante, farmacia,
 abbigliamento e tempo libero, con normali differenze tra un mese e l’altro.
@@ -81,7 +81,22 @@ Su archivio contenente solo questo file, all’8 novembre 2026:
 Totale disponibile attuale, tutti i fondi: **3.893,79 €**; **80 occorrenze** maturate.
 Valori calcolati con il dominio; variano dopo l’8 novembre o unendo dati preesistenti.
 
-Importare da **Spese → Dati → Importa backup (JSON) → Unisci ai dati esistenti**, preferibilmente nella demo.
+Importare da **menu account → Importa ed esporta → Importa backup (JSON) → Unisci ai dati esistenti**, preferibilmente nella demo.
 Le categorie con nomi uguali ma ID diversi possono produrre un conflitto: usare un archivio demo vuoto in tal caso.
 File verificato con parser, piano su archivio vuoto, riferimenti completi e reimportazione identica senza aggiunte.
 Importazione UI/Firestore con questo specifico file non eseguita.
+
+## Prove gratuite degli abbonamenti
+
+File: [`nummo-prove-gratuite-2026-11-09.json`](nummo-prove-gratuite-2026-11-09.json), backup v5, solo dati TEST.
+Al 9 novembre 2026, su archivio contenente solo questo file:
+
+- `TEST Spotify in prova`: attivo, «In prova gratuita», primo pagamento 9 dicembre, nessun pagamento né spesa.
+- `TEST Prova annullata`: annullato durante la prova, nessun pagamento e nessun prossimo addebito.
+- `TEST Prova terminata`: attivo, un pagamento di 15,99 € il 1° novembre; prossimo il 1° dicembre.
+- Totale speso di novembre: 15,99 €. CSV: una sola occorrenza, nessuna riga da zero euro.
+
+Preferire la demo isolata. Importazione e reimportazione sono esplicite; nessun dato viene scritto aprendo il file.
+I client precedenti alla prova gratuita non leggono i backup v5. Un documento con prova usa schema 2: il vecchio
+client rifiuta l'archivio, evitando di trattare l'inizio della prova come un pagamento. Non aprire questi dati con
+un vecchio client; prima di un rilascio occorre aggiornare separatamente le Rules e il sito, con autorizzazione.

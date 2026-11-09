@@ -656,6 +656,41 @@ La transizione di sezione usa Web Animations API sul contenitore esistente: 250 
 opacity/transform, cancellazione al cleanup, rispetto di reduced motion e animation.scale;
 nessun rimontaggio del modulo. Senza API il cambio ? immediato. Reveal dura 250 ms.
 
+## Costo dei cambi pagina (9 novembre 2026)
+
+Il cambio sezione prima rieseguiva RemoteWorkspace (ricreando gli oggetti esposti dai suoi hook) e rimontava
+Spese, Dashboard, Fondi e Liste. Anche il modulo Nuova spesa, nascosto ma montato, riceveva nuove props.
+Con 240 spese TEST e CPU 4× il lavoro sincrono rendeva indisponibile il thread principale per centinaia di ms;
+la transizione WAAPI del contenuto non elimina il costo React/layout, né quello della molla JS della pillola.
+
+La navigazione è ora stato locale di WorkspaceNavigation, sotto gli hook remoti. Callback e props del modulo
+restano stabili; modulo e pagine principali usano memo. Le quattro destinazioni montano alla prima visita,
+poi Activity conserva DOM/stato e sospende gli effetti quando nascoste, senza precaricare tutte le pagine all'avvio.
+Filtri, dettagli e mese selezionato restano tra le visite; tutto è eliminato al cambio UID come prima.
+Le richieste di navigazione usano startTransition: React può cedere il thread durante il primo rendering,
+mentre la pagina precedente resta visibile fino al commit. Non garantisce un commit senza costo o una latenza minore.
+Modulo spesa e backup conservano il proprio ciclo di vita precedente (anche le conferme asincrone).
+
+Nessun nuovo store, router, servizio o query; aggiornamenti remoti, lingua e tema continuano a propagarsi.
+Compromesso: DOM e stato delle pagine già visitate occupano più memoria; la prima apertura resta da ottimizzare
+se ancora lenta sul dispositivo. Geometria, molla, animazione pagina e limite iniziale di 50 spese invariati.
+`scripts/check-navigation.mjs --measure` registra tre giri, commit della destinazione, intervalli rAF e long task;
+le prime visite vanno separate dai ritorni. Gli intervalli rAF misurano disponibilità del thread principale,
+non FPS presentati dal compositor. Misure e limiti del collaudo in HANDOFF.md.
+
+## Feedback della pillola durante il trascinamento (9 novembre 2026, issue #1)
+
+Il drag della pillola assume il controllo del gesto dopo la soglia orizzontale. Il feedback premuto della voce
+iniziale resta soppresso fino alla prossima pressione pointer o attivazione con Invio/Spazio; hover e focus restano
+indipendenti. `StateLayerPressable.suppressPressed` azzera immediatamente quel solo strato, anche se il rilascio
+interno di Pressable arriva dopo il cambio di selezione: il ritorno dal colore trasparente non deve rivelare una
+pressione residua seguita dalla dissolvenza. La soppressione vale anche dopo `pointercancel`. Indicatore, molla,
+transizione della pagina e montaggio delle bozze mantengono il comportamento esistente.
+Invio/Spazio azzerano anche la soppressione del click residuo del drag: l'attivazione da tastiera è un nuovo
+gesto e non deve essere intercettata come il click sintetico del rilascio touch.
+Regressione browser con Chromium/CDP, senza nuove dipendenze: `scripts/check-navigation.mjs`, su export demo
+con emulatori dedicati; richiede Chromium nel PATH e non certifica il comportamento del dispositivo Android reale.
+
 ## Overlay condivisi: menu, fogli dal basso e dialoghi (9 novembre 2026)
 
 Video da smartphone Android (Nuova spesa): il menu Categoria copriva «Salva» e la pillola di navigazione, si apriva
@@ -681,3 +716,59 @@ Decisione: un solo livello `Overlay.tsx` sostituisce Paper `Menu` e `Modal` nell
 - Movimento ridotto da `useReducedMotion()`: `PaperProvider`, ricevendo un tema, forza `animation.scale` a 1 e
   ignora quello di `createTheme`. Le animazioni interne di Paper (es. etichette dei campi) non lo rispettano.
 Nessuna nuova dipendenza, nessuna modifica a dati, servizi o Rules.
+
+## Chiusura del foglio dal basso con swipe (9 novembre 2026, issue #3)
+
+Il trascinamento della maniglia previsto sopra non si attivava mai: il `Portal` di Paper monta i figli in un commit
+successivo, quindi l'effetto di `useSheetDrag` (dipendente solo da `mounted`) trovava i ref vuoti e non ripartiva.
+Prova in Chromium: testata con `touch-action: auto`, foglio fermo dopo 260 px di trascinamento.
+- I nodi (foglio, testata, lista, scrim) arrivano da ref a callback in stato: l'effetto riparte quando esistono.
+  Regola generale per gli overlay nel `Portal`: niente effetti che leggono ref al montaggio senza dipendere dal nodo.
+- Testata: pointer event DOM (touch e mouse), `touch-action: none`. Lista: eventi touch con `touchmove` non passivo,
+  perché con `pan-y` il browser emette `pointercancel` appena scorre. Il gesto passa al foglio solo se inizia con la
+  lista in cima e va verso il basso oltre 8 px, in prevalenza verticale (`sheetGestureOwner`); deciso una volta per
+  gesto, così risalire fino in cima non si trasforma in chiusura. `overscroll-behavior: contain` sulla lista;
+  click successivo al trascinamento soppresso.
+- Chiusura oltre un terzo dell'altezza (max 160 dp) o con swipe ≥ 0,5 px/ms sugli ultimi 100 ms (`recentVelocity`,
+  non la media del gesto). Lo scrim schiarisce con la distanza; l'uscita riparte dalla posizione raggiunta con la
+  transizione esistente, il ritorno con la propria; movimento ridotto: immediati. Vale per `SelectField` e `MenuSelect`.
+
+## Prova gratuita degli abbonamenti (9 novembre 2026, issue #8)
+
+La prova non è una spesa a zero. `amount_minor` resta positivo, `expense_date` è l'inizio dell'abbonamento,
+`first_payment_date` il primo addebito (data civile valida, successiva all'inizio, entro 2099-12-31).
+Campo assente = calendario storico invariato. Il calendario pagato e la numerazione dei prezzi partono dal primo
+addebito: indice 0 al primo pagamento, indice 1 al rinnovo successivo, con gli stessi limiti di fine mese/bisestili.
+Storico, prossimi rinnovi, previsioni, Dashboard, fondi e CSV condividono questa proiezione. Nessun documento di
+pagamento, timer di scrittura o cron; al trascorrere dei giorni l'app ricalcola le occorrenze come già faceva.
+
+Durante la prova lo stato persistente è active/paused/cancelled, come prima. «In prova gratuita» è derivato da
+active e oggi < primo pagamento. L'indice 0 della prova rispetta i cambi di stato, a differenza dell'indice 0
+storico delle serie ordinarie, già pagato alla creazione. Annullamento/pausa di oggi vale dai giorni successivi:
+annullare entro il giorno prima del primo pagamento lo evita; farlo nel giorno dell'addebito non lo cancella.
+La riattivazione riprende il calendario originale, senza recuperare pagamenti saltati.
+
+UI: opzione solo dopo Ricorrente nel modulo di creazione, un solo campo «Primo pagamento», inizializzato a un
+mese dopo l'inizio e modificabile nel calendario. Non si salva anche una durata che potrebbe divergere dalla data.
+L'editor delle serie con prova consente di cambiare la prima data solo finché futura e l'importo base finché
+non sono iniziati gli addebiti; poi il prezzo vale sui rinnovi futuri. Una prova salvata non si rimuove e non si
+aggiunge a una serie ordinaria già registrata: altrimenti si cancellerebbero pagamenti storici. Dopo l'inizio
+pagato non si spostano data iniziale, prima data o frequenza. Impostazioni e bozze conservano IT/EN come prima.
+`DateField` riceve limiti opzionali e un'etichetta: il default per le spese ordinarie resta 2000-01-01…oggi.
+
+Compatibilità: solo le prove usano `schema_version: 2`, così un vecchio decoder non ignora il campo nuovo
+contando spese dalla data di inizio. Il vecchio client blocca l'archivio come non valido: nessuna migrazione
+silenziosa, ma aggiornamento obbligatorio prima di usare un archivio con prove. I documenti esistenti restano
+schema 1; nessuna riscrittura automatica.
+
+Il budget Rules è stato provato sul caso otto prezzi + otto stati + fondo: la rappresentazione array dei prezzi
+non lasciava spazio ai controlli aggiuntivi in aggiornamento. Solo nello schema 2 `price_changes` è quindi una
+stringa `indice:centesimi:0|1;…` (vuota senza variazioni, massimo 8), come gli stati e i piani dei fondi.
+Decoder rigoroso; nel dominio e nel JSON resta un array. Le Rules conservano importi positivi e limiti per entrambi
+gli schemi. Nei controlli legacy si riusano lunghezza/valori e si evita il controllo ridondante sulla dimensione:
+chiavi extra negate da hasOnly, campi obbligatori letti e tipizzati (assenza = rifiuto), con test negativi dedicati.
+
+Backup v5 include prima data e versione documento, preserva i lettori v1–v4 e rifiuta prove etichettate con una
+versione vecchia. Confronti import includono la prima data; ripristino/unione usano il codec corretto per lo schema.
+Fixture aggiornate a v5 e nuovo file TEST delle prove. Sito e nuove Rules devono essere pubblicati separatamente
+con autorizzazione; nessuna pubblicazione o modifica dei dati personali fa parte di questa implementazione.

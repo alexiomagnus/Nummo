@@ -70,3 +70,18 @@ export function promoChanges(after: number, then: number): PriceChange[] {
   return [makeChange(after, then, false)];
 }
 export const maxPromoAfter = maxIndex;
+
+// Trials use schema 2 and a compact Firestore representation to keep Rules below their expression budget.
+// Domain/backup prices remain arrays; version 1 Firestore documents keep their original array representation.
+export function encodeTrialPrices(changes: readonly PriceChange[]): string {
+  return changes.map(c => `${c.index}:${c.amount_minor}:${c.once ? 1 : 0}`).join(';');
+}
+export function decodeTrialPrices(value: unknown): PriceChange[] | null {
+  if (typeof value !== 'string') return null;
+  if (value === '') return [];
+  if (!/^[1-9][0-9]{0,2}:[1-9][0-9]{0,6}:[01](;[1-9][0-9]{0,2}:[1-9][0-9]{0,6}:[01]){0,7}$/.test(value)) return null;
+  return parsePriceChanges(value.split(';').map(part => {
+    const [index, amount, once] = part.split(':');
+    return { index: Number(index), amount_minor: Number(amount), once: once === '1' };
+  }));
+}

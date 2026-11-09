@@ -2,6 +2,7 @@ import type { Category } from './category.ts';
 import { expensePolicy, todayInRome } from './policy.ts';
 import { changePrice, makeChange, maxPromoAfter, nextRenewal, priceAt, type PriceChange, type PriceScope } from './pricing.ts';
 import { isRecurrence, type Recurrence } from './recurrence.ts';
+import { paymentStart, trialTimingError, validFirstPayment } from './trial.ts';
 import type { StatusChange } from './subscription.ts';
 
 export type ExpenseDraft = {
@@ -15,6 +16,8 @@ export type ExpenseDraft = {
   promo: boolean;
   promoAmount: string;
   promoAfter: string;
+  trial: boolean;
+  firstPaymentDate: string;
   // Fund that pays the expense ('' = none).
   fundId: string;
 };
@@ -38,7 +41,9 @@ export type ExpenseData = Readonly<{
   list_id: string | null;
   list_items: readonly string[];
   source: 'web_app';
-  schema_version: 1;
+  // Version 2 is used only for trials: older clients reject it instead of counting phantom payments.
+  first_payment_date?: string;
+  schema_version: 1 | 2;
 }>;
 
 export type ExpenseRequest = Readonly<ExpenseData & { expense_id: string }>;
@@ -46,7 +51,7 @@ export type FieldErrors = Partial<Record<keyof ExpenseDraft, string>>;
 export type Validation = { ok: true; data: ExpenseData } | { ok: false; errors: FieldErrors };
 
 export function newDraft(): ExpenseDraft {
-  return { amount: '', description: '', categoryId: '', date: '', repeat: false, recurrence: '', promo: false, promoAmount: '', promoAfter: '', fundId: '' };
+  return { amount: '', description: '', categoryId: '', date: '', repeat: false, recurrence: '', promo: false, promoAmount: '', promoAfter: '', fundId: '', trial: false, firstPaymentDate: '' };
 }
 
 // Parse digit strings, never multiply a floating-point monetary value.
@@ -86,6 +91,9 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   if (!isValidDate(date) || date < expensePolicy.minDate || date > todayInRome(now)) {
     errors.date = 'Inserisci una data valida dal 01/01/2000 a oggi (AAAA-MM-GG).';
   }
+  if (draft.repeat && draft.trial && !validFirstPayment(date, draft.firstPaymentDate)) {
+    errors.firstPaymentDate = 'Il primo pagamento deve essere dopo l’inizio della prova ed entro il 31/12/2099.';
+  }
   if (draft.repeat && !isRecurrence(draft.recurrence)) errors.recurrence = 'Scegli ogni quanto si ripete.';
   let price_changes: PriceChange[] = [];
   if (draft.repeat && draft.promo) {
@@ -100,7 +108,8 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   return { ok: true, data: {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: category?.id ?? null,
     expense_date: date, recurrence: draft.repeat && isRecurrence(draft.recurrence) ? draft.recurrence : null, price_changes, status_changes: [],
-    fund_id: fund?.id ?? null, list_id: null, list_items: [], source: 'web_app', schema_version: 1,
+    fund_id: fund?.id ?? null, list_id: null, list_items: [], source: 'web_app',
+    ...(draft.repeat && draft.trial ? { first_payment_date: draft.firstPaymentDate, schema_version: 2 as const } : { schema_version: 1 as const }),
   } };
 }
 
@@ -119,9 +128,14 @@ export type PriceEdit = Readonly<{
 
 // Data to save when editing an existing expense. A recurring series keeps the first occurrence's
 // price and everything already due; a new price applies from the next renewal only (or just to it).
-export function applyPriceEdit(previous: Pick<ExpenseData, 'amount_minor' | 'expense_date' | 'recurrence'> & { status_changes?: readonly StatusChange[] }, data: ExpenseData, edit: PriceEdit, today: string): { ok: true; data: ExpenseData } | { ok: false; error: string } {
+export function applyPriceEdit(previous: Pick<ExpenseData, 'amount_minor' | 'expense_date' | 'recurrence'> & { status_changes?: readonly StatusChange[]; first_payment_date?: string }, data: ExpenseData, edit: PriceEdit, today: string): { ok: true; data: ExpenseData } | { ok: false; error: string } {
+  const timingError = trialTimingError(previous, data, today);
+  if (timingError) return { ok: false, error: timingError };
+  if (previous.first_payment_date && previous.first_payment_date > today) {
+    return { ok: true, data: { ...data, price_changes: edit.changes, status_changes: previous.status_changes ?? [] } };
+  }
   if (!previous.recurrence || !data.recurrence) return { ok: true, data: { ...data, price_changes: [], status_changes: [] } };
-  const next = nextRenewal(previous.expense_date, data.recurrence, today);
+  const next = nextRenewal(paymentStart(previous), data.recurrence, today);
   if (!next) return { ok: false, error: 'Non ci sono rinnovi futuri a cui applicare il prezzo.' };
   // The form never edits the status: pauses and cancellations of the series are kept as they are.
   const withBase = { ...data, amount_minor: previous.amount_minor, status_changes: previous.status_changes ?? [] };
@@ -131,8 +145,8 @@ export function applyPriceEdit(previous: Pick<ExpenseData, 'amount_minor' | 'exp
 }
 
 // Price shown when opening a series for editing: the next renewal's, or the base for one-off expenses.
-export function currentPrice(expense: Pick<ExpenseData, 'amount_minor' | 'expense_date' | 'recurrence'> & { price_changes?: readonly PriceChange[] }, today: string): number {
-  const next = nextRenewal(expense.expense_date, expense.recurrence, today);
+export function currentPrice(expense: Pick<ExpenseData, 'amount_minor' | 'expense_date' | 'recurrence'> & { price_changes?: readonly PriceChange[]; first_payment_date?: string }, today: string): number {
+  const next = nextRenewal(paymentStart(expense), expense.recurrence, today);
   return next ? priceAt(expense.amount_minor, expense.price_changes ?? [], next.index) : expense.amount_minor;
 }
 
@@ -144,5 +158,5 @@ export function dataOf(record: ExpenseData): ExpenseData {
   // Likewise expenses saved before shopping lists existed have no list.
   const list_id = record.list_id ?? null;
   const list_items = record.list_items ?? [];
-  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, list_id, list_items, source, schema_version };
+  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, list_id, list_items, source, schema_version, ...(record.first_payment_date ? { first_payment_date: record.first_payment_date } : {}) };
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { menuHorizontalBounds, menuVerticalPlacement, sheetDragOutcome } from '../src/components/menuGeometry.ts';
+import { menuHorizontalBounds, menuVerticalPlacement, recentVelocity, sheetDragOutcome, sheetGestureOwner } from '../src/components/menuGeometry.ts';
 
 test('menu: il filtro Categoria resta sotto il campo destro anche vicino al bordo', () => {
   assert.deepEqual(menuHorizontalBounds(206, 190, 412, 0, 0, 16), { left: 206, width: 190 });
@@ -41,10 +41,30 @@ test('menu: sotto il campo se c’è spazio, altrimenti sopra, mai oltre il bord
 });
 
 test('foglio dal basso: chiusura col trascinamento oltre un terzo o con un gesto rapido', () => {
-  assert.equal(sheetDragOutcome(0, 100, 420), 'settle');
-  assert.equal(sheetDragOutcome(60, 400, 420), 'settle');
-  assert.equal(sheetDragOutcome(140, 600, 420), 'dismiss');
-  assert.equal(sheetDragOutcome(170, 900, 900), 'dismiss'); // tall sheet: at most 160 dp
-  assert.equal(sheetDragOutcome(40, 50, 420), 'dismiss'); // flick
-  assert.equal(sheetDragOutcome(20, 10, 420), 'settle'); // too short to be a flick
+  assert.equal(sheetDragOutcome(0, 1, 420), 'settle');
+  assert.equal(sheetDragOutcome(60, 0.15, 420), 'settle');
+  assert.equal(sheetDragOutcome(140, 0, 420), 'dismiss');
+  assert.equal(sheetDragOutcome(170, 0, 900), 'dismiss'); // tall sheet: at most 160 dp
+  assert.equal(sheetDragOutcome(40, 0.8, 420), 'dismiss'); // flick
+  assert.equal(sheetDragOutcome(20, 2, 420), 'settle'); // too short to be a flick
+  assert.equal(sheetDragOutcome(60, -0.8, 420), 'settle'); // flicked back up
+});
+
+test('foglio dal basso: velocità degli ultimi 100 ms, non media del gesto', () => {
+  assert.equal(recentVelocity([]), 0);
+  assert.equal(recentVelocity([{ t: 0, y: 0 }]), 0);
+  // Slow for 600 ms, then 60 px in the last 50 ms: a flick.
+  assert.equal(recentVelocity([{ t: 0, y: 0 }, { t: 300, y: 15 }, { t: 600, y: 30 }, { t: 650, y: 90 }]), 1.2);
+  // Moved, then held still for 200 ms before lifting (the release is the last sample): no flick.
+  assert.equal(recentVelocity([{ t: 0, y: 0 }, { t: 50, y: 80 }, { t: 250, y: 80 }]), 0);
+  assert.equal(recentVelocity([{ t: 0, y: 100 }, { t: 40, y: 60 }]), -1);
+});
+
+test('foglio dal basso: il trascinamento dalla lista non ruba lo scorrimento', () => {
+  assert.equal(sheetGestureOwner(0, 4, 0), 'pending'); // within the slop
+  assert.equal(sheetGestureOwner(2, 12, 0), 'sheet'); // down, list at its top
+  assert.equal(sheetGestureOwner(0, 40, 1), 'list'); // list already scrolled: native scroll
+  assert.equal(sheetGestureOwner(0, -12, 0), 'list'); // up: scrolls the list
+  assert.equal(sheetGestureOwner(14, 10, 0), 'list'); // mostly horizontal
+  assert.equal(sheetGestureOwner(-9, 9, 0), 'list'); // diagonal tie stays a scroll
 });

@@ -34,7 +34,9 @@ const monthLabel = (month: string, formatter: Intl.DateTimeFormat, locale: strin
 const ALL = 'all';
 const pageSize = 50;
 
-export function ExpenseList({ occurrences, categories, error, onEdit, listItems }: Props) {
+export const ExpenseList = memo(ExpenseListView);
+
+function ExpenseListView({ occurrences, categories, error, onEdit, listItems }: Props) {
   const { t, locale } = useI18n();
   const dates = useMemo(() => dateFormat(locale), [locale]);
   const months = useMemo(() => monthFormat(locale), [locale]);

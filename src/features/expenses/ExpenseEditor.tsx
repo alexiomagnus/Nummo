@@ -1,3 +1,5 @@
+import { paymentStart } from '../../domain/trial';
+import { TrialField } from './TrialField';
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -29,6 +31,7 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
   const shownAmount = useMemo(() => currentPrice(record, today), [record, today]);
   const [draft, setDraft] = useState<ExpenseDraft>({ ...newDraft(), amount: amountText(shownAmount),
     description: record.description, categoryId: record.category_id ?? '', date: record.expense_date === todayInRome() ? '' : record.expense_date, repeat: record.recurrence !== null, recurrence: record.recurrence ?? '',
+    trial: Boolean(record.first_payment_date), firstPaymentDate: record.first_payment_date ?? '',
     fundId: record.fund_id && fundChoices.some((c) => c.fund.id === record.fund_id) ? record.fund_id : fundChoices.length ? noFund : '' });
   const [changes, setChanges] = useState<readonly PriceChange[]>(record.price_changes);
   const [scope, setScope] = useState<PriceScope>('future');
@@ -38,7 +41,7 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
   const [deleting, setDeleting] = useState(false);
   const series = record.recurrence !== null;
   const recurrence = isRecurrence(draft.recurrence) ? draft.recurrence : record.recurrence;
-  const next = series && draft.repeat ? nextRenewal(record.expense_date, recurrence, today) : null;
+  const next = series && draft.repeat ? nextRenewal(draft.trial ? draft.firstPaymentDate : record.expense_date, recurrence, today) : null;
   const save = async () => {
     if (busy || deleting || !store.update) return;
     const funds = fundChoices.map((choice) => choice.fund);
@@ -65,8 +68,11 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
             {t("Il fondo vale per tutti i pagamenti della serie, anche quelli già effettuati.")}</Text>}
         </View> : undefined}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
+      {record.first_payment_date && <TrialField existing enabled firstPaymentDate={draft.firstPaymentDate} startDate={draft.date || today}
+        locked={record.first_payment_date <= today} disabled={busy} error={errors.firstPaymentDate}
+        onChange={(patch) => { setDraft((d) => ({ ...d, ...patch })); setErrors((e) => ({ ...e, firstPaymentDate: undefined })); }} />}
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
-        start={record.expense_date} recurrence={recurrence} disabled={busy} onScope={setScope}
+        start={paymentStart({ expense_date: record.expense_date, ...(draft.trial ? { first_payment_date: draft.firstPaymentDate } : {}) })} recurrence={recurrence} disabled={busy} onScope={setScope}
         onRemove={(change) => setChanges((all) => all.filter((item) => item !== change))} />}
       {listNote && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, paddingHorizontal: spacing.md }}>
         {t("Spesa registrata da una lista: i prodotti acquistati restano invariati.")}</Text>}

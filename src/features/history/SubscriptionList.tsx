@@ -28,7 +28,7 @@ type Props = {
 const historyPreview = 12;
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
-export function StatusBadge({ status }: { status: SubscriptionStatus }) {
+export function StatusBadge({ status, inTrial = false }: { status: SubscriptionStatus; inTrial?: boolean }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   // Three distinct tones, always with the text label (colour is never the only cue).
@@ -38,7 +38,7 @@ export function StatusBadge({ status }: { status: SubscriptionStatus }) {
   return (
     <View style={[styles.badge, { backgroundColor: tone.backgroundColor }]}>
       <SvgIcon shape={status === 'active' ? iconShapes.check : status === 'paused' ? iconShapes.pause : iconShapes.close} size={14} color={tone.color} />
-      <Text variant="labelMedium" style={{ color: tone.color }}>{t(statusLabels[status])}</Text>
+      <Text variant="labelMedium" style={{ color: tone.color }}>{inTrial ? t('In prova gratuita') : t(statusLabels[status])}</Text>
     </View>
   );
 }
@@ -80,14 +80,14 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {subscriptions.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento corrisponde alla ricerca.")}</Text>}
       <View role="list">
-        {subscriptions.map(({ entry, status, amount_minor, next, payments, total }) => {
+        {subscriptions.map(({ entry, status, inTrial, amount_minor, next, payments, total }) => {
           const category = categoryById.get(entry.category_id ?? '');
           const open = expanded.has(entry.id);
           const all = complete.has(entry.id);
           const detailsId = `subscription-details-${entry.id}`;
           const since = entry.status_changes?.[entry.status_changes.length - 1]?.date;
           const frequency = entry.recurrence ? t(recurrenceLabels[entry.recurrence]) : '';
-          const when = status === 'active' ? (next ? t("Prossimo rinnovo {p0}", { p0: formatDate(next.date) }) : '')
+          const when = status === 'active' ? (next ? t(inTrial ? 'Primo pagamento {p0}' : 'Prossimo rinnovo {p0}', { p0: formatDate(next.date) }) : '')
             : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
           const shown = all ? payments : payments.slice(0, historyPreview);
           const working = busy === entry.id;
@@ -97,7 +97,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
             <View key={entry.id}>
               <ListRow outlined icon={category?.icon ?? null} title={entry.description}
                 subtitle={[frequency, when].filter(Boolean).join(' · ')}
-                meta={<View style={styles.meta}><StatusBadge status={status} />{compact && amount}</View>}
+                meta={<View style={styles.meta}><StatusBadge status={status} inTrial={inTrial} />{compact && amount}</View>}
                 trailing={<>
                   {!compact && amount}
                   <IconButton style={listRowStyles.iconButton} aria-expanded={open} aria-controls={open ? detailsId : undefined}
@@ -114,7 +114,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
                     <Field label={t("Totale speso")} value={formatAmount(total)} />
                     <Field label={t("Categoria")} value={category?.label ?? t("Senza categoria")} />
                     <Field label={t("Inizio")} value={formatDate(entry.expense_date)} />
-                    <Field label={t("Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
+                    <Field label={t(inTrial ? "Primo pagamento" : "Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
                   </View>
                   <View style={[styles.actions, compact && styles.compactActions]}>
                     {status === 'active' && <Button compact={compact} mode="outlined" disabled={!canChange || working} loading={working}

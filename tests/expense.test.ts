@@ -5,7 +5,7 @@ import { todayInRome } from '../src/domain/policy.ts';
 
 const now = new Date('2026-11-02T12:00:00Z');
 const categories = [{ id: 'groceries', label: 'Alimentari', icon: null }];
-const draft = { amount: '12,30', description: 'Pane', categoryId: 'groceries', date: '2026-11-02', repeat: false, recurrence: '' as const, promo: false, promoAmount: '', promoAfter: '', fundId: '' };
+const draft = { amount: '12,30', description: 'Pane', categoryId: 'groceries', date: '2026-11-02', repeat: false, recurrence: '' as const, promo: false, promoAmount: '', promoAfter: '', fundId: '', trial: false, firstPaymentDate: '' };
 
 for (const [input, expected] of [['0,01', 1], ['12,3', 1230], ['12.30', 1230], ['99999,99', 9999999], [' 42 ', 4200]] as const) {
   test(`importo esatto: ${input}`, () => assert.equal(parseAmountMinor(input), expected));

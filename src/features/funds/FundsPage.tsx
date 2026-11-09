@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
@@ -39,7 +39,9 @@ const entryLabels: Record<FundEntry['kind'], string> = {
   'transfer-out': 'Trasferimento inviato', expense: 'Spesa',
 };
 
-export function FundsPage({ remote, expenses, today, canWrite, defaultFundId, onSetDefault, notify }: Props) {
+export const FundsPage = memo(FundsPageView);
+
+function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSetDefault, notify }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';

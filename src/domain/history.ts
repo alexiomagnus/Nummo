@@ -1,3 +1,4 @@
+import { isInTrial, paymentStart } from './trial.ts';
 import type { Category } from './category.ts';
 import { nextRenewal, priceAt, type PriceChange } from './pricing.ts';
 import { occurrenceDates, type Recurrence } from './recurrence.ts';
@@ -9,6 +10,7 @@ export type ExpenseEntry = Readonly<{
   expense_date: string; recurrence: Recurrence | null; created_at: string;
   // Absent on expenses saved before price schedules existed.
   price_changes?: readonly PriceChange[];
+  first_payment_date?: string;
   // Absent on expenses saved before subscription statuses existed (= always active).
   status_changes?: readonly StatusChange[];
 }>;
@@ -24,16 +26,16 @@ function toOccurrence(entry: ExpenseEntry, date: string, index: number): Occurre
   };
 }
 
-// Renewals that fall while a series is paused or cancelled are never paid; the start (occurrence 0) always is.
+// A legacy series has already paid occurrence 0 at creation. A trial has not: its first billing slot also obeys status changes.
 function paid(entry: ExpenseEntry, date: string, index: number): boolean {
-  return index === 0 || statusAt(entry.status_changes ?? [], date) === 'active';
+  return (index === 0 && !entry.first_payment_date) || statusAt(entry.status_changes ?? [], date) === 'active';
 }
 
 // A recurring expense counts once per paid occurrence up to today, at the price it had on that occurrence;
 // future ones are not spending yet (see forecastOccurrences).
 export function expandOccurrences(entries: readonly ExpenseEntry[], today: string): Occurrence[] {
   return entries.flatMap((entry) => {
-    const dates = entry.recurrence ? occurrenceDates(entry.expense_date, entry.recurrence, today) : [entry.expense_date];
+    const dates = entry.recurrence ? occurrenceDates(paymentStart(entry), entry.recurrence, today) : [entry.expense_date];
     return dates.flatMap((date, index) => (date <= today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
@@ -42,7 +44,7 @@ export function expandOccurrences(entries: readonly ExpenseEntry[], today: strin
 export function forecastOccurrences(entries: readonly ExpenseEntry[], today: string, until: string): Occurrence[] {
   return entries.flatMap((entry) => {
     if (!entry.recurrence) return [];
-    const dates = occurrenceDates(entry.expense_date, entry.recurrence, until);
+    const dates = occurrenceDates(paymentStart(entry), entry.recurrence, until);
     return dates.flatMap((date, index) => (date > today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
@@ -52,7 +54,7 @@ export function forecastOccurrences(entries: readonly ExpenseEntry[], today: str
 export type Renewal = Readonly<{ occurrence: Occurrence; previous: number }>;
 export function upcomingRenewals(entries: readonly ExpenseEntry[], today: string): Renewal[] {
   return entries.flatMap((entry) => {
-    const next = nextPaidRenewal(entry.expense_date, entry.recurrence, entry.status_changes ?? [], today);
+    const next = nextPaidRenewal(paymentStart(entry), entry.recurrence, entry.status_changes ?? [], today);
     if (!next) return [];
     const changes = entry.price_changes ?? [];
     return [{ occurrence: toOccurrence(entry, next.date, next.index), previous: priceAt(entry.amount_minor, changes, next.index - 1) }];
@@ -62,7 +64,7 @@ export function upcomingRenewals(entries: readonly ExpenseEntry[], today: string
 // ---- Subscriptions (recurring series) ----
 
 export type SubscriptionSummary = Readonly<{
-  entry: ExpenseEntry; status: SubscriptionStatus;
+  entry: ExpenseEntry; status: SubscriptionStatus; inTrial: boolean;
   // Price of the next paid renewal; for paused/cancelled series, the price of the next calendar slot.
   amount_minor: number;
   next: { index: number; date: string } | null;
@@ -73,9 +75,9 @@ export type SubscriptionSummary = Readonly<{
 export function subscriptionSummary(entry: ExpenseEntry, today: string): SubscriptionSummary {
   const payments = expandOccurrences([entry], today).reverse();
   const changes = entry.status_changes ?? [];
-  const slot = nextRenewal(entry.expense_date, entry.recurrence, today);
+  const slot = nextRenewal(paymentStart(entry), entry.recurrence, today);
   return {
-    entry, status: currentStatus(changes), next: nextPaidRenewal(entry.expense_date, entry.recurrence, changes, today),
+    entry, status: currentStatus(changes), inTrial: currentStatus(changes) === 'active' && isInTrial(entry, today), next: nextPaidRenewal(paymentStart(entry), entry.recurrence, changes, today),
     amount_minor: slot ? priceAt(entry.amount_minor, entry.price_changes ?? [], slot.index) : entry.amount_minor,
     payments, total: payments.reduce((sum, item) => sum + item.amount_minor, 0),
   };

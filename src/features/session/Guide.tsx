@@ -64,6 +64,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       <Section title={t("Spese ricorrenti e abbonamenti")}>
         {p(t("Una spesa può ripetersi ogni settimana, mese o anno: la inserisci una volta sola e compare a ogni scadenza maturata."))}
         {p(t("Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com'erano. Prossimi rinnovi mostra le scadenze in arrivo."))}
+        {p(t("Alla creazione di un abbonamento puoi attivare Periodo di prova gratuito e scegliere il primo pagamento. Durante la prova non viene conteggiata alcuna spesa. La data è modificabile finché futura; dopo il primo addebito resta invariata. Puoi annullare durante la prova per evitare i pagamenti successivi."))}
         {p(t("In Pagamenti ricorrenti ogni serie mostra importo, frequenza, prossimo rinnovo e stato (Attivo, In pausa o Annullato). Aprendo i dettagli trovi lo storico dei pagamenti, quanti ne sono stati effettuati e il totale speso, anche per gli abbonamenti annullati."))}
         {p(t("Puoi mettere in pausa, annullare o riattivare un abbonamento: la scelta vale dai rinnovi successivi a oggi, i rinnovi che cadono mentre è in pausa o annullato non vengono conteggiati e i pagamenti già registrati non cambiano. Alla riattivazione i rinnovi riprendono dalle date originali. La Dashboard e l'esportazione CSV includono sempre i pagamenti effettuati degli abbonamenti."))}
       </Section>

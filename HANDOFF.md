@@ -1,5 +1,210 @@
 # HANDOFF — Nummo
 
+## Rules pubblicate e issue #8 chiusa — 9 novembre 2026
+
+- Su autorizzazione esplicita dell'utente: `firebase deploy --only firestore:rules --project nummo-6b6e2`
+  tramite CLI locale. Compilazione e pubblicazione riuscite; **solo Rules**, nessun deploy Hosting o commit.
+- Release `cloud.firestore` aggiornata **16:45:38.713737 UTC** (17:45 Europe/Rome), riletta via API:
+  contenuto identico al file locale, SHA-256 `972fd97ed5c2b06358342fa14de48baddfbc4a78019b59037faf42af821d6d4a`.
+  Progetto verificato nei soli PROJECT_ID dei file di configurazione; nessun segreto esposto né documento personale letto/scritto.
+- Issue #8 chiusa tramite `gh` come completata, su richiesta; stato CLOSED riletto, chiusura **16:46:29 UTC**.
+  Commento con implementazione, check 331/331, suite SDK/Rules 16/16 e limiti del collaudo.
+- Il **client resta locale e non pubblicato**: per usare le prove dal sito pubblico occorre pubblicare il client
+  aggiornato. Vecchi client incompatibili con schema 2; CRUD cloud e Pixel/PWA reale non verificati.
+  La nota «Rilascio non eseguito» della fase di implementazione sotto è superata per le sole Rules.
+
+## Issue #8: prova gratuita degli abbonamenti — 9 novembre 2026
+
+- Implementazione autorizzata dopo lettura della issue tramite `gh`. Nessun commit, deploy, commento o chiusura
+  della issue. Conservate le modifiche locali preesistenti e quelle concorrenti a overlay/geometria/menu.
+- `trial.ts`: `expense_date` = inizio abbonamento, `first_payment_date` = primo addebito e origine del calendario
+  pagato. Importi sempre positivi. Fino al giorno prima non esiste alcuna occorrenza economica, al primo giorno
+  si applica il costo; numerazione prezzi da 0 su questo calendario. Storico, previsioni, riepiloghi, Dashboard,
+  fondi e CSV riusano la stessa proiezione. Nessun cron o pagamento scritto automaticamente.
+- La condizione «In prova gratuita» è calcolata, non un nuovo stato persistente. Pause e annullamenti rispettano
+  anche il primo pagamento differito; cambi di oggi validi dai giorni successivi. Annullare il giorno del primo
+  addebito non lo cancella retroattivamente. Riattivazione senza recupero dei pagamenti saltati.
+- Modulo: opzione solo se Ricorrente, prima data precompilata a un mese dall'inizio, modificabile dal calendario
+  (date valide successive all'inizio, massimo 2099-12-31). Editor: prima data e prezzo base modificabili finché
+  la prima data resta futura; dopo non si spostano calendario o pagamenti maturati, il prezzo cambia per i rinnovi
+  futuri. Una prova salvata non si rimuove né si aggiunge retroattivamente a una serie ordinaria. DateField ha
+  limiti/etichetta opzionali; date ordinarie ancora limitate a oggi. Testi IT/EN e Guida aggiornati.
+- Compatibilità: **schema documento 2 solo per prove**, legacy 1 invariato, nessuna migrazione automatica.
+  I client precedenti rifiutano lo schema 2 (blocco esplicito dell'archivio), evitando spese inesistenti:
+  occorre aggiornare il client prima di usare dati con prove. `price_changes` schema 2 compatto in Firestore,
+  array nel dominio e nel JSON; schema 1 conserva gli array Firestore. Nuovo backup **v5**, lettori v1–v4
+  mantenuti, prima data inclusa nei confronti import. Fixture esistenti aggiornate e nuovo file TEST delle prove.
+- Rules: validazione schema/data/costo e protezione del calendario dopo la prima scadenza. I tentativi iniziali
+  con tutti i prezzi come array superavano il budget di 1000 espressioni in aggiornamento: risolto con prezzi
+  compatti nello schema 2 e valutazioni legacy equivalenti meno ripetitive. Verificati campi obbligatori mancanti,
+  chiavi extra, prezzi/stati malformati, massimo otto prezzi + otto stati + fondo, sia legacy sia prova, in creazione
+  e aggiornamento; modifica futura della prima data e del prezzo nel caso massimo accettata.
+- **Verifiche finali:** `npm run check` OK (typecheck, **331/331**, build demo); `test:emulator` **16/16** su
+  Auth 46199, Firestore 46380, Hub 46417, websocket 46419. Anche CRUD prova, date future/impossibili, downgrade,
+  storico protetto, export/ripristino v5 e importazione identica ripetuta (revisione invariata). Nessun cloud.
+  Log `/tmp/nummo-trial-check.log`, `/tmp/nummo-trial-emulator-final.log`; `git diff --check` OK.
+- **Browser Chromium/CDP**, export demo `/tmp/nummo-trial-web` con endpoint espliciti e dotenv disattivato:
+  412×915 chiaro e 320×740 scuro, importo zero rifiutato, prova assente nelle spese ordinarie, scelta del primo
+  pagamento futuro nel calendario, creazione via UI e rilettura server (schema/costo/data/prezzi), riepilogo con
+  stato in prova/zero pagamenti/zero totale, modifica del costo e annullamento durante la prova senza pagamenti.
+  A 320 px IT→EN→IT, preferenza persistita e bozza conservata; nessun overflow o errore JS. Screenshot osservati
+  in `/tmp/nummo-trial-browser-results` e `/tmp/nummo-trial-browser-320-results`; probe omonimi in `/tmp/`.
+  Il selettore di test iniziale e l'attesa di role=dialog sono stati corretti nel solo probe (AppDialog usa aria-modal).
+- Emulatori demo propri arrestati regolarmente; config `.nummo-trial-review.json` rimossa. Hybrid personale e dati
+  originali non toccati. Restano non verificati Pixel/PWA reale, screen reader, tastiera virtuale reale e cloud.
+  **Rilascio non eseguito:** le nuove Rules sono necessarie prima di poter salvare prove in produzione;
+  pubblicazione Rules e Hosting richiedono autorizzazione separata. I vecchi client aperti vanno aggiornati.
+
+## Issue #3: chiusura del foglio Categoria con swipe — 9 novembre 2026
+
+- Causa dimostrata: `useSheetDrag` (`Overlay.tsx`) esisteva ma non si collegava mai. Il `Portal` Paper monta i figli
+  in un commit successivo, quindi l'effetto (dipendente solo da `mounted`) trovava i ref vuoti. In Chromium prima della
+  correzione: testata con `touch-action: auto`, foglio fermo dopo 260 px da maniglia e lista. Riguardava tutti i
+  `BottomSheet` (`SelectField` e `MenuSelect`).
+- Correzione in `Overlay.tsx`: nodi da ref a callback in stato; `Scrim` accetta `ref`. Testata con pointer event
+  (touch/mouse); lista con eventi touch e `touchmove` non passivo; il gesto passa al foglio solo se parte con la lista
+  in cima, verso il basso oltre 8 px e in prevalenza verticale. `overscroll-behavior: contain`, click dopo il
+  trascinamento soppresso, scrim che schiarisce con la distanza, uscita dalla posizione raggiunta. In
+  `menuGeometry.ts`: `sheetGestureOwner`, `recentVelocity` (ultimi 100 ms); `sheetDragOutcome` ora riceve la velocità.
+  Aggiornati AGENTS.md (riga Overlay) e docs/architecture.md. Nessun nuovo testo UI, dato, servizio o Rules.
+- `npm run check` **OK** (typecheck, **330/330**, build demo) sul working tree condiviso con l'altra sessione; durante
+  la fase il typecheck/test dell'albero è stato temporaneamente rosso per il suo lavoro in corso (`trial`, backup).
+- Chromium headless/CDP, touch emulato, build demo con emulatori dedicati (Auth 41099, Firestore 41280, Hub 41400;
+  config temporanea rimossa, emulatori arrestati; hybrid utente su 8180 non toccato), 16 categorie TEST aggiunte
+  nell'emulatore. 412×915 chiaro IT e 320×740 scuro EN, **22/22 controlli**: maniglia 40 px lenta → ritorno; 260 px →
+  chiusura con foglio che segue il dito e scrim < 1; swipe rapido 50 px → chiusura; lista in cima 260 px → chiusura
+  senza selezionare; swipe in su → la lista scorre; lista già scorsa + swipe in giù → scorre, non chiude; scrim,
+  Escape e tocco su una voce invariati; mouse sulla maniglia → chiusura; movimento ridotto → chiusura immediata.
+  Anche «Ordina» in Spese (`MenuSelect`) si chiude dalla maniglia. Nessun errore JS.
+- Non verificati: telefono reale Android/iOS (elastico e `scrollTop` negativo su Safari, pull-to-refresh di Chrome),
+  screen reader, fluidità percepita. Issue non chiusa, nessun commit o deploy.
+
+## Issue #2: pulsanti di «Modifica prodotto» — 9 novembre 2026
+
+- Causa: `Dialog.Actions` di Paper rende compatti i figli diretti (niente larghezza minima, etichetta ±8 dp), quindi
+  «Salva» pieno risultava più stretto di «Annulla» testuale. La correzione da 96 dp di `ListEditor` non copriva `ItemEditor`.
+- `ListDialogs.tsx` (`ItemEditor`, solo questo): «Annulla» e «Salva» in un gruppo in riga allineato a destra, entrambi
+  `compact` con `minWidth: layout.minTouch * 2` e `flexShrink: 1`; contenitore di «Elimina» da `flex: 1` (base 0) a
+  `flexGrow: 1`, così la riga va a capo invece di comprimere «Elimina» sotto i pulsanti (rischio a 320 px con 96 dp).
+  Mode, colori, testi, salvataggio ed eliminazione invariati; nessuna nuova traduzione.
+- `npm run check` **OK** su Linux/Node 26.13.0 (typecheck, **321/321**, build demo 590 moduli), ripetuto sul working
+  tree che contiene anche modifiche non committate di un'altra sessione (Workspace, AppShell, navigazione…), non toccate.
+- Chromium headless (CDP) su build demo con emulatori dedicati (Auth 41099, Firestore 41280, Hub 41400, config
+  temporanea rimossa, emulatori arrestati; hybrid utente PID 41530 su 8180 non toccato). Lista e prodotto creati dall'UI
+  nell'emulatore. 320/360/412/1280 px, chiaro/scuro, IT/EN: Annulla e Salva 96×48 sulla stessa riga, nessuna
+  sovrapposizione con «Elimina», dentro il dialogo, nessuno scroll orizzontale; a 320–360 px «Elimina» sopra e coppia
+  sotto a destra. «Annulla» chiude, «Elimina» apre la conferma. Nessun errore JS. Non provato su telefono reale.
+- **Rilevato, preesistente e fuori dalla issue:** `AppDialog` non gestisce Escape (solo `AnchoredMenu`/`BottomSheet`
+  usano `useEscape`), mentre il commento di `Scrim` e AGENTS.md ne suggeriscono la chiusura da tastiera.
+  Stesso difetto di larghezza possibile in `RegisterListDialog` e nel dialogo di assegnazione di `FundsPage`.
+  Issue non chiusa, nessun commit o deploy.
+
+## Scatti durante i cambi pagina — 9 novembre 2026
+
+- Diagnosi su export demo locale, Chromium/CDP, 412×915, CPU 4×: 240 spese TEST generate, 8 categorie,
+  fondi e liste dalla fixture standard. Nessun dato personale. Le pagine venivano rimontate a ogni ritorno;
+  il cambio di sezione rieseguiva anche gli hook remoti e ricreava le props del modulo nascosto.
+- Navigazione spostata in `WorkspaceNavigation` sotto gli hook remoti, con callback stabili e `startTransition`;
+  memo per modulo e pagine principali, store visuale del modulo memorizzato. Spese/Dashboard/Fondi/Liste montano
+  alla prima visita e sono conservate con `Activity` (DOM/stato mantenuti, effetti sospesi quando nascoste).
+  Filtri, dettagli e mese selezionato ora restano tra le visite. Nessun precaricamento all'avvio, query,
+  servizio, regola o schema cambiato; cambio UID smonta ancora tutto. Maggior memoria per le pagine visitate.
+- Confronto indicativo (una sessione per versione, due ritorni per pagina, non un benchmark statistico).
+  Tempo fino al commit della destinazione, in ms, **ritorni**:
+
+  | Pagina | Prima | Dopo |
+  | --- | --- | --- |
+  | Spese | 619–814 | 145–155 |
+  | Dashboard | 187–258 | 59–89 |
+  | Fondi | 150–226 | 53–71 |
+  | Liste | 88–101 | 44–62 |
+
+  Massimo intervallo rAF tornando a Spese: 867–1050 → 200–300 ms: miglioramento, **restano frame lenti**.
+  Prima apertura Spese: commit ~994 → ~1170 ms, massimo intervallo rAF ~1250 → ~500 ms. Il rendering concorrente
+  distribuisce il lavoro ma non certifica una minore latenza della prima apertura, né 60 FPS. La molla JS della
+  pillola e l'animazione di larghezza del FAB restano possibili fonti di scatti; non cambiate in questa fase.
+  Nessuna equivalenza con le prestazioni del Pixel 8 reale.
+- Misuratore opzionale in `scripts/check-navigation.mjs --measure`: tre giri, commit effettivo + 500 ms di
+  assestamento, rAF e long task; esegue poi anche le regressioni della issue #1. Esempio:
+  `node scripts/check-navigation.mjs /tmp/nummo-navigation-perf-after /tmp/nummo-navigation-perf-final-isolated --auth-port 49199 --measure`.
+  Prima: `/tmp/nummo-navigation-perf-baseline-confirmed/performance.json`; dopo:
+  `/tmp/nummo-navigation-perf-final-isolated/performance.json`. Build finale demo con endpoint espliciti
+  49199/49380 e `EXPO_NO_DOTENV=1`; le misure rAF non sono FPS presentati dal compositor.
+- Browser: identità DOM del campo ricerca e filtro conservati, pagina nascosta fuori layout, aggiornamento di
+  una descrizione TEST mentre Spese è nascosta visibile al ritorno, cambio IT→EN e bozza 12,34 conservati;
+  nessun errore JS (`/tmp/nummo-navigation-state-results`, probe `/tmp/nummo-navigation-state.mjs`).
+  Regressione issue #1 passata a 412×915 chiaro e 320×740 scuro, incluso desktop, drag/cancel/tocchi/Invio/Spazio:
+  zero frame residui del feedback e nessun overflow nel gesto registrato. Anche 412×915 scuro con movimento
+  ridotto OK: pagina a opacità 1 in tutti i frame. Lo script ora attende la selezione effettiva (limite 5 s),
+  senza presumere un commit entro 300 ms; la prima prova ridotta aveva superato quella vecchia attesa fissa.
+- `npm run check` OK: typecheck, 321/321 test e build demo; sintassi script e diff check OK.
+  Suite SDK/Rules non ripetuta (nessuna modifica ai percorsi di accesso dati). Nessun commit, deploy o intervento
+  sulla issue. Pixel/PWA, screen reader e tastiera virtuale reali restano da verificare.
+- Modifiche concorrenti comparse durante il lavoro in `ListDialogs.tsx` e config `.nummo-issue2-review.json`
+  conservate, non modificate da questa fase; anche hybrid personale e suoi file preesistenti non toccati.
+  Emulatori demo propri arrestati regolarmente; rimossa solo la config propria `.nummo-navigation-perf.json`.
+
+## Issue #1 — flash del feedback al rilascio del drag — 9 novembre 2026
+
+- **Chiusura autorizzata dall'utente:** issue #1 chiusa tramite `gh` come completata il 9 novembre 2026,
+  16:18:50 UTC; stato CLOSED riletto. Commento con correzione, verifiche emulate e limiti: patch ancora locale,
+  nessun commit/deploy né prova Pixel/PWA reale. Gli scatti durante i cambi pagina restano un problema distinto.
+
+- **Riesame e completamento autorizzati:** conservata la patch locale, estesa la regressione a Invio dopo
+  drag. Il confronto ha rilevato un secondo difetto: `swallowClick` intercettava anche il click da Invio.
+  `keydown` ora azzera quel blocco per Invio/Spazio, oltre a ripristinare il feedback. Test CDP Invio con
+  `text: '\r'` (necessario al pulsante nativo): build precedente resta su Spese, build aggiornata apre Dashboard.
+- **Verifica corrente su Linux/Node 26.13.0:** export aggiornato `/tmp/nummo-issue1-verified`, Auth 49199,
+  Firestore 49380, Hub 49417 (demo isolata). Script passato a 412×915 chiaro, 320×740 scuro e 412×915 scuro
+  con movimento ridotto, più navigazione desktop in ogni esecuzione. Zero frame residui del feedback e zero frame
+  dell'indicatore fuori dalla pillola nel gesto registrato; nessun overflow o errore JS. Movimento ridotto: pagina
+  sempre opaca. Risultati `/tmp/nummo-issue1-verified-{light,dark,reduced}`. Sulla build precedente conservata
+  `/tmp/nummo-issue1-before` il test fallisce come atteso con 5 frame residui (`/tmp/nummo-issue1-verified-before`).
+  `npm run check` nuovamente OK (321/321, typecheck e build demo). Nessun collaudo Pixel/PWA reale,
+  commit, deploy o intervento sulla issue. Le prove non certificano che il flash della pillola sia l'unico sintomo
+  segnalato sul telefono; la conferma sul dispositivo resta necessaria.
+  Emulatori dedicati arrestati regolarmente, config `.nummo-issue1-verify.json` rimossa; hybrid personale non toccato.
+
+- Letta tramite `gh` la issue #1 (aperta, nessun commento). Riprodotto in Chromium headless/CDP, touch emulato,
+  CPU 4×: dopo Spese → Fondi, lo strato premuto della voce Spese ricompare per 5 frame (~60 ms), anche disattivando
+  solo in memoria l'animazione della pagina. Nessuna fuoriuscita dell'indicatore nel gesto misurato. Questo identifica
+  un flash della pillola; la coincidenza con il sintomo del Pixel 8 resta da confermare sul dispositivo.
+- `AppShell` conserva la soppressione del feedback premuto oltre il rilascio/annullamento del drag, fino alla
+  successiva pressione pointer o Invio/Spazio. `StateLayerPressable.suppressPressed` azzera subito quel solo strato:
+  non riappare mentre il Pressable di partenza sta ancora completando il rilascio. Hover e focus indipendenti;
+  molla, indicatore e transizione della pagina invariati. Nessuna nuova dipendenza o modifica a modello dati/servizi/Rules.
+- Aggiunto `scripts/check-navigation.mjs`: regressione browser con Chromium nel PATH, export demo e Auth/Firestore
+  demo dedicati già avviati e inizializzati. Esempio della prova eseguita:
+  `node scripts/check-navigation.mjs /tmp/nummo-issue1-after /tmp/nummo-issue1-412-light-final --auth-port 49199`.
+  Build di prova con `EXPO_NO_DOTENV=1`, `EXPO_PUBLIC_NUMMO_BACKEND=emulator`, Auth 127.0.0.1:49199 e
+  Firestore 127.0.0.1:49380, export in `/tmp/nummo-issue1-after`; non usare build cloud/hybrid con questo script.
+  Opzioni `--vp 320x740`, `--theme dark`, `--reduced`; screenshot e frame JSON nella cartella di output.
+- Il test rileva il difetto sulla build precedente (5 frame residui) e passa sulla corretta (0): direzione inversa,
+  ritorno al punto iniziale, `pointercancel`, tocco con tremolio 4 px, feedback del tocco successivo e Spazio dopo
+  drag, cambi rapidi e navigazione desktop 1280×900. Prove 412×915 chiaro, 320×740 scuro e 412×915 scuro con
+  movimento ridotto; nessun overflow o errore JS. Ridotto movimento: pagina sempre a opacità 1.
+- `npm run check` OK: typecheck, **321/321**, build demo; sintassi dello script e `git diff --check` OK.
+  Il collaudo browser è separato da `npm run check`; nessuna prova su Pixel/PWA installata, tastiera virtuale
+  reale, Safari o screen reader. Nessun commit, deploy, commento o chiusura della issue.
+  Emulatori demo propri arrestati regolarmente; config `.nummo-issue1-review.json` rimossa. Hybrid personale
+  su 8180 e relativo file temporaneo preesistente non modificati.
+
+## Diagnosi archivio hybrid in sola lettura — 9 novembre 2026
+
+- Verificato l'emulatore locale su 127.0.0.1:8180 con progetto/Hub coerenti e proprietario configurato.
+  Il messaggio «Archivio non valido: esportazione e modifiche bloccate» è riprodotto dal decoder:
+  1 delle 8 categorie è rifiutata perché conserva `icon: bus`, identificativo rimosso.
+- Sulla sola copia in memoria, cambiare `icon` in `train` rende valido il record; nessun altro campo
+  richiede correzioni. Validi tutti i record letti delle altre collezioni: 72 spese, 3 fondi,
+  6 movimenti, 2 liste e 11 prodotti. Nessun contenuto personale o identificativo nei log.
+- **Correzione successiva autorizzata:** aggiornata solo l'icona della categoria locale `bus` → `train`,
+  revisione +1 e timestamp server, tramite commit atomico REST con precondizione `updateTime` dopo
+  rilettura. Un primo tentativo con transazione REST è scaduto; prima della seconda modalità è stato
+  verificato in lettura che la categoria conservasse `bus`, senza ripetizione cieca della scrittura.
+  Rilette le categorie: **8/8 valide**, altri campi del documento e altre categorie invariati.
+  Nessun accesso cloud, modifica applicativa o deploy; nessuna spesa modificata. Da confermare la
+  scomparsa del messaggio nell'interfaccia. La correzione cloud documentata sotto riguarda un archivio separato.
+
 ## Deploy Hosting autorizzato — 9 novembre 2026, ~03:27 Europe/Rome
 
 - Su richiesta esplicita dell'utente: `npm run check` OK (typecheck, 321/321, build demo), poi

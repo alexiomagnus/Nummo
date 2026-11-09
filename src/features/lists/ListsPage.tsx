@@ -39,7 +39,9 @@ const fillTransition = transition(['transform'], 400);
 
 // «Liste della spesa»: overview of the lists (active first, archived on demand) or one list as a checklist.
 // The page draws its own header, so the open list's name is the page title.
-export function ListsPage({ remote, categories, expenses, fundChoices, defaultFundId, canRegister, notify, onCreateCategory }: Props) {
+export const ListsPage = memo(ListsPageView);
+
+function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundId, canRegister, notify, onCreateCategory }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';

@@ -1,3 +1,4 @@
+import { encodeTrialPrices } from '../../src/domain/pricing.ts';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { test } from 'node:test';
@@ -80,6 +81,11 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         { description: '' }, { admin: true }, { revision: 2 }, { created_at: 'date' }, { updated_at: Timestamp.fromMillis(1) }]) {
         await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
       }
+      for (const key of Object.keys(valid)) {
+        const missing = { ...valid } as Record<string, unknown>;
+        delete missing[key];
+        await denied(setDoc(ref(randomUUID()), missing));
+      }
       await setDoc(ref(expense_id), valid);
       await denied(updateDoc(ref(expense_id), { amount_minor: 1, updated_at: serverTimestamp() }));
       await denied(updateDoc(ref(expense_id), { revision: 2, created_at: Timestamp.fromMillis(1), updated_at: serverTimestamp() }));
@@ -92,6 +98,12 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       const change = { index: 2, amount_minor: 1500, once: true };
       const { price_changes: _, ...withoutField } = valid;
+      for (const key of ['index', 'amount_minor', 'once']) {
+        const missing = { ...change } as Record<string, unknown>;
+        delete missing[key];
+        await denied(setDoc(ref(randomUUID()), { ...valid, price_changes: [missing] }));
+      }
+      await denied(setDoc(ref(randomUUID()), { ...valid, price_changes: [{ ...change, extra: true }] }));
       for (const patch of [{ price_changes: [{ ...change, index: 0 }] }, { price_changes: [{ ...change, index: 1000 }] }, { price_changes: [{ ...change, amount_minor: 0 }] },
         { price_changes: [{ ...change, amount_minor: 1.5 }] }, { price_changes: [{ ...change, once: 'si' }] }, { price_changes: [{ ...change, extra: 1 }] },
         { price_changes: [{ index: 2, amount_minor: 5 }] }, { price_changes: Array.from({ length: 9 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) },
@@ -110,6 +122,58 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.deepEqual(updated.price_changes, next.price_changes);
       await owner.store.removeExpense(updated);
     });
+    await t.test('prova gratuita: CRUD, versione, date future, storico protetto e budget Rules', async () => {
+      const { expense_id, ...base } = expense();
+      const data = { ...base, recurrence: 'monthly' as const, first_payment_date: '2099-12-09', schema_version: 2 as const };
+      await owner.store.createExpense({ expense_id, ...data });
+      let saved = (await owner.store.exportSnapshot()).expenses.find(r => r.id === expense_id)!;
+      assert.equal(saved.first_payment_date, data.first_payment_date);
+      assert.deepEqual(parseBackup(JSON.parse(makeBackup({ expenses: [saved], categories: [] }))).expenses[0]!.first_payment_date, data.first_payment_date);
+      await owner.store.updateExpense(saved, { ...data, amount_minor: 1399, first_payment_date: '2099-12-19' });
+      saved = (await owner.store.exportSnapshot()).expenses.find(r => r.id === expense_id)!;
+      assert.equal(saved.amount_minor, 1399);
+      const backup = parseBackup(JSON.parse(makeBackup({ expenses: [saved], categories: [] })));
+      await owner.store.removeExpense(saved);
+      await owner.store.importRecords(backup.expenses, []);
+      await owner.store.importRecords(backup.expenses, []);
+      saved = (await owner.store.exportSnapshot()).expenses.find(r => r.id === expense_id)!;
+      assert.equal(saved.first_payment_date, '2099-12-19');
+      assert.equal(saved.revision, 1, 'identical trial import is skipped');
+      assert.equal((await getDocFromServer(ref(expense_id))).data()!.price_changes, '');
+      const { fund_id: _f, list_id: _l, list_items: _li, status_changes: _s, ...stored } = data;
+      const raw = { ...stored, price_changes: '', created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      for (const patch of [{ recurrence: null }, { amount_minor: 0 }, { schema_version: 1 },
+        { first_payment_date: null }, { first_payment_date: base.expense_date }, { first_payment_date: '2027-02-30' },
+        { first_payment_date: '2100-01-01' }, { price_changes: [] }, { price_changes: '0:100:0' },
+        { price_changes: '1:0:0' }, { price_changes: '1:10000000:0' }, { price_changes: '1:100:true' },
+        { price_changes: Array.from({ length: 9 }, (_, i) => `${i + 1}:100:0`).join(';') }]) await denied(setDoc(ref(randomUUID()), { ...raw, ...patch }));
+      await denied(updateDoc(ref(expense_id), { first_payment_date: base.expense_date, updated_at: serverTimestamp(), revision: saved.revision + 1 }));
+      const pastId = randomUUID();
+      const past = { ...data, expense_date: '2026-01-01', first_payment_date: '2026-01-02' };
+      await owner.store.createExpense({ ...past, expense_id: pastId });
+      const historic = (await owner.store.exportSnapshot()).expenses.find(r => r.id === pastId)!;
+      await owner.store.updateExpense(historic, { ...past, description: 'TEST prova terminata' });
+      for (const patch of [{ first_payment_date: '2026-01-03' }, { expense_date: '2025-12-31' }, { amount_minor: 1500 }, { recurrence: 'yearly' }]) {
+        await denied(updateDoc(ref(pastId), { ...patch, updated_at: serverTimestamp(), revision: historic.revision + 2 }));
+      }
+      // The worst supported combination remains writable with a trial as well.
+      const worstId = randomUUID();
+      const worst = { ...raw, expense_date: '2026-01-01', first_payment_date: '2099-12-09', fund_id: randomUUID(),
+        status_changes: Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';'),
+        price_changes: encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false }))) };
+      t.diagnostic('trial budget: create');
+      await setDoc(ref(worstId), worst);
+      t.diagnostic('trial budget: update description');
+      await updateDoc(ref(worstId), { description: 'TEST budget trial', updated_at: serverTimestamp(), revision: 2 });
+      t.diagnostic('trial budget: update future date and price');
+      await updateDoc(ref(worstId), { first_payment_date: '2099-12-19', amount_minor: 1500, updated_at: serverTimestamp(), revision: 3 });
+      t.diagnostic('trial budget: create ended trial');
+      await setDoc(ref(randomUUID()), { ...worst, first_payment_date: '2026-01-02' });
+      const ordinaryId = randomUUID();
+      await owner.store.createExpense({ ...base, expense_id: ordinaryId });
+      await denied(updateDoc(ref(ordinaryId), { schema_version: 2, recurrence: 'monthly', first_payment_date: '2099-12-09', updated_at: serverTimestamp(), revision: 2 }));
+      for (const id of [expense_id, pastId, worstId, ordinaryId]) await deleteDoc(ref(id));
+    });
     await t.test('abbonamenti: stati validati dalle regole, campo assente compatibile, storico invariato', async () => {
       const { expense_id, ...data } = expense();
       const series = { ...data, recurrence: 'monthly' as const, expense_date: '2026-01-05', amount_minor: 999, status_changes: [] };
@@ -124,7 +188,10 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       }
       // Worst case for the expression budget: eight statuses together with eight price changes.
       const { status_changes: _, ...legacy } = valid;
-      await setDoc(ref(randomUUID()), { ...legacy, status_changes: eight, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
+      const legacyWorstId = randomUUID();
+      await setDoc(ref(legacyWorstId), { ...legacy, fund_id: randomUUID(), status_changes: eight, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
+      await updateDoc(ref(legacyWorstId), { description: 'TEST budget legacy', updated_at: serverTimestamp(), revision: 2 });
+      await deleteDoc(ref(legacyWorstId));
       await setDoc(ref(randomUUID()), legacy);
       await owner.store.createExpense({ expense_id, ...series });
       const raw = (await getDocFromServer(ref(expense_id))).data()!;

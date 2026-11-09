@@ -76,8 +76,11 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
         <DeleteAction labeled name={item.name} title={t("Eliminare {p0} dalla lista?", { p0: item.name })} description=""
           onDelete={() => { const done = onDelete(); if (done) close(); return done; }} />
       </View>
-      <Button onPress={close}>{t("Annulla")}</Button>
-      <Button mode="contained" onPress={save}>{t("Salva")}</Button>
+      {/* Kept together so that, when the row wraps on narrow phones, the pair moves under Delete as one unit. */}
+      <View style={styles.pair}>
+        <Button compact style={styles.pairAction} onPress={close}>{t("Annulla")}</Button>
+        <Button compact style={styles.pairAction} mode="contained" onPress={save}>{t("Salva")}</Button>
+      </View>
     </Dialog.Actions>
   </Dialog></Portal>;
 }
@@ -87,5 +90,8 @@ const styles = StyleSheet.create({
   content: { gap: spacing.md },
   listAction: { minWidth: layout.minTouch * 2 },
   actions: { flexWrap: 'wrap', gap: spacing.xs },
-  grow: { flex: 1, alignItems: 'flex-start' },
+  // Natural width (not flexBasis 0), so a crowded row wraps instead of squeezing Delete under the pair.
+  grow: { flexGrow: 1, alignItems: 'flex-start' },
+  pair: { flexDirection: 'row', gap: spacing.sm, marginLeft: 'auto' },
+  pairAction: { minWidth: layout.minTouch * 2, flexShrink: 1 },
 });

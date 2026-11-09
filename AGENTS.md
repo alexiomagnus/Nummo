@@ -35,7 +35,7 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 | `src/domain/` | Funzioni pure senza SDK: validazione, contratti, categorie, ricorrenze, prezzi per numero di rinnovo, stati degli abbonamenti (`subscription.ts`), fondi/ricariche/budget/saldi (`funds.ts`), liste della spesa (`shoppingList.ts`), storico, invio, decoder Firestore e backup/import/CSV. |
 | `src/services/` | Configurazione pubblica a build, Auth e cache Firestore, listener, CRUD e transazioni con revisioni, export server-only e import per gruppi; selezione foto account. Con indizio di sessione, `initializeAuth` omette il resolver popup, passato esplicitamente a `signInWithPopup`. |
 | `src/features/session/` | Login Google popup, sessione SDK, logout dopo le scritture pendenti; guida pubblica statica `#guida` con history/link diretto/reload, senza letture o scritture dell'archivio. Il bootstrap Auth è in `App.tsx`. Errori login: solo codici `auth/...` validati, mai messaggi grezzi/token. |
-| `src/features/workspace/` | Composizione sezioni, listener e sincronizzazione; stato smontato al cambio UID. Copertura iniziale limitata a 4 s; `StartupWorkspace` mostra shell e caricamento, senza un secondo modulo fittizio. Il modulo reale resta montato per conservare misure e bozza, invisibile e `inert` finché mancano i dati necessari; il limite di attesa libera la navigazione, non i campi incompleti. |
+| `src/features/workspace/` | Composizione sezioni, listener e sincronizzazione; stato smontato al cambio UID. Navigazione locale in `WorkspaceNavigation`, sotto i listener: i cambi pagina non ricreano gli store. Spese, Dashboard, Fondi e Liste montate alla prima visita e conservate con `Activity` nascosta (effetti sospesi); filtri e stato visuale restano fino al cambio UID. Copertura iniziale limitata a 4 s; `StartupWorkspace` mostra shell e caricamento, senza un secondo modulo fittizio. Il modulo reale resta montato per conservare misure e bozza, invisibile e `inert` finché mancano i dati necessari; il limite di attesa libera la navigazione, non i campi incompleti. |
 | `src/features/expenses/` | Modulo, validazione, `ExpenseStore`, `useRemoteExpenses`, editor; nessun archivio locale applicativo nel percorso attivo. |
 | `src/features/categories/` | Categorie con ID stabili e nomi unici tramite indice `categoryNames`; cinque predefinite (Alimentari, Intrattenimento, Shopping, Tecnologia, Trasporti) create una volta per account/browser su archivio vuoto confermato dal server (`workspace/seedDefaults.ts`), altrimenti dal pulsante a lista vuota. `CategoryEditor` salva nome/icona insieme. Nessun limite applicativo al numero di categorie; unicità e validazione dei record restano obbligatorie. |
 | `src/features/history/`, `dashboard/` | Occorrenze calcolate fino a oggi, non materializzate nel database; pagina Spese in due viste a segmenti, spese singole (`ExpenseList`) e abbonamenti = serie ricorrenti (`SubscriptionList`, stati e storico pagamenti); ciambella SVG DOM e blocchi/treemap puro su proiezione comune (`categoryPresentation.ts`), barre complete senza raggruppamenti, ordinate per spesa, lunghezza relativa alla categoria maggiore e quota sul totale esplicita, riepilogo e andamento SVG giornaliero (`insights.ts`). Variazione per categoria nelle Barre sui giorni precedenti di pari durata, solo con base positiva e storico sufficiente, nessun confronto globale; dettagli categoria in sola lettura sui dati già caricati; andamento con selezione del giorno e lettura di data/importo, senza apertura delle transazioni giornaliere. |
@@ -126,6 +126,12 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
 - Stati degli abbonamenti: si scrive solo il cambio di oggi, valido dalle occorrenze successive; mai alterare pagamenti
   già maturati. In Firestore `status_changes` è una stringa compatta e solo se non vuoto; nel backup è un array.
   Rimisurare con l'emulatore il budget di espressioni delle Rules a ogni nuovo controllo sulle spese.
+- Prove gratuite: `expense_date` è l'inizio, `first_payment_date` (solo serie, documento schema 2) l'inizio del calendario
+  pagato (`trial.ts`); importi sempre positivi, nessuna occorrenza durante la prova. Stato «In prova gratuita» calcolato,
+  mai salvato. Indice 0 = primo addebito, soggetto a pause/annullamenti per le prove; stato cambiato oggi vale da domani.
+  Prima data modificabile solo finché futura; prova salvata non rimovibile né aggiungibile retroattivamente a serie ordinarie.
+  Schema 2: prezzi compatti in Firestore (`pricing.ts`), array nel dominio/backup v5; schema 1 e record esistenti invariati.
+  I vecchi client rifiutano lo schema 2 invece di conteggiare pagamenti inesistenti: aggiornamento client necessario.
 - Fondi: saldo, ricarica, budget e speso restano grandezze distinte (`src/domain/funds.ts`). Ricariche **calcolate**
   dal piano come le occorrenze (una per mese, giorno limitato alla fine del mese, contata solo se ≤ oggi): mai scritte
   come documenti né in render/effect. Modifiche a ricarica/budget solo da ora in poi (mai il passato); `start_date` del
@@ -154,7 +160,7 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
 - Liste della spesa: liste e prodotti salvati con scritture semplici (ultima vince, nessuna revisione); la registrazione è
   l'unica scrittura economica, una transazione che crea **una** spesa singola con `list_id`/`list_items` (nomi spuntati,
   in Firestore una stringa unita da `\n`, nel backup un array) e archivia la lista. Eliminare quella spesa riattiva la
-  lista nella stessa transazione; modificarla conserva collegamento e prodotti. Backup `backupVersion` 4.
+  lista nella stessa transazione; modificarla conserva collegamento e prodotti. Backup `backupVersion` 5.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
   `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
   contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.
@@ -172,7 +178,8 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   montaggio/smontaggio immediati. Escape chiude; il focus va alla prima voce e torna all'elemento d'origine con
   `preventScroll`. Chiusi non montano nulla (nessun focus al montaggio). `AppDialog` conserva Title/Content/ScrollArea/
   Actions di Paper. `SelectField`/`MenuSelect`: `BottomSheet` su compact (sopra navigazione e scrim, lista scorrevole,
-  trascinamento della maniglia), `AnchoredMenu` da medium (sotto il campo o sopra se manca spazio, geometria pura in
+  trascinamento della maniglia o della lista se è in cima; nodi da ref a callback perché il `Portal` Paper monta dopo),
+  `AnchoredMenu` da medium (sotto il campo o sopra se manca spazio, geometria pura in
   `menuGeometry.ts`); `AccountMenu` usa `AnchoredMenu` allineato a destra; `Menu.Item` Paper solo come riga.
   `MenuSelect` per selettori compatti (ordina/filtri), `FieldIcon` per icone decorative dei campi.
   Il menu di `MenuSelect` è largo max(campo, voce più lunga misurata da un clone nascosto) entro i margini dello schermo:

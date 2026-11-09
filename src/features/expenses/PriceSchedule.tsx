@@ -134,7 +134,7 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
       <Text variant="titleSmall">{t("Prezzo dei rinnovi")}</Text>
       <Text variant="bodySmall" style={muted}>
         {t("Prossimo rinnovo (")}{formatLongDate(next.date, locale)}): {formatAmount(shownAmount)}</Text>
-      {changed && (
+      {changed && next.index > 0 && (
         <View style={styles.group} role="group" aria-label={t("Da quando vale il nuovo importo")}>
           <Text variant="labelLarge" style={muted}>{t("Il nuovo importo vale")}</Text>
           <ChoiceChips label={t("Da quando vale il nuovo importo")} value={scope} disabled={disabled}

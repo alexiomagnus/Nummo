@@ -1,12 +1,12 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Portal, Surface, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { transitions } from '../theme/motion';
 import { motion, radius, spacing } from '../theme/tokens';
 import { useReducedMotion } from '../theme/useSizeClass';
-import { menuHorizontalBounds, menuVerticalPlacement, sheetDragOutcome } from './menuGeometry';
+import { menuHorizontalBounds, menuVerticalPlacement, recentVelocity, sheetDragOutcome, sheetGestureOwner, type DragSample } from './menuGeometry';
 
 // Shared overlay layer for menus, bottom sheets and dialogs. Every surface stays opaque while it moves: entering, it
 // becomes solid within `motion.fade` while a short transform settles it; leaving, scrim and surface fade together on the
@@ -80,9 +80,9 @@ const scrimEnter = transitions([['opacity', motion.medium]]);
 const scrimExit = transitions([['opacity', motion.short, motion.exitEasing]]);
 
 // Transparent full-screen catcher (menus) or scrim (sheets, dialogs); not a Tab stop: Escape closes from the keyboard.
-export function Scrim({ visible, shown, color, label, onPress }: { visible: boolean; shown: boolean; color?: string; label: string; onPress?: () => void }) {
+export function Scrim({ ref, visible, shown, color, label, onPress }: { ref?: Ref<ComponentRef<typeof Pressable>>; visible: boolean; shown: boolean; color?: string; label: string; onPress?: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} focusable={false} onPress={onPress} disabled={!onPress}
+    <Pressable ref={ref} accessibilityRole="button" accessibilityLabel={label} focusable={false} onPress={onPress} disabled={!onPress}
       pointerEvents={visible ? 'auto' : 'none'}
       style={[StyleSheet.absoluteFill, styles.scrim, color !== undefined && [{ backgroundColor: color, opacity: shown ? 1 : 0 }, shown ? scrimEnter : scrimExit]]} />
   );
@@ -157,85 +157,176 @@ const sheetEnter = transitions([['transform', motion.long, motion.enter]]);
 const sheetExit = transitions([['transform', motion.exit, motion.exitEasing]]);
 
 // Material 3 modal bottom sheet for choices on phones: it rises from the bottom edge over a scrim, above the navigation
-// and the keyboard area, and holds a long list with its own scroll. Scrim, Escape or dragging the handle down close it.
+// and the keyboard area, and holds a long list with its own scroll. Scrim, Escape, dragging the handle down, or swiping
+// down on the list while it is at its top close it.
 export function BottomSheet({ visible, onDismiss, title, children }: { visible: boolean; onDismiss: () => void; title: string; children: ReactNode }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const animate = useOverlayMotion();
   const { mounted, shown } = usePresence(visible, motion.exit, animate);
   const container = useRef<ComponentRef<typeof View>>(null);
-  const header = useRef<ComponentRef<typeof View>>(null);
+  // Paper's Portal renders its children in a later commit than this component: the drag listeners must wait for the
+  // real nodes (state from callback refs), an effect keyed on `mounted` alone would run while the refs are still empty.
+  const [nodes, setNodes] = useState<SheetNodes>({});
+  const sheetRef = useCallback((node: unknown) => { container.current = node as ComponentRef<typeof View>; setNodes((n) => ({ ...n, sheet: domNode(node) })); }, []);
+  const headerRef = useCallback((node: unknown) => setNodes((n) => ({ ...n, header: domNode(node) })), []);
+  const listRef = useCallback((node: unknown) => setNodes((n) => ({ ...n, list: domNode(node) })), []);
+  const scrimRef = useCallback((node: unknown) => setNodes((n) => ({ ...n, scrim: domNode(node) })), []);
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   useEscape(visible, onDismiss);
   useFocusHandoff(visible, shown, container);
-  useSheetDrag(mounted, header, container, onDismiss);
+  useSheetDrag(visible, nodes, onDismiss);
   if (!mounted) return null;
   return (
     <Portal>
-      <Scrim visible={visible} shown={shown} color={colors.backdrop} label={t('Chiudi')} onPress={onDismiss} />
-      <View ref={container} role="dialog" aria-modal aria-label={title} pointerEvents={visible ? 'auto' : 'none'}
+      <Scrim ref={scrimRef} visible={visible} shown={shown} color={colors.backdrop} label={t('Chiudi')} onPress={onDismiss} />
+      <View ref={sheetRef} role="dialog" aria-modal aria-label={title} pointerEvents={visible ? 'auto' : 'none'}
         style={[styles.sheet, {
           backgroundColor: colors.elevation.level1, maxHeight: Math.max(0, height - insets.top - spacing.xxxl),
           paddingBottom: insets.bottom + spacing.sm, transform: [{ translateY: shown ? 0 : '100%' }],
         }, shown ? sheetEnter : sheetExit]}>
-        <View ref={header} style={styles.sheetHeader}>
+        <View ref={headerRef} style={styles.sheetHeader}>
           <View style={[styles.handle, { backgroundColor: colors.onSurfaceVariant }]} />
           <Text variant="titleMedium" accessibilityRole="header" numberOfLines={1} style={styles.sheetTitle}>{title}</Text>
         </View>
-        <ScrollView role="menu" aria-label={title} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sheetList}>{children}</ScrollView>
+        <ScrollView ref={listRef} role="menu" aria-label={title} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sheetList}>{children}</ScrollView>
       </View>
     </Portal>
   );
 }
 
-// Dragging the header follows the finger (downwards only, without transition) and either closes the sheet or lets it
-// settle back with its own transition. DOM pointer events on the header, as for the navigation pill.
-function useSheetDrag(active: boolean, header: { current: unknown }, sheet: { current: unknown }, onDismiss: () => void) {
+type SheetNodes = { sheet?: HTMLElement | null; header?: HTMLElement | null; list?: HTMLElement | null; scrim?: HTMLElement | null };
+
+// RN Web refs are DOM elements; a ScrollView ref may instead expose its scrollable node.
+function domNode(node: unknown): HTMLElement | null {
+  if (typeof HTMLElement === 'undefined' || !node) return null;
+  if (node instanceof HTMLElement) return node;
+  const scrollable = (node as { getScrollableNode?: () => unknown }).getScrollableNode?.();
+  return scrollable instanceof HTMLElement ? scrollable : null;
+}
+
+// While dragged the sheet follows the finger downwards without transition and the scrim fades with the distance; on
+// release it closes from where it is (the exit transition continues from that offset) or settles back with its own
+// transition. Two entry points share it: the header with DOM pointer events (touch and mouse, `touch-action: none`) and
+// the list with touch events, so a native scroll keeps working: the list only hands a gesture to the sheet when it
+// started at its top and moved down (`sheetGestureOwner`). With reduced motion the global CSS rule makes both instant.
+function useSheetDrag(active: boolean, { sheet, header, list, scrim }: SheetNodes, onDismiss: () => void) {
   const latest = useRef(onDismiss);
   latest.current = onDismiss;
   useEffect(() => {
-    const handle = header.current;
-    const node = sheet.current;
-    if (!active || !(handle instanceof HTMLElement) || !(node instanceof HTMLElement)) return;
-    handle.style.touchAction = 'none';
-    let start: { id: number; y: number; time: number; transform: string; duration: string } | null = null;
+    if (!active || !sheet) return;
+    let drag: { y: number; samples: DragSample[]; transform: string; duration: string; scrimOpacity: string; scrimDuration: string } | null = null;
     let offset = 0;
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0 || !event.isPrimary) return;
-      start = { id: event.pointerId, y: event.clientY, time: event.timeStamp, transform: node.style.transform, duration: node.style.transitionDuration };
+    const begin = (y: number, time: number) => {
+      drag = { y, samples: [{ t: time, y }], transform: sheet.style.transform, duration: sheet.style.transitionDuration,
+        scrimOpacity: scrim?.style.opacity ?? '', scrimDuration: scrim?.style.transitionDuration ?? '' };
       offset = 0;
-      try { handle.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ }
     };
-    const move = (event: PointerEvent) => {
-      if (!start || event.pointerId !== start.id) return;
-      offset = Math.max(0, event.clientY - start.y);
-      node.style.transitionDuration = '0ms';
-      node.style.transform = `translateY(${offset}px)`;
+    const follow = (y: number, time: number) => {
+      if (!drag) return;
+      offset = Math.max(0, y - drag.y);
+      drag.samples.push({ t: time, y });
+      if (drag.samples.length > 32) drag.samples.shift();
+      sheet.style.transitionDuration = '0ms';
+      sheet.style.transform = `translateY(${offset}px)`;
+      if (scrim) {
+        scrim.style.transitionDuration = '0ms';
+        scrim.style.opacity = String(Math.max(0, 1 - offset / Math.max(1, sheet.offsetHeight)));
+      }
     };
-    const end = (event: PointerEvent, commit: boolean) => {
-      if (!start || event.pointerId !== start.id) return;
-      const { transform, duration, time } = start;
-      start = null;
-      node.style.transitionDuration = duration;
-      if (offset === 0) return;
-      if (commit && sheetDragOutcome(offset, event.timeStamp - time, node.offsetHeight) === 'dismiss') { latest.current(); return; }
-      void node.offsetHeight; // apply the restored duration before settling back
-      node.style.transform = transform;
+    // Returns whether the sheet moved, so the click that may follow is not also taken by the row under the finger.
+    const finish = (y: number, time: number, commit: boolean): boolean => {
+      if (!drag) return false;
+      const { transform, duration, scrimOpacity, scrimDuration, samples } = drag;
+      samples.push({ t: time, y: drag.y + offset });
+      drag = null;
+      sheet.style.transitionDuration = duration;
+      if (scrim) scrim.style.transitionDuration = scrimDuration;
+      if (offset === 0) return false;
+      if (commit && sheetDragOutcome(offset, recentVelocity(samples), sheet.offsetHeight) === 'dismiss') { latest.current(); return true; }
+      void sheet.offsetHeight; // apply the restored durations before settling back
+      sheet.style.transform = transform;
+      if (scrim) scrim.style.opacity = scrimOpacity;
+      return true;
     };
-    const up = (event: PointerEvent) => end(event, true);
-    const cancel = (event: PointerEvent) => end(event, false);
-    handle.addEventListener('pointerdown', down);
-    handle.addEventListener('pointermove', move);
-    handle.addEventListener('pointerup', up);
-    handle.addEventListener('pointercancel', cancel);
+    const cleanups: (() => void)[] = [];
+    const listen = <K extends keyof HTMLElementEventMap>(node: HTMLElement, type: K, handler: (event: HTMLElementEventMap[K]) => void, options?: AddEventListenerOptions) => {
+      node.addEventListener(type, handler, options);
+      cleanups.push(() => node.removeEventListener(type, handler, options));
+    };
+
+    if (header) {
+      const previous = header.style.touchAction;
+      header.style.touchAction = 'none';
+      cleanups.push(() => { header.style.touchAction = previous; });
+      let pointer: number | null = null;
+      listen(header, 'pointerdown', (event) => {
+        if (event.button !== 0 || !event.isPrimary) return;
+        pointer = event.pointerId;
+        begin(event.clientY, event.timeStamp);
+        try { header.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ }
+      });
+      listen(header, 'pointermove', (event) => { if (event.pointerId === pointer) follow(event.clientY, event.timeStamp); });
+      const end = (event: PointerEvent, commit: boolean) => {
+        if (event.pointerId !== pointer) return;
+        pointer = null;
+        finish(event.clientY, event.timeStamp, commit);
+      };
+      listen(header, 'pointerup', (event) => end(event, true));
+      listen(header, 'pointercancel', (event) => end(event, false));
+    }
+
+    if (list) {
+      const previous = list.style.overscrollBehaviorY;
+      list.style.overscrollBehaviorY = 'contain'; // no scroll chaining or pull-to-refresh of the page behind
+      cleanups.push(() => { list.style.overscrollBehaviorY = previous; });
+      let touch: { id: number; x: number; y: number; scrollTop: number; owner: 'pending' | 'sheet' | 'list' } | null = null;
+      let swallowClick = false;
+      const find = (touches: TouchList) => touch ? Array.from(touches).find((item) => item.identifier === touch?.id) : undefined;
+      listen(list, 'touchstart', (event) => {
+        const first = event.touches[0];
+        swallowClick = false;
+        if (event.touches.length !== 1 || !first) {
+          if (touch?.owner === 'sheet') finish(touch.y, event.timeStamp, false);
+          touch = null;
+          return;
+        }
+        touch = { id: first.identifier, x: first.clientX, y: first.clientY, scrollTop: list.scrollTop, owner: 'pending' };
+      }, { passive: true });
+      listen(list, 'touchmove', (event) => {
+        const point = find(event.changedTouches);
+        if (!touch || !point || touch.owner === 'list') return;
+        if (touch.owner === 'pending') {
+          touch.owner = sheetGestureOwner(point.clientX - touch.x, point.clientY - touch.y, touch.scrollTop);
+          if (touch.owner !== 'sheet') return;
+          begin(point.clientY, event.timeStamp); // from here, so the sheet does not jump by the slop
+        }
+        if (event.cancelable) event.preventDefault(); // the list must not scroll or overscroll under a sheet drag
+        follow(point.clientY, event.timeStamp);
+      }, { passive: false });
+      const end = (event: TouchEvent, commit: boolean) => {
+        const point = find(event.changedTouches);
+        if (!touch || !point) return;
+        const owner = touch.owner;
+        touch = null;
+        if (owner === 'sheet') swallowClick = finish(point.clientY, event.timeStamp, commit);
+      };
+      listen(list, 'touchend', (event) => end(event, true));
+      listen(list, 'touchcancel', (event) => end(event, false));
+      listen(list, 'click', (event) => {
+        if (!swallowClick) return;
+        swallowClick = false;
+        event.stopPropagation();
+        event.preventDefault();
+      }, { capture: true });
+    }
+
     return () => {
-      handle.removeEventListener('pointerdown', down);
-      handle.removeEventListener('pointermove', move);
-      handle.removeEventListener('pointerup', up);
-      handle.removeEventListener('pointercancel', cancel);
+      cleanups.forEach((cleanup) => cleanup());
+      if (drag) finish(drag.y + offset, performance.now(), false);
     };
-  }, [active, header, sheet]);
+  }, [active, sheet, header, list, scrim]);
 }
 
 const styles = StyleSheet.create({

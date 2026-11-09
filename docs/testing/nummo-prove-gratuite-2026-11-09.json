@@ -1,0 +1,76 @@
+{
+  "format": "nummo-backup",
+  "version": 5,
+  "exported_at": "2026-11-09T12:00:00.000Z",
+  "categories": [
+    {
+      "id": "80000000-0000-4000-8000-000000000001",
+      "label": "TEST Prove gratuite",
+      "icon": "music"
+    }
+  ],
+  "expenses": [
+    {
+      "amount_minor": 1099,
+      "currency": "EUR",
+      "category_id": "80000000-0000-4000-8000-000000000001",
+      "expense_date": "2026-11-09",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 2,
+      "first_payment_date": "2026-12-09",
+      "created_at": "2026-11-09T09:00:00.000Z",
+      "id": "80000000-0000-4000-8000-000000000002",
+      "description": "TEST Spotify in prova"
+    },
+    {
+      "amount_minor": 1099,
+      "currency": "EUR",
+      "category_id": "80000000-0000-4000-8000-000000000001",
+      "expense_date": "2026-11-09",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [
+        {
+          "date": "2026-11-09",
+          "status": "cancelled"
+        }
+      ],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 2,
+      "first_payment_date": "2026-12-09",
+      "created_at": "2026-11-09T09:00:00.000Z",
+      "id": "80000000-0000-4000-8000-000000000003",
+      "description": "TEST Prova annullata"
+    },
+    {
+      "amount_minor": 1599,
+      "currency": "EUR",
+      "category_id": "80000000-0000-4000-8000-000000000001",
+      "expense_date": "2026-10-01",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 2,
+      "first_payment_date": "2026-11-01",
+      "created_at": "2026-10-01T09:00:00.000Z",
+      "id": "80000000-0000-4000-8000-000000000004",
+      "description": "TEST Prova terminata"
+    }
+  ],
+  "funds": [],
+  "movements": [],
+  "lists": []
+}

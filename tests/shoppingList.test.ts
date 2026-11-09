@@ -88,13 +88,13 @@ test('fondi: la spesa registrata da una lista conta una volta sola, come ogni al
   assert.equal(overview.funds[0]!.spent, 4250);
 });
 
-test('backup v4: liste con prodotti e collegamento della spesa ricostruiti; v3 letto senza liste; unione ripetibile', () => {
+test('backup corrente: liste con prodotti e collegamento della spesa ricostruiti; v3 letto senza liste; unione ripetibile', () => {
   const registered = list({ expense_id: uuid(900), total_minor: 4250, category_id: uuid(50),
     items: [{ id: uuid(101), name: 'Pane', checked: true, position: 0 }, { id: uuid(102), name: 'Uova', checked: false, position: 1 }] });
   const active = list({ id: uuid(2), name: 'Casa', created_at: '2026-11-03T10:00:00.000Z', items: [{ id: uuid(103), name: 'Detersivo', checked: false, position: 0 }] });
   const file = JSON.parse(makeBackup({ expenses: [expense()], categories: [], lists: [active, registered] }));
   assert.equal(file.version, backupVersion);
-  assert.equal(backupVersion, 4);
+  assert.equal(backupVersion, 5);
   assert.deepEqual(file.lists.map((l: { id: string }) => l.id), [uuid(1), uuid(2)]);
   assert.deepEqual(Object.keys(file.lists[0]).sort(), ['category_id', 'created_at', 'expense_id', 'id', 'items', 'name', 'total_minor']);
   assert.deepEqual(file.expenses[0].list_items, ['Pane', 'Latte']);

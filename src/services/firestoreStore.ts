@@ -1,3 +1,6 @@
+import { encodeTrialPrices, decodeTrialPrices } from '../domain/pricing.ts';
+import { trialTimingError } from '../domain/trial.ts';
+import { todayInRome } from '../domain/policy.ts';
 import {
   collection, deleteDoc, deleteField, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
   Timestamp, updateDoc, writeBatch, type Firestore, type DocumentData, type QuerySnapshot,
@@ -13,7 +16,7 @@ import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFu
 
 export type SnapshotState<T> = { records: T[]; fromCache: boolean; pending: boolean; pendingIds: string[] };
 function decode(data: DocumentData, id: string) {
-  return { ...data, ...('status_changes' in data ? { status_changes: decodeStatusChanges(data.status_changes) } : {}),
+  return { ...data, ...(data.schema_version === 2 ? { price_changes: decodeTrialPrices(data.price_changes) } : {}), ...('status_changes' in data ? { status_changes: decodeStatusChanges(data.status_changes) } : {}),
     ...('list_items' in data ? { list_items: decodeListItems(data.list_items) } : {}), id, created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : data.created_at,
     updated_at: data.updated_at instanceof Timestamp ? data.updated_at.toDate().toISOString() : data.updated_at };
 }
@@ -38,9 +41,9 @@ function parseSnapshot<T>(snapshot: QuerySnapshot, parse: (value: unknown) => T 
 // one-off expense and series never paused) keep the exact shape that Rules published before statuses accept.
 // Likewise `fund_id` is stored only when the expense has a fund (expenses saved before funds existed have none), and
 // `list_id` + `list_items` (names joined by '\n') only for the expense that registered a shopping list.
-function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id' | 'list_id' | 'list_items'>>(data: T) {
+function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id' | 'list_id' | 'list_items' | 'schema_version' | 'price_changes'>>(data: T) {
   const { status_changes, fund_id, list_id, list_items, ...rest } = data;
-  return { ...rest, ...(status_changes.length ? { status_changes: encodeStatusChanges(status_changes) } : {}), ...(fund_id ? { fund_id } : {}),
+  return { ...rest, price_changes: data.schema_version === 2 ? encodeTrialPrices(data.price_changes) : data.price_changes, ...(status_changes.length ? { status_changes: encodeStatusChanges(status_changes) } : {}), ...(fund_id ? { fund_id } : {}),
     ...(list_id ? { list_id, list_items: encodeListItems(list_items) } : {}) };
 }
 const storedList = (data: ShoppingListData) => ({ name: data.name, category_id: data.category_id, total_minor: data.total_minor, expense_id: data.expense_id });
@@ -107,6 +110,8 @@ export function createFirestoreStore(db: Firestore, uid: string) {
     },
     async updateExpense(previous: SyncedExpense, data: ExpenseData) {
       if (!parseExpenseRequest({ ...data, expense_id: previous.id }, new Date())) throw new Error('Spesa non valida.');
+      const timingError = trialTimingError(previous, data, todayInRome());
+      if (timingError) throw new Error(timingError);
       await runTransaction(db, async (tx) => {
         const ref = doc(expenses, previous.id);
         const current = await tx.get(ref);

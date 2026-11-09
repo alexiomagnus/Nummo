@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -35,7 +35,9 @@ type Props = { occurrences: readonly Occurrence[]; categories: readonly Category
   preferences: DashboardPreferences; onChangePreferences: (change: Partial<DashboardPreferences>) => void;
 };
 
-export function Dashboard({ occurrences, categories, preferences, onChangePreferences }: Props) {
+export const Dashboard = memo(DashboardView);
+
+function DashboardView({ occurrences, categories, preferences, onChangePreferences }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
   const theme = useTheme();
   const size = useSizeClass();

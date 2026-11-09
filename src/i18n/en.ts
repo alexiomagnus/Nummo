@@ -1,5 +1,19 @@
 // Italian source messages are stable UI keys. Never pass user-authored names to t().
 export const english: Readonly<Record<string, string>> = {
+  "Abbonamento salvato.": "Subscription saved.",
+  "Alla creazione di un abbonamento puoi attivare Periodo di prova gratuito e scegliere il primo pagamento. Durante la prova non viene conteggiata alcuna spesa. La data è modificabile finché futura; dopo il primo addebito resta invariata. Puoi annullare durante la prova per evitare i pagamenti successivi.": "When creating a subscription, you can enable Free trial and choose the first payment. No spending is counted during the trial. The date can be edited while it is in the future; after billing starts, it stays unchanged. You can cancel during the trial to avoid future payments.",
+  "Periodo di prova gratuito": "Free trial",
+  "Primo pagamento": "First payment",
+  "In prova gratuita": "On free trial",
+  "Primo pagamento {p0}": "First payment {p0}",
+  "La prova è terminata: la data del primo pagamento resta invariata.": "The trial has ended: the first payment date stays unchanged.",
+  "Nessuna spesa durante la prova. Da questa data iniziano i pagamenti con l’importo e la frequenza scelti.": "No spending during the trial. Payments start on this date at the chosen amount and frequency.",
+  "Il primo pagamento deve essere dopo l’inizio della prova ed entro il 31/12/2099.": "The first payment must be after the trial starts and no later than 31 December 2099.",
+  "La prova già registrata non può essere rimossa e i pagamenti maturati non possono essere spostati.": "A saved trial cannot be removed and payments already due cannot be moved.",
+  "Il nuovo primo pagamento deve essere successivo a oggi.": "The new first payment must be after today.",
+  "La prova gratuita va configurata alla creazione dell’abbonamento.": "A free trial must be set up when creating the subscription.",
+  "La prova gratuita richiede un backup versione 5 o successiva.": "Free trials require backup version 5 or later.",
+
   "Chiudi menu": "Close menu",
   "Mostra altre spese": "Show more expenses",
   "Mostrate {p0} di {p1} spese": "Showing {p0} of {p1} expenses",

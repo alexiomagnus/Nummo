@@ -2,6 +2,7 @@
 // runtime checks. TypeScript types alone do not validate untrusted data.
 import { isValidDate, normalizeDescription, type ExpenseData, type ExpenseRequest } from './expense.ts';
 import { expensePolicy, listPolicy, todayInRome } from './policy.ts';
+import { validFirstPayment } from './trial.ts';
 import { parsePriceChanges } from './pricing.ts';
 import { isRecurrence } from './recurrence.ts';
 import { parseStatusChanges } from './subscription.ts';
@@ -65,7 +66,8 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     && (v.fund_id === undefined || v.fund_id === null || (typeof v.fund_id === 'string' && v.fund_id !== ''))
     // Absent on records saved before shopping lists existed (= not from a list). Only one-off expenses come from a list.
     && (v.list_id === undefined || v.list_id === null || (typeof v.list_id === 'string' && v.list_id !== '' && v.recurrence === null))
-    && v.source === 'web_app' && v.schema_version === 1;
+    && v.source === 'web_app' && (v.schema_version === 1 ? v.first_payment_date === undefined
+      : v.schema_version === 2 && v.recurrence !== null && validFirstPayment(v.expense_date as string, v.first_payment_date));
   const price_changes = parsePriceChanges(v.price_changes);
   const status_changes = parseStatusChanges(v.status_changes);
   const list_items = parseListItems(v.list_items);
@@ -75,7 +77,8 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
   return {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: v.category_id as string | null,
     expense_date: v.expense_date as string, recurrence: v.recurrence as ExpenseData['recurrence'], price_changes, status_changes,
-    fund_id: (v.fund_id as string | null | undefined) ?? null, list_id, list_items, source: 'web_app', schema_version: 1,
+    fund_id: (v.fund_id as string | null | undefined) ?? null, list_id, list_items, source: 'web_app', schema_version: v.schema_version as 1 | 2,
+    ...(typeof v.first_payment_date === 'string' ? { first_payment_date: v.first_payment_date } : {}),
   };
 }
 
@@ -88,10 +91,10 @@ export function parseExpenseRecord(value: unknown): ExpenseRecord | null {
   return data && { ...data, id: v.id, created_at: v.created_at };
 }
 
-// Final client check before a Firestore write (mirrored by the Rules): exact fields, no future dates.
+// Final client check before a Firestore write: exact fields, no future expense/status dates; only trial billing may be future.
 export function parseExpenseRequest(value: unknown, now: Date): ExpenseRequest | null {
   const v = asObject(value);
-  if (!v || Object.keys(v).length !== requestKeys.length || !requestKeys.every((key) => key in v)) return null;
+  if (!v || Object.keys(v).length !== requestKeys.length + ('first_payment_date' in v ? 1 : 0) || !requestKeys.every((key) => key in v)) return null;
   if (!isUuid(v.expense_id) || (v.category_id !== null && !isUuid(v.category_id)) || (v.fund_id !== null && !isUuid(v.fund_id))
     || (v.list_id !== null && !isUuid(v.list_id))) return null;
   const data = readData(v);

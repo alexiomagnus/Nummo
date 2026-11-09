@@ -18,7 +18,8 @@ export const backupFormat = 'nummo-backup';
 // v2 adds `status_changes` (subscription pauses/cancellations); v1 files have none, so every series is active.
 // v3 adds funds, movements (income and transfers) and the expenses' `fund_id`; older files have no funds.
 // v4 adds shopping lists (with their items) and the expenses' `list_id` / `list_items`; older files have no lists.
-export const backupVersion = 4;
+// v5 adds first_payment_date and schema_version 2 for subscriptions with a free trial.
+export const backupVersion = 5;
 
 // --- JSON backup -----------------------------------------------------------------------------
 
@@ -30,6 +31,7 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
     expense_date: e.expense_date, recurrence: e.recurrence, price_changes: e.price_changes.map((c) => ({ index: c.index, amount_minor: c.amount_minor, once: c.once })),
     status_changes: e.status_changes.map((c) => ({ date: c.date, status: c.status })), fund_id: e.fund_id ?? null,
     list_id: e.list_id ?? null, list_items: [...(e.list_items ?? [])],
+    ...(e.first_payment_date ? { first_payment_date: e.first_payment_date } : {}),
     source: e.source, schema_version: e.schema_version, created_at: e.created_at,
   })).sort((a, b) => a.expense_date.localeCompare(b.expense_date) || a.id.localeCompare(b.id));
   const categories = data.categories.map((c) => ({ id: c.id, label: c.label, icon: c.icon })).sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
@@ -104,12 +106,15 @@ const readers: Record<number, (file: Record<string, unknown>) => ImportData> = {
   3: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements),
   // v4: shopping lists; older expenses have no `list_id` / `list_items` (not from a list) and the files no lists.
   4: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
+  5: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
 };
 
 export function parseBackup(value: unknown): ImportData {
   const file = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
   if (!file || file.format !== backupFormat || typeof file.version !== 'number') throw new Error('Formato backup non riconosciuto.');
   if (file.version > backupVersion) throw new Error('Backup creato da una versione più recente di Nummo: aggiorna l’app prima di importarlo.');
+  if (file.version < 5 && Array.isArray(file.expenses) && file.expenses.some((e: unknown) => e && typeof e === 'object' &&
+    ('first_payment_date' in e || ('schema_version' in e && e.schema_version === 2)))) throw new Error('La prova gratuita richiede un backup versione 5 o successiva.');
   const reader = readers[file.version];
   if (!reader) throw new Error('Versione del backup non supportata.');
   return reader(file);
@@ -148,7 +153,7 @@ export type ImportPlan = Readonly<{
   missingFundReferences: number;
 }>;
 
-const expenseKeys = ['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version', 'created_at'] as const;
+const expenseKeys = ['first_payment_date', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version', 'created_at'] as const;
 export function sameExpense(a: ExpenseRecord, b: ExpenseRecord): boolean {
   return expenseKeys.every((key) => sameFieldValue(a[key], b[key]));
 }

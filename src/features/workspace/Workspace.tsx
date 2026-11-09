@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Activity, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
@@ -75,33 +75,11 @@ type DashboardSettingsProps = {
 type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; renderSettings?: (onDone: () => void) => ReactNode };
 
 export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, renderSettings }: { uid: string; storageNote: string; topActions?: ReactNode; onReleased?: () => void } & AccountPageProps & DashboardSettingsProps) {
-  const { t } = useI18n();
   const backend = useMemo(() => createFirestoreStore(getDatabase(), uid), [uid]);
   const store = useRemoteExpenses(backend, storageNote);
   const categoryState = useRemoteCategories(backend);
   const fundState = useRemoteFunds(backend);
   const listState = useRemoteLists(backend);
-  const [section, setSection] = useState<Section>('expense');
-  // Account pages return to the originating main section (they are not navigation destinations).
-  const [returnTo, setReturnTo] = useState<Section>('list');
-  const navigate = (next: Section) => {
-    if (accountPages.has(next) && !accountPages.has(section)) setReturnTo(section);
-    setSection(next);
-  };
-  useEffect(() => { if (categoriesRequest > 0) navigate('categories'); }, [categoriesRequest]);
-  // Requests are events: an old request must not reopen the page when the UID workspace remounts.
-  const lastBackupRequest = useRef(backupRequest);
-  useEffect(() => {
-    if (backupRequest === lastBackupRequest.current) return;
-    lastBackupRequest.current = backupRequest;
-    navigate('backup');
-  }, [backupRequest]);
-  const lastSettingsRequest = useRef(settingsRequest);
-  useEffect(() => {
-    if (settingsRequest === lastSettingsRequest.current) return;
-    lastSettingsRequest.current = settingsRequest;
-    navigate('settings');
-  }, [settingsRequest]);
   const [online, setOnline] = useState(navigator.onLine);
   const [today, setToday] = useState(todayInRome());
   useEffect(() => {
@@ -134,16 +112,45 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   }, [released, dataReady, error]);
   // Tells the app that the real screen is ready to replace the startup placeholder (App.tsx).
   useEffect(() => { if (released) onReleased?.(); }, [released]);
-  return (
-    <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
-      fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
-      actions={<><SyncChip status={status} />{topActions}</>}>
-      <Sections dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences} uid={uid} section={section} onNavigate={navigate} returnTo={returnTo} backend={backend} store={store} categoryState={categoryState} starting={!released}
-        listState={listState}
-        occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon} online={online} synchronized={synchronized} error={error}
-        fundState={fundState} today={today} renderSettings={renderSettings} />
-    </AppShell>
-  );
+  return <WorkspaceNavigation dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences}
+    uid={uid} backend={backend} store={store} categoryState={categoryState} starting={!released}
+    listState={listState} occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon}
+    online={online} synchronized={synchronized} error={error} fundState={fundState} today={today}
+    renderSettings={renderSettings} settingsRequest={settingsRequest} categoriesRequest={categoriesRequest}
+    backupRequest={backupRequest} topActions={topActions} status={status} />;
+}
+
+// Navigation is presentation state: switching pages does not rerun the remote hooks or recreate their store objects.
+function WorkspaceNavigation({ categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, topActions, status, ...props }:
+  Omit<SectionsProps, 'section' | 'onNavigate' | 'returnTo'> & AccountPageProps & {
+    topActions?: ReactNode; status: ReturnType<typeof describeSync>;
+  }) {
+  const { t } = useI18n();
+  const [{ section, returnTo }, setNavigation] = useState<{ section: Section; returnTo: Section }>({ section: 'expense', returnTo: 'list' });
+  const navigate = useCallback((next: Section) => {
+    // Let React yield during a first, expensive page render so touch feedback can keep running.
+    startTransition(() => setNavigation((previous) => previous.section === next ? previous : { section: next,
+      returnTo: accountPages.has(next) && !accountPages.has(previous.section) ? previous.section : previous.returnTo }));
+  }, []);
+  useEffect(() => { if (categoriesRequest > 0) navigate('categories'); }, [categoriesRequest]);
+  // Requests are events: an old request must not reopen the page when the UID workspace remounts.
+  const lastBackupRequest = useRef(backupRequest);
+  useEffect(() => {
+    if (backupRequest === lastBackupRequest.current) return;
+    lastBackupRequest.current = backupRequest;
+    navigate('backup');
+  }, [backupRequest]);
+  const lastSettingsRequest = useRef(settingsRequest);
+  useEffect(() => {
+    if (settingsRequest === lastSettingsRequest.current) return;
+    lastSettingsRequest.current = settingsRequest;
+    navigate('settings');
+  }, [settingsRequest]);
+  return <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
+    fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
+    actions={<><SyncChip status={status} />{topActions}</>}>
+    <Sections {...props} section={section} onNavigate={navigate} returnTo={returnTo} />
+  </AppShell>;
 }
 
 // The shell is available during Auth restoration; do not draw a second form with fake empty data.
@@ -181,7 +188,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const [editing, setEditing] = useState<ExpenseRecord | null>(null);
   const [listView, setListView] = useState<ListView>('expenses');
   const [defaultFundId, setDefaultFundId] = useState(() => readDefaultFund(uid));
-  const changeDefaultFund = (id: string) => { setDefaultFundId(id); writeDefaultFund(uid, id); };
+  const changeDefaultFund = useCallback((id: string) => { setDefaultFundId(id); writeDefaultFund(uid, id); }, [uid]);
+  const openCategories = useCallback(() => onNavigate('categories'), [onNavigate]);
   // Balance now and remaining budget of this month, for the fund field of the forms (same figures as the Funds page).
   const fundSummary = useMemo(() => monthOverview({ funds: fundState.funds, movements: fundState.movements, expenses: store.expenses }, monthOf(today), today),
     [fundState.funds, fundState.movements, store.expenses, today]);
@@ -192,9 +200,12 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Releasing the startup cover after 4 seconds enables navigation, not incomplete form controls.
   const formLoading = starting || (!store.error && !categoryState.error && !fundsError &&
     !(store.ready && hasUsableCategorySnapshot(categoryState) && fundState.ready));
+  const usableCategories = hasUsableCategorySnapshot(categoryState);
+  const formStore = useMemo(() => ({ ...store, ready: store.ready && usableCategories && fundState.ready,
+    error: store.error || categoryState.error || fundsError }), [store, usableCategories, fundState.ready, categoryState.error, fundsError]);
   // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
   const oneOff = useMemo(() => occurrences.filter((item) => item.recurrence === null), [occurrences]);
-  const edit = (id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null);
+  const edit = useCallback((id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null), [store.expenses]);
   // Only today's change is written: past occurrences never change (see subscription.ts). Confirmed by the server transaction.
   const changeStatus = async (id: string, status: SubscriptionStatus) => {
     const record = store.expenses.find((r) => r.id === id);
@@ -248,11 +259,11 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
       {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
       <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
-        <ExpenseForm categories={categoryState.categories} onCreateCategory={() => onNavigate('categories')} fundChoices={fundChoices} defaultFundId={defaultFundId}
-          store={{ ...store, ready: store.ready && hasUsableCategorySnapshot(categoryState) && fundState.ready, error: store.error || categoryState.error || fundsError }} />
+        <ExpenseForm categories={categoryState.categories} onCreateCategory={openCategories} fundChoices={fundChoices} defaultFundId={defaultFundId}
+          store={formStore} />
       </div>
     </View>
-    {section === 'list' && !starting && (
+    <VisitedSection active={section === 'list' && !starting}>
       <View style={styles.list}>
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
           options={listViews.map((view) => ({ ...view, label: t(view.label) }))} />
@@ -263,18 +274,18 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
             canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} />
         </>}
       </View>
-    )}
+    </VisitedSection>
     {/* Preserve import previews and in-flight actions when leaving this page; no reads until an explicit action. */}
     <View style={section === 'backup' && !starting ? undefined : styles.hidden}>
       <BackupActions backend={backend} enabled={synchronized} />
     </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} />}
-    {section === 'lists' && !starting && <ListsPage remote={listState} categories={categoryState.categories} expenses={store.expenses}
-      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify} onCreateCategory={() => onNavigate('categories')} />}
-    {section === 'funds' && !starting && <FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
-      defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} />}
-    {section === 'dashboard' && !starting && <Dashboard occurrences={occurrences} categories={categoryState.categories}
-      preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} />}
+    <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} expenses={store.expenses}
+      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify} onCreateCategory={openCategories} /></VisitedSection>
+    <VisitedSection active={section === 'funds' && !starting}><FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
+      defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} /></VisitedSection>
+    <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}
+      preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} /></VisitedSection>
     {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo))}
     {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
@@ -285,8 +296,16 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   </>;
 }
 
+// Mount on the first visit only. Hidden activities preserve the page's state/DOM while suspending effects and portals;
+// the UID-keyed workspace still discards everything on account change. No background preloading during startup.
+function VisitedSection({ active, children }: { active: boolean; children: ReactNode }) {
+  const [visited, setVisited] = useState(active);
+  useEffect(() => { if (active) setVisited(true); }, [active]);
+  return active || visited ? <Activity mode={active ? 'visible' : 'hidden'}>{children}</Activity> : null;
+}
+
 const styles = StyleSheet.create({
-  // Pages fill the main area (the shell already caps the width); only the form is a narrow column.
+  // Pages fill the main area; the shell does not cap their width.
   list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
   starting: { alignItems: 'center', padding: spacing.xxl },
