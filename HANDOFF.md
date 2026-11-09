@@ -1,5 +1,19 @@
 # HANDOFF — Nummo
 
+## Rilascio: commit, push e Hosting — 9 novembre 2026, ~17:55 Europe/Rome
+
+- Rules: file locale identico alla release pubblicata da Codex alle 16:45:38 UTC (SHA-256 `972fd97e…d6d4a`); nessuna
+  modifica né ripubblicazione necessaria. Prima del commit, sul working tree completo (mio + Codex):
+  `npm run check` **OK** (typecheck, **331/331**, build demo) e `test:emulator` **16/16** su porte dedicate
+  (Auth 42099, Firestore 42280, Hub 42400; config temporanea rimossa). `git diff --check` OK, nessun segreto nel diff.
+- Commit **`37407c3`** (prove gratuite #8, fogli dal basso #3, pulsanti «Modifica prodotto» #2, navigazione #1, documenti
+  e fixture) e push su `origin/main`. Esclusa solo la config temporanea `.nummo-hybrid-41530.json` del runner attivo.
+- `npm run deploy:hosting` (solo Hosting) su nummo-6b6e2, sito LIVE: il sito ora corrisponde a `37407c3`. Verifica HTTP:
+  index.html live referenzia `index-338dc5fa….js` (HTTP 200), manifest `theme_color` `#121212`.
+  Login, caricamento dati, CRUD cloud e resa su Pixel/PWA reale non verificati. I client già aperti vanno ricaricati:
+  quelli vecchi rifiutano lo schema 2 delle prove gratuite.
+- Igiene Git ancora aperta: `.nummo-hybrid-14940.json` resta tracciato e `.gitignore` non ha `.nummo-hybrid-*.json`.
+
 ## Rules pubblicate e issue #8 chiusa — 9 novembre 2026
 
 - Su autorizzazione esplicita dell'utente: `firebase deploy --only firestore:rules --project nummo-6b6e2`
