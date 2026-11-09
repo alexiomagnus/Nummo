@@ -123,7 +123,7 @@ export function ExpenseForm({ categories, store, onCreateCategory, fundChoices =
         ) : (
           <View style={styles.actions}>
             <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
-              contentStyle={styles.button} labelStyle={styles.label} style={styles.submit}>
+              contentStyle={styles.button} labelStyle={styles.label} style={[styles.submit, desktop && styles.submitDesktop]}>
               {submission.status === 'sending' ? t("In attesa di conferma…") : t("Salva")}
             </Button>
           </View>
@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row', marginTop: spacing.sm },
   submit: { flexGrow: 1 },
+  submitDesktop: { flexGrow: 0, minWidth: 192 },
   label: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   button: { minHeight: layout.controlHeight },
 });

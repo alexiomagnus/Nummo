@@ -22,6 +22,8 @@ con icona/etichetta (sotto 380 dp etichetta `labelSmall`), attiva su `primaryCon
 `spatialSpring` (M3 Expressive) e segue il dito trascinato sulla pillola, aprendo la destinazione al rilascio (pointer event DOM,
 geometria pura in `navIndicator.ts`, click successivo al trascinamento soppresso); pulsante tondo in `primary`, nascosto nella pagina Nuova.
 Desktop: rail/drawer con FAB. Le azioni di Nuova spesa sono sempre nel flusso, dopo tutti i campi, senza barra sticky.
+Il contenuto occupa sempre tutta la larghezza del pannello, anche su monitor grandi: nessun limite
+di larghezza né colonna centrata in `AppShell`. Salva su expanded non cresce a tutta riga (minimo 192 px).
 La navigazione mobile si nasconde già al tocco su un campo scrivibile (anticipo con scadenza se non segue la tastiera)
 e, dopo conferma dal viewport, resta nascosta durante la chiusura fino al recupero dell'altezza;
 il solo focus da tastiera fisica non la nasconde. `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
@@ -59,6 +61,8 @@ Chiavi `localStorage` dell'app: `nummo.preferences.v1`, `nummo.boot-theme.v1`, `
 (segnaposto d'avvio, connessioni anticipate): non concede mai accesso, l'app attende sempre Firebase Auth.
 Aggiornare `Guide.tsx` quando cambiano le funzioni descritte; non presentare l’app come aperta a registrazioni.
 La splash Android usa colori/icone statici del manifest, non il tema o accento scelti nell’app.
+La barra di navigazione dell'app installata usa solo il `theme_color` del manifest (scuro, `#121212`), fissato nella
+WebAPK: la pagina e il tema di Nummo non possono cambiarla; non reintrodurre un `theme_color` chiaro.
 
 ## Stack e comandi
 

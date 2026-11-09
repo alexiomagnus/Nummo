@@ -414,7 +414,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   body: { flex: 1, flexDirection: 'row', minHeight: 0 },
   scroll: { flex: 1, minWidth: 0 },
-  content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', flexGrow: 1, gap: spacing.xl },
+  // The page always fills the panel, on any monitor: no width cap or centred column.
+  content: { width: '100%', flexGrow: 1, gap: spacing.xl },
   floating: { flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.md },
   // display: none also removes it from the accessibility tree and the Tab order while the keyboard is open.
   hidden: { display: 'none' },

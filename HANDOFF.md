@@ -1,5 +1,106 @@
 # HANDOFF — Nummo
 
+## Deploy Hosting autorizzato — 9 novembre 2026, ~03:27 Europe/Rome
+
+- Su richiesta esplicita dell'utente: `npm run check` OK (typecheck, 321/321, build demo), poi
+  `npm run deploy:hosting` (solo Hosting, Rules non toccate) su nummo-6b6e2, sito LIVE. Pubblicato il working tree
+  non committato: contenuto a tutta larghezza, Salva desktop min 192 px, manifest `theme_color` `#121212`,
+  script build/deploy Windows. Base Git `5e67dcf`, **nessun commit**: il sito non corrisponde a un commit.
+- Verificato via HTTP: index.html live referenzia il bundle `index-069e9b72….js` di `dist/` (HTTP 200), manifest
+  live con `theme_color` `#121212`. Login, caricamento dati e resa nel browser di produzione non verificati.
+
+## Contenuto a tutta larghezza del pannello — 9 novembre 2026
+
+- Screenshot utente 1920×1080 (monitor 24"), hybrid su localhost:8081: Nuova spesa in una colonna
+  centrata di 800 px con ampie fasce vuote. Richiesta: il contenuto deve occupare tutta la card anche su
+  schermi grandi. Sostituisce la fase «Larghezze desktop per attività» qui sotto.
+- Rimossi `contentMaxWidth` (AppShell), `pageWidths` (Workspace) e i token `maxContent`, `pageForm`,
+  `pageList`, `pageOverview`: `styles.content` è a larghezza 100% senza centratura. Conservato Salva su
+  expanded non espanso (minimo 192 px). Aggiornati AGENTS.md e docs/architecture.md.
+- `npm run check` con script-shell Git Bash **OK**: typecheck, **321/321**, build demo 588 moduli.
+  Resa a 1920×1080 e su monitor ultrawide non riverificata visivamente da questa sessione.
+- Avvio locale: lock orfano del PID 14940 (sessione `hybrid-LzwWoK` senza export/previous, processo assente)
+  rinominato in `.firebase/hybrid.lock.stale-14940`; `npm run dev -- --port 8081` avviato, HTTP 200.
+  Nello screenshot «Accesso negato: verifica UID del proprietario e regole»: probabile `config/owner`
+  dell'archivio locale assente o diverso dall'UID di login; non indagato né modificato.
+- La sessione hybrid (PID 11888, `.firebase/hybrid-NpA797`) si è chiusa da sola: Firestore Java uscito con
+  0xC000013A (segnale Ctrl+C/chiusura console, origine non identificata), export non confermato. Nessun export
+  nella sessione, `emulator-data/` invariato (01:20–01:23): lock rinominato in `hybrid.lock.stale-11888`, riavviato
+  su 8081 (HTTP 200). **`emulator-data/` contiene solo i metadati dell'export, nessun documento**: l'archivio locale è
+  vuoto, quindi manca anche `config/owner`. La cartella `recovery/` citata sotto non esiste più.
+
+## Barra di navigazione Android dell'app installata — 9 novembre 2026
+
+- Sorgente Chromium (main): in una WebAPK standalone la barra di navigazione usa solo il `theme_color` del manifest
+  salvato nella WebAPK (`WebappIntentDataProvider.getNavigationBarColor`, flag `WebAppNavigationBarThemeColor` attivo
+  di default). Il meta `theme-color` dinamico la cambia solo in edge-to-edge, che per le app installate Chrome usa
+  solo nel visualizzatore multimediale o in fullscreen con flag disattivato. `dark_theme_color` non viene letto dal
+  parser del manifest e dipenderebbe dalla modalità notte di sistema. Seguire il tema di Nummo: **non possibile**.
+- Causa probabile della barra chiara: WebAPK installata col `theme_color` `#F5FBF5` del commit `96777ac`. Produzione
+  (GET pubblico del manifest, nessun'altra lettura) serve già `#0F1511` (Last-Modified 9 nov 02:07 GMT); la WebAPK
+  si aggiorna solo dopo la verifica giornaliera al lancio, con app chiusa, in carica e su Wi-Fi, oppure reinstallando.
+  In alternativa, Chrome precedente alla logica lascia il colore di sistema. Versione Chrome dell'utente non nota.
+- Modifica: `theme_color` `#121212` (ripiego scuro richiesto); `background_color` `#0F1511` (splash), meta
+  `theme-color` runtime, `color-scheme`, viewport, safe area, layout e temi invariati. Nuovo `tests/manifest.test.ts`.
+  Corrette AGENTS.md, docs/architecture.md, docs/avvio-prestazioni.md (l'attribuzione a `background_color` su
+  Android 15+ era errata).
+- `npm run check` con script-shell Git Bash **OK**: typecheck, **321/321**, build demo; manifest esportato con
+  `#121212`. Non verificato su Android: serve `npm run deploy:hosting` (autorizzazione) e aggiornamento o
+  reinstallazione della WebAPK. Nessun commit o deploy.
+
+## Larghezze desktop per attività — 9 novembre 2026
+
+- Screenshot 1920×1080: Nuova spesa dilatata a 1440 px, pulsante Salva a tutta riga.
+  Diagnosi nel codice: unico maxContent per tutte le schermate, ExpenseForm senza
+  limite e pulsante con flexGrow:1 indipendente dalla classe desktop.
+- AppShell riceve contentMaxWidth; Workspace assegna token per pagina: modulo 800,
+  Spese/Liste/Categorie/Backup/Impostazioni 1120, Dashboard/Fondi 1280 px. Titolo,
+  contenuto e azioni condividono l'allineamento, colonna centrata e larghezza 100%
+  sotto il limite; il pannello resta esteso. Startup usa la stessa larghezza del modulo.
+  Salva su expanded non cresce e ha minimo 192 px; mobile/tablet invariati.
+- Nessuna modifica a dati/Rules/logica, nessun nuovo testo UI o dipendenza.
+  Check con Git Bash OK: typecheck, 319/319 test, build demo 588 moduli.
+  Browser host e pipe Computer Use indisponibili: screenshot dopo, zoom 125/150%,
+  monitor ultrawide e resa mobile non verificati visivamente. Nessun commit/deploy.
+
+## Correzione autorizzata categoria cloud bus → train — 9 novembre 2026
+
+- Con autorizzazione esplicita, aggiornata la sola categoria non valida su nummo-6b6e2:
+  icon bus → train, revision +1 e updated_at server. Commit REST con precondizione
+  updateTime del documento appena letto, senza retry automatici.
+- Riletta la collezione: 10/10 categorie accettate da parseSyncedCategory, zero invalide.
+  Verificati gli altri campi del documento invariati e le altre categorie identiche.
+  Nessuna spesa letta/modificata, nessun deploy o modifica Rules. Nessun contenuto
+  personale/ID/credenziale nei log. Da confermare la scomparsa dell'errore nell'app;
+  le altre collezioni non sono state controllate. Nessuna modifica applicativa,
+  test/build non necessari per questa singola correzione dati verificata sul server.
+
+## Diagnosi archivio di produzione in sola lettura — 9 novembre 2026
+
+- Autorizzata dall'utente la diagnosi sul cloud. Letto config/owner e la sola collezione
+  categorie del proprietario su nummo-6b6e2, tramite GET e sessione CLI esistente.
+  10 categorie controllate: una rifiutata dal decoder attuale esclusivamente perché
+  `icon` vale `bus`, ID rimosso. Sostituendo solo icon con null nella copia in memoria,
+  parseSyncedCategory accetta il record: gli altri campi di quella categoria sono validi.
+- Nessuna scrittura cloud, deploy o lettura delle spese; nessun nome categoria, UID,
+  ID documento o credenziale stampato. Diagnosi conferma una causa del blocco,
+  non certifica le altre collezioni (non lette). Proposta: cambio esplicito bus → train
+  sulla sola categoria interessata, con controllo della revisione e timestamp aggiornato;
+  modifica cloud ancora da autorizzare. Non rieseguiti test/build: nessuna modifica applicativa.
+
+## Preparazione produzione e CLI Windows — 9 novembre 2026
+
+- Segnalato deploy bloccato per PROJECT_ID mancante: `.env.production.local` assente,
+  creato con le sole quattro variabili pubbliche già compilate in `.env.local`.
+  File ignorato da Git, nessun valore di configurazione sensibile stampato.
+- Dry-run iniziale fallito: spawnSync('npx') su Windows restituisce ENOENT (riprodotto
+  anche con --version). build-cloud/deploy-hosting ora eseguono le CLI locali Expo/Firebase
+  tramite process.execPath e createRequire, senza shell; errori di avvio espliciti.
+- `deploy:hosting -- --dry-run` OK: build cloud validata, target nummo-6b6e2,
+  solo Hosting, nessuna pubblicazione. `check` OK: typecheck, 319/319 test e build demo;
+  diff check OK. Nessuna modifica alle Rules o ai dati, nessun deploy o commit.
+  Restano i controlli di compatibilità icone descritti sotto prima del rilascio effettivo.
+
 ## Overlay condivisi: selettori, menu e dialoghi senza glitch — 9 novembre 2026
 
 - Fonte: video `C:\Users\aless\Downloads\video_2026-11-09_02-16-22.mp4` (69 fotogrammi esaminati, Nuova spesa su

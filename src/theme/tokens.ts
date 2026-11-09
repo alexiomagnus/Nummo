@@ -75,8 +75,6 @@ export const layout = {
   railWidth: 80,
   drawerWidth: 248,
   topBarHeight: 64,
-  // Pages fill the viewport up to this width and are centred beyond it (very wide monitors).
-  maxContent: 1440,
   // Dialogs.
   maxForm: 560,
   // Gap between the blocks of a page (toolbar, cards, panels).

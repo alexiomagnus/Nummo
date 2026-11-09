@@ -6,6 +6,13 @@ incrementale: [migrazione-byof.md](migrazione-byof.md).
 
 ## Salvataggio Nuova spesa nel flusso (9 novembre 2026)
 
+Desktop: su richiesta dell'utente (screenshot 1920×1080, monitor 24") il contenuto
+occupa sempre tutta la larghezza del pannello, a qualsiasi dimensione dello schermo.
+Rimossi sia i limiti per attività (800/1120/1280 px) sia il limite globale di 1440 px
+con colonna centrata: lasciavano ampie fasce vuote ai lati del modulo.
+Salva su expanded resta nel flusso con larghezza minima 192 px,
+senza espandersi all'intera riga; su mobile mantiene la larghezza piena.
+
 Il pulsante Salva e il recupero degli esiti incerti seguono sempre tutti i campi
 nel normale scorrimento, anche su smartphone. Rimossa la barra sticky mobile:
 copriva ricorrenza e prezzo promozionale quando il modulo superava lo spazio
@@ -15,8 +22,23 @@ nascondersi quando si apre la tastiera virtuale.
 
 ## Barra di navigazione Android dell'app installata (9 novembre 2026)
 
-I colori statici `background_color` e `theme_color` del manifest sono entrambi lo sfondo scuro predefinito
-`#0F1511`: nessun passaggio statico chiaro/scuro fra i due. È un ripiego statico, non un manifest dinamico
+Aggiornamento dal sorgente Chromium (ramo main, letto il 9 novembre 2026): in un'app installata (WebAPK
+standalone) la barra di navigazione prende il **`theme_color` del manifest** (`WebappIntentDataProvider`,
+`getNavigationBarColor`, flag `WebAppNavigationBarThemeColor` attivo di default); senza `theme_color` resta al
+colore predefinito di Chrome/sistema. Il colore è salvato nella WebAPK: la pagina non lo cambia. Il meta
+`theme-color` dinamico tocca la barra di navigazione solo in edge-to-edge, che per le app installate Chrome usa
+soltanto nel visualizzatore multimediale o in fullscreen con un flag disattivato; `viewport-fit=cover` non lo attiva.
+La variante scura (`dark_theme_color`) esiste nella WebAPK ma il parser del manifest Blink legge solo
+`theme_color`/`background_color` di primo livello, e comunque sceglierebbe in base alla modalità notte di sistema,
+non al tema di Nummo. Quindi la barra non può seguire il tema chiaro/scuro scelto nell'app: ripiego statico scuro,
+`theme_color` `#121212` (testo e pulsanti bianchi leggibili con tema chiaro e scuro), `background_color` `#0F1511`
+per la splash. Le WebAPK già installate restano col vecchio `theme_color` (fino al 9 novembre `#F5FBF5`, chiaro)
+finché Chrome non le aggiorna: verifica al lancio se sono passate 24 ore, nuovo pacchetto solo con tutte le finestre
+dell'app chiuse, dispositivo in carica e Wi-Fi ([web.dev](https://web.dev/articles/manifest-updates)); altrimenti
+reinstallazione. Le versioni di Chrome precedenti a questa logica lasciano la barra al colore di sistema.
+
+Testo precedente, superato per la barra di navigazione: i colori statici `background_color` e `theme_color` erano
+entrambi `#0F1511`. È un ripiego statico, non un manifest dinamico
 per tema: con tema chiaro o altro accento la splash può differire dalla pagina. La precedente attribuzione
 esatta dei colori delle barre alle versioni Android proveniva da fonti non ufficiali e non è provata sul Pixel.
 La [documentazione Chrome](https://developer.chrome.com/docs/lighthouse/pwa/splash-screen) conferma che la splash

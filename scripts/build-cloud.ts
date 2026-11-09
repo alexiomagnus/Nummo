@@ -3,6 +3,7 @@
 // `.env.production.local` (git-ignored) and/or the shell (CI), are validated, then passed explicitly.
 // Output goes to `dist/`; the bundle is scanned afterwards. Never prints values, only names/counts.
 import { spawnSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
@@ -29,8 +30,9 @@ if (problems.length > 0) fail([...problems, `Variabili in ${FILE} (non versionat
 const childEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('EXPO_PUBLIC_')));
 Object.assign(childEnv, publicEnv, { EXPO_NO_DOTENV: '1', NODE_ENV: 'production' });
 rmSync(outDir, { recursive: true, force: true });
-const run = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', outDir], { env: childEnv as NodeJS.ProcessEnv, stdio: 'inherit' });
-if (run.status !== 0) fail(['expo export non riuscito']);
+const require = createRequire(import.meta.url);
+const run = spawnSync(process.execPath, [require.resolve('expo/bin/cli'), 'export', '--platform', 'web', '--output-dir', outDir], { env: childEnv as NodeJS.ProcessEnv, stdio: 'inherit' });
+if (run.status !== 0) fail([run.error?.message ?? 'expo export non riuscito']);
 
 const jsFiles = (dir: string): string[] => readdirSync(dir, { withFileTypes: true })
   .flatMap((entry) => entry.isDirectory() ? jsFiles(join(dir, entry.name)) : entry.name.endsWith('.js') ? [join(dir, entry.name)] : []);

@@ -5,6 +5,7 @@
 //   npm run deploy:hosting -- --channel nome -> temporary preview channel (7 days), live site untouched
 //   npm run deploy:hosting -- --dry-run      -> build + checks, prints the command, deploys nothing
 import { spawnSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 
@@ -23,7 +24,7 @@ const project = (process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? fromFile.EXPO_PU
 if (!project) fail(`EXPO_PUBLIC_FIREBASE_PROJECT_ID mancante in ${file} o nella shell.`);
 if (project.startsWith('demo-')) fail('il progetto è un progetto demo: non si pubblica.');
 
-const build = spawnSync('node', ['scripts/build-cloud.ts'], { stdio: 'inherit' });
+const build = spawnSync(process.execPath, ['scripts/build-cloud.ts'], { stdio: 'inherit' });
 if (build.status !== 0) fail('build:cloud non riuscita (nulla è stato pubblicato).');
 for (const required of ['dist/index.html', 'dist/manifest.webmanifest', 'dist/icons/icon-512.png']) {
   if (!existsSync(required)) fail(`${required} assente da dist/: build incompleta.`);
@@ -35,4 +36,7 @@ const command = channel
 console.log(`\nTarget: progetto ${project}, ${channel ? `canale di anteprima «${channel}»` : 'sito LIVE'}, solo Hosting.`);
 console.log(`Comando: npx ${command.join(' ')}`);
 if (dryRun) { console.log('--dry-run: nessuna pubblicazione eseguita.'); process.exit(0); }
-process.exit(spawnSync('npx', command, { stdio: 'inherit' }).status ?? 1);
+const require = createRequire(import.meta.url);
+const deployed = spawnSync(process.execPath, [require.resolve('firebase-tools/lib/bin/firebase.js'), ...command.slice(1)], { stdio: 'inherit' });
+if (deployed.error) fail(deployed.error.message);
+process.exit(deployed.status ?? 1);

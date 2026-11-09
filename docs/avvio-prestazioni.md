@@ -7,7 +7,7 @@ Auth e Firestore degli emulatori): **non** sono state eseguite su un Pixel 8 rea
 
 Riprodotta in emulazione, identica alla segnalazione dal Pixel 8:
 
-1. splash Android (sfondo `#121212` dal manifest, icona del manifest);
+1. splash Android (sfondo `background_color` `#0F1511` dal manifest, icona del manifest);
 2. pagina vuota con lo sfondo statico dell'HTML (schema Menta, **diverso** da quello scelto dall'utente);
 3. intestazione con indicatore «Caricamento della sessione» (guscio della schermata di accesso, senza navigazione);
 4. cambio di guscio: titolo, barra di navigazione e indicatore «Caricamento dei dati», modulo invisibile;
@@ -25,7 +25,7 @@ Riprodotta in emulazione, identica alla segnalazione dal Pixel 8:
 | Font richiesto solo dopo il mount di React (`@font-face` iniettato da un effetto): prima il testo usa il font di ripiego | **Confermata** (richiesta a 421 ms prima, a ≈ 10 ms ora) | Sì |
 | Attesa dei primi snapshot Firestore (connessione + token) | Confermata, inevitabile | No, solo mascherabile |
 | Bundle unico da 2,2 MB (437 KB con Brotli) | Pesa solo all'avvio a freddo dopo un deploy; da riapertura la cache HTTP lo serve in ≈ 10 ms | **Non ottimizzato**: nessuna evidenza che sia il collo di bottiglia in riapertura |
-| Splash Android: colore e icona statici del manifest | Confermata | No: il manifest non segue tema/accento; dal 9 novembre 2026 `#0F1511` (sfondo scuro Menta, prima `#121212`), usato da Android 15+ anche per la barra di navigazione dell’app installata |
+| Splash Android: colore e icona statici del manifest | Confermata | No: il manifest non segue tema/accento; dal 9 novembre 2026 sfondo `#0F1511` (prima `#121212`); la barra di navigazione dell’app installata usa invece `theme_color` `#121212` (vedi architecture.md) |
 | Ripresa dell'app già in memoria da «Recenti» | Gestita da Android/Chrome | No: nessun avvio da rifare |
 
 ## Correzioni
