@@ -120,5 +120,38 @@ Build `cloud` pubblicata solo con autorizzazione (`deploy:hosting -- --channel a
 - Indizio presente ma sessione scaduta o revocata: il segnaposto compare e poi lascia il posto alla schermata di accesso (verificato
   in emulazione, 1 cambio di schermata). Primo accesso o logout: nessun segnaposto.
 - FCP e primo paint di testo più tardi di 100–300 ms (emulazione) per il primo commit più pesante.
-- Il segnaposto duplica per un attimo il modulo (due istanze montate): costo CPU in più sul percorso critico, accettato.
+- Il segnaposto non contiene più un secondo modulo (dal 9 novembre: guscio, titolo e indicatore di caricamento).
 - Bundle non ridotto; da valutare (divisione dei blocchi, import dinamici) solo se un test reale mostrerà l'avvio a freddo come problema.
+
+## Issue #4 e #5 — verifica del 10 novembre 2026 (emulazione)
+
+**Causa trovata e corretta (#5, lato app).** Misura con fotogrammi a ogni cambio di stato (`measure-startup.mjs --snap`, CPU ×4,
+4g, tema chiaro, 412×915): nel segnaposto `StartupWorkspace` il titolo «Nuova spesa» e l'indicatore comparivano **a metà
+schermo**, perché su smartphone `AppShell` centra verticalmente le pagine corte di Nuova spesa e il segnaposto non aveva l'area
+del modulo che nella pagina reale occupa l'altezza. All'arrivo dei dati il titolo saltava di ≈ 350 px verso l'alto: uno
+sfarfallio visibile proprio nel momento descritto dalla segnalazione («interfaccia caricata, poi di nuovo un cambio»). Ora il
+segnaposto ha la stessa struttura della pagina reale (area che cresce, indicatore sovrapposto in alto): titolo e indicatore restano
+fermi dal segnaposto al modulo. Sequenza misurata dopo la correzione: sfondo del tema (≈ 110 ms) → guscio con titolo in alto e
+indicatore (≈ 620 ms) → stessa pagina con intestazione completa (≈ 1040 ms) → modulo (≈ 1380 ms); un solo colore di sfondo,
+nessun ricaricamento, nessun logo centrale disegnato dalla pagina. Emulazione, non Pixel 8.
+
+**Cosa resta di piattaforma (non correggibile dalla pagina).**
+- La splash con il logo è di Android/Chrome (manifest: `background_color` `#0F1511` + icona). Su Android 12+ può comparire prima la
+  splash di sistema (icona del launcher) e poi quella della WebAPK; Chrome la dissolve sopra la pagina già dipinta: è il «logo
+  sovrapposto». Con tema chiaro il passaggio splash scura → pagina chiara resta visibile.
+- #4: la barra di navigazione dell'app installata usa solo il `theme_color` del manifest salvato nella WebAPK (`#121212`, scuro in
+  entrambi i temi; vedi `architecture.md`). Un tema chiaro con barra chiara **non è ottenibile** dalla pagina; nessun workaround
+  introdotto. Il criterio «tema chiaro: sfondo chiaro» della issue va dichiarato non realizzabile.
+
+**Prove necessarie sul Pixel 8 (prima della chiusura, con autorizzazione al deploy).**
+1. Pubblicare il sito (o un canale di anteprima) con questa correzione; su `chrome://webapks` controllare data di aggiornamento e
+   `Theme color` = `#121212` della WebAPK installata; se è ancora `#F5FBF5`/`#0F1511`, reinstallare l'app.
+2. #4: aprire Nuova spesa con tema chiaro e scuro; fotografare la barra gestuale: atteso scuro in entrambi con indicatore leggibile,
+   nessuna fascia bianca; nessuna regressione della pillola di navigazione.
+3. #5: registrare lo schermo a 60 fps per tre aperture: a freddo (app chiusa dai Recenti), dopo > 1 h, e riapertura dai Recenti.
+   In parallelo `adb logcat | grep -iE "splash|webapk"` e debug remoto (`chrome://inspect`): in console
+   `performance.getEntriesByType('navigation').length` deve essere 1 e `performance.getEntriesByType('navigation')[0].type`
+   `navigate` (un `reload` indicherebbe un ricaricamento). Annotare versione di Android, Chrome e del launcher.
+4. Classificare il video: due splash consecutive prima della pagina = splash di sistema + WebAPK (piattaforma); titolo che salta =
+   regressione di questa correzione; pagina visibile e poi di nuovo splash completa con nuova navigazione = da analizzare (non
+   riprodotto in emulazione).

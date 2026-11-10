@@ -166,7 +166,12 @@ export function StartupWorkspace({ topActions }: { topActions?: ReactNode }) {
         {/* Where the account avatar will appear: the buttons beside it do not move. */}
         <View style={styles.avatarSlot}><View style={[styles.avatarDot, { backgroundColor: colors.primaryContainer }]} /></View></>}>
       <PageHeader title={t(headings.expense)} />
-      <View style={styles.starting}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>
+      {/* Same structure as the real page (a growing form area with the spinner overlaid at its top): on phones the shell
+          centres short pages vertically, so a bare spinner would put the title mid-screen and make it jump when the form
+          replaces this placeholder (issue #5). */}
+      <View style={styles.grow}>
+        <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>
+      </View>
     </AppShell>
   );
 }
