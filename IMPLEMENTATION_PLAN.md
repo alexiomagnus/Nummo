@@ -9,8 +9,8 @@ architettura e convenzioni: `AGENTS.md`. Al momento della stesura `npm run check
 
 ## Stato di avanzamento (aggiornato il 10 novembre 2026)
 
-Branch `feat/6-expense-cards` (commit impilati su `main`, nessun push, nessuna issue chiusa). Ogni passo: `npm run check`
-verde (335/335 test, typecheck, build demo). Prove nel browser solo su emulatori dedicati (49199/49280), non su dispositivo.
+Branch `feat/7-simplify-funds` (commit impilati su `main`, nessun push, nessuna issue chiusa). Ogni passo: `npm run check`
+verde (ultimo: 360/360 test, typecheck, build demo) e, per #9 e #7, `test:emulator` 18/18 su porte dedicate. Prove nel browser solo su emulatori dedicati (49199/49280), non su dispositivo.
 
 | Issue | Stato | Commit | Note |
 | --- | --- | --- | --- |
@@ -19,9 +19,13 @@ verde (335/335 test, typecheck, build demo). Prove nel browser solo su emulatori
 | #6 | **Implementata solo per Spese** | `3c198d9` | Scheda interamente cliccabile, data breve, importo a destra, «Modifica» nei dettagli, dissolvenza (`usePresence`). Verificata in Chromium 412×915 chiaro e 1280×900 scuro (nessun overflow, nessun errore JS, nessun pulsante annidato). **Resta:** Pagamenti ricorrenti (D6, sotto-fase) e prova con touch/tastiera/320 px/reduced-motion. |
 | #4 | Nessun codice; **in attesa** | — | Serve la verifica su Pixel 8 e l'autorizzazione a commentare/chiudere. |
 | #5 | **In attesa** | — | Serve video e diagnosi su dispositivo prima di toccare il codice. |
-| #9 | **Non iniziata** | — | Richiede conferma di D9 (schema 3, Rules, backup v6): modifica invasiva, non improvvisata. |
-| #7 | **Non iniziata** | — | Richiede le decisioni D7.1–5. |
+| #9 | **Implementata** (opzione A) | `fd8aeb4` | `calendar_changes` (max 4), schema 3, Rules, backup v6, `FrequencyField` in «Modifica serie», frequenza in vigore negli elenchi. Nessuna migrazione. Verificata in Chromium (salvataggio reale su emulatore: `3:2026-11-15:y`, schema 3, base `monthly`). **Resta:** nuove Rules da pubblicare prima del sito (autorizzazione), prova su dispositivo. |
+| #7 | **Implementata** (7a + 7b) | vedi `git log` | Fondi semplici e facoltativi, spesa per fondo, budget mensile generale (`settings/budget`, Rules, backup v6 `general_budget`), nessuna scelta obbligata in Nuova spesa, dati di saldo preesistenti conservati e mai sovrascritti (`fundFromForm`). Verificata in Chromium 412 px (fondo nuovo + fondo con saldo/ricariche). **Resta:** nuove Rules da pubblicare prima del sito, prova con touch/desktop/EN, decisione futura sulla dismissione di ricariche/movimenti (D7.1 c). |
 | #11 | **Non iniziata** | — | Richiede l'audit visivo e l'approvazione a lotti. |
+
+Decisioni prese in autonomia (non distruttive): D9 = opzione A (nuovo calendario nel documento); D7.1 = funzioni di saldo nascoste ma conservate; D7.4 = budget generale incluso (documento dedicato); eccezioni mensili dei fondi esistenti restano attive e non più modificabili; il budget generale non ha eccezioni.
+
+Problemi da rivedere: (1) importare in «Sostituisci» un backup senza `general_budget` azzera il budget generale (coerente con «uguaglia il file», con copia automatica); (2) le Rules non verificano la correttezza in avanti di `calendar_changes` (solo il decoder); (3) chiavi i18n del vecchio testo Fondi restano in `en.ts` inutilizzate; (4) un client vecchio con Rules nuove ignora `settings/budget` e rifiuta le serie schema 3.
 
 Osservazioni: `HANDOFF.md` ha modifiche non committate di un'altra sessione (escluse dai miei commit) e non è ancora
 aggiornato con queste tre issue.
