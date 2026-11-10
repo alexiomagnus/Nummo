@@ -28,7 +28,7 @@ import { donutLegendWidth, donutMaxSize } from './donutLayout';
 
 const chartLabels: Record<ChartType, string> = { donut: 'Ciambella', blocks: 'Blocchi', bars: 'Barre' };
 
-// Existing validated 12-colour palette (shared with the funds); slots follow category IDs, labels disambiguate repeated colours.
+// Existing validated 12-colour palette (shared with the funds); slots come from `categoryColorSlots` (distinct up to 12 used categories); labels disambiguate repeats beyond that.
 const palette = chartPalette;
 
 type Props = { occurrences: readonly Occurrence[]; categories: readonly Category[];

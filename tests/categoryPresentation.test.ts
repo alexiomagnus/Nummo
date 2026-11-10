@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { breakdown, categoryColorSlot, otherCategoriesKey, uncategorizedKey, periods, type ExpenseEntry } from '../src/domain/history.ts';
+import { breakdown, categoryColorSlots, otherCategoriesKey, uncategorizedKey, periods, type ExpenseEntry } from '../src/domain/history.ts';
 import { expandOccurrences } from '../src/domain/history.ts';
 import { categoryPresentation, blockHeight, blockLayout, blockRadius, blockTileBounds, categoryPercent } from '../src/features/dashboard/categoryPresentation.ts';
 import { treemap } from '../src/features/dashboard/treemap.ts';
@@ -68,7 +68,8 @@ test('categorie inutilizzate e periodi vuoti non affollano i grafici; colori ind
   const reordered = breakdown(items, [...unused, ...[...categories].reverse()].map((c) => ({ ...c, label: `Nuovo ${c.label}` })), 'month', today);
   assert.equal(reordered.series.length, 30);
   assert.deepEqual(reordered.series.map((s) => [s.key, s.slot, s.total]), original.series.map((s) => [s.key, s.slot, s.total]));
-  assert.ok(original.series.every((s) => s.slot === categoryColorSlot(s.key)));
+  const expected = categoryColorSlots(original.series.map((s) => s.key));
+  assert.ok(original.series.every((s) => s.slot === expected.get(s.key)));
   const empty = categoryPresentation(breakdown(items, categories, 'previous-month', today));
   assert.equal(empty.data.total, 0);
   assert.deepEqual(empty.data.series, []);

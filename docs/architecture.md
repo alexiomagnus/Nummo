@@ -202,8 +202,12 @@ null/riferimenti orfani come «Senza categoria». Le categorie inutilizzate non 
 `categoryPresentation` produce la stessa proiezione per ciambella, blocchi e barre: oltre otto serie,
 principali per importo + «Altre categorie», lasciando «Senza categoria» distinta. È un budget visivo,
 non un limite dati: la legenda espande tutti i membri di Altre con percentuali sul totale completo.
-I gruppi non entrano in Firestore o nei backup. I colori derivano dall’ID su 12 slot esistenti:
-restano stabili tra periodi/ordinamenti/rinomine ma possono ripetersi, con etichette sempre disponibili.
+I gruppi non entrano in Firestore o nei backup. I colori usano 12 slot esistenti: ogni
+categoria parte dallo slot dell’hash del suo ID e, se occupato, prende il primo libero (`categoryColorSlots`, issue #10).
+L’insieme considerato è quello delle categorie con almeno una spesa nell’archivio, non quello del periodo: con
+fino a 12 categorie usate nessun colore si ripete e i colori restano uguali tra periodi, grafici, filtri, ordinamenti e
+rinomine. Possono cambiare solo quando una categoria riceve la prima spesa o perde l’ultima. Oltre 12 le ripetizioni
+restano inevitabili, con etichette sempre disponibili.
 Tre modalità esplicite: Ciambella (`donut`), Blocchi (`blocks`, treemap recuperata da `d2fbe15`),
 Barre (`bars`, estratte dal precedente fallback). Blocchi conserva sempre rettangoli proporzionali,
 anche su mobile: gutter ridotti sulle tessere sottili senza espandere l’area nelle tessere vicine;

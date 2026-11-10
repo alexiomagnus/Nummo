@@ -167,12 +167,30 @@ export const uncategorizedKey = '__none';
 export type Series = Readonly<{ key: string; label: string; slot: number | null; total: number; values: number[] }>;
 export type Breakdown = Readonly<{ buckets: Bucket[]; series: Series[]; totals: number[]; total: number; count: number }>;
 
-// A category keeps its colour across periods, sorting, renaming and insertion/deletion of other categories.
-// A finite palette must repeat; labels and amounts remain the primary identification.
+// Colour slot preferred by a category: a hash of its ID, independent of every other category.
 export function categoryColorSlot(id: string): number {
   let hash = 2166136261;
   for (const char of id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-  return (hash >>> 0) % 12;
+  return (hash >>> 0) % colorSlots;
+}
+
+const colorSlots = 12;
+// Slots for a stable set of categories (those with spending anywhere in the archive, never the selected period):
+// IDs in sorted order each take their preferred slot, or the next free one, so up to 12 categories never share a colour.
+// The result depends only on the set of IDs, so it is the same across periods, charts, filters, names and ordering; it can
+// change only when a category gains its first spending or loses its last. Beyond 12 a finite palette must repeat;
+// labels and amounts remain the primary identification.
+export function categoryColorSlots(ids: Iterable<string>): Map<string, number> {
+  const sorted = [...new Set(ids)].sort();
+  const taken = new Set<number>();
+  const slots = new Map<string, number>();
+  for (const id of sorted) {
+    let slot = categoryColorSlot(id);
+    if (taken.size < colorSlots) while (taken.has(slot)) slot = (slot + 1) % colorSlots;
+    taken.add(slot);
+    slots.set(id, slot);
+  }
+  return slots;
 }
 
 export function breakdown(items: readonly Occurrence[], categories: readonly Category[], period: Period, today: string): Breakdown {
@@ -181,13 +199,14 @@ export function breakdown(items: readonly Occurrence[], categories: readonly Cat
   const to = buckets[buckets.length - 1]!.to;
   const seriesMap = new Map<string, { key: string; label: string; slot: number | null; values: number[] }>();
   const categoryMap = new Map(categories.map((category) => [category.id, category]));
+  const slots = categoryColorSlots(items.flatMap((item) => (item.category_id && categoryMap.has(item.category_id) ? [item.category_id] : [])));
   let count = 0;
   for (const item of items) {
     if (item.date < from || item.date > to) continue;
     const index = buckets.findIndex((bucket) => item.date >= bucket.from && item.date <= bucket.to);
     if (index === -1) continue;
     const category = categoryMap.get(item.category_id ?? '');
-    const info = category ? { key: category.id, label: category.label, slot: categoryColorSlot(category.id) }
+    const info = category ? { key: category.id, label: category.label, slot: slots.get(category.id) ?? categoryColorSlot(category.id) }
       : { key: uncategorizedKey, label: 'Senza categoria', slot: null };
     let series = seriesMap.get(info.key);
     if (!series) {

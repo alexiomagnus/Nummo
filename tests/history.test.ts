@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { occurrenceDates } from '../src/domain/recurrence.ts';
 import {
-  breakdown, categoryColorSlot, bucketsFor, expandOccurrences, searchAndSort, type ExpenseEntry,
+  breakdown, categoryColorSlot, categoryColorSlots, bucketsFor, expandOccurrences, searchAndSort, type ExpenseEntry,
 } from '../src/domain/history.ts';
 
 const entry = (over: Partial<ExpenseEntry>): ExpenseEntry => ({
@@ -86,4 +86,34 @@ test('ultimi 3 mesi comprendono quello corrente; totali separati dal mese scorso
   ], '2026-01-15');
   assert.equal(breakdown(items, [], 'quarter', '2026-01-15').total, 600);
   assert.equal(breakdown(items, [], 'previous-month', '2026-01-15').total, 200);
+});
+
+test('colori: fino a 12 categorie usate hanno slot distinti, indipendenti da ordine e periodo', () => {
+  const ids = Array.from({ length: 12 }, (_, i) => `cat-${i}-${'abcdef'.charAt(i % 6)}`);
+  const slots = categoryColorSlots(ids);
+  assert.equal(new Set(slots.values()).size, 12);
+  assert.deepEqual([...categoryColorSlots([...ids].reverse())].sort(), [...slots].sort());
+  assert.deepEqual([...categoryColorSlots([...ids, ...ids])].sort(), [...slots].sort());
+  // Hash collisions alone would repeat colours: with 12 IDs some pair collides on the preferred slot.
+  assert.ok(new Set(ids.map(categoryColorSlot)).size < 12);
+});
+
+test('colori: oltre 12 categorie restano nell’intervallo e deterministici', () => {
+  const ids = Array.from({ length: 30 }, (_, i) => `id-${i}`);
+  const slots = categoryColorSlots(ids);
+  assert.ok([...slots.values()].every((slot) => Number.isInteger(slot) && slot >= 0 && slot < 12));
+  assert.deepEqual([...categoryColorSlots(ids)], [...slots]);
+  assert.equal(new Set(slots.values()).size, 12);
+});
+
+test('colori: i casi della segnalazione (Casa, Ristorazione, Alimentari, Trasporti) restano distinti e stabili tra i periodi', () => {
+  const categories = ['Casa', 'Ristorazione', 'Alimentari', 'Trasporti'].map((label, i) => ({ id: `00000000-0000-4000-8000-00000000000${i}`, label, icon: null }));
+  const today = '2026-11-10';
+  const items = categories.map((c, i) => ({ key: `${c.id}:x`, expenseId: `e${i}`, date: i === 0 ? '2026-06-01' : '2026-11-05', amount_minor: 1000,
+    description: c.label, category_id: c.id, recurrence: null }));
+  const month = breakdown(items, categories, 'month', today);
+  const year = breakdown(items, categories, 'year', today);
+  const slotOf = (b: typeof month, key: string) => b.series.find((s) => s.key === key)?.slot;
+  assert.equal(new Set(year.series.map((s) => s.slot)).size, 4);
+  for (const s of month.series) assert.equal(s.slot, slotOf(year, s.key));
 });
