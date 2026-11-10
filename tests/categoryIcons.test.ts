@@ -116,3 +116,12 @@ test('palette icone: contrasto di tinte e dettagli sulle superfici reali di ogni
   }
   assert.equal(new Set(iconHues.map((hue) => iconRamp(hue, false).b)).size, iconHues.length);
 });
+
+test('stile pixel: nessuno sprite coincide con un altro, nemmeno a meno della tinta (issue #11)', () => {
+  const shapes = Object.entries(pixelSprites).map(([name, sprite]) => [name, sprite.rows.join('/')] as const);
+  const seen = new Map<string, string>();
+  for (const [name, shape] of shapes) {
+    assert.equal(seen.get(shape), undefined, `${name} uguale a ${seen.get(shape)}`);
+    seen.set(shape, name);
+  }
+});
