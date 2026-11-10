@@ -34,8 +34,8 @@ architettura e convenzioni: `AGENTS.md`. Al momento della stesura `npm run check
 - **Verifica post-rilascio dell'agente:** pagina pubblica caricata in Chromium senza errori JavaScript né richieste fallite fino a
   «Accedi con Google». **Non verificati:** login, lettura e scrittura dei dati reali (richiedono l'account del proprietario).
 - **Issue:** a #4, #5, #6, #7, #9, #10, #11 e #12 è stato aggiunto un commento con soluzione, commit, test e verifiche mancanti.
-  **Nessuna chiusa:** servono la conferma del proprietario sul sito pubblico (#6, #7, #9, #10, #12), l'approvazione visiva (#11)
-  e le prove sul Pixel 8 (#4, #5).
+  **Chiuse su autorizzazione del proprietario:** #6, #7, #9, #10, #12, ciascuna con un commento finale. Le verifiche sul sito pubblico
+  restano consigliate. **Aperte:** #11 (approvazione visiva degli sprite), #4 e #5 (prove sul Pixel 8).
 
 ## Stato di avanzamento (aggiornato il 10 novembre 2026, secondo giro)
 
