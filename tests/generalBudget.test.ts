@@ -133,3 +133,11 @@ test('importazione: il budget generale riempie solo un budget vuoto, non sovrasc
   assert.deepEqual(planImport({ ...base }, { ...base, budget: other }, 'replace').setBudget, [], 'sostituzione con file senza budget: nessun budget');
   assert.equal(planImport({ ...base }, { ...base }, 'replace').setBudget, null);
 });
+
+test('panoramica Fondi: i mesi con spese restano raggiungibili anche con fondi creati dopo o senza fondi', async () => {
+  const { firstOverviewMonth } = await import('../src/domain/funds.ts');
+  assert.equal(firstOverviewMonth([], [], today), '2026-11');
+  assert.equal(firstOverviewMonth([], [{ expense_date: '2026-03-14' }], today), '2026-03');
+  assert.equal(firstOverviewMonth([fund({ start_date: '2026-11-10' })], [{ expense_date: '2025-12-01' }], today), '2025-12');
+  assert.equal(firstOverviewMonth([fund({ start_date: '2025-06-01' })], [{ expense_date: '2026-01-01' }], today), '2025-06');
+});

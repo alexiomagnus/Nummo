@@ -9,7 +9,7 @@ import { SelectField } from '../../components/SelectField';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { parseSyncedExpense, type SyncedExpense, type SyncedFund, type SyncedMovement } from '../../domain/firestore';
 import {
-  addMonths, currentRecharge, fundInUse, generalBudgetMonth, hasBalanceData, monthOf, monthOverview, unassignedExpenses, type BudgetChange,
+  addMonths, currentRecharge, firstOverviewMonth, fundInUse, generalBudgetMonth, hasBalanceData, monthOf, monthOverview, unassignedExpenses, type BudgetChange,
   type FundEntry, type FundMonth, type MonthKind, type MovementKind,
 } from '../../domain/funds';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -66,8 +66,8 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const general = useMemo(() => generalBudgetMonth(remote.budgets, overview), [remote.budgets, overview]);
   const balances = useMemo(() => new Map(overview.funds.map((item) => [item.fund.id, item.balance])), [overview]);
   const orphans = useMemo(() => unassignedExpenses(expenses, funds), [expenses, funds]);
-  // Earliest month with data (first fund start), up to one year ahead (forecasts only).
-  const first = funds.reduce((min, fund) => (monthOf(fund.start_date) < min ? monthOf(fund.start_date) : min), monthOf(today));
+  // Earliest month with data (first fund start or oldest expense), up to one year ahead (forecasts only).
+  const first = useMemo(() => firstOverviewMonth(funds, expenses, today), [funds, expenses, today]);
   const last = addMonths(monthOf(today), 12);
   const monthLabel = formatDate(`${month}-01`, { month: 'long', year: 'numeric' });
   const forecast = overview.kind === 'future';

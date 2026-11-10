@@ -516,3 +516,12 @@ export function resolveFund(chosen: string, choices: readonly { fund: { id: stri
   if (chosen) return chosen;
   return choices.some((choice) => choice.fund.id === defaultFundId) ? defaultFundId : noFund;
 }
+
+// First month the Funds page can show: the earliest of the funds' start, the oldest expense and the current month. Spending
+// is the overview (issue #7), so months with expenses stay reachable even when every fund was created later (or none exists).
+export function firstOverviewMonth(funds: readonly Pick<Fund, 'start_date'>[], expenses: readonly { expense_date: string }[], today: string): Month {
+  let first = monthOf(today);
+  for (const fund of funds) if (monthOf(fund.start_date) < first) first = monthOf(fund.start_date);
+  for (const expense of expenses) if (monthOf(expense.expense_date) < first) first = monthOf(expense.expense_date);
+  return first;
+}
