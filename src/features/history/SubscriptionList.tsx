@@ -1,17 +1,18 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
+import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { ListRow, listRowStyles } from '../../components/ListRow';
-import { Reveal } from '../../components/Reveal';
+import { usePresence, useOverlayMotion } from '../../components/Overlay';
+import { fadeTransition } from '../../theme/motion';
 import { leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import { searchSubscriptions, type SubscriptionSummary } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
 import { statusLabels, type SubscriptionStatus } from '../../domain/subscription';
-import { inputOutline, radius, spacing } from '../../theme/tokens';
+import { inputOutline, motion, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 
 type Props = {
@@ -80,79 +81,88 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {subscriptions.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento corrisponde alla ricerca.")}</Text>}
       <View role="list">
-        {subscriptions.map(({ entry, status, inTrial, amount_minor, frequency: inForce, next, payments, total }) => {
-          const category = categoryById.get(entry.category_id ?? '');
-          const open = expanded.has(entry.id);
-          const all = complete.has(entry.id);
-          const detailsId = `subscription-details-${entry.id}`;
-          const since = entry.status_changes?.[entry.status_changes.length - 1]?.date;
-          const frequency = inForce ? t(recurrenceLabels[inForce]) : '';
-          const when = status === 'active' ? (next ? t(inTrial ? 'Primo pagamento {p0}' : 'Prossimo rinnovo {p0}', { p0: formatDate(next.date) }) : '')
-            : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
-          const shown = all ? payments : payments.slice(0, historyPreview);
-          const working = busy === entry.id;
-          const amount = <Text variant={compact ? 'titleSmall' : 'titleMedium'}
-            style={[listRowStyles.amount, !compact && styles.rowAmount, status !== 'active' && { color: colors.onSurfaceVariant }]}>{formatAmount(amount_minor)}</Text>;
-          return (
-            <View key={entry.id}>
-              <ListRow outlined icon={category?.icon ?? null} title={entry.description}
-                subtitle={[frequency, when].filter(Boolean).join(' · ')}
-                meta={<View style={styles.meta}><StatusBadge status={status} inTrial={inTrial} />{compact && amount}</View>}
-                trailing={<>
-                  {!compact && amount}
-                  <IconButton style={listRowStyles.iconButton} aria-expanded={open} aria-controls={open ? detailsId : undefined}
-                    accessibilityLabel={t("{p0} dettagli di {p1}", { p0: open ? t("Nascondi") : t("Mostra"), p1: entry.description })}
-                    icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
-                    onPress={() => toggle(setExpanded, entry.id)} />
-                  <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
-                    accessibilityLabel={t("Modifica {p0}", { p0: entry.description })} onPress={() => onEdit(entry.id)} />
-                </>}>
-                {open && <Reveal nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: entry.description })}
-                  style={[styles.details, { borderColor: colors.outlineVariant }]}>
-                  <View style={styles.fields}>
-                    <Field label={t("Pagamenti effettuati")} value={String(payments.length)} />
-                    <Field label={t("Totale speso")} value={formatAmount(total)} />
-                    <Field label={t("Categoria")} value={category?.label ?? t("Senza categoria")} />
-                    <Field label={t("Inizio")} value={formatDate(entry.expense_date)} />
-                    <Field label={t(inTrial ? "Primo pagamento" : "Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
-                  </View>
-                  <View style={[styles.actions, compact && styles.compactActions]}>
-                    {status === 'active' && <Button compact={compact} mode="outlined" disabled={!canChange || working} loading={working}
-                      icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
-                      onPress={() => void change(entry.id, 'paused')}>{t("Metti in pausa")}</Button>}
-                    {status !== 'active' && <Button compact={compact} mode="contained-tonal" disabled={!canChange || working} loading={working}
-                      icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
-                      onPress={() => void change(entry.id, 'active')}>{t("Riattiva")}</Button>}
-                    {status !== 'cancelled' && <Button compact={compact} mode="text" textColor={colors.error} disabled={!canChange || working}
-                      icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
-                      onPress={() => void change(entry.id, 'cancelled')}>{t("Annulla abbonamento")}</Button>}
-                  </View>
-                  {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-                    {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
-                  </Text>}
-                  <View style={styles.history}>
-                    <Text variant="titleSmall" accessibilityRole="header" style={styles.historyTitle}>{t("Storico dei pagamenti")}</Text>
-                    {payments.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Nessun pagamento.")}</Text>}
-                    <View role="list">
-                      {shown.map((payment, index) => (
-                        <View key={payment.key} role="listitem" style={[styles.payment, index < shown.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant }]}>
-                          <Text variant="bodyMedium">{formatDate(payment.date)}</Text>
-                          <Text variant="bodyMedium" style={listRowStyles.amount}>{formatAmount(payment.amount_minor)}</Text>
-                        </View>
-                      ))}
-                    </View>
-                    {payments.length > historyPreview && <View style={styles.start}>
-                      <Button mode="text" aria-expanded={all} onPress={() => toggle(setComplete, entry.id)}>
-                        {all ? t("Mostra solo i più recenti") : t("Mostra tutti i pagamenti ({p0})", { p0: payments.length })}
-                      </Button>
-                    </View>}
-                  </View>
-                </Reveal>}
-              </ListRow>
-            </View>
-          );
-        })}
+        {subscriptions.map((summary) => (
+          <SubscriptionRow key={summary.entry.id} summary={summary} category={categoryById.get(summary.entry.category_id ?? '')}
+            open={expanded.has(summary.entry.id)} all={complete.has(summary.entry.id)} compact={compact} canChange={canChange}
+            working={busy === summary.entry.id} formatDate={formatDate}
+            onToggle={() => toggle(setExpanded, summary.entry.id)} onToggleAll={() => toggle(setComplete, summary.entry.id)}
+            onEdit={() => onEdit(summary.entry.id)} onChange={(status) => void change(summary.entry.id, status)} />
+        ))}
       </View>
+    </View>
+  );
+}
+
+// Same card as the expense list (issue #6): the whole card toggles its details, no chevron or edit button when closed,
+// amount right-aligned, status badge under the name; edit and status actions live in the expanded details.
+function SubscriptionRow({ summary, category, open, all, compact, canChange, working, formatDate, onToggle, onToggleAll, onEdit, onChange }: {
+  summary: SubscriptionSummary; category?: Category; open: boolean; all: boolean; compact: boolean; canChange: boolean; working: boolean;
+  formatDate: (date: string) => string; onToggle: () => void; onToggleAll: () => void; onEdit: () => void; onChange: (status: SubscriptionStatus) => void;
+}) {
+  const { t, formatAmount } = useI18n();
+  const { colors } = useTheme();
+  const animate = useOverlayMotion();
+  const { mounted, shown: visible } = usePresence(open, motion.fade, animate);
+  const { entry, status, inTrial, amount_minor, frequency: inForce, next, payments, total } = summary;
+  const detailsId = `subscription-details-${entry.id}`;
+  const since = entry.status_changes?.[entry.status_changes.length - 1]?.date;
+  const frequency = inForce ? t(recurrenceLabels[inForce]) : '';
+  const when = status === 'active' ? (next ? t(inTrial ? 'Primo pagamento {p0}' : 'Prossimo rinnovo {p0}', { p0: formatDate(next.date) }) : '')
+    : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
+  const shown = all ? payments : payments.slice(0, historyPreview);
+  return (
+    <View>
+      <ListRow outlined dense icon={category?.icon ?? null} title={entry.description}
+        subtitle={[frequency, when].filter(Boolean).join(' · ')}
+        meta={<View style={styles.meta}><StatusBadge status={status} inTrial={inTrial} /></View>}
+        expanded={open} controls={open ? detailsId : undefined}
+        pressLabel={t("{p0} dettagli di {p1}", { p0: open ? t("Nascondi") : t("Mostra"), p1: entry.description })}
+        onPress={onToggle}
+        trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount, status !== 'active' && { color: colors.onSurfaceVariant }]}>{formatAmount(amount_minor)}</Text>}>
+        {mounted && <View nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: entry.description })}
+          style={[styles.details, { borderColor: colors.outlineVariant, opacity: visible ? 1 : 0 }, animate && fadeTransition]}>
+          <View style={styles.fields}>
+            <Field label={t("Pagamenti effettuati")} value={String(payments.length)} />
+            <Field label={t("Totale speso")} value={formatAmount(total)} />
+            <Field label={t("Categoria")} value={category?.label ?? t("Senza categoria")} />
+            <Field label={t("Inizio")} value={formatDate(entry.expense_date)} />
+            <Field label={t(inTrial ? "Primo pagamento" : "Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
+          </View>
+          <View style={[styles.actions, compact && styles.compactActions]}>
+            <Button compact={compact} mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
+            {status === 'active' && <Button compact={compact} mode="outlined" disabled={!canChange || working} loading={working}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
+              onPress={() => onChange('paused')}>{t("Metti in pausa")}</Button>}
+            {status !== 'active' && <Button compact={compact} mode="contained-tonal" disabled={!canChange || working} loading={working}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
+              onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
+            {status !== 'cancelled' && <Button compact={compact} mode="text" textColor={colors.error} disabled={!canChange || working}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
+              onPress={() => onChange('cancelled')}>{t("Annulla abbonamento")}</Button>}
+          </View>
+          {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+            {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
+          </Text>}
+          <View style={styles.history}>
+            <Text variant="titleSmall" accessibilityRole="header" style={styles.historyTitle}>{t("Storico dei pagamenti")}</Text>
+            {payments.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Nessun pagamento.")}</Text>}
+            <View role="list">
+              {shown.map((payment, index) => (
+                <View key={payment.key} role="listitem" style={[styles.payment, index < shown.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant }]}>
+                  <Text variant="bodyMedium">{formatDate(payment.date)}</Text>
+                  <Text variant="bodyMedium" style={listRowStyles.amount}>{formatAmount(payment.amount_minor)}</Text>
+                </View>
+              ))}
+            </View>
+            {payments.length > historyPreview && <View style={styles.start}>
+              <Button mode="text" aria-expanded={all} onPress={onToggleAll}>
+                {all ? t("Mostra solo i più recenti") : t("Mostra tutti i pagamenti ({p0})", { p0: payments.length })}
+              </Button>
+            </View>}
+          </View>
+        </View>}
+      </ListRow>
     </View>
   );
 }
@@ -169,10 +179,10 @@ function Field({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   root: { gap: spacing.lg },
-  meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, paddingVertical: 2 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', borderRadius: radius.pill,
     paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  rowAmount: { minWidth: 96, textAlign: 'right', marginRight: spacing.md },
+  rowAmount: { minWidth: 80, textAlign: 'right' },
   details: { gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md },
   fields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
   field: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
