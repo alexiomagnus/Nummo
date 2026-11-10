@@ -7,28 +7,48 @@ Issue lette con `gh issue list/view`: **#4, #5, #6, #7, #9, #10, #11, #12** (nes
 Il piano non modifica codice. Riferimenti di riga validi per `ab7a72a`. Stato e verifiche correnti: `HANDOFF.md`;
 architettura e convenzioni: `AGENTS.md`. Al momento della stesura `npm run check` è verde (typecheck, 331/331, build demo).
 
-## Stato di avanzamento (aggiornato il 10 novembre 2026)
+## Stato di avanzamento (aggiornato il 10 novembre 2026, secondo giro)
 
-Branch `feat/7-simplify-funds` (commit impilati su `main`, nessun push, nessuna issue chiusa). Ogni passo: `npm run check`
-verde (ultimo: 360/360 test, typecheck, build demo) e, per #9 e #7, `test:emulator` 18/18 su porte dedicate. Prove nel browser solo su emulatori dedicati (49199/49280), non su dispositivo.
+Branch `fix/10-12-review`: tutti i commit sono impilati su `main` (`ab7a72a`). Nessun push, nessun deploy, nessuna issue chiusa;
+`HANDOFF.md` non modificato (ha ancora modifiche non committate di un'altra sessione, escluse da ogni commit).
+Verifiche finali sullo stato corrente: `npm run check` **verde** (typecheck, **363/363** test, build demo) e
+`test:emulator` **18/18** (Auth 49199, Firestore 49280, config temporanea rimossa). `test:hybrid` non rieseguito (nessuna modifica
+al runner). Prove nel browser solo in Chromium headless su build demo con emulatori dedicati: **nessuna prova su dispositivo**.
 
-| Issue | Stato | Commit | Note |
+| Issue | Stato | Commit | Verifiche e note |
 | --- | --- | --- | --- |
-| #12 | **Implementata** | `bccc653` | Preferenza `dashboardTrend`, interruttore in Impostazioni, Guida, test. Non provata nel browser. |
-| #10 | **Implementata** (opzione A) | `969ddb4` | `categoryColorSlots`: slot distinti fino a 12 categorie con spese, stabili tra periodi. Cambiano i colori delle categorie che collidevano. |
-| #6 | **Implementata solo per Spese** | `3c198d9` | Scheda interamente cliccabile, data breve, importo a destra, «Modifica» nei dettagli, dissolvenza (`usePresence`). Verificata in Chromium 412×915 chiaro e 1280×900 scuro (nessun overflow, nessun errore JS, nessun pulsante annidato). **Resta:** Pagamenti ricorrenti (D6, sotto-fase) e prova con touch/tastiera/320 px/reduced-motion. |
-| #4 | Nessun codice; **in attesa** | — | Serve la verifica su Pixel 8 e l'autorizzazione a commentare/chiudere. |
-| #5 | **In attesa** | — | Serve video e diagnosi su dispositivo prima di toccare il codice. |
-| #9 | **Implementata** (opzione A) | `fd8aeb4` | `calendar_changes` (max 4), schema 3, Rules, backup v6, `FrequencyField` in «Modifica serie», frequenza in vigore negli elenchi. Nessuna migrazione. Verificata in Chromium (salvataggio reale su emulatore: `3:2026-11-15:y`, schema 3, base `monthly`). **Resta:** nuove Rules da pubblicare prima del sito (autorizzazione), prova su dispositivo. |
-| #7 | **Implementata** (7a + 7b) | vedi `git log` | Fondi semplici e facoltativi, spesa per fondo, budget mensile generale (`settings/budget`, Rules, backup v6 `general_budget`), nessuna scelta obbligata in Nuova spesa, dati di saldo preesistenti conservati e mai sovrascritti (`fundFromForm`). Verificata in Chromium 412 px (fondo nuovo + fondo con saldo/ricariche). **Resta:** nuove Rules da pubblicare prima del sito, prova con touch/desktop/EN, decisione futura sulla dismissione di ricariche/movimenti (D7.1 c). |
-| #11 | **Non iniziata** | — | Richiede l'audit visivo e l'approvazione a lotti. |
+| #6 | **Completata** | `3c198d9`, `bd2f6df` | Spese e Pagamenti ricorrenti con la stessa scheda: interamente cliccabile, nessuna freccia né matita da chiusa, importo a destra, «Modifica» nei dettagli (con le azioni di stato per gli abbonamenti), dissolvenza con movimento ridotto. Chromium 412×915 chiaro e 1280×900 scuro: nessun pulsante annidato, nessun overflow, nessun errore JS; nome lungo su due righe con ellissi. |
+| #11 | **Completata** (da approvare visivamente) | `10052d9` | Audit dei 42 sprite a 24/72 px chiaro/scuro. Ridisegnati i 6 meno riconoscibili: `pasta`, `bag`, `box`, `graduation`, `growth`, `piggy`. Stessi ID, tinte e griglia 12×12; nuovo test anti-duplicati. Gli altri 36 restano invariati: giudicati leggibili, da confermare con l'utente. |
+| #5 | **Correzione lato app + protocollo** | `bcecf44` | Causa dimostrata in emulazione: nel segnaposto d'avvio il titolo «Nuova spesa» era a metà schermo e saltava di ≈ 350 px all'arrivo del modulo. Corretto: titolo e indicatore fermi tra segnaposto e modulo. Doppia splash e logo in dissolvenza sopra la pagina sono di Android/Chrome. Protocollo Pixel 8 in `docs/avvio-prestazioni.md`. |
+| #4 | **Nessun codice possibile oltre al ripiego** | `bcecf44` (documenti) | La barra usa solo il `theme_color` della WebAPK (`#121212`, scuro sempre): «tema chiaro → barra chiara» non è realizzabile dalla pagina. Da verificare su Pixel 8 dopo aggiornamento o reinstallazione della WebAPK. |
+| #9 | **Completata, rivista** | `fd8aeb4` | Revisione: storico invariato per costruzione (numeri di occorrenza fissi), equivalenza senza cambi testata, cambio di stato e `assignFund` preservano `calendar_changes`/schema 3, Rules (forma, versione non regredibile, campo non accorciabile, budget di espressioni nel caso peggiore), backup v6 con lettore v5 e rifiuto dei file vecchi con schema 3. Nessun difetto trovato. |
+| #7 | **Completata, rivista** | `6b38a96`, `da617e1` | Revisione: **trovata e corretta** una regressione: il navigatore dei mesi partiva dall'inizio del fondo più vecchio, quindi senza fondi o con fondi nuovi i mesi passati di spesa non erano raggiungibili (`firstOverviewMonth`). Campi nascosti mai sovrascritti (`fundFromForm`, test); budget generale con Rules, transazioni, export/import (unione non sovrascrive). |
+| #10 | **Completata, rivista** | `969ddb4`, `a479b7b` | Browser: 6 categorie → 6 colori distinti, legenda coerente. Revisione dei requisiti: con più di 12 categorie usate, ora le 12 con più spesa nell'archivio hanno colori distinti, quindi le categorie mostrate insieme non si ripetono più; fino a 12 il risultato non cambia. |
+| #12 | **Completata, verificata** | `bccc653` | Browser: visibile di base; con la preferenza a `false` dopo il ricaricamento il grafico non c'è e non lascia spazi; l'interruttore in Impostazioni lo riattiva subito e la scelta resta salvata. |
 
-Decisioni prese in autonomia (non distruttive): D9 = opzione A (nuovo calendario nel documento); D7.1 = funzioni di saldo nascoste ma conservate; D7.4 = budget generale incluso (documento dedicato); eccezioni mensili dei fondi esistenti restano attive e non più modificabili; il budget generale non ha eccezioni.
+**Decisioni prese in autonomia (non distruttive):** per #9 l'opzione A (nuovo calendario nel documento, schema 3). Per #7, le funzioni di
+saldo restano nascoste ma conservate, il budget generale è un documento dedicato, le eccezioni mensili esistenti restano attive e il budget
+generale non ha eccezioni. Per #11 il ridisegno riguarda solo gli sprite giudicati ambigui.
 
-Problemi da rivedere: (1) importare in «Sostituisci» un backup senza `general_budget` azzera il budget generale (coerente con «uguaglia il file», con copia automatica); (2) le Rules non verificano la correttezza in avanti di `calendar_changes` (solo il decoder); (3) chiavi i18n del vecchio testo Fondi restano in `en.ts` inutilizzate; (4) un client vecchio con Rules nuove ignora `settings/budget` e rifiuta le serie schema 3.
+**Criticità irrisolte / da decidere:**
+1. **Ordine di rilascio obbligato:** prima le Rules (schema 3, `settings/budget`), poi il sito. Con il sito nuovo e le Rules vecchie,
+   l'esportazione del backup fallisce (lettura di `settings/budget` negata) e i salvataggi con cambio di frequenza vengono rifiutati.
+   I client vecchi rifiutano gli archivi con serie a schema 3.
+2. Importare in «Sostituisci» un backup senza `general_budget`, per esempio un v5, azzera il budget generale. È coerente con «uguaglia il file»
+   e la copia automatica precedente lo conserva.
+3. Le Rules non verificano l'ordine e le date di `calendar_changes`: lo fa solo il decoder.
+4. Oltre 12 categorie i colori delle categorie minori possono ripetersi. Se cambia la classifica delle 12 maggiori, alcuni colori cambiano.
+5. Le chiavi i18n del vecchio testo della Guida su Fondi restano inutilizzate in `src/i18n/en.ts`.
+6. #11: va confermata con l'utente la selezione degli sprite ridisegnati.
 
-Osservazioni: `HANDOFF.md` ha modifiche non committate di un'altra sessione (escluse dai miei commit) e non è ancora
-aggiornato con queste tre issue.
+**Verifiche manuali prima del rilascio:**
+- **Pixel 8 / PWA:** protocollo #4 e #5 in `docs/avvio-prestazioni.md`, cioè WebAPK aggiornata, barra con i due temi, video di tre aperture, `navigation` = 1.
+- **Telefono reale:** schede Spese e Abbonamenti al tocco, scorrimento senza attivazioni accidentali, tastiera fisica (Tab/Invio),
+  lettore di schermo, 320 px, movimento ridotto.
+- **Dati reali, dopo la pubblicazione delle Rules:** cambio di frequenza su un abbonamento di prova, export/import del backup v6,
+  pagina Fondi con i 3 fondi e i 6 movimenti esistenti (saldi ancora visibili, nulla riscritto), budget generale impostato e rimosso.
+- **Icone pixel:** controllo visivo in app (elenco, Categorie, selettore) chiaro/scuro.
+- **Inglese:** verifica delle nuove stringhe (Fondi, frequenza, budget) nell'interfaccia.
 
 ---
 
