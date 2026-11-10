@@ -9,13 +9,14 @@ import { Button } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
 import type { Category } from '../../domain/category';
 import type { ExpenseRecord } from '../../domain/contract';
-import { applyPriceEdit, currentPrice, newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
+import { applyFrequencyChange, applyPriceEdit, currentPrice, newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import { todayInRome } from '../../domain/policy';
 import { nextRenewal, type PriceChange, type PriceScope } from '../../domain/pricing';
-import { isRecurrence } from '../../domain/recurrence';
+import { isRecurrence, recurrenceAt, type Recurrence } from '../../domain/recurrence';
 import { spacing } from '../../theme/tokens';
 import { ExpenseFields } from './ExpenseFields';
 import { PriceChangeField } from './PriceSchedule';
+import { FrequencyField } from './FrequencyField';
 import type { ExpenseStore } from './expenseStore';
 import { FundField, noFund, type FundChoice } from '../funds/FundField';
 
@@ -40,12 +41,27 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const series = record.recurrence !== null;
-  const recurrence = isRecurrence(draft.recurrence) ? draft.recurrence : record.recurrence;
-  const next = series && draft.repeat ? nextRenewal(draft.trial ? draft.firstPaymentDate : record.expense_date, recurrence, today) : null;
+  // Frequency switch (issue #9): the next renewal of the saved calendar, the frequency in force for it, and what the form proposes.
+  const savedCalendar = record.calendar_changes ?? [];
+  const nextSaved = series ? nextRenewal(paymentStart(record), record.recurrence, today, savedCalendar) : null;
+  const currentFrequency: Recurrence | null = record.recurrence && nextSaved ? recurrenceAt(record.recurrence, savedCalendar, nextSaved.index) : record.recurrence;
+  const tomorrow = new Date(Date.parse(`${today}T00:00:00Z`) + 86400000).toISOString().slice(0, 10);
+  const [frequency, setFrequency] = useState<Recurrence | null>(currentFrequency);
+  const [firstDate, setFirstDate] = useState(nextSaved && nextSaved.date > today ? nextSaved.date : tomorrow);
+  const [frequencyError, setFrequencyError] = useState<string | null>(null);
+  const frequencyEdit = frequency && currentFrequency && frequency !== currentFrequency ? { recurrence: frequency, firstDate } : null;
+  // Live preview of the calendar the form would save, so scheduled prices show the right dates.
+  const preview = applyFrequencyChange(record, frequencyEdit, today);
+  const calendar = preview.ok ? preview.calendar_changes : savedCalendar;
+  const recurrence = (preview.ok ? preview.recurrence : record.recurrence) ?? (isRecurrence(draft.recurrence) ? draft.recurrence : record.recurrence);
+  const next = series && draft.repeat && recurrence ? nextRenewal(draft.trial ? draft.firstPaymentDate : record.expense_date, recurrence, today, calendar) : null;
   const save = async () => {
     if (busy || deleting || !store.update) return;
     const funds = fundChoices.map((choice) => choice.fund);
-    const result = validateDraft({ ...draft, fundId: draft.fundId === noFund ? '' : draft.fundId }, categories, undefined, funds);
+    const freq = applyFrequencyChange(record, frequencyEdit, today);
+    if (!freq.ok) { setFrequencyError(freq.error); return; }
+    setFrequencyError(null);
+    const result = validateDraft({ ...draft, recurrence: freq.recurrence ?? '', fundId: draft.fundId === noFund ? '' : draft.fundId }, categories, undefined, funds);
     const missing = draft.categoryId ? {} : { categoryId: "Seleziona una categoria." };
     if (!result.ok) { setErrors({ ...result.errors, ...missing }); return; }
     if (!draft.categoryId) { setErrors(missing); return; }
@@ -54,7 +70,8 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
     setPriceError(null);
     setBusy(true);
     // The shopping-list link and the products bought are not edited here: they stay as registered.
-    const data = { ...applied.data, list_id: record.list_id ?? null, list_items: record.list_items ?? [] };
+    const data = { ...applied.data, list_id: record.list_id ?? null, list_items: record.list_items ?? [],
+      ...(freq.calendar_changes.length ? { calendar_changes: freq.calendar_changes } : {}), schema_version: freq.schema_version === 3 ? 3 as const : applied.data.schema_version };
     try { if (await store.update(record, data)) close(); } finally { setBusy(false); }
   };
   return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }}>
@@ -71,8 +88,11 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
       {record.first_payment_date && <TrialField existing enabled firstPaymentDate={draft.firstPaymentDate} startDate={draft.date || today}
         locked={record.first_payment_date <= today} disabled={busy} error={errors.firstPaymentDate}
         onChange={(patch) => { setDraft((d) => ({ ...d, ...patch })); setErrors((e) => ({ ...e, firstPaymentDate: undefined })); }} />}
+      {series && currentFrequency && frequency && <FrequencyField value={frequency} current={currentFrequency} next={nextSaved} firstDate={firstDate} tomorrow={tomorrow}
+        pending={savedCalendar.find((change) => nextSaved !== null && change.index === nextSaved.index) ?? null} error={frequencyError ?? undefined} disabled={busy}
+        onChange={(patch) => { if (patch.frequency) setFrequency(patch.frequency); if (patch.firstDate) setFirstDate(patch.firstDate); setFrequencyError(null); }} />}
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
-        start={paymentStart({ expense_date: record.expense_date, ...(draft.trial ? { first_payment_date: draft.firstPaymentDate } : {}) })} recurrence={recurrence} disabled={busy} onScope={setScope}
+        start={paymentStart({ expense_date: record.expense_date, ...(draft.trial ? { first_payment_date: draft.firstPaymentDate } : {}) })} recurrence={recurrence} calendar={calendar} disabled={busy} onScope={setScope}
         onRemove={(change) => setChanges((all) => all.filter((item) => item !== change))} />}
       {listNote && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, paddingHorizontal: spacing.md }}>
         {t("Spesa registrata da una lista: i prodotti acquistati restano invariati.")}</Text>}

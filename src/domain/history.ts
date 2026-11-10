@@ -1,7 +1,7 @@
 import { isInTrial, paymentStart } from './trial.ts';
 import type { Category } from './category.ts';
 import { nextRenewal, priceAt, type PriceChange } from './pricing.ts';
-import { occurrenceDates, type Recurrence } from './recurrence.ts';
+import { maxOccurrences, recurrenceAt, scheduleDates, type CalendarChange, type Recurrence } from './recurrence.ts';
 import { currentStatus, nextPaidRenewal, statusAt, type StatusChange, type SubscriptionStatus } from './subscription.ts';
 
 // Structural subset of a stored expense, so the domain does not depend on storage.
@@ -13,6 +13,8 @@ export type ExpenseEntry = Readonly<{
   first_payment_date?: string;
   // Absent on expenses saved before subscription statuses existed (= always active).
   status_changes?: readonly StatusChange[];
+  // Absent on series that never changed frequency (the original calendar).
+  calendar_changes?: readonly CalendarChange[];
 }>;
 export type Occurrence = Readonly<{
   key: string; expenseId: string; date: string; amount_minor: number;
@@ -22,7 +24,8 @@ export type Occurrence = Readonly<{
 function toOccurrence(entry: ExpenseEntry, date: string, index: number): Occurrence {
   return {
     key: `${entry.id}:${date}`, expenseId: entry.id, date, amount_minor: priceAt(entry.amount_minor, entry.price_changes ?? [], index),
-    description: entry.description, category_id: entry.category_id, recurrence: entry.recurrence,
+    description: entry.description, category_id: entry.category_id,
+    recurrence: entry.recurrence ? recurrenceAt(entry.recurrence, entry.calendar_changes ?? [], index) : null,
   };
 }
 
@@ -35,7 +38,7 @@ function paid(entry: ExpenseEntry, date: string, index: number): boolean {
 // future ones are not spending yet (see forecastOccurrences).
 export function expandOccurrences(entries: readonly ExpenseEntry[], today: string): Occurrence[] {
   return entries.flatMap((entry) => {
-    const dates = entry.recurrence ? occurrenceDates(paymentStart(entry), entry.recurrence, today) : [entry.expense_date];
+    const dates = entry.recurrence ? scheduleDates(paymentStart(entry), entry.recurrence, entry.calendar_changes ?? [], today) : [entry.expense_date];
     return dates.flatMap((date, index) => (date <= today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
@@ -44,7 +47,7 @@ export function expandOccurrences(entries: readonly ExpenseEntry[], today: strin
 export function forecastOccurrences(entries: readonly ExpenseEntry[], today: string, until: string): Occurrence[] {
   return entries.flatMap((entry) => {
     if (!entry.recurrence) return [];
-    const dates = occurrenceDates(paymentStart(entry), entry.recurrence, until);
+    const dates = scheduleDates(paymentStart(entry), entry.recurrence, entry.calendar_changes ?? [], until);
     return dates.flatMap((date, index) => (date > today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
@@ -54,7 +57,7 @@ export function forecastOccurrences(entries: readonly ExpenseEntry[], today: str
 export type Renewal = Readonly<{ occurrence: Occurrence; previous: number }>;
 export function upcomingRenewals(entries: readonly ExpenseEntry[], today: string): Renewal[] {
   return entries.flatMap((entry) => {
-    const next = nextPaidRenewal(paymentStart(entry), entry.recurrence, entry.status_changes ?? [], today);
+    const next = nextPaidRenewal(paymentStart(entry), entry.recurrence, entry.status_changes ?? [], today, entry.calendar_changes ?? []);
     if (!next) return [];
     const changes = entry.price_changes ?? [];
     return [{ occurrence: toOccurrence(entry, next.date, next.index), previous: priceAt(entry.amount_minor, changes, next.index - 1) }];
@@ -67,6 +70,8 @@ export type SubscriptionSummary = Readonly<{
   entry: ExpenseEntry; status: SubscriptionStatus; inTrial: boolean;
   // Price of the next paid renewal; for paused/cancelled series, the price of the next calendar slot.
   amount_minor: number;
+  // Frequency in force for the next calendar slot (the last one after a frequency change); null for one-off expenses.
+  frequency: Recurrence | null;
   next: { index: number; date: string } | null;
   // Paid occurrences up to today, newest first; `total` is exactly their sum (same figures as the dashboard).
   payments: Occurrence[]; total: number;
@@ -75,9 +80,10 @@ export type SubscriptionSummary = Readonly<{
 export function subscriptionSummary(entry: ExpenseEntry, today: string): SubscriptionSummary {
   const payments = expandOccurrences([entry], today).reverse();
   const changes = entry.status_changes ?? [];
-  const slot = nextRenewal(paymentStart(entry), entry.recurrence, today);
+  const slot = nextRenewal(paymentStart(entry), entry.recurrence, today, entry.calendar_changes ?? []);
   return {
-    entry, status: currentStatus(changes), inTrial: currentStatus(changes) === 'active' && isInTrial(entry, today), next: nextPaidRenewal(paymentStart(entry), entry.recurrence, changes, today),
+    entry, status: currentStatus(changes), inTrial: currentStatus(changes) === 'active' && isInTrial(entry, today), next: nextPaidRenewal(paymentStart(entry), entry.recurrence, changes, today, entry.calendar_changes ?? []),
+    frequency: entry.recurrence ? recurrenceAt(entry.recurrence, entry.calendar_changes ?? [], slot?.index ?? maxOccurrences) : null,
     amount_minor: slot ? priceAt(entry.amount_minor, entry.price_changes ?? [], slot.index) : entry.amount_minor,
     payments, total: payments.reduce((sum, item) => sum + item.amount_minor, 0),
   };

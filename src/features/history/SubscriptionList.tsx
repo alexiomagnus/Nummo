@@ -80,13 +80,13 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {subscriptions.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento corrisponde alla ricerca.")}</Text>}
       <View role="list">
-        {subscriptions.map(({ entry, status, inTrial, amount_minor, next, payments, total }) => {
+        {subscriptions.map(({ entry, status, inTrial, amount_minor, frequency: inForce, next, payments, total }) => {
           const category = categoryById.get(entry.category_id ?? '');
           const open = expanded.has(entry.id);
           const all = complete.has(entry.id);
           const detailsId = `subscription-details-${entry.id}`;
           const since = entry.status_changes?.[entry.status_changes.length - 1]?.date;
-          const frequency = entry.recurrence ? t(recurrenceLabels[entry.recurrence]) : '';
+          const frequency = inForce ? t(recurrenceLabels[inForce]) : '';
           const when = status === 'active' ? (next ? t(inTrial ? 'Primo pagamento {p0}' : 'Prossimo rinnovo {p0}', { p0: formatDate(next.date) }) : '')
             : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
           const shown = all ? payments : payments.slice(0, historyPreview);

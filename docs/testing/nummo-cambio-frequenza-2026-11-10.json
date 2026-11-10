@@ -1,0 +1,82 @@
+{
+  "format": "nummo-backup",
+  "version": 6,
+  "exported_at": "2026-11-10T12:00:00.000Z",
+  "categories": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "label": "TEST Cambio frequenza",
+      "icon": "film"
+    }
+  ],
+  "funds": [],
+  "movements": [],
+  "lists": [],
+  "expenses": [
+    {
+      "id": "90000000-0000-4000-8000-0000000000a1",
+      "amount_minor": 1000,
+      "currency": "EUR",
+      "description": "TEST Mensile poi annuale",
+      "category_id": "90000000-0000-4000-8000-000000000001",
+      "expense_date": "2026-08-15",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "calendar_changes": [
+        {
+          "index": 3,
+          "start": "2026-12-01",
+          "recurrence": "yearly"
+        }
+      ],
+      "source": "web_app",
+      "schema_version": 3,
+      "created_at": "2026-08-15T09:00:00.000Z"
+    },
+    {
+      "id": "90000000-0000-4000-8000-0000000000a2",
+      "amount_minor": 500,
+      "currency": "EUR",
+      "description": "TEST Settimanale poi mensile",
+      "category_id": "90000000-0000-4000-8000-000000000001",
+      "expense_date": "2026-09-07",
+      "recurrence": "weekly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "calendar_changes": [
+        {
+          "index": 10,
+          "start": "2026-11-30",
+          "recurrence": "monthly"
+        }
+      ],
+      "source": "web_app",
+      "schema_version": 3,
+      "created_at": "2026-09-07T09:00:00.000Z"
+    },
+    {
+      "id": "90000000-0000-4000-8000-0000000000a3",
+      "amount_minor": 700,
+      "currency": "EUR",
+      "description": "TEST Mensile senza cambi",
+      "category_id": "90000000-0000-4000-8000-000000000001",
+      "expense_date": "2026-09-20",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-20T09:00:00.000Z"
+    }
+  ]
+}

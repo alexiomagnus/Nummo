@@ -8,14 +8,14 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { parseAmountMinor } from '../../domain/expense';
 import { maxPromoAfter, type PriceChange, type PriceScope } from '../../domain/pricing';
-import { occurrenceDateAt, type Recurrence } from '../../domain/recurrence';
+import { scheduleDateAt, type CalendarChange, type Recurrence } from '../../domain/recurrence';
 import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 export const formatLongDate = (date: string, locale: string) => dateFormat(locale).format(new Date(`${date}T00:00:00Z`));
 
 // Date of renewal number `index` (1 = first renewal), for texts that say when a price starts.
-export const renewalDate = (start: string, recurrence: Recurrence, index: number, locale: string) => formatLongDate(occurrenceDateAt(start, recurrence, index), locale);
+export const renewalDate = (start: string, recurrence: Recurrence, index: number, locale: string, calendar: readonly CalendarChange[] = []) => formatLongDate(scheduleDateAt(start, recurrence, calendar, index), locale);
 
 // Round Material 3 outlined icon buttons (− / +) at the height of the fields, always visible. The mouse wheel
 // over the focused field steps too; the native listener is non-passive so the page does not scroll meanwhile.
@@ -115,13 +115,15 @@ type ChangeProps = {
   changes: readonly PriceChange[];
   start: string;
   recurrence: Recurrence;
+  // Frequency switches of the series: the dates of scheduled prices follow the calendar in force.
+  calendar?: readonly CalendarChange[];
   disabled?: boolean;
   onScope: (scope: PriceScope) => void;
   onRemove: (change: PriceChange) => void;
 };
 
 // Edit dialog of a series: the amount field is the price of the next renewal. Past payments never change.
-export function PriceChangeField({ next, shownAmount, typed, scope, changes, start, recurrence, disabled, onScope, onRemove }: ChangeProps) {
+export function PriceChangeField({ next, shownAmount, typed, scope, changes, start, recurrence, calendar = [], disabled, onScope, onRemove }: ChangeProps) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const muted = { color: colors.onSurfaceVariant };
@@ -148,9 +150,9 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
           {scheduled.map((change) => (
             <View key={`${change.index}:${change.once}`} role="listitem" style={styles.scheduled}>
               <Text variant="bodyMedium" style={styles.scheduledText}>
-                {change.once ? t("Solo il") : t("Dal")} {renewalDate(start, recurrence, change.index, locale)}: {formatAmount(change.amount_minor)}
+                {change.once ? t("Solo il") : t("Dal")} {renewalDate(start, recurrence, change.index, locale, calendar)}: {formatAmount(change.amount_minor)}
               </Text>
-              <IconButton accessibilityLabel={t("Rimuovi la variazione del {p0}", { p0: renewalDate(start, recurrence, change.index, locale) })} disabled={disabled}
+              <IconButton accessibilityLabel={t("Rimuovi la variazione del {p0}", { p0: renewalDate(start, recurrence, change.index, locale, calendar) })} disabled={disabled}
                 icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} onPress={() => onRemove(change)} />
             </View>
           ))}

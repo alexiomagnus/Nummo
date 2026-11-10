@@ -695,5 +695,15 @@ export const english: Readonly<Record<string, string>> = {
   "1 movimento": "1 movement",
   "{p0} movimenti": "{p0} movements",
   "1 lista": "1 list",
-  "{p0} liste": "{p0} lists"
+  "{p0} liste": "{p0} lists",
+  "Frequenza": "Frequency",
+  "Primo rinnovo con la nuova frequenza": "First renewal with the new frequency",
+  "Cambio già programmato: dal {p0}, {p1}.": "Change already scheduled: from {p0}, {p1}.",
+  "I pagamenti già effettuati restano invariati: la nuova frequenza vale dai rinnovi successivi.": "Payments already made stay unchanged: the new frequency applies to later renewals.",
+  "Nessun pagamento è ancora stato effettuato: la nuova frequenza vale dal primo pagamento.": "No payment has been made yet: the new frequency applies from the first payment.",
+  "Non ci sono rinnovi futuri a cui applicare la frequenza.": "There are no future renewals to apply the frequency to.",
+  "La data del primo rinnovo con la nuova frequenza deve essere successiva a oggi.": "The date of the first renewal with the new frequency must be after today.",
+  "Troppi cambi di frequenza: il limite è quattro per abbonamento.": "Too many frequency changes: the limit is four per subscription.",
+  "Il cambio di frequenza richiede un backup versione 6 o successiva.": "A frequency change requires a version 6 backup or later.",
+  "Puoi cambiare la frequenza di un abbonamento da Modifica serie (settimanale, mensile o annuale) scegliendo la data del primo rinnovo con la nuova frequenza: i pagamenti già effettuati restano invariati e il prezzo segue il numero di rinnovo. Un abbonamento con la frequenza cambiata richiede la versione aggiornata dell’app e un backup versione 6.": "You can change the frequency of a subscription from Edit series (weekly, monthly or yearly) by choosing the date of the first renewal with the new frequency: payments already made stay unchanged and the price follows the renewal number. A subscription whose frequency was changed needs the updated app and a version 6 backup."
 };

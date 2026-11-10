@@ -132,6 +132,13 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   Prima data modificabile solo finché futura; prova salvata non rimovibile né aggiungibile retroattivamente a serie ordinarie.
   Schema 2: prezzi compatti in Firestore (`pricing.ts`), array nel dominio/backup v5; schema 1 e record esistenti invariati.
   I vecchi client rifiutano lo schema 2 invece di conteggiare pagamenti inesistenti: aggiornamento client necessario.
+- Cambio di frequenza (#9): il numero di occorrenza non cambia mai (i prezzi lo usano), cambiano solo le date dalla modifica in
+  poi: `calendar_changes` (indice, nuova data di partenza, frequenza; massimo 4) riavvia il calendario dall'occorrenza successiva
+  a oggi (`recurrence.ts`: `scheduleDates`/`scheduleDateAt`/`recurrenceAt`; mai `occurrenceDates` direttamente per le serie).
+  `recurrence` resta la frequenza di base; `Occurrence.recurrence` e `SubscriptionSummary.frequency` danno quella in vigore.
+  Schema 3 (prezzi compatti, prova facoltativa); Firestore: una stringa compatta e solo se non vuota, nel backup (v6) un array.
+  Senza pagamenti maturati (prova in corso) cambia direttamente la frequenza di base. Un cambio non ancora in vigore si sostituisce.
+  Le Rules verificano forma e che la versione non regredisca né il campo si accorci; la correttezza in avanti è del decoder.
 - Fondi: saldo, ricarica, budget e speso restano grandezze distinte (`src/domain/funds.ts`). Ricariche **calcolate**
   dal piano come le occorrenze (una per mese, giorno limitato alla fine del mese, contata solo se ≤ oggi): mai scritte
   come documenti né in render/effect. Modifiche a ricarica/budget solo da ora in poi (mai il passato); `start_date` del
@@ -160,7 +167,7 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
 - Liste della spesa: liste e prodotti salvati con scritture semplici (ultima vince, nessuna revisione); la registrazione è
   l'unica scrittura economica, una transazione che crea **una** spesa singola con `list_id`/`list_items` (nomi spuntati,
   in Firestore una stringa unita da `\n`, nel backup un array) e archivia la lista. Eliminare quella spesa riattiva la
-  lista nella stessa transazione; modificarla conserva collegamento e prodotti. Backup `backupVersion` 5.
+  lista nella stessa transazione; modificarla conserva collegamento e prodotti. Backup `backupVersion` 6.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
   `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
   contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.

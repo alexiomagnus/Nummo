@@ -94,7 +94,7 @@ test('backup corrente: liste con prodotti e collegamento della spesa ricostruiti
   const active = list({ id: uuid(2), name: 'Casa', created_at: '2026-11-03T10:00:00.000Z', items: [{ id: uuid(103), name: 'Detersivo', checked: false, position: 0 }] });
   const file = JSON.parse(makeBackup({ expenses: [expense()], categories: [], lists: [active, registered] }));
   assert.equal(file.version, backupVersion);
-  assert.equal(backupVersion, 5);
+  assert.equal(backupVersion, 6);
   assert.deepEqual(file.lists.map((l: { id: string }) => l.id), [uuid(1), uuid(2)]);
   assert.deepEqual(Object.keys(file.lists[0]).sort(), ['category_id', 'created_at', 'expense_id', 'id', 'items', 'name', 'total_minor']);
   assert.deepEqual(file.expenses[0].list_items, ['Pane', 'Latte']);

@@ -1,5 +1,5 @@
 import { expensePolicy } from './policy.ts';
-import { maxOccurrences, occurrenceDateAt, occurrenceDates, type Recurrence } from './recurrence.ts';
+import { maxOccurrences, scheduleDateAt, scheduleDates, type CalendarChange, type Recurrence } from './recurrence.ts';
 
 // Price schedule of a recurring series. `amount_minor` of the expense is the price of occurrence 0;
 // each change refers to an occurrence NUMBER (1 = first renewal), so past occurrences keep the price
@@ -47,10 +47,10 @@ export function priceAt(base: number, changes: readonly PriceChange[], index: nu
 }
 
 // First occurrence after `today`: its number and date (null for a one-off expense or past the safety limit).
-export function nextRenewal(start: string, recurrence: Recurrence | null, today: string): { index: number; date: string } | null {
+export function nextRenewal(start: string, recurrence: Recurrence | null, today: string, calendar: readonly CalendarChange[] = []): { index: number; date: string } | null {
   if (!recurrence) return null;
-  const index = occurrenceDates(start, recurrence, today).length;
-  return index > maxIndex ? null : { index, date: occurrenceDateAt(start, recurrence, index) };
+  const index = scheduleDates(start, recurrence, calendar, today).length;
+  return index > maxIndex ? null : { index, date: scheduleDateAt(start, recurrence, calendar, index) };
 }
 
 export type PriceScope = 'once' | 'future';

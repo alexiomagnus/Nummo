@@ -99,10 +99,11 @@ test('prova: modifica prima dell’addebito cambia il prezzo base, dopo conserva
   assert.ok(trialTimingError({ ...e, first_payment_date: undefined }, dataOf(e), today));
 });
 
-test('prova: backup v5, round trip, conflitti e lettori storici senza migrazioni implicite', () => {
+test('prova: backup (v5+), round trip, conflitti e lettori storici senza migrazioni implicite', () => {
   const e = trial();
   const file = JSON.parse(makeBackup({ expenses: [e], categories: [] }));
-  assert.equal(file.version, 5);
+  assert.equal(file.version, 6);
+  assert.deepEqual(parseBackup({ ...file, version: 5 }).expenses[0], e);
   const restored = parseBackup(file);
   assert.deepEqual(restored.expenses[0], e);
   assert.equal(planImport(restored, restored, 'merge').sameExpenses, 1);

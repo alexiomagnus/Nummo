@@ -1,6 +1,6 @@
 import { isValidDate } from './expense.ts';
 import { nextRenewal } from './pricing.ts';
-import type { Recurrence } from './recurrence.ts';
+import type { CalendarChange, Recurrence } from './recurrence.ts';
 
 // Lifecycle of a recurring series (a subscription). A change made on day D takes effect for the
 // occurrences AFTER D: the occurrence of D itself has already been counted (or skipped), so a change
@@ -71,6 +71,6 @@ export function setStatus(changes: readonly StatusChange[], status: Subscription
 }
 
 // First occurrence after `today` that will actually be paid: none for paused or cancelled series.
-export function nextPaidRenewal(start: string, recurrence: Recurrence | null, changes: readonly StatusChange[], today: string): { index: number; date: string } | null {
-  return currentStatus(changes) === 'active' ? nextRenewal(start, recurrence, today) : null;
+export function nextPaidRenewal(start: string, recurrence: Recurrence | null, changes: readonly StatusChange[], today: string, calendar: readonly CalendarChange[] = []): { index: number; date: string } | null {
+  return currentStatus(changes) === 'active' ? nextRenewal(start, recurrence, today, calendar) : null;
 }

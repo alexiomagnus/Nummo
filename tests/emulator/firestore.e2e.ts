@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { initializeAuth, connectAuthEmulator, signInWithCredential, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { initializeFirestore, connectFirestoreEmulator, doc, setDoc, getDocFromServer, getDocsFromServer, collection,
-  updateDoc, deleteDoc, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate, waitForPendingWrites } from 'firebase/firestore';
+  updateDoc, deleteDoc, deleteField, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate, waitForPendingWrites } from 'firebase/firestore';
 import { createFirestoreStore } from '../../src/services/firestoreStore.ts';
 import { makeBackup, parseBackup } from '../../src/domain/backup.ts';
 import { todayInRome } from '../../src/domain/policy.ts';
@@ -173,6 +173,78 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await owner.store.createExpense({ ...base, expense_id: ordinaryId });
       await denied(updateDoc(ref(ordinaryId), { schema_version: 2, recurrence: 'monthly', first_payment_date: '2099-12-09', updated_at: serverTimestamp(), revision: 2 }));
       for (const id of [expense_id, pastId, worstId, ordinaryId]) await deleteDoc(ref(id));
+    });
+    await t.test('frequenza: calendario con cambi (schema 3), compatibilità, storico, versione non regredibile e budget Rules', async () => {
+      const { expense_id, ...base } = expense();
+      const series = { ...base, recurrence: 'monthly' as const, expense_date: '2026-08-15', amount_minor: 999 };
+      const changes = [{ index: 3, start: '2026-12-01', recurrence: 'yearly' as const }];
+      await owner.store.createExpense({ expense_id, ...series });
+      let saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.equal(saved.schema_version, 1);
+      assert.equal((await getDocFromServer(ref(expense_id))).data()!.calendar_changes, undefined, 'un abbonamento senza cambi non scrive il campo');
+      // The series becomes schema 3: prices become the compact string, the switch is one string, past payments are untouched.
+      await owner.store.updateExpense(saved, { ...series, schema_version: 3, calendar_changes: changes, price_changes: [{ index: 4, amount_minor: 1299, once: false }] });
+      saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.equal(saved.schema_version, 3);
+      assert.deepEqual(saved.calendar_changes, changes);
+      assert.deepEqual(saved.price_changes, [{ index: 4, amount_minor: 1299, once: false }]);
+      const rawDoc = (await getDocFromServer(ref(expense_id))).data()!;
+      assert.equal(rawDoc.calendar_changes, '3:2026-12-01:y');
+      assert.equal(rawDoc.price_changes, '4:1299:0');
+      assert.equal(rawDoc.recurrence, 'monthly', 'la frequenza di base non cambia');
+      // Backup v6 round trip, then an identical import is skipped.
+      const backup = parseBackup(JSON.parse(makeBackup({ expenses: [saved], categories: [] })));
+      await owner.store.removeExpense(saved);
+      await owner.store.importRecords(backup.expenses, []);
+      await owner.store.importRecords(backup.expenses, []);
+      saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.deepEqual(saved.calendar_changes, changes);
+      assert.equal(saved.revision, 1, 'identical import is skipped');
+      // Second switch (replacing nothing: a later index) and a rewrite of the first one while it is still pending.
+      const two = [...changes, { index: 4, start: '2027-12-02', recurrence: 'weekly' as const }];
+      await owner.store.updateExpense(saved, { ...series, schema_version: 3, calendar_changes: two, price_changes: saved.price_changes });
+      saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.deepEqual(saved.calendar_changes, two);
+      // Malformed or misplaced switches are denied by the Rules, whatever the client does.
+      const { fund_id: _f, list_id: _l, list_items: _li, status_changes: _s, ...storedBase } = series;
+      const raw = { ...storedBase, schema_version: 3, price_changes: '', created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      await setDoc(ref(randomUUID()), { ...raw, calendar_changes: '3:2026-12-01:y' });
+      await setDoc(ref(randomUUID()), raw); // schema 3 without switches or trial is valid too
+      for (const patch of [{ calendar_changes: '' }, { calendar_changes: '3:2026-12-01:x' }, { calendar_changes: '0:2026-12-01:y' }, { calendar_changes: '3:2026-12-1:y' },
+        { calendar_changes: '3:2026-12-01:y;' }, { calendar_changes: [{ index: 3, start: '2026-12-01', recurrence: 'yearly' }] }, { calendar_changes: 7 },
+        { calendar_changes: Array.from({ length: 5 }, (_, i) => `${i + 1}:2026-12-01:y`).join(';') },
+        { calendar_changes: '3:2026-12-01:y', price_changes: [] }, { calendar_changes: '3:2026-12-01:y', recurrence: null },
+        { calendar_changes: '3:2026-12-01:y', schema_version: 1 }, { calendar_changes: '3:2026-12-01:y', schema_version: 2 },
+        { calendar_changes: '3:2026-12-01:y', schema_version: 4 }, { schema_version: 3, recurrence: null }, { schema_version: 3, first_payment_date: '2027-02-30' }]) {
+        await denied(setDoc(ref(randomUUID()), { ...raw, ...patch }));
+      }
+      // A series never goes back to an older version, and its switches are never dropped or shortened.
+      await denied(updateDoc(ref(expense_id), { schema_version: 1, price_changes: [], updated_at: serverTimestamp(), revision: saved.revision + 1 }));
+      await denied(updateDoc(ref(expense_id), { calendar_changes: deleteField(), updated_at: serverTimestamp(), revision: saved.revision + 1 }));
+      await denied(updateDoc(ref(expense_id), { calendar_changes: '3:2026-12-01:y', updated_at: serverTimestamp(), revision: saved.revision + 1 }));
+      // Trial series switching to version 3 keeps its first payment; an ordinary series cannot gain a trial through it.
+      const trialId = randomUUID();
+      const trial = { ...series, expense_date: '2026-01-01', first_payment_date: '2099-12-09', schema_version: 2 as const };
+      await owner.store.createExpense({ ...trial, expense_id: trialId });
+      const trialSaved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === trialId)!;
+      await owner.store.updateExpense(trialSaved, { ...trial, schema_version: 3, calendar_changes: [{ index: 1, start: '2099-12-20', recurrence: 'weekly' }] });
+      const afterTrial = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === trialId)!;
+      assert.equal(afterTrial.first_payment_date, '2099-12-09');
+      assert.equal(afterTrial.schema_version, 3);
+      await denied(updateDoc(ref(expense_id), { first_payment_date: '2099-12-09', updated_at: serverTimestamp(), revision: saved.revision + 1 }));
+      // The worst supported combination (8 prices, 8 statuses, fund, trial, 4 switches) stays writable.
+      const worstId = randomUUID();
+      const worst = { ...raw, expense_date: '2026-01-01', first_payment_date: '2099-12-09', fund_id: randomUUID(),
+        status_changes: Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';'),
+        price_changes: encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false }))),
+        calendar_changes: '996:2099-12-31:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:w' };
+      t.diagnostic('frequency budget: create');
+      await setDoc(ref(worstId), worst);
+      t.diagnostic('frequency budget: update description');
+      await updateDoc(ref(worstId), { description: 'TEST budget frequenza', updated_at: serverTimestamp(), revision: 2 });
+      t.diagnostic('frequency budget: update calendar');
+      await updateDoc(ref(worstId), { calendar_changes: '995:2099-12-30:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:m', updated_at: serverTimestamp(), revision: 3 });
+      for (const id of [expense_id, trialId, worstId]) await deleteDoc(ref(id));
     });
     await t.test('abbonamenti: stati validati dalle regole, campo assente compatibile, storico invariato', async () => {
       const { expense_id, ...data } = expense();

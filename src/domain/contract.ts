@@ -4,7 +4,7 @@ import { isValidDate, normalizeDescription, type ExpenseData, type ExpenseReques
 import { expensePolicy, listPolicy, todayInRome } from './policy.ts';
 import { validFirstPayment } from './trial.ts';
 import { parsePriceChanges } from './pricing.ts';
-import { isRecurrence } from './recurrence.ts';
+import { isRecurrence, parseCalendarChanges } from './recurrence.ts';
 import { parseStatusChanges } from './subscription.ts';
 
 export type ExpenseRecord = Readonly<ExpenseData & { id: string; created_at: string }>;
@@ -14,6 +14,8 @@ const requestKeys = [
   'expense_id', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date',
   'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version',
 ] as const;
+// Optional on a request, like first_payment_date.
+const optionalRequestKeys = ['first_payment_date', 'calendar_changes'] as const;
 
 // A product name of a shopping list: one line, normalised like a description, 1..60 characters.
 export function isListItemName(value: unknown): value is string {
@@ -66,19 +68,23 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     && (v.fund_id === undefined || v.fund_id === null || (typeof v.fund_id === 'string' && v.fund_id !== ''))
     // Absent on records saved before shopping lists existed (= not from a list). Only one-off expenses come from a list.
     && (v.list_id === undefined || v.list_id === null || (typeof v.list_id === 'string' && v.list_id !== '' && v.recurrence === null))
-    && v.source === 'web_app' && (v.schema_version === 1 ? v.first_payment_date === undefined
-      : v.schema_version === 2 && v.recurrence !== null && validFirstPayment(v.expense_date as string, v.first_payment_date));
+    && v.source === 'web_app' && (v.schema_version === 1 ? v.first_payment_date === undefined && v.calendar_changes === undefined
+      : v.schema_version === 2 ? v.recurrence !== null && v.calendar_changes === undefined && validFirstPayment(v.expense_date as string, v.first_payment_date)
+        // Schema 3 (frequency switches): a trial is optional, like on any series.
+        : v.schema_version === 3 && v.recurrence !== null && (v.first_payment_date === undefined || validFirstPayment(v.expense_date as string, v.first_payment_date)));
   const price_changes = parsePriceChanges(v.price_changes);
   const status_changes = parseStatusChanges(v.status_changes);
   const list_items = parseListItems(v.list_items);
-  if (!valid || !price_changes || !status_changes || !list_items || (v.recurrence === null && status_changes.length > 0)) return null;
+  const calendar = valid ? parseCalendarChanges(v.calendar_changes, (typeof v.first_payment_date === 'string' ? v.first_payment_date : v.expense_date) as string, v.recurrence as ExpenseData['recurrence']) : null;
+  if (!valid || !calendar || !price_changes || !status_changes || !list_items || (v.recurrence === null && status_changes.length > 0)) return null;
   const list_id = (v.list_id as string | null | undefined) ?? null;
   if (list_id === null && list_items.length > 0) return null;
   return {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: v.category_id as string | null,
     expense_date: v.expense_date as string, recurrence: v.recurrence as ExpenseData['recurrence'], price_changes, status_changes,
-    fund_id: (v.fund_id as string | null | undefined) ?? null, list_id, list_items, source: 'web_app', schema_version: v.schema_version as 1 | 2,
+    fund_id: (v.fund_id as string | null | undefined) ?? null, list_id, list_items, source: 'web_app', schema_version: v.schema_version as 1 | 2 | 3,
     ...(typeof v.first_payment_date === 'string' ? { first_payment_date: v.first_payment_date } : {}),
+    ...(calendar.length ? { calendar_changes: calendar } : {}),
   };
 }
 
@@ -94,7 +100,7 @@ export function parseExpenseRecord(value: unknown): ExpenseRecord | null {
 // Final client check before a Firestore write: exact fields, no future expense/status dates; only trial billing may be future.
 export function parseExpenseRequest(value: unknown, now: Date): ExpenseRequest | null {
   const v = asObject(value);
-  if (!v || Object.keys(v).length !== requestKeys.length + ('first_payment_date' in v ? 1 : 0) || !requestKeys.every((key) => key in v)) return null;
+  if (!v || Object.keys(v).length !== requestKeys.length + optionalRequestKeys.filter((key) => key in v).length || !requestKeys.every((key) => key in v)) return null;
   if (!isUuid(v.expense_id) || (v.category_id !== null && !isUuid(v.category_id)) || (v.fund_id !== null && !isUuid(v.fund_id))
     || (v.list_id !== null && !isUuid(v.list_id))) return null;
   const data = readData(v);

@@ -100,3 +100,16 @@ Preferire la demo isolata. Importazione e reimportazione sono esplicite; nessun 
 I client precedenti alla prova gratuita non leggono i backup v5. Un documento con prova usa schema 2: il vecchio
 client rifiuta l'archivio, evitando di trattare l'inizio della prova come un pagamento. Non aprire questi dati con
 un vecchio client; prima di un rilascio occorre aggiornare separatamente le Rules e il sito, con autorizzazione.
+
+## Cambio di frequenza degli abbonamenti
+
+File: [`nummo-cambio-frequenza-2026-11-10.json`](nummo-cambio-frequenza-2026-11-10.json), backup **v6**, solo dati TEST.
+Al 10 novembre 2026, su archivio contenente solo questo file:
+
+- `TEST Mensile poi annuale`: 3 pagamenti da 10,00 € (15 ago, 15 set, 15 ott), totale 30,00 €; il prossimo rinnovo è l'**1 dicembre 2026**, poi annuale.
+- `TEST Settimanale poi mensile`: 10 pagamenti da 5,00 € dal 7 settembre al 9 novembre; il prossimo è il **30 novembre 2026**, poi mensile.
+- `TEST Mensile senza cambi`: serie di controllo (schema 1), pagamenti del 20 settembre e 20 ottobre, prossimo 20 novembre.
+- Le serie con cambio usano schema 3; gli elenchi mostrano la frequenza in vigore («Annuale», «Mensile»).
+
+I tre backup precedenti restano **v5** di proposito: esercitano il lettore storico. I client precedenti al cambio di
+frequenza non leggono i backup v6 con schema 3 e rifiutano l'archivio: pubblicare prima le Rules, poi il sito (con autorizzazione).

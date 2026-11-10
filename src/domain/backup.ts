@@ -19,7 +19,8 @@ export const backupFormat = 'nummo-backup';
 // v3 adds funds, movements (income and transfers) and the expenses' `fund_id`; older files have no funds.
 // v4 adds shopping lists (with their items) and the expenses' `list_id` / `list_items`; older files have no lists.
 // v5 adds first_payment_date and schema_version 2 for subscriptions with a free trial.
-export const backupVersion = 5;
+// v6 adds calendar_changes and schema_version 3 for subscriptions whose frequency was changed.
+export const backupVersion = 6;
 
 // --- JSON backup -----------------------------------------------------------------------------
 
@@ -32,6 +33,7 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
     status_changes: e.status_changes.map((c) => ({ date: c.date, status: c.status })), fund_id: e.fund_id ?? null,
     list_id: e.list_id ?? null, list_items: [...(e.list_items ?? [])],
     ...(e.first_payment_date ? { first_payment_date: e.first_payment_date } : {}),
+    ...(e.calendar_changes?.length ? { calendar_changes: e.calendar_changes.map((c) => ({ index: c.index, start: c.start, recurrence: c.recurrence })) } : {}),
     source: e.source, schema_version: e.schema_version, created_at: e.created_at,
   })).sort((a, b) => a.expense_date.localeCompare(b.expense_date) || a.id.localeCompare(b.id));
   const categories = data.categories.map((c) => ({ id: c.id, label: c.label, icon: c.icon })).sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
@@ -107,6 +109,8 @@ const readers: Record<number, (file: Record<string, unknown>) => ImportData> = {
   // v4: shopping lists; older expenses have no `list_id` / `list_items` (not from a list) and the files no lists.
   4: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
   5: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
+  // v6: frequency switches of subscriptions (`calendar_changes`, schema_version 3); older expenses have none.
+  6: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
 };
 
 export function parseBackup(value: unknown): ImportData {
@@ -115,6 +119,8 @@ export function parseBackup(value: unknown): ImportData {
   if (file.version > backupVersion) throw new Error('Backup creato da una versione più recente di Nummo: aggiorna l’app prima di importarlo.');
   if (file.version < 5 && Array.isArray(file.expenses) && file.expenses.some((e: unknown) => e && typeof e === 'object' &&
     ('first_payment_date' in e || ('schema_version' in e && e.schema_version === 2)))) throw new Error('La prova gratuita richiede un backup versione 5 o successiva.');
+  if (file.version < 6 && Array.isArray(file.expenses) && file.expenses.some((e: unknown) => e && typeof e === 'object' &&
+    ('calendar_changes' in e || ('schema_version' in e && e.schema_version === 3)))) throw new Error('Il cambio di frequenza richiede un backup versione 6 o successiva.');
   const reader = readers[file.version];
   if (!reader) throw new Error('Versione del backup non supportata.');
   return reader(file);
@@ -155,7 +161,8 @@ export type ImportPlan = Readonly<{
 
 const expenseKeys = ['first_payment_date', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version', 'created_at'] as const;
 export function sameExpense(a: ExpenseRecord, b: ExpenseRecord): boolean {
-  return expenseKeys.every((key) => sameFieldValue(a[key], b[key]));
+  // Absent and empty frequency switches are the same original calendar.
+  return expenseKeys.every((key) => sameFieldValue(a[key], b[key])) && sameFieldValue(a.calendar_changes ?? [], b.calendar_changes ?? []);
 }
 export function sameCategory(a: Category, b: Category): boolean {
   return a.label === b.label && a.icon === b.icon;

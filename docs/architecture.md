@@ -776,3 +776,34 @@ Backup v5 include prima data e versione documento, preserva i lettori v1–v4 e 
 versione vecchia. Confronti import includono la prima data; ripristino/unione usano il codec corretto per lo schema.
 Fixture aggiornate a v5 e nuovo file TEST delle prove. Sito e nuove Rules devono essere pubblicati separatamente
 con autorizzazione; nessuna pubblicazione o modifica dei dati personali fa parte di questa implementazione.
+
+## Cambio di frequenza degli abbonamenti (issue #9) — 10 novembre 2026
+
+**Problema.** «Modifica serie» non permetteva di cambiare la frequenza. Una serie è un solo documento e le sue occorrenze
+sono calcolate da data di partenza e frequenza: cambiare semplicemente `recurrence` avrebbe ricalcolato anche le date e il
+numero dei pagamenti già maturati, contro la regola «mai alterare pagamenti già maturati». Il modello dati andava quindi esteso.
+
+**Decisione.** Campo facoltativo `calendar_changes`: elenco (massimo 4) di `{ index, start, recurrence }`. Dall'occorrenza
+`index` il calendario riparte da `start` con la nuova frequenza. Il numero delle occorrenze non cambia (prezzi per numero di
+rinnovo invariati), gli stati restano per data, le occorrenze già maturate mantengono data e importo. `recurrence` resta la
+frequenza iniziale; la frequenza in vigore per un'occorrenza è `recurrenceAt`. Funzioni pure in `src/domain/recurrence.ts`
+(`scheduleDateAt`, `scheduleDates`, `parseCalendarChanges`, `switchFrequency`, codec); `applyFrequencyChange` in `expense.ts`.
+Senza cambi il risultato è identico a prima (test di equivalenza). Prima del primo pagamento (prova in corso) si sostituisce
+direttamente la frequenza di base, senza segmento. Un cambio non ancora in vigore (stessa occorrenza) si sostituisce.
+La data del nuovo primo rinnovo deve essere successiva a oggi, quindi solo il futuro cambia; la validazione in avanti
+(la ripartenza segue l'occorrenza precedente) è del decoder, non delle Rules.
+
+**Schema 3.** Un vecchio client ignorerebbe il campo e calcolerebbe date sbagliate (e lo cancellerebbe al salvataggio):
+si introduce `schema_version: 3`, rifiutato dai vecchi decoder come lo schema 2 delle prove. Schema 3 = prezzi in forma
+compatta (come lo schema 2, per il budget di 1000 espressioni delle Rules), `first_payment_date` facoltativa,
+`calendar_changes` facoltativo (stringa `indice:AAAA-MM-GG:w|m|y;…`). Le serie senza cambi restano schema 1 o 2: **nessuna
+migrazione**, i documenti esistenti non vengono riscritti; solo salvando un cambio la serie passa a schema 3 (i prezzi si
+ricodificano nella forma compatta nella stessa transazione). Le Rules impongono forma, versione (non regredisce) e che il
+campo non venga tolto né accorciato; il caso peggiore (8 prezzi, 8 stati, fondo, prova, 4 cambi) è verificato in emulatore.
+
+**Backup v6.** `calendar_changes` come array solo quando presente; lettori v1–v5 invariati, e i file precedenti con schema 3
+o `calendar_changes` sono rifiutati con messaggio dedicato. Fixture `docs/testing/nummo-cambio-frequenza-2026-11-10.json`.
+
+**Compatibilità.** Rilascio: prima le Rules, poi il sito. I client aperti vanno ricaricati; quelli vecchi rifiutano un archivio
+con serie schema 3. CSV: una riga per occorrenza con la frequenza in vigore alla data; elenco abbonamenti: frequenza del
+prossimo rinnovo.
