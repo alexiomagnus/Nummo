@@ -7,6 +7,22 @@ Issue lette con `gh issue list/view`: **#4, #5, #6, #7, #9, #10, #11, #12** (nes
 Il piano non modifica codice. Riferimenti di riga validi per `ab7a72a`. Stato e verifiche correnti: `HANDOFF.md`;
 architettura e convenzioni: `AGENTS.md`. Al momento della stesura `npm run check` è verde (typecheck, 331/331, build demo).
 
+## Verifica pre-rilascio (10 novembre 2026) — READY
+
+- **Revisione finale** del diff `origin/main..HEAD` (13 commit). Rules: documenti esistenti a schema 1/2 ancora validi;
+  schema 3 e `calendar_changes` solo su serie, versione non regredibile, campo non rimovibile né accorciabile;
+  `settings/budget` solo per il proprietario, ogni altro documento di `settings` negato dal catch-all. Vecchi client: continuano a scrivere
+  schema 1/2 accettati; rifiutano (decoder) archivi con serie a schema 3, come per le prove gratuite. Nessun difetto bloccante.
+- **Test:** `npm run check` 363/363 + typecheck + build demo; `test:emulator` 18/18 (porte 49199/49280); `test:hybrid` 9/9.
+- **Backup di produzione in sola lettura** (API REST con l'accesso della Firebase CLI, nessun contenuto stampato):
+  `.firebase/backup-prod-20261110-021925/` (ignorata da Git) con `config/owner`, tutte le sottocollezioni del proprietario
+  (10 categorie, 10 nomi, 12 spese, 2 liste, 6 prodotti; nessun fondo né movimento), ruleset live e release Hosting live, manifest con SHA-256.
+- **Compatibilità dei dati reali:** il nuovo codice decodifica 12/12 spese (tutte schema 1, 4 serie), 10/10 categorie, 2/2 liste,
+  6/6 prodotti; round trip nel backup v6 riuscito.
+- **Rules live prima del rilascio:** release del 9 novembre 16:45:38 UTC, SHA-256 `972fd97e…d6d4a` = `origin/main`.
+  **Hosting live prima del rilascio:** versione `88cb0099e5e9976e` (9 novembre 16:49 UTC, commit `37407c3`).
+- `firebase deploy --only firestore:rules --dry-run --project nummo-6b6e2`: compilazione riuscita.
+
 ## Stato di avanzamento (aggiornato il 10 novembre 2026, secondo giro)
 
 Branch `fix/10-12-review`: tutti i commit sono impilati su `main` (`ab7a72a`). Nessun push, nessun deploy, nessuna issue chiusa;
