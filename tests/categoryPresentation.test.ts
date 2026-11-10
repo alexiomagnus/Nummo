@@ -68,8 +68,11 @@ test('categorie inutilizzate e periodi vuoti non affollano i grafici; colori ind
   const reordered = breakdown(items, [...unused, ...[...categories].reverse()].map((c) => ({ ...c, label: `Nuovo ${c.label}` })), 'month', today);
   assert.equal(reordered.series.length, 30);
   assert.deepEqual(reordered.series.map((s) => [s.key, s.slot, s.total]), original.series.map((s) => [s.key, s.slot, s.total]));
-  const expected = categoryColorSlots(original.series.map((s) => s.key));
+  // Weights = spending in the whole archive (here every item falls in the month), so the 12 largest keep distinct colours.
+  const expected = categoryColorSlots(original.series.map((s) => s.key), new Map(original.series.map((s) => [s.key, s.total])));
   assert.ok(original.series.every((s) => s.slot === expected.get(s.key)));
+  const largest = [...original.series].sort((a, b) => b.total - a.total || a.key.localeCompare(b.key)).slice(0, 12);
+  assert.equal(new Set(largest.map((s) => s.slot)).size, 12);
   const empty = categoryPresentation(breakdown(items, categories, 'previous-month', today));
   assert.equal(empty.data.total, 0);
   assert.deepEqual(empty.data.series, []);

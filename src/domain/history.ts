@@ -184,18 +184,22 @@ const colorSlots = 12;
 // Slots for a stable set of categories (those with spending anywhere in the archive, never the selected period):
 // IDs in sorted order each take their preferred slot, or the next free one, so up to 12 categories never share a colour.
 // The result depends only on the set of IDs, so it is the same across periods, charts, filters, names and ordering; it can
-// change only when a category gains its first spending or loses its last. Beyond 12 a finite palette must repeat;
-// labels and amounts remain the primary identification.
-export function categoryColorSlots(ids: Iterable<string>): Map<string, number> {
-  const sorted = [...new Set(ids)].sort();
+// change only when a category gains its first spending or loses its last. Beyond 12 a finite palette must repeat: then the
+// 12 categories with the most spending in the whole archive (`weights`, ties by ID) keep distinct colours, being the ones
+// the charts show side by side, and the others take their hashed slot. Labels and amounts remain the primary identification.
+export function categoryColorSlots(ids: Iterable<string>, weights?: ReadonlyMap<string, number>): Map<string, number> {
+  const all = [...new Set(ids)].sort();
+  const distinct = all.length <= colorSlots || !weights ? all
+    : [...all].sort((a, b) => (weights.get(b) ?? 0) - (weights.get(a) ?? 0) || a.localeCompare(b)).slice(0, colorSlots).sort();
   const taken = new Set<number>();
   const slots = new Map<string, number>();
-  for (const id of sorted) {
+  for (const id of distinct) {
     let slot = categoryColorSlot(id);
     if (taken.size < colorSlots) while (taken.has(slot)) slot = (slot + 1) % colorSlots;
     taken.add(slot);
     slots.set(id, slot);
   }
+  for (const id of all) if (!slots.has(id)) slots.set(id, categoryColorSlot(id));
   return slots;
 }
 
@@ -205,7 +209,9 @@ export function breakdown(items: readonly Occurrence[], categories: readonly Cat
   const to = buckets[buckets.length - 1]!.to;
   const seriesMap = new Map<string, { key: string; label: string; slot: number | null; values: number[] }>();
   const categoryMap = new Map(categories.map((category) => [category.id, category]));
-  const slots = categoryColorSlots(items.flatMap((item) => (item.category_id && categoryMap.has(item.category_id) ? [item.category_id] : [])));
+  const spending = new Map<string, number>();
+  for (const item of items) if (item.category_id && categoryMap.has(item.category_id)) spending.set(item.category_id, (spending.get(item.category_id) ?? 0) + item.amount_minor);
+  const slots = categoryColorSlots(spending.keys(), spending);
   let count = 0;
   for (const item of items) {
     if (item.date < from || item.date > to) continue;

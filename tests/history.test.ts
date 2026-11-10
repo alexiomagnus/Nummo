@@ -117,3 +117,13 @@ test('colori: i casi della segnalazione (Casa, Ristorazione, Alimentari, Traspor
   assert.equal(new Set(year.series.map((s) => s.slot)).size, 4);
   for (const s of month.series) assert.equal(s.slot, slotOf(year, s.key));
 });
+
+test('colori: oltre 12 categorie le 12 con più spesa nell’archivio restano distinte; fino a 12 il peso non conta', () => {
+  const ids = Array.from({ length: 20 }, (_, i) => `cat-${String(i).padStart(2, '0')}`);
+  const weights = new Map(ids.map((id, i) => [id, (i + 1) * 100]));
+  const slots = categoryColorSlots(ids, weights);
+  const top = ids.slice(8);
+  assert.equal(new Set(top.map((id) => slots.get(id))).size, 12);
+  assert.deepEqual(categoryColorSlots(ids.slice(0, 12), weights), categoryColorSlots(ids.slice(0, 12)));
+  assert.deepEqual([...categoryColorSlots([...ids].reverse(), weights)].sort(), [...slots].sort());
+});

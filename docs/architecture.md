@@ -207,7 +207,8 @@ categoria parte dallo slot dell’hash del suo ID e, se occupato, prende il prim
 L’insieme considerato è quello delle categorie con almeno una spesa nell’archivio, non quello del periodo: con
 fino a 12 categorie usate nessun colore si ripete e i colori restano uguali tra periodi, grafici, filtri, ordinamenti e
 rinomine. Possono cambiare solo quando una categoria riceve la prima spesa o perde l’ultima. Oltre 12 le ripetizioni
-restano inevitabili, con etichette sempre disponibili.
+restano inevitabili: i colori distinti vanno alle 12 categorie con più spesa nell’archivio (quelle che i grafici mostrano
+insieme), le altre usano lo slot dell’hash; etichette sempre disponibili. Revisione del 10 novembre 2026.
 Tre modalità esplicite: Ciambella (`donut`), Blocchi (`blocks`, treemap recuperata da `d2fbe15`),
 Barre (`bars`, estratte dal precedente fallback). Blocchi conserva sempre rettangoli proporzionali,
 anche su mobile: gutter ridotti sulle tessere sottili senza espandere l’area nelle tessere vicine;

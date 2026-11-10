@@ -213,7 +213,7 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   prima di rimuovere un identificativo valutare compatibilità di record e backup esistenti.
 - Grafici: palette categoriale stabile, legenda e tabella, colore legato alla categoria;
   proiezione visuale separata dall’aggregazione completa (`categoryPresentation.ts`), gruppi virtuali mai salvati.
-  Colori deterministici sulla palette finita (`categoryColorSlots`: slot distinti fino a 12 categorie con spese, stabili tra periodi), dettaglio completo anche se oltre 12 si ripetono;
+  Colori deterministici sulla palette finita (`categoryColorSlots`: slot distinti fino a 12 categorie con spese, oltre per le 12 con più spesa; stabili tra periodi), dettaglio completo anche se oltre 12 si ripetono;
   seguire la skill dataviz se disponibile quando si modificano grafici/palette.
 - Web è l'unico target: non promettere persistenza RN nativa, PWA o avvio offline a
   freddo. Distinguere cache dati, disponibilità bundle, login e test su dispositivi.
