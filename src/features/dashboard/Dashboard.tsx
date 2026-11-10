@@ -130,7 +130,7 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
               <View style={chartSideBySide ? styles.legendCol : undefined}>{legend}</View>
             </View>}
         </Card>}
-      <Card><TimeChart key={period} days={insights.days} /></Card>
+      {preferences.dashboardTrend && <Card><TimeChart key={period} days={insights.days} /></Card>}
       {detail && <TransactionDetails {...detail} categories={categories} onClose={() => setDetail(null)} />}
 
     </View>

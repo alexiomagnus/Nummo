@@ -8,6 +8,7 @@ import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { iconStyles, iconStyleText } from '../../components/categoryIconSets';
 import type { CategoryIcon } from '../../domain/category';
 import { ChoiceChips } from '../../components/ChoiceChips';
+import { SwitchRow } from '../../components/SwitchRow';
 import { PageHeader } from '../../components/PageHeader';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -84,6 +85,10 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
         </Card>
         <Card title={t("Carattere")} style={section}>
           <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
+        </Card>
+        <Card title={t("Dashboard")} style={section}>
+          <SwitchRow label={t("Mostra andamento nel tempo")} value={preferences.dashboardTrend}
+            onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
         </Card>
         <Card title={t("Stile delle icone")} style={styles.section}>
           <View style={styles.styleCards} role="radiogroup" aria-label={t("Stile delle icone")}>

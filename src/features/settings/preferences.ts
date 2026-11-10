@@ -9,11 +9,11 @@ export type ThemeChoice = 'system' | 'light' | 'dark';
 export type FontChoice = 'google' | 'system';
 export const chartTypes = ['donut', 'bars', 'blocks'] as const;
 export type ChartType = (typeof chartTypes)[number];
-export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period };
+export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -32,5 +32,6 @@ export function parsePreferences(raw: string | null): Preferences {
     iconStyle: oneOf(iconStyles, o.iconStyle, defaultPreferences.iconStyle),
     dashboardChart: oneOf(chartTypes, o.dashboardChart === 'ranking' ? 'bars' : o.dashboardChart, defaultPreferences.dashboardChart),
     dashboardPeriod: oneOf(periods, o.dashboardPeriod, defaultPreferences.dashboardPeriod),
+    dashboardTrend: typeof o.dashboardTrend === 'boolean' ? o.dashboardTrend : defaultPreferences.dashboardTrend,
   };
 }

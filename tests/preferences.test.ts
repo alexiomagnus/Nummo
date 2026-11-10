@@ -70,3 +70,12 @@ test('icone: lo stile colorato sopravvive al salvataggio e non altera le altre s
 test('dashboard: preferenza Classifica migra a Barre', () => {
   assert.equal(parsePreferences('{"dashboardChart":"ranking","dashboardPeriod":"year"}').dashboardChart, 'bars');
 });
+
+test('dashboard: andamento visibile di base, scelta booleana conservata, valori non validi ripristinati', () => {
+  assert.equal(defaultPreferences.dashboardTrend, true);
+  assert.equal(parsePreferences('{"theme":"dark"}').dashboardTrend, true);
+  assert.equal(parsePreferences('{"dashboardTrend":false}').dashboardTrend, false);
+  for (const bad of ['"false"', '0', 'null', '[]']) assert.equal(parsePreferences(`{"dashboardTrend":${bad},"accent":"amber"}`).dashboardTrend, true);
+  const saved = { ...defaultPreferences, dashboardTrend: false, dashboardChart: 'bars' as const };
+  assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+});
