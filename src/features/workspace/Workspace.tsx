@@ -41,7 +41,7 @@ import { FundsPage } from '../funds/FundsPage';
 import { useRemoteFunds, type RemoteFunds } from '../funds/useRemoteFunds';
 import { readDefaultFund, writeDefaultFund } from '../funds/defaultFund';
 import type { FundChoice } from '../funds/FundField';
-import { monthOf, monthOverview } from '../../domain/funds';
+import { hasBalanceData, monthOf, monthOverview } from '../../domain/funds';
 import { ListsPage } from '../lists/ListsPage';
 import { useRemoteLists, type RemoteLists } from '../lists/useRemoteLists';
 
@@ -193,7 +193,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Balance now and remaining budget of this month, for the fund field of the forms (same figures as the Funds page).
   const fundSummary = useMemo(() => monthOverview({ funds: fundState.funds, movements: fundState.movements, expenses: store.expenses }, monthOf(today), today),
     [fundState.funds, fundState.movements, store.expenses, today]);
-  const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, balance: item.balance, remaining: item.remaining });
+  const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, balance: item.balance, remaining: item.remaining, tracksBalance: hasBalanceData(item.fund, fundState.movements) });
   const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary]);
   const editorFundChoices = editing ? fundSummary.funds.filter((item) => !item.fund.archived || item.fund.id === editing.fund_id).map(choiceOf) : [];
   const fundsError = fundState.ready ? null : fundState.error;

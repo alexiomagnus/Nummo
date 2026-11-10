@@ -1,7 +1,7 @@
 import { categoryNameError, isCategoryIcon, normalizeCategoryName, type Category } from './category.ts';
 import { isUtcTimestamp, isUuid, parseExpenseRecord, type ExpenseRecord } from './contract.ts';
 import { parseExpenseRequest } from './contract.ts';
-import { parseFund, parseMovement, type Fund, type Movement } from './funds.ts';
+import { parseBudgets, parseFund, parseMovement, type BudgetChange, type Fund, type Movement } from './funds.ts';
 import { parseListItem, parseShoppingList, type ListItem, type ShoppingList } from './shoppingList.ts';
 export type SyncedExpense = ExpenseRecord & { revision: number; updated_at: string };
 export type SyncedCategory = Category & { revision: number; updated_at: string; name_key: string };
@@ -56,3 +56,12 @@ export function parseSyncedList(value: unknown): SyncedList | null {
   return { ...list, updated_at: v.updated_at };
 }
 export const parseSyncedListItem = (value: unknown): SyncedListItem | null => parseListItem(value);
+
+// General monthly budget (issue #7): one document; the store decodes its compact `budgets` string into the array first.
+export type SyncedBudget = Readonly<{ budgets: BudgetChange[]; revision: number; updated_at: string }>;
+export function parseSyncedBudget(value: unknown): SyncedBudget | null {
+  const v = value as { budgets?: unknown; revision?: unknown; updated_at?: unknown } | null;
+  const budgets = v ? parseBudgets(v.budgets) : null;
+  if (!v || !budgets || !isUtcTimestamp(v.updated_at) || !Number.isSafeInteger(v.revision) || (v.revision as number) < 1) return null;
+  return { budgets, revision: v.revision as number, updated_at: v.updated_at };
+}

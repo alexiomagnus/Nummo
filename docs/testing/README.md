@@ -113,3 +113,9 @@ Al 10 novembre 2026, su archivio contenente solo questo file:
 
 I tre backup precedenti restano **v5** di proposito: esercitano il lettore storico. I client precedenti al cambio di
 frequenza non leggono i backup v6 con schema 3 e rifiutano l'archivio: pubblicare prima le Rules, poi il sito (con autorizzazione).
+
+## Budget mensile generale
+
+Il backup v6 può contenere `general_budget` (piano compatto come il budget ricorrente di un fondo; assente = nessun budget).
+Nessuna fixture dedicata: il caso è coperto da `tests/generalBudget.test.ts` e dalla suite emulatore. Importando un file senza
+`general_budget` in modalità «Sostituisci» il budget generale salvato viene rimosso (la copia automatica prima del ripristino lo conserva).

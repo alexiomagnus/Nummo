@@ -174,6 +174,58 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await denied(updateDoc(ref(ordinaryId), { schema_version: 2, recurrence: 'monthly', first_payment_date: '2099-12-09', updated_at: serverTimestamp(), revision: 2 }));
       for (const id of [expense_id, pastId, worstId, ordinaryId]) await deleteDoc(ref(id));
     });
+    await t.test('budget mensile generale: regole, revisioni, esportazione, unione senza sovrascritture e sostituzione', async () => {
+      const budgetRef = doc(owner.db, 'users', uid, 'settings', 'budget');
+      const schedule = [{ month: '2026-11', amount_minor: 30000 }];
+      await deleteDoc(budgetRef);
+      assert.deepEqual((await owner.store.exportSnapshot()).budget, []);
+      // Rules: only the `budget` document, exact fields, compact schedule, server revision and time.
+      for (const [target, data] of [
+        [doc(owner.db, 'users', uid, 'settings', 'altro'), { budgets: '', revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: '2026-11:30000', revision: 2, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: '2026-11:30000', revision: 1, updated_at: serverTimestamp(), extra: true }],
+        [budgetRef, { budgets: '2026-11:30000', revision: 1 }],
+        [budgetRef, { budgets: [{ month: '2026-11', amount_minor: 30000 }], revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: '2026-11:x', revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: '2026-11:30000;', revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: '2026-11:123456789', revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: Array.from({ length: 25 }, (_, i) => `2026-${String(i % 12 + 1).padStart(2, '0')}:100`).join(';'), revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: '', revision: 1, updated_at: Timestamp.fromDate(new Date('2020-01-01')) }],
+      ] as const) await denied(setDoc(target, data));
+      await denied(setDoc(doc(intruder.db, 'users', uid, 'settings', 'budget'), { budgets: '', revision: 1, updated_at: serverTimestamp() }));
+      await denied(getDocFromServer(doc(intruder.db, 'users', uid, 'settings', 'budget')));
+      await setDoc(budgetRef, { budgets: '', revision: 1, updated_at: serverTimestamp() }); // empty = no budget is valid
+      await deleteDoc(budgetRef);
+      // Store: first save requires no document, later saves the revision seen; a stale one is a conflict.
+      await owner.store.saveBudget(schedule, null);
+      assert.equal((await getDocFromServer(budgetRef)).data()!.budgets, '2026-11:30000');
+      await assert.rejects(owner.store.saveBudget(schedule, null), /cambiati in un’altra sessione/);
+      const seen = await new Promise<any>((resolve, reject) => { const stop = owner.store.watchBudget((value) => { stop(); resolve(value); }, reject); });
+      assert.deepEqual(seen.budget.budgets, schedule);
+      const next = [...schedule, { month: '2026-12', amount_minor: 45000 }];
+      await owner.store.saveBudget(next, seen.budget);
+      await assert.rejects(owner.store.saveBudget(schedule, seen.budget), /cambiati in un’altra sessione/);
+      await denied(updateDoc(budgetRef, { revision: 9, updated_at: serverTimestamp() }));
+      assert.deepEqual((await owner.store.exportSnapshot()).budget, next);
+      // Backup: exported with the data, merge never overwrites a different saved budget, an identical one is skipped.
+      const snapshot = await owner.store.exportSnapshot();
+      const file = parseBackup(JSON.parse(makeBackup(snapshot)));
+      assert.deepEqual(file.budget, next);
+      assert.equal((await owner.store.previewImport(file)).merge.setBudget, null);
+      const different = [{ month: '2026-11', amount_minor: 99900 }];
+      assert.equal((await owner.store.previewImport({ ...file, budget: different })).merge.conflicts.some((c) => c.kind === 'budget'), true);
+      await assert.rejects(owner.store.importRecords([], [], 'merge', [], [], [], different), /Importazione bloccata/);
+      assert.deepEqual((await owner.store.exportSnapshot()).budget, next, 'nothing was written');
+      // Merge fills an empty budget; replace makes it equal to the file (and to «none» when the file has none).
+      await deleteDoc(budgetRef);
+      await owner.store.importRecords([], [], 'merge', [], [], [], different);
+      assert.deepEqual((await owner.store.exportSnapshot()).budget, different);
+      await owner.store.importRecords([], [], 'replace', [], [], [], next);
+      assert.deepEqual((await owner.store.exportSnapshot()).budget, next);
+      await owner.store.importRecords([], [], 'replace', [], [], [], []);
+      assert.deepEqual((await owner.store.exportSnapshot()).budget, []);
+      await deleteDoc(budgetRef);
+    });
     await t.test('frequenza: calendario con cambi (schema 3), compatibilità, storico, versione non regredibile e budget Rules', async () => {
       const { expense_id, ...base } = expense();
       const series = { ...base, recurrence: 'monthly' as const, expense_date: '2026-08-15', amount_minor: 999 };

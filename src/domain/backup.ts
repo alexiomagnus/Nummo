@@ -2,7 +2,7 @@ import { categoryNameError, isCategoryIcon, normalizeCategoryName, type Category
 import { isUtcTimestamp, isUuid, parseExpenseRecord, sameFieldValue, type ExpenseRecord } from './contract.ts';
 import { categoryNameKey, validateImportedExpense } from './firestore.ts';
 import { expandOccurrences } from './history.ts';
-import { fundNameError, parseFund, parseMovement, type Fund, type Movement } from './funds.ts';
+import { fundNameError, parseBudgets, parseFund, parseMovement, sameBudgets, type BudgetChange, type Fund, type Movement } from './funds.ts';
 import { todayInRome } from './policy.ts';
 import { parseListRecord, sameListRecord, sortItems, type ShoppingListRecord } from './shoppingList.ts';
 import { recurrenceLabels } from './recurrence.ts';
@@ -11,7 +11,8 @@ import { recurrenceLabels } from './recurrence.ts';
 // - CSV: a read-only table of the spending (one row per occurrence up to today) for spreadsheets. Never imported.
 // - JSON: the only backup/restore format, versioned so that later schema changes can migrate older files.
 
-export type ImportData = { expenses: ExpenseRecord[]; categories: Category[]; funds: Fund[]; movements: Movement[]; lists: ShoppingListRecord[] };
+// `budget`: the general monthly budget schedule (issue #7); absent or empty = none.
+export type ImportData = { expenses: ExpenseRecord[]; categories: Category[]; funds: Fund[]; movements: Movement[]; lists: ShoppingListRecord[]; budget?: BudgetChange[] };
 
 export const backupFormat = 'nummo-backup';
 // Bump when the file shape changes and add a reader for the old number to `readers`.
@@ -19,14 +20,14 @@ export const backupFormat = 'nummo-backup';
 // v3 adds funds, movements (income and transfers) and the expenses' `fund_id`; older files have no funds.
 // v4 adds shopping lists (with their items) and the expenses' `list_id` / `list_items`; older files have no lists.
 // v5 adds first_payment_date and schema_version 2 for subscriptions with a free trial.
-// v6 adds calendar_changes and schema_version 3 for subscriptions whose frequency was changed.
+// v6 adds calendar_changes and schema_version 3 for subscriptions whose frequency was changed, and `general_budget`.
 export const backupVersion = 6;
 
 // --- JSON backup -----------------------------------------------------------------------------
 
 // Only what a restore needs: no Firestore bookkeeping (revision, updated_at, name_key), no account or
 // project identifiers. Output is deterministic (sorted) so that two exports of the same data are equal.
-export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[] }, now = new Date()): string {
+export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[]; budget?: readonly BudgetChange[] }, now = new Date()): string {
   const expenses = data.expenses.map((e) => ({
     id: e.id, amount_minor: e.amount_minor, currency: e.currency, description: e.description, category_id: e.category_id,
     expense_date: e.expense_date, recurrence: e.recurrence, price_changes: e.price_changes.map((c) => ({ index: c.index, amount_minor: c.amount_minor, once: c.once })),
@@ -51,11 +52,13 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
     id: l.id, name: l.name, category_id: l.category_id, total_minor: l.total_minor, expense_id: l.expense_id, created_at: l.created_at,
     items: sortItems(l.items).map((i) => ({ id: i.id, name: i.name, checked: i.checked, position: i.position })),
   })).sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
-  return JSON.stringify({ format: backupFormat, version: backupVersion, exported_at: now.toISOString(), categories, funds, movements, lists, expenses }, null, 2);
+  const general_budget = (data.budget ?? []).map((c) => ({ month: c.month, amount_minor: c.amount_minor }));
+  return JSON.stringify({ format: backupFormat, version: backupVersion, exported_at: now.toISOString(), categories, funds, movements, lists,
+    ...(general_budget.length ? { general_budget } : {}), expenses }, null, 2);
 }
 
 // Strict validation of the body shared by the file reader and the store. Anything invalid rejects the whole file.
-export function validateBackupData(rawExpenses: unknown, rawCategories: unknown, rawFunds: unknown = [], rawMovements: unknown = [], rawLists: unknown = []): ImportData {
+export function validateBackupData(rawExpenses: unknown, rawCategories: unknown, rawFunds: unknown = [], rawMovements: unknown = [], rawLists: unknown = [], rawBudget: unknown = undefined): ImportData {
   if (!Array.isArray(rawExpenses) || !Array.isArray(rawCategories) || !Array.isArray(rawFunds) || !Array.isArray(rawMovements) || !Array.isArray(rawLists)) throw new Error('Formato backup non riconosciuto.');
   const lists: ShoppingListRecord[] = [];
   const itemIds = new Set<string>();
@@ -96,7 +99,9 @@ export function validateBackupData(rawExpenses: unknown, rawCategories: unknown,
     validateImportedExpense(record);
     expenses.push({ ...record, created_at: new Date(record.created_at).toISOString() });
   }
-  return { expenses, categories, funds, movements, lists };
+  const budget = rawBudget === undefined ? [] : parseBudgets(rawBudget);
+  if (!budget) throw new Error('Budget mensile nel backup non valido.');
+  return { expenses, categories, funds, movements, lists, ...(budget.length ? { budget } : {}) };
 }
 
 // One reader per supported version; each returns the current in-memory shape.
@@ -110,7 +115,7 @@ const readers: Record<number, (file: Record<string, unknown>) => ImportData> = {
   4: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
   5: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
   // v6: frequency switches of subscriptions (`calendar_changes`, schema_version 3); older expenses have none.
-  6: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
+  6: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
 };
 
 export function parseBackup(value: unknown): ImportData {
@@ -121,6 +126,7 @@ export function parseBackup(value: unknown): ImportData {
     ('first_payment_date' in e || ('schema_version' in e && e.schema_version === 2)))) throw new Error('La prova gratuita richiede un backup versione 5 o successiva.');
   if (file.version < 6 && Array.isArray(file.expenses) && file.expenses.some((e: unknown) => e && typeof e === 'object' &&
     ('calendar_changes' in e || ('schema_version' in e && e.schema_version === 3)))) throw new Error('Il cambio di frequenza richiede un backup versione 6 o successiva.');
+  if (file.version < 6 && 'general_budget' in file) throw new Error('Il budget mensile generale richiede un backup versione 6 o successiva.');
   const reader = readers[file.version];
   if (!reader) throw new Error('Versione del backup non supportata.');
   return reader(file);
@@ -129,7 +135,7 @@ export function parseBackup(value: unknown): ImportData {
 // --- Import planning (pure; used for the preview and again by the store before writing) -----------
 
 export type ImportMode = 'merge' | 'replace';
-export type ImportConflict = Readonly<{ kind: 'expense' | 'category' | 'fund' | 'movement' | 'list'; id: string; label: string }>;
+export type ImportConflict = Readonly<{ kind: 'expense' | 'category' | 'fund' | 'movement' | 'list' | 'budget'; id: string; label: string }>;
 export type ImportPlan = Readonly<{
   mode: ImportMode;
   addExpenses: ExpenseRecord[];
@@ -137,6 +143,8 @@ export type ImportPlan = Readonly<{
   addFunds: Fund[];
   addMovements: Movement[];
   addLists: ShoppingListRecord[];
+  // General budget schedule to write (null = nothing to write): merge fills an empty one, replace makes it equal to the file.
+  setBudget: BudgetChange[] | null;
   // Already saved and identical: skipped, never rewritten.
   sameExpenses: number;
   sameCategories: number;
@@ -194,8 +202,8 @@ function planById<T extends { id: string }>(file: readonly T[], saved: readonly 
   return { add, identical, conflicts, remove };
 }
 
-export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & Partial<Pick<ImportData, 'funds' | 'movements' | 'lists'>>,
-  current: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[] }, mode: ImportMode): ImportPlan {
+export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & Partial<Pick<ImportData, 'funds' | 'movements' | 'lists' | 'budget'>>,
+  current: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[]; budget?: readonly BudgetChange[] }, mode: ImportMode): ImportPlan {
   const fileFunds = data.funds ?? [];
   const funds = planById(fileFunds, current.funds ?? [], sameFund, mode, (f) => f.name, 'fund');
   // A new fund whose name is already used by another saved fund would make two funds look alike: a merge conflict.
@@ -204,6 +212,15 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
   }
   const movements = planById(data.movements ?? [], current.movements ?? [], sameMovement, mode, (m) => m.note, 'movement');
   const lists = planById(data.lists ?? [], current.lists ?? [], sameListRecord, mode, (l) => l.name, 'list');
+  // The general budget never overwrites a different saved one in a merge; a replace makes it equal to the file.
+  const fileBudget = data.budget ?? [];
+  const savedBudget = current.budget ?? [];
+  let setBudget: BudgetChange[] | null = null;
+  const budgetConflicts: ImportConflict[] = [];
+  if (!sameBudgets(fileBudget, savedBudget)) {
+    if (mode === 'replace' || (savedBudget.length === 0 && fileBudget.length > 0)) setBudget = [...fileBudget];
+    else if (fileBudget.length > 0) budgetConflicts.push({ kind: 'budget', id: 'budget', label: 'Budget mensile' });
+  }
   const savedExpenses = new Map(current.expenses.map((e) => [e.id, e]));
   const savedCategories = new Map(current.categories.map((c) => [c.id, c]));
   const fileExpenses = new Map(data.expenses.map((e) => [e.id, e]));
@@ -236,10 +253,10 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
   const finalCategories = new Set(mode === 'replace' ? fileCategories.keys() : [...savedCategories.keys(), ...fileCategories.keys()]);
   const finalFunds = new Set(mode === 'replace' ? fileFunds.map((f) => f.id) : [...(current.funds ?? []).map((f) => f.id), ...fileFunds.map((f) => f.id)]);
   return {
-    mode, addExpenses, addCategories, addFunds: funds.add, addMovements: movements.add, addLists: lists.add,
+    mode, addExpenses, addCategories, addFunds: funds.add, addMovements: movements.add, addLists: lists.add, setBudget,
     sameExpenses, sameCategories, sameFunds: funds.identical, sameMovements: movements.identical, sameLists: lists.identical,
     removeExpenseIds, removeCategoryIds, removeFundIds: funds.remove, removeMovementIds: movements.remove, removeListIds: lists.remove,
-    conflicts: [...conflicts, ...funds.conflicts, ...movements.conflicts, ...lists.conflicts],
+    conflicts: [...conflicts, ...funds.conflicts, ...movements.conflicts, ...lists.conflicts, ...budgetConflicts],
     categoryTotal: finalCategories.size,
     missingCategoryReferences: data.expenses.filter((e) => e.category_id !== null && !finalCategories.has(e.category_id)).length,
     missingFundReferences: data.expenses.filter((e) => e.fund_id && !finalFunds.has(e.fund_id)).length

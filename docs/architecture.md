@@ -807,3 +807,28 @@ o `calendar_changes` sono rifiutati con messaggio dedicato. Fixture `docs/testin
 **Compatibilità.** Rilascio: prima le Rules, poi il sito. I client aperti vanno ricaricati; quelli vecchi rifiutano un archivio
 con serie schema 3. CSV: una riga per occorrenza con la frequenza in vigore alla data; elenco abbonamenti: frequenza del
 prossimo rinnovo.
+
+## Fondi e budget semplificati (issue #7) — 10 novembre 2026
+
+**Obiettivo.** Fondi e budget devono essere strumenti facoltativi per organizzare le spese, non contabilità. Nummo è completamente
+utilizzabile senza fondi e senza budget; con fondi esistenti l'inserimento di una spesa non richiede nessuna scelta.
+
+**Cosa cambia, senza toccare il modello dei fondi.** Nessuna migrazione e nessuna cancellazione:
+- il documento fondo resta com'è (le Rules non cambiano per i fondi); un **nuovo** fondo nasce con saldo iniziale 0, nessuna ricarica e
+  nessuna eccezione, e il modulo offre solo nome, icona, colore e budget mensile;
+- la pagina mostra la **spesa del mese** (totale e per fondo), il budget rimasto e, aprendo un fondo, le sue spese del mese; i saldi,
+  «Aggiungi denaro» e «Trasferisci» compaiono **solo** finché esiste un fondo con dati di saldo (`hasBalanceData`: saldo iniziale, ricariche o
+  movimenti). Per quei fondi saldo, ricariche e movimenti restano consultabili (e i movimenti eliminabili) e il salvataggio del fondo riscrive
+  invariati saldo iniziale, data di inizio, ricariche ed eccezioni (`fundFromForm`, coperto da test);
+- in Nuova spesa e nel dialogo «Registra spesa» la scelta del fondo parte da «Nessun fondo» (o dal fondo predefinito), senza errore obbligatorio;
+  il saldo del fondo si mostra solo se ne tiene uno.
+
+**Budget mensile generale.** Un documento `users/{uid}/settings/budget` con il piano compatto `YYYY-MM:importo;…` del budget ricorrente di un fondo
+(stesso codec, stessa regola «vale dal mese corrente, i mesi chiusi restano»; nessuna eccezione per mese). Si confronta con la spesa totale del mese
+(ogni fondo e «Senza fondo»; per i mesi futuri la previsione). Le Rules (`generalBudget`) impongono documento unico, campi esatti, formato e revisione;
+l'ordine dei mesi è del decoder. Scritture in transazione sulla revisione vista, con listener separato in `useRemoteFunds`: un suo errore non nasconde i fondi.
+**Backup v6** (non ancora rilasciato, nessun nuovo numero): `general_budget` solo se presente; unione = riempie un budget vuoto, mai sovrascrive
+(un budget diverso blocca l'importazione), sostituzione = uguaglia il file (senza `general_budget` lo azzera, con copia automatica precedente).
+
+**Scelte non fatte.** Non si rimuovono ricariche, movimenti, trasferimenti o eccezioni dal modello né dal backup: sarebbe una migrazione
+distruttiva di dati reali. Una futura dismissione richiede una decisione esplicita. Il budget generale non ha eccezioni mensili.

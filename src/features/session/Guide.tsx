@@ -71,10 +71,10 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title={t("Fondi")}>
-        {p(t("Un fondo è una disponibilità separata, ad esempio soldi personali, risparmi, un contributo della famiglia o uno stipendio. Ha un saldo iniziale, un'icona e un colore; in Nuova spesa scegli quale fondo paga, e puoi indicarne uno predefinito."))}
-        {p(t("Un fondo può ricevere una ricarica mensile in un giorno scelto: viene accreditata una sola volta per mese, solo quando la data è arrivata, anche se non apri l'app. Puoi cambiarne importo e giorno, o sospenderla: le modifiche valgono per le scadenze successive. Puoi anche aggiungere denaro a mano o trasferirlo tra fondi; i trasferimenti non contano come entrate né come spese."))}
-        {p(t("Il budget mensile è un limite di spesa, distinto dal saldo: mostra quanto hai speso e quanto resta, avvisa quando ti avvicini o lo superi, ma non blocca le spese. Può essere ricorrente, con eccezioni per singoli mesi; ciò che non spendi resta nel saldo e non si somma al budget del mese dopo. Puoi consultare i mesi passati e quelli futuri, questi ultimi come previsione."))}
-        {p(t("Le spese registrate prima dei fondi restano senza fondo e non incidono su nessun saldo, finché non scegli di assegnarle. Un fondo con movimenti si archivia invece di essere eliminato, così lo storico resta."))}
+        {p(t("I fondi e i budget sono facoltativi: puoi usare Nummo senza crearne nessuno. Un fondo raggruppa alcune spese (ad esempio vacanze, casa o università) con nome, icona e colore; in Nuova spesa puoi sceglierlo oppure lasciare Nessun fondo, e puoi indicarne uno predefinito."))}
+        {p(t("La pagina Fondi mostra quanto hai speso nel mese, in totale e per fondo; aprendo un fondo vedi le sue spese del mese. Puoi impostare un budget mensile generale, per tutte le spese, e un budget per ciascun fondo: è un limite indicativo che mostra quanto hai speso e quanto resta, avvisa quando ti avvicini o lo superi, ma non blocca le spese. Vale dal mese corrente: i mesi passati restano come sono."))}
+        {p(t("Le spese senza fondo restano valide; puoi assegnarle a un fondo solo se lo scegli. Un fondo con spese collegate si archivia invece di essere eliminato."))}
+        {p(t("I fondi creati con una versione precedente conservano saldo iniziale, ricariche, movimenti ed eccezioni del budget: restano consultabili e non vengono modificati quando salvi il fondo."))}
       </Section>
 
       <Section title={t("Esportare i dati")}>

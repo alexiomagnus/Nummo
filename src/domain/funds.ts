@@ -466,3 +466,53 @@ export function nextFundColor(funds: readonly Pick<Fund, 'color'>[]): number {
 export function emptyFund(name: string, start_date: string, color: number): FundData {
   return { name, icon: null, color, initial_minor: 0, start_date, recharges: [], budgets: [], budget_exceptions: [], archived: false };
 }
+
+// ---- General monthly budget (issue #7) ----
+// An optional spending reference for the whole month, independent of the funds: one recurring schedule (month, amount;
+// 0 = none), like a fund's recurring budget and with the same rule: a change applies from the current month on, closed
+// months keep what they had. It is a number to compare with: nothing is blocked and no money is added or removed.
+export const generalBudgetStart = '2000-01-01';
+export const generalBudgetFor = (budgets: readonly BudgetChange[], month: Month): number | null =>
+  budgetFor({ start_date: generalBudgetStart, budgets, budget_exceptions: [] }, month);
+export const setGeneralBudget = (budgets: readonly BudgetChange[], amount: number | null, today: string): BudgetChange[] | null =>
+  setRecurringBudget({ start_date: generalBudgetStart, budgets }, amount, today);
+export const sameBudgets = (a: readonly BudgetChange[], b: readonly BudgetChange[]): boolean =>
+  a.length === b.length && a.every((change, i) => change.month === b[i]!.month && change.amount_minor === b[i]!.amount_minor);
+
+export type GeneralBudgetMonth = Readonly<{ budget: number | null; spent: number; remaining: number | null; state: BudgetState }>;
+// All spending of the month (every fund and «Senza fondo») against the general budget; future months use the forecast.
+export function generalBudgetMonth(budgets: readonly BudgetChange[], overview: Pick<MonthOverview, 'month' | 'kind' | 'spent' | 'forecastSpent'>): GeneralBudgetMonth {
+  const budget = generalBudgetFor(budgets, overview.month);
+  const spent = overview.kind === 'future' ? overview.forecastSpent : overview.spent;
+  return { budget, spent, remaining: budget === null ? null : budget - spent, state: budgetState(spent, budget) };
+}
+
+// A fund that still carries balance accounting from the earlier version (initial balance, recharges or movements). New funds
+// never get any: the page keeps showing balances, recharges and movements only for those, read-only plus the old entries.
+export function hasBalanceData(fund: Pick<Fund, 'id' | 'initial_minor' | 'recharges'>, movements: readonly Pick<Movement, 'to_fund_id' | 'from_fund_id'>[]): boolean {
+  return fund.initial_minor > 0 || fund.recharges.length > 0 || movements.some((m) => m.to_fund_id === fund.id || m.from_fund_id === fund.id);
+}
+
+// Data to save from the simplified fund form (name, icon, colour, optional monthly budget). A new fund starts empty today; an
+// existing one is written back with everything the form does not show exactly as saved (initial balance, start date, recharges,
+// per-month budget exceptions, archived flag), and only its recurring budget changes, from the current month on.
+// null = too many scheduled budget changes.
+export function fundFromForm(record: FundData | undefined, form: { name: string; icon: CategoryIcon | null; color: number; budget: number | null }, today: string): FundData | null {
+  const name = normalizeCategoryName(form.name);
+  if (!record) {
+    const base = emptyFund(name, today, form.color);
+    return { ...base, icon: form.icon, budgets: form.budget === null ? [] : [{ month: monthOf(today), amount_minor: form.budget }] };
+  }
+  const budgets = setRecurringBudget(record, form.budget, today);
+  if (!budgets) return null;
+  return { name, icon: form.icon, color: form.color, initial_minor: record.initial_minor, start_date: record.start_date, recharges: record.recharges,
+    budgets, budget_exceptions: record.budget_exceptions, archived: record.archived };
+}
+
+// Explicit «no fund» choice of the expense form, and the fund it starts with: the one chosen, else the default fund if it is
+// still available, else «no fund». Funds are optional (issue #7), so having funds never forces an extra choice.
+export const noFund = 'none';
+export function resolveFund(chosen: string, choices: readonly { fund: { id: string } }[], defaultFundId = ''): string {
+  if (chosen) return chosen;
+  return choices.some((choice) => choice.fund.id === defaultFundId) ? defaultFundId : noFund;
+}

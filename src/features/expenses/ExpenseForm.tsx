@@ -14,16 +14,12 @@ import { PromoField } from './PriceSchedule';
 import { TrialField } from './TrialField';
 import { RepeatField } from './RepeatField';
 import { todayInRome } from '../../domain/policy';
-import { FundField, noFund, type FundChoice } from '../funds/FundField';
+import { FundField, type FundChoice } from '../funds/FundField';
+import { noFund, resolveFund } from '../../domain/funds';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
 type Props = { categories: readonly Category[]; store: ExpenseStore; onCreateCategory?: () => void; fundChoices?: readonly FundChoice[]; defaultFundId?: string };
 
-// The draft keeps '' until the user picks a fund: the default fund (if still available) applies meanwhile, also after a save.
-export function resolveFund(chosen: string, choices: readonly FundChoice[], defaultFundId = ''): string {
-  if (chosen) return chosen;
-  return choices.some((choice) => choice.fund.id === defaultFundId) ? defaultFundId : '';
-}
 
 export const ExpenseForm = memo(ExpenseFormView);
 

@@ -97,7 +97,7 @@ export function BackupActions({ backend, enabled }: { backend: FirestoreStore; e
         {missing === 1 ? t("1 riferimento a fondi o categorie mancanti.") : t("{p0} riferimenti a fondi o categorie mancanti.", { p0: missing })}</Text>}
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
         {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists); finish();
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget); finish();
         })}>{t("Unisci ai dati esistenti")}</Button>}
         <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
         <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
@@ -114,7 +114,7 @@ export function BackupActions({ backend, enabled }: { backend: FirestoreStore; e
         try {
           // Safety copy before the first deletion: the current data stays on disk if anything goes wrong.
           download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists);
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />

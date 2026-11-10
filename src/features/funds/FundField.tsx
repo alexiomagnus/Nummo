@@ -1,15 +1,16 @@
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { SelectField } from '../../components/SelectField';
-import type { Fund } from '../../domain/funds';
+import { noFund, type Fund } from '../../domain/funds';
 import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
 import { FundAvatar } from './FundAvatar';
 
 // What the expense form needs to know about a fund: its balance now and what remains of this month's budget.
-export type FundChoice = Readonly<{ fund: Fund; balance: number; remaining: number | null }>;
+// `tracksBalance`: the fund keeps balance data from an earlier version; only then is its balance shown.
+export type FundChoice = Readonly<{ fund: Fund; balance: number; remaining: number | null; tracksBalance?: boolean }>;
 // Explicit «no fund» choice (expenses that should not touch any balance).
-export const noFund = 'none';
+export { noFund };
 
 // Fund paying the expense. Shown only when at least one fund exists, so the form is unchanged for those who do not use
 // funds. The selected fund's balance and remaining budget are written below the field; nothing is ever blocked.
@@ -28,11 +29,11 @@ export function FundField({ choices, value, error, disabled, onChange }: {
     <View>
       <SelectField label={t("Fondo")} options={options} value={selected ? value : value === noFund ? noFund : ''} disabled={disabled} error={error} onChange={onChange} />
       {selected ? <View style={styles.info} aria-live="polite">
-        <Text variant="bodySmall" style={{ color: selected.balance < 0 ? colors.error : colors.onSurfaceVariant }}>
-          {t("Saldo disponibile: {p0}", { p0: formatAmount(selected.balance) })}</Text>
+        {selected.tracksBalance && <Text variant="bodySmall" style={{ color: selected.balance < 0 ? colors.error : colors.onSurfaceVariant }}>
+          {t("Saldo disponibile: {p0}", { p0: formatAmount(selected.balance) })}</Text>}
         {selected.remaining !== null && <Text variant="bodySmall" style={{ color: over ? colors.error : colors.onSurfaceVariant }}>
           {over ? t("Budget del mese superato di {p0}", { p0: formatAmount(-selected.remaining) }) : t("Budget residuo del mese: {p0}", { p0: formatAmount(selected.remaining) })}</Text>}
-      </View> : value === noFund ? <HelperText type="info" style={styles.helper}>{t("La spesa non inciderà sul saldo di nessun fondo.")}</HelperText> : null}
+      </View> : value === noFund ? <HelperText type="info" style={styles.helper}>{t("La spesa non sarà assegnata a nessun fondo.")}</HelperText> : null}
     </View>
   );
 }

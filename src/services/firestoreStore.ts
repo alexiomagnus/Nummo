@@ -11,10 +11,19 @@ import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../domain/contract.ts';
 import { categoryNameError, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
 import { decodeStatusChanges, encodeStatusChanges } from '../domain/subscription.ts';
-import { categoryNameKey, parseSyncedCategory, parseSyncedExpense, parseSyncedFund, parseSyncedList, parseSyncedListItem, parseSyncedMovement, type SyncedCategory, type SyncedExpense, type SyncedFund, type SyncedList, type SyncedListItem, type SyncedMovement } from '../domain/firestore.ts';
+import { categoryNameKey, parseSyncedBudget, type SyncedBudget, parseSyncedCategory, parseSyncedExpense, parseSyncedFund, parseSyncedList, parseSyncedListItem, parseSyncedMovement, type SyncedCategory, type SyncedExpense, type SyncedFund, type SyncedList, type SyncedListItem, type SyncedMovement } from '../domain/firestore.ts';
 import { decodeListItems, encodeListItems, listNameError, itemNameError, normalizeListText, parseListData, sameListRecord, sortItems, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
-import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFundData, parseMovementData, type Fund, type FundData, type Movement, type MovementData } from '../domain/funds.ts';
+import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFundData, parseMovementData, sameBudgets, type BudgetChange, type Fund, type FundData, type Movement, type MovementData } from '../domain/funds.ts';
 
+export type BudgetSnapshot = { budget: SyncedBudget | null; fromCache: boolean; pending: boolean };
+// The stored schedule is a compact string (see firestore.rules); undecodable → the record check fails (archive invalid).
+function readBudget(data: DocumentData | undefined): SyncedBudget | null {
+  if (!data) return null;
+  const budget = parseSyncedBudget({ budgets: decodeBudgets(data.budgets), revision: data.revision,
+    updated_at: data.updated_at instanceof Timestamp ? data.updated_at.toDate().toISOString() : data.updated_at });
+  if (!budget) throw new Error('Archivio non valido: esportazione e modifiche bloccate.');
+  return budget;
+}
 export type SnapshotState<T> = { records: T[]; fromCache: boolean; pending: boolean; pendingIds: string[] };
 function decode(data: DocumentData, id: string) {
   return { ...data, ...(data.schema_version === 2 || data.schema_version === 3 ? { price_changes: decodeTrialPrices(data.price_changes) } : {}), ...('calendar_changes' in data ? { calendar_changes: decodeCalendarChanges(data.calendar_changes) } : {}), ...('status_changes' in data ? { status_changes: decodeStatusChanges(data.status_changes) } : {}),
@@ -62,20 +71,23 @@ export function createFirestoreStore(db: Firestore, uid: string) {
   const movements = collection(db, 'users', uid, 'movements');
   const lists = collection(db, 'users', uid, 'lists');
   const listItems = collection(db, 'users', uid, 'listItems');
+  // General monthly budget (issue #7): the only document of `settings`.
+  const budgetRef = doc(db, 'users', uid, 'settings', 'budget');
   const conflict = () => new Error('I dati sono cambiati in un’altra sessione. Riapri la modifica e riprova.');
   // Reads the saved archive from the server for a restore plan. Refuses while writes are pending.
   async function readAll() {
-    const [e, c, f, m, l, i] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements),
-      getDocsFromServer(lists), getDocsFromServer(listItems)]);
+    const [e, c, f, m, l, i, b] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements),
+      getDocsFromServer(lists), getDocsFromServer(listItems), getDocFromServer(budgetRef)]);
     return [parseSnapshot(e, parseSyncedExpense), parseSnapshot(c, parseSyncedCategory), parseSnapshot(f, parseSyncedFund, decodeFund), parseSnapshot(m, parseSyncedMovement),
-      parseSnapshot(l, parseSyncedList), parseSnapshot(i, parseSyncedListItem)] as const;
+      parseSnapshot(l, parseSyncedList), parseSnapshot(i, parseSyncedListItem),
+      { records: b.exists() ? [readBudget(b.data())!] : [], pending: b.metadata.hasPendingWrites }] as const;
   }
   async function readArchive() {
     const states = await readAll();
-    const [savedExpenses, savedCategories, savedFunds, savedMovements, savedLists, savedItems] = states;
+    const [savedExpenses, savedCategories, savedFunds, savedMovements, savedLists, savedItems, savedBudget] = states;
     if (states.some((state) => state.pending)) throw new Error('Attendi le scritture pendenti prima di importare.');
     return { expenses: savedExpenses.records, categories: savedCategories.records, funds: savedFunds.records, movements: savedMovements.records,
-      lists: listRecords(savedLists.records, savedItems.records), items: savedItems.records };
+      lists: listRecords(savedLists.records, savedItems.records), items: savedItems.records, budget: savedBudget.records[0]?.budgets ?? [] };
   }
   // Checklist edits are plain writes queued by the SDK (they work with a weak signal in a shop): the listener shows them
   // at once and the sync chip until the server has them. A rejected write is reported, never retried by the app.
@@ -167,6 +179,22 @@ export function createFirestoreStore(db: Firestore, uid: string) {
       return onSnapshot(movements, { includeMetadataChanges: true }, (s) => {
         try { next(parseSnapshot(s, parseSyncedMovement)); } catch (e) { error(e as Error); }
       }, error);
+    },
+    // General monthly budget (issue #7): a single document, absent until the first budget is set.
+    watchBudget(next: (value: BudgetSnapshot) => void, error: (reason: Error) => void) {
+      return onSnapshot(budgetRef, { includeMetadataChanges: true }, (s) => {
+        try { next({ budget: s.exists() ? readBudget(s.data({ serverTimestamps: 'estimate' })) : null, fromCache: s.metadata.fromCache, pending: s.metadata.hasPendingWrites }); }
+        catch (e) { error(e as Error); }
+      }, error);
+    },
+    // Writes the schedule in a transaction on the revision seen when the editor opened (a first save requires no document).
+    async saveBudget(budgets: readonly BudgetChange[], previous: SyncedBudget | null) {
+      if (!parseSyncedBudget({ budgets, revision: 1, updated_at: '2000-01-01T00:00:00.000Z' })) throw new Error('Budget non valido.');
+      await runTransaction(db, async (tx) => {
+        const current = await tx.get(budgetRef);
+        if (previous ? !current.exists() || current.data().revision !== previous.revision : current.exists()) throw conflict();
+        tx.set(budgetRef, { budgets: encodeBudgets(budgets), revision: (previous?.revision ?? 0) + 1, updated_at: serverTimestamp() });
+      });
     },
     // Create (no `previous`) or update a fund in a transaction on the revision seen when the editor opened.
     async saveFund(id: string, data: FundData, previous?: SyncedFund) {
@@ -301,10 +329,10 @@ export function createFirestoreStore(db: Firestore, uid: string) {
     async exportSnapshot() {
       // Server-only: never label an incomplete offline cache as a complete backup.
       const states = await readAll();
-      const [expenseState, categoryState, fundState, movementState, listState, itemState] = states;
+      const [expenseState, categoryState, fundState, movementState, listState, itemState, budgetState] = states;
       if (states.some((state) => state.pending)) throw new Error('Attendi la sincronizzazione prima di esportare.');
       return { expenses: expenseState.records, categories: categoryState.records, funds: fundState.records, movements: movementState.records,
-        lists: listRecords(listState.records, itemState.records) };
+        lists: listRecords(listState.records, itemState.records), budget: budgetState.records[0]?.budgets ?? [] };
     },
     // Preview for the import dialog: what each mode would do, computed on the current server data. No writes.
     async previewImport(data: ImportData) {
@@ -314,8 +342,8 @@ export function createFirestoreStore(db: Firestore, uid: string) {
     // 'merge' only adds (identical items skipped; any conflict blocks the whole import before the first write).
     // 'replace' makes the archive equal to the file: it removes saved items that differ from the file, then adds the rest.
     // Nothing is written until the file and the plan have been validated against the server data.
-    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = []) {
-      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists);
+    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = []) {
+      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget);
       const current = await readArchive();
       const plan = planImport(checked, current, mode);
       if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi diversi dai dati salvati. Nessuna modifica.`);
@@ -423,6 +451,17 @@ export function createFirestoreStore(db: Firestore, uid: string) {
             if (itemDocs.some((d) => d.exists())) throw conflict();
             tx.set(ref, { ...storedList(list), created_at: Timestamp.fromDate(new Date(list.created_at)), updated_at: serverTimestamp() });
             list.items.forEach((i) => tx.set(doc(listItems, i.id), { list_id: list.id, name: i.name, checked: i.checked, position: i.position }));
+          });
+        }
+        // General budget (one document): a merge only fills an empty one, a replace makes it equal to the file. Rechecked in the transaction.
+        if (plan.setBudget) {
+          const wanted = plan.setBudget;
+          await runTransaction(db, async (tx) => {
+            const existing = await tx.get(budgetRef);
+            const saved = existing.exists() ? readBudget(existing.data()) : null;
+            if (saved && sameBudgets(saved.budgets, wanted)) return;
+            if (mode === 'merge' && saved && saved.budgets.length > 0) throw conflict();
+            tx.set(budgetRef, { budgets: encodeBudgets(wanted), revision: (saved?.revision ?? 0) + 1, updated_at: serverTimestamp() });
           });
         }
       } catch {
