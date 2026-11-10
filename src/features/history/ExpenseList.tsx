@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { Fragment, memo, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
+import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import type { Category } from '../../domain/category';
 import { searchAndSort, sortLabels, sortOptions, type Occurrence, type SortOption } from '../../domain/history';
@@ -10,7 +10,9 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ListRow, listRowStyles } from '../../components/ListRow';
-import { inputOutline, spacing } from '../../theme/tokens';
+import { usePresence, useOverlayMotion } from '../../components/Overlay';
+import { fadeTransition } from '../../theme/motion';
+import { inputOutline, motion, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { expenseMonths } from './expenseMonths';
 
@@ -24,6 +26,7 @@ type Props = {
 };
 
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const shortDateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const monthFormat = (locale: string) => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const monthLabel = (month: string, formatter: Intl.DateTimeFormat, locale: string) => {
   const name = formatter.format(new Date(`${month}-01T00:00:00Z`));
@@ -39,6 +42,7 @@ export const ExpenseList = memo(ExpenseListView);
 function ExpenseListView({ occurrences, categories, error, onEdit, listItems }: Props) {
   const { t, locale } = useI18n();
   const dates = useMemo(() => dateFormat(locale), [locale]);
+  const shortDates = useMemo(() => shortDateFormat(locale), [locale]);
   const months = useMemo(() => monthFormat(locale), [locale]);
   const amounts = useMemo(() => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }), [locale]);
   const theme = useTheme();
@@ -89,7 +93,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems }: 
             heading={byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== item.date.slice(0, 7))}
             summary={summaries.get(item.date.slice(0, 7))!} category={categoryById.get(item.category_id ?? '')}
             products={listItems?.get(item.expenseId)} open={expanded.has(item.key)} setExpanded={setExpanded}
-            compact={compact} dates={dates} months={months} amounts={amounts} onEdit={onEdit} />;
+            dates={dates} shortDates={shortDates} months={months} amounts={amounts} onEdit={onEdit} />;
         })}
         {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna spesa.")}</Text>}
         {occurrences.length > 0 && results.length === 0 && (
@@ -111,15 +115,17 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems }: 
 
 // Stable props let expanding one detail or appending a page leave existing rows alone.
 const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, open, setExpanded,
-  compact, dates, months, amounts, onEdit }: {
+  dates, shortDates, months, amounts, onEdit }: {
   item: Occurrence; index: number; heading: boolean; summary: { count: number; total: number };
   category?: Category; products?: readonly string[]; open: boolean;
-  setExpanded: Dispatch<SetStateAction<ReadonlySet<string>>>; compact: boolean;
-  dates: Intl.DateTimeFormat; months: Intl.DateTimeFormat; amounts: Intl.NumberFormat;
+  setExpanded: Dispatch<SetStateAction<ReadonlySet<string>>>;
+  dates: Intl.DateTimeFormat; shortDates: Intl.DateTimeFormat; months: Intl.DateTimeFormat; amounts: Intl.NumberFormat;
   onEdit?: (id: string) => void;
 }) {
   const { t, locale } = useI18n();
   const theme = useTheme();
+  const animate = useOverlayMotion();
+  const { mounted, shown } = usePresence(open, motion.fade, animate);
   const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
   const formatAmount = (minor: number) => amounts.format(minor / 100);
           const month = item.date.slice(0, 7);
@@ -142,26 +148,19 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
                 </View>
               )}
               <View>
-              <ListRow outlined icon={category?.icon ?? null} title={item.description}
-                meta={compact || listMark ? <>
-                  {compact && <Text variant="titleSmall" style={listRowStyles.amount}>{formatAmount(item.amount_minor)}</Text>}
-                  {listMark}
-                </> : undefined}
-                trailing={<>
-                  {!compact && <Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>}
-                  <IconButton style={listRowStyles.iconButton} aria-expanded={open} aria-controls={open ? detailsId : undefined}
-                    accessibilityLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: formatDate(item.date) })}
-                    icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
-                    onPress={() => setExpanded((previous) => {
-                      const next = new Set(previous);
-                      if (next.has(item.key)) next.delete(item.key); else next.add(item.key);
-                      return next;
-                    })} />
-                  {onEdit && <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
-                    accessibilityLabel={t("Modifica {p0}", { p0: item.description })} onPress={() => onEdit(item.expenseId)} />}
-                </>}>
-                {open && <View nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: item.description })}
-                  style={[styles.details, { borderColor: theme.colors.outlineVariant }]}>
+              <ListRow outlined dense icon={category?.icon ?? null} title={item.description}
+                subtitle={shortDates.format(new Date(`${item.date}T00:00:00Z`))}
+                meta={listMark}
+                expanded={open} controls={open ? detailsId : undefined}
+                pressLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: formatDate(item.date) })}
+                onPress={() => setExpanded((previous) => {
+                  const next = new Set(previous);
+                  if (next.has(item.key)) next.delete(item.key); else next.add(item.key);
+                  return next;
+                })}
+                trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>}>
+                {mounted && <View nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: item.description })}
+                  style={[styles.details, { borderColor: theme.colors.outlineVariant, opacity: shown ? 1 : 0 }, animate && fadeTransition]}>
                   <View style={styles.detailField}>
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Data")}</Text>
                     <Text variant="bodyMedium">{formatDate(item.date)}</Text>
@@ -181,6 +180,9 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
                     <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
                   </View>}
+                  {onEdit && <View style={styles.editRow}><Button mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: item.description })}
+                    icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
+                    onPress={() => onEdit(item.expenseId)}>{t("Modifica")}</Button></View>}
                 </View>}
               </ListRow>
               </View>
@@ -200,7 +202,8 @@ const styles = StyleSheet.create({
   monthLabel: { flex: 1, minWidth: 0, gap: spacing.xs },
   monthName: { fontWeight: '700', fontSize: 15, lineHeight: 22 },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
-  rowAmount: { minWidth: 96, textAlign: 'right', marginRight: spacing.md },
+  rowAmount: { minWidth: 80, textAlign: 'right' },
+  editRow: { flexBasis: '100%', alignItems: 'flex-start' },
   details: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: spacing.md, paddingBottom: spacing.sm },
   detailField: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
