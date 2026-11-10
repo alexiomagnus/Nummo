@@ -23,6 +23,20 @@ architettura e convenzioni: `AGENTS.md`. Al momento della stesura `npm run check
   **Hosting live prima del rilascio:** versione `88cb0099e5e9976e` (9 novembre 16:49 UTC, commit `37407c3`).
 - `firebase deploy --only firestore:rules --dry-run --project nummo-6b6e2`: compilazione riuscita.
 
+## Rilascio in produzione (10 novembre 2026) — eseguito
+
+- Branch pubblicato: `origin/release/2026-11-10` (nessun merge su `main`, nessun force push).
+- **Rules** pubblicate su `nummo-6b6e2` alle **01:20:40 UTC**; ruleset live riletto via API: identico a `firestore.rules`,
+  SHA-256 `59e64d5b…078bb`. Precedente: `972fd97e…d6d4a` (salvato nel backup per un eventuale ripristino).
+- **Hosting** pubblicato con `npm run deploy:hosting` (build cloud verificata, solo Hosting): live serve `index-2460cefa….js`
+  (HTTP 200, 2,4 MB), manifest invariato (`theme_color` `#121212`), nessun endpoint di emulatore nel bundle, fallback SPA attivo.
+  Versione precedente: `88cb0099e5e9976e` (rollback possibile dalla console Hosting; le Rules nuove accettano anche il client vecchio).
+- **Verifica post-rilascio dell'agente:** pagina pubblica caricata in Chromium senza errori JavaScript né richieste fallite fino a
+  «Accedi con Google». **Non verificati:** login, lettura e scrittura dei dati reali (richiedono l'account del proprietario).
+- **Issue:** a #4, #5, #6, #7, #9, #10, #11 e #12 è stato aggiunto un commento con soluzione, commit, test e verifiche mancanti.
+  **Nessuna chiusa:** servono la conferma del proprietario sul sito pubblico (#6, #7, #9, #10, #12), l'approvazione visiva (#11)
+  e le prove sul Pixel 8 (#4, #5).
+
 ## Stato di avanzamento (aggiornato il 10 novembre 2026, secondo giro)
 
 Branch `fix/10-12-review`: tutti i commit sono impilati su `main` (`ab7a72a`). Nessun push, nessun deploy, nessuna issue chiusa;
