@@ -29,6 +29,31 @@
   Liste/Importa ed esporta) e parti di `docs/architecture.md` sono storici. Traduzioni inutilizzate della vecchia Guida
   sui Fondi in `src/i18n/en.ts`. Le sezioni datate sotto sono registro storico: per numeri e versioni vale questa.
 
+## Issue #15: creare una categoria dal selettore di Nuova spesa — 11 novembre 2026
+
+- Implementazione autorizzata dopo l'analisi: **solo nome e icona** (le categorie non hanno colore: resta quello automatico
+  della palette) e **solo in Nuova spesa** (più lo stato senza categorie). Modifica spesa e conferma delle liste invariate
+  (lì il pulsante dello stato vuoto porta ancora a Categorie). Issue aperta, nessun commento, commit o deploy.
+- `useRemoteCategories.createCategory` restituisce l'ID creato (`null` se fallisce) ed è stabile (`useCallback`), per non
+  rompere il `memo` del modulo. `CategoryEditor` ha due modalità (`record` assente = «Nuova categoria»), stessa
+  validazione `categoryNameError`; la pagina Categorie lo usa ancora per la modifica. `SelectField` ha un'`action`
+  facoltativa: ultima riga separata, con «+», che chiude il foglio/menu e poi apre il dialogo. `ExpenseForm` imposta
+  `categoryId` solo dopo la conferma della transazione; la bozza non viene toccata. Offline la riga e il pulsante dello
+  stato vuoto sono disattivati (salvataggio in transazione server). Nuovo errore «Crea prima una categoria.»,
+  paragrafo nella Guida, traduzioni EN. Nessuna modifica a dati, servizi, Rules o backup.
+- **Verifiche:** `npm run check` OK (typecheck, **363/363**, build demo) e `test:emulator` **18/18** (porte dedicate
+  46099/46280, config rimossa). Chromium/CDP su build demo con emulatori dedicati (45099/45280), archivio vuoto:
+  **26/26 controlli** in ciascuna esecuzione a 412×915 chiaro IT (foglio), 1280×900 scuro EN (menu) e 320×740 scuro IT.
+  Coperti: creazione dallo stato vuoto e dalla riga in fondo al selettore, selezione automatica, bozza (importo e
+  descrizione) conservata, Annulla senza effetti, nome duplicato (maiuscole diverse) e vuoto rifiutati, icona salvata
+  e mostrata, spesa salvata sul server con l'ID della nuova categoria, riga disattivata offline, Escape sul selettore,
+  nessun overflow né errore JS. Screenshot osservati in `/tmp/claude-1000/…/scratchpad/issue15-*`; probe conservato lì.
+- **Osservato, preesistente:** a 320×740 la snackbar copre «Salva» per qualche secondo (vale per tutte le notifiche).
+  Il dialogo non chiude con Escape (`AppDialog`, già noto). Non verificati telefono reale, tastiera virtuale, screen reader.
+- Lavoro concorrente di un'altra sessione (#13: AppShell, StateLayerPressable, check-navigation, AGENTS, architettura)
+  e `npm run dev` hybrid dell'utente (dalle 14:16) presenti e non toccati. La fixture `nummo-utente-medio-2026-11-11.json`
+  risulta rinominata in `nummo-utente-medio.json` e modificata da altri: il link in `docs/testing/README.md` va riallineato.
+
 ## Chiusura issue #13 — 11 novembre 2026
 
 - Su richiesta dell'utente, issue #13 chiusa come completata tramite `gh`; stato **CLOSED** riletto,

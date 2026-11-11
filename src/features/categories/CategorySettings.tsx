@@ -23,7 +23,8 @@ type Props = {
   // Present only while there are no categories: adds the predefined set.
   onAddDefaults?: () => void;
   canAddDefaults: boolean;
-  onCreate: (name: string, icon: CategoryIcon | null) => boolean | Promise<boolean>;
+  // Resolves with the new category's ID (null when it was not saved).
+  onCreate: (name: string, icon: CategoryIcon | null) => Promise<string | null>;
   onDelete: (id: string) => boolean | Promise<boolean>;
   onUpdate: (id: string, name: string, icon: CategoryIcon | null, expected: Category) => boolean | Promise<boolean>;
 };
@@ -107,8 +108,8 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
         </View>
         {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
         {editing && <CategoryEditor record={editing} categories={categories} ready={ready} error={error}
-          onSave={async (id, nextName, nextIcon, expected) => {
-            const saved = await onUpdate(id, nextName, nextIcon, expected);
+          onSave={async (nextName, nextIcon) => {
+            const saved = await onUpdate(editing.id, nextName, nextIcon, editing);
             if (saved) notify("Categoria aggiornata.");
             return saved;
           }} close={() => setEditing(null)} />}

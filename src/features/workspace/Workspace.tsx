@@ -264,7 +264,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
       {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
       <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
-        <ExpenseForm categories={categoryState.categories} onCreateCategory={openCategories} fundChoices={fundChoices} defaultFundId={defaultFundId}
+        <ExpenseForm categories={categoryState.categories} onCreateCategory={categoryState.createCategory}
+          canCreateCategory={categoryState.ready && online} categoryError={categoryState.error} fundChoices={fundChoices} defaultFundId={defaultFundId}
           store={formStore} />
       </div>
     </View>

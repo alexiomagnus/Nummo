@@ -45,6 +45,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
       <Section title={t("Organizzare le categorie")}>
         {p(t("Dal menu dell'account, alla voce Categorie, crei le tue categorie con un nome e, se vuoi, un'icona. Puoi rinominarle o eliminarle, oppure aggiungere quelle già pronte."))}
+        {p(t("Mentre registri una spesa puoi crearne una anche da Nuova categoria, in fondo all'elenco del campo Categoria: diventa subito la categoria della spesa e i dati già inseriti restano. Serve la connessione."))}
       </Section>
 
       <Section title={t("Liste della spesa")}>

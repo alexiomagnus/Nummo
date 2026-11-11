@@ -7,7 +7,8 @@ import { useSnackbar } from '../../components/SnackbarHost';
 import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
-import type { Category } from '../../domain/category';
+import type { Category, CategoryIcon } from '../../domain/category';
+import { CategoryEditor } from '../categories/CategoryEditor';
 import { ExpenseFields, type BaseField } from './ExpenseFields';
 import type { ExpenseStore } from './expenseStore';
 import { PromoField } from './PriceSchedule';
@@ -18,12 +19,18 @@ import { FundField, type FundChoice } from '../funds/FundField';
 import { noFund, resolveFund } from '../../domain/funds';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
-type Props = { categories: readonly Category[]; store: ExpenseStore; onCreateCategory?: () => void; fundChoices?: readonly FundChoice[]; defaultFundId?: string };
+// `onCreateCategory` saves a category (name and icon) and resolves with its ID, null when not saved; `canCreateCategory`
+// is false while offline or not ready (the save is a server transaction); `categoryError` is the outcome of the last attempt.
+type Props = {
+  categories: readonly Category[]; store: ExpenseStore; fundChoices?: readonly FundChoice[]; defaultFundId?: string;
+  onCreateCategory?: (name: string, icon: CategoryIcon | null) => Promise<string | null>;
+  canCreateCategory?: boolean; categoryError?: string | null;
+};
 
 
 export const ExpenseForm = memo(ExpenseFormView);
 
-function ExpenseFormView({ categories, store, onCreateCategory, fundChoices = [], defaultFundId }: Props) {
+function ExpenseFormView({ categories, store, onCreateCategory, canCreateCategory = false, categoryError = null, fundChoices = [], defaultFundId }: Props) {
   const { t } = useI18n();
   const notify = useSnackbar();
   const size = useSizeClass();
@@ -33,6 +40,9 @@ function ExpenseFormView({ categories, store, onCreateCategory, fundChoices = []
   const [errors, setErrors] = useState<FieldErrors>({});
   // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
   const [formKey, setFormKey] = useState(0);
+  // Category dialog opened from the picker; `tried` hides an older error of the Categories page until a save here fails.
+  const [creating, setCreating] = useState(false);
+  const [tried, setTried] = useState(false);
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
   const busy = submission.status === 'sending' || submission.status === 'uncertain';
   const dataState = store.ready ? 'ready' : store.error ? 'error' : 'loading';
@@ -71,7 +81,18 @@ function ExpenseFormView({ categories, store, onCreateCategory, fundChoices = []
     const result = validateDraft(current, categories, undefined, funds);
     setErrors((previous) => ({ ...previous, [field]: result.ok ? undefined : result.errors[field] }));
   };
-  const categoryMissing = categories.length === 0 ? "Crea prima una categoria nella sezione Categorie." : "Seleziona una categoria.";
+  const categoryMissing = categories.length === 0
+    ? (onCreateCategory ? "Crea prima una categoria." : "Crea prima una categoria nella sezione Categorie.") : "Seleziona una categoria.";
+  const openCreate = () => { setTried(false); setCreating(true); };
+  // The draft (other fields included) stays as it is: only the category changes, and only after the server confirmed it.
+  const createCategory = async (name: string, icon: CategoryIcon | null) => {
+    setTried(true);
+    const id = await onCreateCategory!(name, icon);
+    if (!id) return false;
+    update({ categoryId: id });
+    notify("Categoria creata.");
+    return true;
+  };
   const save = () => {
     // Today is resolved here, at save time, so a form left open past midnight is not stale.
     const result = validateDraft(current, categories, undefined, funds);
@@ -109,7 +130,10 @@ function ExpenseFormView({ categories, store, onCreateCategory, fundChoices = []
     <View style={styles.page}>
     <View style={[styles.form, desktop && styles.formDesktop]}>
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
-        extra={repeat} onCreateCategory={onCreateCategory} onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
+        extra={repeat} onAddCategory={onCreateCategory ? openCreate : undefined} addCategoryDisabled={!canCreateCategory}
+        onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
+      {creating && <CategoryEditor categories={categories} ready={canCreateCategory} error={tried ? categoryError : null}
+        onSave={createCategory} close={() => setCreating(false)} />}
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{t(submission.message)}</HelperText>

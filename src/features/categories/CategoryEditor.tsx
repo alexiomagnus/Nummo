@@ -9,37 +9,40 @@ import { inputOutline, spacing } from '../../theme/tokens';
 import { IconPicker } from './IconPicker';
 
 type Props = {
-  record: Category;
+  // Absent: creates a new category (empty name, no icon); present: edits it.
+  record?: Category;
   categories: readonly Category[];
   ready: boolean;
   error: string | null;
-  onSave: (id: string, name: string, icon: CategoryIcon | null, expected: Category) => boolean | Promise<boolean>;
+  // Resolves true once saved (the dialog then closes); false keeps it open with `error`.
+  onSave: (name: string, icon: CategoryIcon | null) => boolean | Promise<boolean>;
   close: () => void;
 };
 
+// Name and icon of a category, the only data a category has; same validation for creation and editing.
 export function CategoryEditor({ record, categories, ready, error, onSave, close }: Props) {
   const { t } = useI18n();
-  const [name, setName] = useState(record.label);
-  const [icon, setIcon] = useState(record.icon);
+  const [name, setName] = useState(record?.label ?? '');
+  const [icon, setIcon] = useState<CategoryIcon | null>(record?.icon ?? null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const blocked = busy || !ready;
   const save = async () => {
     if (blocked) return;
-    const invalid = categoryNameError(name, categories.filter((category) => category.id !== record.id));
+    const invalid = categoryNameError(name, record ? categories.filter((category) => category.id !== record.id) : categories);
     setValidationError(invalid);
     if (invalid) return;
     setBusy(true);
-    try { if (await onSave(record.id, name, icon, record)) close(); }
+    try { if (await onSave(name, icon)) close(); }
     finally { setBusy(false); }
   };
   return <Portal>
     <Dialog visible onDismiss={() => { if (!busy) close(); }}>
-      <Dialog.Title>{t('Modifica categoria')}</Dialog.Title>
+      <Dialog.Title>{record ? t('Modifica categoria') : t('Nuova categoria')}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <TextInput outlineStyle={inputOutline} mode="outlined" label={t('Nome')} value={name}
-            accessibilityLabel={t('Nuovo nome per {p0}', { p0: record.label })}
+            accessibilityLabel={record ? t('Nuovo nome per {p0}', { p0: record.label }) : t('Nome della nuova categoria, obbligatorio')}
             readOnly={blocked} aria-disabled={blocked} error={Boolean(validationError)}
             onChangeText={(next) => { setName(next); setValidationError(null); }} onSubmitEditing={() => void save()} />
           {validationError && <HelperText type="error" accessibilityRole="alert">{t(validationError)}</HelperText>}

@@ -26,6 +26,10 @@ type Props = {
   extra?: ReactNode;
   // Shown as an action when there are no categories yet (opens the Categories section).
   onCreateCategory?: () => void;
+  // Creates a category in place (new-expense form): last row of the picker and the empty-archive action,
+  // shown disabled with `addCategoryDisabled` (offline: the save needs the server).
+  onAddCategory?: () => void;
+  addCategoryDisabled?: boolean;
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
@@ -33,7 +37,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
 // Every field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, onCreateCategory, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, onCreateCategory, onAddCategory, addCategoryDisabled = false, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -79,12 +83,12 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
             <Text variant="titleSmall">{t("Nessuna categoria")}</Text>
             <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Serve almeno una categoria per salvare la spesa.")}</Text>
           </View>
-          {onCreateCategory && <Button mode="contained-tonal" onPress={onCreateCategory} disabled={disabled}>{t("Crea categoria")}</Button>}
+          {(onAddCategory ?? onCreateCategory) && <Button mode="contained-tonal" onPress={onAddCategory ?? onCreateCategory} disabled={disabled || (Boolean(onAddCategory) && addCategoryDisabled)}>{t("Crea categoria")}</Button>}
           {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.categoryId)}</HelperText>}
         </View>
       ) : (
         <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
-          disabled={disabled} error={errors.categoryId} />
+          disabled={disabled} error={errors.categoryId} action={onAddCategory && { label: t("Nuova categoria"), onPress: onAddCategory, disabled: addCategoryDisabled }} />
       )}
       {extra ? <View style={[styles.extra, dense && styles.denseExtra]}>{extra}</View> : null}
     </View>

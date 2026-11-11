@@ -400,6 +400,8 @@ export const english: Readonly<Record<string, string>> = {
   "Crea categoria": "Create category",
   "Spesa salvata e confermata da Firestore.": "Expense saved and confirmed by Firestore.",
   "Crea prima una categoria nella sezione Categorie.": "First create a category on the Categories page.",
+  "Crea prima una categoria.": "Create a category first.",
+  "Mentre registri una spesa puoi crearne una anche da Nuova categoria, in fondo all'elenco del campo Categoria: diventa subito la categoria della spesa e i dati già inseriti restano. Serve la connessione.": "While recording an expense you can also create one from New category, at the end of the Category field's list: it immediately becomes the expense's category and what you already entered is kept. A connection is required.",
   "Conferma non ancora disponibile: controlla lo stato e l’elenco prima di inserire di nuovo la spesa.": "Confirmation is not yet available: check the status and list before entering the expense again.",
   "Verifica sul server": "Check on server",
   "In attesa di conferma…": "Awaiting confirmation…",
