@@ -1,6 +1,6 @@
-// Browser regression for issue #1. Chromium and dedicated demo Auth/Firestore must already be running/available.
+// Browser regressions for issues #1 and #13. Chromium and dedicated demo Auth/Firestore must already be running/available.
 // Build with explicit local emulator endpoints, seed only that demo, then run:
-// node scripts/check-navigation.mjs DIST OUTPUT [--auth-port 49199] [--vp 412x915] [--theme light|dark] [--reduced] [--measure]
+// node scripts/check-navigation.mjs DIST OUTPUT [--auth-port 49199] [--vp 412x915] [--theme light|dark] [--reduced] [--measure] [--labels-only]
 // Never point DIST at a cloud/hybrid build. No personal data or external network is needed.
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
@@ -55,7 +55,7 @@ try {
   if(process.argv.includes('--measure')){
   const results=[];
   await evaluate(`window.__long=[];new PerformanceObserver(l=>window.__long.push(...l.getEntries().map(e=>({start:e.startTime,duration:e.duration})))).observe({type:'longtask',buffered:true})`);
-  for(let round=0;round<3;round++)for(const label of ['Spese','Dashboard','Fondi','Liste']){
+  for(let round=0;round<3;round++)for(const label of ['Spese','Analisi','Fondi','Liste']){
     const result=await evaluate(`new Promise(resolve=>{const frames=[];const start=performance.now();const begin=window.__long.length;let last=start,committedAt=null;const tick=now=>{frames.push(now-last);last=now;if(committedAt===null&&document.querySelector('[role=navigation] [aria-current=page]')?.textContent===${JSON.stringify(label)})committedAt=performance.now()-start;if((committedAt===null||now-start<committedAt+500)&&now-start<10000)requestAnimationFrame(tick);else resolve({committedAt,label:${JSON.stringify(label)},round:${round},elapsed:now-start,maxFrame:Math.max(...frames),slowFrames:frames.filter(x=>x>34).length,longTasks:window.__long.slice(begin),frames});};requestAnimationFrame(tick);[...document.querySelectorAll('[role=navigation] [role=button]')].find(n=>n.textContent===${JSON.stringify(label)}).click();})`);
     assert.notEqual(result.committedAt,null,'The measured destination must actually open');
     results.push(result);await sleep(150);
@@ -63,6 +63,52 @@ try {
   writeFileSync(join(out,'performance.json'),JSON.stringify(results,null,2));
   console.log(JSON.stringify({navigationPerformance:results.map(({frames,...r})=>r)}));
   }
+  if (process.argv.includes('--labels-only')) {
+    const measurements = [];
+    for (const font of ['google', 'system']) for (const language of ['it', 'en']) {
+      await evaluate(`localStorage.setItem('nummo.preferences.v1',JSON.stringify({...JSON.parse(localStorage.getItem('nummo.preferences.v1')),font:${JSON.stringify(font)},language:${JSON.stringify(language)}}));true`);
+      await send('Page.reload');
+      for (let i=0;i<100;i++) {
+        if (await evaluate(`!!document.querySelector('[role=navigation] [role=button]')`)) break;
+        await sleep(100);
+      }
+      await evaluate('document.fonts.ready.then(()=>true)');
+      for (const w of [320,360,379,380,390,412]) {
+        await send('Emulation.setDeviceMetricsOverride',{width:w,height,deviceScaleFactor:2.625,mobile:true});
+        await sleep(300);
+        // New expense has no round action; Analysis has it, and uses the active bold label.
+        for (const page of ['new', 'dashboard']) {
+          await evaluate(page === 'new'
+            ? `document.querySelector('[role=banner] [role=button]').click()`
+            : `document.querySelector('[role=navigation]').querySelectorAll('[role=button]')[1].click()`);
+          await sleep(700);
+          const rows = await evaluate(`(()=>{
+            const nav=document.querySelector('[role=navigation]');
+            return [...nav.querySelectorAll('[role=button]')].map(button=>{
+              const label=button.lastElementChild;
+              const range=document.createRange();range.selectNodeContents(label);
+              const text=range.getBoundingClientRect(),box=button.getBoundingClientRect(),style=getComputedStyle(label);
+              return {label:label.textContent,left:text.left,right:text.right,width:text.width,slotLeft:box.left,slotRight:box.right,slotWidth:box.width,height:box.height,overflow:getComputedStyle(button).overflow,fontSize:style.fontSize};
+            });
+          })()`);
+          for (const row of rows) {
+            const context=JSON.stringify({w,font,language,page,...row});
+            assert.ok(row.left>=row.slotLeft-.5 && row.right<=row.slotRight+.5,'Full label must fit its button: '+context);
+            assert.ok(Math.abs((row.left+row.right-row.slotLeft-row.slotRight)/2)<1,'Label must be centred: '+context);
+            assert.equal(row.overflow,'visible','Rounded buttons must not clip the bottom corners of the label: '+context);
+            assert.ok(row.slotWidth>=48 && row.height>=48,'Touch target must remain usable: '+context);
+          }
+          assert.equal(new Set(rows.map(row=>row.fontSize)).size,1,'All labels use the same size');
+          measurements.push({w,font,language,page,rows});
+          if(w===320 && page==='dashboard')await send('Page.captureScreenshot',{format:'png'}).then(r=>writeFileSync(join(out,`labels-320-${font}-${language}.png`),Buffer.from(r.data,'base64')));
+        }
+      }
+      await send('Page.captureScreenshot',{format:'png'}).then(r=>writeFileSync(join(out,`labels-${font}-${language}.png`),Buffer.from(r.data,'base64')));
+    }
+    writeFileSync(join(out,'labels.json'),JSON.stringify(measurements,null,2));
+    assert.equal(errors.length,0,'No uncaught browser exceptions');
+    console.log(JSON.stringify({labelChecks:measurements.length,errors,out}));
+  } else {
   await tap(0);
   await evaluate(`window.__frames=[];window.__record=true;(()=>{const tick=()=>{if(window.__record){const nav=[...document.querySelectorAll('[role=navigation]')].find(n=>!n.closest('[inert]'));const main=[...document.querySelectorAll('[role=main]')].find(n=>!n.closest('[inert]'));const indicator=nav.firstElementChild;const nr=nav.getBoundingClientRect(),ir=indicator.getBoundingClientRect();window.__frames.push({t:performance.now(),main:getComputedStyle(main).opacity,transform:getComputedStyle(main).transform,navLeft:nr.left,navRight:nr.right,indicatorLeft:ir.left,indicatorRight:ir.right,buttons:[...nav.querySelectorAll('[role=button]')].map(b=>{const s=getComputedStyle(b.firstElementChild);return {name:b.textContent,current:b.getAttribute('aria-current'),color:s.backgroundColor,opacity:s.opacity}})});}requestAnimationFrame(tick)};tick()})()`);
   const rows=await rects();await touch('touchStart',rows[0].x,rows[0].y);await sleep(70);
@@ -79,8 +125,8 @@ try {
   // Touch feedback must return on the next ordinary press, including a small movement below the drag threshold.
   let r=(await rects())[1];await touch('touchStart',r.x,r.y);await sleep(350);
   assert.ok(await evaluate(`Number(getComputedStyle(document.querySelector('[role=navigation]').querySelectorAll('[role=button]')[1].firstElementChild).opacity)>.05`),'Normal press feedback must recover after a drag');
-  await touch('touchMove',r.x+4,r.y);await touch('touchEnd',r.x+4,r.y);await waitForSelection('Dashboard');await sleep(400);
-  assert.equal(await selected(),'Dashboard','A 4 px movement stays a tap');
+  await touch('touchMove',r.x+4,r.y);await touch('touchEnd',r.x+4,r.y);await waitForSelection('Analisi');await sleep(400);
+  assert.equal(await selected(),'Analisi','A 4 px movement stays a tap');
   // Reverse direction, returning to the starting slot, pointer cancellation and repeated quick gestures.
   const drag=async(from,to,cancel=false,settle=300)=>{const points=await rects();await touch('touchStart',points[from].x,points[from].y);for(let i=1;i<=8;i++){await touch('touchMove',points[from].x+(points[to].x-points[from].x)*i/8,points[from].y);await sleep(12);}if(cancel)await send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});else await touch('touchEnd',points[to].x,points[to].y);await sleep(settle);if(settle>=300)await waitForSelection(points[cancel?from:to].label);};
   await drag(1,3);assert.equal(await selected(),'Liste');await drag(3,0);assert.equal(await selected(),'Spese');
@@ -95,7 +141,7 @@ try {
   await evaluate(`document.querySelector('[role=navigation]').querySelectorAll('[role=button]')[1].focus({preventScroll:true})`);
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r'});await sleep(350);
   assert.ok(await evaluate(`Number(getComputedStyle(document.querySelector('[role=navigation]').querySelectorAll('[role=button]')[1].firstElementChild).opacity)>.05`),'Enter feedback must recover after a drag');
-  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});await waitForSelection('Dashboard');await sleep(400);assert.equal(await selected(),'Dashboard');
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});await waitForSelection('Analisi');await sleep(400);assert.equal(await selected(),'Analisi');
   // Rapid reversals during the spring must settle on the final destination.
   await drag(1,0,false,40);await drag(0,3,false,400);assert.equal(await selected(),'Liste');
   const viewport=await evaluate('({inner:innerWidth,client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth})');
@@ -106,4 +152,5 @@ try {
   assert.equal(await selected(),'Spese','Desktop drawer navigation still works');
   assert.equal(await evaluate('document.documentElement.scrollWidth'),1280);assert.equal(errors.length,0);
   console.log(JSON.stringify({width,height,theme,reduced,frames:frames.length,sourcePressFrames:painted.length,minMainOpacity:Math.min(...frames.map(f=>Number(f.main))),indicatorOutsideFrames:frames.filter(f=>f.indicatorLeft<f.navLeft||f.indicatorRight>f.navRight).length,regressions:'drag/reverse/return/cancel/tap/keyboard/rapid/desktop passed',errors,viewport,out}));
+  }
 } finally {socket?.close();child.kill('SIGTERM');server.close();}

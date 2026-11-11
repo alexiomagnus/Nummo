@@ -4,6 +4,21 @@ Aggiornamento: 2 novembre 2026. La richiesta BYOF sostituisce la direzione Sheet
 `recap.md` v0.4, conservata come specifica originale. Analisi della base e piano
 incrementale: [migrazione-byof.md](migrazione-byof.md).
 
+## Etichette della navigazione mobile (11 novembre 2026, issue #13)
+
+Le quattro destinazioni restano slot uguali con un solo indicatore e la geometria di `navIndicator.ts`.
+`NavigationBar` misura la propria larghezza nel layout (già al netto della safe area) e riserva il FAB
+anche quando nascosto in Nuova spesa, così la sua animazione non cambia la tipografia. Un elemento DOM
+invisibile misura le etichette tradotte in `labelMedium`, al peso attivo 700 e con il font scelto;
+la misura si aggiorna anche al caricamento dei font. Tutte le etichette usano la stessa variante:
+`labelMedium` se entra con un margine di sicurezza, altrimenti `labelSmall` senza tracking.
+Nessuna soglia sul modello di telefono o sulla larghezza della finestra. Margini laterali 4 dp,
+spazio dal FAB 4 dp e nessun gap tra gli slot recuperano spazio senza ridurre il FAB o le aree di tocco.
+Il testo è centrato e vincolato alla larghezza del pulsante; il pulsante lascia visibile il contenuto
+agli angoli, mentre lo strato di feedback conserva il proprio raggio (evita il taglio delle lettere
+nella parte bassa della pillola). Dimensioni dei font e ingrandimento
+restano quelli di Paper/browser, senza disabilitare lo scaling.
+
 ## Salvataggio Nuova spesa nel flusso (9 novembre 2026)
 
 Desktop: su richiesta dell'utente (screenshot 1920×1080, monitor 24") il contenuto

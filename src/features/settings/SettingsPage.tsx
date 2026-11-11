@@ -86,7 +86,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
         <Card title={t("Carattere")} style={section}>
           <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
         </Card>
-        <Card title={t("Dashboard")} style={section}>
+        <Card title={t("Analisi")} style={section}>
           <SwitchRow label={t("Mostra andamento nel tempo")} value={preferences.dashboardTrend}
             onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
         </Card>

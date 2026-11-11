@@ -29,6 +29,47 @@
   Liste/Importa ed esporta) e parti di `docs/architecture.md` sono storici. Traduzioni inutilizzate della vecchia Guida
   sui Fondi in `src/i18n/en.ts`. Le sezioni datate sotto sono registro storico: per numeri e versioni vale questa.
 
+## Rinomina Dashboard → Analisi — 11 novembre 2026
+
+- Su richiesta: titolo e navigazione ora «Analisi» in italiano e «Analysis» in inglese. Allineati il titolo
+  delle relative impostazioni e i riferimenti nella Guida; identificatore `dashboard`, preferenze e stato invariati.
+- Aggiornati catalogo IT/EN, controllo di traduzione e selettori della regressione browser.
+- `npm run check` OK (typecheck, **363/363**, build demo), sia sul working tree sia su copia isolata
+  dei soli file preparati per il commit; `git diff --cached --check` e sintassi script OK.
+  Commit/push autorizzati per questa rinomina e la correzione #13, escluso il lavoro concorrente #15 e le fixture.
+  Nessun deployment o chiusura della issue.
+
+## Issue #13: etichette della navigazione mobile — 11 novembre 2026
+
+- Implementazione autorizzata dopo l'analisi; issue lasciata aperta, nessun commento, commit o deploy.
+  Conservate le modifiche concorrenti a categorie/modulo/guida e le fixture locali preesistenti.
+- Riprodotto su build precedente in Chromium: a 320 px, Dashboard attiva in Google Sans 11 px misura
+  57,53 px contro uno slot di 51 px; la verifica della sola larghezza della pagina non lo rileva.
+  Il controllo visivo ha trovato anche un secondo ritaglio: `overflow: hidden` del pulsante arrotondato
+  taglia le lettere in basso pur quando il rettangolo del testo entra nello slot.
+- `NavigationBar` usa la larghezza del proprio layout, il font scelto e la misura DOM delle etichette
+  tradotte al peso 700; stessa variante Paper per tutti (`labelMedium` oppure `labelSmall` senza tracking).
+  Riserva sempre il FAB nel calcolo, anche su Nuova spesa: nessun cambio tipografico durante la sua animazione.
+  Margini laterali e distanza dal FAB 4 dp, gap slot 0: a 320 px gli slot con FAB diventano 59 px.
+  Testo centrato/maxWidth 100%; contenuto del pulsante visibile agli angoli. `StateLayerPressable`
+  dà allo strato di feedback il proprio raggio, conservando la forma arrotondata anche senza clipping del padre.
+  Nessuna nuova dipendenza, testo UI, modifica a dati/servizi/Rules o disattivazione dello scaling del browser.
+- `scripts/check-navigation.mjs --labels-only`: misure `Range` rispetto ai pulsanti, centratura, area di tocco
+  almeno 48×48, variante uniforme e assenza del clipping del pulsante; screenshot anche a 320 px.
+  **48/48** combinazioni su build finale: 320/360/379/380/390/412 px × Google Sans/system × IT/EN ×
+  Nuova spesa/Dashboard attiva (FAB assente/presente). Zero errori JS. Confrontati i risultati: tipografia
+  invariata nei **24** passaggi FAB assente/presente. Lo stesso controllo fallisce sulla build precedente.
+- Regressione completa navigazione: 320×740 scuro e 412×915 chiaro con movimento ridotto; drag, inversione,
+  ritorno, annullamento, tocchi, Invio/Spazio, cambi rapidi e drawer desktop passati. Nessun frame residuo
+  del feedback o indicatore fuori dalla pillola, nessun overflow o errore JS. Screenshot 320 chiaro/scuro
+  osservati: etichette intere. Risultati in `/tmp/nummo-issue13-final-{labels,gestures,reduced}`.
+- **`npm run check` OK** (typecheck, **363/363**, build demo), sul working tree condiviso; `git diff --check`
+  e sintassi dello script OK. Suite Rules non richiesta/ripetuta: intervento di presentazione.
+  Emulatori demo propri Auth 49199/Firestore 49380/Hub 49417 arrestati, config `.nummo-issue13-review.json`
+  rimossa; nessun dato personale/cloud toccato. AGENTS e architettura aggiornati per la nuova regola stabile.
+- Restano da verificare Realme 14T/PWA reale, Safari iOS, impostazioni di ingrandimento del testo del dispositivo
+  e screen reader. L'emulazione Chromium non certifica questi ambienti; patch non pubblicata.
+
 ## Rilascio: commit, push e Hosting — 9 novembre 2026, ~17:55 Europe/Rome
 
 - Rules: file locale identico alla release pubblicata da Codex alle 16:45:38 UTC (SHA-256 `972fd97e…d6d4a`); nessuna

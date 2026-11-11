@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { Logo } from './Logo';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Animated, Easing, ScrollView, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
+import { Animated, Easing, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layerTransition } from '../theme/motion';
@@ -133,7 +133,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
             </ThemeProvider>
           </ScrollView>
         </View>
-        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} fab={showFab ? fab : undefined} hidden={!bottomBar} />}
+        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} />}
       </SnackbarProvider>
     </View>
   );
@@ -148,9 +148,9 @@ function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boo
 type Fab<T extends string> = { label: string; icon: string; target: T };
 type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
-function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab, hidden }: NavProps<T> & { bottomInset: number; hidden: boolean }) {
+function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab, reserveFab, hidden }: NavProps<T> & { bottomInset: number; reserveFab: boolean; hidden: boolean }) {
   const { t } = useI18n();
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const reduceMotion = useReducedMotion();
   // The round action enters/leaves with width, opacity and scale; the pill is flex: 1, so it widens/narrows with it.
   // The action stays mounted until its exit animation has finished (an interrupted one must not unmount it).
@@ -166,15 +166,38 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
     }).start(({ finished }) => { if (finished && !visible) setMounted(false); });
   }, [visible, progress, reduceMotion]);
   const action = fab ?? lastFab.current;
-  // Four destinations on the narrowest phones (≈ 360 dp and below): a smaller label without tracking, so «Dashboard» and
-  // «Categorie» fit whole instead of being truncated.
-  const { width } = useWindowDimensions();
-  const tight = destinations.length > 3 && width < 380;
+  const [barWidth, setBarWidth] = useState(0);
+  // Size for the narrowest pill (with the primary action), even on New expense. This keeps typography stable throughout
+  // the action's width animation. onLayout includes the shell's safe-area constraints, unlike window dimensions.
+  const labelSlot = pillGeometry(barWidth - spacing.xs * 2 - (reserveFab ? layout.floatingBar + spacing.xs : 0), destinations.length, pillPadding, pillGap)?.slot ?? 0;
+  const [labelWidth, setLabelWidth] = useState<number | null>(null);
+  const labels = JSON.stringify(destinations.map(({ label }) => label));
+  const { fontFamily, fontSize, letterSpacing } = fonts.labelMedium;
+  useLayoutEffect(() => {
+    // Measure with the browser's font metrics, including the selected system fallback and the active (bold) weight.
+    const probe = document.createElement('span');
+    Object.assign(probe.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'nowrap', fontFamily,
+      fontSize: `${fontSize}px`, fontWeight: '700', letterSpacing: `${letterSpacing}px` });
+    probe.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(probe);
+    const measure = () => {
+      let widest = 0;
+      for (const label of JSON.parse(labels) as string[]) {
+        probe.textContent = label;
+        widest = Math.max(widest, probe.getBoundingClientRect().width);
+      }
+      setLabelWidth(widest);
+    };
+    measure();
+    document.fonts.addEventListener('loadingdone', measure);
+    return () => { document.fonts.removeEventListener('loadingdone', measure); probe.remove(); };
+  }, [labels, fontFamily, fontSize, letterSpacing]);
+  const tight = labelWidth === null || labelWidth + spacing.xs > labelSlot;
   const index = destinations.findIndex((item) => item.value === selected);
   const { pill, indicator, focus, suppressPressed } = useSlidingIndicator(destinations, index, onSelect, reduceMotion);
   const shownIndex = focus ?? index;
   return (
-    <View style={[styles.floating, { paddingBottom: spacing.md + bottomInset }, hidden && styles.hidden]}>
+    <View onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)} style={[styles.floating, { paddingBottom: spacing.md + bottomInset }, hidden && styles.hidden]}>
       <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
             the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}
@@ -188,7 +211,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
               aria-current={item.value === selected ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
               style={[styles.pillItem, active && !indicator && { backgroundColor: colors.primaryContainer }]}>
               <SvgIcon shape={item.icon} size={24} color={color} />
-              <Text variant={tight ? 'labelSmall' : 'labelMedium'} numberOfLines={1} style={{ color, fontWeight: active ? '700' : '500', ...(tight ? { letterSpacing: 0 } : null) }}>{item.label}</Text>
+              <Text variant={tight ? 'labelSmall' : 'labelMedium'} numberOfLines={1} style={{ maxWidth: '100%', textAlign: 'center', color, fontWeight: active ? '700' : '500', ...(tight ? { letterSpacing: 0 } : null) }}>{item.label}</Text>
             </StateLayerPressable>
           );
         })}
@@ -197,7 +220,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
         <Animated.View pointerEvents={visible ? 'auto' : 'none'} aria-hidden={!visible}
           style={[styles.actionSlot, {
             width: progress.interpolate({ inputRange: [0, 1], outputRange: [0, layout.floatingBar] }),
-            marginLeft: progress.interpolate({ inputRange: [0, 1], outputRange: [0, spacing.sm] }),
+            marginLeft: progress.interpolate({ inputRange: [0, 1], outputRange: [0, spacing.xs] }),
             opacity: progress, transform: [{ scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
           }]}>
           <StateLayerPressable layerColor={colors.onPrimary} radius={radius.pill} accessibilityRole="button" accessibilityLabel={action.label}
@@ -212,7 +235,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
 }
 
 const pillPadding = spacing.xs;
-const pillGap = spacing.xs;
+const pillGap = 0;
 
 // Sliding active indicator of the compact pill, with drag-to-switch: press anywhere on the pill and slide horizontally,
 // the indicator follows the finger (slightly lifted), the destination under it is highlighted, and releasing opens it.
@@ -432,12 +455,13 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, minWidth: 0 },
   // The page always fills the panel, on any monitor: no width cap or centred column.
   content: { width: '100%', flexGrow: 1, gap: spacing.xl },
-  floating: { flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.md },
+  floating: { flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.xs },
   // display: none also removes it from the accessibility tree and the Tab order while the keyboard is open.
   hidden: { display: 'none' },
-  pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: spacing.xs, gap: spacing.xs },
+  pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: pillPadding, gap: pillGap },
   indicator: { position: 'absolute', left: pillPadding, top: pillPadding, height: layout.floatingBar - pillPadding * 2, borderRadius: radius.pill },
-  pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill },
+  // The rounded state layer clips itself; clipping the entire button would cut label glyphs at the bottom corners.
+  pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill, overflow: 'visible' },
   actionSlot: { height: layout.floatingBar, overflow: 'hidden' },
   roundAction: { width: layout.floatingBar, height: layout.floatingBar, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },

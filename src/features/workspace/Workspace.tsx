@@ -51,14 +51,14 @@ type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categorie
 // Categories and import/export open from the account menu, outside the main destinations.
 const destinations: readonly Destination<Section>[] = [
   { value: 'list', label: 'Spese', icon: iconShapes.list },
-  { value: 'dashboard', label: 'Dashboard', icon: iconShapes.chart },
+  { value: 'dashboard', label: 'Analisi', icon: iconShapes.chart },
   { value: 'funds', label: 'Fondi', icon: iconShapes.wallet },
   { value: 'lists', label: 'Liste', icon: iconShapes.checklist },
 ];
 // The Spese page has two views: one-off expenses and subscriptions (every recurring series), never both.
 type ListView = 'expenses' | 'subscriptions';
 const listViews = [{ value: 'expenses', label: 'Spese' }, { value: 'subscriptions', label: 'Pagamenti ricorrenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Dashboard', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Importa ed esporta', settings: 'Impostazioni' };
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Importa ed esporta', settings: 'Impostazioni' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
 const accountPages: ReadonlySet<Section> = new Set(['categories', 'backup', 'settings']);

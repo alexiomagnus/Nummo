@@ -23,6 +23,8 @@ test('lingue: testo italiano, inglese, parametri e fallback senza alterare i dat
   assert.equal(t('Una frase sconosciuta'), 'Una frase sconosciuta');
   assert.equal(t('constructor'), 'constructor');
   assert.equal(t('__proto__'), '__proto__');
+  assert.equal(translate('it', 'Analisi'), 'Analisi');
+  assert.equal(translate('en', 'Analisi'), 'Analysis');
   assert.equal(t('Mostra altre spese'), 'Show more expenses');
   assert.equal(t('In prova gratuita'), 'On free trial');
   assert.equal(translate('en', 'Primo pagamento {p0}', { p0: '9 Dec 2026' }), 'First payment 9 Dec 2026');

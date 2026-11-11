@@ -27,7 +27,7 @@ export function StateLayerPressable({ layerColor, radius = 0, bleed = 0, suppres
         const suppressed = suppressPressed && state.pressed;
         const opacity = disabled || suppressed ? 0 : state.pressed ? stateOpacity.pressed : state.hovered ? stateOpacity.hover : 0;
         return <>
-          <View pointerEvents="none" style={[StyleSheet.absoluteFill, bleed ? { top: -bleed, left: -bleed, right: -bleed, bottom: -bleed, borderRadius: radius + bleed } : null, { backgroundColor: layerColor, opacity }, layerTransition, suppressed && ({ transitionDuration: '0ms' } as ViewStyle)]} />
+          <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius }, bleed ? { top: -bleed, left: -bleed, right: -bleed, bottom: -bleed, borderRadius: radius + bleed } : null, { backgroundColor: layerColor, opacity }, layerTransition, suppressed && ({ transitionDuration: '0ms' } as ViewStyle)]} />
           {typeof children === 'function' ? children(state) : children}
         </>;
       }}
