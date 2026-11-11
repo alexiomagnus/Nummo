@@ -1,5 +1,34 @@
 # HANDOFF — Nummo
 
+## Stato corrente — 11 novembre 2026
+
+- **Produzione = `a479b7b`** (ultimo commit con codice; i successivi sono solo documenti). Rilascio del 10 novembre
+  (Rules 01:20:40 UTC, Hosting 02:21 Europe/Rome) descritto in `IMPLEMENTATION_PLAN.md`: issue #6, #7, #9, #10, #12
+  chiuse; aperte #11 (approvazione visiva sprite), #4 e #5 (prove Pixel 8). Backup di produzione del 10 novembre in
+  `.firebase/backup-prod-20261110-021925/` (ignorata da Git).
+- **Integrità del deploy verificata (11 novembre, sola lettura):** `index.html` live su `web.app` e `firebaseapp.com`
+  identico alla build locale; bundle live `index-2460cefa….js` (HTTP 200) con SHA-256 `cddb2425…af36c6`, identico a quello
+  di un `npm run build:cloud` rieseguito da HEAD (build riproducibile, nessun endpoint emulatore); manifest identico,
+  fallback SPA attivo. Rules live (release 2026-11-10T01:20:40Z, letta via API con l'accesso della CLI) SHA-256
+  `59e64d5b…078bb` = `firestore.rules`. Canale `anteprima` del 6 novembre ancora attivo fino al 13 novembre (scade da solo).
+  Login, lettura e scrittura dei dati reali restano **non verificati** dall'agente.
+- **Git:** su autorizzazione, `release/2026-11-10` unito in `main` (fast-forward) e pubblicato con push; nessun force push.
+- **Dati hybrid promossi (11 novembre, autorizzato):** dopo il riavvio della macchina (11 nov 13:50) il Firestore Java
+  orfano 41656 ed Expo 105884 non esistevano più, porte 8180/8081 libere; i dati in memoria sopravvivevano solo
+  nell'export di recupero. Copia precedente di `emulator-data/` (export 8 nov, icona `bus`) spostata in
+  `.firebase/promote-20261111-recovery-41530/previous/` con impronte `previous.sha256`/`promoted.sha256`; l'export
+  `.firebase/recovery-20261110-orphan-41530/` (conservato) copiato in `emulator-data/`, identico byte per byte. Import
+  verificato in un emulatore temporaneo (porta 43380, config rimossa): 1 config, 72 spese, 8 categorie, 8 nomi, 3 fondi,
+  6 movimenti, 2 liste, 11 prodotti; nessuna icona `bus`, una `train`. Nessun contenuto stampato. Rimossi il lock
+  obsoleto `.firebase/hybrid.lock` (PID 41530 non attivo) e le config `.nummo-hybrid-41530.json`/`-14940.json`.
+  `npm run dev` ora riparte dai dati aggiornati; avvio interattivo non provato.
+- **Verifiche:** `npm run check` OK (typecheck, **363/363**, build demo) l'11 novembre; `test:emulator` 18/18 e
+  `test:hybrid` 9/9 del 10 novembre, non rieseguiti (nessuna modifica al codice).
+- **Discrepanze note ancora aperte:** `AppDialog` non chiude con Escape (solo `AnchoredMenu`/`BottomSheet` usano
+  `useEscape`), in contrasto con la convenzione Overlay di AGENTS.md. README (backup da «Spese → Dati», mancano Fondi/
+  Liste/Importa ed esporta) e parti di `docs/architecture.md` sono storici. Traduzioni inutilizzate della vecchia Guida
+  sui Fondi in `src/i18n/en.ts`. Le sezioni datate sotto sono registro storico: per numeri e versioni vale questa.
+
 ## Rilascio: commit, push e Hosting — 9 novembre 2026, ~17:55 Europe/Rome
 
 - Rules: file locale identico alla release pubblicata da Codex alle 16:45:38 UTC (SHA-256 `972fd97e…d6d4a`); nessuna
@@ -14,10 +43,18 @@
   quelli vecchi rifiutano lo schema 2 delle prove gratuite.
 - Igiene Git (10 novembre): `.nummo-hybrid-*.json` in `.gitignore`, `.nummo-hybrid-14940.json` tolto dall'indice con
   `git rm --cached` (file conservato su disco). Superato il punto 4 delle «Prossime attività» in fondo.
-- **Hybrid orfano rilevato (10 novembre), non toccato:** runner PID 41530 terminato, ma Firestore Java PID 41656 su 8180
-  ed Expo PID 105884 su 8081 ancora attivi; `.firebase/hybrid.lock` punta a 41530, sessione `hybrid-pjXRdr` senza
-  export, config `.nummo-hybrid-41530.json` rimasta. Eventuali dati scritti in locale dalle 15:07 del 9 novembre sono
-  solo nella memoria del processo Java: esportarli esplicitamente in una cartella nuova prima di arrestarlo.
+- **[Superato l'11 novembre, vedi «Stato corrente»]** **Firestore hybrid senza proprietario (10 novembre):** il runner PID 41530 (avvio 9 nov 15:07) è terminato senza export;
+  il suo Firestore Java PID 41656 su 8180 è rimasto attivo, `.firebase/hybrid.lock` punta ancora a 41530 e resta
+  `.nummo-hybrid-41530.json`. Un secondo `npm run dev` (runner PID 105831, avvio 16:33, Expo PID 105884 su 8081) lo ha
+  riconosciuto e **riusato**: non lo possiede, quindi all'arresto non lo esporta né lo ferma. Processi non toccati.
+- Export esplicito via endpoint dell'emulatore in **`.firebase/recovery-20261110-orphan-41530/`** (cartella nuova, con
+  `firebase-export-metadata.json`; `emulator-data/` non sovrascritto). Validato importandolo in un emulatore temporaneo
+  (porta 43280, poi arrestato, config rimossa): impronte SHA-256 dei 111 documenti del proprietario identiche ai dati in
+  memoria (1 config, 72 spese, 8 categorie, 8 nomi, 3 fondi, 6 movimenti, 2 liste, 11 prodotti). Nessun contenuto stampato.
+- Rispetto a `emulator-data/` (export 8 nov 22:17) differisce **un solo documento**: la categoria con icona `bus` → `train`,
+  revisione 1 → 2 (9 nov 14:22 UTC). Il client attuale rifiuta `bus`: riavviare hybrid da `emulator-data/` riproporrebbe
+  il blocco delle categorie. Da fare con autorizzazione, a sessione dev chiusa: nuovo export finale, promozione in
+  `emulator-data/` conservando la copia precedente, poi arresto di Java 41656 e ripristino del lock.
 
 ## Rules pubblicate e issue #8 chiusa — 9 novembre 2026
 
@@ -733,6 +770,8 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 
 ## Git
 
+- **Superata dallo «Stato corrente»:** `main` contiene ora il rilascio del 10 novembre; i punti seguenti sono storici.
+
 - **Ritocco integrato in `b97758d`:** rimossa l'icona di spunta dal pulsante «Registra spesa» nel dettaglio
   lista (`ListsPage.tsx`). `npm run check` OK: typecheck, 305/305 test e build demo; resa browser non ricontrollata.
 
@@ -762,9 +801,10 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   filtro categoria, ordinamento, raggruppamento mensile) e «Pagamenti ricorrenti» (serie, ricerca normalizzata,
   stati Attivo/In pausa/Annullato, storico pagamenti, prossimi rinnovi). Ricorrenze settimanali/mensili/annuali con
   fino a otto variazioni di prezzo per numero di rinnovo; i pagamenti maturati non vengono mai riscritti.
-- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 42 icone in tre stili
+- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 42 icone (`categoryIcons`) in tre stili
   (minimale, colorato, pixel); cinque predefinite su archivio vuoto confermato dal server.
-- **Fondi e budget** (destinazione «Fondi»): saldo iniziale, ricarica mensile calcolata, budget mensile con eccezioni,
+- **Fondi e budget** (destinazione «Fondi»): dalla #7 facoltativi e semplici (nome, icona, colore, budget) con budget
+  mensile generale (`settings/budget`); per i fondi che li avevano restano saldo iniziale, ricarica mensile calcolata, budget mensile con eccezioni,
   entrate e trasferimenti immutabili, archiviazione, fondo predefinito per browser, mesi navigabili
   effettivo/previsione, selettore fondo nel modulo, assegnazione esplicita delle spese «Senza fondo».
 - **Liste della spesa** (destinazione «Liste»): crea/rinomina/duplica/elimina, checklist con salvataggio automatico,
@@ -775,13 +815,14 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   selezione), Blocchi treemap senza testo nelle tessere con pannello dettagli, Barre complete ordinate per spesa;
   dettaglio transazioni per categoria con conteggio; andamento giornaliero SVG con selezione del giorno (nessuna
   apertura delle transazioni del giorno). Preferenza `ranking` legacy migrata a `bars`.
-- **Importa ed esporta** (menu account, sotto Categorie): CSV di sola consultazione; JSON `nummo-backup` **v4** unico
+- **Importa ed esporta** (menu account, sotto Categorie): CSV di sola consultazione; JSON `nummo-backup` **v6** unico
   ripristino (lettori storici per le versioni precedenti), anteprima su una riga, unione senza sovrascritture,
   sostituzione confermata con copia automatica, esiti in snackbar.
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa» (modulo desktop compatto ≥1024 dp),
   temi/tinte, IT/EN senza rimontare sessione o bozze, tastiera virtuale gestita, transizioni con riduzione movimento.
-- **Collaudo:** `docs/testing/` con due backup fittizi v4 (casi limite; spese standard prefissate `Demo ·`) e guida
-  ai risultati attesi. Da importare preferibilmente nella demo.
+- **Abbonamenti:** prove gratuite (schema 2) e cambio di frequenza (schema 3, `calendar_changes`).
+- **Collaudo:** `docs/testing/` con quattro backup fittizi (casi limite e spese standard dell'8 novembre, prove gratuite,
+  cambio di frequenza) e guida ai risultati attesi. Da importare preferibilmente nella demo.
 
 ## Decisioni tecniche recenti (dettagli in `docs/architecture.md`)
 
@@ -849,6 +890,10 @@ dry-run/deploy, audit, import UI dei backup fittizi, dispositivi reali, touch, t
 screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
+
+0. **Aggiornamento 11 novembre:** collaudo del rilascio del 10 novembre sui dati reali e sul Pixel 8 (elenco in
+   `IMPLEMENTATION_PLAN.md`), approvazione degli sprite #11, Escape in `AppDialog`, riallineamento README/architettura.
+   Il punto 4 sotto è concluso (10 novembre).
 
 1. **Collaudo produzione e compatibilità:** dopo la pubblicazione Rules verificata sopra, ricaricare l’app e verificare
    caricamento e sincronizzazione. Per prove CRUD cloud serve autorizzazione. Decidere conservazione o migrazione
