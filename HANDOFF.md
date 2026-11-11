@@ -29,6 +29,16 @@
   Liste/Importa ed esporta) e parti di `docs/architecture.md` sono storici. Traduzioni inutilizzate della vecchia Guida
   sui Fondi in `src/i18n/en.ts`. Le sezioni datate sotto sono registro storico: per numeri e versioni vale questa.
 
+## Chiusura issue #13 — 11 novembre 2026
+
+- Su richiesta dell'utente, issue #13 chiusa come completata tramite `gh`; stato **CLOSED** riletto,
+  chiusura **14:15:51 UTC**. Commento: https://github.com/alexiomagnus/Nummo/issues/13#issuecomment-6798198126.
+- Correzione della navigazione e rinomina «Analisi» nel commit **`fa521d2`**, già su `origin/main`.
+  `npm run check` passato prima di quel commit (363/363, typecheck e build demo), anche su copia isolata.
+  Questa fase modifica solo il registro di consegna: controllato il diff, nessun nuovo test applicativo necessario.
+- Nessun deploy Hosting né collaudo Realme/PWA o Safari iOS reale; questi limiti sono riportati nel commento.
+  Modifiche concorrenti della issue #15 e fixture conservate ed escluse dal commit di chiusura.
+
 ## Rinomina Dashboard → Analisi — 11 novembre 2026
 
 - Su richiesta: titolo e navigazione ora «Analisi» in italiano e «Analysis» in inglese. Allineati il titolo
