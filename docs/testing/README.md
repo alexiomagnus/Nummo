@@ -86,6 +86,43 @@ Le categorie con nomi uguali ma ID diversi possono produrre un conflitto: usare 
 File verificato con parser, piano su archivio vuoto, riferimenti completi e reimportazione identica senza aggiunte.
 Importazione UI/Firestore con questo specifico file non eseguita.
 
+## Utente medio (backup v6)
+
+File: [`nummo-utente-medio.json`](nummo-utente-medio.json), backup **v6**, dati fittizi.
+Profilo di una persona in affitto con auto, dal 1° maggio all'11 novembre 2026: **187 spese singole e 9 pagamenti
+ricorrenti** in 10 categorie, 3 fondi semplici (modello #7: nessun saldo, ricarica o movimento), budget mensile generale
+di 2.000 € dal maggio 2026 e 2 liste. Nomi di categorie, fondi e liste prefissati `Medio ·` (nessun conflitto con le
+categorie predefinite né con gli altri file); descrizioni naturali. Agosto con vacanza al mare e meno spesa alimentare.
+
+- **Fondi:** `Spesa e casa` (budget 550 €: spesa, internet, bollette), `Tempo libero` (250 €: bar, cene, svago, Netflix,
+  palestra, Spotify), `Auto` (senza budget: carburante, tagliando, assicurazione). 75 spese «Senza fondo» (affitto, caffè,
+  farmacia, shopping, viaggi…), da assegnare esplicitamente se si vuole provare la funzione.
+- **Abbonamenti all'11 novembre:** Affitto 750 € (7 pagamenti); Internet fibra 27,90 €; Telefono 9,99 € → **11,99 €
+  dal 5° rinnovo** (totale 63,94 €); Netflix 13,99 € **in pausa dal 1° settembre** (4 pagamenti); Palestra 39 €
+  **annullata dal 1° ottobre** (5 pagamenti); Amazon Prime annuale 49,90 €; Assicurazione auto annuale 420 € (giugno);
+  Spazio cloud 2,99 € mensile, **cambio di frequenza** (schema 3) ad annuale 29,99 € dal 20 novembre; Spotify
+  **in prova gratuita** (schema 2), primo addebito 1° dicembre a 10,99 €, nessun pagamento.
+- **Liste:** `Medio · Spesa grande di ottobre` registrata (spesa del 16 ottobre, 87,40 €, 9 prodotti) e
+  `Medio · Spesa della settimana` attiva, 8 prodotti di cui 3 spuntati, senza totale.
+
+Su archivio contenente solo questo file, all'11 novembre 2026 (224 occorrenze maturate, totale **12.788,13 €**):
+
+| Mese | Speso | Budget generale | Spesa e casa | Tempo libero | Auto |
+| --- | ---: | --- | ---: | ---: | ---: |
+| Maggio | 1.764,39 € | vicino (≥ 80%) | 577,21 € superato | 207,10 € vicino | 122,28 € |
+| Giugno | 2.290,99 € | **superato** | 475,80 € vicino | 243,15 € vicino | 538,44 € |
+| Luglio | 1.876,03 € | vicino | 567,53 € superato | 276,74 € superato | 114,08 € |
+| Agosto | 2.044,03 € | **superato** | 218,99 € | 311,03 € superato | 117,52 € |
+| Settembre | 1.830,60 € | vicino | 574,10 € superato | 164,07 € | 243,94 € |
+| Ottobre | 1.778,63 € | vicino | 484,31 € vicino | 130,82 € | 118,08 € |
+| Novembre fino all'11 | 1.203,46 € | sotto | 295,82 € | 18,56 € | 66,56 € |
+
+Valori calcolati con il dominio; cambiano dopo l'11 novembre (Telefono il 12, Spazio cloud il 20, Affitto e Spotify
+il 1° dicembre). Importare preferibilmente nella demo con **Unisci ai dati esistenti**: le categorie predefinite non
+entrano in conflitto. Verificato con `parseBackup`, piano di unione su archivio vuoto (nessun conflitto né riferimento
+mancante) e, nell'emulatore demo con le Rules del checkout, importazione reale con `importRecords`: l'export successivo
+è identico al file byte per byte e una seconda unione non trova conflitti. Importazione dall'interfaccia non eseguita.
+
 ## Prove gratuite degli abbonamenti
 
 File: [`nummo-prove-gratuite-2026-11-09.json`](nummo-prove-gratuite-2026-11-09.json), backup v5, solo dati TEST.

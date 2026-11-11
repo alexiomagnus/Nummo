@@ -29,6 +29,17 @@
   Liste/Importa ed esporta) e parti di `docs/architecture.md` sono storici. Traduzioni inutilizzate della vecchia Guida
   sui Fondi in `src/i18n/en.ts`. Le sezioni datate sotto sono registro storico: per numeri e versioni vale questa.
 
+## Rilascio Hosting di `e2eee92` (#13 + #15) — 12 novembre 2026, 00:03 Europe/Rome
+
+- Su autorizzazione: `feat/15-category-from-picker` unito in `main` (fast-forward `e7ade61..e2eee92`) e push; issue #15
+  chiusa come completata (commento con soluzione, verifiche e limiti). `npm run check` OK sull'albero combinato (363/363).
+- `npm run deploy:hosting` (prima `--dry-run`) su nummo-6b6e2, **solo Hosting**: le Rules non cambiano
+  (`firestore.rules` SHA-256 `59e64d5b…078bb` = release live del 10 novembre). Pubblicati insieme #13 (navigazione,
+  «Analisi») e #15. Live su `web.app` e `firebaseapp.com`: `index-11c4cc18….js` (HTTP 200, SHA-256 `d130a93e…`, uguale a
+  `dist/`), nessun endpoint emulatore, `index.html` e manifest identici alla build; Chromium headless arriva ad
+  «Accedi con Google». Precedente versione live: bundle `index-2460cefa….js` del 10 novembre (rollback dalla console).
+- **Non verificati:** login, creazione di una categoria e spese sui dati reali, telefono/PWA. I client aperti vanno ricaricati.
+
 ## Issue #15: creare una categoria dal selettore di Nuova spesa — 11 novembre 2026
 
 - Implementazione autorizzata dopo l'analisi: **solo nome e icona** (le categorie non hanno colore: resta quello automatico
@@ -51,8 +62,8 @@
 - **Osservato, preesistente:** a 320×740 la snackbar copre «Salva» per qualche secondo (vale per tutte le notifiche).
   Il dialogo non chiude con Escape (`AppDialog`, già noto). Non verificati telefono reale, tastiera virtuale, screen reader.
 - Lavoro concorrente di un'altra sessione (#13: AppShell, StateLayerPressable, check-navigation, AGENTS, architettura)
-  e `npm run dev` hybrid dell'utente (dalle 14:16) presenti e non toccati. La fixture `nummo-utente-medio-2026-11-11.json`
-  risulta rinominata in `nummo-utente-medio.json` e modificata da altri: il link in `docs/testing/README.md` va riallineato.
+  e `npm run dev` hybrid dell'utente (dalle 14:16) presenti e non toccati. La fixture dell'utente medio è stata rinominata
+  in `docs/testing/nummo-utente-medio.json` (stessi dati, solo formattazione): link del README riallineato il 12 novembre.
 
 ## Chiusura issue #13 — 11 novembre 2026
 
