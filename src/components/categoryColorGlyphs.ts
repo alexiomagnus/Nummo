@@ -21,10 +21,9 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   burger: { hue: 'orange', shape: `<path ${T} d="M4 10a8 6.2 0 0 1 16 0Z"/><rect ${B} x="3.5" y="11.4" width="17" height="3.2" rx="1.6"/><path ${T} d="M4.5 15.8h15v1a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-1Z"/>${dot(9, 7, 1.6).replace('{o}', '{i}')}${dot(12.6, 5.8, 1.6).replace('{o}', '{i}')}${dot(15.6, 7.4, 1.6).replace('{o}', '{i}')}` },
   pizza: { hue: 'orange', shape: `<path ${T} stroke="{b}" stroke-width="1.2" d="M4.8 8.5Q12 5.5 19.2 8.5L12 21.5Z"/><path ${B} stroke="{i}" stroke-width="1.2" d="M3.5 5.8Q12 1.8 20.5 5.8L19.2 9Q12 5.8 4.8 9Z"/><path stroke="{t}" stroke-width="1" d="M6.2 6.1Q12 3.9 17.8 6.1"/><circle ${B} stroke="none" cx="9.2" cy="11.2" r="1.5"/><circle ${B} stroke="none" cx="14.5" cy="11.8" r="1.4"/><circle ${B} stroke="none" cx="11.8" cy="16.2" r="1.3"/>` },
   pasta: { hue: 'amber', shape: `<path ${T} d="M5.5 12a6.5 5 0 0 1 13 0Z"/><path ${L} d="M8 8.5c0-1.5 1-1.5 1-3M12 8.5c0-1.5 1-1.5 1-3M16 8.5c0-1.5 1-1.5 1-3"/><path ${B} d="M3 12h18c0 4.5-4 8-9 8s-9-3.5-9-8Z"/>` },
-  popcorn: { hue: 'violet', shape: `<path ${T} d="M6 10a2.5 2.5 0 0 1 2-4 2.5 2.5 0 0 1 4-2 2.5 2.5 0 0 1 4 2 2.5 2.5 0 0 1 2 4Z"/><path ${B} d="M6 10h12l-1.5 11h-9L6 10Z"/><path stroke="{o}" d="M9.8 10.8l.4 9.4M14.2 10.8l-.4 9.4"/>` },
+  popcorn: { hue: 'popcorn', shape: `<path ${T} d="M6 10a2.5 2.5 0 0 1 2-4 2.5 2.5 0 0 1 4-2 2.5 2.5 0 0 1 4 2 2.5 2.5 0 0 1 2 4Z"/><path ${B} d="M6 10h12l-1.5 11h-9L6 10Z"/><path stroke="{o}" d="M9.8 10.8l.4 9.4M14.2 10.8l-.4 9.4"/>` },
   coffee: { hue: 'amber', shape: `<path ${B} d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/><path ${T} d="M4 9h13v2.5H4Z"/><path ${L} d="M17 10h1.5a2.5 2.5 0 0 1 0 5H16.5"/><path ${L} d="M8 3v3M12 3v3"/>` },
   utensils: { hue: 'orange', shape: `<path ${B} d="M6 3v6a2.5 2.5 0 0 0 5 0V3Z"/><path ${L} d="M8.5 9.5V21"/><path ${T} d="M17.5 3c-2.5 1.5-4 4.5-4 8h4V3Z"/><path ${L} d="M17.5 11v10"/>` },
-  beer: { hue: 'amber', shape: `<path ${B} d="M5.5 7h10v12h-10V7Z"/><path ${T} d="M5.5 8.5V7a2.5 2.5 0 0 1 3-2.5 2.5 2.5 0 0 1 4.5 0 2.5 2.5 0 0 1 2.5 2.5v1.5Z"/><path ${L} d="M15.5 9.5H18a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-2.5"/><path stroke="{o}" d="M9 12.5v4M12 12.5v4"/>` },
   cake: { hue: 'pink', shape: `<path ${B} d="M4 20h16v-6.5H4V20Z"/><path ${T} d="M4 13.5h16v3c-2-1.5-3-1.5-4 0s-3 1.5-4 0-2.5-1.5-4 0-3 1.5-4 0v-3Z"/><path ${L} d="M12 13.5V10"/><path ${T} d="M12 3.5c1 1.5 1 2.5 0 3.5-1-1-1-2 0-3.5Z"/>` },
   // Shopping and gifts
   bag: { hue: 'pink', shape: `<path ${B} d="M5 8h14l-1 12H6L5 8Z"/><path ${L} d="M9 8V6.5a3 3 0 0 1 6 0V8"/>${dot(9.5, 11.5)}${dot(14.5, 11.5)}` },
@@ -47,7 +46,6 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   tv: { hue: 'violet', shape: `<rect ${B} x="3" y="5.5" width="18" height="12" rx="2"/><rect ${T} x="5.2" y="7.7" width="13.6" height="7.6" rx="1"/><path ${L} d="M8 20.5h8M12 17.5v3"/>` },
   sparkles: { hue: 'violet', shape: `<path ${B} d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3Z"/>` },
   camera: { hue: 'slate', shape: `<path ${B} d="M4 8h3l1.5-2.5h7L17 8h3v11H4V8Z"/><circle ${T} cx="12" cy="13" r="3.5"/>${dot(17.5, 10.5)}` },
-  graduation: { hue: 'violet', shape: `<path ${T} d="M6.5 12v4.5c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3V12L12 14.5 6.5 12Z"/><path ${B} d="m2.5 9.5 9.5-5 9.5 5-9.5 5-9.5-5Z"/><path ${L} d="M21.5 9.5V15"/>` },
   // Money and work
   coin: { hue: 'amber', shape: `<circle ${B} cx="12" cy="12" r="9"/><circle ${T} cx="12" cy="12" r="6.4"/><path d="M12 8v8M13.8 9.9c-.4-.7-1.1-1-1.8-1-1 0-1.8.5-1.8 1.4s.8 1.2 1.8 1.4 1.8.5 1.8 1.4-.8 1.4-1.8 1.4c-.7 0-1.4-.3-1.8-1" stroke-width="1.2"/>` },
   wallet: { hue: 'orange', shape: `<path ${T} d="M5 7.5A2.5 2.5 0 0 1 7.5 5H17v3H5Z"/><rect ${B} x="3.5" y="7.5" width="17" height="12" rx="2"/><path ${T} d="M20.5 11.5H16a2 2 0 0 0 0 4h4.5Z"/><path stroke-width="2.2" d="M16.3 13.5h.01"/>` },
@@ -64,5 +62,4 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   cross: { hue: 'red', shape: `<path ${B} d="M9 3.5h6v5.5h5.5v6H15v5.5H9V15H3.5V9H9V3.5Z"/>` },
   dumbbell: { hue: 'green', shape: `<path ${L} stroke-width="2" d="M8 12h8"/><rect ${B} x="5.5" y="5.5" width="4.5" height="13" rx="1.6"/><rect ${T} x="2.2" y="8.5" width="3.8" height="7" rx="1.3"/><rect ${B} x="14" y="5.5" width="4.5" height="13" rx="1.6"/><rect ${T} x="18" y="8.5" width="3.8" height="7" rx="1.3"/>` },
   paw: { hue: 'orange', shape: `<circle ${B} cx="4.3" cy="11.2" r="2.1" stroke-width="1.2"/><circle ${B} cx="8.8" cy="6.6" r="2.1" stroke-width="1.2"/><circle ${B} cx="15.2" cy="6.6" r="2.1" stroke-width="1.2"/><circle ${B} cx="19.7" cy="11.2" r="2.1" stroke-width="1.2"/><path ${B} stroke-width="1.2" d="M12 11.8c-3.3 0-6.2 3.2-5.4 5.8.6 2 2.8 1.9 5.4 1.9s4.8.1 5.4-1.9c.8-2.6-2.1-5.8-5.4-5.8Z"/><path ${T} stroke-width="1.2" d="M9.2 16.4c.5-1.2 1.4-1.9 2.4-1.9"/>` },
-  star: { hue: 'amber', shape: `<path ${B} d="m12 3.5 2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.9l-5.3 2.7 1-5.8-4.2-4.1 5.9-.9L12 3.5Z"/>` },
 };

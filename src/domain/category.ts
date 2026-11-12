@@ -4,7 +4,7 @@ export type Category = Readonly<{ id: string; label: string; icon: CategoryIcon 
 export const categoryIconLabels = {
   cart: 'carrello', burger: 'hamburger', pizza: 'pizza', pasta: 'piatto di pasta', popcorn: 'popcorn',
   coffee: 'caffè', heart: 'cuore',
-  star: 'stella', gamepad: 'videogioco', bag: 'borsa della spesa', box: 'pacco',
+  gamepad: 'videogioco', bag: 'borsa della spesa', box: 'pacco',
   house: 'casa', bulb: 'lampadina', gift: 'regalo', shirt: 'maglietta',
   paw: 'zampa', dumbbell: 'manubrio', coin: 'moneta',
   wallet: 'portafoglio', bank: 'banca', cash: 'contanti', safe: 'cassaforte', growth: 'investimenti',
@@ -15,9 +15,7 @@ export const categoryIconLabels = {
   music: 'musica',
   film: 'cinema',
   camera: 'fotocamera',
-  graduation: 'istruzione',
   sofa: 'divano',
-  beer: 'birra',
   cake: 'dolce',
   laptop: 'computer',
   piggy: 'risparmio',

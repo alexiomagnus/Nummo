@@ -401,7 +401,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const movementRef = (id: string) => doc(owner.db, 'users', uid, 'movements', id);
       const today = todayInRome();
       const month = today.slice(0, 7);
-      const data = { name: `Vita ${suffix}`, icon: 'graduation' as const, color: 2, initial_minor: 50000, start_date: today,
+      const data = { name: `Vita ${suffix}`, icon: 'laptop' as const, color: 2, initial_minor: 50000, start_date: today,
         recharges: [{ month, amount_minor: 30000, day: 1, active: true }], budgets: [{ month, amount_minor: 25000 }], budget_exceptions: [], archived: false };
       const stored = { name: data.name, icon: data.icon, color: 2, initial_minor: 50000, start_date: today, recharges: `${month}:30000:1:a`,
         budgets: `${month}:25000`, budget_exceptions: '', archived: false, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };

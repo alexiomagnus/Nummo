@@ -848,3 +848,15 @@ l'ordine dei mesi è del decoder. Scritture in transazione sulla revisione vista
 
 **Scelte non fatte.** Non si rimuovono ricariche, movimenti, trasferimenti o eccezioni dal modello né dal backup: sarebbe una migrazione
 distruttiva di dati reali. Una futura dismissione richiede una decisione esplicita. Il budget generale non ha eccezioni mensili.
+
+
+## Revisione icone da riferimenti visivi — 12 novembre 2026
+
+Su richiesta esplicita rimossi gli ID `star` e `graduation` dai tre stili e dalle Rules locali.
+Come per le precedenti rimozioni, decoder e import non accettano questi ID: nessuna trasformazione automatica
+dei dati personali. La terza icona richiesta era `beer`, rimossa allo stesso modo; ridisegnati inoltre gli sprite pixel di
+gamepad, borsa, fotocamera, divano e moneta (ora pila di monete), che non si riconoscevano.
+Fotocamera, divano, pizza e borsa mantengono gli ID, con sprite più dettagliati sulla stessa griglia 12×12.
+Il popcorn conserva l'ID e usa nei due set illustrati una palette semantica dedicata: cartone rosso,
+strisce bianche, chicchi gialli in entrambi i temi. Colori nei token `iconPalette.ts`, nessun colore letterale
+nei disegni e controlli di contrasto comuni agli altri set.

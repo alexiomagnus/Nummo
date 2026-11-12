@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { categoryIcons } from '../src/domain/category.ts';
+import { categoryIcons, isCategoryIcon } from '../src/domain/category.ts';
 import { categoryGlyphs } from '../src/components/categoryGlyphs.ts';
 import { categoryColorGlyphs } from '../src/components/categoryColorGlyphs.ts';
 import { categoryPixelGlyphs, pixelGrid, pixelSprites, snapPixelSize, spriteMarkup } from '../src/components/categoryPixelGlyphs.ts';
@@ -123,5 +123,32 @@ test('stile pixel: nessuno sprite coincide con un altro, nemmeno a meno della ti
   for (const [name, shape] of shapes) {
     assert.equal(seen.get(shape), undefined, `${name} uguale a ${seen.get(shape)}`);
     seen.set(shape, name);
+  }
+});
+
+
+test('icone rimosse: stella, istruzione e birra non sono selezionabili né disegnate in alcuno stile', () => {
+  for (const icon of ['star', 'graduation', 'beer']) {
+    assert.equal(isCategoryIcon(icon), false);
+    for (const style of iconStyles) for (const dark of [false, true]) {
+      assert.equal(resolveCategoryGlyph(style, icon, dark), null, `${style}:${icon}`);
+    }
+  }
+});
+
+test('popcorn: cartone rosso, strisce bianche e chicchi gialli nei due stili e temi', () => {
+  for (const dark of [false, true]) {
+    const ramp = iconRamp('popcorn', dark);
+    assert.equal(ramp.o, '#FFFFFF');
+    // The red channel dominates the carton; kernels keep red and green above blue.
+    const rgb = (hex: string) => [1, 3, 5].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
+    const [r, g, b] = rgb(ramp.b);
+    assert.ok(r! > g! * 2 && r! > b! * 2);
+    const [kr, kg, kb] = rgb(ramp.t);
+    assert.ok(kr! > kb! && kg! > kb!);
+    for (const style of ['colorful', 'pixel'] as const) {
+      const glyph = resolveCategoryGlyph(style, 'popcorn', dark)!;
+      for (const color of [ramp.b, ramp.t, ramp.o]) assert.ok(glyph.shape.includes(color));
+    }
   }
 });
