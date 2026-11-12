@@ -86,10 +86,6 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
         <Card title={t("Carattere")} style={section}>
           <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
         </Card>
-        <Card title={t("Analisi")} style={section}>
-          <SwitchRow label={t("Mostra andamento nel tempo")} value={preferences.dashboardTrend}
-            onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
-        </Card>
         <Card title={t("Stile delle icone")} style={styles.section}>
           <View style={styles.styleCards} role="radiogroup" aria-label={t("Stile delle icone")}>
             {iconStyles.map((style) => {
@@ -107,12 +103,18 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
               );
             })}
           </View>
-          <Button mode="text" textColor={colors.secondary} style={styles.start} onPress={onReset}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
-            {t("Ripristina predefiniti")}
-          </Button>
+        </Card>
+        <Card title={t("Analisi")} style={styles.section}>
+          <SwitchRow label={t("Mostra andamento nel tempo")} value={preferences.dashboardTrend}
+            onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
         </Card>
       </View>
+      {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
+          `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}
+      <Button mode="outlined" textColor={colors.secondary} style={styles.reset} onPress={onReset}
+        icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
+        {t("Ripristina predefiniti")}
+      </Button>
     </View>
   );
 }
@@ -121,7 +123,7 @@ const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: layout.sectionGap },
   section: { width: '100%' },
-  start: { alignSelf: 'flex-start' },
+  reset: { alignSelf: 'flex-start', borderRadius: radius.pill },
   styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   styleCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
   preview: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.sm, minHeight: 32, marginBottom: spacing.xs },

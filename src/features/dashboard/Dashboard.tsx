@@ -120,14 +120,17 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
               <CategoryLegend key={period} series={data.series} others={others} categories={categories} total={data.total}
                 colors={colors} active={active} onActive={setActive} onOpen={openCategory} compact />
             </View> :
-            <View onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
-              style={[styles.chartRow, chartSideBySide && styles.row]}>
-              <View style={styles.chartCol}><View style={!sideBySide ? { width: '100%', maxWidth: 280, alignSelf: 'center' } : undefined}>
-                <DonutChart {...chartProps} />
+            <View style={styles.chartRow}>
+              <View onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
+                style={[styles.chartRow, chartSideBySide && styles.row]}>
+                <View style={styles.chartCol}><View style={!sideBySide ? { width: '100%', maxWidth: 280, alignSelf: 'center' } : undefined}>
+                  <DonutChart {...chartProps} />
+                </View>
+                {active !== null && <Button mode="text" onPress={() => openCategory(data.series[active]!.key)}>{t('Mostra transazioni')}</Button>}
+                </View>
+                <View style={chartSideBySide ? styles.legendCol : undefined}>{legend}</View>
               </View>
-              {active !== null && <Button mode="text" onPress={() => openCategory(data.series[active]!.key)}>{t('Mostra transazioni')}</Button>}
-              </View>
-              <View style={chartSideBySide ? styles.legendCol : undefined}>{legend}</View>
+              {active === null && <Text variant="bodyMedium" style={[muted, styles.donutHint]}>{t('Tocca una sezione per vedere i dettagli della categoria.')}</Text>}
             </View>}
         </Card>}
       {preferences.dashboardTrend && <Card><TimeChart key={period} days={insights.days} /></Card>}
@@ -144,6 +147,7 @@ const styles = StyleSheet.create({
   select: { flexGrow: 1, flexBasis: 140, minWidth: 0 },
   total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
+  donutHint: { marginTop: spacing.xxl },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   chartCol: { flex: 1, minWidth: 0, gap: spacing.sm },
   legendCol: { width: donutLegendWidth, flexShrink: 0 },

@@ -51,11 +51,13 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
         </View>;
       })}
     </View>
+    <Text variant="bodyMedium" style={[styles.hint, { color: colors.muted }]}>{t('Tocca una barra per vedere i dettagli della categoria.')}</Text>
   </View>;
 }
 
 const styles = StyleSheet.create({
   bars: { gap: spacing.sm },
+  hint: { marginTop: spacing.md },
   barRow: { padding: spacing.sm, gap: spacing.xs },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   label: { flex: 1, minWidth: 0 },

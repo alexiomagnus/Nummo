@@ -173,15 +173,16 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '..ittbbtti..',
     '..iiiiiiii..',
   ] },
-  // Front view: backrest, arms set apart from it by a notch, light seat, legs.
+  // Front view: two back cushions with rounded tops (no square panels, which read as vehicle windows), rolled arms
+  // in the base colour, light seat cushion and legs.
   sofa: { hue: 'blue', rows: [
-    '..iiiiiiii..',
-    '..ibbbbbbi..',
-    'ii.ibbbbi.ii',
-    'ibiittttiibi',
-    'ibittttttibi',
-    'ibbbbbbbbbbi',
-    'iiiiiiiiiiii',
+    '...ii..ii...',
+    '..ittiitti..',
+    '.bittiittib.',
+    'bbittiittibb',
+    'bbiiiiiiiibb',
+    'bbttttttttbb',
+    'bbbbbbbbbbbb',
     '.bb......bb.',
   ] },
   bulb: { hue: 'amber', rows: [
@@ -321,18 +322,20 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     'iiiiiiiiiiii',
   ] },
   // Money and work
-  // A small stack seen from the side: reads as coins at 24 px, where a symbol on a round face blurs.
+  // A round coin face: dark outline, rim in the base colour, light face with a bold € in ink (dark in both themes).
   coin: { hue: 'amber', rows: [
-    '..iiiiiiii..',
-    '.itttttttti.',
-    'itttbbbbttti',
-    'ibttttttttbi',
-    'ibbbbbbbbbbi',
-    'iiiiiiiiiiii',
-    'ibbbbbbbbbbi',
-    'iiiiiiiiiiii',
-    'ibbbbbbbbbbi',
-    '.iiiiiiiiii.',
+    '...iiiiii...',
+    '..iibbbbii..',
+    '.ibbttttbbi.',
+    'iibttiiitbii',
+    'ibttittttbbi',
+    'ibtiiiittbbi',
+    'ibttittttbbi',
+    'ibtiiiittbbi',
+    'iibtittttbii',
+    '.ibbtiiibbi.',
+    '..iibbbbii..',
+    '...iiiiii...',
   ] },
   wallet: { hue: 'orange', rows: [
     '..iiiiiiii..',

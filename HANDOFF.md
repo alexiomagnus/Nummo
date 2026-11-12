@@ -1,5 +1,91 @@
 # HANDOFF — Nummo
 
+## Preparazione commit e push autorizzati — 12 novembre 2026
+
+- Inclusi i ritocchi locali a sprite `sofa`/`coin`, riordino Impostazioni e pulsante Ripristina outlined,
+  indicazioni IT/EN sotto Barre/Ciambella con spaziatura e scomparsa alla selezione della ciambella,
+  regressioni i18n e note di consegna. Nessuna nuova modifica a servizi o Rules in questo commit.
+- `npm run check` ripetuto sull’intero albero: OK (typecheck, 365/365 test, build demo); diff check OK.
+  Nessuna pubblicazione Hosting/Rules. Esito commit e sincronizzazione riportato nella risposta della sessione.
+
+## Sprite pixel `sofa` e `coin` ridisegnati — 12 novembre 2026
+
+- Segnalazione dell'utente: due icone pixel incomprensibili. Quella blu era `sofa` (scambiata per un'auto; `car` resta
+  rimossa, scelta confermata): ora due cuscini di schienale arrotondati, braccioli imbottiti in `b`, seduta chiara, piedini.
+  Scartate le varianti con riquadri chiari quadrati, che sembrano finestrini di un veicolo. `coin` (pila di monete letta
+  come un rettangolo) torna a una moneta tonda: contorno, bordo `b`, faccia `t`, € pieno in `i` (scuro in entrambi i temi).
+- Solo `categoryPixelGlyphs.ts`; stessi ID, tinte, stili minimale/colorato invariati, nessuna modifica a Rules o dati.
+  `npm run check` OK (365/365, build demo), `git diff --check` OK. Anteprima Chromium statica a 24/72 px chiaro/scuro
+  nello scratchpad della sessione; nessun collaudo in app o su telefono. Modifiche concorrenti (Analisi, Impostazioni,
+  traduzioni, test i18n) non toccate. Nessun commit/deploy.
+
+## Analisi: indicazioni sotto Barre e Ciambella — 12 novembre 2026
+
+- Indicazione Barre distanziata ulteriormente dall’elenco con 12 dp aggiuntivi sopra (`spacing.md`),
+  su richiesta. `npm run check` OK (365/365, typecheck e build demo); diff check OK.
+  Resa browser non ricontrollata; nessun deploy.
+- Indicazione ciambella visibile solo senza una selezione (`active === null`): scompare al tocco di una
+  sezione e ricompare deselezionandola o cambiando periodo. Hover invariato. `npm run check` OK (365/365,
+  typecheck e build demo); diff check OK. Verifica dal codice, browser non ripetuto; nessun deploy.
+- Ulteriore ritocco richiesto: 32 dp aggiuntivi sopra il testo della ciambella (`spacing.xxl`), oltre al gap
+  del blocco, per distanziarlo maggiormente dal grafico/legenda. `npm run check` OK (365/365, typecheck,
+  build demo); diff check OK. Nessuna verifica browser o pubblicazione in questa fase.
+- Ritocco successivo: indicazione della ciambella spostata sotto l’intero blocco grafico/legenda (e dopo
+  l’eventuale azione «Mostra transazioni»), anche su desktop. `npm run check` ripetuto: OK, 365/365,
+  typecheck e build demo; diff check OK. Resa browser non ricontrollata, nessun deploy.
+- Su richiesta: sotto le barre «Tocca una barra per vedere i dettagli della categoria.»; sotto la ciambella
+  «Tocca una sezione per vedere i dettagli della categoria.». Testi `bodyMedium` nel colore secondario del testo,
+  sempre visibili quando il relativo grafico è presente; traduzioni EN aggiunte e caso i18n esteso.
+- `npm run check` OK: typecheck, 365/365 test e build demo; `git diff --check` OK. Resa browser non ricontrollata.
+  Nessuna modifica a dati/servizi/Rules, nessun commit o deploy; modifiche locali preesistenti conservate.
+
+## Ritocco pizza e nuovi sprite controller/borsa — 12 novembre 2026
+
+- Su nuovi riferimenti dell'utente: pizza pixel ridotta da 12×12 a 10×10 celle (centrata sulla tela 12×12,
+  circa 17% in meno per lato); ridisegnati `gamepad` (croce, pulsanti, impugnature) e `bag` (manici aperti,
+  attacchi, pieghe laterali e fondo). Solo pixel, stessi ID e palette; altri stili invariati in questa fase.
+- `npm run check` OK: typecheck, 365/365 test e build demo sull'albero condiviso; `git diff --check` OK.
+  Anteprima statica Chromium osservata a 24/72 px chiaro/scuro (`/tmp/nummo-icons-refinement.png`),
+  nessun collaudo app/telefono. Nessuna nuova modifica a servizi/Rules o dati; suite emulatori non ripetuta.
+- Modifiche concorrenti conservate; nessun commit/deploy. La terza rimozione della richiesta precedente
+  (rettangolo giallo) resta in attesa di identificazione, come documentato sotto.
+
+## Icone: rimozioni e revisione pixel — 12 novembre 2026
+
+- **Seconda passata (stesso giorno):** la terza immagine (rettangolo giallo) era lo sprite pixel di `beer` (boccale
+  ambra su tema scuro), identificato confrontando il render degli sprite con l'immagine. `beer` rimosso da catalogo,
+  tre stili, traduzione `birra` e due liste delle Rules; regressione estesa a stella/istruzione/birra. Nessun `beer`
+  nelle fixture `docs/testing/` né in `emulator-data/` (solo conteggio, nessun contenuto letto). **Icone attuali: 39.**
+- Ridisegnati da zero gli sprite pixel di `gamepad` (corpo con impugnature, croce in `i`, quattro tasti in `o`), `bag`
+  (manico sopra una fascia in tinta e corpo svasato), `camera` (gobba del mirino, pulsante, obiettivo ad anelli
+  concentrici, flash), `sofa` (ridisegnato di nuovo su richiesta: vista frontale con schienale, braccioli staccati da una tacca, seduta
+  chiara, piedini) e `coin` (bordo, faccia
+  chiara, simbolo € in `i`; poi, su richiesta, sostituita da una pila di monete vista di lato, perché a 24 px il simbolo
+  si impastava). Stesse tinte, griglia ≤12×12, contorni non indispensabili sul tema scuro. Render
+  Chromium chiaro/scuro a 24/48/96 px osservato (scratchpad della sessione): non è un collaudo su telefono reale.
+- `npm run check` OK (365/365, build demo); suite SDK/Rules demo **18/18** su porte dedicate 48099/48280 con config
+  temporanea nella radice, rimossa; emulatori/hybrid dell'utente (8180/8081/4000, PID runner 18290) non toccati.
+- **Issue #11 e #16 chiuse** su richiesta (completed, 12 nov 19:02 UTC) con commento su soluzione, verifiche e limiti
+  (modifiche locali, nessun commit/deploy). Restano aperte #14, #5, #4.
+- Compatibilità: le Rules locali rifiutano ora anche `beer`. Prima di pubblicarle verificare che i dati di
+  produzione non usino `star`, `graduation` o `beer`, altrimenti categorie/fondi diventano illeggibili.
+
+- Richiesta dalle immagini: rimossi `star` (stella) e `graduation` (istruzione/tocco accademico) da catalogo,
+  tre disegni, traduzioni e liste delle Rules. La terza immagine (rettangolo giallo) resta da identificare con
+  l'utente (risolto sotto: `beer`). Icone dopo questa prima passata: 40.
+- Ridisegnati solo gli sprite pixel `camera`, `sofa`, `pizza`, `bag` sulla griglia 12×12; nuovi dettagli di
+  lente, cuscini/braccioli, crosta/condimento e manici/pieghe. `popcorn` colorato e pixel usa una palette dedicata
+  rossa/bianca/gialla, con ruoli nei token e contrasti verificati per entrambi i temi. Nessuna dipendenza nuova.
+- Fixture casi limite: `graduation` → `laptop`, `star` → `sparkles`; test fondo emulato usa `laptop`.
+  Due regressioni per rimozioni in ogni stile e colori popcorn. Anteprima statica Chromium osservata a 24/72 px,
+  chiaro/scuro (`/tmp/nummo-icons-final.png`): non è un collaudo UI o su telefono reale.
+- `npm run check` OK (typecheck, 365/365 test e build demo); suite SDK/Rules demo 18/18 su porte dedicate
+  47099/47280, emulatori arrestati e config temporanea rimossa. Primo tentativo bloccato da EPERM sandbox,
+  riuscito fuori sandbox. Working tree condiviso con modifiche concorrenti a Impostazioni/SwitchRow,
+  storico/prezzi/workspace/test: conservate, fuori da questo intervento.
+- Compatibilità: record e backup con gli ID rimossi vengono rifiutati; nessun adapter o migrazione automatica,
+  nessun dato personale letto/modificato. Rules solo locali, nessun commit o deploy.
+
 ## Stato corrente — 11 novembre 2026
 
 - **Produzione = `a479b7b`** (ultimo commit con codice; i successivi sono solo documenti). Rilascio del 10 novembre
@@ -22,12 +108,44 @@
   6 movimenti, 2 liste, 11 prodotti; nessuna icona `bus`, una `train`. Nessun contenuto stampato. Rimossi il lock
   obsoleto `.firebase/hybrid.lock` (PID 41530 non attivo) e le config `.nummo-hybrid-41530.json`/`-14940.json`.
   `npm run dev` ora riparte dai dati aggiornati; avvio interattivo non provato.
-- **Verifiche:** `npm run check` OK (typecheck, **363/363**, build demo) l'11 novembre; `test:emulator` 18/18 e
+- **Sessione hybrid interrotta (12 novembre):** il runner PID 10861 (avvio 11 nov 14:16) è terminato col riavvio della
+  macchina (12 nov 18:43) senza export: `.firebase/hybrid-cN5WrZ/` contiene solo `cli-config`. Le scritture locali fatte
+  in quella sessione sono perse; `emulator-data/` resta l'export promosso (10 nov 00:57). Lock rinominato in
+  `.firebase/hybrid.lock.stale-10861`, config `.nummo-hybrid-10861.json` spostata nella cartella di sessione.
+- **Verifiche:** `npm run check` OK (typecheck, **363/363**, build demo) l'11 e il 12 novembre; `test:emulator` 18/18 e
   `test:hybrid` 9/9 del 10 novembre, non rieseguiti (nessuna modifica al codice).
 - **Discrepanze note ancora aperte:** `AppDialog` non chiude con Escape (solo `AnchoredMenu`/`BottomSheet` usano
   `useEscape`), in contrasto con la convenzione Overlay di AGENTS.md. README (backup da «Spese → Dati», mancano Fondi/
   Liste/Importa ed esporta) e parti di `docs/architecture.md` sono storici. Traduzioni inutilizzate della vecchia Guida
   sui Fondi in `src/i18n/en.ts`. Le sezioni datate sotto sono registro storico: per numeri e versioni vale questa.
+
+## Issue #14 (spese programmate) chiusa senza implementazione — 12 novembre 2026
+
+- Analizzata via `gh`, nessuna modifica al codice. Su decisione dell'utente chiusa come **not planned** (19:05:55 UTC)
+  con commento di sintesi: limite «≤ oggi» in `DateField`, `validateExpenseForm`, `parseExpenseRequest` e Rules
+  (`validDate`); `expandOccurrences` esclude già le singole future, ma `ExpenseList` le nasconderebbe. Riapribile.
+
+## Impostazioni: sezione «Analisi» sotto lo stile delle icone, Ripristina outlined — 12 novembre 2026
+
+- `SettingsPage.tsx`, ordine finale: Lingua, Tema, Colore, Carattere, Stile delle icone, **«Analisi»** (card a tutta
+  larghezza con il solo `SwitchRow` «Mostra andamento nel tempo», componente e preferenza `dashboardTrend` invariati),
+  poi «Ripristina predefiniti» fuori dalle card, come `Button` `outlined` (bordo 1 dp `outline` di Paper, testo
+  `secondary`, `radius.pill`, icona `rotateCcw`, altezza 48 dp; hover/ripple di Paper, anello di focus globale).
+  Su richiesta, scartato un primo tentativo con l'interruttore dentro la card delle icone e senza padding laterale
+  (hover attaccato al testo, diverso dalle altre righe): `SwitchRow` è tornato identico a HEAD.
+- `npm run check` OK (typecheck, **365/365**, inclusi test di un'altra sessione concorrente, build demo). Chromium
+  headless su export demo privato nello scratchpad (da disconnessi, nessun dato): 412×915 chiaro IT, 320×740 scuro IT,
+  1280×900 scuro EN e chiaro IT; ordine delle intestazioni e opzioni → switch → pulsante, un solo switch, nessun overflow
+  orizzontale né errore JS. Hover col mouse emulato: un solo strato `onSurface` all'8% a tutta riga con il raggio del
+  controllo. Non provati telefono reale, mouse reale, screen reader. Nessun commit.
+- **«Prossimi rinnovi» (Spese → Pagamenti ricorrenti) limitato ai 30 giorni:** `upcomingRenewals(entries, today, until?)`
+  esclude i rinnovi oltre `until` (incluso il giorno limite); `Workspace` passa `addDays(today, forecastDays)`, la stessa
+  finestra del totale `soon`, che già escludeva i rinnovi lontani (prima elenco e conteggio includevano es. un annuale
+  tra 11 mesi). Card nascosta se nessun rinnovo nella finestra. Limite noto: l'elenco mostra il prossimo rinnovo per serie,
+  mentre il totale somma tutte le occorrenze (una serie settimanale conta 4–5 volte nel totale, una nell'elenco).
+  Guida e traduzione EN aggiornate («prossimi 30 giorni»); nuovi assert in `tests/pricing.test.ts`.
+  `npm run check` OK (**365/365**, inclusi test di un'altra sessione concorrente su icone/Rules, non toccata).
+  Card dei rinnovi non vista nel browser (richiede dati): coperta solo dai test di dominio.
 
 ## Rilascio Hosting di `e2eee92` (#13 + #15) — 12 novembre 2026, 00:03 Europe/Rome
 
