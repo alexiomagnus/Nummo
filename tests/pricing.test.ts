@@ -102,6 +102,10 @@ test('previsioni: pagamenti futuri con il prezzo programmato, separati dagli eff
   const sorted = upcomingRenewals([aruba, monthly, entry({ id: 'c', recurrence: null })], '2026-11-02');
   assert.deepEqual(sorted.map((r) => r.occurrence.expenseId), ['b', 'a']);
   assert.deepEqual(forecastOccurrences([monthly], '2026-11-02', addDays('2026-11-02', 30)).map((o) => o.date), ['2026-11-20']);
+  // With a window (the card's 30 days), renewals due later are left out; the limit day itself is included.
+  assert.deepEqual(upcomingRenewals([aruba, monthly], '2026-11-02', addDays('2026-11-02', 30)).map((r) => r.occurrence.expenseId), ['b']);
+  assert.deepEqual(upcomingRenewals([monthly], '2026-10-21', '2026-11-20').map((r) => r.occurrence.date), ['2026-11-20']);
+  assert.deepEqual(upcomingRenewals([monthly], '2026-10-21', '2026-11-19'), []);
 });
 
 test('previsioni: oggi è già un pagamento effettivo, il prossimo rinnovo è il successivo', () => {

@@ -90,7 +90,8 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   }, []);
   const occurrences = useMemo(() => expandOccurrences(store.expenses, today), [store.expenses, today]);
   const subscriptions = useMemo(() => subscriptionSummaries(store.expenses, today), [store.expenses, today]);
-  const renewals = useMemo(() => upcomingRenewals(store.expenses, today), [store.expenses, today]);
+  // Same window as `soon`: the card lists only the renewals its total counts.
+  const renewals = useMemo(() => upcomingRenewals(store.expenses, today, addDays(today, forecastDays)), [store.expenses, today]);
   const soon = useMemo(() => forecastOccurrences(store.expenses, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [store.expenses, today]);
   // Lists count once loaded: a list listener that fails (e.g. Rules not yet published) must not block expenses and funds.
   const pending = Boolean(store.sync?.pending || categoryState.sync.pending || fundState.sync.pending || listState.sync.pending);

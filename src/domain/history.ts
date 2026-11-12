@@ -52,13 +52,13 @@ export function forecastOccurrences(entries: readonly ExpenseEntry[], today: str
   });
 }
 
-// The next renewal of every active recurring expense, soonest first. `previous` is the price of the
-// occurrence before it, so a scheduled change can be pointed out.
+// The next renewal of every active recurring expense, soonest first; with `until`, only those due by that day
+// (inclusive). `previous` is the price of the occurrence before it, so a scheduled change can be pointed out.
 export type Renewal = Readonly<{ occurrence: Occurrence; previous: number }>;
-export function upcomingRenewals(entries: readonly ExpenseEntry[], today: string): Renewal[] {
+export function upcomingRenewals(entries: readonly ExpenseEntry[], today: string, until?: string): Renewal[] {
   return entries.flatMap((entry) => {
     const next = nextPaidRenewal(paymentStart(entry), entry.recurrence, entry.status_changes ?? [], today, entry.calendar_changes ?? []);
-    if (!next) return [];
+    if (!next || (until !== undefined && next.date > until)) return [];
     const changes = entry.price_changes ?? [];
     return [{ occurrence: toOccurrence(entry, next.date, next.index), previous: priceAt(entry.amount_minor, changes, next.index - 1) }];
   }).sort((a, b) => a.occurrence.date.localeCompare(b.occurrence.date) || a.occurrence.key.localeCompare(b.occurrence.key));
