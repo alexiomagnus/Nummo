@@ -6,7 +6,7 @@ import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layerTransition } from '../theme/motion';
 import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
-import { isHorizontalDrag, pillGeometry, slotAt } from './navIndicator';
+import { floatingBarBottomSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt } from './navIndicator';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { observeVirtualKeyboard } from '../theme/viewport';
@@ -32,6 +32,8 @@ type Props<T extends string> = {
 
 // Virtual keyboard open (inferred, see viewport.ts). Pages read it to give the fields the room left above the keyboard.
 const KeyboardContext = createContext(false);
+// Fixed for the session: only the iPhone lowers the floating bar into its home-indicator area.
+const iPhone = typeof navigator !== 'undefined' && isIPhone(navigator.userAgent);
 export const useKeyboardOpen = () => useContext(KeyboardContext);
 
 function useVirtualKeyboard(): boolean {
@@ -84,7 +86,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const navMounted = hasNav && size === 'compact';
   const bottomBar = navMounted && !keyboard;
   // Compact: floating toolbar (destinations pill + round primary action) in the layout flow, above the bottom inset.
-  const barHeight = layout.floatingBar + spacing.md * 2 + insets.bottom;
+  const barBottom = floatingBarBottomSpace(insets.bottom, spacing.md, iPhone);
+  const barHeight = layout.floatingBar + spacing.md + barBottom;
   const showFab = bottomBar && fab && selected !== fab.target;
   const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
   const compact = size === 'compact';
@@ -133,7 +136,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
             </ThemeProvider>
           </ScrollView>
         </View>
-        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomInset={insets.bottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} />}
+        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomSpace={barBottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} />}
       </SnackbarProvider>
     </View>
   );
@@ -148,7 +151,7 @@ function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boo
 type Fab<T extends string> = { label: string; icon: string; target: T };
 type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
-function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomInset, fab, reserveFab, hidden }: NavProps<T> & { bottomInset: number; reserveFab: boolean; hidden: boolean }) {
+function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomSpace, fab, reserveFab, hidden }: NavProps<T> & { bottomSpace: number; reserveFab: boolean; hidden: boolean }) {
   const { t } = useI18n();
   const { colors, fonts } = useTheme();
   const reduceMotion = useReducedMotion();
@@ -197,7 +200,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const { pill, indicator, focus, suppressPressed } = useSlidingIndicator(destinations, index, onSelect, reduceMotion);
   const shownIndex = focus ?? index;
   return (
-    <View onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)} style={[styles.floating, { paddingBottom: spacing.md + bottomInset }, hidden && styles.hidden]}>
+    <View onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)} style={[styles.floating, { paddingBottom: bottomSpace }, hidden && styles.hidden]}>
       <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
             the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}

@@ -107,8 +107,8 @@ test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', (
 });
 
 test('abbonamenti: stati e azioni tradotti, nomi delle serie mai tradotti', () => {
-  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Pagamenti ricorrenti', 'Recurring payments'],
-    ['Metti in pausa', 'Pause'], ['Riattiva', 'Resume'], ['Annulla abbonamento', 'Cancel subscription']] as const) {
+  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Pagamenti ricorrenti', 'Recurring payments'], ['Abbonamenti', 'Subscriptions'], ['Settimana', 'Week'], ['Anno', 'Year'], ['Giroconto', 'Transfer'], ['Budget', 'Budget'],
+    ['Metti in pausa', 'Pause'], ['Pausa', 'Pause'], ['Riattiva', 'Resume'], ['Annulla abbonamento', 'Cancel subscription']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
   }
@@ -128,4 +128,11 @@ test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
   assert.equal(translate('en', 'Impossibile unire il backup'), 'Cannot merge backup');
   assert.equal(translate('it', '{p0} elementi sono diversi dai dati salvati.', { p0: 2 }), '2 elementi sono diversi dai dati salvati.');
   assert.equal(translate('en', '{p0} elementi sono diversi dai dati salvati.', { p0: 2 }), '2 items differ from your saved data.');
+});
+
+test('impostazioni: interruttore del budget mensile tradotto in entrambe le lingue', () => {
+  for (const [it, en] of [['Grafici e budget', 'Charts and budget'], ['Mostra budget mensile', 'Show monthly budget'], ['Nella pagina Analisi, il grafico delle spese giorno per giorno.', 'On the Analysis page, a chart of spending day by day.'], ['Nella pagina Fondi. Se lo nascondi, il budget resta salvato.', 'On the Funds page. Hiding it keeps the budget saved.']] as const) {
+    assert.equal(translate('it', it), it);
+    assert.equal(translate('en', it), en);
+  }
 });

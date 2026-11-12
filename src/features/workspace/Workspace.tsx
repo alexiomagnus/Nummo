@@ -57,7 +57,8 @@ const destinations: readonly Destination<Section>[] = [
 ];
 // The Spese page has two views: one-off expenses and subscriptions (every recurring series), never both.
 type ListView = 'expenses' | 'subscriptions';
-const listViews = [{ value: 'expenses', label: 'Spese' }, { value: 'subscriptions', label: 'Pagamenti ricorrenti' }] as const;
+// Short labels keep the segmented button on one line at every width; the accessible name of the second is the full one.
+const listViews = [{ value: 'expenses', label: 'Spese', full: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
 const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Importa ed esporta', settings: 'Impostazioni' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
@@ -273,7 +274,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <VisitedSection active={section === 'list' && !starting}>
       <View style={styles.list}>
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
-          options={listViews.map((view) => ({ ...view, label: t(view.label) }))} />
+          options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
@@ -290,7 +291,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} expenses={store.expenses}
       fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify} onCreateCategory={openCategories} /></VisitedSection>
     <VisitedSection active={section === 'funds' && !starting}><FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
-      defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} /></VisitedSection>
+      defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} showGeneralBudget={dashboardPreferences.showGeneralBudget} /></VisitedSection>
     <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}
       preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} /></VisitedSection>
     {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo))}

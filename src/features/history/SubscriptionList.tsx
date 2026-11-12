@@ -1,6 +1,6 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { ListRow, listRowStyles } from '../../components/ListRow';
@@ -101,6 +101,9 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
 }) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
+  // Below 360 dp the three actions only fit one row without the icon of the (red, text-only) cancel action.
+  const { width } = useWindowDimensions();
+  const narrow = compact && width < 360;
   const animate = useOverlayMotion();
   const { mounted, shown: visible } = usePresence(open, motion.fade, animate);
   const { entry, status, inTrial, amount_minor, frequency: inForce, next, payments, total } = summary;
@@ -131,15 +134,18 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
           <View style={[styles.actions, compact && styles.compactActions]}>
             <Button compact={compact} mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
+            {/* Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
             {status === 'active' && <Button compact={compact} mode="outlined" disabled={!canChange || working} loading={working}
+              accessibilityLabel={t("Metti in pausa")}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
-              onPress={() => onChange('paused')}>{t("Metti in pausa")}</Button>}
+              onPress={() => onChange('paused')}>{compact ? t("Pausa") : t("Metti in pausa")}</Button>}
             {status !== 'active' && <Button compact={compact} mode="contained-tonal" disabled={!canChange || working} loading={working}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
               onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
             {status !== 'cancelled' && <Button compact={compact} mode="text" textColor={colors.error} disabled={!canChange || working}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
-              onPress={() => onChange('cancelled')}>{t("Annulla abbonamento")}</Button>}
+              accessibilityLabel={t("Annulla abbonamento")}
+              icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
+              onPress={() => onChange('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
           </View>
           {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
             {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
@@ -183,11 +189,11 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', borderRadius: radius.pill,
     paddingHorizontal: spacing.sm, paddingVertical: 2 },
   rowAmount: { minWidth: 80, textAlign: 'right' },
-  details: { gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md },
+  details: { gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md, paddingHorizontal: spacing.md },
   fields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
   field: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  // Phones: compact buttons side by side (still 48 dp tall); they wrap only on very narrow screens.
+  actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm },
+  // Phones: compact buttons with short labels on one row (still 48 dp tall); they wrap only on very narrow screens.
   compactActions: { gap: spacing.xs },
   // A little more than the details gap (lg): the history is a separate block from the actions above.
   history: { marginTop: spacing.sm },

@@ -104,9 +104,11 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
             })}
           </View>
         </Card>
-        <Card title={t("Analisi")} style={styles.section}>
-          <SwitchRow label={t("Mostra andamento nel tempo")} value={preferences.dashboardTrend}
+        <Card title={t("Grafici e budget")} style={styles.section}>
+          <SwitchRow label={t("Mostra andamento nel tempo")} supporting={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}
             onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
+          <SwitchRow label={t("Mostra budget mensile")} supporting={t("Nella pagina Fondi. Se lo nascondi, il budget resta salvato.")}
+            value={preferences.showGeneralBudget} onChange={(showGeneralBudget) => onChange({ showGeneralBudget })} />
         </Card>
       </View>
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp

@@ -1,5 +1,128 @@
 # HANDOFF — Nummo
 
+## Impostazioni: sezione «Analisi» rinominata «Grafici e budget» — 12 novembre 2026
+
+- Il riquadro sotto «Stile delle icone» contiene ora andamento (Analisi) e budget generale (Fondi): titolo «Grafici e budget»
+  (EN «Charts and budget»), frase della Guida e traduzione allineate, caso i18n esteso. Le voci sotto che citano la sezione
+  «Analisi» delle Impostazioni si riferiscono a questo riquadro.
+
+## Righe di Spese: freccia di apertura più grande e distanziata — 12 novembre 2026
+
+- Su richiesta: chevron di `ListRow` (righe espandibili, Spese e Pagamenti ricorrenti) da 20 a 24 dp e 12 dp dall'importo
+  (gap `xs` + `marginLeft: spacing.sm`, prima 4). Solo `ListRow.tsx`. `npm run check` OK (368/368, build demo), diff check
+  OK. Resa nel browser non ricontrollata (servono spese); file di probe `.nummo-hover-*` nella radice di un'altra sessione, non toccati.
+
+## Impostazioni → Analisi: interruttore «Mostra budget mensile» — 12 novembre 2026
+
+- Su richiesta, scelta «strada A» dopo analisi dei rischi: preferenza locale `showGeneralBudget` (predefinita `true`) in
+  `nummo.preferences.v1`, `SwitchRow` sotto «Mostra andamento nel tempo» con testo di supporto. Spenta nasconde in Fondi
+  solo la scheda del budget generale e «Imposta un budget mensile»; budget dei fondi invariati. Nessuna scrittura né
+  cancellazione: `settings/budget`, Rules e backup invariati. Limiti noti: non sincronizzata tra dispositivi; il budget
+  nascosto resta nei dati e nei backup. Guida, EN, AGENTS.md aggiornati; test in `preferences.test.ts` e `i18n.test.ts`.
+- `npm run check` OK (**368/368**, build demo), diff check OK. Chromium su build demo da disconnessi (nessun emulatore,
+  rete esterna bloccata): aggiunto poi anche il testo di supporto di «Mostra andamento nel tempo» («Nella pagina Analisi, il grafico
+  delle spese giorno per giorno.», EN incluso). 412×915 scuro IT e 1280×900 chiaro EN, interruttore acceso di base, al tocco spento e salvato
+  `false`, nessun overflow/errore JS. **Pagina Fondi con budget nascosto non vista nel browser** (servono dati): solo codice.
+
+## Sprite pixel `coffee` leggibile nel tema scuro — 12 novembre 2026
+
+- Segnalazione (miniatura su sfondo scuro): la tazza appariva come un rettangolo ambra. Causa: manico, bordo e piattino
+  solo in `i`, scuro nel tema scuro. Ridisegnato su 12×12: vapore in due volute staccate dalla tazza, bordo `i`,
+  crema `t`, corpo `b`, manico ad anello e piattino in `b` (visibili in entrambi i temi), riga `i` di separazione.
+- Solo `categoryPixelGlyphs.ts`; stessi ID e tinta `amber`, altri stili invariati, nessuna modifica a Rules o dati.
+  `npm run check` OK (366/366, build demo), diff check OK. Anteprima Chromium statica prima/dopo a 24/48/96 px chiaro
+  e scuro (scratchpad della sessione); non vista nell'app né su telefono.
+
+## iPhone: barra di navigazione mobile più in basso — 12 novembre 2026
+
+- Segnalazione con screenshot da iPhone 16 Pro Max (app installata, build precedente con «Dashboard»): troppo spazio
+  sotto la pillola. Causa: `paddingBottom = spacing.md + insets.bottom` = 12 + 34 = 46 pt, mentre su iPhone l'indicatore
+  home sta già dentro la safe area. Ora `floatingBarBottomSpace(inset, gap, iPhone)` (`navIndicator.ts`, puro):
+  su iPhone con safe area `max(gap, inset − gap)` = **22 pt** (24 pt più in basso, ~9 pt sopra l'indicatore home);
+  altrove invariato. `isIPhone(userAgent)` riconosce solo iPhone/iPod: iPad, Android, desktop invariati. `barHeight`
+  (offset snackbar) usa lo stesso valore. Test in `tests/navIndicator.test.ts`.
+- `npm run check` OK (**366/366**, build demo); `git diff --check` OK. Chromium/CDP su build demo con emulatori
+  dedicati (Auth 47299, Firestore 47480, hub 47400, config temporanea in radice poi rimossa; seed con `FIRESTORE_PORT`
+  esplicito), UA iPhone, 440×956 DPR 3, safe area 59/34 via `Emulation.setSafeAreaInsetsOverride`: spazio sotto la
+  pillola 22 pt su Spese/Analisi/Fondi/Liste/Nuova, chiaro e scuro; con UA Android 46 pt (prima). Nessun overflow
+  orizzontale né errore JS; testata sotto la Dynamic Island (banner 0–123 pt). **Non provato su iPhone reale.**
+- **Trovato, non corretto:** iPhone in orizzontale (956×440, classe medium) mostra la rail, che non scorre: «Liste»
+  esce sotto il bordo e non è raggiungibile. Vale per ogni finestra medium bassa, non solo iPhone.
+- Lo screenshot mostrava anche «Accesso negato» (UID non proprietario o Rules): non indagato, build vecchia.
+
+## Selettori a segmenti su una riga, Analisi su tablet, pulsanti Fondi — 12 novembre 2026
+
+- `SegmentedButtons`: mai a capo (`numberOfLines={1}`, altezza 40). Larghezza naturale dell'etichetta misurata da un
+  clone nascosto nowrap; spunta mostrata solo se entra (gap + 18 dp); se un'etichetta non entra nemmeno senza spunta,
+  padding 8 dp a **tutti** i segmenti (con `flex: 1` il padding si somma alla larghezza: ridurlo a uno solo lo restringe).
+  `Segment.accessibilityLabel` facoltativo per il nome completo.
+- Etichette brevi su ogni dimensione (scelta dell'utente): vista Spese «Spese | Abbonamenti» (nome accessibile «Pagamenti
+  ricorrenti»), ricorrenza «Settimana | Mese | Anno» (nome «Settimanale»…; i testi descrittivi restano «Mensile»…),
+  tipo di movimento «Entrata | Giroconto» (nome «Trasferimento»). Guida (due paragrafi) e EN aggiornati, test i18n esteso.
+- Analisi: menu a tendina Periodo/Grafico anche su medium (chip solo da expanded); indicazione sotto la ciambella con
+  `marginTop` 16 (24 dp dal grafico invece di 8) su smartphone e tablet.
+- Fondi: etichette visibili «Nuovo fondo · Budget · Aggiungi · Trasferisci» (nomi accessibili completi «Imposta un budget
+  mensile», «Aggiungi denaro»); su medium pulsanti `compact` e gap 4: una riga da 600 dp. Smartphone: colonna invariata.
+  Modifiche concorrenti in `FundsPage` (`showGeneralBudget`) e preferenze conservate.
+- Chromium/CDP su build demo con emulatori dedicati (47199/47380, config/probe rimossi), dati fittizi (spese, un
+  abbonamento, due fondi con saldo): 320/360/412/600/700/1280 IT e 320/600 EN — tutti i selettori alti 40, nessun testo
+  a capo o troncato, segmenti di uguale larghezza, spunta presente dove c'è spazio, Fondi su una riga da 600, menu su
+  tablet, nessun overflow né errore JS. `npm run check` OK (**368/368**, build demo). Nessun commit/deploy.
+
+## Azioni dell'abbonamento su una riga da smartphone — 12 novembre 2026
+
+- `SubscriptionList`, classe compact: etichette visibili brevi «Pausa» (nuova, EN «Pause») e «Annulla» (esistente),
+  nome accessibile completo «Metti in pausa»/«Annulla abbonamento»; sotto 360 dp l'azione testuale rossa «Annulla»
+  perde l'icona (altrimenti a 320 dp IT andava a capo per ~7 px). Riga centrata verticalmente. Da medium invariato.
+- Misurato in Chromium/CDP (build demo, emulatori dedicati 47199/47380, config/probe rimossi): una sola riga a
+  320/360/393/412 IT e 320/412 EN, nessun overflow/errore JS. `npm run check` OK (366/366, build demo).
+- **Proposte, non implementate:** il selettore «Spese | Pagamenti ricorrenti» va a capo a 320 dp (altezza 56 invece di 38;
+  intero da 360 dp). Opzioni presentate all'utente: etichette brevi su compact, niente spunta su compact, schede M3.
+
+## Divisore dei dettagli allineato allo strato di hover — 12 novembre 2026
+
+- Righe `outlined` aperte (Spese e Pagamenti ricorrenti): il divisore superiore dei dettagli era rientrato di 12 dp per
+  lato e 8 dp sotto lo strato di hover. Ora il contenitore dei figli in `ListRow` non ha gap né padding laterale, e
+  `details` di `ExpenseList`/`SubscriptionList` ha `paddingHorizontal: spacing.md`: il divisore inizia dove finisce lo
+  strato, con la stessa larghezza (interno del bordo).
+- `npm run check` OK (**366/366**, incluso un test concorrente su `navIndicator`; build demo), `git diff --check` OK.
+  Chromium/CDP su build demo con emulatori dedicati (47199/47380, config e probe rimossi): 412 chiaro e 1280 scuro,
+  spesa e abbonamento aperti → scarto verticale 0, sinistra/destra 0, contenuti rientrati 12 dp, nessun overflow/errore.
+  Modifiche concorrenti ad `AppShell`/`navIndicator` non toccate. Nessun commit/deploy.
+- **Domanda aperta (Prossimi rinnovi):** l'utente chiede di includere «i pagamenti di questo mese non ancora avvenuti».
+  Dal codice la card elenca già il prossimo rinnovo attivo di ogni serie entro 30 giorni e il totale coincide con la
+  somma delle righe; un rinnovo con data odierna conta come già pagato. Caso mancante non ancora chiarito con l'utente.
+
+## Freccia di espansione nelle righe e indicazione ciambella sotto il grafico su mobile — 12 novembre 2026
+
+- `ListRow`: le righe espandibili (`onPress` + `expanded`) mostrano dopo l'importo una piccola freccia 20 dp
+  `onSurfaceVariant` (giù chiusa, su aperta, come gli altri elementi a scomparsa), `aria-hidden`: lo stato resta
+  annunciato da `aria-expanded`. Vale per Spese e Pagamenti ricorrenti; nessun nuovo testo.
+- `Dashboard`: con la legenda sotto la ciambella (`!chartSideBySide`, smartphone) l'indicazione «Tocca una sezione…» è
+  subito sotto il grafico, centrata, prima della legenda; con legenda affiancata resta sotto l'intero blocco come prima.
+  Sempre solo senza selezione.
+- `npm run check` OK (365/365, build demo), `git diff --check` OK. Chromium/CDP su build demo con emulatori dedicati
+  (47199/47380, config e probe temporanei nella radice rimossi), 3 spese fittizie in 2 categorie: 412×915 chiaro e 1280×900
+  scuro — frecce presenti e nascoste ai lettori, apertura riga ok, indicazione sopra la legenda su mobile (osservato da
+  screenshot), nessun overflow né errore JS. Non provati telefono reale né screen reader. Nessun commit/deploy.
+
+## Hover delle righe di Spese allineato al contorno — 12 novembre 2026
+
+- Segnalazione: in Spese lo strato di hover della riga era più piccolo del contorno. Causa in `ListRow` (`outlined`):
+  il padding (md orizzontale, xs verticale) stava sul contenitore bordato, quindi il pulsante interno e il suo strato
+  restavano rientrati. Ora il padding è dentro l'area premibile (e in un contenitore per i dettagli): lo strato riempie
+  l'interno del bordo con raggio `radius.control − 1`; con i dettagli aperti gli angoli inferiori sono a 0
+  (`StateLayerPressable.bottomRadius`, nuova prop facoltativa). Altezza minima compensata: riga invariata (62 px).
+  Vale anche per `SubscriptionList` (stessa riga). Righe non `outlined` (Categorie) invariate.
+- `npm run check` OK (365/365, build demo). Chromium/CDP su build demo con emulatori dedicati (Auth 47199, Firestore
+  47380, config temporanea e probe nella radice poi rimossi), 3 spese fittizie: 1280×900 scuro e 412×915 chiaro, hover
+  col mouse emulato → strato a 1 px dal bordo su tutti i lati, raggi 19/19 chiusa e 19/0 aperta, nessun overflow né
+  errore JS. Non provati mouse reale, touch, focus da tastiera visivo.
+- **Incidente da risolvere con l'utente:** al primo tentativo `seed-demo.ts` è partito senza `FIRESTORE_PORT` e ha scritto
+  `config/owner` (`uid: demo-owner`) nel progetto **`demo-nummo`** dell'emulatore hybrid dell'utente su 8180 (12 nov
+  19:22:29 UTC). Dati di `nummo-6b6e2` non toccati. La cancellazione è stata negata dai permessi: documento ancora
+  presente; sparisce al riavvio se l'export di uscita include solo `nummo-6b6e2` (non verificato).
+
 ## Preparazione commit e push autorizzati — 12 novembre 2026
 
 - Inclusi i ritocchi locali a sprite `sofa`/`coin`, riordino Impostazioni e pulsante Ripristina outlined,

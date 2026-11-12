@@ -67,7 +67,7 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           {funds.length > 1 && <SegmentedButtons label={t("Tipo di movimento")} value={kind} disabled={blocked}
             onChange={(next) => { setKind(next); setErrors({}); if (next === 'transfer' && !from) setFrom(funds.find((f) => f.id !== to)?.id ?? ''); }}
-            options={[{ value: 'income', label: t("Entrata") }, { value: 'transfer', label: t("Trasferimento") }]} />}
+            options={[{ value: 'income', label: t("Entrata") }, { value: 'transfer', label: t("Giroconto"), accessibilityLabel: t("Trasferimento") }]} />}
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo")} value={amount} inputMode="decimal" placeholder="0,00"
               readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.amount)} left={leadingIcon(iconShapes.euro)}

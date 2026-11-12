@@ -42,6 +42,8 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
   const theme = useTheme();
   const size = useSizeClass();
   const sideBySide = size !== 'compact';
+  // Chips only on desktop: on phones and tablets they wrap over several rows, so the two compact selectors are used.
+  const chips = size === 'expanded';
   const [chartWidth, setChartWidth] = useState(0);
   const chartSideBySide = chartWidth >= donutMaxSize + donutLegendWidth + spacing.lg;
   const { dashboardChart: chart, dashboardPeriod: period } = preferences;
@@ -70,6 +72,7 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
   };
   const chartProps = { data, colors, active, onActive: setActive };
   const muted = { color: theme.colors.onSurfaceVariant };
+  const donutHint = t('Tocca una sezione per vedere i dettagli della categoria.');
   const legend = <CategoryLegend key={period} series={data.series} others={others} categories={categories} total={data.total}
     colors={colors} active={active} onActive={setActive} onOpen={openCategory} />;
 
@@ -80,7 +83,7 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
   return (
     <View style={styles.layout}>
       <View style={styles.toolbar}>
-        {sideBySide ? (
+        {chips ? (
           <>
             <ChoiceChips label={t("Periodo")} value={period} onChange={changePeriod}
               options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />
@@ -88,7 +91,7 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
               options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />
           </>
         ) : (
-          // Chips would not fit on a phone: two compact selectors share one row.
+          // Phones and tablets: two compact selectors share one row.
           <>
             <MenuSelect label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.select}
               onChange={(value) => changePeriod(value)} options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />
@@ -127,10 +130,12 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
                   <DonutChart {...chartProps} />
                 </View>
                 {active !== null && <Button mode="text" onPress={() => openCategory(data.series[active]!.key)}>{t('Mostra transazioni')}</Button>}
+                {/* Legend below the chart (phones): the hint sits right under the donut, before the legend. */}
+                {active === null && !chartSideBySide && <Text variant="bodyMedium" style={[muted, styles.donutHintBelow]}>{donutHint}</Text>}
                 </View>
                 <View style={chartSideBySide ? styles.legendCol : undefined}>{legend}</View>
               </View>
-              {active === null && <Text variant="bodyMedium" style={[muted, styles.donutHint]}>{t('Tocca una sezione per vedere i dettagli della categoria.')}</Text>}
+              {active === null && chartSideBySide && <Text variant="bodyMedium" style={[muted, styles.donutHint]}>{donutHint}</Text>}
             </View>}
         </Card>}
       {preferences.dashboardTrend && <Card><TimeChart key={period} days={insights.days} /></Card>}
@@ -148,6 +153,8 @@ const styles = StyleSheet.create({
   total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
   donutHint: { marginTop: spacing.xxl },
+  // Clear space from the donut (plus the column gap), so the hint reads as a caption rather than part of the chart.
+  donutHintBelow: { textAlign: 'center', marginTop: spacing.lg },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   chartCol: { flex: 1, minWidth: 0, gap: spacing.sm },
   legendCol: { width: donutLegendWidth, flexShrink: 0 },

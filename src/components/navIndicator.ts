@@ -24,3 +24,15 @@ export const dragThreshold = 8;
 export function isHorizontalDrag(dx: number, dy: number): boolean {
   return Math.abs(dx) >= dragThreshold && Math.abs(dx) > Math.abs(dy);
 }
+
+// Space below the floating bar. Elsewhere the bar sits a gap above the bottom safe area. On iPhone the home indicator
+// lives inside that area (34 pt on Face ID models, indicator top ≈ 13 pt from the edge), so gap + inset left ~46 pt of
+// empty space: there the bar overlaps the inset by one gap and still stays clear of the indicator.
+export function floatingBarBottomSpace(inset: number, gap: number, iPhone: boolean): number {
+  return iPhone && inset > 0 ? Math.max(gap, inset - gap) : gap + inset;
+}
+
+// iPhone (and iPod touch) Safari and home-screen apps; iPad and other platforms keep the default spacing.
+export function isIPhone(userAgent: string): boolean {
+  return /\b(iPhone|iPod)\b/.test(userAgent);
+}

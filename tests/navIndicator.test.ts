@@ -34,3 +34,14 @@ test('molla spaziale M3 Expressive: rapporto di smorzamento 0,8', () => {
   const ratio = spatialSpring.damping / (2 * Math.sqrt(spatialSpring.stiffness * spatialSpring.mass));
   assert.ok(Math.abs(ratio - 0.8) < 1e-9);
 });
+
+test('barra mobile: su iPhone entra nella safe area senza toccare l’indicatore home, altrove resta sopra', async () => {
+  const { floatingBarBottomSpace, isIPhone } = await import('../src/components/navIndicator.ts');
+  assert.equal(floatingBarBottomSpace(34, 12, true), 22); // Face ID: 24 pt più in basso di prima (46)
+  assert.equal(floatingBarBottomSpace(34, 12, false), 46); // Android/desktop invariati
+  assert.equal(floatingBarBottomSpace(0, 12, true), 12); // iPhone SE / Safari con barra: nessuna safe area
+  assert.equal(floatingBarBottomSpace(20, 12, true), 12); // mai sotto il margine minimo
+  assert.equal(isIPhone('Mozilla/5.0 (iPhone; CPU iPhone OS 26_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Mobile/15E148 Safari/604.1'), true);
+  assert.equal(isIPhone('Mozilla/5.0 (iPad; CPU OS 26_1 like Mac OS X) AppleWebKit/605.1.15'), false);
+  assert.equal(isIPhone('Mozilla/5.0 (Linux; Android 16; Pixel 8) AppleWebKit/537.36 Chrome/142.0 Mobile Safari/537.36'), false);
+});

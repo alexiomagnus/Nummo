@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   rowAmount: { minWidth: 80, textAlign: 'right' },
   editRow: { flexBasis: '100%', alignItems: 'flex-start' },
   details: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: spacing.md, paddingBottom: spacing.sm },
+    paddingTop: spacing.md, paddingBottom: spacing.sm, paddingHorizontal: spacing.md },
   detailField: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
   empty: { gap: spacing.sm },
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },

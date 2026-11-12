@@ -55,7 +55,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title={t("Consultare le spese")}>
-        {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; tocca una spesa per aprirne i dettagli, da cui la modifichi o la elimini. Pagamenti ricorrenti raccoglie le spese che si ripetono."))}
+        {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; tocca una spesa per aprirne i dettagli, da cui la modifichi o la elimini. Abbonamenti raccoglie le spese che si ripetono."))}
         {p(t("L’elenco mostra 50 spese alla volta: Mostra altre spese estende la lista. Ricerca, ordinamento e riepiloghi mensili considerano sempre tutti i risultati."))}
         {p(t("La pagina Analisi mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con riepilogo, ciambella, blocchi o barre e andamento giornaliero interattivo."))}
         {p(t("Grafico e periodo scelti vengono ricordati in questo browser. Il confronto usa un intervallo precedente di pari durata, mostrato con le sue date, quando lo storico lo consente. L’andamento include i giorni senza spese fino a oggi e si può nascondere dalle Impostazioni."))}
@@ -66,7 +66,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
         {p(t("Una spesa può ripetersi ogni settimana, mese o anno: la inserisci una volta sola e compare a ogni scadenza maturata."))}
         {p(t("Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com'erano. Prossimi rinnovi mostra le scadenze dei prossimi 30 giorni."))}
         {p(t("Alla creazione di un abbonamento puoi attivare Periodo di prova gratuito e scegliere il primo pagamento. Durante la prova non viene conteggiata alcuna spesa. La data è modificabile finché futura; dopo il primo addebito resta invariata. Puoi annullare durante la prova per evitare i pagamenti successivi."))}
-        {p(t("In Pagamenti ricorrenti ogni serie mostra importo, frequenza, prossimo rinnovo e stato (Attivo, In pausa o Annullato). Aprendo i dettagli trovi lo storico dei pagamenti, quanti ne sono stati effettuati e il totale speso, anche per gli abbonamenti annullati."))}
+        {p(t("In Abbonamenti ogni serie mostra importo, frequenza, prossimo rinnovo e stato (Attivo, In pausa o Annullato). Aprendo i dettagli trovi lo storico dei pagamenti, quanti ne sono stati effettuati e il totale speso, anche per gli abbonamenti annullati."))}
         {p(t("Puoi mettere in pausa, annullare o riattivare un abbonamento: la scelta vale dai rinnovi successivi a oggi, i rinnovi che cadono mentre è in pausa o annullato non vengono conteggiati e i pagamenti già registrati non cambiano. Alla riattivazione i rinnovi riprendono dalle date originali. La pagina Analisi e l'esportazione CSV includono sempre i pagamenti effettuati degli abbonamenti."))}
         {p(t("Puoi cambiare la frequenza di un abbonamento da Modifica serie (settimanale, mensile o annuale) scegliendo la data del primo rinnovo con la nuova frequenza: i pagamenti già effettuati restano invariati e il prezzo segue il numero di rinnovo. Un abbonamento con la frequenza cambiata richiede la versione aggiornata dell’app e un backup versione 6."))}
       </Section>
@@ -74,6 +74,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       <Section title={t("Fondi")}>
         {p(t("I fondi e i budget sono facoltativi: puoi usare Nummo senza crearne nessuno. Un fondo raggruppa alcune spese (ad esempio vacanze, casa o università) con nome, icona e colore; in Nuova spesa puoi sceglierlo oppure lasciare Nessun fondo, e puoi indicarne uno predefinito."))}
         {p(t("La pagina Fondi mostra quanto hai speso nel mese, in totale e per fondo; aprendo un fondo vedi le sue spese del mese. Puoi impostare un budget mensile generale, per tutte le spese, e un budget per ciascun fondo: è un limite indicativo che mostra quanto hai speso e quanto resta, avvisa quando ti avvicini o lo superi, ma non blocca le spese. Vale dal mese corrente: i mesi passati restano come sono."))}
+        {p(t("Puoi nascondere il budget mensile generale da Impostazioni, sezione Grafici e budget: resta salvato e ricompare quando lo riattivi."))}
         {p(t("Le spese senza fondo restano valide; puoi assegnarle a un fondo solo se lo scegli. Un fondo con spese collegate si archivia invece di essere eliminato."))}
         {p(t("I fondi creati con una versione precedente conservano saldo iniziale, ricariche, movimenti ed eccezioni del budget: restano consultabili e non vengono modificati quando salvi il fondo."))}
       </Section>

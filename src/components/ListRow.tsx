@@ -33,7 +33,8 @@ type Props = {
   outlined?: boolean;
   // Below the row, inside the same divider (inline editor).
   children?: ReactNode;
-  // Expandable row: the whole main area is one button (no nested buttons), the children stay outside it.
+  // Expandable row: the whole main area is one button (no nested buttons), the children stay outside it; with
+  // `expanded` set, a small chevron after the trailing slot shows that it opens.
   onPress?: () => void;
   pressLabel?: string;
   expanded?: boolean;
@@ -46,6 +47,7 @@ type Props = {
 // Every row has the same minimum height and centres its content vertically.
 export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense }: Props) {
   const { colors } = useTheme();
+  const expandable = onPress !== undefined && expanded !== undefined;
   const content = <>
     <IconTile icon={icon} />
     <View style={styles.text}>
@@ -53,14 +55,26 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
       {meta}
       {subtitle ? <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{subtitle}</Text> : null}
     </View>
-    {trailing && <View style={styles.trailing}>{trailing}</View>}
+    {(trailing || expandable) && <View style={styles.trailing}>
+      {trailing}
+      {/* Small decorative chevron: hints that the row opens; state is announced by aria-expanded on the button. */}
+      {expandable && <View aria-hidden style={styles.chevron}>
+        <SvgIcon shape={expanded ? iconShapes.chevronUp : iconShapes.chevronDown} size={24} color={colors.onSurfaceVariant} />
+      </View>}
+    </View>}
   </>;
+  // Outlined rows keep their padding inside the target, so the hover/pressed layer fills the outline exactly: inner
+  // radius = outline radius − border width, square bottom while an expanded panel continues below it.
+  // The padding moves inside the target with the minimum height, so the row keeps its previous height.
+  const inset = outlined && [styles.outlinedMain, { minHeight: (dense ? denseHeight : rowHeight) + 2 * spacing.xs }];
+  const hasChildren = children !== undefined && children !== null && children !== false;
   return (
     <View role="listitem" style={outlined ? [styles.row, styles.outlined, { borderColor: dense ? colors.outlineVariant : colors.outline }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
-      {onPress ? <StateLayerPressable onPress={onPress} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="button"
-        accessibilityLabel={pressLabel} aria-expanded={expanded} aria-controls={controls} style={[styles.main, dense && styles.dense, styles.pressable]}>{content}</StateLayerPressable>
-        : <View style={[styles.main, dense && styles.dense]}>{content}</View>}
-      {children}
+      {onPress ? <StateLayerPressable onPress={onPress} layerColor={colors.onSurface} radius={outlined ? innerRadius : radius.control}
+        bottomRadius={outlined && hasChildren ? 0 : undefined} accessibilityRole="button"
+        accessibilityLabel={pressLabel} aria-expanded={expanded} aria-controls={controls} style={[styles.main, dense && styles.dense, outlined ? inset : styles.pressable]}>{content}</StateLayerPressable>
+        : <View style={[styles.main, dense && styles.dense, inset]}>{content}</View>}
+      {hasChildren && (outlined ? <View style={styles.outlinedChildren}>{children}</View> : children)}
     </View>
   );
 }
@@ -70,14 +84,25 @@ export const listRowStyles = StyleSheet.create({
   iconButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
 });
 
+const rowHeight = 56;
+const denseHeight = 52;
+const outlineWidth = 1;
+const innerRadius = radius.control - outlineWidth;
+
 const styles = StyleSheet.create({
   row: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.xs, gap: spacing.sm },
   noDivider: { borderBottomWidth: 0 },
-  outlined: { borderWidth: 1, borderBottomWidth: 1, borderRadius: radius.control, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
+  outlined: { borderWidth: outlineWidth, borderBottomWidth: outlineWidth, borderRadius: radius.control, paddingVertical: 0, gap: 0, marginBottom: spacing.sm },
+  outlinedMain: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  // No gap and no side padding: a divider drawn at the top of the children spans the hover layer edge to edge and
+  // starts exactly where it ends. The children pad their own content (spacing.md, like the row).
+  outlinedChildren: { paddingBottom: spacing.xs },
   pressable: { paddingHorizontal: spacing.xs },
-  dense: { minHeight: 52 },
-  main: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56 },
+  dense: { minHeight: denseHeight },
+  main: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: rowHeight },
   text: { flex: 1, minWidth: 0 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 },
   tile: { alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  // 24 dp like the other icons, so it reads as an affordance; spacing.md from the amount (xs gap + sm margin).
+  chevron: { marginLeft: spacing.sm, marginRight: -spacing.xs },
 });

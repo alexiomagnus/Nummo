@@ -32,6 +32,8 @@ type Props = {
   defaultFundId: string;
   onSetDefault: (id: string) => void;
   notify: (message: string) => void;
+  // Display preference (Settings → Charts and budget): when false the general budget card and its «set» action are hidden, never removed.
+  showGeneralBudget: boolean;
 };
 
 const kindLabels: Record<MonthKind, string> = { past: 'Mese concluso', current: 'Mese in corso', future: 'Previsione' };
@@ -42,10 +44,13 @@ const entryLabels: Record<FundEntry['kind'], string> = {
 
 export const FundsPage = memo(FundsPageView);
 
-function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSetDefault, notify }: Props) {
+function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSetDefault, notify, showGeneralBudget }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
-  const compact = useSizeClass() === 'compact';
+  const sizeClass = useSizeClass();
+  const compact = sizeClass === 'compact';
+  // Tablets: compact buttons with a tighter gap, so the four actions fit one row from 600 dp.
+  const tablet = sizeClass === 'medium';
   const [month, setMonth] = useState(monthOf(today));
   const [editing, setEditing] = useState<SyncedFund | 'new' | null>(null);
   const [moving, setMoving] = useState<{ kind: MovementKind; to?: string } | null>(null);
@@ -64,6 +69,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const balanceFunds = useMemo(() => new Set(funds.filter((fund) => hasBalanceData(fund, movements)).map((fund) => fund.id)), [funds, movements]);
   const anyBalance = balanceFunds.size > 0;
   const general = useMemo(() => generalBudgetMonth(remote.budgets, overview), [remote.budgets, overview]);
+  const budgetShown = showGeneralBudget && general.budget !== null;
   const balances = useMemo(() => new Map(overview.funds.map((item) => [item.fund.id, item.balance])), [overview]);
   const orphans = useMemo(() => unassignedExpenses(expenses, funds), [expenses, funds]);
   // Earliest month with data (first fund start or oldest expense), up to one year ahead (forecasts only).
@@ -106,13 +112,13 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       </View>
 
       {/* Spending overview first: what was spent in the month (every fund and «Senza fondo»). Balances only for funds that keep them. */}
-      {(funds.length > 0 || general.budget !== null) && <View style={styles.tiles}>
+      {(funds.length > 0 || budgetShown) && <View style={styles.tiles}>
         {tile(forecast ? t("Spese previste") : t("Speso nel mese"), formatAmount(forecast ? overview.forecastSpent : overview.spent),
           !forecast && overview.forecastSpent > 0 ? t("Altri {p0} di rinnovi previsti", { p0: formatAmount(overview.forecastSpent) }) : undefined)}
         {anyBalance && tile(t("Disponibile ora"), formatAmount(overview.available), undefined, overview.available < 0 ? colors.error : undefined)}
         {anyBalance && tile(overview.kind === 'past' ? t("Saldo a fine mese") : t("Saldo previsto a fine mese"), formatAmount(overview.closing))}
       </View>}
-      {general.budget !== null && <View style={[styles.budget, { backgroundColor: colors.elevation.level1 }]}>
+      {budgetShown && general.budget !== null && <View style={[styles.budget, { backgroundColor: colors.elevation.level1 }]}>
         <View style={styles.budgetHeader}>
           <Text variant="titleMedium" style={styles.bold}>{t("Budget mensile")}</Text>
           <Text variant="titleMedium" style={styles.number}>{formatAmount(general.budget)}</Text>
@@ -121,14 +127,17 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
         <Button mode="text" style={styles.start} disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}>{t("Modifica budget")}</Button>
       </View>}
 
-      <View style={[styles.actions, compact && styles.actionsCompact]}>
-        <Button mode="contained" disabled={!canWrite} onPress={() => setEditing('new')}
+      {/* Short visible labels keep the actions on one row from tablet width up; accessible names stay complete. */}
+      <View style={[styles.actions, compact && styles.actionsCompact, tablet && styles.actionsTablet]}>
+        <Button compact={tablet} mode="contained" disabled={!canWrite} onPress={() => setEditing('new')}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{t("Nuovo fondo")}</Button>
-        {general.budget === null && <Button mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.chart} size={size} color={color} />}>{t("Imposta un budget mensile")}</Button>}
-        {anyBalance && <Button mode="contained-tonal" disabled={!canWrite || activeFunds.length === 0} onPress={() => setMoving({ kind: 'income' })}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.euro} size={size} color={color} />}>{t("Aggiungi denaro")}</Button>}
-        {anyBalance && <Button mode="contained-tonal" disabled={!canWrite || activeFunds.length < 2} onPress={() => setMoving({ kind: 'transfer' })}
+        {showGeneralBudget && general.budget === null && <Button compact={tablet} mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
+          accessibilityLabel={t("Imposta un budget mensile")}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.chart} size={size} color={color} />}>{t("Budget")}</Button>}
+        {anyBalance && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite || activeFunds.length === 0} onPress={() => setMoving({ kind: 'income' })}
+          accessibilityLabel={t("Aggiungi denaro")}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.euro} size={size} color={color} />}>{t("Aggiungi")}</Button>}
+        {anyBalance && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite || activeFunds.length < 2} onPress={() => setMoving({ kind: 'transfer' })}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.swap} size={size} color={color} />}>{t("Trasferisci")}</Button>}
       </View>
       {!canWrite && <Text variant="bodySmall" style={muted}>{t("Le modifiche ai fondi richiedono la connessione e dati sincronizzati.")}</Text>}
@@ -377,6 +386,7 @@ const styles = StyleSheet.create({
   bold: { fontWeight: '700' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   actionsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
+  actionsTablet: { gap: spacing.xs },
   empty: { borderRadius: radius.card, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
   notice: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderWidth: 1, borderRadius: radius.card, padding: spacing.lg },
   list: { gap: spacing.md },

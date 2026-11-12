@@ -79,3 +79,12 @@ test('dashboard: andamento visibile di base, scelta booleana conservata, valori 
   const saved = { ...defaultPreferences, dashboardTrend: false, dashboardChart: 'bars' as const };
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
 });
+
+test('budget mensile generale: visibile di base, solo booleani accettati, scelta conservata', () => {
+  assert.equal(defaultPreferences.showGeneralBudget, true);
+  assert.equal(parsePreferences('{"dashboardTrend":false}').showGeneralBudget, true); // preferenze salvate prima della scelta
+  assert.equal(parsePreferences('{"showGeneralBudget":false}').showGeneralBudget, false);
+  for (const bad of ['"false"', '0', 'null', '{}']) assert.equal(parsePreferences(`{"showGeneralBudget":${bad}}`).showGeneralBudget, true);
+  const saved = { ...defaultPreferences, showGeneralBudget: false };
+  assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+});
