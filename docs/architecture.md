@@ -1,8 +1,30 @@
 # Architettura Nummo — Firebase personale
 
-Aggiornamento: 2 novembre 2026. La richiesta BYOF sostituisce la direzione Sheets di
+Decisione BYOF: 2 novembre 2026; revisione UI e contesto: 12 novembre 2026. La richiesta BYOF sostituisce la direzione Sheets di
 `recap.md` v0.4, conservata come specifica originale. Analisi della base e piano
 incrementale: [migrazione-byof.md](migrazione-byof.md).
+
+Le sezioni datate conservano anche decisioni successivamente sostituite. Comportamento corrente:
+quattro destinazioni Spese, Analisi, Fondi e Liste; Impostazioni, Categorie e Importa ed esporta dal menu account.
+Impostazioni è una pagina (anche prima del login), con due colonne solo da 872 px effettivi di contenuto.
+Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella senza totale centrale e Blocchi;
+l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
+convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
+
+## Tocchi, tastiera e overlay — 12 novembre 2026
+
+Nascondere la navigazione con `display: none` durante `pointerdown` faceva aumentare lo spazio dello scroller:
+vicino al fondo il browser riduceva `scrollTop`, spostando un altro controllo sotto il dito prima del rilascio.
+Riprodotto in Liste: toccando Totale spesa veniva spuntato l'ultimo prodotto. Ora la barra diventa invisibile e
+`inert`, ma conserva il proprio spazio durante l'anticipo; lo libera solo dopo la conferma della tastiera dal
+viewport. Anche lo scroll del campo attivo attende questa conferma. Restano fallback di 800 ms e attesa del
+recupero dell'altezza in chiusura. La rail medium scorre verticalmente quando la finestra è bassa.
+
+`AppDialog` condivide Escape e passaggio del focus con gli altri overlay: listener in cattura (RN Web TextInput
+ferma la propagazione), pila di aperture per chiudere solo il livello superiore, rispetto di `dismissable` e dei
+gestori che bloccano la chiusura durante un salvataggio; nessun secondo listener in DeleteDialog.
+Il dialogo Registra spesa riceve il totale digitato dalla bozza, senza attendere il listener della scrittura
+accodata. Il dettaglio lista è identificato dall'ID per non trasferire bozze/editor alla lista duplicata.
 
 ## Etichette della navigazione mobile (11 novembre 2026, issue #13)
 
@@ -278,7 +300,7 @@ stesso motivo `CategoryGlyph` aggancia la dimensione al multiplo di 12 più vici
 sono quindi in `b`/`t` e ogni sprite deve avere almeno dieci celle piene (test). Fallback pixel → colorato → outline →
 segnaposto; stessi ID, nessuna modifica a Firestore, Rules, backup o CSV. Etichetta «Pixel art» tradotta in en.ts.
 
-Dashboard, dettaglio giornaliero (8 novembre 2026): elenco compatto dei giorni con
+Storico, superato dall'andamento senza dettaglio giornaliero descritto sotto (8 novembre 2026): elenco compatto dei giorni con
 spese per tutti i periodi (anche 3/6/12 mesi), dal più recente, sette iniziali con
 espansione esplicita. Senza titolo/intestazione mensile: il mese è nella data di ogni
 riga, con anno quando l'intervallo attraversa due anni. I giorni senza
@@ -404,6 +426,8 @@ propone Firebase 9.14, incompatibile con la direzione attuale: nessun downgrade 
 un audit di sicurezza completo.
 
 ## Impostazioni di aspetto (3 novembre 2026)
+
+Nota storica: il dialogo è stato sostituito dalla pagina Impostazioni; vedere il riepilogo corrente in apertura.
 
 Menu account → «Impostazioni» (dialog, non una seconda navigazione). Preferenze solo di
 presentazione (tema, monocolore/palette, colore principale, carattere), salvate in
@@ -604,6 +628,9 @@ funzioni in una pagina aperta dalla voce **Categorie del menu account** (sotto I
   prodotti e i prodotti orfani. CSV invariato: una spesa da lista è una riga come le altre.
 
 ## Dashboard: riepilogo, classifica e andamento — 8 novembre 2026
+
+Fase storica, superata da «Ripristino Barre» e «Andamento senza dettaglio giornaliero» sotto.
+La ciambella corrente ha il centro vuoto; la migrazione delle preferenze è `ranking` → `bars`.
 
 La Dashboard legge esclusivamente le occorrenze già espanse dal workspace (inclusi i pagamenti ricorrenti
 maturati). Riepilogo e classifica usano l'aggregazione completa; solo Ciambella e Blocchi mantengono la proiezione

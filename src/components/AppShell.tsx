@@ -36,10 +36,11 @@ const KeyboardContext = createContext(false);
 const iPhone = typeof navigator !== 'undefined' && isIPhone(navigator.userAgent);
 export const useKeyboardOpen = () => useContext(KeyboardContext);
 
-function useVirtualKeyboard(): boolean {
+function useVirtualKeyboard() {
   const [open, setOpen] = useState(false);
-  useEffect(() => (typeof window === 'undefined' ? undefined : observeVirtualKeyboard(window, setOpen)), []);
-  return open;
+  const [confirmed, setConfirmed] = useState(false);
+  useEffect(() => (typeof window === 'undefined' ? undefined : observeVirtualKeyboard(window, setOpen, setConfirmed)), []);
+  return { open, confirmed };
 }
 
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
@@ -49,17 +50,17 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const { colors } = theme;
   const size = useSizeClass();
   const reduceMotion = useReducedMotion();
-  const keyboard = useVirtualKeyboard();
-  // The layout above the keyboard changes (navigation hidden, save bar back in the flow): bring the focused field back
+  const { open: keyboard, confirmed: keyboardConfirmed } = useVirtualKeyboard();
+  // Once the keyboard changes the layout, bring the focused field back
   // into view once it has settled. `nearest` honours the scroll padding reserved by sticky bars.
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const frame = requestAnimationFrame(() => {
       const active = document.activeElement;
-      if (keyboard && active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
+      if (keyboardConfirmed && active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
     });
     return () => cancelAnimationFrame(frame);
-  }, [keyboard]);
+  }, [keyboardConfirmed]);
   const page = useRef<ComponentRef<typeof View>>(null);
   const previousSection = useRef(selected);
   // Animate the existing DOM container: no per-frame React/JS updates or remount of drafts.
@@ -81,8 +82,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     scroller.current?.scrollTo({ y: 0, animated: false });
   }, [onSelect]);
   const hasNav = Boolean(destinations?.length);
-  // While typing, the navigation bar would take room from the fields above the keyboard: it is hidden (still mounted,
-  // so its state and the round action survive) and comes back when the keyboard closes.
+  // Hide on touch, but keep its space until the viewport confirms the keyboard. Removing it on pointerdown would
+  // clamp scrollTop near the bottom, shifting another control under the finger before pointerup/click.
   const navMounted = hasNav && size === 'compact';
   const bottomBar = navMounted && !keyboard;
   // Compact: floating toolbar (destinations pill + round primary action) in the layout flow, above the bottom inset.
@@ -136,7 +137,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
             </ThemeProvider>
           </ScrollView>
         </View>
-        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomSpace={barBottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} />}
+        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomSpace={barBottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} reserveSpace={keyboard && !keyboardConfirmed} />}
       </SnackbarProvider>
     </View>
   );
@@ -151,7 +152,7 @@ function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boo
 type Fab<T extends string> = { label: string; icon: string; target: T };
 type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
-function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomSpace, fab, reserveFab, hidden }: NavProps<T> & { bottomSpace: number; reserveFab: boolean; hidden: boolean }) {
+function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomSpace, fab, reserveFab, hidden, reserveSpace }: NavProps<T> & { bottomSpace: number; reserveFab: boolean; hidden: boolean; reserveSpace: boolean }) {
   const { t } = useI18n();
   const { colors, fonts } = useTheme();
   const reduceMotion = useReducedMotion();
@@ -200,7 +201,9 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const { pill, indicator, focus, suppressPressed } = useSlidingIndicator(destinations, index, onSelect, reduceMotion);
   const shownIndex = focus ?? index;
   return (
-    <View onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)} style={[styles.floating, { paddingBottom: bottomSpace }, hidden && styles.hidden]}>
+    <View aria-hidden={hidden} {...{ inert: hidden ? true : undefined }} pointerEvents={hidden ? 'none' : 'auto'}
+      onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
+      style={[styles.floating, { paddingBottom: bottomSpace }, hidden && (reserveSpace ? { opacity: 0 } : styles.hidden)]}>
       <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
             the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}
@@ -393,7 +396,8 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
   const { t } = useI18n();
   const { colors } = useTheme();
   return (
-    <View role="navigation" aria-label={t("Sezioni")} style={[styles.rail, { backgroundColor: colors.background }]}>
+    <ScrollView role="navigation" aria-label={t("Sezioni")} style={[styles.rail, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.railContent} keyboardShouldPersistTaps="handled">
       {fab && (
         <FAB mode="flat" icon={({ size, color }) => <SvgIcon shape={fab.icon} size={size} color={color} />} accessibilityLabel={fab.label}
           onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
@@ -414,7 +418,7 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
           </StateLayerPressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -467,7 +471,8 @@ const styles = StyleSheet.create({
   pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill, overflow: 'visible' },
   actionSlot: { height: layout.floatingBar, overflow: 'hidden' },
   roundAction: { width: layout.floatingBar, height: layout.floatingBar, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  rail: { width: layout.railWidth, paddingTop: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },
+  rail: { width: layout.railWidth, flexGrow: 0, flexShrink: 0 },
+  railContent: { paddingTop: spacing.lg, paddingBottom: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },
   railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.button },
   railItem: { width: layout.railWidth - spacing.sm, alignItems: 'center', gap: spacing.xs, paddingVertical: 4 },
   railIndicator: { overflow: 'hidden', width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },

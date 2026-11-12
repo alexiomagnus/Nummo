@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from './AppDialog';
@@ -28,13 +28,6 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (!visible) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape' && !busy) onDismiss(); };
-    document.addEventListener('keydown', onKey);
-    const timer = setTimeout(() => document.querySelector<HTMLElement>('[role=alertdialog] [role=button], [role=alertdialog] button')?.focus(), 80);
-    return () => { document.removeEventListener('keydown', onKey); clearTimeout(timer); };
-  }, [visible, busy, onDismiss]);
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={() => { if (!busy) onDismiss(); }} style={{ maxWidth: 400 }}>

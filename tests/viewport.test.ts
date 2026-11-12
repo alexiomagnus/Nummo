@@ -97,7 +97,8 @@ test('tastiera virtuale: apertura, passaggio tra campi, chiusura, zoom e rimozio
   const visual = Object.assign(new EventTarget(), { height: 915, width: 412, scale: 1 });
   const target = Object.assign(new EventTarget(), { innerHeight: 915, innerWidth: 412, visualViewport: visual, document: doc });
   const states: boolean[] = [];
-  const stop = observeVirtualKeyboard(target as unknown as Window, (open) => states.push(open));
+  const confirmed: boolean[] = [];
+  const stop = observeVirtualKeyboard(target as unknown as Window, (open) => states.push(open), (value) => confirmed.push(value));
   const input = { tagName: 'INPUT', type: 'text' }, area = { tagName: 'TEXTAREA' };
   doc.activeElement = input; doc.dispatchEvent(new Event('focusin')); await tick();
   assert.deepEqual(states, [], 'focus senza riduzione: tastiera fisica');
@@ -121,6 +122,7 @@ test('tastiera virtuale: apertura, passaggio tra campi, chiusura, zoom e rimozio
   stop();
   doc.activeElement = input; doc.dispatchEvent(new Event('focusin')); visual.dispatchEvent(new Event('resize')); await tick();
   assert.deepEqual(states, [true, false, true, false]);
+  assert.deepEqual(confirmed, [true, false, true, false], 'lo spazio della barra si libera solo con tastiera confermata e torna alla fine della chiusura');
 });
 
 test('tastiera virtuale: tocco anticipa apertura, nessun flash nei primi resize e fallback con tastiera fisica', (context) => {
@@ -130,7 +132,8 @@ test('tastiera virtuale: tocco anticipa apertura, nessun flash nei primi resize 
   const visual = Object.assign(new EventTarget(), { height: 915, width: 412, scale: 1 });
   const target = Object.assign(new EventTarget(), { innerHeight: 915, innerWidth: 412, visualViewport: visual, document: doc });
   const states: boolean[] = [];
-  const stop = observeVirtualKeyboard(target as unknown as Window, (open) => states.push(open));
+  const confirmed: boolean[] = [];
+  const stop = observeVirtualKeyboard(target as unknown as Window, (open) => states.push(open), (value) => confirmed.push(value));
   const pointer = (pointerType: string, entry: object) => {
     const event = Object.assign(new Event('pointerdown'), { pointerType });
     Object.defineProperty(event, 'target', { value: entry });
@@ -141,16 +144,19 @@ test('tastiera virtuale: tocco anticipa apertura, nessun flash nei primi resize 
   assert.deepEqual(states, [], 'mouse e picker non anticipano la tastiera');
   pointer('touch', input);
   assert.deepEqual(states, [true], 'barra nascosta prima del primo resize');
+  assert.deepEqual(confirmed, [], 'il tocco non deve liberare spazio e spostare il bersaglio prima del rilascio');
   visual.height = 880; visual.dispatchEvent(new Event('resize'));
   assert.deepEqual(states, [true], 'nessuna ricomparsa all’inizio dell’animazione');
   visual.height = 503; visual.dispatchEvent(new Event('resize'));
   context.mock.timers.tick(1000);
   assert.deepEqual(states, [true], 'tastiera confermata dal viewport');
+  assert.deepEqual(confirmed, [true]);
   visual.height = 915; visual.dispatchEvent(new Event('resize'));
   pointer('touch', input);
   visual.height = 860; visual.dispatchEvent(new Event('resize'));
   context.mock.timers.tick(1000);
   assert.deepEqual(states, [true, false, true, false], 'con sole barre browser il tocco non lascia la barra nascosta');
+  assert.deepEqual(confirmed, [true, false], 'il fallback non cambia la geometria della pagina');
   pointer('touch', input);
   stop();
   context.mock.timers.tick(1000);

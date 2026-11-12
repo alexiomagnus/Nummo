@@ -27,8 +27,7 @@ export function TrialField({ enabled, firstPaymentDate, startDate, error, disabl
     {enabled && <>
       <DateField name={t('Primo pagamento')} label={t('Primo pagamento')} value={firstPaymentDate} minDate={dayAfterStart} maxDate={maxFirstPaymentDate}
         error={Boolean(error)} disabled={disabled || locked} onChange={(date) => onChange({ firstPaymentDate: date || todayInRome() })} />
-      <Text variant="bodySmall">{locked ? t('La prova è terminata: la data del primo pagamento resta invariata.')
-        : t('Nessuna spesa durante la prova. Da questa data iniziano i pagamenti con l’importo e la frequenza scelti.')}</Text>
+      {locked && <Text variant="bodySmall">{t('La prova è terminata: la data del primo pagamento resta invariata.')}</Text>}
     </>}
     {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
   </View>;

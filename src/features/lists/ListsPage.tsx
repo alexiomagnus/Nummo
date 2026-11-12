@@ -73,7 +73,7 @@ function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundI
     }} />;
 
   if (open) return <>
-    <ListDetail list={open} items={remote.itemsFor(open.id)} state={listState(open, expenseIds)} remote={remote} categories={categories}
+    <ListDetail key={open.id} list={open} items={remote.itemsFor(open.id)} state={listState(open, expenseIds)} remote={remote} categories={categories}
       expense={open.expense_id ? expenses.find((e) => e.id === open.expense_id) : undefined}
       fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={canRegister} notify={notify} onCreateCategory={onCreateCategory}
       onBack={() => setOpenId(null)} onEdit={() => setEditing(open)} onOpen={setOpenId} />
@@ -287,7 +287,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
       {editingItem && <ItemEditor item={editingItem} close={() => setEditingItem(null)}
         onSave={(next) => remote.updateItem(editingItem, { name: next })}
         onDelete={() => remote.removeItem(editingItem)} />}
-      {registering && <RegisterListDialog list={list} items={items} categories={categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
+      {registering && <RegisterListDialog list={list} initialAmount={totalText} items={items} categories={categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
         canRegister={canRegister} error={remote.error} close={() => setRegistering(false)} onCreateCategory={onCreateCategory}
         onRegister={async (expenseId: string, data: ExpenseData, remember: boolean) => {
           const saved = await remote.register(list, expenseId, data, remember);

@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { HelperText, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { SelectField } from '../../components/SelectField';
 import { noFund, type Fund } from '../../domain/funds';
 import { useI18n } from '../../i18n/I18nProvider';
@@ -33,12 +33,11 @@ export function FundField({ choices, value, error, disabled, onChange }: {
           {t("Saldo disponibile: {p0}", { p0: formatAmount(selected.balance) })}</Text>}
         {selected.remaining !== null && <Text variant="bodySmall" style={{ color: over ? colors.error : colors.onSurfaceVariant }}>
           {over ? t("Budget del mese superato di {p0}", { p0: formatAmount(-selected.remaining) }) : t("Budget residuo del mese: {p0}", { p0: formatAmount(selected.remaining) })}</Text>}
-      </View> : value === noFund ? <HelperText type="info" style={styles.helper}>{t("La spesa non sarà assegnata a nessun fondo.")}</HelperText> : null}
+      </View> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   info: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.md, paddingHorizontal: spacing.md, paddingTop: spacing.xs },
-  helper: { paddingHorizontal: spacing.md },
 });

@@ -1,5 +1,55 @@
 # HANDOFF — Nummo
 
+## Rimozione testi di supporto e commit/push autorizzati — 12 novembre 2026
+
+- Su richiesta rimossi il testo esplicativo sotto Primo pagamento durante la prova e la nota per Nessun fondo,
+  da tutti i moduli che riusano TrialField/FundField, con le relative traduzioni EN. Conservati errori, informazioni
+  del fondo selezionato e avviso della prova terminata; nessuna modifica a calcoli, dati o Rules.
+- Commit e push richiesti anche per le correzioni e il riallineamento documentale della fase precedente sotto.
+  Nessuna pubblicazione Hosting/Rules; il precedente «senza commit/push» descrive lo stato prima di questa richiesta.
+- `npm run check` OK sull'intero albero finale: typecheck, 368/368 test e build demo; `git diff --check` OK.
+  Nessuna nuova verifica browser per la sola rimozione di testo; suite SDK/Rules 18/18 della fase precedente.
+
+## Stato corrente — revisione Liste e controllo generale, 12 novembre 2026
+
+- Base Git verificata: `main` a `61c8b62`, inizialmente pulito e allineato al riferimento locale `origin/main`
+  (nessun fetch). Le correzioni sotto sono locali, senza commit, push o pubblicazione. Le sezioni datate conservano
+  la cronologia: titoli «Stato corrente»/«Fase attuale» più vecchi non descrivono questo checkout.
+- **Liste, bug riprodotto e corretto:** su Chromium touch 320×740, scorrendo al totale, la scomparsa della barra
+  durante `pointerdown` aumentava lo spazio dello scroller e riduceva `scrollTop`; al rilascio veniva spuntato
+  Detersivo al posto di mettere a fuoco Totale spesa. In `AppShell` la barra ora è invisibile e `inert` ma conserva
+  lo spazio finché `observeVirtualKeyboard` non conferma la tastiera. Lo scroll del campo attivo attende la stessa
+  conferma. Regressioni dell'osservatore estese a conferma/fallback/chiusura; nessuna modifica a dati o Rules.
+- **Totale nella conferma:** riprodotto un dialogo Registra spesa con importo vuoto nonostante `12,50` appena
+  digitato. Ora riceve la bozza corrente, senza attendere la scrittura accodata/listener. `ListDetail` ha key ID:
+  duplicare/aprire un'altra lista non trasferisce testo, errori o editor del dettaglio precedente.
+- **Overlay:** `AppDialog` espone il ruolo dialog, usa Escape in cattura (funziona anche dai TextInput RN Web),
+  passa il focus al primo controllo e lo restituisce senza scroll. Pila delle aperture: Escape chiude solo il livello
+  superiore, rispettando dismissable e blocchi durante il salvataggio. Tolto il gestore Escape/focus duplicato di
+  DeleteDialog; prima azione della conferma resta Annulla. **Rail medium** ora scorre nelle finestre basse.
+- **Controllo browser:** Chromium/CDP, build demo con Auth 48199/Firestore 48380/Hub 48417 dedicati, rete HTTPS
+  esterna bloccata. Totale fermo tra touchStart/touchEnd, focus corretto e checkbox invariate; bozza del totale nella
+  conferma ed Escape: 320×740 IT scuro, 360×800 IT chiaro, 412×915 IT scuro, 600×800 EN chiaro, 820×1000 IT chiaro,
+  1280×900 EN scuro. Dialoghi annidati (prodotto/eliminazione), Annulla a fuoco, selettore Categoria sopra Registra,
+  Escape dal testo, tastiera simulata 740→430→740: passati. Liste raggiungibile nella rail a 600×360, 820×360 e 956×440.
+  Controllo delle quattro destinazioni con fixture standard popolata a 320/412/600/820/1280: nessun overflow orizzontale
+  né archivio invalido. Creazione lista/prodotto e duplicazione via UI: prodotto copiato, bozze ed errori non trasferiti;
+  nessuna eccezione JavaScript raccolta. Screenshot demo osservati; probe e risultati in `/tmp/nummo-ui-*` (temporanei).
+- **Verifiche:** `npm run check` OK (typecheck, 368/368 test, build demo); suite SDK/Rules demo 18/18 sulle porte
+  dedicate (`AUTH_PORT=48199 FIRESTORE_PORT=48380 node tests/emulator/firestore.e2e.ts`, con emulatori già avviati).
+  La suite copre CRUD/conflitti/offline/import e registrazione lista unica con ripristino all'eliminazione della spesa.
+  Emulatori e Chromium propri arrestati, config/seed temporanei rimossi dalla radice.
+  Nessun dato personale né servizio hybrid preesistente modificato. Nessun test su telefono/Safari/PWA reale.
+- **Documentazione riallineata:** README (Analisi, Fondi, Liste, backup dal menu account, stato dei rilasci), AGENTS
+  (872 px per le due colonne, spazio durante l'anticipo tastiera e rail scorrevole), architettura (decisioni correnti
+  e sezioni storiche esplicite), guida fixture (v5 storici, lettore v6). Catalogo attuale 39 icone; fixture JSON cinque.
+- **Produzione:** ultimo rilascio documentato Hosting `e2eee92` del 12 novembre 00:03 Europe/Rome; le rimozioni
+  successive di icone/Rules e queste correzioni non risultano pubblicate nel registro. Stato cloud e issue non
+  interrogati in questa revisione. Prima di pubblicare resta il controllo autorizzato degli ID icona rimossi nei dati.
+- **Restano:** prove dispositivi reali; prossimi rinnovi (una riga per serie, totale di tutte le occorrenze nella
+  finestra); incidente del seed nel progetto demo dell'emulatore hybrid utente (nota storica sotto, non intervenuti).
+  Il controllo generale non certifica tutti i flussi né assenza di ulteriori bug; nessun audit dipendenze/clone pulito.
+
 ## Impostazioni: sezione «Analisi» rinominata «Grafici e budget» — 12 novembre 2026
 
 - Il riquadro sotto «Stile delle icone» contiene ora andamento (Analisi) e budget generale (Fondi): titolo «Grafici e budget»
@@ -209,7 +259,7 @@
 - Compatibilità: record e backup con gli ID rimossi vengono rifiutati; nessun adapter o migrazione automatica,
   nessun dato personale letto/modificato. Rules solo locali, nessun commit o deploy.
 
-## Stato corrente — 11 novembre 2026
+## Stato all'11 novembre 2026 — storico, superato dal riepilogo in apertura
 
 - **Produzione = `a479b7b`** (ultimo commit con codice; i successivi sono solo documenti). Rilascio del 10 novembre
   (Rules 01:20:40 UTC, Hosting 02:21 Europe/Rome) descritto in `IMPLEMENTATION_PLAN.md`: issue #6, #7, #9, #10, #12
@@ -240,7 +290,7 @@
 - **Discrepanze note ancora aperte:** `AppDialog` non chiude con Escape (solo `AnchoredMenu`/`BottomSheet` usano
   `useEscape`), in contrasto con la convenzione Overlay di AGENTS.md. README (backup da «Spese → Dati», mancano Fondi/
   Liste/Importa ed esporta) e parti di `docs/architecture.md` sono storici. Traduzioni inutilizzate della vecchia Guida
-  sui Fondi in `src/i18n/en.ts`. Le sezioni datate sotto sono registro storico: per numeri e versioni vale questa.
+  sui Fondi in `src/i18n/en.ts`. Questi riscontri sono storici: per numeri e problemi attuali vale il riepilogo in apertura.
 
 ## Issue #14 (spese programmate) chiusa senza implementazione — 12 novembre 2026
 
@@ -967,7 +1017,7 @@ Firestore BYOF, accesso riservato all'UID in `config/owner`. Contesto stabile, a
 motivazioni: `docs/architecture.md`; configurazione: `README.md`, `docs/firebase-personale.md`.
 Questo file descrive il checkout: risultati emulati non certificano cloud, dispositivi reali o pubblicazione.
 
-## Fase attuale — icona monocromatica (non pubblicata)
+## Fase storica — icona monocromatica (stato del 9 novembre)
 
 - Aggiunta `public/icons/icon-monochrome.svg`, stesse forme del logo con riempimento nero
   opaco e sfondo trasparente; scala 0,77 contro 0,72 della favicon (+6,9%), entro il
@@ -997,7 +1047,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   `origin/main` (nessun fetch). Quel commit ha già rimosso `.nummo-hybrid-12312.json`:
   la nota storica sotto e il passo di rimozione dall'indice sono superati; manca il glob in `.gitignore`.
 
-## Fase attuale — icone di categoria (non pubblicata, Rules locali cambiate)
+## Fase storica — icone di categoria (stato del 9 novembre)
 
 - Su richiesta dell'utente **eliminati del tutto gli ID `car`, `bus`, `tree`** (auto, autobus, natura): rimossi da
   `categoryIconLabels`, glifi minimali, disegni colorati, sprite pixel, traduzioni EN e dalle due liste `icon in [...]`
@@ -1129,7 +1179,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   filtro categoria, ordinamento, raggruppamento mensile) e «Pagamenti ricorrenti» (serie, ricerca normalizzata,
   stati Attivo/In pausa/Annullato, storico pagamenti, prossimi rinnovi). Ricorrenze settimanali/mensili/annuali con
   fino a otto variazioni di prezzo per numero di rinnovo; i pagamenti maturati non vengono mai riscritti.
-- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 42 icone (`categoryIcons`) in tre stili
+- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 39 icone (`categoryIcons`) in tre stili
   (minimale, colorato, pixel); cinque predefinite su archivio vuoto confermato dal server.
 - **Fondi e budget** (destinazione «Fondi»): dalla #7 facoltativi e semplici (nome, icona, colore, budget) con budget
   mensile generale (`settings/budget`); per i fondi che li avevano restano saldo iniziale, ricarica mensile calcolata, budget mensile con eccezioni,
@@ -1149,8 +1199,8 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa» (modulo desktop compatto ≥1024 dp),
   temi/tinte, IT/EN senza rimontare sessione o bozze, tastiera virtuale gestita, transizioni con riduzione movimento.
 - **Abbonamenti:** prove gratuite (schema 2) e cambio di frequenza (schema 3, `calendar_changes`).
-- **Collaudo:** `docs/testing/` con quattro backup fittizi (casi limite e spese standard dell'8 novembre, prove gratuite,
-  cambio di frequenza) e guida ai risultati attesi. Da importare preferibilmente nella demo.
+- **Collaudo:** `docs/testing/` con cinque backup fittizi (casi limite e spese standard dell'8 novembre, prove gratuite,
+  cambio di frequenza e utente medio) e guida ai risultati attesi. Da importare preferibilmente nella demo.
 
 ## Decisioni tecniche recenti (dettagli in `docs/architecture.md`)
 
@@ -1183,9 +1233,8 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   integralmente. Licenza assente; audit dipendenze non aggiornato. Nessun lint configurato.
 - Richieste pregresse senza contesto sufficiente (scritta «minimale» senza testo, colori attivi mobile/rail): chiarire
   con l'utente prima di intervenire.
-- **Documentazione d'uso parzialmente storica:** README indica ancora Spese → «Dati» per i backup e non elenca Fondi/Liste;
-  `docs/architecture.md` conserva sezioni poi superate (classifica, dettaglio giornaliero, totale centrale ciambella).
-  Per il comportamento attuale usare codice e questo stato; riallineamento fuori dalla presente revisione di due file.
+- **Documentazione storica:** riallineati README e riepiloghi dell'architettura il 12 novembre; le vecchie fasi restano
+  conservate ed esplicitamente storiche. Per comportamento e verifiche attuali usare codice e riepilogo in apertura.
 
 ## Verifiche
 

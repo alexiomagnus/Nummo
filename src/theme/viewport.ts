@@ -35,7 +35,8 @@ export function isTextEntry(element: FocusTarget): boolean {
   return !nonTextInputs.has((element.type ?? 'text').toLowerCase()) && !element.readOnly && !element.disabled;
 }
 
-export function observeVirtualKeyboard(target: Window, update: (open: boolean) => void): () => void {
+// `update` hides navigation immediately; `onConfirmedChange` permits layout changes only after viewport confirmation.
+export function observeVirtualKeyboard(target: Window, update: (open: boolean) => void, onConfirmedChange?: (confirmed: boolean) => void): () => void {
   const visual = target.visualViewport;
   const doc = target.document;
   let reference: KeyboardReference | null = null;
@@ -43,9 +44,11 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   let open = false;
   let opening = false;
   let confirmed = false;
+  let publishedConfirmed = false;
   let openingTimer: ReturnType<typeof setTimeout> | undefined;
   const publish = (next: boolean) => {
     if (next !== open) { open = next; update(open); }
+    if (confirmed !== publishedConfirmed) { publishedConfirmed = confirmed; onConfirmedChange?.(confirmed); }
   };
   const evaluate = () => {
     const detected = height !== null && keyboardOpen(reference, height, isTextEntry(doc.activeElement as FocusTarget));

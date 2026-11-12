@@ -41,21 +41,29 @@ export function useOverlayMotion(): boolean {
   return !useReducedMotion();
 }
 
-// Escape closes the topmost overlay only while it is open.
-function useEscape(active: boolean, onEscape: () => void) {
+// Portals may nest a selector or a confirmation above a dialog. Only the last opened overlay handles Escape.
+const escapeStack: object[] = [];
+export function useEscape(active: boolean, onEscape: () => void) {
   const latest = useRef(onEscape);
   latest.current = onEscape;
   useEffect(() => {
     if (!active || typeof document === 'undefined') return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') latest.current(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const entry = {};
+    escapeStack.push(entry);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || escapeStack.at(-1) !== entry) return;
+      event.preventDefault();
+      latest.current();
+    };
+    // RN Web TextInput stops bubbling key events, including Escape.
+    document.addEventListener('keydown', onKey, true);
+    return () => { escapeStack.splice(escapeStack.indexOf(entry), 1); document.removeEventListener('keydown', onKey, true); };
   }, [active]);
 }
 
 // Focus moves to the first item once the overlay is shown (as Paper's menu did) and goes back, without scrolling, to the
 // element that had it when the overlay opened (the field), unless the user has meanwhile moved it elsewhere.
-function useFocusHandoff(visible: boolean, shown: boolean, container: { current: unknown }) {
+export function useFocusHandoff(visible: boolean, shown: boolean, container: { current: unknown }) {
   const opener = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!visible || typeof document === 'undefined') return;
@@ -71,7 +79,7 @@ function useFocusHandoff(visible: boolean, shown: boolean, container: { current:
   useEffect(() => {
     const node = container.current;
     if (!shown || !(node instanceof HTMLElement)) return;
-    const first = node.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"]), [tabindex="0"]');
+    const first = node.querySelector<HTMLElement>('input:not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly]), button:not([disabled]):not([tabindex="-1"]):not([aria-hidden="true"]), [role="menuitem"]:not([aria-disabled="true"]), [tabindex="0"]');
     first?.focus({ preventScroll: true });
   }, [shown, container]);
 }

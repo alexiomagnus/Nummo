@@ -13,10 +13,10 @@ import { spacing } from '../../theme/tokens';
 import { ExpenseFields } from '../expenses/ExpenseFields';
 import { FundField, noFund, type FundChoice } from '../funds/FundField';
 
-const amountText = (minor: number | null) => minor === null ? '' : `${Math.floor(minor / 100)},${String(minor % 100).padStart(2, '0')}`;
-
 type Props = {
   list: SyncedList; items: readonly SyncedListItem[]; categories: readonly Category[];
+  // Use the current draft, without waiting for the total's queued write to reach the list listener.
+  initialAmount: string;
   fundChoices: readonly FundChoice[]; defaultFundId: string; canRegister: boolean;
   onRegister: (expenseId: string, data: ExpenseData, remember: boolean) => Promise<boolean>;
   // After a confirmed registration, when the user asked to move what was not bought into a new list (with the list's
@@ -30,7 +30,7 @@ type Props = {
 // Confirmation before registering a list: the same fields as a new expense (amount required, date, description and
 // category, fund) prefilled from the list. The expense ID is chosen once per opening: pressing again after an uncertain
 // outcome repeats the same transaction, which finds the expense already saved instead of adding a second one.
-export function RegisterListDialog({ list, items, categories, fundChoices, defaultFundId, canRegister, onRegister, onMoveRemaining, onCreateCategory, error, close }: Props) {
+export function RegisterListDialog({ list, initialAmount, items, categories, fundChoices, defaultFundId, canRegister, onRegister, onMoveRemaining, onCreateCategory, error, close }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const expenseId = useRef(crypto.randomUUID()).current;
@@ -38,7 +38,7 @@ export function RegisterListDialog({ list, items, categories, fundChoices, defau
   const remaining = items.length - bought.length;
   const category = list.category_id && categories.some((c) => c.id === list.category_id) ? list.category_id : '';
   const fund = fundChoices.some((c) => c.fund.id === defaultFundId) ? defaultFundId : fundChoices.length ? noFund : '';
-  const [draft, setDraft] = useState<ExpenseDraft>({ ...newDraft(), amount: amountText(list.total_minor), description: list.name, categoryId: category, fundId: fund });
+  const [draft, setDraft] = useState<ExpenseDraft>({ ...newDraft(), amount: initialAmount, description: list.name, categoryId: category, fundId: fund });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [remember, setRemember] = useState(list.category_id === null);
   const [move, setMove] = useState(remaining > 0);

@@ -1,7 +1,7 @@
 # Backup dimostrativo con casi limite
 
 File: [`nummo-test-casi-limite-2026-11-08.json`](nummo-test-casi-limite-2026-11-08.json).
-Dati interamente fittizi, formato `nummo-backup` **v5** della versione corrente del repository:
+Dati interamente fittizi, formato storico `nummo-backup` **v5**, leggibile dal client corrente (backup v6):
 89 spese/serie, 15 categorie, 6 fondi, 2 movimenti, 4 liste con 112 prodotti. Circa 76 kB.
 Non è compatibile con versioni dell’app che leggono solo backup v1/v2/v3.
 

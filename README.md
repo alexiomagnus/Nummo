@@ -1,7 +1,7 @@
 # Nummo
 
 Gestionale personale di spese per il web. Registri le spese, le organizzi per categoria,
-gestisci abbonamenti e ricorrenze e guardi l'andamento in una dashboard.
+gestisci abbonamenti e ricorrenze e guardi l'andamento nella pagina Analisi.
 
 ## Il modello BYOF (Bring Your Own Firebase)
 
@@ -14,17 +14,19 @@ sicurezza del progetto sono una tua responsabilità (vedi [Sicurezza](#sicurezza
 ## Funzionalità
 
 - **Nuova spesa** con importo, data, descrizione e categoria; **Spese** con ricerca, filtri, modifica ed eliminazione.
-- **Ricorrenze** settimanali, mensili e annuali, con prezzo promozionale per i primi rinnovi e riepilogo dei prossimi rinnovi.
-- **Categorie** personalizzabili, con icone, e **Dashboard** con totali e grafici.
-- **Dati**: esportazione delle transazioni in CSV (per Excel/LibreOffice) e backup completo in JSON, l'unico formato importabile per il ripristino.
+- **Abbonamenti** settimanali, mensili e annuali, con prove gratuite, variazioni di prezzo, pausa/annullamento e cambi di frequenza futuri che conservano i pagamenti maturati.
+- **Categorie** personalizzabili, con 39 icone in tre stili, e **Analisi** con totali e grafici.
+- **Fondi e budget** facoltativi: spesa mensile per fondo e budget generale; i fondi già dotati di saldo conservano ricariche e movimenti.
+- **Liste della spesa** con checklist, totale manuale e registrazione di una sola spesa per acquisto.
+- **Importa ed esporta**, dal menu account: CSV per consultazione (Excel/LibreOffice) e backup JSON v6, unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.
 - Sincronizzazione tramite l'SDK Firestore. Solo web; vedi i [limiti](#installazione-come-pwa).
 
-Stato: progetto personale in fase di preparazione alla distribuzione. Collaudato su Chrome desktop;
-browser mobili e dispositivi reali non sono ancora stati verificati. Non è presente una licenza:
+Stato: progetto personale con rilasci Hosting documentati in [HANDOFF.md](HANDOFF.md).
+Le verifiche automatiche e in Chromium emulato sono distinte dai collaudi su dispositivi reali, ancora da completare. Non è presente una licenza:
 senza di essa il codice non è formalmente riutilizzabile.
 
 ## Requisiti
@@ -163,7 +165,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 - L'accesso è riservato all'UID in `config/owner`, creato solo dalla Console: l'app non può nominare il proprietario.
 - Le regole in `firestore.rules` sono la vera protezione dei dati (la `apiKey` è pubblica). Pubblicale prima dell'uso e non usare la modalità test.
 - `.env.local`, `.env.production.local`, `.firebaserc` ed `emulator-data/` sono ignorati da Git: non versionarli e non pubblicarli. Non inserire chiavi di servizio nel frontend.
-- **Backup**: da Spese → «Dati» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
+- **Backup**: da menu account → «Importa ed esporta» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
 - Cache su disco (`EXPO_PUBLIC_FIRESTORE_CACHE=persistent`) solo su dispositivi fidati: contiene dati personali anche dopo il logout.
 - Costi, quote, fatturazione e conformità del progetto Firebase sono a tuo carico. Il software è fornito senza garanzie.
 
@@ -177,7 +179,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 | Popup di login bloccato | Consenti i popup per il sito e riprova dal tocco/clic |
 | «Configurazione mancante» o `build:cloud` si ferma | Mancano le quattro `EXPO_PUBLIC_FIREBASE_*`, o hai valori in conflitto tra file e shell, o un file `.env*` contiene `EXPO_PUBLIC_NUMMO_BACKEND`/`*_EMULATOR` |
 | Le modifiche a `.env.local` non hanno effetto | Riavvia Expo, se serve con `npx expo start --web --clear` (le variabili sono incorporate nel bundle); per la produzione ricostruisci |
-| Porta degli emulatori occupata (9099, 8180, 4000) | Chiudi il processo che la usa; alternative in [AGENTS.md](AGENTS.md) (config temporanea con altre porte e `FIRESTORE_PORT`/`AUTH_PORT`) |
+| Porta degli emulatori occupata (9099, 8180, 4000) | Usa porte dedicate senza arrestare servizi preesistenti; vedi [AGENTS.md](AGENTS.md) (config temporanea e `FIRESTORE_PORT`/`AUTH_PORT`) |
 | La CLI Firebase non trova il progetto | Il repository non ha un progetto predefinito: aggiungi sempre `--project ID_PROGETTO` |
 
 ## Documentazione

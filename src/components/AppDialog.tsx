@@ -1,12 +1,12 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { Children, cloneElement, isValidElement, useMemo, type ComponentProps, type ReactElement, type ReactNode } from 'react';
+import { Children, cloneElement, isValidElement, useMemo, useRef, type ComponentProps, type ComponentRef, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import { Dialog, Surface, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { transitions } from '../theme/motion';
 import { dialogColor } from '../theme/theme';
 import { layout, motion, radius, spacing } from '../theme/tokens';
-import { Scrim, useOverlayMotion, usePresence } from './Overlay';
+import { Scrim, useEscape, useFocusHandoff, useOverlayMotion, usePresence } from './Overlay';
 
 type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dismissable' | 'testID'> & {
   style?: StyleProp<ViewStyle>;
@@ -31,6 +31,9 @@ function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID,
   const modalTheme = useMemo(() => ({ ...theme, colors: { ...theme.colors, background } }), [theme, background]);
   const animate = useOverlayMotion();
   const { mounted, shown } = usePresence(visible, motion.short, animate);
+  const container = useRef<ComponentRef<typeof View>>(null);
+  useEscape(visible, () => { if (dismissable) onDismiss?.(); });
+  useFocusHandoff(visible, shown, container);
   if (!mounted) return null;
   const maxHeight = `calc(var(--nummo-viewport-height, 100dvh) - ${insets.top + insets.bottom + spacing.lg * 2}px)` as DimensionValue;
   // As in Paper's Material 3 dialog, the first block (title or content) keeps 24 dp from the top edge.
@@ -39,9 +42,9 @@ function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID,
       ? cloneElement(child as ReactElement<{ style?: StyleProp<ViewStyle> }>, { style: [{ marginTop: 24 }, child.props.style] })
       : child);
   return <ThemeProvider theme={modalTheme}>
-    <View aria-modal accessibilityLiveRegion="polite" pointerEvents={visible ? 'auto' : 'none'} style={StyleSheet.absoluteFill} testID={testID}>
+    <View role="dialog" aria-modal accessibilityLiveRegion="polite" pointerEvents={visible ? 'auto' : 'none'} style={StyleSheet.absoluteFill} testID={testID}>
       <Scrim visible={visible} shown={shown} color={theme.colors.backdrop} label={t('Chiudi')} onPress={dismissable ? onDismiss : undefined} />
-      <View pointerEvents="box-none" style={[styles.wrapper, { marginTop: insets.top, marginBottom: insets.bottom }]}>
+      <View ref={container} pointerEvents="box-none" style={[styles.wrapper, { marginTop: insets.top, marginBottom: insets.bottom }]}>
         <Surface style={[{
           maxWidth: layout.maxForm, borderRadius: radius.dialog,
           backgroundColor: background, borderWidth: 1, borderColor: theme.colors.outline,
