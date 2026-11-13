@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ExpenseData } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { copyItems, itemsOf, nextPosition, type ShoppingListData } from '../../domain/shoppingList';
-import type { FirestoreStore } from '../../services/firestoreStore';
+import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
 
 // Shopping lists and their items, from two listeners. Checklist edits are queued writes (shown at once, synchronised by
 // the SDK, errors reported here); registration is a server transaction that reports success only once confirmed.
-export function useRemoteLists(backend: FirestoreStore) {
+export function useRemoteLists(backend: DataStore) {
   const [lists, setLists] = useState<SyncedList[]>([]);
   const [items, setItems] = useState<SyncedListItem[]>([]);
   const [listsReady, setListsReady] = useState(false);

@@ -32,7 +32,7 @@ type Props = {
   defaultFundId: string;
   onSetDefault: (id: string) => void;
   notify: (message: string) => void;
-  // Display preference (Settings → Charts and budget): when false the general budget card and its «set» action are hidden, never removed.
+  // Display preference (Settings → Features): hides the general budget and fund editor budget controls, preserving their data.
   showGeneralBudget: boolean;
 };
 
@@ -195,7 +195,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
         </Reveal>}
       </View>}
 
-      {editing && <FundEditor record={editing === 'new' ? undefined : editing} funds={funds} ready={canWrite} error={remote.error}
+      {editing && <FundEditor record={editing === 'new' ? undefined : editing} funds={funds} showBudget={showGeneralBudget} ready={canWrite} error={remote.error}
         onSave={async (data) => {
           const saved = editing === 'new' ? await remote.createFund(data) : await remote.updateFund(editing, data);
           if (saved) notify(editing === 'new' ? "Fondo creato." : "Fondo aggiornato.");

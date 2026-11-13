@@ -19,4 +19,6 @@ export type ExpenseStore = Readonly<{
   recovery?: readonly ExpenseRecord[];
   sync?: Readonly<{ fromCache: boolean; pending: boolean }>;
   storageNote: string;
+  // The archive is on this device: a save is final at once, nothing waits for a server.
+  local?: boolean;
 }>;

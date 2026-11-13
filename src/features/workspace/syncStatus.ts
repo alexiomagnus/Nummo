@@ -1,7 +1,8 @@
 // Pure description of the Firestore sync state shown in the top app bar.
 // «synced» is only reported when everything is confirmed by the server.
 export type SyncKind = 'loading' | 'synced' | 'pending' | 'cached' | 'offline' | 'error';
-export type SyncInput = { ready: boolean; online: boolean; pending: boolean; cached: boolean; error: string | null };
+// `local`: the archive is on this device (Standard mode): nothing to synchronise, a save is final at once.
+export type SyncInput = { ready: boolean; online: boolean; pending: boolean; cached: boolean; error: string | null; local?: boolean };
 export type SyncDescription = { kind: SyncKind; label: string; detail: string };
 
 // An initial empty cache is not proof of an empty archive. Existing cached categories
@@ -10,7 +11,12 @@ export function hasUsableCategorySnapshot(state: { ready: boolean; categories: r
   return state.ready && (state.categories.length > 0 || !state.sync.fromCache);
 }
 
-export function describeSync({ ready, online, pending, cached, error }: SyncInput): SyncDescription {
+export function describeSync({ ready, online, pending, cached, error, local }: SyncInput): SyncDescription {
+  if (local) {
+    if (error) return { kind: 'error', label: 'Problema con i dati', detail: error };
+    if (!ready) return { kind: 'loading', label: 'Caricamento…', detail: 'Lettura dei dati dal dispositivo in corso.' };
+    return { kind: 'synced', label: 'Sul dispositivo', detail: 'I dati sono salvati su questo dispositivo. Proteggili con un backup.' };
+  }
   if (error) return { kind: 'error', label: 'Problema di sincronizzazione', detail: error };
   if (pending) return { kind: 'pending', label: 'Sincronizzazione…', detail: 'Alcune modifiche attendono la conferma di Firestore.' };
   if (!online) return { kind: 'offline', label: 'Offline', detail: 'Sei offline: i dati sono letti dalla cache e le nuove spese restano in coda.' };

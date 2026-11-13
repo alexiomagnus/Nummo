@@ -131,7 +131,7 @@ test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
 });
 
 test('impostazioni: interruttore del budget mensile tradotto in entrambe le lingue', () => {
-  for (const [it, en] of [['Grafici e budget', 'Charts and budget'], ['Mostra budget mensile', 'Show monthly budget'], ['Nella pagina Analisi, il grafico delle spese giorno per giorno.', 'On the Analysis page, a chart of spending day by day.'], ['Nella pagina Fondi. Se lo nascondi, il budget resta salvato.', 'On the Funds page. Hiding it keeps the budget saved.']] as const) {
+  for (const [it, en] of [['Funzionalità', 'Features'], ['Mostra budget mensile', 'Show monthly budget'], ['Nella pagina Analisi, il grafico delle spese giorno per giorno.', 'On the Analysis page, a chart of spending day by day.'], ['Mostra il budget generale e i controlli del budget dei fondi. I budget nascosti restano salvati.', 'Show the general budget and fund budget controls. Hidden budgets stay saved.']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
   }

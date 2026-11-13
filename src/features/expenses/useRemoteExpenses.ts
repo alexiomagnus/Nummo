@@ -4,10 +4,10 @@ import { sameFieldValue } from '../../domain/contract';
 import { parseSyncedExpense, type SyncedExpense } from '../../domain/firestore';
 import { submissionReducer } from '../../domain/submission';
 import { errorCode } from '../../services/firebase';
-import type { FirestoreStore } from '../../services/firestoreStore';
+import type { DataStore } from '../../services/dataStore';
 import type { ExpenseStore } from './expenseStore';
 
-export function useRemoteExpenses(backend: FirestoreStore, storageNote: string): ExpenseStore {
+export function useRemoteExpenses(backend: DataStore, storageNote: string): ExpenseStore {
   const pendingRecords = useRef(new Map<string, SyncedExpense>());
   const [recovery, setRecovery] = useState<SyncedExpense[]>([]);
   const [expenses, setExpenses] = useState<SyncedExpense[]>([]);
@@ -55,7 +55,8 @@ export function useRemoteExpenses(backend: FirestoreStore, storageNote: string):
       if (active.current) dispatch({ type: 'confirmed', receipt });
     }).catch((reason: unknown) => {
       if (!active.current) return;
-      if (['permission-denied', 'unauthenticated', 'invalid-argument'].includes(errorCode(reason))) {
+      // A device write is atomic: a failure wrote nothing, so the draft can simply be sent again.
+      if (backend.kind === 'local' || ['permission-denied', 'unauthenticated', 'invalid-argument'].includes(errorCode(reason))) {
         dispatch({ type: 'rejected', message: message(reason) });
       } else dispatch({ type: 'uncertain' });
     }).finally(() => { inFlight.current = false; });
@@ -84,7 +85,7 @@ export function useRemoteExpenses(backend: FirestoreStore, storageNote: string):
       if (!parsed) throw new Error('Spesa non valida.');
       await backend.updateExpense(parsed, data);
     }),
-    storageNote,
+    storageNote, local: backend.kind === 'local',
   };
 }
 export function message(reason: unknown): string {

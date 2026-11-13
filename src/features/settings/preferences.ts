@@ -9,7 +9,7 @@ export type ThemeChoice = 'system' | 'light' | 'dark';
 export type FontChoice = 'google' | 'system';
 export const chartTypes = ['donut', 'bars', 'blocks'] as const;
 export type ChartType = (typeof chartTypes)[number];
-// `showGeneralBudget` only hides the general monthly budget on the Funds page: the budget itself stays saved in Firestore.
+// `showGeneralBudget` hides the general budget and fund editor budget controls; saved budget plans stay intact.
 export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showGeneralBudget: boolean };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 

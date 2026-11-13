@@ -9,7 +9,9 @@ export const FIREBASE_KEYS = [
 export const SCRIPT_OWNED_KEYS = [
   'EXPO_PUBLIC_NUMMO_BACKEND', 'EXPO_PUBLIC_FIRESTORE_EMULATOR', 'EXPO_PUBLIC_AUTH_EMULATOR', 'EXPO_PUBLIC_FUNCTIONS_EMULATOR',
 ] as const;
-const CLOUD_ALLOWED = new Set<string>([...FIREBASE_KEYS, 'EXPO_PUBLIC_NUMMO_BACKEND', 'EXPO_PUBLIC_FIRESTORE_CACHE']);
+// Optional: public OAuth client ID (web) for the Google Drive backups of the Standard mode. Never a client secret.
+export const GOOGLE_CLIENT_ID_KEY = 'EXPO_PUBLIC_GOOGLE_CLIENT_ID';
+const CLOUD_ALLOWED = new Set<string>([...FIREBASE_KEYS, 'EXPO_PUBLIC_NUMMO_BACKEND', 'EXPO_PUBLIC_FIRESTORE_CACHE', GOOGLE_CLIENT_ID_KEY]);
 const filled = (value: string | undefined): value is string => typeof value === 'string' && value.trim() !== '';
 
 /** Development env files (`.env`, `.env.local`, …) may carry only the Firebase web config. */
@@ -36,6 +38,8 @@ export function cloudEnvProblems(env: Env): string[] {
   if (project && (project.startsWith('demo-') || /\s/.test(project))) problems.push('EXPO_PUBLIC_FIREBASE_PROJECT_ID non valido per il cloud (demo-* o spazi)');
   const domain = env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ?? '';
   if (domain && /^(https?:|localhost|127\.|\[::1\])/.test(domain)) problems.push('EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN deve essere un dominio, senza schema né localhost');
+  const client = env[GOOGLE_CLIENT_ID_KEY];
+  if (filled(client) && !/^[\w-]+\.apps\.googleusercontent\.com$/.test(client.trim())) problems.push(`${GOOGLE_CLIENT_ID_KEY} non è un ID client OAuth web (….apps.googleusercontent.com); un segreto client non va mai inserito`);
   if (env.EXPO_PUBLIC_FIRESTORE_CACHE !== undefined && !['', 'persistent'].includes(env.EXPO_PUBLIC_FIRESTORE_CACHE)) problems.push('EXPO_PUBLIC_FIRESTORE_CACHE ammette solo "persistent"');
   return problems;
 }

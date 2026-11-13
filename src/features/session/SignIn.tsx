@@ -7,7 +7,8 @@ import { Card } from '../../components/Card';
 import { spacing } from '../../theme/tokens';
 import { Guide } from './Guide';
 
-type Props = { error: string | null; onSignIn: () => void };
+// `onChangeMode`: back to the choice between the device archive and Firebase.
+type Props = { error: string | null; onSignIn: () => void; onChangeMode?: () => void };
 
 // The guide lives at `#guida` (no router in the app): a direct link and a reload keep working, and the
 // browser's Back button returns to the sign-in. Hosting needs no rewrite for a fragment.
@@ -21,9 +22,8 @@ export function leaveGuide() {
   else if (readGuide()) { window.history.replaceState(null, '', window.location.pathname + window.location.search); window.dispatchEvent(new PopStateEvent('popstate')); }
 }
 
-export function SignIn({ error, onSignIn }: Props) {
-  const { t } = useI18n();
-  const { colors } = useTheme();
+// The guide as a route of the signed-out screens (mode choice and sign-in).
+export function useGuide() {
   const [guide, setGuide] = useState(readGuide);
   useEffect(() => {
     const sync = () => setGuide(readGuide());
@@ -32,7 +32,13 @@ export function SignIn({ error, onSignIn }: Props) {
     return () => { window.removeEventListener('popstate', sync); window.removeEventListener('hashchange', sync); };
   }, []);
   const openGuide = () => { window.history.pushState({ guide: true }, '', guideHash); setGuide(true); };
-  const closeGuide = leaveGuide;
+  return { guide, openGuide, closeGuide: leaveGuide };
+}
+
+export function SignIn({ error, onSignIn, onChangeMode }: Props) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const { guide, openGuide, closeGuide } = useGuide();
   if (guide) return <Guide onBack={closeGuide} />;
   return (
     <View style={styles.wrap}>
@@ -44,7 +50,10 @@ export function SignIn({ error, onSignIn }: Props) {
         {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
         <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>{t("Accedi con Google")}</Button>
       </Card>
-      <Button mode="text" compact onPress={openGuide} style={styles.guideLink}>{t("Cos'è Nummo e come funziona?")}</Button>
+      <View style={styles.links}>
+        <Button mode="text" compact onPress={openGuide} style={styles.guideLink}>{t("Cos'è Nummo e come funziona?")}</Button>
+        {onChangeMode && <Button mode="text" compact onPress={onChangeMode} style={styles.guideLink}>{t("Usa Nummo senza account")}</Button>}
+      </View>
     </View>
   );
 }
@@ -54,5 +63,6 @@ const styles = StyleSheet.create({
   intro: { gap: spacing.xs },
   helper: { paddingHorizontal: 0 },
   button: { minHeight: 48 },
+  links: { alignItems: 'flex-start' },
   guideLink: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
 });

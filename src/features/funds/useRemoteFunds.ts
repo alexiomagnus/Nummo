@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import type { SyncedBudget, SyncedExpense, SyncedFund, SyncedMovement } from '../../domain/firestore';
 import { parseSyncedFund, parseSyncedMovement } from '../../domain/firestore';
 import type { BudgetChange, FundData, MovementData } from '../../domain/funds';
-import type { FirestoreStore } from '../../services/firestoreStore';
+import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
 
 const noBudget: readonly BudgetChange[] = [];
 
 // Funds and movements of the account, from two listeners. Every mutation is a server transaction: it reports success only
 // after the server has confirmed it (offline it fails with a clear message instead of queuing silently).
-export function useRemoteFunds(backend: FirestoreStore) {
+export function useRemoteFunds(backend: DataStore) {
   const [funds, setFunds] = useState<SyncedFund[]>([]);
   const [movements, setMovements] = useState<SyncedMovement[]>([]);
   const [fundsReady, setFundsReady] = useState(false);

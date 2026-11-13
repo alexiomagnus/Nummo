@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
 
 // Trash icon first, explicit confirmation dialog second. The action seen when the dialog
 // was opened is the one confirmed, even if the parent re-renders with newer data meanwhile.
-export function DeleteAction({ name, title, description, onDelete, labeled, disabled, onOpenChange }: { name: string; title?: string; description?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
+export function DeleteAction({ name, title, description, onDelete, labeled, mode = 'text', disabled, onOpenChange }: { name: string; title?: string; description?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { t } = useI18n();
   const action = useRef(onDelete);
   const [open, setOpen] = useState(false);
@@ -76,7 +76,7 @@ export function DeleteAction({ name, title, description, onDelete, labeled, disa
   const icon = ({ size, color }: { size: number; color: string }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />;
   return <>
     {labeled
-      ? <Button mode="text" disabled={disabled} icon={icon} textColor={colors.error} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</Button>
+      ? <Button mode={mode} disabled={disabled} icon={icon} textColor={colors.error} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</Button>
       : <IconButton disabled={disabled} icon={icon} style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 }} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request} />}
     <DeleteDialog visible={open} name={name} title={title} description={description} onDismiss={dismiss} onConfirm={() => action.current()} />
   </>;

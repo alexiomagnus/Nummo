@@ -101,7 +101,7 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
 }) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
-  // Below 360 dp the three actions only fit one row without the icon of the (red, text-only) cancel action.
+  // Below 360 dp omit decorative icons on cancel/edit to keep room for the wider status action.
   const { width } = useWindowDimensions();
   const narrow = compact && width < 360;
   const animate = useOverlayMotion();
@@ -132,20 +132,20 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
             <Field label={t(inTrial ? "Primo pagamento" : "Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
           </View>
           <View style={[styles.actions, compact && styles.compactActions]}>
-            <Button compact={compact} mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
-            {/* Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
-            {status === 'active' && <Button compact={compact} mode="outlined" disabled={!canChange || working} loading={working}
-              accessibilityLabel={t("Metti in pausa")}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
-              onPress={() => onChange('paused')}>{compact ? t("Pausa") : t("Metti in pausa")}</Button>}
-            {status !== 'active' && <Button compact={compact} mode="contained-tonal" disabled={!canChange || working} loading={working}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
-              onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
-            {status !== 'cancelled' && <Button compact={compact} mode="text" textColor={colors.error} disabled={!canChange || working}
+            {status !== 'cancelled' && <Button compact={compact} mode="outlined" textColor={colors.error} disabled={!canChange || working}
               accessibilityLabel={t("Annulla abbonamento")}
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
               onPress={() => onChange('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
+            <Button compact={compact} mode="outlined" style={narrow && styles.narrowEdit} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
+              icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
+            {/* Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
+            {status === 'active' && <Button compact={compact} mode="outlined" style={compact && styles.statusAction} contentStyle={compact && styles.statusActionContent} disabled={!canChange || working} loading={working}
+              accessibilityLabel={t("Metti in pausa")}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
+              onPress={() => onChange('paused')}>{compact ? t("Pausa") : t("Metti in pausa")}</Button>}
+            {status !== 'active' && <Button compact={compact} mode="contained-tonal" style={compact && styles.statusAction} contentStyle={compact && styles.statusActionContent} disabled={!canChange || working} loading={working}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
+              onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
           </View>
           {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
             {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
@@ -192,9 +192,12 @@ const styles = StyleSheet.create({
   details: { gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md, paddingHorizontal: spacing.md },
   fields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
   field: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm },
   // Phones: compact buttons with short labels on one row (still 48 dp tall); they wrap only on very narrow screens.
   compactActions: { gap: spacing.xs },
+  narrowEdit: { minWidth: 50 },
+  statusAction: { minWidth: 98 },
+  statusActionContent: { paddingHorizontal: spacing.xs },
   // A little more than the details gap (lg): the history is a separate block from the actions above.
   history: { marginTop: spacing.sm },
   historyTitle: { marginBottom: spacing.xs },

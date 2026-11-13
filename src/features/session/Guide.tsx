@@ -6,7 +6,7 @@ import { Button } from '../../components/Button';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { spacing } from '../../theme/tokens';
 
-// Public introduction, shown on the signed-out screen. Static text only: no Firebase access and no
+// Public introduction, shown on the mode choice and sign-in screens. Static text only: no data access and no
 // dependency on the session. Every statement below describes something the app does today.
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -26,7 +26,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
     <View role="article" aria-label={t("Cos'è Nummo e come funziona")} style={styles.wrap}>
       <Button mode="text" compact onPress={onBack} style={styles.back}
         icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}>
-        {t("Torna all'accesso")}</Button>
+        {t("Torna indietro")}</Button>
       <View style={styles.intro}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{t("Cos'è Nummo")}</Text>
         <Text variant="bodyLarge" style={muted}>
@@ -34,8 +34,9 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </View>
 
       <Section title={t("Come iniziare")}>
-        {p(t("Si entra con il proprio account Google."))}
-        {p(t("Nummo è un'app personale: al momento può accedere solo il proprietario autorizzato. Non c'è una registrazione aperta e gli altri account Google non vedono né salvano alcun dato."))}
+        {p(t("Alla prima apertura scegli dove salvare i dati. Con la modalità Standard inizi subito, senza account: i dati restano su questo dispositivo e puoi proteggerli con un backup su Google Drive o con un file."))}
+        {p(t("Con la modalità Avanzata i dati stanno in un progetto Firebase personale e si sincronizzano tra i dispositivi: entra con Google solo il proprietario del progetto. Non c'è una registrazione aperta e gli altri account Google non vedono né salvano alcun dato."))}
+        {p(t("Le due modalità hanno archivi separati: cambiare modalità dalle Impostazioni non copia e non elimina nulla."))}
       </Section>
 
       <Section title={t("Registrare una spesa")}>
@@ -45,7 +46,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
       <Section title={t("Organizzare le categorie")}>
         {p(t("Dal menu dell'account, alla voce Categorie, crei le tue categorie con un nome e, se vuoi, un'icona. Puoi rinominarle o eliminarle, oppure aggiungere quelle già pronte."))}
-        {p(t("Mentre registri una spesa puoi crearne una anche da Nuova categoria, in fondo all'elenco del campo Categoria: diventa subito la categoria della spesa e i dati già inseriti restano. Serve la connessione."))}
+        {p(t("Mentre registri una spesa puoi crearne una anche da Nuova categoria, in fondo all'elenco del campo Categoria: diventa subito la categoria della spesa e i dati già inseriti restano. In modalità Avanzata serve la connessione."))}
       </Section>
 
       <Section title={t("Liste della spesa")}>
@@ -74,21 +75,23 @@ export function Guide({ onBack }: { onBack: () => void }) {
       <Section title={t("Fondi")}>
         {p(t("I fondi e i budget sono facoltativi: puoi usare Nummo senza crearne nessuno. Un fondo raggruppa alcune spese (ad esempio vacanze, casa o università) con nome, icona e colore; in Nuova spesa puoi sceglierlo oppure lasciare Nessun fondo, e puoi indicarne uno predefinito."))}
         {p(t("La pagina Fondi mostra quanto hai speso nel mese, in totale e per fondo; aprendo un fondo vedi le sue spese del mese. Puoi impostare un budget mensile generale, per tutte le spese, e un budget per ciascun fondo: è un limite indicativo che mostra quanto hai speso e quanto resta, avvisa quando ti avvicini o lo superi, ma non blocca le spese. Vale dal mese corrente: i mesi passati restano come sono."))}
-        {p(t("Puoi nascondere il budget mensile generale da Impostazioni, sezione Grafici e budget: resta salvato e ricompare quando lo riattivi."))}
+        {p(t("Da Impostazioni, sezione Funzionalità, puoi nascondere il budget mensile generale e i controlli del budget in Nuovo fondo e Modifica fondo. I budget restano salvati e non cambiano quando modifichi gli altri dati del fondo; i controlli ricompaiono quando li riattivi."))}
         {p(t("Le spese senza fondo restano valide; puoi assegnarle a un fondo solo se lo scegli. Un fondo con spese collegate si archivia invece di essere eliminato."))}
         {p(t("I fondi creati con una versione precedente conservano saldo iniziale, ricariche, movimenti ed eccezioni del budget: restano consultabili e non vengono modificati quando salvi il fondo."))}
       </Section>
 
       <Section title={t("Esportare i dati")}>
-        {p(t("Dalla pagina Importa ed esporta, nel menu account sotto Categorie, esporti le transazioni in CSV, da aprire con Excel, LibreOffice o Google Fogli, e scarichi il backup completo in JSON. Solo il backup JSON si può importare di nuovo per ripristinare i dati, con riepilogo prima della conferma. Servono la connessione e la sincronizzazione completata."))}
+        {p(t("Dalla pagina Importa ed esporta, nel menu account sotto Categorie, esporti le transazioni in CSV, da aprire con Excel, LibreOffice o Google Fogli, e scarichi il backup completo in JSON. Solo il backup JSON si può importare di nuovo per ripristinare i dati, con riepilogo prima della conferma. In modalità Avanzata servono la connessione e la sincronizzazione completata."))}
+        {p(t("In modalità Standard, da Impostazioni, sezione Archiviazione e backup, puoi collegare Google Drive: Nummo salva una copia dei dati in una cartella riservata all'app, quando lo chiedi o in automatico mentre la usi, e la ripristina su richiesta dopo averti mostrato data e contenuto del backup. Il ripristino sostituisce i dati del dispositivo. È un backup, non una sincronizzazione: i dati non si aggiornano da soli tra dispositivi."))}
       </Section>
 
       <Section title={t("Dove sono i dati")}>
-        {p(t("Le spese sono salvate in Cloud Firestore, il database di Firebase (Google), nel progetto del proprietario: non ci sono altri archivi. Possono leggerle e scriverle solo l'accesso con Google e le regole di sicurezza del database, riservate al proprietario."))}
-        {p(t("Il segnale in alto mostra se i dati sono sincronizzati; senza rete alcune operazioni non sono disponibili."))}
+        {p(t("In modalità Standard le spese sono salvate nel browser di questo dispositivo e non vengono inviate a nessun server. Se cancelli i dati del sito, disinstalli l'app o cambi browser o dispositivo senza un backup, vanno perse."))}
+        {p(t("In modalità Avanzata le spese sono salvate in Cloud Firestore, il database di Firebase (Google), nel progetto del proprietario. Possono leggerle e scriverle solo l'accesso con Google e le regole di sicurezza del database, riservate al proprietario."))}
+        {p(t("Il segnale in alto mostra lo stato dei dati; in modalità Avanzata, senza rete alcune operazioni non sono disponibili."))}
       </Section>
 
-      <Button mode="outlined" onPress={onBack} style={styles.bottom}>{t("Torna all'accesso")}</Button>
+      <Button mode="outlined" onPress={onBack} style={styles.bottom}>{t("Torna indietro")}</Button>
     </View>
   );
 }

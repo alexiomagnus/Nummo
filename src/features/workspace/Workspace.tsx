@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
+import { DeleteAction } from '../../components/DeleteAction';
 import { AppShell, type Destination } from '../../components/AppShell';
 import { Card } from '../../components/Card';
 import { PageHeader } from '../../components/PageHeader';
@@ -35,7 +36,8 @@ import { makeBackup } from '../../domain/backup';
 import { backendMode, firestoreEmulator } from '../../services/backendConfig';
 import { BackupActions, download } from '../backup/BackupActions';
 import { getDatabase } from '../../services/firebase';
-import { createFirestoreStore, type FirestoreStore } from '../../services/firestoreStore';
+import { createFirestoreStore } from '../../services/firestoreStore';
+import type { DataStore } from '../../services/dataStore';
 import type { ExpenseStore } from '../expenses/expenseStore';
 import { FundsPage } from '../funds/FundsPage';
 import { useRemoteFunds, type RemoteFunds } from '../funds/useRemoteFunds';
@@ -75,13 +77,26 @@ type DashboardSettingsProps = {
 // `renderSettings` draws the settings page (preferences live in App); `onDone` returns to the originating section.
 type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; renderSettings?: (onDone: () => void) => ReactNode };
 
-export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, renderSettings }: { uid: string; storageNote: string; topActions?: ReactNode; onReleased?: () => void } & AccountPageProps & DashboardSettingsProps) {
+// `notice`: a short message of the app above the pages (e.g. an automatic backup waiting for authorisation).
+type WorkspaceProps = { storageNote: string; topActions?: ReactNode; onReleased?: () => void; notice?: ReactNode } & AccountPageProps & DashboardSettingsProps;
+
+// «Avanzata»: the archive of the signed-in owner in their Firebase project.
+export function RemoteWorkspace({ uid, ...props }: { uid: string } & WorkspaceProps) {
   const backend = useMemo(() => createFirestoreStore(getDatabase(), uid), [uid]);
+  return <DataWorkspace backend={backend} scope={uid} {...props} />;
+}
+
+// The workspace on any store (Firestore or this device). `scope` names the archive for the few browser-side
+// identifiers kept per archive (default fund, one-time default categories): the UID, or `local`.
+export function DataWorkspace({ backend, scope: uid, storageNote, topActions, onReleased, notice, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, renderSettings }: { backend: DataStore; scope: string } & WorkspaceProps) {
+  const local = backend.kind === 'local';
   const store = useRemoteExpenses(backend, storageNote);
   const categoryState = useRemoteCategories(backend);
   const fundState = useRemoteFunds(backend);
   const listState = useRemoteLists(backend);
-  const [online, setOnline] = useState(navigator.onLine);
+  // The device archive needs no network: «online» only gates what waits for a server.
+  const [browserOnline, setOnline] = useState(navigator.onLine);
+  const online = local || browserOnline;
   const [today, setToday] = useState(todayInRome());
   useEffect(() => {
     const change = () => { setOnline(navigator.onLine); setToday(todayInRome()); };
@@ -101,7 +116,7 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   const ready = store.ready && categoryState.ready && fundState.ready;
   const synchronized = ready && !pending && !cached && online;
   const error = store.error || categoryState.error;
-  const status = describeSync({ ready, online, pending, cached, error });
+  const status = describeSync({ ready, online, pending, cached, error, local });
   // The first screen waits for what it needs (both first snapshots, usable categories) so it does not appear
   // piece by piece. Released for good by an error or after a few seconds: never a permanent block (offline, slow link).
   const [released, setReleased] = useState(false);
@@ -115,7 +130,7 @@ export function RemoteWorkspace({ uid, storageNote, topActions, onReleased, dash
   // Tells the app that the real screen is ready to replace the startup placeholder (App.tsx).
   useEffect(() => { if (released) onReleased?.(); }, [released]);
   return <WorkspaceNavigation dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences}
-    uid={uid} backend={backend} store={store} categoryState={categoryState} starting={!released}
+    uid={uid} backend={backend} store={store} notice={notice} categoryState={categoryState} starting={!released}
     listState={listState} occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon}
     online={online} synchronized={synchronized} error={error} fundState={fundState} today={today}
     renderSettings={renderSettings} settingsRequest={settingsRequest} categoriesRequest={categoriesRequest}
@@ -179,16 +194,16 @@ export function StartupWorkspace({ topActions }: { topActions?: ReactNode }) {
 }
 
 type SectionsProps = DashboardSettingsProps & {
-  uid: string; section: Section; onNavigate: (section: Section) => void; returnTo: Section; backend: FirestoreStore; store: ExpenseStore;
+  uid: string; section: Section; onNavigate: (section: Section) => void; returnTo: Section; backend: DataStore; store: ExpenseStore;
   listState: RemoteLists;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
   subscriptions: ReturnType<typeof subscriptionSummaries>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
-  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void) => ReactNode;
+  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void) => ReactNode; notice?: ReactNode;
 };
 
-function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings, notice }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -242,6 +257,15 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   }, [seedable]);
   // Products bought, for the expenses that registered a shopping list (shown in their details).
   const listItems = useMemo(() => new Map(store.expenses.filter((e) => e.list_id).map((e) => [e.id, e.list_items])), [store.expenses]);
+  const expensesById = useMemo(() => new Map(store.expenses.map((expense) => [expense.id, expense])), [store.expenses]);
+  const renderExpenseDelete = useCallback((id: string) => {
+    const record = expensesById.get(id);
+    if (!record || !store.remove) return null;
+    const linked = record.list_id && listState.lists.some((list) => list.id === record.list_id && list.expense_id === record.id);
+    return <DeleteAction labeled mode="outlined" name={record.description}
+      description={[(linked ? t("La lista collegata tornerà tra quelle attive. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
+      onDelete={() => store.remove!(record)} />;
+  }, [expensesById, listState.lists, store.remove, store.error, t]);
   const listNote = editing?.list_id ? (listState.lists.some((l) => l.id === editing.list_id && l.expense_id === editing.id) ? 'linked' : 'unlinked') : undefined;
   return <>
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
@@ -258,7 +282,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         </View>
       </Card>
     )}
-    {backendMode === 'hybrid' && firestoreEmulator && (
+    {!starting && section !== 'settings' && notice}
+    {backend.kind === 'firestore' && backendMode === 'hybrid' && firestoreEmulator && (
       <HybridConnectionNotice waiting={!synchronized && !error} endpoint={firestoreEmulator} />
     )}
     {starting && section !== 'expense' && <View style={styles.starting}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
@@ -275,7 +300,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <View style={styles.list}>
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
-        {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} />}
+        {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems}
+          renderDelete={store.remove ? renderExpenseDelete : undefined} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
           <SubscriptionList subscriptions={subscriptions} categories={categoryState.categories} error={error}

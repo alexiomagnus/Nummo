@@ -100,7 +100,7 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
       {store.error && <HelperText type="error">{t(store.error)}</HelperText>}
     </ScrollView></Dialog.ScrollArea>
     <Dialog.Actions style={{ flexWrap: 'wrap', gap: spacing.xs }}>
-      {store.remove && <View style={{ flex: 1, alignItems: 'flex-start' }}><DeleteAction labeled disabled={busy} onOpenChange={setDeleting}
+      {series && store.remove && <View style={{ flex: 1, alignItems: 'flex-start' }}><DeleteAction labeled disabled={busy} onOpenChange={setDeleting}
         name={series ? t("la serie {p0}", { p0: record.description }) : record.description}
         description={[(series ? t("Eliminando questa ricorrenza si elimina l’intera serie. ") : '') + (listNote === 'linked' ? t("La lista collegata tornerà tra quelle attive. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
         onDelete={async () => {

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Category, CategoryIcon } from '../../domain/category';
 import { parseSyncedCategory, type SyncedCategory } from '../../domain/firestore';
-import type { FirestoreStore } from '../../services/firestoreStore';
+import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
-export function useRemoteCategories(backend: FirestoreStore) {
+export function useRemoteCategories(backend: DataStore) {
   const [categories, setCategories] = useState<SyncedCategory[]>([]);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);

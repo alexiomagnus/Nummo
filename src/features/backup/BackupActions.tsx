@@ -10,7 +10,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
-import type { FirestoreStore } from '../../services/firestoreStore';
+import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
 const maxFileBytes = 5_000_000;
 export function download(name: string, content: string, type: string) {
@@ -20,7 +20,7 @@ export function download(name: string, content: string, type: string) {
 }
 type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: ImportPlan };
 
-export function BackupActions({ backend, enabled }: { backend: FirestoreStore; enabled: boolean }) {
+export function BackupActions({ backend, enabled }: { backend: DataStore; enabled: boolean }) {
   const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';

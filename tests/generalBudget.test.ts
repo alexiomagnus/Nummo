@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { backupVersion, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
 import { parseSyncedBudget } from '../src/domain/firestore.ts';
 import {
-  decodeBudgets, emptyFund, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
+  budgetFor, decodeBudgets, emptyFund, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
   type Fund, type FundData,
 } from '../src/domain/funds.ts';
 
@@ -80,6 +80,19 @@ test('fondo semplificato: modificare un fondo con dati di una versione precedent
   const noBudget = fundFromForm(legacy, { name: 'Università', icon: 'bank', color: 5, budget: null }, today)!;
   assert.equal(noBudget.budgets.at(-1)?.amount_minor, 0);
   assert.equal(parseBudgets(noBudget.budgets)?.length, 2);
+});
+
+test('fondo con budget nascosto: conserva piano futuro ed eccezioni modificando gli altri dati', () => {
+  const saved: FundData = { ...emptyFund('Casa', '2026-01-01', 0),
+    budgets: [{ month: '2026-01', amount_minor: 20000 }, { month: '2026-12', amount_minor: 35000 }],
+    budget_exceptions: [{ month: '2026-12', amount_minor: 50000 }] };
+  const edited = fundFromForm(saved, { name: 'Vacanze', icon: 'house', color: 2 }, today)!;
+  assert.deepEqual(edited, { ...saved, name: 'Vacanze', icon: 'house', color: 2 });
+  assert.equal(budgetFor(edited, '2026-11'), 20000);
+  assert.equal(budgetFor(edited, '2026-12'), 50000);
+  assert.equal(budgetFor(edited, '2027-01'), 35000);
+  const created = fundFromForm(undefined, { name: 'Nuovo', icon: null, color: 0 }, today)!;
+  assert.deepEqual(created.budgets, []);
 });
 
 test('fondo semplificato: troppe variazioni programmate → null, mai troncate', () => {

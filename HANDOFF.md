@@ -1,5 +1,137 @@
 # HANDOFF — Nummo
 
+## Contorno delle azioni distruttive nelle spese — 13 novembre 2026
+
+- «Annulla abbonamento» ora outlined, con testo/icona rossi; stesso contorno di Modifica/Pausa.
+  «Elimina» nei dettagli delle spese singole outlined tramite prop facoltativa `DeleteAction.mode`;
+  altri usi del componente invariati. Ordine e conferme conservati.
+- `npm run check` OK: typecheck, 393/393 test e build demo; `git diff --check` OK.
+  Chromium con soli dati TEST Standard a 320/360 px IT/EN: ordine, una riga, bersagli ≥48×48,
+  nessun overflow o errore JS; screenshot 320 scuro osservato. Server/Chromium propri arrestati.
+  Nessun test su telefono reale, commit o pubblicazione.
+
+## Avatar utente pieno — 13 novembre 2026
+
+- Su richiesta glifo utente pieno, testa separata dal busto da uno spazio di 1,5 unità SVG.
+  `SvgIcon` espone il colore del tema anche a `currentColor` per i riempimenti.
+- `npm run check` OK: typecheck, 393/393 test e build demo; `git diff --check` OK.
+  Nessuna nuova verifica browser, commit o pubblicazione.
+
+## Icona utente come ripiego dell'avatar — 13 novembre 2026
+
+- AccountMenu mostra l'icona utente classica quando non c'è un account (Standard), manca la foto,
+  è in caricamento o fallisce. Sostituiti i tre puntini e l'iniziale; la foto disponibile resta sovrapposta.
+  Nuovo glifo UI `iconShapes.user`, nessuna modifica alle azioni del menu.
+- `npm run check` OK: typecheck, 393/393 test e build demo; `git diff --check` OK.
+  Nessuna nuova verifica browser o su dispositivo, nessun commit o pubblicazione.
+
+## Ordine delle azioni e pulsanti di stato mobile — 13 novembre 2026
+
+- Spese singole: Elimina prima di Modifica, gruppo a destra. Abbonamenti: Annulla abbonamento,
+  Modifica, Pausa/Riattiva. Nessuna modifica a conferme, dati o operazioni.
+- Su compact Pausa/Riattiva più larghi (almeno 96 px di bersaglio e padding laterale aggiuntivo).
+  Sotto 360 px tolte le icone decorative di Annulla e Modifica per mantenere una sola riga;
+  Modifica conserva almeno 48×48 px anche con l'etichetta EN «Edit».
+- `npm run check` OK sull'albero condiviso: typecheck, 393/393 test e build demo; `git diff --check` OK.
+  Chromium/CDP, profilo temporaneo e tre record TEST in IndexedDB Standard, HTTPS esterno bloccato:
+  ordine Elimina/Modifica e Annulla/Modifica/stato, riga unica, larghezze e nessun overflow a
+  320/360/412/1280 px IT/EN. Dopo il ritocco finale di Edit ripetuti 320 px IT/EN con bersagli ≥48×48;
+  screenshot 320 scuro osservato, nessun errore JS. Risultati in `/tmp/nummo-actions-order-browser*`.
+  Server/Chromium propri arrestati; nessun dato personale o cloud, telefono reale non verificato.
+  Nessun commit o pubblicazione; modifiche concorrenti conservate.
+
+## Stato corrente — modalità Standard (IndexedDB + Google Drive) e Avanzata (Firebase BYOF), 12–13 novembre 2026
+
+Implementazione locale, **senza commit, push o pubblicazione**. Decisione e limiti in `docs/architecture.md` (prima sezione),
+uso e configurazione nel README, convenzioni in AGENTS.md. Le sezioni sotto restano cronologia.
+
+- **Cosa c'è.** Schermata di scelta prima di ogni accesso (`ModeChoice`): Standard (consigliata) apre subito l'app senza
+  account; Avanzata porta al flusso BYOF esistente (login, guida, configurazione mancante). Scelta in `nummo.storageMode.v1`,
+  ripristinata all'avvio; un browser con indizio di sessione Firebase e nessuna scelta resta in Avanzata. Cambio da
+  Impostazioni → «Archiviazione e backup» con avviso sugli archivi separati; dalla schermata di accesso «Usa Nummo senza
+  account». Nessuna copia, migrazione o cancellazione tra le modalità.
+- **Persistenza.** Contratto `DataStore` (`src/services/dataStore.ts`) con `firestoreStore.ts` (invariato nel comportamento:
+  solo tipo di ritorno, `kind` e spostamento di `listRecords`) e il nuovo `localStore.ts` su `localDatabase.ts` (IndexedDB
+  `nummo-local`, schema versione 1, migrazioni a passi). Hook, pagine e `BackupActions` usano il contratto; `RemoteWorkspace`
+  è ora un involucro di `DataWorkspace`. In Standard: nessun esito «incerto», stato «Sul dispositivo», «online» sempre vero,
+  Firebase non inizializzato.
+- **Google Drive.** `googleAuth.ts` (Google Identity Services, token solo in memoria, accesso solo da un gesto),
+  `googleDrive.ts` (REST su `appDataFolder`, ambito `drive.appdata`), `useDriveBackup` e `StorageSection`: collega/scollega,
+  backup manuale, backup automatico (giorno/settimana/mese), ultimo backup, ripristino con elenco, data, contenuto, avviso
+  e conferma; copia di sicurezza scaricata prima; sostituzione in un'unica transazione locale. Un file per backup, cinque
+  conservati; l'automatico non carica archivi vuoti. Senza `EXPO_PUBLIC_GOOGLE_CLIENT_ID` la sezione mostra «Non
+  disponibile» e resta il backup su file. `envPolicy` ammette la variabile e rifiuta valori che non siano un ID client web.
+- **Verifiche eseguite.** `npm run check` OK: typecheck, **393/393** test (nuovi: `tests/localStore.test.ts` 12,
+  `tests/driveBackup.test.ts` 12, caso in `envPolicy`), build demo; `git diff --check` OK. Suite SDK/Rules demo **18/18** su
+  porte dedicate (Auth 44199, Firestore 44380, hub 44400; config temporanea in radice rimossa, emulatori arrestati; hybrid
+  dell'utente su 8180 e `.nummo-hybrid-18290.json` non toccati). `test:hybrid` non rieseguito (runner non modificato).
+- **Chromium headless/CDP su build demo, rete HTTPS esterna bloccata, IndexedDB reale** — 32/32 controlli in ciascuna di
+  quattro esecuzioni (412×915 IT chiaro, 320×740 IT scuro, 820×1000 EN chiaro, 1280×900 EN scuro): scelta mostrata senza
+  database né modalità salvata; Standard apre l'app senza accesso; schema v1 con 8 store; cinque categorie predefinite;
+  spesa creata dal modulo e presente in IndexedDB; ricarica → stessa modalità e stessi dati; Analisi/Fondi/Liste senza
+  overflow; sezione Impostazioni; esportazione JSON dal dispositivo; avviso e cambio verso Avanzata (schermata di accesso),
+  archivio locale intatto, ritorno a Standard con i dati; nessun errore JavaScript. Screenshot osservati.
+- **Flusso Drive con Google SIMULATO nella pagina** (script di identità e REST sostituiti da uno stub; build di prova con ID
+  client segnaposto, mai pubblicata): 29/29 a 412×915 — nessun accesso chiesto prima del tocco, solo ambito `drive.appdata`,
+  nessun token in localStorage/sessionStorage, backup manuale, automatico in attesa dopo la ricarica e ripreso con un tocco,
+  automatico eseguito da solo con accesso valido, ripristino con riepilogo e conferma, copia di sicurezza, autorizzazione
+  scaduta, rete assente, conservazione di cinque file, scollegamento con revoca. **Questo prova la logica dell'app, non
+  l'integrazione con Google.** Probe e risultati nello scratchpad della sessione (temporanei).
+- **NON verificato.** Google OAuth e Drive reali (nessun client OAuth configurato: finestra di consenso, origini
+  autorizzate, comportamento del popup su mobile e nell'app installata, quote e codici d'errore reali); accesso Google e
+  dati reali in Avanzata dopo la modifica (solo emulatori); telefoni reali, Safari/iOS (IndexedDB, eliminazione dei dati
+  dopo inattività, `navigator.storage.persist`), Firefox; due schede reali contemporanee (coperto solo dai test con canale
+  simulato); archivi grandi; screen reader.
+- **Configurazione manuale ancora necessaria** (README, «Configurare Google OAuth e Drive»): abilitare Google Drive API,
+  schermata di consenso con il solo ambito `drive.appdata`, client OAuth «Applicazione web» con le origini del sito,
+  `EXPO_PUBLIC_GOOGLE_CLIENT_ID` in `.env.production.local`/`.env.local`, eventuale passaggio in produzione dell'app OAuth.
+- **Limiti e punti aperti.** Token di circa un'ora senza rinnovo silenzioso: il backup automatico non gira ad app chiusa
+  e dopo una ricarica attende un tocco (avviso nell'app). `build:cloud` richiede ancora le quattro variabili Firebase: non
+  esiste una build solo Standard. Nessun service worker: avvio a freddo senza rete non garantito. In Standard chiunque usi
+  il browser vede i dati (nessun blocco). L'elenco dei backup nel ripristino mostra data e ora al minuto: due backup nello
+  stesso minuto hanno la stessa etichetta. Testi in italiano rimasti generici in Standard («verifica connessione» per le
+  categorie predefinite non aggiunte). La Guida pubblica è aggiornata alle due modalità; `docs/firebase-personale.md` e
+  `docs/migrazione-byof.md` descrivono solo l'Avanzata.
+- **Working tree.** Presenti anche modifiche non mie di altre sessioni (fondi, editor, preferenze, test del budget):
+  conservate e incluse nel `npm run check` sopra.
+
+## Azioni degli abbonamenti a destra — 12 novembre 2026
+
+- Su richiesta allineati a destra i pulsanti nei dettagli di SubscriptionList (`justifyContent: flex-end`);
+  ordine, etichette, comportamento e adattamento mobile invariati.
+- `git diff --check` OK; `npm run check` tentato, bloccato dall'errore di sintassi concorrente in
+  `src/i18n/en.ts:749` (virgola attesa). Nessuna verifica browser, commit o pubblicazione.
+
+## Azioni nei dettagli delle spese singole — 12 novembre 2026
+
+- «Modifica» allineato a destra, con «Elimina» al fianco nei dettagli di ExpenseList. Eliminazione tramite
+  DeleteAction: conserva il record/revisione visti all'apertura della conferma e l'avviso di riattivazione della
+  lista collegata. Rimossa l'azione dal modulo Modifica spesa; Modifica serie conserva l'eliminazione della serie.
+- Nessuna modifica a servizi/Rules. Guida già coerente (modifica/elimina dai dettagli). `git diff --check` OK.
+  `npm run check` tentato, fermo al typecheck per errore di sintassi concorrente in `src/i18n/en.ts:749`
+  (virgola attesa). Nessuna verifica browser, commit o pubblicazione; lavoro concorrente conservato.
+
+## Preferenza budget estesa ai moduli fondo — 12 novembre 2026
+
+- «Mostra budget mensile» nasconde ora anche la sezione Budget mensile in Nuovo/Modifica fondo.
+  I controlli nascosti non vengono validati; `fundFromForm` con budget omesso conserva esattamente piano,
+  variazioni future ed eccezioni. Nuovi fondi senza budget; riattivando la preferenza tornano i controlli.
+  Indicatori dei budget esistenti sui singoli fondi invariati. Descrizione, Guida, IT/EN e convenzioni aggiornate.
+- Regressione conservazione dati e creazione senza budget: suite dedicata `generalBudget.test.ts` 13/13.
+  Typecheck e build demo separata OK, `git diff --check` OK. `npm run check` eseguito sull'albero condiviso:
+  typecheck OK, test 380/381; il catalogo i18n fallisce su «Menu» in `AccountMenu.tsx`, modificato dal lavoro
+  concorrente sull'archiviazione, non da questa fase. Il primo tentativo si era fermato su `iconShapes.cloud`
+  in StorageSection, errore concorrente non più presente al controllo finale. Nessun check completo verde.
+- Modifiche concorrenti ai servizi/archiviazione conservate. Nessuna verifica browser o emulatori,
+  nessun commit/deploy né accesso a dati personali.
+
+## Titolo Impostazioni «Funzionalità» — 12 novembre 2026
+
+- Su richiesta «Grafici e budget» rinominato «Funzionalità» (EN «Features»); riferimento nella Guida,
+  traduzioni e caso i18n allineati. Solo testi, comportamento invariato.
+- `npm run check` OK: typecheck, 368/368 test e build demo; `git diff --check` OK.
+  Nessuna nuova verifica browser, commit o pubblicazione.
+
 ## Rimozione testi di supporto e commit/push autorizzati — 12 novembre 2026
 
 - Su richiesta rimossi il testo esplicativo sotto Primo pagamento durante la prova e la nota per Nessun fondo,

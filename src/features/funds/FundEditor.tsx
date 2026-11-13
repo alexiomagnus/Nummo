@@ -20,6 +20,7 @@ import { IconPicker } from '../categories/IconPicker';
 type Props = {
   record?: SyncedFund;
   funds: readonly Fund[];
+  showBudget: boolean;
   ready: boolean;
   error: string | null;
   onSave: (data: FundData) => Promise<boolean>;
@@ -33,7 +34,7 @@ const amountText = (minor: number) => `${Math.floor(minor / 100)},${String(minor
 // more; when a fund saved by an earlier version carries it (initial balance, recharges, per-month budget exceptions, start date)
 // those fields are written back exactly as they were, so editing a fund never overwrites what the form does not show. The
 // budget applies from the current month on (setRecurringBudget); months already closed keep theirs.
-export function FundEditor({ record, funds, ready, error, onSave, close }: Props) {
+export function FundEditor({ record, funds, showBudget, ready, error, onSave, close }: Props) {
   const { t } = useI18n();
   const { colors, dark } = useTheme();
   const today = todayInRome();
@@ -56,9 +57,9 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
     const nameError = fundNameError(name, funds, record?.id);
     if (nameError) next.name = nameError;
     const budgetMinor = parseAmountMinor(budgetAmount);
-    if (budgetOn && budgetMinor === null) next.budgetAmount = budgetAmount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo del budget.';
+    if (showBudget && budgetOn && budgetMinor === null) next.budgetAmount = budgetAmount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo del budget.';
     if (Object.keys(next).length) { setErrors(next); return; }
-    const data = fundFromForm(record, { name, icon, color, budget: budgetOn ? budgetMinor : null }, today);
+    const data = fundFromForm(record, { name, icon, color, ...(showBudget ? { budget: budgetOn ? budgetMinor : null } : {}) }, today);
     if (!data) { setErrors({ form: 'Troppe modifiche programmate per questo fondo: crea un nuovo fondo per continuare.' }); return; }
     setBusy(true);
     try { if (await onSave(data)) close(); } finally { setBusy(false); }
@@ -95,22 +96,24 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
               {icon ? t("Cambia icona") : t("Scegli un'icona")}</Button>
             {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={blocked} />}
           </View>
-          <View style={styles.section}>
-            <SwitchRow label={t("Budget mensile")} supporting={t("Facoltativo: un limite di spesa indicativo per il mese, non blocca le spese.")}
-              value={budgetOn} disabled={blocked} onChange={setBudgetOn} />
-            {budgetOn && <View>
-              <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo del budget")} value={budgetAmount} inputMode="decimal" placeholder="0,00"
-                readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.budgetAmount)} left={leadingIcon(iconShapes.euro)}
-                onChangeText={(value) => { setBudgetAmount(value); setErrors({ ...errors, budgetAmount: undefined }); }} />
-              {field('budgetAmount')}
-            </View>}
-            {record && budgetOn && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-              {t("Vale dal mese corrente: i mesi passati restano come sono.")}</Text>}
-            {keptExceptions > 0 && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-              {t("Eccezioni programmate per singoli mesi: {p0}. Restano attive.", { p0: keptExceptions })}</Text>}
+          {(showBudget || keptBalance) && <View style={styles.section}>
+            {showBudget && <>
+              <SwitchRow label={t("Budget mensile")} supporting={t("Facoltativo: un limite di spesa indicativo per il mese, non blocca le spese.")}
+                value={budgetOn} disabled={blocked} onChange={setBudgetOn} />
+              {budgetOn && <View>
+                <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo del budget")} value={budgetAmount} inputMode="decimal" placeholder="0,00"
+                  readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.budgetAmount)} left={leadingIcon(iconShapes.euro)}
+                  onChangeText={(value) => { setBudgetAmount(value); setErrors({ ...errors, budgetAmount: undefined }); }} />
+                {field('budgetAmount')}
+              </View>}
+              {record && budgetOn && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+                {t("Vale dal mese corrente: i mesi passati restano come sono.")}</Text>}
+              {keptExceptions > 0 && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+                {t("Eccezioni programmate per singoli mesi: {p0}. Restano attive.", { p0: keptExceptions })}</Text>}
+            </>}
             {keptBalance && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
               {t("Saldo iniziale e ricariche di una versione precedente restano conservati.")}</Text>}
-          </View>
+          </View>}
           {field('form')}
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
         </ScrollView>

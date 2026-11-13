@@ -11,6 +11,43 @@ Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella s
 l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
 convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
 
+## Modalità Standard e Avanzata — 12 novembre 2026
+
+Decisione: un'unica webapp con due archivi alternativi scelti dall'utente prima di ogni accesso. Sostituisce, per la
+sola modalità Standard, il principio «Firestore unica fonte di verità»; in Avanzata il flusso BYOF resta invariato.
+
+- **Contratto unico.** `DataStore` (`src/services/dataStore.ts`) è la forma che lo store Firestore aveva già: hook e
+  pagine non sono stati riscritti, ricevono lo store. `kind` distingue i due casi nei pochi punti in cui conta
+  (esito incerto di un invio, stato «online», testi). Nessuna logica applicativa duplicata: validazione, piani di
+  importazione, backup e calcoli restano nel dominio.
+- **Standard.** `localStore.ts` su `localDatabase.ts`: database IndexedDB `nummo-local`, un object store per tipo di
+  record con chiave `id`, più `settings` (budget generale) e `meta` (ora dell'ultima modifica, non nel backup). Ogni
+  mutazione è una transazione atomica che controlla la revisione vista dall'editor; i listener ricevono i dati prima
+  che la chiamata risponda; le altre schede vengono avvisate con BroadcastChannel e rileggono. L'importazione
+  (unione o sostituzione) è un'unica transazione: mai un ripristino parziale. Versione dello schema = numero di passi
+  in `localMigrations`; una versione più recente del codice è rifiutata con un messaggio. localStorage contiene solo
+  preferenze e la modalità.
+- **Scelta e separazione.** `nummo.storageMode.v1`; senza scelta salvata, un browser con indizio di sessione Firebase
+  resta in Avanzata (utenti esistenti), gli altri vedono la schermata di scelta. Firebase non viene inizializzato in
+  Standard. Il cambio di modalità smonta il workspace e non tocca nessuno dei due archivi.
+- **Google Drive.** Solo backup e ripristino, via REST su `appDataFolder` con ambito `drive.appdata`. Autorizzazione
+  con Google Identity Services (modello a token, nessun segreto, nessun backend): il token dura circa un'ora e resta
+  in memoria. Conseguenza accettata: nessun rinnovo silenzioso; il backup automatico gira mentre l'app è aperta e
+  l'accesso è valido, altrimenti resta in attesa di un tocco. Alternative scartate: refresh token (richiede un server
+  e un segreto), token in localStorage (esposizione), file unico sovrascritto (un dispositivo vuoto distruggerebbe il
+  backup: da qui un file per backup, cinque conservati, e nessun caricamento automatico di archivi vuoti).
+- **Limiti noti.** `build:cloud` richiede ancora la configurazione Firebase (nessuna build solo Standard); nessun
+  service worker, quindi l'avvio a freddo senza rete non è garantito nemmeno in Standard; l'adattatore IndexedDB reale
+  è verificato in Chromium, non dai test Node (che usano il gemello in memoria).
+
+## Visibilità dei controlli budget — 12 novembre 2026
+
+La preferenza locale `showGeneralBudget` nasconde anche la sezione budget nei moduli Nuovo fondo e Modifica fondo.
+Il modulo non valida né invia una modifica del budget quando i controlli sono nascosti: `fundFromForm` riceve il
+campo omesso e conserva esattamente il piano esistente, comprese variazioni future ed eccezioni. I nuovi fondi
+creati in questa modalità non hanno budget. Riattivando la preferenza tornano i controlli; dati, calcoli e
+indicatori dei budget già presenti sui singoli fondi restano invariati.
+
 ## Tocchi, tastiera e overlay — 12 novembre 2026
 
 Nascondere la navigazione con `display: none` durante `pointerdown` faceva aumentare lo spazio dello scroller:

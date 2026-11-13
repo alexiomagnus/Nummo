@@ -10,6 +10,7 @@ const cloud = {
 test('build cloud: configurazione valida, e ogni miscela è respinta', () => {
   assert.deepEqual(cloudEnvProblems(cloud), []);
   assert.deepEqual(cloudEnvProblems({ ...cloud, EXPO_PUBLIC_FIRESTORE_CACHE: 'persistent' }), []);
+  assert.deepEqual(cloudEnvProblems({ ...cloud, EXPO_PUBLIC_GOOGLE_CLIENT_ID: '1234-abc.apps.googleusercontent.com' }), []);
   const rejected: Record<string, Record<string, string | undefined>> = {
     'backend assente': { EXPO_PUBLIC_NUMMO_BACKEND: undefined },
     'backend hybrid': { EXPO_PUBLIC_NUMMO_BACKEND: 'hybrid' },
@@ -21,6 +22,7 @@ test('build cloud: configurazione valida, e ogni miscela è respinta', () => {
     'progetto demo': { EXPO_PUBLIC_FIREBASE_PROJECT_ID: 'demo-nummo' },
     'dominio locale': { EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: 'localhost' },
     'cache non valida': { EXPO_PUBLIC_FIRESTORE_CACHE: 'memory' },
+    'client Google non valido': { EXPO_PUBLIC_GOOGLE_CLIENT_ID: 'GOCSPX-un-segreto' },
   };
   for (const [label, change] of Object.entries(rejected)) assert.ok(cloudEnvProblems({ ...cloud, ...change }).length > 0, label);
 });

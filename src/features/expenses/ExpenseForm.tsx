@@ -54,7 +54,7 @@ function ExpenseFormView({ categories, store, onCreateCategory, canCreateCategor
     setDraft(newDraft());
     setErrors({});
     setFormKey((key) => key + 1);
-    notify(submission.request.first_payment_date ? "Abbonamento salvato." : "Spesa salvata e confermata da Firestore.");
+    notify(submission.request.first_payment_date ? "Abbonamento salvato." : store.local ? "Spesa salvata." : "Spesa salvata e confermata da Firestore.");
     store.startNew();
   }, [submission.status]);
   // A category deleted in the other section simply stops being selected.

@@ -12,10 +12,11 @@ import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../doma
 import { categoryNameError, normalizeCategoryName, type Category, type CategoryIcon } from '../domain/category.ts';
 import { decodeStatusChanges, encodeStatusChanges } from '../domain/subscription.ts';
 import { categoryNameKey, parseSyncedBudget, type SyncedBudget, parseSyncedCategory, parseSyncedExpense, parseSyncedFund, parseSyncedList, parseSyncedListItem, parseSyncedMovement, type SyncedCategory, type SyncedExpense, type SyncedFund, type SyncedList, type SyncedListItem, type SyncedMovement } from '../domain/firestore.ts';
-import { decodeListItems, encodeListItems, listNameError, itemNameError, normalizeListText, parseListData, sameListRecord, sortItems, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
+import { decodeListItems, encodeListItems, listNameError, itemNameError, normalizeListText, parseListData, sameListRecord, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFundData, parseMovementData, sameBudgets, type BudgetChange, type Fund, type FundData, type Movement, type MovementData } from '../domain/funds.ts';
 
-export type BudgetSnapshot = { budget: SyncedBudget | null; fromCache: boolean; pending: boolean };
+import { listRecords, type BudgetSnapshot, type DataStore, type SnapshotState } from './dataStore.ts';
+export type { BudgetSnapshot, SnapshotState } from './dataStore.ts';
 // The stored schedule is a compact string (see firestore.rules); undecodable → the record check fails (archive invalid).
 function readBudget(data: DocumentData | undefined): SyncedBudget | null {
   if (!data) return null;
@@ -24,7 +25,6 @@ function readBudget(data: DocumentData | undefined): SyncedBudget | null {
   if (!budget) throw new Error('Archivio non valido: esportazione e modifiche bloccate.');
   return budget;
 }
-export type SnapshotState<T> = { records: T[]; fromCache: boolean; pending: boolean; pendingIds: string[] };
 function decode(data: DocumentData, id: string) {
   return { ...data, ...(data.schema_version === 2 || data.schema_version === 3 ? { price_changes: decodeTrialPrices(data.price_changes) } : {}), ...('calendar_changes' in data ? { calendar_changes: decodeCalendarChanges(data.calendar_changes) } : {}), ...('status_changes' in data ? { status_changes: decodeStatusChanges(data.status_changes) } : {}),
     ...('list_items' in data ? { list_items: decodeListItems(data.list_items) } : {}), id, created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : data.created_at,
@@ -57,13 +57,8 @@ function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id' | 'list
     ...(list_id ? { list_id, list_items: encodeListItems(list_items) } : {}) };
 }
 const storedList = (data: ShoppingListData) => ({ name: data.name, category_id: data.category_id, total_minor: data.total_minor, expense_id: data.expense_id });
-// Lists of the archive with their items (backups and import plans). Items whose list no longer exists are left out.
-function listRecords(lists: readonly SyncedList[], items: readonly SyncedListItem[]): ShoppingListRecord[] {
-  return lists.map((l) => ({ id: l.id, name: l.name, category_id: l.category_id, total_minor: l.total_minor, expense_id: l.expense_id, created_at: l.created_at,
-    items: sortItems(items.filter((i) => i.list_id === l.id)).map((i) => ({ id: i.id, name: i.name, checked: i.checked, position: i.position })) }));
-}
 
-export function createFirestoreStore(db: Firestore, uid: string) {
+export function createFirestoreStore(db: Firestore, uid: string): DataStore {
   const expenses = collection(db, 'users', uid, 'expenses');
   const categories = collection(db, 'users', uid, 'categories');
   const names = collection(db, 'users', uid, 'categoryNames');
@@ -94,6 +89,7 @@ export function createFirestoreStore(db: Firestore, uid: string) {
   let onWriteError: (reason: unknown) => void = () => {};
   const queued = (write: Promise<void>) => { void write.catch((reason) => onWriteError(reason)); };
   return {
+    kind: 'firestore',
     watchExpenses(next: (value: SnapshotState<SyncedExpense>) => void, error: (reason: Error) => void) {
       return onSnapshot(expenses, { includeMetadataChanges: true }, (s) => {
         try { next(parseSnapshot(s, parseSyncedExpense)); } catch (e) { error(e as Error); }
@@ -470,4 +466,3 @@ export function createFirestoreStore(db: Firestore, uid: string) {
     },
   };
 }
-export type FirestoreStore = ReturnType<typeof createFirestoreStore>;

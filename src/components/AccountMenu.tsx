@@ -7,7 +7,8 @@ import { AnchoredMenu, type MenuAnchor } from './Overlay';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
-type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut: () => void; onOpenSettings: () => void; onOpenCategories: () => void; onOpenBackup: () => void };
+// Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
+type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenCategories: () => void; onOpenBackup: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
@@ -26,10 +27,10 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
     <>
       <View ref={trigger}>
         <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} bleed={4} accessibilityRole="button"
-          aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`Account${email ? `: ${email}` : ''}`}
+          aria-haspopup="menu" aria-expanded={open} accessibilityLabel={onSignOut ? `Account${email ? `: ${email}` : ''}` : t("Menu")}
           onPress={openMenu} style={styles.trigger}>
           <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>
-            <Text variant="titleSmall" style={{ color: colors.onPrimaryContainer }}>{(email ?? 'N').charAt(0).toUpperCase()}</Text>
+            <SvgIcon shape={iconShapes.user} size={22} color={colors.onPrimaryContainer} />
             {photoURL && !photoFailed && <img key={photoAttempt} src={photoURL} alt="" aria-hidden draggable={false}
               width={36} height={36} referrerPolicy="no-referrer"
               onLoad={() => setPhotoLoaded(true)} onError={() => setPhotoFailed(true)}
@@ -38,14 +39,17 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
         </StateLayerPressable>
       </View>
       <AnchoredMenu visible={open} onDismiss={() => setOpen(false)} anchor={anchor} align="end" label="Account" contentStyle={styles.menu}>
-      <View style={styles.info}>
+      {onSignOut ? <View style={styles.info}>
         <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Account Google")}</Text>
         <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? t("Account senza e-mail")}</Text>
         {(!photoURL || photoFailed || !photoLoaded) && <Text variant="bodySmall" accessibilityLiveRegion="polite" style={{ color: colors.onSurfaceVariant }}>
           {!photoURL ? t('Nessuna foto profilo disponibile per questo account.')
             : photoFailed ? t('La foto profilo non si è caricata.') : t('Caricamento foto profilo…')}
         </Text>}
-      </View>
+      </View> : <View style={styles.info}>
+        <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Modalità Standard")}</Text>
+        <Text variant="bodyMedium">{t("Dati su questo dispositivo")}</Text>
+      </View>}
       <Divider />
       {photoURL && photoFailed && <Menu.Item title={t('Riprova foto')} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.sync} size={size} color={color} />}
@@ -59,9 +63,9 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
       <Menu.Item title={t("Importa ed esporta")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenBackup(); }} />
-      <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy} style={styles.item}
+      {onSignOut && <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
-        onPress={() => { setOpen(false); onSignOut(); }} />
+        onPress={() => { setOpen(false); onSignOut(); }} />}
       </AnchoredMenu>
     </>
   );

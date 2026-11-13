@@ -497,13 +497,14 @@ export function hasBalanceData(fund: Pick<Fund, 'id' | 'initial_minor' | 'rechar
 // existing one is written back with everything the form does not show exactly as saved (initial balance, start date, recharges,
 // per-month budget exceptions, archived flag), and only its recurring budget changes, from the current month on.
 // null = too many scheduled budget changes.
-export function fundFromForm(record: FundData | undefined, form: { name: string; icon: CategoryIcon | null; color: number; budget: number | null }, today: string): FundData | null {
+export function fundFromForm(record: FundData | undefined, form: { name: string; icon: CategoryIcon | null; color: number; budget?: number | null }, today: string): FundData | null {
   const name = normalizeCategoryName(form.name);
   if (!record) {
     const base = emptyFund(name, today, form.color);
-    return { ...base, icon: form.icon, budgets: form.budget === null ? [] : [{ month: monthOf(today), amount_minor: form.budget }] };
+    return { ...base, icon: form.icon, budgets: form.budget == null ? [] : [{ month: monthOf(today), amount_minor: form.budget }] };
   }
-  const budgets = setRecurringBudget(record, form.budget, today);
+  // An omitted budget means its controls are hidden: preserve the exact plan, including future changes.
+  const budgets = form.budget === undefined ? record.budgets : setRecurringBudget(record, form.budget, today);
   if (!budgets) return null;
   return { name, icon: form.icon, color: form.color, initial_minor: record.initial_minor, start_date: record.start_date, recharges: record.recharges,
     budgets, budget_exceptions: record.budget_exceptions, archived: record.archived };
