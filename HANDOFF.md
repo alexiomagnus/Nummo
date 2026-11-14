@@ -22,6 +22,29 @@ Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle sin
   telefoni reali e Safari/iOS, collaudo in demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup,
   pubblicazione Hosting e Rules (solo con autorizzazione).
 
+## Nuova spesa: sezione ricorrente riorganizzata — 14 novembre 2026
+
+- Tre gruppi in `RepeatField` (ora contenitore, `role="group"` «Pagamento ricorrente»): Ricorrente + frequenza, poi Prova
+  gratuita e Prezzo promozionale passati come figli, separati da divisori `outlineVariant` con rientro di 16 px. Tutti i
+  controlli sono allineati alle etichette degli interruttori (prima il campo Primo pagamento non era rientrato). Spazi tra
+  i gruppi ridotti (da 24 a 8 + divisore).
+- Visualizzazione progressiva: spento «Ricorrente» non mostra nulla; acceso mostra frequenza e i due interruttori (Prezzo
+  promozionale ora visibile anche prima di scegliere la frequenza: il riepilogo compare solo dopo). Nuovo componente
+  `components/Disclosure.tsx`: apertura con dissolvenza e scorrimento di 4 px, chiusura con dissolvenza breve
+  (`usePresence`, solo opacity/transform, `inert` durante l'uscita, immediato con movimento ridotto).
+- Prezzo promozionale: «Importo successivo» con icona euro come l'importo principale; «Dopo quanti rinnovi» diventa
+  **«Rinnovi a prezzo promozionale»**, etichetta accanto a un contatore compatto − [n] + in una pillola da 50 px (bersagli
+  48 px, numero ancora digitabile, rotellina conservata, bordo errore/focus). Affiancati da circa 500 px; su telefono
+  impilati, a 320 px il contatore va sotto l'etichetta. Tolto il segnaposto; nome accessibile = etichetta visibile.
+  Su richiesta, attivando Prezzo promozionale il contatore parte da **1** (minimo) se vuoto o a 0, e lasciando il
+  campo vuoto o a 0 torna a 1 (prima partiva vuoto e il salvataggio dava errore). Un valore già impostato resta.
+- Invariati: calcoli, validazione (messaggi compresi), salvataggio, dialogo di modifica (`TrialField existing`, `PriceChangeField`,
+  `FrequencyField`). Traduzioni EN aggiornate, rimosse le due chiavi non più usate; nuovo caso in `tests/i18n.test.ts`.
+- Verifiche: `npm run check` OK (typecheck, test, build demo), poi `npm test` **397/397**. Chromium headless/CDP sulla build
+  demo in Standard, HTTPS esterno bloccato: 360 IT chiaro e 1280 IT chiaro (tutte le opzioni attive, confronto prima/dopo),
+  320 e 360 EN scuro con errori di validazione, spegnimento/riaccensione di Ricorrente; nessun overflow orizzontale né errore JS.
+  Non provati: telefono reale, movimento ridotto nel browser, dialogo di modifica nel browser. Nessun commit.
+
 ## Riallineamento documenti e logo — 14 novembre 2026
 
 - HANDOFF (stato Git a `6956a56`, produzione/Rules non pubblicate, prossime attività) e AGENTS (fonti storiche

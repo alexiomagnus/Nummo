@@ -136,3 +136,11 @@ test('impostazioni: interruttore del budget mensile tradotto in entrambe le ling
     assert.equal(translate('en', it), en);
   }
 });
+
+test('nuova spesa: etichette della sezione ricorrente tradotte, vecchia etichetta dei rinnovi rimossa', () => {
+  for (const [it, en] of [['Pagamento ricorrente', 'Recurring payment'], ['Rinnovi a prezzo promozionale', 'Renewals at promotional price'], ['Prezzo promozionale', 'Promotional price'], ['Periodo di prova gratuito', 'Free trial']] as const) {
+    assert.equal(translate('it', it), it);
+    assert.equal(translate('en', it), en);
+  }
+  assert.ok(!Object.hasOwn(english, 'Dopo quanti rinnovi'));
+});

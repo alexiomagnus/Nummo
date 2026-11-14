@@ -113,16 +113,15 @@ function ExpenseFormView({ categories, store, onCreateCategory, canCreateCategor
     <View style={[styles.repeat, desktop && styles.repeatDesktop]}>
       {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
         onChange={(fundId) => update({ fundId })} />}
-      <RepeatField repeat={draft.repeat} recurrence={draft.recurrence} startDate={startDate}
+      <RepeatField repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
-        onRecurrenceChange={(recurrence) => update({ recurrence })} />
-      {draft.repeat && <TrialField enabled={draft.trial} firstPaymentDate={draft.firstPaymentDate} startDate={startDate}
-        error={errors.firstPaymentDate} disabled={!enabled} onChange={update} />}
-      {draft.repeat && draft.recurrence && (
+        onRecurrenceChange={(recurrence) => update({ recurrence })}>
+        <TrialField enabled={draft.trial} firstPaymentDate={draft.firstPaymentDate} startDate={startDate}
+          error={errors.firstPaymentDate} disabled={!enabled} onChange={update} />
         <PromoField value={draft.promo} amount={draft.promoAmount} after={draft.promoAfter} firstAmount={draft.amount}
           recurrence={draft.recurrence} startDate={billingStart} disabled={!enabled}
           errors={{ amount: errors.promoAmount, after: errors.promoAfter }} onChange={update} />
-      )}
+      </RepeatField>
     </View>
   );
 

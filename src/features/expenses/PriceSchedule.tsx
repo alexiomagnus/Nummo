@@ -1,8 +1,10 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useEffect, useRef, type ComponentRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { StyleSheet, TextInput as NativeInput, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { ChoiceChips } from '../../components/ChoiceChips';
+import { Disclosure } from '../../components/Disclosure';
+import { leadingIcon } from '../../components/FieldIcon';
 import { SwitchRow } from '../../components/SwitchRow';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -41,9 +43,35 @@ function StepButton({ label, shape, disabled, onPress }: { label: string; shape:
   const { colors } = useTheme();
   return (
     <StateLayerPressable layerColor={colors.onSurface} radius={radius.pill} disabled={disabled} onPress={onPress}
-      accessibilityRole="button" accessibilityLabel={label} style={[styles.step, { borderColor: colors.outline }]}>
-      <SvgIcon shape={shape} size={20} color={colors.onSurface} />
+      accessibilityRole="button" accessibilityLabel={label} style={styles.step}>
+      <SvgIcon shape={shape} size={20} color={disabled ? colors.onSurfaceDisabled : colors.onSurface} />
     </StateLayerPressable>
+  );
+}
+
+// Compact stepper: − [number] + in one 48 dp pill, the number still typeable; leaving it empty or at 0 restores the minimum, 1. The visible label sits beside it,
+// like the switch rows, so the long label never has to fit inside a field.
+function RenewalStepper({ label, value, error, disabled, onType, onStep }: {
+  label: string; value: string; error: boolean; disabled?: boolean;
+  onType: (value: string) => void; onStep: (delta: number) => void;
+}) {
+  const { t } = useI18n();
+  const { colors, fonts } = useTheme();
+  const [focused, setFocused] = useState(false);
+  const box = useWheelStep(value, onStep);
+  const current = /^\d{1,3}$/.test(value.trim()) ? Number(value) : 0;
+  const border = error ? colors.error : focused ? colors.primary : colors.outline;
+  return (
+    <View ref={box} style={styles.counter}>
+      <Text variant="bodyLarge" style={styles.counterLabel} aria-hidden>{label}</Text>
+      <View style={[styles.stepper, { borderColor: border }, (focused || error) && styles.stepperStrong]}>
+        <StepButton label={t("Meno un rinnovo")} shape={iconShapes.minus} disabled={Boolean(disabled) || current <= 1} onPress={() => onStep(-1)} />
+        <NativeInput value={value} onChangeText={onType} inputMode="numeric" maxLength={3} editable={!disabled}
+          aria-disabled={disabled} aria-invalid={error} accessibilityLabel={label}
+          onFocus={() => setFocused(true)} onBlur={() => { setFocused(false); if (current < 1) onType('1'); }} style={[styles.count, { color: colors.onSurface, fontFamily: fonts.bodyLarge.fontFamily }]} />
+        <StepButton label={t("Più un rinnovo")} shape={iconShapes.plus} disabled={Boolean(disabled) || current >= maxPromoAfter} onPress={() => onStep(1)} />
+      </View>
+    </View>
   );
 }
 
@@ -53,6 +81,7 @@ type PromoProps = {
   after: string;
   // The starting price typed in the main amount field.
   firstAmount: string;
+  // Empty until a frequency is chosen: the summary waits for it.
   recurrence: Recurrence | '';
   startDate: string;
   errors: { amount?: string; after?: string };
@@ -60,47 +89,36 @@ type PromoProps = {
   onChange: (patch: { promo?: boolean; promoAmount?: string; promoAfter?: string }) => void;
 };
 
-// Optional promotional price of a new series: the amount typed above is the starting price.
+// Optional promotional price of a new series: the amount typed above is the starting price. Turning it on fills in the
+// minimum number of renewals (1) when none is set, so the stepper never starts empty.
 export function PromoField({ value, amount, after, firstAmount, recurrence, startDate, errors, disabled, onChange }: PromoProps) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
-  const muted = { color: colors.onSurfaceVariant };
   const current = /^\d{1,3}$/.test(after.trim()) ? Number(after) : 0;
   const step = (delta: number) => onChange({ promoAfter: String(Math.min(maxPromoAfter, Math.max(1, current + delta))) });
-  const afterBox = useWheelStep(after, step);
   const first = parseAmountMinor(firstAmount);
   const then = parseAmountMinor(amount);
-  const count = /^\d{1,3}$/.test(after.trim()) ? Number(after) : 0;
-  const summary = first !== null && then !== null && count >= 1 && count <= 999 && recurrence
-    ? t("{p0} per {p1}, poi {p2} dal {p3}° rinnovo ({p4}).", { p0: formatAmount(first), p1: count === 1 ? t("il primo pagamento") : t("i primi {p0} pagamenti", { p0: count }), p2: formatAmount(then), p3: count, p4: renewalDate(startDate, recurrence, count, locale) }) : null;
+  const summary = first !== null && then !== null && current >= 1 && current <= 999 && recurrence
+    ? t("{p0} per {p1}, poi {p2} dal {p3}° rinnovo ({p4}).", { p0: formatAmount(first), p1: current === 1 ? t("il primo pagamento") : t("i primi {p0} pagamenti", { p0: current }), p2: formatAmount(then), p3: current, p4: renewalDate(startDate, recurrence, current, locale) }) : null;
   return (
-    <View style={styles.group}>
-      <SwitchRow label={t("Prezzo promozionale")} value={value} disabled={disabled} onChange={(promo) => onChange({ promo })} />
-      {value && (
-        <View style={styles.fields}>
-          <View style={styles.row}>
-            <View style={styles.amount}>
-              <TextInput outlineStyle={inputOutline} label={t("Importo successivo")} value={amount} mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'}
-                onChangeText={(promoAmount) => onChange({ promoAmount })} error={Boolean(errors.amount)} disabled={disabled}
-                accessibilityLabel={t("Importo dopo il periodo promozionale, in euro")} />
-              {errors.amount && <HelperText type="error" accessibilityRole="alert">{t(errors.amount)}</HelperText>}
-            </View>
-            <View ref={afterBox} style={styles.after}>
-              <View style={styles.afterRow}>
-              <TextInput style={styles.afterField} outlineStyle={inputOutline} label={t("Dopo quanti rinnovi")} value={after} mode="outlined" inputMode="numeric"
-                onChangeText={(promoAfter) => onChange({ promoAfter })} error={Boolean(errors.after)} disabled={disabled}
-                accessibilityLabel={t("Numero di rinnovi dopo i quali cambia l’importo")} />
-              <View style={styles.steps}>
-                <StepButton label={t("Meno un rinnovo")} shape={iconShapes.minus} disabled={disabled || current <= 1} onPress={() => step(-1)} />
-                <StepButton label={t("Più un rinnovo")} shape={iconShapes.plus} disabled={disabled || current >= maxPromoAfter} onPress={() => step(1)} />
-              </View>
-              </View>
-              {errors.after && <HelperText type="error" accessibilityRole="alert">{t(errors.after)}</HelperText>}
-            </View>
+    <View>
+      <SwitchRow label={t("Prezzo promozionale")} value={value} disabled={disabled} onChange={(promo) => onChange({ promo, ...(promo && current < 1 ? { promoAfter: '1' } : {}) })} />
+      <Disclosure open={value} style={styles.fields}>
+        <View style={styles.row}>
+          <View style={styles.amount}>
+            <TextInput outlineStyle={inputOutline} label={t("Importo successivo")} value={amount} mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'}
+              onChangeText={(promoAmount) => onChange({ promoAmount })} error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
+              left={leadingIcon(iconShapes.euro)} accessibilityLabel={t("Importo dopo il periodo promozionale, in euro")} />
+            {errors.amount && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.amount)}</HelperText>}
           </View>
-          {summary && <Text variant="bodySmall" style={muted}>{summary}</Text>}
+          <View style={styles.after}>
+            <RenewalStepper label={t("Rinnovi a prezzo promozionale")} value={after} error={Boolean(errors.after)} disabled={disabled}
+              onType={(promoAfter) => onChange({ promoAfter })} onStep={step} />
+            {errors.after && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.after)}</HelperText>}
+          </View>
         </View>
-      )}
+        {summary && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{summary}</Text>}
+      </Disclosure>
     </View>
   );
 }
@@ -164,15 +182,20 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
 
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
-  fields: { gap: spacing.sm, paddingHorizontal: spacing.lg },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  amount: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
-  after: { flexGrow: 1, flexBasis: 300, minWidth: 0 },
-  afterRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  afterField: { flex: 1, minWidth: 0 },
-  // Paper's outlined field reserves 6 dp above its box: the buttons take the same 50 dp box and offset.
-  steps: { flexDirection: 'row', gap: spacing.sm, marginTop: 6 },
-  step: { width: layout.fieldBoxHeight, height: layout.fieldBoxHeight, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  fields: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
+  // Amount and stepper side by side when both fit (≥ 2 × 240 + gap), stacked on phones.
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', columnGap: spacing.xl, rowGap: spacing.md },
+  amount: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
+  after: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
+  helper: { paddingHorizontal: 0 },
+  // Same 50 dp box and 6 dp top offset as Paper's outlined field beside it, so both align on wide screens.
+  // On the narrowest phones the label takes its own line and the stepper moves under it, still at the end.
+  counter: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.md, rowGap: spacing.sm, minHeight: layout.fieldBoxHeight, marginTop: 6 },
+  counterLabel: { flexGrow: 1, flexShrink: 1, flexBasis: 136, minWidth: 0 },
+  stepper: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'stretch', height: layout.fieldBoxHeight, borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: 1 },
+  stepperStrong: { borderWidth: 2, paddingHorizontal: 0 },
+  step: { width: layout.minTouch, alignItems: 'center', justifyContent: 'center' },
+  count: { width: 40, textAlign: 'center', fontSize: 16, fontVariant: ['tabular-nums'], outlineWidth: 0 },
   scheduled: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   scheduledText: { flex: 1 },
 });
