@@ -33,6 +33,7 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   // Home
   house: { hue: 'blue', shape: `<path ${T} d="M5.5 11.5h13V20h-13Z"/><path ${B} d="M3.5 11.5 12 4l8.5 7.5h-17Z"/><rect ${B} x="10" y="14" width="4" height="6"/>` },
   sofa: { hue: 'blue', shape: `<path ${T} d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3H5Z"/><path ${B} d="M3 12.5a2 2 0 0 1 4 0V14h10v-1.5a2 2 0 0 1 4 0V18H3v-5.5Z"/><path ${L} d="M6 18v2M18 18v2"/>` },
+  key: { hue: 'amber', shape: `<path stroke="{i}" stroke-width="3.6" d="m10.5 12.5 9-9M15.5 7.5l2.5 2.5M18 5l2 2"/><path stroke="{b}" stroke-width="2" d="m10.5 12.5 9-9M15.5 7.5l2.5 2.5M18 5l2 2"/><circle ${B} cx="7.5" cy="15.5" r="4.5"/><circle ${T} cx="6.5" cy="16.5" r="1.5"/>` },
   bulb: { hue: 'amber', shape: `<path ${B} d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/><rect ${T} x="9.5" y="16" width="5" height="2.2" rx="1"/><path ${L} d="M10.5 21h3"/><path stroke="{o}" d="M9.8 8.3a2.6 2.6 0 0 1 2-1.7"/>` },
   wifi: { hue: 'blue', shape: `<path stroke="{b}" stroke-width="2.4" d="M3 9.5a14 14 0 0 1 18 0M6 13a9.5 9.5 0 0 1 12 0M9 16.5a5 5 0 0 1 6 0"/><circle fill="{l}" stroke="none" cx="12" cy="20" r="1.6"/>` },
   // Transport
@@ -47,7 +48,7 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   sparkles: { hue: 'violet', shape: `<path ${B} d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3Z"/>` },
   camera: { hue: 'slate', shape: `<path ${B} d="M4 8h3l1.5-2.5h7L17 8h3v11H4V8Z"/><circle ${T} cx="12" cy="13" r="3.5"/>${dot(17.5, 10.5)}` },
   // Money and work
-  coin: { hue: 'amber', shape: `<circle ${B} cx="12" cy="12" r="9"/><circle ${T} cx="12" cy="12" r="6.4"/><path d="M12 8v8M13.8 9.9c-.4-.7-1.1-1-1.8-1-1 0-1.8.5-1.8 1.4s.8 1.2 1.8 1.4 1.8.5 1.8 1.4-.8 1.4-1.8 1.4c-.7 0-1.4-.3-1.8-1" stroke-width="1.2"/>` },
+  coin: { hue: 'gold', shape: `<circle ${B} cx="12" cy="12" r="9"/><circle ${T} cx="12" cy="12" r="6.4"/><path d="M12 8v8M13.8 9.9c-.4-.7-1.1-1-1.8-1-1 0-1.8.5-1.8 1.4s.8 1.2 1.8 1.4 1.8.5 1.8 1.4-.8 1.4-1.8 1.4c-.7 0-1.4-.3-1.8-1" stroke-width="1.2"/>` },
   wallet: { hue: 'orange', shape: `<path ${T} d="M5 7.5A2.5 2.5 0 0 1 7.5 5H17v3H5Z"/><rect ${B} x="3.5" y="7.5" width="17" height="12" rx="2"/><path ${T} d="M20.5 11.5H16a2 2 0 0 0 0 4h4.5Z"/><path stroke-width="2.2" d="M16.3 13.5h.01"/>` },
   bank: { hue: 'blue', shape: `<path ${B} d="M3 9 12 4l9 5H3Z"/><rect ${T} x="5" y="10" width="2.6" height="6.5" rx=".4"/><rect ${T} x="9.1" y="10" width="2.6" height="6.5" rx=".4"/><rect ${T} x="13.2" y="10" width="2.6" height="6.5" rx=".4"/><rect ${T} x="17.3" y="10" width="2.6" height="6.5" rx=".4"/><rect ${B} x="3" y="17.5" width="18" height="3" rx=".6"/>${dot(12, 7.2)}` },
   cash: { hue: 'green', shape: `<rect ${B} x="2.5" y="6.5" width="19" height="11" rx="2"/><circle ${T} cx="12" cy="12" r="2.8"/><path stroke="{o}" d="M5.8 10v4M18.2 10v4"/>` },

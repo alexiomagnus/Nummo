@@ -223,12 +223,13 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
 - Icone UI SVG inline (`SvgIcon`/`iconShapes`, non seguono lo stile scelto). Le icone di categoria hanno tre stili di
   visualizzazione, preferenza `iconStyle` (`minimal` predefinito | `colorful` | `pixel`) in `nummo.preferences.v1`, mai nei dati:
   glifi outline 24×24 in `categoryGlyphs.ts`, disegni colorati in `categoryColorGlyphs.ts` e sprite pixel art (griglia ≤12×12 a
-  caratteri, scala ×2, solo celle intere) in `categoryPixelGlyphs.ts`, con ruoli colore `{b}{t}{i}{o}{l}`
+  caratteri, scala ×2, solo celle intere; `grid: 24` ad alta definizione solo se un simbolo non si legge, oggi `coin`) in `categoryPixelGlyphs.ts`, con ruoli colore `{b}{t}{i}{o}{l}`
   risolti per tema da `theme/iconPalette.ts` (niente hex nei disegni). Solo `categoryIconSets.ts` (puro) sceglie il disegno e i
   fallback (pixel → colorato → outline → segnaposto) e la dimensione (`glyphSize`: il pixel si aggancia a multipli di 12); solo `CategoryGlyph` lo mostra, con lo stile da `IconStyleProvider` (sopra
   `PaperProvider`, come la lingua) o dalla prop `style`. Nuova icona: aggiornare insieme `categoryIconLabels`, glifo minimale,
   disegno colorato con tinta per significato, sprite pixel (dettagli sottili in b/t, mai solo in `i`) e Rules (`tests/categoryIcons.test.ts` impone la corrispondenza e i contrasti);
-  prima di rimuovere un identificativo valutare compatibilità di record e backup esistenti.
+  prima di rimuovere un identificativo valutare compatibilità di record e backup esistenti: per toglierla dal selettore
+  senza rompere i dati aggiungerla a `retiredCategoryIcons` (`domain/category.ts`, oggi `sofa`), che resta valida e disegnata.
 - Grafici: palette categoriale stabile, legenda e tabella, colore legato alla categoria;
   proiezione visuale separata dall’aggregazione completa (`categoryPresentation.ts`), gruppi virtuali mai salvati.
   Colori deterministici sulla palette finita (`categoryColorSlots`: slot distinti fino a 12 categorie con spese, oltre per le 12 con più spesa; stabili tra periodi), dettaglio completo anche se oltre 12 si ripetono;

@@ -4,17 +4,41 @@
 
 Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` a `73034ba` («Standard (on-device) and Advanced (Firebase) storage modes»), allineato al riferimento locale
-  `origin/main` (nessun fetch). Quel commit contiene tutte le fasi del 12–13 novembre, comprese quelle marcate «nessun commit»
+- **Git.** `main` a `ed21a87` (pulsanti mobile, «Nuova lista», anteprima Blocchi, riallineamento documenti), pubblicato su
+  `origin/main`; sotto c'è `73034ba` («Standard (on-device) and Advanced (Firebase) storage modes»). Quel commit contiene tutte le fasi del 12–13 novembre, comprese quelle marcate «nessun commit»
   (modalità Standard/Avanzata e Drive, azioni di Spese/abbonamenti, contorno delle azioni distruttive, icona utente e avatar).
   Non c'è un rilascio Hosting registrato dopo `e2eee92` (12 novembre): il commit `73034ba` è da considerare **non pubblicato**
-  finché non lo si verifica. Modifiche del 14 novembre (sotto) locali, senza commit.
+  finché non lo si verifica, come `ed21a87`. La fase icone del 14 novembre è nel commit successivo («feat: pixel icon redesign, key icon,
+  retired sofa»), con push; le Rules modificate (icona `key`) **non sono pubblicate**.
 - **Verifiche il 14 novembre.** `npm run check` OK su `73034ba`: typecheck, **393/393** test, build demo. Emulatori e hybrid
   non rieseguiti (ultimo esito: SDK/Rules 18/18 il 12–13 novembre, hybrid 8/8 in una revisione precedente).
 - **Ambiente.** Un runner hybrid dell'utente era attivo (`node scripts/dev-hybrid.ts`, PID 18290, config
   `.nummo-hybrid-18290.json` in radice, ignorata da Git): non toccarlo; per le suite usare porte dedicate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Google OAuth/Drive reali mai provati (nessun client configurato),
   telefoni reali e Safari/iOS, collaudo in demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup.
+
+## Icone: sprite pixel ridisegnati, chiave, divano ritirato — 14 novembre 2026
+
+- Commit `ed21a87` (fasi precedenti del 14 novembre) pubblicato su `origin/main`; questa fase è nel commit «feat: pixel icon redesign, key icon,
+  retired sofa» con push (Rules non pubblicate).
+- **Sprite pixel ridisegnati con più dettaglio:** `wifi` (archi doppi con riflesso e punto tondo), `pizza` (crosta,
+  formaggio, salamini arancioni asimmetrici: con salamini scuri sembrava un teschio), `coin` (primo sprite ad alta definizione: griglia
+  24×24, una cella per pixel a 24 px, contorni spessi due celle; faccia dorata, bordo chiaro, € bianco centrato con due barre;
+  su 12×12 il € non era leggibile né centrabile), `cash` (una sola banconota con medaglione e angoli), `house` (camino, finestra, porta), `bulb` (raggi, riflesso,
+  filamento, attacco filettato). Stessi ID e tinte; minimale e colorato invariati.
+- **Nuova tinta `gold`** (`iconPalette.ts`) per la moneta, nel pixel e nel colorato: amber più profondo con dettagli
+  bianchi in entrambi i temi (come `popcorn`). Con `amber` il bianco non raggiungeva 3:1 sulla base nel tema scuro.
+- **Nuova icona `key` (chiave)** nei tre stili (tinta amber), etichetta IT/EN, Rules (due elenchi `icon in [...]`).
+- **`sofa` (divano) ritirata:** non più nel selettore, ma ancora valida per decoder, backup e Rules e disegnata nei tre
+  stili, così le categorie esistenti che la usano restano leggibili. `IconPicker` la mostra solo sulla categoria che
+  la usa (se la si toglie, sparisce). Convenzione in AGENTS.md, decisione in `docs/architecture.md`.
+- **Da fare in Avanzata:** le Rules **pubblicate** non conoscono `key`. Finché non si pubblicano le Rules (operazione
+  separata da autorizzare), salvare in cloud una categoria con la chiave viene rifiutato. Standard non ne è toccata.
+- Verifiche: `npm run check` OK anche dopo il ritocco di moneta e banconota, **396/396** test (nuovo: alta definizione
+  solo per la moneta, € centrato e bianco) (nuovi: chiave nei tre stili; divano ritirato ma valido). Suite
+  emulatori SDK/Rules **18/18** su porte dedicate (Auth 44199, Firestore 44380, hub 44400; config temporanea rimossa;
+  hybrid dell'utente su 8180 non toccato), con categoria salvata con `key` e con `sofa`. Sprite osservati a 24 px e
+  ingranditi, tema chiaro e scuro; nessuna prova nell'app su dispositivo.
 
 ## Blocchi: anteprima dopo deselezione, Pausa e «Nuova» — 14 novembre 2026
 
@@ -1367,7 +1391,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   filtro categoria, ordinamento, raggruppamento mensile) e «Pagamenti ricorrenti» (serie, ricerca normalizzata,
   stati Attivo/In pausa/Annullato, storico pagamenti, prossimi rinnovi). Ricorrenze settimanali/mensili/annuali con
   fino a otto variazioni di prezzo per numero di rinnovo; i pagamenti maturati non vengono mai riscritti.
-- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 39 icone (`categoryIcons`) in tre stili
+- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 40 icone (`categoryIcons`; 39 selezionabili, `sofa` ritirata) in tre stili
   (minimale, colorato, pixel); cinque predefinite su archivio vuoto confermato dal server.
 - **Fondi e budget** (destinazione «Fondi»): dalla #7 facoltativi e semplici (nome, icona, colore, budget) con budget
   mensile generale (`settings/budget`); per i fondi che li avevano restano saldo iniziale, ricarica mensile calcolata, budget mensile con eccezioni,

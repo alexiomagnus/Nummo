@@ -14,6 +14,7 @@ export const categoryGlyphs: Record<CategoryIcon, string> = {
   bag: '<path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
   box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z"/><path d="m3.5 7.5 8.5 4.5 8.5-4.5M12 12v9"/>',
   house: '<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10M10 20v-6h4v6"/>',
+  key: '<circle cx="7.5" cy="15.5" r="4"/><path d="m10.5 12.5 9-9M15.5 7.5l2.5 2.5M18 5l2 2"/>',
   bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/>',
   gift: '<rect x="3.5" y="9" width="17" height="4" rx="1"/><path d="M5 13v7h14v-7M12 9v11"/><path d="M12 9C9 9 7.5 7.5 7.5 6.2S9 4 10 4.5C11.5 5.2 12 9 12 9Zm0 0c3 0 4.5-1.5 4.5-2.8S15 4 14 4.5C12.5 5.2 12 9 12 9Z"/>',
   shirt: '<path d="m8.5 4-5 3 2 4 2-1V20h9V10l2 1 2-4-5-3a3.5 3.5 0 0 1-7 0Z"/>',

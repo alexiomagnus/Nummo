@@ -15,7 +15,10 @@ export const pixelGrid = 12;
 // Rendering size that keeps every cell a whole number of pixels: the pixel set snaps to multiples of the grid.
 export const snapPixelSize = (size: number): number => Math.max(pixelGrid, Math.round(size / pixelGrid) * pixelGrid);
 
-type Sprite = Readonly<{ hue: IconHue; rows: readonly string[] }>;
+// `grid: 24` marks a high-definition sprite (24×24 cells, one cell per pixel at 24 px) for the few symbols that cannot be
+// read on 12 cells, such as the € on the coin. Outlines stay two cells thick so it sits with the rest of the set.
+export const detailGrid = 24;
+type Sprite = Readonly<{ hue: IconHue; rows: readonly string[]; grid?: typeof detailGrid }>;
 
 export const pixelSprites: Record<CategoryIcon, Sprite> = {
   // Groceries and food
@@ -43,16 +46,18 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '.iiiiiiii.',
   ] },
   pizza: { hue: 'orange', rows: [
-    '.bbbbbbbb.',
-    'bttttttttb',
-    'bbbbbbbbbb',
-    '.itbbttti.',
-    '.itttbtti.',
-    '..itttti..',
-    '..ibttti..',
-    '...itti...',
-    '...ibti...',
-    '....ii....',
+    '.bbbbbbbbbb.',
+    'bbbbbbbbbbbb',
+    'itttttttttti',
+    '.itbbttttti.',
+    '.itbbttttti.',
+    '..itttbbti..',
+    '..itttbbti..',
+    '...itttti...',
+    '...itbtti...',
+    '....itti....',
+    '....itti....',
+    '.....ii.....',
   ] },
   pasta: { hue: 'amber', rows: [
     '...b..b..b..',
@@ -167,15 +172,28 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '..iiiiiiii..',
   ] },
   house: { hue: 'blue', rows: [
-    '.....ii.....',
-    '....ibbi....',
-    '...ibbbbi...',
-    '..ibbbbbbi..',
-    '.ibbbbbbbbi.',
-    '..itttttti..',
-    '..ittbbtti..',
-    '..ittbbtti..',
-    '..iiiiiiii..',
+    '.....ii.iii.',
+    '....ibbiibi.',
+    '...ibbbbibi.',
+    '..ibbbbbbbi.',
+    '.ibbbbbbbbbi',
+    'iiiiiiiiiiii',
+    '.itttttttti.',
+    '.ibbtttiiti.',
+    '.ibbttibbti.',
+    '.itttttbbti.',
+    '.itttttbbti.',
+    '.iiiiiiiiii.',
+  ] },
+  key: { hue: 'amber', rows: [
+    '.iiii.......',
+    'ibbbbi......',
+    'iboobiiiiiii',
+    'iboobbbbbbbi',
+    'ibbbbiiibibi',
+    '.iiii..ibibi',
+    '.......ibiii',
+    '.......iii..',
   ] },
   // Front view: two back cushions with rounded tops (no square panels, which read as vehicle windows), rolled arms
   // in the base colour, light seat cushion and legs.
@@ -190,29 +208,31 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '.bb......bb.',
   ] },
   bulb: { hue: 'amber', rows: [
-    '..iiii..',
-    '.itttti.',
-    'ittbttti',
-    'ittbttti',
-    'itttttti',
-    '.itttti.',
-    '..itti..',
-    '..ibbi..',
-    '..iiii..',
-    '..ibbi..',
-    '...ii...',
+    'b....bb....b',
+    '.b..iiii..b.',
+    '...itttti...',
+    '..ittottti..',
+    '..itotttti..',
+    'b.itttttti.b',
+    '..ittiitti..',
+    '...ititti...',
+    '....ibbi....',
+    '....iooi....',
+    '....ibbi....',
+    '.....ii.....',
   ] },
   // Two thick arcs and the dot: three thin arcs merge at 24 px.
   wifi: { hue: 'blue', rows: [
-    '...bbbbbb...',
-    '.bbbbbbbbbb.',
-    'bbb......bbb',
-    'bb........bb',
-    '....bbbb....',
     '..bbbbbbbb..',
-    '..bb....bb..',
-    '............',
+    '.bbttttttbb.',
+    'bbt......tbb',
+    'bt..bbbb..tb',
+    '...bbttbb...',
+    '..bbt..tbb..',
+    '..bt....tb..',
     '.....bb.....',
+    '....bttb....',
+    '....bttb....',
     '.....bb.....',
   ] },
   // Transport
@@ -327,19 +347,31 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
   ] },
   // Money and work
   // A round coin face: dark outline, rim in the base colour, light face with a bold € in ink (dark in both themes).
-  coin: { hue: 'amber', rows: [
-    '...iiiiii...',
-    '..iibbbbii..',
-    '.ibbttttbbi.',
-    'iibttiiitbii',
-    'ibttittttbbi',
-    'ibtiiiittbbi',
-    'ibttittttbbi',
-    'ibtiiiittbbi',
-    'iibtittttbii',
-    '.ibbtiiibbi.',
-    '..iibbbbii..',
-    '...iiiiii...',
+  coin: { hue: 'gold', grid: detailGrid, rows: [
+    '.........iiiiii.........',
+    '......iiiiiiiiiiii......',
+    '.....iiiittttttiiii.....',
+    '....iiittttttttttiii....',
+    '...iittttbbbbbbttttii...',
+    '..iitttbbbbbbbbbbtttii..',
+    '.iiittbbbbbboobbbbttiii.',
+    '.iittbbbbbooooooobbttii.',
+    '.iittbbbbooobbooobbttii.',
+    'iittbbbbooobbbbbbbbbttii',
+    'iittbboooooooobbbbbbttii',
+    'iittbbbboobbbbbbbbbbttii',
+    'iittbbbboobbbbbbbbbbttii',
+    'iittbboooooooobbbbbbttii',
+    'iittbbbbooobbbbbbbbbttii',
+    '.iittbbbbooobbooobbttii.',
+    '.iittbbbbbooooooobbttii.',
+    '.iiittbbbbbboobbbbttiii.',
+    '..iitttbbbbbbbbbbtttii..',
+    '...iittttbbbbbbttttii...',
+    '....iiittttttttttiii....',
+    '.....iiiittttttiiii.....',
+    '......iiiiiiiiiiii......',
+    '.........iiiiii.........',
   ] },
   wallet: { hue: 'orange', rows: [
     '..iiiiiiii..',
@@ -368,12 +400,12 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
   ] },
   cash: { hue: 'green', rows: [
     'iiiiiiiiiiii',
-    'ibbbbbbbbbbi',
-    'ibobbttbbobi',
+    'iobbbbbbbboi',
+    'ibbbbttbbbbi',
     'ibbbttttbbbi',
     'ibbbttttbbbi',
-    'ibobbttbbobi',
-    'ibbbbbbbbbbi',
+    'ibbbbttbbbbi',
+    'iobbbbbbbboi',
     'iiiiiiiiiiii',
   ] },
   safe: { hue: 'slate', rows: [
@@ -497,11 +529,12 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
 const roleOf: Readonly<Record<string, string>> = { i: '{i}', b: '{b}', t: '{t}', o: '{o}' };
 
 // Builds the SVG markup of a sprite in the 24×24 space of the icon canvas: one path per colour, made of whole cells,
-// scaled by two and drawn without anti-aliasing. Pure and deterministic, so it can be tested without a renderer.
-export function spriteMarkup(rows: readonly string[]): string {
+// scaled to the canvas (×2 on the 12 grid, ×1 on the detail grid) and drawn without anti-aliasing. Pure and
+// deterministic, so it can be tested without a renderer.
+export function spriteMarkup(rows: readonly string[], grid: number = pixelGrid): string {
   const width = Math.max(...rows.map((row) => row.length));
-  const left = Math.floor((pixelGrid - width) / 2);
-  const top = Math.floor((pixelGrid - rows.length) / 2);
+  const left = Math.floor((grid - width) / 2);
+  const top = Math.floor((grid - rows.length) / 2);
   const paths: string[] = [];
   for (const role of ['t', 'b', 'o', 'i']) {
     let d = '';
@@ -517,9 +550,9 @@ export function spriteMarkup(rows: readonly string[]): string {
     });
     if (d) paths.push(`<path fill="${roleOf[role]}" d="${d}"/>`);
   }
-  return `<g transform="scale(2)" stroke="none" shape-rendering="crispEdges">${paths.join('')}</g>`;
+  return `<g transform="scale(${detailGrid / grid})" stroke="none" shape-rendering="crispEdges">${paths.join('')}</g>`;
 }
 
 export const categoryPixelGlyphs = Object.fromEntries(
-  Object.entries(pixelSprites).map(([icon, sprite]) => [icon, { hue: sprite.hue, shape: spriteMarkup(sprite.rows) }]),
+  Object.entries(pixelSprites).map(([icon, sprite]) => [icon, { hue: sprite.hue, shape: spriteMarkup(sprite.rows, sprite.grid) }]),
 ) as Record<CategoryIcon, ColorGlyph>;

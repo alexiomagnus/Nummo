@@ -14,13 +14,15 @@
 // Explicit black outline requested for the colourful shopping cart.
 export const cartOutlineColor = '#000000';
 
-export const iconHues = ['orange', 'amber', 'red', 'pink', 'violet', 'blue', 'teal', 'green', 'slate', 'popcorn'] as const;
+export const iconHues = ['orange', 'amber', 'red', 'pink', 'violet', 'blue', 'teal', 'green', 'slate', 'popcorn', 'gold'] as const;
 export type IconHue = (typeof iconHues)[number];
 export type IconRamp = Readonly<{ b: string; t: string; i: string; o: string; l: string }>;
 
 // Popcorn keeps its classic red carton, white stripes and golden kernels in both themes.
+// Gold (coin): a deeper amber than `amber`, with white details in both themes (the € on the coin face).
 const light: Record<IconHue, IconRamp> = {
   popcorn: { b: '#C23832', t: '#FFE29A', i: '#3F200D', o: '#FFFFFF', l: '#3F200D' },
+  gold: { b: '#9C6B00', t: '#FFE29A', i: '#3F2A00', o: '#FFFFFF', l: '#3F2A00' },
   orange: { b: '#C25E00', t: '#FFD8B2', i: '#4A2000', o: '#FFFFFF', l: '#4A2000' },
   amber: { b: '#A87200', t: '#FFE29A', i: '#3F2A00', o: '#FFFFFF', l: '#3F2A00' },
   red: { b: '#C1403B', t: '#FFD6D2', i: '#4A0F0C', o: '#FFFFFF', l: '#4A0F0C' },
@@ -34,6 +36,7 @@ const light: Record<IconHue, IconRamp> = {
 
 const dark: Record<IconHue, IconRamp> = {
   popcorn: { b: '#E05248', t: '#FFE9A8', i: '#321A09', o: '#FFFFFF', l: '#FFE9A8' },
+  gold: { b: '#B8860B', t: '#FFE9A8', i: '#2E2000', o: '#FFFFFF', l: '#FFE9A8' },
   orange: { b: '#F6A15A', t: '#FFD9B8', i: '#3A1900', o: '#3A1900', l: '#FFD9B8' },
   amber: { b: '#EDB83A', t: '#FFE9A8', i: '#2E2000', o: '#2E2000', l: '#FFE9A8' },
   red: { b: '#F28B82', t: '#FFD3CF', i: '#410E0B', o: '#410E0B', l: '#FFD3CF' },

@@ -298,6 +298,7 @@ export const english: Readonly<Record<string, string>> = {
   "borsa della spesa": "shopping bag",
   "pacco": "parcel",
   "casa": "house",
+  "chiave": "key",
   "lampadina": "light bulb",
   "regalo": "gift",
   "maglietta": "t-shirt",

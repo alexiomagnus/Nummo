@@ -344,13 +344,15 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       let c = (await owner.store.exportSnapshot()).categories.find((c) => c.id === id)!;
       await assert.rejects(second.store.saveCategory(randomUUID(), `CAFFÈ / TÈ % ${suffix}`, null), /già/);
       await denied(setDoc(doc(owner.db, 'users', uid, 'categoryNames', c.name_key), { category_id: randomUUID() }));
-      await owner.store.saveCategory(id, `Bevande ${suffix}`, 'cart', c);
+      await owner.store.saveCategory(id, `Bevande ${suffix}`, 'key', c);
       await assert.rejects(second.store.saveCategory(id, 'Vecchio', null, c), /altra sessione/);
       const openedRevision = c.revision;
       c = (await owner.store.exportSnapshot()).categories.find((c) => c.id === id)!;
       assert.equal(c.label, `Bevande ${suffix}`);
-      assert.equal(c.icon, 'cart');
+      assert.equal(c.icon, 'key');
       assert.equal(c.revision, openedRevision + 1);
+      // Retired icons stay valid for existing categories (not offered by the picker any more).
+      await owner.store.saveCategory(randomUUID(), `Divano ${suffix}`, 'sofa');
       await denied(deleteDoc(doc(owner.db, 'users', uid, 'categories', id)));
       await owner.store.removeCategory(c);
       await owner.store.saveCategory(randomUUID(), `Bevande ${suffix}`, null);

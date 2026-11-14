@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { categoryIcons, isCategoryIcon } from '../src/domain/category.ts';
+import { categoryIcons, isCategoryIcon, retiredCategoryIcons, selectableCategoryIcons } from '../src/domain/category.ts';
 import { categoryGlyphs } from '../src/components/categoryGlyphs.ts';
 import { categoryColorGlyphs } from '../src/components/categoryColorGlyphs.ts';
-import { categoryPixelGlyphs, pixelGrid, pixelSprites, snapPixelSize, spriteMarkup } from '../src/components/categoryPixelGlyphs.ts';
+import { categoryPixelGlyphs, detailGrid, pixelGrid, pixelSprites, snapPixelSize, spriteMarkup } from '../src/components/categoryPixelGlyphs.ts';
 import { defaultIconStyle, glyphSize, iconStyles, resolveCategoryGlyph } from '../src/components/categoryIconSets.ts';
 import { iconHues, iconRamp } from '../src/theme/iconPalette.ts';
 import { accents, buildScheme } from '../src/theme/palette.ts';
@@ -56,7 +56,8 @@ test('stile pixel: ogni categoria ha uno sprite valido, centrato su una griglia 
   assert.deepEqual(Object.keys(pixelSprites).sort(), [...categoryIcons].sort());
   for (const [name, sprite] of Object.entries(pixelSprites)) {
     const width = sprite.rows[0]!.length;
-    assert.ok(width > 0 && width <= pixelGrid && sprite.rows.length > 0 && sprite.rows.length <= pixelGrid, `${name}: dimensioni`);
+    const grid = sprite.grid ?? pixelGrid;
+    assert.ok(width > 0 && width <= grid && sprite.rows.length > 0 && sprite.rows.length <= grid, `${name}: dimensioni`);
     for (const row of sprite.rows) assert.match(row, new RegExp(`^[.ibto]{${width}}$`), `${name}: righe rettangolari e caratteri ammessi`);
     const cells = sprite.rows.join('');
     assert.ok((cells.match(/[bt]/g) ?? []).length >= 10, `${name}: riempimento sufficiente (i soli contorni scuri spariscono nel tema scuro)`);
@@ -70,7 +71,7 @@ test('stile pixel: markup a celle intere, senza colori letterali, ruoli sostitui
   assert.equal(spriteMarkup(['b.', '.t']), '<g transform="scale(2)" stroke="none" shape-rendering="crispEdges"><path fill="{t}" d="M6 6h1v1h-1z"/><path fill="{b}" d="M5 5h1v1h-1z"/></g>');
   assert.match(spriteMarkup(['bbb']), /d="M4 5h3v1h-3z"/);
   for (const [name, glyph] of Object.entries(categoryPixelGlyphs)) {
-    assert.match(glyph.shape, /^<g transform="scale\(2\)" stroke="none" shape-rendering="crispEdges">(<path fill="\{[btio]\}" d="[Mhvz\d -]+"\/>)+<\/g>$/, name);
+    assert.match(glyph.shape, /^<g transform="scale\([12]\)" stroke="none" shape-rendering="crispEdges">(<path fill="\{[btio]\}" d="[Mhvz\d -]+"\/>)+<\/g>$/, name);
     assert.doesNotMatch(glyph.shape, /#[0-9a-f]{3,6}|rgb/i, name);
   }
   for (const icon of categoryIcons) {
@@ -151,4 +152,29 @@ test('popcorn: cartone rosso, strisce bianche e chicchi gialli nei due stili e t
       for (const color of [ramp.b, ramp.t, ramp.o]) assert.ok(glyph.shape.includes(color));
     }
   }
+});
+
+test('chiave: disponibile e selezionabile in tutti e tre gli stili e temi', () => {
+  assert.ok(isCategoryIcon('key'));
+  assert.ok(selectableCategoryIcons.includes('key'));
+  for (const style of iconStyles) for (const dark of [false, true]) assert.ok(resolveCategoryGlyph(style, 'key', dark), `${style}:${dark}`);
+});
+
+test('divano ritirato: non più selezionabile, ma ancora valido e disegnato per le categorie e i backup esistenti', () => {
+  assert.deepEqual([...retiredCategoryIcons], ['sofa']);
+  assert.equal(selectableCategoryIcons.includes('sofa'), false);
+  assert.ok(isCategoryIcon('sofa'));
+  for (const style of iconStyles) for (const dark of [false, true]) assert.ok(resolveCategoryGlyph(style, 'sofa', dark), `${style}:${dark}`);
+  assert.equal(selectableCategoryIcons.length, categoryIcons.length - retiredCategoryIcons.length);
+});
+
+test('stile pixel: alta definizione solo dove serve (moneta), a celle intere sul 24×24 e con il € bianco al centro', () => {
+  assert.deepEqual(Object.entries(pixelSprites).filter(([, sprite]) => sprite.grid).map(([name]) => name), ['coin']);
+  assert.equal(spriteMarkup(['b'], detailGrid), '<g transform="scale(1)" stroke="none" shape-rendering="crispEdges"><path fill="{b}" d="M11 11h1v1h-1z"/></g>');
+  const rows = pixelSprites.coin.rows;
+  assert.equal(rows.length, detailGrid);
+  const cells = rows.flatMap((row, y) => [...row].map((c, x) => ({ c, x, y }))).filter((cell) => cell.c === 'o');
+  const mid = (values: number[]) => (Math.min(...values) + Math.max(...values) + 1) / 2;
+  assert.ok(Math.abs(mid(cells.map((cell) => cell.x)) - 12) <= 0.5 && Math.abs(mid(cells.map((cell) => cell.y)) - 12) <= 0.5, 'simbolo centrato');
+  for (const dark of [false, true]) assert.equal(iconRamp('gold', dark).o, '#FFFFFF');
 });

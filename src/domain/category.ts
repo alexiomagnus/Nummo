@@ -5,7 +5,7 @@ export const categoryIconLabels = {
   cart: 'carrello', burger: 'hamburger', pizza: 'pizza', pasta: 'piatto di pasta', popcorn: 'popcorn',
   coffee: 'caffè', heart: 'cuore',
   gamepad: 'videogioco', bag: 'borsa della spesa', box: 'pacco',
-  house: 'casa', bulb: 'lampadina', gift: 'regalo', shirt: 'maglietta',
+  house: 'casa', key: 'chiave', bulb: 'lampadina', gift: 'regalo', shirt: 'maglietta',
   paw: 'zampa', dumbbell: 'manubrio', coin: 'moneta',
   wallet: 'portafoglio', bank: 'banca', cash: 'contanti', safe: 'cassaforte', growth: 'investimenti',
   train: 'treno',
@@ -28,6 +28,10 @@ export const categoryIconLabels = {
 } as const;
 export type CategoryIcon = keyof typeof categoryIconLabels;
 export const categoryIcons = Object.keys(categoryIconLabels) as CategoryIcon[];
+// Retired icons: still valid in records, backups and Rules (existing categories keep them and keep their drawing), but
+// no longer offered by the picker. Removing an ID outright would make archives that use it unreadable.
+export const retiredCategoryIcons: readonly CategoryIcon[] = ['sofa'];
+export const selectableCategoryIcons = categoryIcons.filter((icon) => !retiredCategoryIcons.includes(icon));
 
 export function isCategoryIcon(value: unknown): value is CategoryIcon {
   return typeof value === 'string' && (categoryIcons as readonly string[]).includes(value);

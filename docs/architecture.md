@@ -11,6 +11,13 @@ Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella s
 l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
 convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
 
+## Icone ritirate e chiave — 14 novembre 2026
+
+Un'icona tolta dal selettore non viene più rimossa dall'elenco degli ID validi: le precedenti rimozioni rendevano
+illeggibili categorie e backup che la usavano. `retiredCategoryIcons` (`sofa`, su richiesta) resta accettata da
+decoder, backup e Rules e conserva i disegni nei tre stili; `IconPicker` mostra solo `selectableCategoryIcons` più
+l'eventuale icona ritirata della categoria aperta. Aggiunta `key` (chiave) nei tre stili e nelle Rules.
+
 ## Modalità Standard e Avanzata — 12 novembre 2026
 
 Decisione: un'unica webapp con due archivi alternativi scelti dall'utente prima di ogni accesso. Sostituisce, per la
