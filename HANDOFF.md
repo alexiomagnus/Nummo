@@ -4,8 +4,9 @@
 
 Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` a `6956a56` («pixel icon redesign, key icon, retired sofa»), allineato al riferimento locale `origin/main`
-  (nessun fetch). Commit del 14 novembre: `ed21a87` (pulsanti mobile, «Nuova lista», anteprima Blocchi) e `6956a56` (icone).
+- **Git.** `main` a `57dba1f` («docs: realign HANDOFF/AGENTS…», solo documentazione), allineato al riferimento locale
+  `origin/main` (nessun fetch). Commit del 14 novembre: `ed21a87` (pulsanti mobile, «Nuova lista», anteprima Blocchi),
+  `6956a56` (icone) e `57dba1f` (riallineamento documenti, rimozione del doppione `logo`).
   Sotto, `73034ba` contiene tutte le fasi del 12–13 novembre, comprese quelle marcate «nessun commit» (modalità
   Standard/Avanzata e Drive, azioni di Spese/abbonamenti, contorno delle azioni distruttive, icona utente e avatar).
 - **Produzione.** Ultimo rilascio Hosting registrato: `e2eee92` (12 novembre); `73034ba`, `ed21a87` e `6956a56` sono
@@ -13,7 +14,7 @@ Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle sin
   registrata: icone rimosse in `d7e1504`, icona `key` aggiunta in `6956a56`. Le Rules vanno pubblicate a parte, con
   autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key` viene
   rifiutata dal cloud.
-- **Verifiche il 14 novembre.** `npm run check` OK su `6956a56`: typecheck, **396/396** test, build demo. Suite SDK/Rules
+- **Verifiche il 14 novembre.** `npm run check` OK su `6956a56` e di nuovo su `57dba1f`: typecheck, **396/396** test, build demo. Suite SDK/Rules
   18/18 nella fase icone (sotto); hybrid non rieseguito (ultimo esito 8/8 in una revisione precedente).
 - **Ambiente.** Un runner hybrid dell'utente era attivo (ancora attivo il 14 novembre, lock `.firebase/hybrid.lock` suo) (`node scripts/dev-hybrid.ts`, PID 18290, config
   `.nummo-hybrid-18290.json` in radice, ignorata da Git): non toccarlo; per le suite usare porte dedicate.
@@ -27,7 +28,8 @@ Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle sin
   `IMPLEMENTATION_PLAN.md`/`docs/progress.md`, documenti della sola Avanzata, percorso `src/theme/viewport.ts`) allineati al codice.
 - Su conferma eliminato il file `logo` nella radice: doppione identico di `docs/design/logo-concepts/hybrids-10/01-arco-light.svg`,
   non usato dall'app. Logo adottato «Arco» annotato in AGENTS e nel README dei concept (icone in `public/icons/`).
-- `npm run check` OK su `6956a56` (396/396) prima di queste modifiche solo documentali. Nessun commit.
+- `npm run check` OK su `6956a56` (396/396) prima di queste modifiche solo documentali. Integrate poi nel commit `57dba1f`
+  (presente su `origin/main`).
 
 ## Icone: sprite pixel ridisegnati, chiave, divano ritirato — 14 novembre 2026
 
@@ -184,8 +186,8 @@ uso e configurazione nel README, convenzioni in AGENTS.md. Le sezioni sotto rest
   stesso minuto hanno la stessa etichetta. Testi in italiano rimasti generici in Standard («verifica connessione» per le
   categorie predefinite non aggiunte). La Guida pubblica è aggiornata alle due modalità; `docs/firebase-personale.md` e
   `docs/migrazione-byof.md` descrivono solo l'Avanzata.
-- **Working tree.** Presenti anche modifiche non mie di altre sessioni (fondi, editor, preferenze, test del budget):
-  conservate e incluse nel `npm run check` sopra.
+- **Working tree (allora).** Erano presenti anche modifiche di altre sessioni (fondi, editor, preferenze, test del budget),
+  conservate e incluse nel `npm run check` sopra; sono state poi integrate in `73034ba`.
 
 ## Azioni degli abbonamenti a destra — 12 novembre 2026
 
@@ -1412,7 +1414,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 - **Liste della spesa** (destinazione «Liste»): crea/rinomina/duplica/elimina, checklist con salvataggio automatico,
   «Registra spesa» in transazione (una spesa con `list_id`/`list_items`, lista archiviata, non acquistati spostabili
   in nuova lista); eliminare la spesa riattiva la lista. Limite 100 prodotti per lista solo lato client.
-- **Dashboard:** periodi mese corrente/precedente, 3/6/12 mesi; riepilogo con date del periodo (confronto globale col
+- **Analisi** (già Dashboard): periodi mese corrente/precedente, 3/6/12 mesi; riepilogo con date del periodo (confronto globale col
   periodo precedente rimosso; resta la variazione per categoria nelle righe Barre); Ciambella (centro vuoto, dettagli al passaggio/
   selezione), Blocchi treemap senza testo nelle tessere con pannello dettagli, Barre complete ordinate per spesa;
   dettaglio transazioni per categoria con conteggio; andamento giornaliero SVG con selezione del giorno (nessuna
@@ -1496,14 +1498,15 @@ screen reader, concorrenza tra due dispositivi.
 0. **Modalità Standard/Avanzata (aggiornato 14 novembre):** configurare un client OAuth web reale e provare Google
    Drive (consenso, origini, popup su mobile e app installata, errori e quote reali); provare l'Avanzata con accesso e
    dati reali dopo il cambio di architettura; Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per inattività,
-   `navigator.storage.persist`), due schede reali, archivi grandi. Pubblicare `main` (oggi `6956a56`) su Hosting e,
+   `navigator.storage.persist`), due schede reali, archivi grandi. Pubblicare `main` (oggi `57dba1f`) su Hosting e,
    separatamente, le Rules solo con autorizzazione (vedi punto 1).
    Ancora da fare dall'elenco dell'11 novembre: collaudo sui dati reali e sul Pixel 8 (elenco storico in
    `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`) e approvazione degli sprite #11 ridisegnati.
    Già fatti il 12 novembre: Escape in `AppDialog` e riallineamento README/architettura.
 
-1. **Collaudo produzione e compatibilità:** dopo la pubblicazione Rules verificata sopra, ricaricare l’app e verificare
-   caricamento e sincronizzazione. Per prove CRUD cloud serve autorizzazione. Decidere conservazione o migrazione
+1. **Collaudo produzione e compatibilità:** l'ultima pubblicazione Rules registrata è dell'8 novembre (sezione «Produzione»
+   sotto); da allora `firestore.rules` è cambiato (icone rimosse in `d7e1504`, `key` aggiunta in `6956a56`). Dopo la nuova
+   pubblicazione autorizzata, ricaricare l’app e verificare caricamento e sincronizzazione. Per prove CRUD cloud serve autorizzazione. Decidere conservazione o migrazione
    esplicita degli ID icona rimossi, con regressioni decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione v4 dall'interfaccia, riepilogo ed esiti del ripristino, eccezioni di budget e
