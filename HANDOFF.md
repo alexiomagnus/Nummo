@@ -7,9 +7,9 @@ cronaca delle singole fasi e possono dire cose superate.
 
 - **Git.** `main` a `8d9f225` (Web Push) più il commit di questa fase (barra mobile, ciclo di import, icona dei campi,
   Impostazioni in due colonne, segmenti, Liste/Spese/Notifiche/accesso del 14 novembre), pubblicato su `origin/main`
-  con autorizzazione il 14 novembre sera. Hash finale in `git log`.
+  con autorizzazione il 14 novembre sera. Codice in `f77f42a`.
 - **Produzione.** Hosting pubblicato dall'utente il 14 novembre con il push (commit non registrato) e, con autorizzazione,
-  di nuovo con `npm run deploy:hosting` dopo il commit di questa fase (esito nella sezione più recente). Worker
+  di nuovo con `npm run deploy:hosting` su `f77f42a` (riuscito, sezione più recente). Worker
   `nummo-push` attivo su Cloudflare. `firestore.rules` è cambiato dopo l'ultima pubblicazione Rules registrata (icone
   rimosse in `d7e1504`, `key` aggiunta in `6956a56`): pubblicazione separata, con autorizzazione, dopo il controllo degli
   ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key` viene rifiutata dal cloud.
@@ -31,6 +31,12 @@ cronaca delle singole fasi e possono dire cose superate.
 - `npm run check` OK (416/416, build demo). Chromium headless sulla build demo (schermata di scelta → Impostazioni):
   screenshot 1280 scuro (due colonne) e 412 (una colonna) osservati, nessun overflow orizzontale a 1280/1024/412.
   Con drawer/rail del workspace non provato nel browser; nessun commit.
+
+## Commit, push e pubblicazione Hosting — 14 novembre 2026
+
+- Su richiesta esplicita dell'utente (incluse le modifiche di un'altra sessione presenti nel working tree): commit
+  `f77f42a`, push su `origin/main`, `npm run deploy:hosting` sul progetto `nummo-6b6e2` (sito live, solo Hosting) riuscito
+  verso le 18:41 UTC; pagina principale risponde 200. Rules **non** pubblicate. Resa sui dispositivi non verificata.
 
 ## Console di Chrome: ciclo di import e `<button>` annidato — 14 novembre 2026
 
