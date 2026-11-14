@@ -85,10 +85,10 @@ function OpenedSummary({ notifications, from, to, onClose }: { notifications: No
   );
 }
 
-// Page of the account menu (below Settings): the main switch, system notifications of this browser, the backup
-// reminder (Standard mode only: in the Advanced mode the data is in Firebase, and a JSON backup is a separate, manual
-// choice) and the spending summary. Every change applies at once and is kept in this browser. Turning the main switch
-// off keeps the individual choices. A tapped notification leads here.
+// Page of the account menu (below Settings): system notifications of this browser, the backup reminder (Standard mode
+// only: in the Advanced mode the data is in Firebase, and a JSON backup is a separate, manual choice) and the spending
+// summary, each with its own switch. Every change applies at once and is kept in this browser. A tapped notification
+// leads here.
 export function NotificationsPage({ notifications, opened, onCloseOpened, exporting, onExport }: { notifications: Notifications;
   opened: OpenedNotification | null; onCloseOpened: () => void; exporting: boolean; onExport: () => void }) {
   const { t, locale } = useI18n();
@@ -106,16 +106,12 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
     <View style={styles.root}>
       {opened?.kind === 'summary' && opened.from && opened.to &&
         <OpenedSummary notifications={notifications} from={opened.from} to={opened.to} onClose={onCloseOpened} />}
-      <Card title={t("Notifiche generali")}>
-        <SwitchRow label={t("Attiva notifiche")} value={p.enabled} onChange={(enabled) => change({ enabled })}
-          supporting={t("Promemoria e riepiloghi. Con le notifiche di sistema attive arrivano anche ad app chiusa; altrimenti compaiono dentro Nummo quando la apri.")} />
-      </Card>
       <SystemNotifications push={notifications.push} />
       {backupReminders && <Card title={t("Promemoria backup")}>
         <Text variant="bodyMedium" style={muted}>{t("Ricevi un promemoria per esportare una copia dei tuoi dati.")}</Text>
-        <SwitchRow label={t("Attiva promemoria backup")} value={p.backupEnabled} disabled={!p.enabled} onChange={(backupEnabled) => change({ backupEnabled })}
+        <SwitchRow label={t("Attiva promemoria backup")} value={p.backupEnabled} onChange={(backupEnabled) => change({ backupEnabled })}
           supporting={t("Solo se i dati sono cambiati dall’ultimo backup confermato.")} />
-        {frequency(t("Frequenza del promemoria"), p.backupFrequency, (backupFrequency) => change({ backupFrequency }), !p.enabled || !p.backupEnabled)}
+        {frequency(t("Frequenza del promemoria"), p.backupFrequency, (backupFrequency) => change({ backupFrequency }), !p.backupEnabled)}
         <Text variant="bodyMedium" style={muted}>{lastBackupAt
           ? t("Ultimo backup confermato: {p0}", { p0: new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastBackupAt)) })
           : t("Nessun backup confermato finora.")}</Text>
@@ -136,9 +132,9 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
       </Card>}
       <Card title={t("Riepilogo spese")}>
         <Text variant="bodyMedium" style={muted}>{t("Ricevi un riepilogo periodico delle tue spese.")}</Text>
-        <SwitchRow label={t("Attiva riepilogo spese")} value={p.summaryEnabled} disabled={!p.enabled} onChange={(summaryEnabled) => change({ summaryEnabled })}
+        <SwitchRow label={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })}
           supporting={t("Totale, numero di spese e categoria principale del periodo concluso. Abbonamenti esclusi.")} />
-        {frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.enabled || !p.summaryEnabled)}
+        {frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.summaryEnabled)}
       </Card>
     </View>
   );

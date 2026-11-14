@@ -6,7 +6,7 @@ incrementale: [migrazione-byof.md](migrazione-byof.md).
 
 Le sezioni datate conservano anche decisioni successivamente sostituite. Comportamento corrente:
 quattro destinazioni Spese, Analisi, Fondi e Liste; Impostazioni, Notifiche, Categorie e Archiviazione e backup (ex Importa ed esporta) dal menu account.
-Impostazioni è una pagina (anche prima del login), con due colonne solo da 872 px effettivi di contenuto.
+Impostazioni è una pagina (anche prima del login), con due colonne solo da 752 px effettivi di contenuto.
 Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella senza totale centrale e Blocchi;
 l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
 convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
@@ -58,7 +58,8 @@ Su richiesta, sostituisce il punto «Google Drive» della decisione del 12 novem
   Riepilogo in entrambe le modalità su periodi allineati (settimana lun–dom, blocchi di 14 giorni dal 1° gennaio 2024,
   mese di calendario), sole spese singole fino a oggi via `expandOccurrences` sulle voci senza ricorrenza. Attivazione,
   riattivazione e cambio di frequenza del riepilogo partono da adesso: nessun avviso per il tempo passato.
-  Alternative scartate: Notification API/push (permessi, nessuna garanzia ad app chiusa senza service worker),
+  Alternative scartate allora: Notification API/push (permessi, nessuna garanzia ad app chiusa senza service worker;
+  superata dalla sezione Web Push del 14 novembre),
   conferma implicita del backup al download (il browser non dice se il file è stato salvato).
 
 ## Icone ritirate e chiave — 14 novembre 2026
@@ -417,7 +418,7 @@ accessibile completa anche quando il nome viene troncato visivamente.
 | Web Chrome Android, Safari iOS | Obiettivi; dispositivi reali e OAuth mobile da verificare |
 | React/Expo web | Build/typecheck verificati; unico target dichiarato in app.json |
 | App native Android/iOS | Non implementate: UI SVG DOM e login popup richiedono adattamenti; il Firebase JS SDK in RN non fornisce persistenza Firestore nativa equivalente |
-| Installazione Android (manifest + icone) | Manifest e icone presenti (6 nov 2026); installabilità non provata su dispositivo; niente service worker |
+| Installazione Android (manifest + icone) | Manifest e icone presenti (6 nov 2026); installabilità non provata su dispositivo; service worker `sw.js` solo per le notifiche (14 nov), senza cache |
 | Apertura a freddo senza rete | Non implementata: manca il service worker; cache dati ≠ disponibilità offline del bundle |
 | Firebase Hosting | Configurato in `firebase.json` e `npm run deploy:hosting` (solo Hosting); nessuna pubblicazione eseguita |
 

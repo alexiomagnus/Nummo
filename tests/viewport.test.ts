@@ -163,6 +163,37 @@ test('tastiera virtuale: tocco anticipa apertura, nessun flash nei primi resize 
   assert.deepEqual(states, [true, false, true, false, true], 'cleanup annulla anche l’anticipo pendente');
 });
 
+test('tastiera virtuale: un tocco su un campo che diventa scorrimento non nasconde la barra', (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  const body = { tagName: 'BODY' }, input = { tagName: 'INPUT', type: 'text' };
+  const doc = Object.assign(new EventTarget(), { activeElement: body as object });
+  const visual = Object.assign(new EventTarget(), { height: 844, width: 390, scale: 1 });
+  const target = Object.assign(new EventTarget(), { innerHeight: 844, innerWidth: 390, visualViewport: visual, document: doc });
+  const states: boolean[] = [];
+  const stop = observeVirtualKeyboard(target as unknown as Window, (open) => states.push(open));
+  const touch = (type: string) => {
+    const event = Object.assign(new Event(type), { pointerType: 'touch' });
+    Object.defineProperty(event, 'target', { value: input });
+    doc.dispatchEvent(event);
+  };
+  touch('pointerdown');
+  touch('pointercancel'); // the browser took over the pan
+  assert.deepEqual(states, [true, false], 'scorrimento iniziato su un campo: barra subito di nuovo visibile');
+  touch('pointerdown');
+  doc.dispatchEvent(new Event('scroll'));
+  assert.deepEqual(states, [true, false, true, false], 'scroll senza campo attivo annulla l’anticipo');
+  // A real tap: focus arrives, then the field is scrolled into view while the keyboard opens.
+  touch('pointerdown');
+  doc.activeElement = input;
+  doc.dispatchEvent(new Event('scroll'));
+  touch('pointercancel');
+  assert.deepEqual(states, [true, false, true, false, true], 'con il campo attivo la barra resta nascosta');
+  visual.height = 450; visual.dispatchEvent(new Event('resize'));
+  context.mock.timers.tick(1000);
+  assert.deepEqual(states, [true, false, true, false, true], 'tastiera confermata');
+  stop();
+});
+
 test('scroll padding: altezza della barra pubblicata sul contenitore scorrevole più vicino e ripristinata', () => {
   const style = (initial: Record<string, string> = {}) => {
     const values = new Map(Object.entries(initial));

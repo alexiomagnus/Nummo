@@ -59,7 +59,9 @@ Dal menu account, **Notifiche** (sotto Impostazioni). Due canali, mai insieme pe
 Preferenze e stato restano nel browser (`nummo.notifications.v1`, più lo stato per archivio
 `nummo.notifications.v1.<local|UID>`; `nummo.push.v1` ricorda solo l'ultimo invio degli orari).
 
-- **Attiva notifiche**: interruttore generale. Spento, disattiva tutto ma conserva le scelte dei singoli avvisi.
+Ogni avviso ha il proprio interruttore, senza un interruttore generale: con le notifiche di sistema attive gli avvisi
+arrivano sia ad app aperta sia ad app chiusa.
+
 - **Promemoria backup** (solo Standard; predefinito attivo, ogni settimana; anche ogni 14 giorni o ogni mese): compare se
   è trascorso l'intervallo dall'ultimo backup confermato **e** i dati sono cambiati da allora. «Esporta backup» avvia
   l'esportazione JSON; poiché il browser non dice se il file è stato davvero salvato, Nummo chiede «Hai salvato il

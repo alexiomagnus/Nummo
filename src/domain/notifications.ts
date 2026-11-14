@@ -14,17 +14,16 @@ export const notificationFrequencyLabels: Record<NotificationFrequency, string> 
 // «Ricordamelo dopo» on the backup reminder.
 export const backupSnoozeDays = 3;
 
-// Preferences, one set per browser (`nummo.notifications.v1`). Turning the main switch off keeps the individual choices.
-// `*Since`: when that reminder last became active (main switch and its own switch both on), or when the summary changed
-// frequency. Nothing is due for the time before: enabling never fires at once for a past interval.
+// Preferences, one set per browser (`nummo.notifications.v1`): one switch per reminder, no main switch.
+// `*Since`: when that reminder last became active, or when the summary changed frequency. Nothing is due for the time
+// before: enabling never fires at once for a past interval.
 export type NotificationPreferences = Readonly<{
-  enabled: boolean;
   backupEnabled: boolean; backupFrequency: NotificationFrequency; backupSince: string | null;
   summaryEnabled: boolean; summaryFrequency: NotificationFrequency; summarySince: string | null;
 }>;
 export const notificationPreferencesKey = 'nummo.notifications.v1';
 export const defaultNotificationPreferences: NotificationPreferences = {
-  enabled: true, backupEnabled: true, backupFrequency: 'weekly', backupSince: null, summaryEnabled: true, summaryFrequency: 'weekly', summarySince: null,
+  backupEnabled: true, backupFrequency: 'weekly', backupSince: null, summaryEnabled: true, summaryFrequency: 'weekly', summarySince: null,
 };
 
 // State of one archive (`nummo.notifications.v1.<scope>`, scope = `local` or the Firebase UID), so the two modes never mix.
@@ -51,14 +50,15 @@ const frequency = (value: unknown, fallback: NotificationFrequency): Notificatio
 const flag = (value: unknown, fallback: boolean): boolean => typeof value === 'boolean' ? value : fallback;
 const timestamp = (value: unknown): string | null => isUtcTimestamp(value) ? value : null;
 
-// Untrusted input (localStorage can be edited or corrupted): every field falls back on its own.
+// Untrusted input (localStorage can be edited or corrupted): every field falls back on its own. A main switch saved
+// off by earlier versions (`enabled: false`) turns both reminders off, so nothing starts again on its own.
 export function parseNotificationPreferences(raw: string | null): NotificationPreferences {
   const o = object(raw);
   const d = defaultNotificationPreferences;
+  const off = o.enabled === false;
   return {
-    enabled: flag(o.enabled, d.enabled),
-    backupEnabled: flag(o.backupEnabled, d.backupEnabled), backupFrequency: frequency(o.backupFrequency, d.backupFrequency), backupSince: timestamp(o.backupSince),
-    summaryEnabled: flag(o.summaryEnabled, d.summaryEnabled), summaryFrequency: frequency(o.summaryFrequency, d.summaryFrequency), summarySince: timestamp(o.summarySince),
+    backupEnabled: !off && flag(o.backupEnabled, d.backupEnabled), backupFrequency: frequency(o.backupFrequency, d.backupFrequency), backupSince: timestamp(o.backupSince),
+    summaryEnabled: !off && flag(o.summaryEnabled, d.summaryEnabled), summaryFrequency: frequency(o.summaryFrequency, d.summaryFrequency), summarySince: timestamp(o.summarySince),
   };
 }
 // A missing or damaged state starts afresh at `now`: nothing becomes due at once.
@@ -69,8 +69,8 @@ export function parseNotificationState(raw: string | null, now: Date): Notificat
   return { startedAt, lastBackupAt: timestamp(o.lastBackupAt), backupSnoozedUntil: timestamp(o.backupSnoozedUntil), summaryShownThrough: isCivilDate(o.summaryShownThrough) ? o.summaryShownThrough : null };
 }
 
-export const backupActive = (p: NotificationPreferences): boolean => p.enabled && p.backupEnabled;
-export const summaryActive = (p: NotificationPreferences): boolean => p.enabled && p.summaryEnabled;
+export const backupActive = (p: NotificationPreferences): boolean => p.backupEnabled;
+export const summaryActive = (p: NotificationPreferences): boolean => p.summaryEnabled;
 
 // Applies a change from the settings page. A reminder that becomes active (again) starts counting from now; a new
 // summary frequency starts with the period in progress, so neither fires at once for time already passed.

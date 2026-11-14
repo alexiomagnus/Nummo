@@ -21,3 +21,12 @@ export const compactIconPadding = {
   roomyNarrow: StyleSheet.create({ content: { paddingLeft: spacing.xs }, label: { marginLeft: 3, marginRight: 19 } }),
   snugNarrow: StyleSheet.create({ content: { paddingLeft: 0 }, label: { marginLeft: 2, marginRight: 14 } }),
 } as const;
+
+// The same for regular (non-compact) buttons: Paper leaves 16 dp before the icon but 24 dp after the label, so with the
+// glyph's own inset the ink sat about 19 dp from the left edge and 25 dp from the right. Measured with the 18 dp icons
+// (close, pencil, play): about 19–21 dp before the icon and 20 dp after the label, 12 dp between icon and text.
+// `balancedNarrow` is for pause, whose narrow glyph leaves 3 dp more between icon and text.
+export const regularIconPadding = {
+  balanced: StyleSheet.create({ content: {}, label: { marginRight: 19 } }),
+  balancedNarrow: StyleSheet.create({ content: {}, label: { marginLeft: 21, marginRight: 19 } }),
+} as const;

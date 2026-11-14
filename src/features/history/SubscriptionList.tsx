@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
-import { Button, compactIconPadding } from '../../components/Button';
+import { Button, compactIconPadding, regularIconPadding } from '../../components/Button';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { usePresence, useOverlayMotion } from '../../components/Overlay';
 import { fadeTransition } from '../../theme/motion';
@@ -107,8 +107,8 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
   // Phones: balanced padding (see `compactIconPadding`), roomier from 380 dp where the three actions still fit one row;
   // below that the same total width as Paper's compact buttons.
   const roomy = width >= 380;
-  const iconPad = !compact ? undefined : roomy ? compactIconPadding.roomy : compactIconPadding.snug;
-  const pausePad = !compact ? undefined : roomy ? compactIconPadding.roomyNarrow : compactIconPadding.snugNarrow;
+  const iconPad = !compact ? regularIconPadding.balanced : roomy ? compactIconPadding.roomy : compactIconPadding.snug;
+  const pausePad = !compact ? regularIconPadding.balancedNarrow : roomy ? compactIconPadding.roomyNarrow : compactIconPadding.snugNarrow;
   const textPad = compact ? styles.textOnlyLabel : undefined;
   const animate = useOverlayMotion();
   const { mounted, shown: visible } = usePresence(open, motion.fade, animate);

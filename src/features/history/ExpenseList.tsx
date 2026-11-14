@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { Fragment, memo, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import { Fragment, memo, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -21,7 +21,6 @@ type Props = {
   categories: readonly Category[];
   error: string | null;
   onEdit?: (expenseId: string) => void;
-  renderDelete?: (expenseId: string) => ReactNode;
   // Expenses that registered a shopping list → the products bought (marked «Lista spesa», listed in the details).
   listItems?: ReadonlyMap<string, readonly string[]>;
 };
@@ -40,7 +39,7 @@ const pageSize = 50;
 
 export const ExpenseList = memo(ExpenseListView);
 
-function ExpenseListView({ occurrences, categories, error, onEdit, renderDelete, listItems }: Props) {
+function ExpenseListView({ occurrences, categories, error, onEdit, listItems }: Props) {
   const { t, locale } = useI18n();
   const dates = useMemo(() => dateFormat(locale), [locale]);
   const shortDates = useMemo(() => shortDateFormat(locale), [locale]);
@@ -94,7 +93,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, renderDelete,
             heading={byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== item.date.slice(0, 7))}
             summary={summaries.get(item.date.slice(0, 7))!} category={categoryById.get(item.category_id ?? '')}
             products={listItems?.get(item.expenseId)} open={expanded.has(item.key)} setExpanded={setExpanded}
-            dates={dates} shortDates={shortDates} months={months} amounts={amounts} onEdit={onEdit} renderDelete={renderDelete} />;
+            dates={dates} shortDates={shortDates} months={months} amounts={amounts} onEdit={onEdit} />;
         })}
         {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna spesa.")}</Text>}
         {occurrences.length > 0 && results.length === 0 && (
@@ -116,13 +115,12 @@ function ExpenseListView({ occurrences, categories, error, onEdit, renderDelete,
 
 // Stable props let expanding one detail or appending a page leave existing rows alone.
 const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, open, setExpanded,
-  dates, shortDates, months, amounts, onEdit, renderDelete }: {
+  dates, shortDates, months, amounts, onEdit }: {
   item: Occurrence; index: number; heading: boolean; summary: { count: number; total: number };
   category?: Category; products?: readonly string[]; open: boolean;
   setExpanded: Dispatch<SetStateAction<ReadonlySet<string>>>;
   dates: Intl.DateTimeFormat; shortDates: Intl.DateTimeFormat; months: Intl.DateTimeFormat; amounts: Intl.NumberFormat;
   onEdit?: (id: string) => void;
-  renderDelete?: (id: string) => ReactNode;
 }) {
   const { t, locale } = useI18n();
   const theme = useTheme();
@@ -182,11 +180,10 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
                     <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
                   </View>}
-                  {(onEdit || renderDelete) && <View style={styles.editRow}>
-                    {renderDelete?.(item.expenseId)}
-                    {onEdit && <Button mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: item.description })}
+                  {onEdit && <View style={styles.editRow}>
+                    <Button mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: item.description })}
                     icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
-                    onPress={() => onEdit(item.expenseId)}>{t("Modifica")}</Button>}
+                    onPress={() => onEdit(item.expenseId)}>{t("Modifica")}</Button>
                   </View>}
                 </View>}
               </ListRow>

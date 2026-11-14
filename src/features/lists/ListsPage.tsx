@@ -10,6 +10,7 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { leadingIcon } from '../../components/FieldIcon';
 import type { Category } from '../../domain/category';
+import type { CategoryCreation } from '../categories/CategoryEditor';
 import type { ExpenseRecord } from '../../domain/contract';
 import { parseAmountMinor, type ExpenseData } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
@@ -32,7 +33,7 @@ type Props = {
   // Registration needs the server (online, nothing pending, not from cache); checklist edits do not.
   canRegister: boolean;
   notify: (message: string) => void;
-  onCreateCategory: () => void;
+  categoryCreation: CategoryCreation;
 };
 
 const fillTransition = transition(['transform'], 400);
@@ -41,7 +42,7 @@ const fillTransition = transition(['transform'], 400);
 // The page draws its own header, so the open list's name is the page title.
 export const ListsPage = memo(ListsPageView);
 
-function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundId, canRegister, notify, onCreateCategory }: Props) {
+function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundId, canRegister, notify, categoryCreation }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -60,7 +61,7 @@ function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundI
   useEffect(() => { if (openId && !open && seen.current === openId) setOpenId(null); }, [openId, open]);
   const muted = { color: colors.onSurfaceVariant };
 
-  const editor = editing && <ListEditor record={editing === 'new' ? undefined : editing} categories={categories} close={() => setEditing(null)}
+  const editor = editing && <ListEditor record={editing === 'new' ? undefined : editing} categories={categories} categoryCreation={categoryCreation} notify={notify} close={() => setEditing(null)}
     onSave={(name, categoryId) => {
       if (editing === 'new') {
         const id = remote.createList({ name, category_id: categoryId });
@@ -75,7 +76,7 @@ function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundI
   if (open) return <>
     <ListDetail key={open.id} list={open} items={remote.itemsFor(open.id)} state={listState(open, expenseIds)} remote={remote} categories={categories}
       expense={open.expense_id ? expenses.find((e) => e.id === open.expense_id) : undefined}
-      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={canRegister} notify={notify} onCreateCategory={onCreateCategory}
+      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={canRegister} notify={notify} categoryCreation={categoryCreation}
       onBack={() => setOpenId(null)} onEdit={() => setEditing(open)} onOpen={setOpenId} />
     {editor}
   </>;
@@ -157,10 +158,10 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
 type DetailProps = {
   list: SyncedList; items: readonly SyncedListItem[]; state: ListState; expense?: ExpenseRecord; remote: RemoteLists;
   categories: readonly Category[]; fundChoices: readonly FundChoice[]; defaultFundId: string; canRegister: boolean;
-  notify: (message: string) => void; onCreateCategory: () => void; onBack: () => void; onEdit: () => void; onOpen: (id: string) => void;
+  notify: (message: string) => void; categoryCreation: CategoryCreation; onBack: () => void; onEdit: () => void; onOpen: (id: string) => void;
 };
 
-function ListDetail({ list, items, state, expense, remote, categories, fundChoices, defaultFundId, canRegister, notify, onCreateCategory, onBack, onEdit, onOpen }: DetailProps) {
+function ListDetail({ list, items, state, expense, remote, categories, fundChoices, defaultFundId, canRegister, notify, categoryCreation, onBack, onEdit, onOpen }: DetailProps) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
   const editable = state === 'active';
@@ -289,7 +290,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
         onSave={(next) => remote.updateItem(editingItem, { name: next })}
         onDelete={() => remote.removeItem(editingItem)} />}
       {registering && <RegisterListDialog list={list} initialAmount={totalText} items={items} categories={categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
-        canRegister={canRegister} error={remote.error} close={() => setRegistering(false)} onCreateCategory={onCreateCategory}
+        canRegister={canRegister} error={remote.error} close={() => setRegistering(false)} categoryCreation={categoryCreation} notify={notify}
         onRegister={async (expenseId: string, data: ExpenseData, remember: boolean) => {
           const saved = await remote.register(list, expenseId, data, remember);
           if (saved) notify("Spesa registrata: la lista è stata archiviata.");

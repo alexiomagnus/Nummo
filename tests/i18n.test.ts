@@ -146,7 +146,7 @@ test('nuova spesa: etichette della sezione ricorrente tradotte, vecchia etichett
 });
 
 test('notifiche e protezione: testi della pagina, degli avvisi e dello stato tradotti in entrambe le lingue', () => {
-  for (const [it, en] of [['Notifiche', 'Notifications'], ['Attiva notifiche', 'Turn on notifications'], ['Promemoria backup', 'Backup reminder'],
+  for (const [it, en] of [['Notifiche', 'Notifications'], ['Promemoria backup', 'Backup reminder'],
     ['Riepilogo spese', 'Spending summary'], ['Ricordamelo dopo', 'Remind me later'], ['Ogni settimana (consigliato)', 'Every week (recommended)'],
     ['Ogni 14 giorni', 'Every 14 days'], ['Archivio locale protetto', 'Local archive protected'], ['Protezione aggiuntiva non attiva', 'Extra protection not active'],
     ['Protezione non disponibile', 'Protection not available']] as const) {

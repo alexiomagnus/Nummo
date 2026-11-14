@@ -32,7 +32,6 @@ test('push: promemoria backup solo con dati cambiati dopo l’ultimo backup conf
   const snoozed = snoozeBackup(state, new Date('2026-11-20T10:00:00Z'));
   assert.equal(backupJob({ preferences: p, state: snoozed, lastChange: '2026-11-02T10:00:00Z', now: new Date('2026-11-20T10:00:00Z') })?.at, '2026-11-23T10:00:00.000Z');
   assert.equal(backupJob({ preferences: { ...p, backupEnabled: false }, state, lastChange: '2026-11-02T10:00:00Z', now }), null);
-  assert.equal(backupJob({ preferences: { ...p, enabled: false }, state, lastChange: '2026-11-02T10:00:00Z', now }), null);
   assert.equal((backupJob({ preferences: { ...p, backupFrequency: 'monthly' }, state, lastChange: '2026-11-02T10:00:00Z', now }) as { repeatDays?: number } | null)?.repeatDays, 30);
 });
 
@@ -62,8 +61,8 @@ test('push: riepilogo alle 9 del giorno dopo la fine del periodo, solo con spese
   assert.equal(summaryJob({ preferences: { ...p, summaryEnabled: false }, state, expenses: [expense('a', '2026-11-17')], categories: [], now }), null);
 });
 
-test('push: interruttore generale spento = nessun promemoria', () => {
-  const input = { preferences: { ...p, enabled: false }, state, expenses: [expense('a', '2026-11-17')], categories: [], now: new Date('2026-11-18T10:00:00Z'), lastChange: '2026-11-17T10:00:00Z' };
+test('push: entrambi gli avvisi spenti = nessun promemoria', () => {
+  const input = { preferences: { ...p, backupEnabled: false, summaryEnabled: false }, state, expenses: [expense('a', '2026-11-17')], categories: [], now: new Date('2026-11-18T10:00:00Z'), lastChange: '2026-11-17T10:00:00Z' };
   assert.deepEqual(pushJobs(input), []);
   assert.equal(pushJobs({ ...input, preferences: p }).length, 2);
 });

@@ -5,26 +5,89 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` a `302b24e` («feat: remove Google Drive, add local storage protection and in-app notifications»),
-  pubblicato su `origin/main` con autorizzazione il 14 novembre: include la fase Drive/protezione/notifiche e le
-  modifiche separate a Fondi, menu account e stato vuoto degli abbonamenti, più lo spostamento delle fixture dei test in
-  `tests/fixtures/`. Working tree pulito dopo il commit (salvo questo aggiornamento di HANDOFF).
-- **Produzione.** Ultimo rilascio Hosting registrato: `e2eee92` (12 novembre); `73034ba`, `ed21a87`, `6956a56`,
-  `7132480` e `302b24e` sono **non pubblicati** su Hosting. `firestore.rules` è cambiato dopo l'ultima pubblicazione
-  Rules registrata (icone rimosse in `d7e1504`, `key` aggiunta in `6956a56`): pubblicazione separata, con
-  autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key`
-  viene rifiutata dal cloud. Questa fase non tocca le Rules.
-- **Verifiche il 14 novembre.** `npm run check` OK su tutte le modifiche locali (rieseguito a fine giornata dopo il
-  riallineamento documentale): typecheck, **399/399** test, build demo; `git diff --check` OK. Chromium headless sulla
-  build demo in Standard: 43/43 controlli per la fase Drive/notifiche, controlli dedicati per il menu account (dettagli
-  sotto). Suite SDK/Rules non rieseguita (Firestore, Rules e `DataStore` invariati; ultimo esito 18/18 nella fase icone);
-  hybrid non rieseguito.
-- **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts`, PID 18290, lock `.firebase/hybrid.lock`,
-  config `.nummo-hybrid-18290.json` in radice, ignorata da Git): non toccarlo; per le suite usare porte dedicate.
+- **Git.** `main` a `8d9f225` (Web Push) più il commit di questa fase (barra mobile, ciclo di import, icona dei campi,
+  Impostazioni in due colonne, segmenti, Liste/Spese/Notifiche/accesso del 14 novembre), pubblicato su `origin/main`
+  con autorizzazione il 14 novembre sera. Hash finale in `git log`.
+- **Produzione.** Hosting pubblicato dall'utente il 14 novembre con il push (commit non registrato) e, con autorizzazione,
+  di nuovo con `npm run deploy:hosting` dopo il commit di questa fase (esito nella sezione più recente). Worker
+  `nummo-push` attivo su Cloudflare. `firestore.rules` è cambiato dopo l'ultima pubblicazione Rules registrata (icone
+  rimosse in `d7e1504`, `key` aggiunta in `6956a56`): pubblicazione separata, con autorizzazione, dopo il controllo degli
+  ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key` viene rifiutata dal cloud.
+- **Verifiche il 14 novembre sera.** `npm run check` OK: typecheck, **417/417** test, build demo. Suite SDK/Rules e
+  hybrid non rieseguite (Rules, Firestore e `DataStore` invariati).
+- **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
+  `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, pubblicazione Hosting e Rules
   (solo con autorizzazione).
+
+## Impostazioni: due colonne su desktop, Colore e Carattere a sinistra — 14 novembre 2026
+
+- Su richiesta: `SettingsPage` su pagina larga (da 2 × 360 + 32 = 752 px effettivi, prima 872) mostra due colonne
+  indipendenti, poi invertite su richiesta: Colore e Carattere a sinistra, Lingua e Tema a destra (ordine del DOM
+  scambiato solo su pagina larga, così focus da tastiera e lettura seguono la vista); Stile delle icone e Funzionalità
+  seguono a tutta larghezza. Su smartphone ordine invariato, una colonna. AGENTS aggiornato.
+- `npm run check` OK (416/416, build demo). Chromium headless sulla build demo (schermata di scelta → Impostazioni):
+  screenshot 1280 scuro (due colonne) e 412 (una colonna) osservati, nessun overflow orizzontale a 1280/1024/412.
+  Con drawer/rail del workspace non provato nel browser; nessun commit.
+
+## Console di Chrome: ciclo di import e `<button>` annidato — 14 novembre 2026
+
+- Analizzati i messaggi della console in sviluppo segnalati dall'utente. Corretti:
+  - **Require cycle `trial.ts ↔ expense.ts`**: `isValidDate` spostata in `domain/policy.ts` (accanto a `todayInRome`),
+    riesportata da `expense.ts` per gli import esistenti; `trial.ts` importa da `policy.ts`. Controllo con script: nessun
+    altro ciclo di import a runtime in `src/`.
+  - **`<button>` dentro `<button>`** in `DateField` (e potenzialmente negli altri campi-azione): l'icona decorativa
+    `leadingIcon` (`FieldIcon.tsx`) è un `IconButton` Paper; ora ha `role="presentation"`, così RN Web la rende come `<div>`
+    (resta fuori da Tab e albero di accessibilità; un clic continua a dare il focus al campo).
+- Non da correggere nel codice: avviso React DevTools; `useNativeDriver` di Paper senza modulo nativo (fallback JS normale
+  sul web); `ERR_BLOCKED_BY_CLIENT` sulla chiusura del canale Listen verso l'emulatore 8180 (estensione di blocco nel
+  browser); `UnableToResolveError` per `react-native-paper`/`hyphenate-style-name`: `node_modules` reinstallato alle 18:36
+  mentre Metro era attivo; dipendenze presenti (`npm ls` OK), lockfile invariato, runner riavviato con `--clear` alle 19:25.
+- `npm run check` OK (417/417, build demo). Assenza dei messaggi nella console **non verificata nel browser**. Nessun commit.
+
+## Navigazione mobile: barra sparita scorrendo il modulo — 14 novembre 2026
+
+- Segnalato dall'utente su iPhone (Nuova spesa, sezione ricorrente): scorrendo verso il basso la barra inferiore spariva,
+  lasciando il proprio spazio vuoto. Causa: il `pointerdown` touch su un campo scrivibile anticipa la tastiera
+  (`opacity: 0` con spazio riservato, scadenza 800 ms); se il dito parte su un campo e il gesto diventa uno scorrimento la
+  tastiera non arriva, ma la barra restava nascosta, e con un modulo pieno di campi spariva a ogni scorrimento.
+- Correzione in `observeVirtualKeyboard` (`src/theme/viewport.ts`): `pointercancel` o `scroll` (in cattura) mentre
+  l'anticipo è in corso e nessun campo di testo ha il focus annullano subito l'anticipo. Un tocco vero (focus sul campo,
+  poi scorrimento per mostrarlo) resta nascosto come prima. Nuovo test in `tests/viewport.test.ts`.
+- Verificato solo con test unitari e `npm run check`; **non provato su iPhone/Android reali**. Nessun commit.
+
+## Accesso: «Usa Nummo senza account» come pulsante con contorno — 14 novembre 2026
+
+- Su richiesta: nella schermata di accesso (Avanzata, disconnessi) il collegamento testuale diventa un pulsante
+  `outlined` a tutta larghezza sotto «Accedi con Google», stessa altezza minima (48), etichetta centrata (`SignIn.tsx`).
+- `npm run check` OK (416/416, build demo). Resa nel browser non verificata; nessun commit.
+
+## Spese singole: Elimina spostato in Modifica — 14 novembre 2026
+
+- Su richiesta: nei dettagli di una spesa singola (`ExpenseList`) resta solo «Modifica»; «Elimina» è ora nel dialogo
+  «Modifica spesa» (`ExpenseEditor`), a sinistra di Annulla/Salva come già per le serie, con la stessa conferma
+  (`DeleteAction`, nota sulla lista collegata che torna attiva). Tolti `renderDelete` da `ExpenseList` e
+  `renderExpenseDelete` da `Workspace`. Supera la sezione «Azioni nei dettagli delle spese singole» del 12 novembre.
+- `npm run check` OK (416/416, build demo). Resa nel browser non verificata; nessun commit.
+
+## Liste: categoria predefinita sempre scelta — 14 novembre 2026
+
+- Su richiesta: in Nuova/Modifica lista (`ListEditor`) tolta la voce «Nessuna categoria predefinita»; il selettore propone
+  la categoria della lista se esiste ancora, altrimenti la prima dell'elenco (calcolata al render: vale anche se le
+  categorie arrivano dopo l'apertura). Senza alcuna categoria la lista si salva ancora senza (`category_id` null resta
+  ammesso da dominio, Rules e backup; liste esistenti invariate finché non si salvano). Traduzione non più usata rimossa.
+- `npm run check` OK (416/416, build demo). Resa nel browser non verificata; nessun commit.
+
+## Notifiche: rimosso l'interruttore generale — 14 novembre 2026
+
+- Su richiesta: eliminata la scheda «Notifiche generali» («Attiva notifiche») dalla pagina Notifiche. Con le notifiche di
+  sistema attive gli avvisi arrivano ad app aperta e chiusa; restano gli interruttori di Promemoria backup e Riepilogo spese.
+- `enabled` tolto da `NotificationPreferences`; un vecchio `enabled: false` salvato spegne in lettura backup e riepilogo
+  (nessun avviso riparte da solo). Traduzioni non più usate rimosse, README/AGENTS aggiornati.
+- `npm run check` OK (416/416, build demo). Non pubblicato né committato; nel working tree restano anche
+  `Button.tsx`/`SubscriptionList.tsx` di un'altra sessione.
 
 ## Notifiche di sistema Web Push, fase 1 — 14 novembre 2026
 

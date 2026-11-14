@@ -38,54 +38,67 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 
 // Display settings page, opened from the account menu (or the sign-in screen), outside the main destinations.
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
-// Sections stack on phones and pair up in two columns when the window is wide enough.
+// Sections stack on phones; when the page is wide enough, Colore and Carattere move to a right-hand column beside
+// Lingua and Tema (two stacks of similar height), and the wider sections follow at full width.
 export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
   // Measure the actual page: the desktop navigation and browser zoom reduce its usable width.
-  const wide = contentWidth >= 2 * 420 + spacing.xxl;
-  const section = [styles.section, wide && { width: (contentWidth - spacing.xxl) / 2 }];
+  // 360 dp per column: the colour swatches wrap onto a second row rather than squeeze, every chip row still fits.
+  const wide = contentWidth >= 2 * 360 + spacing.xxl;
+  const general = (
+    <View key="general" style={[styles.column, wide && styles.half]}>
+      <Card title={t("Lingua")} style={styles.section}>
+        <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
+          value={preferences.language} onChange={(language) => language && onChange({ language })} />
+      </Card>
+      <Card title={t("Tema")} style={styles.section}>
+        <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
+      </Card>
+    </View>
+  );
+  const look = (
+    <View key="look" style={[styles.column, wide && styles.half]}>
+      <Card title={t("Colore")} style={styles.section}>
+        <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
+        <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
+          {accents.map((accent) => {
+            const scheme = buildScheme(accent, preferences.colorMode, dark);
+            const selected = accent === preferences.accent;
+            const dots = [scheme.primary, ...(preferences.colorMode === 'palette' && accent !== 'graphite' ? [scheme.secondary, scheme.tertiary] : [])];
+            return (
+              <StateLayerPressable key={accent} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="radio"
+                aria-checked={selected} accessibilityLabel={`${t(accentLabels[accent])}${selected ? t(", selezionato") : ''}`}
+                // `title` is the web tooltip: the swatch carries no visible text.
+                {...({ title: t(accentLabels[accent]) } as object)}
+                onPress={() => onChange({ accent })}
+                style={[styles.swatch, { borderColor: selected ? colors.primary : 'transparent' }]}>
+                <View style={styles.dots}>
+                  {dots.map((color, index) => (
+                    <View key={index} style={[styles.dot, { backgroundColor: color, marginLeft: index ? -8 : 0 }]} />
+                  ))}
+                </View>
+              </StateLayerPressable>
+            );
+          })}
+        </View>
+      </Card>
+      <Card title={t("Carattere")} style={styles.section}>
+        <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
+      </Card>
+    </View>
+  );
   return (
     <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
       <PageHeader title={t("Impostazioni")} action={
         <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}
           onPress={onDone}>{t("Fatto")}</Button>} />
+      <View style={[styles.grid, wide && styles.columns]}>
+        {/* Desktop: Colore and Carattere on the left, Lingua and Tema on the right; phones keep the reading order. */}
+        {wide ? [look, general] : [general, look]}
+      </View>
       <View style={styles.grid}>
-        <Card title={t("Lingua")} style={section}>
-          <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
-            value={preferences.language} onChange={(language) => language && onChange({ language })} />
-        </Card>
-        <Card title={t("Tema")} style={section}>
-          <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
-        </Card>
-        <Card title={t("Colore")} style={section}>
-          <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
-          <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
-            {accents.map((accent) => {
-              const scheme = buildScheme(accent, preferences.colorMode, dark);
-              const selected = accent === preferences.accent;
-              const dots = [scheme.primary, ...(preferences.colorMode === 'palette' && accent !== 'graphite' ? [scheme.secondary, scheme.tertiary] : [])];
-              return (
-                <StateLayerPressable key={accent} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="radio"
-                  aria-checked={selected} accessibilityLabel={`${t(accentLabels[accent])}${selected ? t(", selezionato") : ''}`}
-                  // `title` is the web tooltip: the swatch carries no visible text.
-                  {...({ title: t(accentLabels[accent]) } as object)}
-                  onPress={() => onChange({ accent })}
-                  style={[styles.swatch, { borderColor: selected ? colors.primary : 'transparent' }]}>
-                  <View style={styles.dots}>
-                    {dots.map((color, index) => (
-                      <View key={index} style={[styles.dot, { backgroundColor: color, marginLeft: index ? -8 : 0 }]} />
-                    ))}
-                  </View>
-                </StateLayerPressable>
-              );
-            })}
-          </View>
-        </Card>
-        <Card title={t("Carattere")} style={section}>
-          <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
-        </Card>
         <Card title={t("Stile delle icone")} style={styles.section}>
           <View style={styles.styleCards} role="radiogroup" aria-label={t("Stile delle icone")}>
             {iconStyles.map((style) => {
@@ -123,7 +136,10 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
 
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: layout.sectionGap },
+  grid: { gap: layout.sectionGap },
+  columns: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xxl },
+  column: { gap: layout.sectionGap },
+  half: { flex: 1, minWidth: 0 },
   section: { width: '100%' },
   reset: { alignSelf: 'flex-start', borderRadius: radius.pill },
   styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

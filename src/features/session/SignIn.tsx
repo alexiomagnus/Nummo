@@ -52,7 +52,7 @@ export function SignIn({ error, onSignIn, onChangeMode }: Props) {
         <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>{t("Accedi con Google")}</Button>
       </Card>
       <View style={styles.links}>
-        {onChangeMode && <Button mode="text" compact onPress={onChangeMode} style={styles.guideLink}>{t("Usa Nummo senza account")}</Button>}
+        {onChangeMode && <Button mode="outlined" onPress={onChangeMode} contentStyle={styles.button}>{t("Usa Nummo senza account")}</Button>}
       </View>
     </View>
   );
@@ -63,6 +63,6 @@ const styles = StyleSheet.create({
   intro: { gap: spacing.xs },
   helper: { paddingHorizontal: 0 },
   button: { minHeight: 48 },
-  links: { alignItems: 'flex-start' },
-  guideLink: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
+  // Secondary choice: outlined, as wide as «Accedi con Google» above, label centred.
+  links: { alignItems: 'stretch' },
 });

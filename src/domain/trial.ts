@@ -1,4 +1,4 @@
-import { isValidDate } from './expense.ts';
+import { isValidDate } from './policy.ts';
 
 // The subscription starts on expense_date; billing starts on first_payment_date when a trial exists.
 // Legacy/ordinary expenses omit the field. The first paid occurrence is always billing index 0.

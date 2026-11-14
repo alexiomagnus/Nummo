@@ -17,13 +17,16 @@ const categories: Category[] = [{ id: 'food', label: 'Alimentari', icon: null },
 
 test('notifiche: predefiniti richiesti e preferenze danneggiate ripristinate campo per campo', () => {
   assert.deepEqual(defaultNotificationPreferences, {
-    enabled: true, backupEnabled: true, backupFrequency: 'weekly', backupSince: null, summaryEnabled: true, summaryFrequency: 'weekly', summarySince: null,
+    backupEnabled: true, backupFrequency: 'weekly', backupSince: null, summaryEnabled: true, summaryFrequency: 'weekly', summarySince: null,
   });
   assert.deepEqual(parseNotificationPreferences(null), defaultNotificationPreferences);
   assert.deepEqual(parseNotificationPreferences('{rotto'), defaultNotificationPreferences);
   assert.deepEqual(parseNotificationPreferences('[]'), defaultNotificationPreferences);
   const parsed = parseNotificationPreferences(JSON.stringify({ enabled: false, backupFrequency: 'daily', summaryFrequency: 'monthly', backupSince: 'ieri', summarySince: '2026-11-02T10:00:00.000Z' }));
-  assert.equal(parsed.enabled, false);
+  assert.equal(parsed.backupEnabled, false, 'vecchio interruttore generale spento: avvisi spenti');
+  assert.equal(parsed.summaryEnabled, false);
+  assert.equal(parseNotificationPreferences('{"enabled":true,"summaryEnabled":false}').backupEnabled, true);
+  assert.equal('enabled' in parsed, false, 'nessun interruttore generale nelle preferenze');
   assert.equal(parsed.backupFrequency, 'weekly');
   assert.equal(parsed.summaryFrequency, 'monthly');
   assert.equal(parsed.backupSince, null);
@@ -35,13 +38,12 @@ test('notifiche: predefiniti richiesti e preferenze danneggiate ripristinate cam
   assert.equal(parseNotificationState(JSON.stringify({ ...state(), summaryShownThrough: '2026-13-01' }), now).summaryShownThrough, null);
 });
 
-test('notifiche: l’interruttore generale conserva le scelte; riattivare o cambiare frequenza riparte da adesso', () => {
+test('notifiche: riattivare un avviso o cambiare frequenza riparte da adesso', () => {
   const now = at('2026-11-14T09:00:00.000Z');
-  const off = changeNotificationPreferences(prefs(), { enabled: false }, now);
-  assert.equal(off.backupEnabled, true);
-  assert.equal(off.summaryEnabled, true);
+  const off = changeNotificationPreferences(prefs(), { backupEnabled: false, summaryEnabled: false }, now);
+  assert.equal(off.backupFrequency, 'weekly', 'spegnere conserva la frequenza');
   assert.equal(off.backupSince, null);
-  const on = changeNotificationPreferences(off, { enabled: true }, now);
+  const on = changeNotificationPreferences(off, { backupEnabled: true, summaryEnabled: true }, now);
   assert.equal(on.backupSince, now.toISOString());
   assert.equal(on.summarySince, now.toISOString());
   const later = at('2026-11-20T09:00:00.000Z');
@@ -68,7 +70,6 @@ test('promemoria backup: solo dopo l’intervallo, con modifiche, mai al primo a
   assert.equal(due(base, '2026-11-08T09:59:00.000Z'), false, 'intervallo non ancora trascorso dal primo avvio');
   assert.equal(due(base, '2026-11-08T10:00:00.000Z'), true);
   assert.equal(due(base, '2026-11-20T10:00:00.000Z', prefs(), null), false, 'nessun dato modificato (o modalità Avanzata)');
-  assert.equal(due(base, '2026-11-20T10:00:00.000Z', prefs({ enabled: false })), false);
   assert.equal(due(base, '2026-11-20T10:00:00.000Z', prefs({ backupEnabled: false })), false);
   assert.equal(due(base, '2026-11-12T10:00:00.000Z', prefs({ backupFrequency: 'biweekly' })), false);
   assert.equal(due(base, '2026-11-15T10:00:00.000Z', prefs({ backupFrequency: 'biweekly' })), true);
@@ -136,7 +137,6 @@ test('riepilogo: non al primo avvio, una volta per periodo, nessun avviso senza 
   assert.equal(summaryDue(input('2026-11-20', closed)), null, 'già mostrato e chiuso');
   assert.equal(summaryDue(input('2026-11-16', s, prefs(), [])), null, 'nessuna spesa nel periodo');
   assert.equal(summaryDue(input('2026-11-16', s, prefs({ summaryEnabled: false }))), null);
-  assert.equal(summaryDue(input('2026-11-16', s, prefs({ enabled: false }))), null);
   // Assenza lunga: solo l’ultimo periodo concluso, non una fila di avvisi.
   const late = summaryDue(input('2026-12-02', s, prefs(), [...expenses, expense('latte', 120, '2026-11-25', 'food')]));
   assert.deepEqual(late?.period, { from: '2026-11-23', to: '2026-11-29' });
@@ -153,5 +153,5 @@ test('notifiche dovute: il promemoria backup esiste solo con l’orologio dell�
   const base = { preferences: prefs(), state: s, expenses: [expense('pane', 250, '2026-11-10', 'food')], categories, today: '2026-11-16', now: at('2026-11-16T10:00:00.000Z') };
   assert.deepEqual(dueNotifications({ ...base, lastChange: '2026-11-10T10:00:00.000Z' }).map((item) => item.kind), ['backup', 'summary']);
   assert.deepEqual(dueNotifications({ ...base, lastChange: null }).map((item) => item.kind), ['summary']);
-  assert.deepEqual(dueNotifications({ ...base, preferences: prefs({ enabled: false }), lastChange: '2026-11-10T10:00:00.000Z' }), []);
+  assert.deepEqual(dueNotifications({ ...base, preferences: prefs({ backupEnabled: false, summaryEnabled: false }), lastChange: '2026-11-10T10:00:00.000Z' }), []);
 });

@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { DeleteAction } from '../../components/DeleteAction';
 import { AppShell, type Destination } from '../../components/AppShell';
 import { Card } from '../../components/Card';
 import { PageHeader } from '../../components/PageHeader';
@@ -224,7 +223,10 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const [listView, setListView] = useState<ListView>('expenses');
   const [defaultFundId, setDefaultFundId] = useState(() => readDefaultFund(uid));
   const changeDefaultFund = useCallback((id: string) => { setDefaultFundId(id); writeDefaultFund(uid, id); }, [uid]);
-  const openCategories = useCallback(() => onNavigate('categories'), [onNavigate]);
+  const createCategory = categoryState.createCategory;
+  const categoryCreationEnabled = categoryState.ready && online;
+  const categoryCreation = useMemo(() => ({ create: createCategory, enabled: categoryCreationEnabled, error: categoryState.error }),
+    [createCategory, categoryCreationEnabled, categoryState.error]);
   // Balance now and remaining budget of this month, for the fund field of the forms (same figures as the Funds page).
   const fundSummary = useMemo(() => monthOverview({ funds: fundState.funds, movements: fundState.movements, expenses: store.expenses }, monthOf(today), today),
     [fundState.funds, fundState.movements, store.expenses, today]);
@@ -270,15 +272,6 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   }, [seedable]);
   // Products bought, for the expenses that registered a shopping list (shown in their details).
   const listItems = useMemo(() => new Map(store.expenses.filter((e) => e.list_id).map((e) => [e.id, e.list_items])), [store.expenses]);
-  const expensesById = useMemo(() => new Map(store.expenses.map((expense) => [expense.id, expense])), [store.expenses]);
-  const renderExpenseDelete = useCallback((id: string) => {
-    const record = expensesById.get(id);
-    if (!record || !store.remove) return null;
-    const linked = record.list_id && listState.lists.some((list) => list.id === record.list_id && list.expense_id === record.id);
-    return <DeleteAction labeled mode="outlined" name={record.description}
-      description={[(linked ? t("La lista collegata tornerà tra quelle attive. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
-      onDelete={() => store.remove!(record)} />;
-  }, [expensesById, listState.lists, store.remove, store.error, t]);
   // In-app notifications (backup reminder in the Standard mode, spending summary in both).
   const notifications = useNotifications({ scope: uid, expenses: store.expenses, categories: categoryState.categories,
     ready: !starting && store.ready && categoryState.ready, archive: localArchive });
@@ -330,8 +323,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <View style={styles.list}>
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
-        {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems}
-          renderDelete={store.remove ? renderExpenseDelete : undefined} />}
+        {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
           <SubscriptionList subscriptions={subscriptions} categories={categoryState.categories} error={error}
@@ -346,7 +338,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} />}
     <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} expenses={store.expenses}
-      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify} onCreateCategory={openCategories} /></VisitedSection>
+      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify} categoryCreation={categoryCreation} /></VisitedSection>
     <VisitedSection active={section === 'funds' && !starting}><FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
       defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} showGeneralBudget={dashboardPreferences.showGeneralBudget} /></VisitedSection>
     <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}

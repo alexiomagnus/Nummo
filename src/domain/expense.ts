@@ -1,5 +1,5 @@
 import type { Category } from './category.ts';
-import { expensePolicy, todayInRome } from './policy.ts';
+import { expensePolicy, isValidDate, todayInRome } from './policy.ts';
 import { changePrice, makeChange, maxPromoAfter, nextRenewal, priceAt, type PriceChange, type PriceScope } from './pricing.ts';
 import { isRecurrence, recurrenceAt, switchFrequency, type CalendarChange, type Recurrence } from './recurrence.ts';
 import { paymentStart, trialTimingError, validFirstPayment } from './trial.ts';
@@ -64,11 +64,8 @@ export function parseAmountMinor(input: string): number | null {
   return amount > 0 && amount <= expensePolicy.maxAmountMinor ? amount : null;
 }
 
-export function isValidDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
+// Lives in policy.ts so trial.ts can use it without importing this module (no require cycle).
+export { isValidDate };
 
 export function normalizeDescription(value: string): string {
   return value.normalize('NFC').trim().replace(/\s+/gu, ' ');

@@ -69,6 +69,15 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
     // A hardware keyboard or a prevented focus may leave the viewport unchanged.
     openingTimer = setTimeout(() => { opening = false; evaluate(); }, 800);
   };
+  // A touch that starts on a field and turns into a scroll (pointercancel when the browser takes over the pan, or a
+  // scroll before any field has focus) brings no keyboard: show navigation again at once instead of after the timeout,
+  // or scrolling a form full of fields keeps hiding it.
+  const touchAbandoned = () => {
+    if (!opening || isTextEntry(doc.activeElement as FocusTarget)) return;
+    opening = false;
+    clearTimeout(openingTimer);
+    evaluate();
+  };
   const resize = () => {
     const measured = visibleViewportHeight(target.innerHeight, visual);
     if (measured === null) return; // pinch zoom: keep the current state
@@ -87,6 +96,8 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   doc.addEventListener('focusin', focusChange);
   doc.addEventListener('focusout', focusChange);
   doc.addEventListener('pointerdown', touchEntry, true);
+  doc.addEventListener('pointercancel', touchAbandoned, true);
+  doc.addEventListener('scroll', touchAbandoned, true);
   return () => {
     clearTimeout(pending);
     clearTimeout(openingTimer);
@@ -95,6 +106,8 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
     doc.removeEventListener('focusin', focusChange);
     doc.removeEventListener('focusout', focusChange);
     doc.removeEventListener('pointerdown', touchEntry, true);
+    doc.removeEventListener('pointercancel', touchAbandoned, true);
+    doc.removeEventListener('scroll', touchAbandoned, true);
   };
 }
 
