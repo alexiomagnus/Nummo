@@ -32,6 +32,27 @@ cronaca delle singole fasi e possono dire cose superate.
   screenshot 1280 scuro (due colonne) e 412 (una colonna) osservati, nessun overflow orizzontale a 1280/1024/412.
   Con drawer/rail del workspace non provato nel browser; nessun commit.
 
+## Console: «Blocked aria-hidden» sul pulsante «Nuova spesa» — 15 novembre 2026
+
+- Avviso di Chrome segnalato dall'utente: premendo il pulsante tondo della barra mobile si apre Nuova e lo slot del
+  pulsante si chiude con `aria-hidden` mentre il pulsante ha ancora il focus. `AppShell.tsx`: lo slot nascosto usa ora
+  `inert` (come la barra), che toglie anche il focus.
+- Chromium headless sul server di sviluppo (Standard, 412 px), pressione reale dopo Spese: prima della correzione a 60 ms il
+  focus era su un `BUTTON` dentro un antenato `aria-hidden="true"` (condizione dell'avviso); dopo, focus su `BODY` e nessun
+  antenato nascosto. L'avviso in sé non arriva via CDP: verificata la condizione, non il testo. `npm run check` OK.
+  Non committato né pubblicato.
+
+## Console: `<button>` annidato anche in SelectField — 15 novembre 2026
+
+- Dopo il ricaricamento l'utente vedeva ancora l'avviso, ora sulla freccia a destra di `SelectField` (Categoria): la
+  correzione di `f77f42a` copriva solo `leadingIcon`. Nuovo `decorativeIcon` in `FieldIcon.tsx` (IconButton Paper con
+  `role="presentation"`, fuori da Tab e accessibilità), usato da `leadingIcon`, dalle due icone di `SelectField` (senza
+  focus del campo) e dall'icona della nuova categoria in `CategorySettings`. Le icone «Cancella ricerca» restano pulsanti veri
+  (non sono dentro un altro pulsante).
+- Verifica in Chromium headless (profilo temporaneo, server di sviluppo 8081, Standard, 412 px): 0 `button button`,
+  adornamenti resi come `DIV`, console con i soli avvisi React DevTools e `useNativeDriver`. `npm run check` OK (417/417).
+  Non committato né pubblicato.
+
 ## Commit, push e pubblicazione Hosting — 14 novembre 2026
 
 - Su richiesta esplicita dell'utente (incluse le modifiche di un'altra sessione presenti nel working tree): commit

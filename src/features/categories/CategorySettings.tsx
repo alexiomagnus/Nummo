@@ -9,7 +9,7 @@ import { categoryNameError, type Category, type CategoryIcon } from '../../domai
 import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
-import { leadingIcon } from '../../components/FieldIcon';
+import { decorativeIcon, leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { inputOutline, layout, spacing } from '../../theme/tokens';
 import { IconPicker } from './IconPicker';
@@ -63,7 +63,7 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
           <TextInput outlineStyle={inputOutline} label={t("Nuova categoria")} accessibilityLabel={t("Nome della nuova categoria, obbligatorio")} mode="outlined" value={name}
             onChangeText={(value) => { setName(value); setNameError(null); }}
             onSubmitEditing={create} error={Boolean(nameError)} disabled={!ready}
-            left={icon ? <TextInput.Icon icon={() => <CategoryGlyph icon={icon} size={24} />} /> : undefined} />
+            left={icon ? decorativeIcon(() => <CategoryGlyph icon={icon} size={24} />) : undefined} />
           {nameError && <HelperText type="error" accessibilityRole="alert">{t(nameError)}</HelperText>}
         </View>
         <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}

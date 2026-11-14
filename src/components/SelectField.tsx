@@ -5,6 +5,7 @@ import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { AnchoredMenu, BottomSheet, type MenuAnchor } from './Overlay';
+import { decorativeIcon } from './FieldIcon';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -70,8 +71,8 @@ export function SelectField<T extends string>({ label, options, value, onChange,
         <div inert>
           <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false}
             error={Boolean(error)} aria-disabled={disabled} showSoftInputOnFocus={false}
-            left={current?.icon ? <TextInput.Icon icon={() => current.icon} forceTextInputFocus={false} tabIndex={-1} aria-hidden /> : undefined}
-            right={<TextInput.Icon icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />} forceTextInputFocus={false} tabIndex={-1} aria-hidden />} />
+            left={current?.icon ? decorativeIcon(() => current.icon, false) : undefined}
+            right={decorativeIcon(({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />, false)} />
         </div>
       </Pressable>
       {compact

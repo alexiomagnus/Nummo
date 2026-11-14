@@ -223,7 +223,9 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
         })}
       </View>
       {mounted && action && (
-        <Animated.View pointerEvents={visible ? 'auto' : 'none'} aria-hidden={!visible}
+        // `inert`, not aria-hidden: the button usually still has focus when it hides (it was just pressed to open «Nuova»),
+        // and aria-hidden on a focused element is blocked by the browser. inert also drops the focus and the a11y node.
+        <Animated.View pointerEvents={visible ? 'auto' : 'none'} {...{ inert: visible ? undefined : true }}
           style={[styles.actionSlot, {
             width: progress.interpolate({ inputRange: [0, 1], outputRange: [0, layout.floatingBar] }),
             marginLeft: progress.interpolate({ inputRange: [0, 1], outputRange: [0, spacing.xs] }),
