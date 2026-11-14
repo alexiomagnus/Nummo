@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
-import { Button } from '../../components/Button';
+import { Button, compactIconPadding } from '../../components/Button';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { usePresence, useOverlayMotion } from '../../components/Overlay';
 import { fadeTransition } from '../../theme/motion';
@@ -104,6 +104,12 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
   // Below 360 dp omit decorative icons on cancel/edit to keep room for the wider status action.
   const { width } = useWindowDimensions();
   const narrow = compact && width < 360;
+  // Phones: balanced padding (see `compactIconPadding`), roomier from 380 dp where the three actions still fit one row;
+  // below that the same total width as Paper's compact buttons.
+  const roomy = width >= 380;
+  const iconPad = !compact ? undefined : roomy ? compactIconPadding.roomy : compactIconPadding.snug;
+  const pausePad = !compact ? undefined : roomy ? compactIconPadding.roomyNarrow : compactIconPadding.snugNarrow;
+  const textPad = compact ? styles.textOnlyLabel : undefined;
   const animate = useOverlayMotion();
   const { mounted, shown: visible } = usePresence(open, motion.fade, animate);
   const { entry, status, inTrial, amount_minor, frequency: inForce, next, payments, total } = summary;
@@ -133,17 +139,19 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
           </View>
           <View style={[styles.actions, compact && styles.compactActions]}>
             {status !== 'cancelled' && <Button compact={compact} mode="outlined" textColor={colors.error} disabled={!canChange || working}
+              contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label}
               accessibilityLabel={t("Annulla abbonamento")}
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
               onPress={() => onChange('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
-            <Button compact={compact} mode="outlined" style={narrow && styles.narrowEdit} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
+            <Button compact={compact} mode="outlined" style={narrow && styles.narrowEdit}
+              contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
             {/* Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
-            {status === 'active' && <Button compact={compact} mode="outlined" style={compact && styles.statusAction} contentStyle={compact && styles.statusActionContent} disabled={!canChange || working} loading={working}
+            {status === 'active' && <Button compact={compact} mode="outlined" style={compact && styles.statusAction} contentStyle={pausePad?.content} labelStyle={pausePad?.label} disabled={!canChange || working} loading={working}
               accessibilityLabel={t("Metti in pausa")}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
               onPress={() => onChange('paused')}>{compact ? t("Pausa") : t("Metti in pausa")}</Button>}
-            {status !== 'active' && <Button compact={compact} mode="contained-tonal" style={compact && styles.statusAction} contentStyle={compact && styles.statusActionContent} disabled={!canChange || working} loading={working}
+            {status !== 'active' && <Button compact={compact} mode="contained-tonal" style={compact && styles.statusAction} contentStyle={iconPad?.content} labelStyle={iconPad?.label} disabled={!canChange || working} loading={working}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
               onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
           </View>
@@ -197,7 +205,7 @@ const styles = StyleSheet.create({
   compactActions: { gap: spacing.xs },
   narrowEdit: { minWidth: 50 },
   statusAction: { minWidth: 98 },
-  statusActionContent: { paddingHorizontal: spacing.xs },
+  textOnlyLabel: { marginHorizontal: spacing.md },
   // A little more than the details gap (lg): the history is a separate block from the actions above.
   history: { marginTop: spacing.sm },
   historyTitle: { marginBottom: spacing.xs },

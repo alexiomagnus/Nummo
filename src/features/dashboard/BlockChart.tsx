@@ -57,7 +57,9 @@ export function BlockChart({ data, colors, active, onActive, percent, onOpen }: 
           const dimmed = active !== null && !selected && hovered !== index;
           return (
             <StateLayerPressable key={series.key} layerColor={layer} radius={corner} role="button"
-              onPress={() => onActive(selected ? null : index)} aria-pressed={selected}
+              // A press ends any preview: a tap also focuses the tile (after a dialog closes too), and that focus preview
+              // must not keep the details of a tile just deselected.
+              onPress={() => { setHovered(null); onActive(selected ? null : index); }} aria-pressed={selected}
               onHoverIn={() => setHovered(index)} onHoverOut={() => setHovered((current) => (current === index ? null : current))}
               onFocus={() => setHovered(index)} onBlur={() => setHovered((current) => (current === index ? null : current))}
               accessibilityLabel={`${name}: ${amount}, ${share}`}

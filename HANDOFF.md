@@ -1,5 +1,61 @@
 # HANDOFF — Nummo
 
+## Stato corrente — 14 novembre 2026
+
+Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle singole fasi e possono dire cose superate.
+
+- **Git.** `main` a `73034ba` («Standard (on-device) and Advanced (Firebase) storage modes»), allineato al riferimento locale
+  `origin/main` (nessun fetch). Quel commit contiene tutte le fasi del 12–13 novembre, comprese quelle marcate «nessun commit»
+  (modalità Standard/Avanzata e Drive, azioni di Spese/abbonamenti, contorno delle azioni distruttive, icona utente e avatar).
+  Non c'è un rilascio Hosting registrato dopo `e2eee92` (12 novembre): il commit `73034ba` è da considerare **non pubblicato**
+  finché non lo si verifica. Modifiche del 14 novembre (sotto) locali, senza commit.
+- **Verifiche il 14 novembre.** `npm run check` OK su `73034ba`: typecheck, **393/393** test, build demo. Emulatori e hybrid
+  non rieseguiti (ultimo esito: SDK/Rules 18/18 il 12–13 novembre, hybrid 8/8 in una revisione precedente).
+- **Ambiente.** Un runner hybrid dell'utente era attivo (`node scripts/dev-hybrid.ts`, PID 18290, config
+  `.nummo-hybrid-18290.json` in radice, ignorata da Git): non toccarlo; per le suite usare porte dedicate.
+- **Cosa resta aperto** (dettagli in «Prossime attività»): Google OAuth/Drive reali mai provati (nessun client configurato),
+  telefoni reali e Safari/iOS, collaudo in demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup.
+
+## Blocchi: anteprima dopo deselezione, Pausa e «Nuova» — 14 novembre 2026
+
+- **Bug Analisi → Blocchi (touch):** dopo «Mostra transazioni» e «Chiudi», ritoccare il blocco lo deselezionava, ma il
+  pannello restava in anteprima («Seleziona il blocco…»). Il tocco dà il focus al blocco, e il focus attivava l'anteprima
+  pensata per mouse e tastiera. Ora la pressione azzera l'anteprima (`BlockChart.tsx`). Riprodotto con tocchi CDP a 360 px
+  prima della correzione; dopo la correzione, in entrambi gli scenari (tocco/ritocco, e tocco → transazioni → Chiudi →
+  ritocco) il pannello torna all'invito. Su desktop, dopo un clic che deseleziona, l'anteprima ricompare solo rientrando
+  col puntatore.
+- **Spaziature condivise:** ora sono `compactIconPadding` in `components/Button.tsx` (`roomy`/`snug`, più le varianti
+  `*Narrow` per glifi stretti), usate da `SubscriptionList` e `ListsPage`. Pausa misurata circa 22 / 9 / 22 px
+  (prima 22 / 11 / 19,6).
+- **Liste:** `+ Nuova` su compact usa `roomy`: 94 px invece di 84, circa 16 / 9 / 16 px. Desktop invariato. A 320 e 360 px
+  il titolo va su due righe. Nessun overflow, nessun errore JS.
+- `npm run check` OK (393/393). Nessun telefono reale.
+
+## Pulsanti degli abbonamenti bilanciati su smartphone — 14 novembre 2026
+
+- Diagnosi con misura dei pixel (Chromium, scala 3): icone e testo erano già centrati in verticale (scarto ≤0,3 px).
+  Lo squilibrio era orizzontale: i pulsanti compatti di Paper hanno 8 px per lato, ma l'icona da 18 px ha margini propri,
+  quindi Annulla e Modifica avevano circa 12 px a sinistra e 8,7 a destra, e Riattiva 17 a sinistra e 12,7 a destra.
+- `SubscriptionList.tsx`, solo su compact: spaziature bilanciate per Annulla, Modifica e Pausa/Riattiva. Da 380 px:
+  pulsanti più ampi, con circa 16 px ai lati e 8–10 tra icona e testo (+10 px di larghezza ciascuno). Tra 360 e 379 px:
+  larghezza invariata, con circa 12 / 8 / 12 px. Sotto 360 px: Annulla e Modifica senza icona, testo con 12 px per lato
+  (prima 8). Desktop/medium, ordine, etichette, conferme e operazioni invariati.
+- Verifica: Chromium headless/CDP sulla build demo in Standard, backup TEST `docs/testing/nummo-utente-medio.json` importato
+  dall'interfaccia, abbonamenti in pausa (Netflix) e attivo (Spotify) a 320/360/375/393/412 px IT. Tre pulsanti sempre
+  su una riga, alti 48 px, nessun errore JS; ritaglio a 393 px osservato. Resta un leggero eccesso a sinistra su Pausa
+  (circa 2,5 px), dovuto al glifo stretto. `npm run check` OK (393/393). Nessun telefono reale né verifica in EN.
+
+## Liste: «Nuova lista» nella riga del titolo — 14 novembre 2026
+
+- Panoramica di Liste: il pulsante pieno `+ Nuova lista` (`+ Nuova` su compact, padding compatto) passa nell'`action` di
+  `PageHeader`, a destra del titolo, come «Fatto» in Impostazioni. Il titolo va a capo prima che il pulsante si restringa.
+  Distanza titolo → liste ridotta da `sectionGap` (32) a `lg` (16); prima c'erano una riga a sé per il pulsante e due spazi
+  di sezione. Stato vuoto con «Crea la prima lista», dettaglio lista, dialoghi e FAB della navigazione invariati.
+- `npx tsc --noEmit` OK, build demo OK. Chromium headless/CDP sulla build demo in Standard, profilo temporaneo, due liste
+  TEST create dal pulsante, HTTPS esterno bloccato: 320/360/412/820/1280 px IT ed EN, pulsante sulla riga del titolo
+  allineato a destra (bersaglio 48 px), nessun overflow orizzontale, nessun errore JS; screenshot 320 scuro e 1280 scuro
+  osservati. A 320 px «Liste della spesa» va su due righe accanto a `+ Nuova` (atteso). Nessun telefono reale.
+
 ## Contorno delle azioni distruttive nelle spese — 13 novembre 2026
 
 - «Annulla abbonamento» ora outlined, con testo/icona rossi; stesso contorno di Modifica/Pausa.
@@ -42,7 +98,7 @@
 
 ## Stato corrente — modalità Standard (IndexedDB + Google Drive) e Avanzata (Firebase BYOF), 12–13 novembre 2026
 
-Implementazione locale, **senza commit, push o pubblicazione**. Decisione e limiti in `docs/architecture.md` (prima sezione),
+Implementazione integrata nel commit `73034ba` (push su `origin/main`; Hosting non pubblicato). Decisione e limiti in `docs/architecture.md` (prima sezione),
 uso e configurazione nel README, convenzioni in AGENTS.md. Le sezioni sotto restano cronologia.
 
 - **Cosa c'è.** Schermata di scelta prima di ogni accesso (`ModeChoice`): Standard (consigliata) apre subito l'app senza
@@ -1300,7 +1356,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   `296407b` liste della spesa, backup v4, Dashboard informativa, backup fittizio limite; `85fb9aa` fondi e budget,
   icone a tema denaro; `96777ac` transizioni e ricerca abbonamenti; `112ebcb` stati abbonamenti, backup v2, tre stili
   icone, predefiniti, avvio. I titoli dei commit non descrivono interamente il contenuto.
-- HEAD traccia ancora `.nummo-hybrid-12312.json` (config temporanea del runner, non coperta da `.gitignore`).
+- `.nummo-hybrid-*.json` è ora coperto da `.gitignore` e nessun file del genere è tracciato (verificato il 14 novembre).
 
 ## Funzionalità implementate (riscontro nel codice)
 
@@ -1358,9 +1414,10 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 - **Liste:** spunte simultanee su due dispositivi: prevale l'ultima; nomi non unici; lista archiviata non modificabile.
 - **Backup/concorrenza:** nessuno snapshot globale né atomicità dell'intero ripristino; piano di sostituzione
   ricalcolato senza nuova anteprima. Client precedenti non leggono backup più recenti.
-- **Guida/avvio:** `warmUpServices()` parte da `App.tsx` anche su `#guida`: assenza di traffico Firebase non garantita.
+- **Guida/avvio:** in Avanzata `warmUpServices()` parte da `App.tsx` anche su `#guida` (in Standard non parte mai):
+  assenza di traffico Firebase sulla guida non garantita.
 - **UI mobile (diagnosi storiche non riverificate):** menu Categoria che allarga il viewport o copre la pillola, scroll
-  annidato nei menu bassi, etichetta «Dashboard» troncata a 320 px, Nuova spesa in landscape aperta scorsa.
+  annidato nei menu bassi, etichetta «Dashboard» (oggi «Analisi») troncata a 320 px, Nuova spesa in landscape aperta scorsa.
 - Nessun service worker né avvio offline a freddo; cache persistente non cancellata al logout; collezioni caricate
   integralmente. Licenza assente; audit dipendenze non aggiornato. Nessun lint configurato.
 - Richieste pregresse senza contesto sufficiente (scritta «minimale» senza testo, colori attivi mobile/rail): chiarire
@@ -1368,7 +1425,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 - **Documentazione storica:** riallineati README e riepiloghi dell'architettura il 12 novembre; le vecchie fasi restano
   conservate ed esplicitamente storiche. Per comportamento e verifiche attuali usare codice e riepilogo in apertura.
 
-## Verifiche
+## Verifiche (storiche — esiti correnti nello «Stato corrente» in apertura)
 
 **Revisione documentale precedente** sulla base `d5170ee`, prima della correzione focus/prestazioni, dipendenze già installate,
 Node 26.13.0, npm 12.2.2, Java 21.0.13:
@@ -1380,7 +1437,7 @@ Node 26.13.0, npm 12.2.2, Java 21.0.13:
 | `git diff --check` | **OK**. |
 | `AUTH_PORT=39099 FIRESTORE_PORT=39280 npm run test:emulator -- --config .nummo-docs-review.json` | **15/15** (SDK/Rules, CRUD, conflitti, stati, fondi, liste, import v4). Porte dedicate anche per Hub/log/websocket, UI disattivata; config temporanea rimossa dopo la suite. |
 | `npm run test:hybrid` | **8/8** (lifecycle runner, Firestore demo reale, Expo simulato). |
-| Prova locale decoder/import con ID icona rimossi | **OK**: 45 icone attive, 18 ID storici rifiutati da entrambi. Nessun dato personale letto. |
+| Prova locale decoder/import con ID icona rimossi | **OK**: 45 icone attive allora (39 dal 12 novembre), 18 ID storici rifiutati da entrambi. Nessun dato personale letto. |
 
 Le suite hybrid ed emulatori sono state rieseguite fuori dalla sandbox dopo i primi tentativi falliti
 (avvio test hybrid; binding porte emulatori). Solo dati demo isolati, nessun arresto dei servizi utente.
@@ -1400,7 +1457,11 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-0. **Aggiornamento 11 novembre:** collaudo del rilascio del 10 novembre sui dati reali e sul Pixel 8 (elenco in
+0. **Aggiornamento 14 novembre — modalità Standard/Avanzata:** configurare un client OAuth web reale e provare Google
+   Drive (consenso, origini, popup su mobile e app installata, errori e quote reali); provare l'Avanzata con accesso e
+   dati reali dopo il cambio di architettura; Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per inattività,
+   `navigator.storage.persist`), due schede reali, archivi grandi. Pubblicare `73034ba` su Hosting solo con autorizzazione.
+   **Aggiornamento 11 novembre (ancora valido in parte):** collaudo del rilascio del 10 novembre sui dati reali e sul Pixel 8 (elenco in
    `IMPLEMENTATION_PLAN.md`), approvazione degli sprite #11, Escape in `AppDialog`, riallineamento README/architettura.
    Il punto 4 sotto è concluso (10 novembre).
 
@@ -1412,8 +1473,7 @@ screen reader, concorrenza tra due dispositivi.
    sospensione ricarica, dialoghi Fondi/Liste a 320 px e in landscape, CSV in foglio di calcolo reale.
 3. **Collaudo dispositivi:** telefono reale (touch, tastiera virtuale, safe area, rotazione), screen reader, Tab/Invio
    su Blocchi e Ciambella, riduzione movimento; riprodurre i problemi UI mobile elencati sopra.
-4. **Igiene Git separata:** aggiungere `.nummo-hybrid-*.json` a `.gitignore` e togliere dall'indice il file tracciato
-   (`git rm --cached`) senza cancellarlo se un runner lo usa. Non ripulire `.firebase/`, lock, staging o `emulator-data/`
+4. **Igiene Git:** `.nummo-hybrid-*.json` già ignorato e non tracciato (fatto). Non ripulire `.firebase/`, lock, staging o `emulator-data/`
    senza ispezione. Nessun commit automatico.
 5. **Avvio/guida:** misurare rete su `#guida`; procedura `docs/avvio-prestazioni.md` su dispositivo e rete lenta;
    popup dopo logout/scadenza, Safari/Firefox/Edge.

@@ -1,4 +1,4 @@
-# Architettura Nummo — Firebase personale
+# Architettura Nummo — modalità Standard (dispositivo) e Avanzata (Firebase personale)
 
 Decisione BYOF: 2 novembre 2026; revisione UI e contesto: 12 novembre 2026. La richiesta BYOF sostituisce la direzione Sheets di
 `recap.md` v0.4, conservata come specifica originale. Analisi della base e piano

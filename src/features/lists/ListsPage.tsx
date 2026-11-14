@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { ActivityIndicator, HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
-import { Button } from '../../components/Button';
+import { Button, compactIconPadding } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction } from '../../components/DeleteAction';
 import { PageHeader } from '../../components/PageHeader';
@@ -109,11 +109,12 @@ function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundI
 
   return (
     <View style={styles.root}>
-      <PageHeader title={t("Liste della spesa")} />
-      <View style={styles.start}>
-        <Button mode="contained" onPress={() => setEditing('new')} accessibilityLabel={t("Nuova lista")}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{compact ? t("Nuova") : t("Nuova lista")}</Button>
-      </View>
+      {/* The new-list action shares the title row (short label and balanced compact padding on phones); the title wraps
+          before the button shrinks, so nothing overflows at 320 px. */}
+      <PageHeader title={t("Liste della spesa")} style={styles.overviewHeader} action={
+        <Button mode="contained" compact={compact} style={styles.headerButton} contentStyle={compact ? compactIconPadding.roomy.content : undefined}
+          labelStyle={compact ? compactIconPadding.roomy.label : undefined} onPress={() => setEditing('new')} accessibilityLabel={t("Nuova lista")}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{compact ? t("Nuova") : t("Nuova lista")}</Button>} />
       {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
       {!remote.ready && !remote.error && <View style={styles.loading}><ActivityIndicator accessibilityLabel={t("Caricamento delle liste")} /></View>}
       {remote.ready && remote.lists.length === 0 && <View style={[styles.empty, { backgroundColor: colors.elevation.level1 }]}>
@@ -323,6 +324,9 @@ const styles = StyleSheet.create({
   avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   grow: { flex: 1, minWidth: 0 },
   start: { alignSelf: 'flex-start' },
+  // Title and lists are one block: `lg` between them instead of the page's section gap.
+  overviewHeader: { marginBottom: spacing.lg - layout.sectionGap },
+  headerButton: { flexShrink: 0 },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', width: '100%', borderRadius: radius.pill, transformOrigin: 'left center' } as ViewStyle,
   detailTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
