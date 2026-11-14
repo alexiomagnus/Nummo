@@ -5,14 +5,12 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** Base `main` a `7132480` («feat: reorganize recurring options…»), allineato al riferimento locale `origin/main`
-  (nessun fetch). Sopra, **modifiche locali non committate** della fase «Rimozione di Google Drive, protezione locale e
-  notifiche» (sotto): nessun commit, push o deploy. Nel working tree ci sono anche modifiche **di fasi distinte**, ciascuna
-  con la propria sezione datata sotto, da attribuire prima del commit: `src/features/funds/FundsPage.tsx` (Budget come
-  ultima azione), `src/components/AccountMenu.tsx` (hover a filo e larghezza minima 232), `src/features/history/SubscriptionList.tsx`
-  e la relativa chiave in `src/i18n/en.ts` (stato vuoto «Nessun abbonamento.»).
+- **Git.** `main` a `302b24e` («feat: remove Google Drive, add local storage protection and in-app notifications»),
+  pubblicato su `origin/main` con autorizzazione il 14 novembre: include la fase Drive/protezione/notifiche e le
+  modifiche separate a Fondi, menu account e stato vuoto degli abbonamenti, più lo spostamento delle fixture dei test in
+  `tests/fixtures/`. Working tree pulito dopo il commit (salvo questo aggiornamento di HANDOFF).
 - **Produzione.** Ultimo rilascio Hosting registrato: `e2eee92` (12 novembre); `73034ba`, `ed21a87`, `6956a56`,
-  `7132480` e le modifiche locali sono **non pubblicati**. `firestore.rules` è cambiato dopo l'ultima pubblicazione
+  `7132480` e `302b24e` sono **non pubblicati** su Hosting. `firestore.rules` è cambiato dopo l'ultima pubblicazione
   Rules registrata (icone rimosse in `d7e1504`, `key` aggiunta in `6956a56`): pubblicazione separata, con
   autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key`
   viene rifiutata dal cloud. Questa fase non tocca le Rules.
