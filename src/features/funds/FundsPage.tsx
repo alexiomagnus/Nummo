@@ -131,14 +131,14 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       <View style={[styles.actions, compact && styles.actionsCompact, tablet && styles.actionsTablet]}>
         <Button compact={tablet} mode="contained" disabled={!canWrite} onPress={() => setEditing('new')}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{t("Nuovo fondo")}</Button>
-        {showGeneralBudget && general.budget === null && <Button compact={tablet} mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
-          accessibilityLabel={t("Imposta un budget mensile")}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.chart} size={size} color={color} />}>{t("Budget")}</Button>}
         {anyBalance && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite || activeFunds.length === 0} onPress={() => setMoving({ kind: 'income' })}
           accessibilityLabel={t("Aggiungi denaro")}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.euro} size={size} color={color} />}>{t("Aggiungi")}</Button>}
         {anyBalance && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite || activeFunds.length < 2} onPress={() => setMoving({ kind: 'transfer' })}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.swap} size={size} color={color} />}>{t("Trasferisci")}</Button>}
+        {showGeneralBudget && general.budget === null && <Button compact={tablet} mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
+          accessibilityLabel={t("Imposta un budget mensile")}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.chart} size={size} color={color} />}>{t("Budget")}</Button>}
       </View>
       {!canWrite && <Text variant="bodySmall" style={muted}>{t("Le modifiche ai fondi richiedono la connessione e dati sincronizzati.")}</Text>}
 

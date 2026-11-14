@@ -69,7 +69,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
   if (allSeries.length === 0) {
     return <View style={styles.root}>
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
-      <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento. Per aggiungerne uno, crea una spesa che si ripete.")}</Text>
+      <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento.")}</Text>
     </View>;
   }
   return (

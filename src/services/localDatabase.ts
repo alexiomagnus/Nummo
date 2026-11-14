@@ -67,7 +67,9 @@ export function openLocalDatabase(name = localDatabaseName, factory: IDBFactory 
       db.onversionchange = () => db.close();
       const run = <T>(mode: IDBTransactionMode, failure: string, work: (tx: LocalTx) => Promise<T>) => new Promise<T>((done, fail) => {
         let tx: IDBTransaction;
-        try { tx = db.transaction(localStoreNames, mode); } catch { fail(new Error(readFailed)); return; }
+        // Writes ask for `strict` durability: the transaction completes only once the browser has flushed it to disk,
+        // so a save is never reported before it is really kept (browsers without the option ignore it).
+        try { tx = db.transaction(localStoreNames, mode, mode === 'readwrite' ? { durability: 'strict' } : undefined); } catch { fail(new Error(failure)); return; }
         let result: T;
         let reason: unknown;
         const api: LocalTx = {

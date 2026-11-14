@@ -18,9 +18,17 @@ export function download(name: string, content: string, type: string) {
   const a = document.createElement('a'); a.href = url; a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+// The full JSON backup, as a download. Returns the time of the copy: the browser only starts the download, so the
+// caller cannot know the file was kept (the backup reminder asks the user to confirm it).
+export async function downloadBackup(backend: DataStore): Promise<string> {
+  const at = new Date();
+  download('nummo-backup.json', makeBackup(await backend.exportSnapshot(), at), 'application/json');
+  return at.toISOString();
+}
 type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: ImportPlan };
 
-export function BackupActions({ backend, enabled }: { backend: DataStore; enabled: boolean }) {
+// `onBackupDownloaded`: told when a full backup download has started (Standard mode: the reminder asks for confirmation).
+export function BackupActions({ backend, enabled, onBackupDownloaded }: { backend: DataStore; enabled: boolean; onBackupDownloaded?: (at: string) => void }) {
   const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -40,8 +48,9 @@ export function BackupActions({ backend, enabled }: { backend: DataStore; enable
     notify("CSV delle transazioni esportato.");
   });
   const exportBackup = () => run(async () => {
-    download('nummo-backup.json', makeBackup(await backend.exportSnapshot()), 'application/json');
+    const at = await downloadBackup(backend);
     notify("Backup completo esportato.");
+    onBackupDownloaded?.(at);
   });
   const pick = () => {
     const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json';

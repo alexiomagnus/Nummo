@@ -325,3 +325,18 @@ test('più schede: una modifica avvisa le altre, che rileggono dal database cond
   await second.updateExpense(record, { ...data, amount_minor: 1 });
   await assert.rejects(first.removeExpense(record), /altra scheda/);
 });
+
+test('salvataggio locale: riuscito solo se la scrittura è confermata; un listener in errore non lo trasforma in fallimento', async () => {
+  const { db, store } = open();
+  // Scrittura rifiutata dal database (es. spazio esaurito): errore, nessun dato, nessun cambio registrato.
+  const failing: LocalDatabase = { ...db, write: () => Promise.reject(new Error('Salvataggio sul dispositivo non riuscito: lo spazio potrebbe essere esaurito. Nessuna modifica.')) };
+  const broken = createLocalStore(failing, null);
+  await assert.rejects(broken.createExpense(expense()), /Salvataggio sul dispositivo non riuscito/);
+  assert.equal((await store.exportSnapshot()).expenses.length, 0);
+  assert.equal(await store.lastChange(), null);
+  // Scrittura confermata: un listener che lancia non cambia l’esito né i dati salvati.
+  store.onChange(() => { throw new Error('listener'); });
+  await store.createExpense(expense());
+  assert.equal((await store.exportSnapshot()).expenses.length, 1);
+  assert.equal(typeof await store.lastChange(), 'string');
+});

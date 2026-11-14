@@ -13,9 +13,9 @@ Alla prima apertura Nummo chiede dove salvare i dati. La scelta resta in questo 
 | Per chi | Chi vuole usare subito l'app | Chi ha, o vuole creare, un proprio progetto Firebase |
 | Account | **Nessuno**: si entra senza accesso | Account Google del proprietario del progetto |
 | Dove sono i dati | Nel browser del dispositivo (IndexedDB) | In Cloud Firestore, nel tuo progetto |
-| Senza rete | Tutto funziona (tranne Google Drive) | Lettura dalla cache; modifiche e backup richiedono la rete |
+| Senza rete | Tutto funziona | Lettura dalla cache; modifiche e backup richiedono la rete |
 | Più dispositivi | **No**: ogni dispositivo ha il suo archivio | Sì, sincronizzazione di Firestore |
-| Copia di sicurezza | File JSON e, se configurato, Google Drive | File JSON (Firestore non è un backup) |
+| Copia di sicurezza | File JSON esportato a mano, con promemoria facoltativo | File JSON (Firestore non è un backup) |
 | Configurazione | Nessuna per l'utente | Progetto Firebase, regole e proprietario (sotto) |
 
 Le due modalità hanno **archivi separati**. Cambiare modalità non copia, non sposta e non cancella nulla: i dati
@@ -27,74 +27,40 @@ condiviso, in nessuna delle due modalità.
 
 1. Apri l'app e scegli **Standard → Inizia subito**. Non servono registrazione, accesso o Firebase.
 2. Al primo avvio vengono create cinque categorie predefinite; da lì registri spese, abbonamenti, fondi e liste.
-3. Proteggi i dati: **Impostazioni → Archiviazione e backup** (Google Drive, se disponibile) oppure
-   **menu → Importa ed esporta → Scarica backup (JSON)**.
+3. Proteggi i dati: **menu → Importa ed esporta → Scarica backup (JSON)** e conserva il file fuori dal browser.
+   Il **promemoria backup** (menu → Notifiche) te lo ricorda quando i dati sono cambiati.
 
 **I dati esistono solo su quel dispositivo e in quel browser.** Si perdono se cancelli i dati del sito o la cronologia
 con «cookie e dati dei siti», se disinstalli l'app installata o reimposti il dispositivo, se usi la navigazione privata
 (l'archivio sparisce alla chiusura, o non è disponibile affatto) e, su alcuni browser, se lo spazio si esaurisce o il
 sito non viene aperto per molto tempo (Safari elimina i dati dei siti non usati da alcune settimane, salvo app
 aggiunta alla schermata Home). Un altro browser o un altro profilo sullo stesso dispositivo è un archivio diverso.
-Nummo chiede al browser di rendere l'archivio persistente, ma è una richiesta, non una garanzia.
+Nummo chiede al browser di rendere l'archivio persistente (una volta che contiene dati, al massimo ogni 30 giorni;
+alcuni browser, come Firefox, mostrano una richiesta). **Impostazioni → Archiviazione e backup** mostra l'esito:
+«Archivio locale protetto», «Protezione aggiuntiva non attiva» o «Protezione non disponibile». È una richiesta, non una
+garanzia, e non sostituisce un backup.
 
-**Recupero**: su un dispositivo nuovo o svuotato scegli Standard, poi **Ripristina da Drive** oppure
-**Importa ed esporta → Importa backup (JSON)**. Senza un backup i dati persi non sono recuperabili: nessuno ne ha una copia.
+**Recupero**: su un dispositivo nuovo o svuotato scegli Standard, poi **Importa ed esporta → Importa backup (JSON)**. Senza un backup i dati persi non sono recuperabili: nessuno ne ha una copia.
 
-### Google Drive: backup, non sincronizzazione
+### Notifiche
 
-In modalità Standard si può collegare Google Drive da **Impostazioni → Archiviazione e backup**.
+Dal menu account, **Notifiche** (sotto Impostazioni). Sono **avvisi dentro l'app**, controllati all'apertura e quando si
+torna all'app: non sono notifiche di sistema, non chiedono permessi e non arrivano ad app chiusa. Preferenze e stato
+restano nel browser (`nummo.notifications.v1`, più lo stato per archivio `nummo.notifications.v1.<local|UID>`).
 
-- Nummo usa solo la cartella nascosta riservata all'app (`appDataFolder`, permesso `drive.appdata`): non vede né
-  modifica i tuoi file. I backup non compaiono in Drive; si gestiscono da Drive → Impostazioni → Gestisci app.
-- **Esegui backup** carica una copia completa (lo stesso JSON versionato dell'esportazione manuale). Ogni backup è un
-  file nuovo; restano i cinque più recenti.
-- **Ripristina da Drive** elenca i backup, scarica e convalida per intero quello scelto, ne mostra data e contenuto,
-  avvisa che i dati del dispositivo verranno sostituiti e chiede conferma. Prima scarica una copia dei dati attuali; la
-  sostituzione avviene in un'unica transazione locale: o tutta o niente. Backup di una versione più recente dell'app
-  o non validi vengono rifiutati senza toccare nulla.
-- **Backup automatico** (ogni giorno, settimana o mese): parte mentre l'app è aperta, se i dati sono cambiati
-  dall'ultimo backup. Un archivio vuoto non viene mai caricato da solo.
+- **Attiva notifiche**: interruttore generale. Spento, disattiva tutto ma conserva le scelte dei singoli avvisi.
+- **Promemoria backup** (solo Standard; predefinito attivo, ogni settimana; anche ogni 14 giorni o ogni mese): compare se
+  è trascorso l'intervallo dall'ultimo backup confermato **e** i dati sono cambiati da allora. «Esporta backup» avvia
+  l'esportazione JSON; poiché il browser non dice se il file è stato davvero salvato, Nummo chiede «Hai salvato il
+  backup?» e aggiorna la data solo dopo la conferma (anche per l'esportazione da Importa ed esporta). «Ricordamelo dopo»
+  rinvia di 3 giorni. In Avanzata non c'è: i dati sono in Firestore e il backup JSON resta una scelta manuale.
+- **Riepilogo spese** (entrambe le modalità; predefinito attivo, ogni settimana): alla fine di ogni periodo (settimana
+  lunedì–domenica, blocchi di 14 giorni, mese di calendario) mostra totale, numero di spese, categoria principale e
+  intervallo. Considera solo spese singole già effettuate: **abbonamenti e loro pagamenti esclusi**. Nessun avviso se
+  nel periodo non ci sono spese; dopo una lunga assenza solo l'ultimo periodo concluso.
 
-Limiti da conoscere:
-
-- **Non è una sincronizzazione.** I dispositivi non si aggiornano tra loro, non c'è unione né risoluzione dei
-  conflitti: il ripristino sostituisce l'archivio del dispositivo con quello del backup. Usare due dispositivi sullo
-  stesso Drive significa scegliere ogni volta quale copia tenere.
-- **L'autorizzazione dura circa un'ora** e resta solo in memoria: non viene salvata nel browser. Un'app senza server
-  non può rinnovarla da sola, quindi dopo una ricarica o a scadenza il backup automatico dovuto **resta in attesa** e
-  l'app lo segnala: basta un tocco su «Esegui backup» (la finestra di Google di solito si chiude da sola). Il backup
-  automatico non gira ad app chiusa.
-- Serve la rete; senza, l'app lo dice e i dati sul dispositivo non cambiano.
-- **Scollega** revoca il permesso e spegne il backup automatico; i backup già caricati restano su Drive.
-
-#### Configurare Google OAuth e Drive (una volta, chi pubblica l'app)
-
-Gli utenti non configurano nulla. Chi costruisce e pubblica Nummo deve creare un client OAuth, altrimenti la sezione
-mostra Google Drive come «Non disponibile» (resta il backup su file). **Questi passaggi vanno fatti a mano nella
-[Google Cloud Console](https://console.cloud.google.com): non sono stati eseguiti né verificati dal repository.**
-
-1. Scegli il progetto Google Cloud (va bene quello del progetto Firebase, se ne hai uno; altrimenti creane uno).
-2. **API e servizi → Libreria** → abilita **Google Drive API**.
-3. **API e servizi → Schermata consenso OAuth** (Google Auth Platform): tipo **Esterno**, nome dell'app, email di
-   assistenza e di contatto. In **Accesso ai dati / Ambiti** aggiungi solo `https://www.googleapis.com/auth/drive.appdata`
-   (ambito non sensibile: non richiede la verifica riservata agli ambiti sensibili o con restrizioni).
-4. In stato **Test** possono autorizzare solo gli account elencati tra gli utenti di test, con consenso da rinnovare
-   periodicamente. Per aprirla a tutti: **Pubblica app** (passaggio in produzione); Google può chiedere una verifica
-   del marchio (nome, logo, domini, informativa sulla privacy).
-5. **Credenziali → Crea credenziali → ID client OAuth → Applicazione web**. In **Origini JavaScript autorizzate**
-   inserisci ogni origine da cui l'app viene servita, senza percorso: ad esempio `https://ID_PROGETTO.web.app`,
-   `https://ID_PROGETTO.firebaseapp.com`, il dominio personalizzato e, per lo sviluppo, `http://localhost:8081`.
-   Gli URI di reindirizzamento non servono.
-6. Copia l'**ID client** (`….apps.googleusercontent.com`) in `.env.production.local` (e in `.env.local` per lo sviluppo):
-
-   ```sh
-   EXPO_PUBLIC_GOOGLE_CLIENT_ID=000000000000-xxxxxxxx.apps.googleusercontent.com
-   ```
-
-   È un identificativo pubblico. Il **segreto client non serve e non va mai inserito** nei file o nel repository:
-   `build:cloud` rifiuta valori che non siano un ID client web.
-7. Ricostruisci e pubblica (`npm run deploy:hosting`), poi prova da un account autorizzato: Collega, Esegui backup,
-   Ripristina.
+Al primo avvio, quando si riattiva un avviso o si cambia la frequenza del riepilogo, si parte da quel momento: nessun
+avviso immediato per il tempo già trascorso. Ogni avviso chiuso o rinviato non ricompare, neppure in altre schede.
 
 Nota: in questa versione `build:cloud` richiede comunque le quattro variabili Firebase, quindi il sito pubblicato
 offre entrambe le modalità; chi sceglie Standard non contatta mai Firebase.
@@ -119,7 +85,8 @@ Le sezioni [Installazione](#installazione) e [Pubblicazione](#pubblicazione) son
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.
-- **Due modalità di archiviazione**: Standard (sul dispositivo, senza account, backup su Google Drive o file) e Avanzata (Firestore, con sincronizzazione dell'SDK). Solo web; vedi i [limiti](#installazione-come-pwa).
+- **Notifiche in-app** configurabili: promemoria per il backup JSON (Standard) e riepilogo periodico delle spese.
+- **Due modalità di archiviazione**: Standard (sul dispositivo, senza account, backup JSON manuale) e Avanzata (Firestore, con sincronizzazione dell'SDK). Solo web; vedi i [limiti](#installazione-come-pwa).
 
 Stato: progetto personale con rilasci Hosting documentati in [HANDOFF.md](HANDOFF.md).
 Le verifiche automatiche e in Chromium emulato sono distinte dai collaudi su dispositivi reali, ancora da completare. Non è presente una licenza:
@@ -131,7 +98,7 @@ senza di essa il codice non è formalmente riutilizzabile.
 | --- | --- |
 | Node.js | `^22.18`, `^24.3` o `^26` (meglio una LTS) e npm |
 | Java | solo per gli emulatori locali (verificato con Java 21) |
-| Account Google | solo per la modalità Avanzata (progetto Firebase e accesso) e per i backup su Google Drive |
+| Account Google | solo per la modalità Avanzata (progetto Firebase e accesso) |
 | Progetto Firebase | Authentication, Cloud Firestore e, per pubblicare, Hosting. Non servono Cloud Functions, service account né Blaze |
 
 Hosting e Firestore hanno quote gratuite: controllale nella Console e nella
@@ -140,7 +107,6 @@ Hosting e Firestore hanno quote gratuite: controllale nella Console e nella
 ## Installazione
 
 Guida BYOF per la modalità Avanzata e per pubblicare il sito. Tutti i passaggi sono obbligatori, salvo dove indicato.
-Per il solo backup su Drive vedi [Configurare Google OAuth e Drive](#configurare-google-oauth-e-drive-una-volta-chi-pubblica-lapp).
 
 ### 1. Prova locale senza Firebase (facoltativa)
 
@@ -260,7 +226,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 
 ## Sicurezza e responsabilità
 
-- **Standard**: i dati non lasciano il dispositivo, salvo i backup che carichi tu su Google Drive. Chiunque usi quel browser li vede: non c'è accesso. L'autorizzazione a Drive non viene salvata nel browser.
+- **Standard**: i dati non lasciano il dispositivo, salvo i file di backup che esporti tu. Chiunque usi quel browser li vede: non c'è accesso.
 - **Avanzata**: l'accesso è riservato all'UID in `config/owner`, creato solo dalla Console: l'app non può nominare il proprietario.
 - Le regole in `firestore.rules` sono la vera protezione dei dati (la `apiKey` è pubblica). Pubblicale prima dell'uso e non usare la modalità test.
 - `.env.local`, `.env.production.local`, `.firebaserc` ed `emulator-data/` sono ignorati da Git: non versionarli e non pubblicarli. Non inserire chiavi di servizio nel frontend.
@@ -279,9 +245,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 | «Configurazione mancante» o `build:cloud` si ferma | Mancano le quattro `EXPO_PUBLIC_FIREBASE_*`, o hai valori in conflitto tra file e shell, o un file `.env*` contiene `EXPO_PUBLIC_NUMMO_BACKEND`/`*_EMULATOR` |
 | Le modifiche a `.env.local` non hanno effetto | Riavvia Expo, se serve con `npx expo start --web --clear` (le variabili sono incorporate nel bundle); per la produzione ricostruisci |
 | Porta degli emulatori occupata (9099, 8180, 4000) | Usa porte dedicate senza arrestare servizi preesistenti; vedi [AGENTS.md](AGENTS.md) (config temporanea e `FIRESTORE_PORT`/`AUTH_PORT`) |
-| Google Drive «Non disponibile» | La build non ha `EXPO_PUBLIC_GOOGLE_CLIENT_ID`: vedi la configurazione OAuth |
-| Errore di Google alla finestra di consenso (`origin_mismatch`, accesso bloccato) | L'origine del sito manca tra le Origini JavaScript autorizzate, oppure l'app è in Test e l'account non è tra gli utenti di test |
-| «Google Drive non è abilitato per questa installazione» | Abilita Google Drive API nel progetto Google Cloud del client OAuth |
+| `build:cloud`: «EXPO_PUBLIC_GOOGLE_CLIENT_ID non è ammessa» | Il backup su Google Drive è stato rimosso: togli la variabile da `.env.production.local` o dalla shell |
 | «Dati non disponibili su questo dispositivo» | IndexedDB è bloccato (navigazione privata, dati dei siti disattivati): cambia impostazione o browser |
 | La CLI Firebase non trova il progetto | Il repository non ha un progetto predefinito: aggiungi sempre `--project ID_PROGETTO` |
 

@@ -8,12 +8,12 @@ import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
-type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenCategories: () => void; onOpenBackup: () => void };
+type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenBackup: () => void };
 
-// Account avatar → menu with the signed-in e-mail, settings, categories, import/export and the sign-out action.
+// Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
 // `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
-export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenCategories, onOpenBackup }: Props) {
+export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenBackup }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -57,6 +57,9 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
       <Menu.Item title={t("Impostazioni")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.settings} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenSettings(); }} />
+      <Menu.Item title={t("Notifiche")} style={styles.item}
+        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.bell} size={size} color={color} />}
+        onPress={() => { setOpen(false); onOpenNotifications(); }} />
       <Menu.Item title={t("Categorie")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.tag} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenCategories(); }} />
@@ -72,10 +75,10 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
 }
 
 const styles = StyleSheet.create({
-  menu: { borderRadius: radius.control, overflow: 'hidden' },
+  menu: { minWidth: 232, borderRadius: radius.control, paddingVertical: 0, overflow: 'hidden' },
   // Size items against the account menu rather than Paper's independent width cap.
-  // Fill its actual width; inset rounded rows keep hover/ripple/focus inside the surface.
-  item: { maxWidth: '100%', marginHorizontal: spacing.xs, borderRadius: radius.tile, overflow: 'hidden' },
+  // Edge-to-edge rows: the menu clips hover/ripple to its outer corners, including the final row.
+  item: { maxWidth: '100%', borderRadius: 0, overflow: 'hidden' },
   trigger: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   avatar: { width: 36, height: 36, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   info: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 2, maxWidth: 280 },

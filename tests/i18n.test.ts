@@ -144,3 +144,16 @@ test('nuova spesa: etichette della sezione ricorrente tradotte, vecchia etichett
   }
   assert.ok(!Object.hasOwn(english, 'Dopo quanti rinnovi'));
 });
+
+test('notifiche e protezione: testi della pagina, degli avvisi e dello stato tradotti in entrambe le lingue', () => {
+  for (const [it, en] of [['Notifiche', 'Notifications'], ['Attiva notifiche', 'Turn on notifications'], ['Promemoria backup', 'Backup reminder'],
+    ['Riepilogo spese', 'Spending summary'], ['Ricordamelo dopo', 'Remind me later'], ['Ogni settimana (consigliato)', 'Every week (recommended)'],
+    ['Ogni 14 giorni', 'Every 14 days'], ['Archivio locale protetto', 'Local archive protected'], ['Protezione aggiuntiva non attiva', 'Extra protection not active'],
+    ['Protezione non disponibile', 'Protection not available']] as const) {
+    assert.equal(translate('it', it), it);
+    assert.equal(translate('en', it), en);
+  }
+  assert.equal(translate('en', '{p0} in {p1} spese', { p0: '€12.50', p1: 3 }), '€12.50 in 3 expenses');
+  // Il backup su Google Drive è stato rimosso: nessun testo residuo nel catalogo.
+  assert.equal(Object.keys(english).some((key) => key.includes('Google Drive')), false);
+});

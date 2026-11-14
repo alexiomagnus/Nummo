@@ -127,14 +127,14 @@ test('prova: codec prezzi Firestore schema 2 rigoroso, backup ancora leggibile c
 });
 
 test('prova: fixture v5 documentata, una sola spesa reale al 9 novembre', () => {
-  const file = parseBackup(JSON.parse(readFileSync(new URL('../docs/testing/nummo-prove-gratuite-2026-11-09.json', import.meta.url), 'utf8')));
+  const file = parseBackup(JSON.parse(readFileSync(new URL('./fixtures/nummo-prove-gratuite-2026-11-09.json', import.meta.url), 'utf8')));
   assert.equal(file.expenses.length, 3);
   const paid = expandOccurrences(file.expenses, today);
   assert.equal(paid.length, 1);
   assert.equal(paid[0]?.amount_minor, 1599);
   assert.equal(file.expenses.filter(e => subscriptionSummary(e, today).inTrial).length, 1);
-  for (const name of ['nummo-spese-standard-2026-11-08.json', 'nummo-test-casi-limite-2026-11-08.json']) {
-    const sample = JSON.parse(readFileSync(new URL('../docs/testing/' + name, import.meta.url), 'utf8'));
+  for (const path of ['./fixtures/nummo-spese-standard-2026-11-08.json', '../docs/testing/nummo-test-casi-limite-2026-11-08.json']) {
+    const sample = JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
     assert.equal(sample.version, 5);
     assert.ok(parseBackup(sample).expenses.length > 0);
   }

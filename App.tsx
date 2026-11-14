@@ -18,7 +18,7 @@ import { readSessionHint, writeSessionHint } from './src/services/sessionHint';
 import { DataWorkspace, RemoteWorkspace, StartupWorkspace } from './src/features/workspace/Workspace';
 import { ModeChoice } from './src/features/storage/ModeChoice';
 import { AdvancedStorage, StandardStorage } from './src/features/storage/StorageSection';
-import { useDriveBackup } from './src/features/storage/useDriveBackup';
+import { useStorageProtection } from './src/features/storage/useStorageProtection';
 import { openLocalDatabase } from './src/services/localDatabase';
 import { createLocalStore, type LocalStore } from './src/services/localStore';
 import { initialStorageMode, readStorageMode, writeStorageMode, type StorageMode } from './src/services/storageMode';
@@ -124,9 +124,6 @@ function StandardRoot(props: ModeProps) {
       store = createLocalStore(db);
       if (cancelled) { store.close(); return; }
       setOpened({ store });
-      // Asks the browser not to evict this site's data when space runs low (granted or refused without a prompt on
-      // most browsers). It lowers the risk; it is not a backup.
-      void navigator.storage?.persist?.().catch(() => false);
     }, (reason: unknown) => { if (!cancelled) setOpened({ error: reason instanceof Error ? reason.message : 'Archivio locale non disponibile in questo browser. Controlla che la navigazione privata o il blocco dei dati dei siti non siano attivi.' }); });
     return () => { cancelled = true; store?.close(); };
   }, []);
@@ -147,28 +144,25 @@ function StandardRoot(props: ModeProps) {
 
 function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, preferences, onChangePreferences }: ModeProps & { store: LocalStore }) {
   const { t } = useI18n();
-  const drive = useDriveBackup(store);
+  // Asks the browser to keep the device archive (automatic, no setting); the state is shown in Settings.
+  const protection = useStorageProtection(store);
   const [settingsRequest, setSettingsRequest] = useState(0);
+  const [notificationsRequest, setNotificationsRequest] = useState(0);
   const [categoriesRequest, setCategoriesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
   const menu = <AccountMenu email={null} photoURL={null} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
-    onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
+    onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
   return (
     <>
       <View style={styles.fill}>
         <DataWorkspace backend={store} scope="local" storageNote={t('Spese e categorie salvate su questo dispositivo.')}
           onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} backupRequest={backupRequest} settingsRequest={settingsRequest}
-          renderSettings={(onDone) => renderSettings(onDone, <StandardStorage drive={drive} onOpenFiles={openBackup} onChangeMode={onChangeMode} style={styles.wide} />)}
+          notificationsRequest={notificationsRequest} localArchive={store}
+          renderSettings={(onDone) => renderSettings(onDone, <StandardStorage protection={protection} onOpenFiles={openBackup} onChangeMode={onChangeMode} style={styles.wide} />)}
           dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
-          topActions={<>{themeToggle}{menu}</>}
-          notice={drive.autoWaiting ? (
-            <Card>
-              <Text variant="bodyMedium" accessibilityRole="alert">{t("Backup automatico in attesa: autorizza di nuovo Google Drive per salvarlo.")}</Text>
-              <View style={styles.start}><Button mode="contained-tonal" disabled={drive.busy !== null} loading={drive.busy === 'backup'} onPress={() => void drive.backupNow()}>{t("Esegui backup")}</Button></View>
-            </Card>
-          ) : undefined} />
+          topActions={<>{themeToggle}{menu}</>} />
       </View>
       {!released ? (
         <View style={[StyleSheet.absoluteFill, styles.startup]} aria-hidden>
@@ -185,8 +179,9 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const theme = useTheme();
   // Signed out, Settings replaces the sign-in screen until «Fatto».
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Account menu pages (Settings, Categories, import/export): each request (a counter) opens its page in the workspace.
+  // Account menu pages (Settings, Notifications, Categories, import/export): each request (a counter) opens its page in the workspace.
   const [settingsRequest, setSettingsRequest] = useState(0);
+  const [notificationsRequest, setNotificationsRequest] = useState(0);
   const [categoriesRequest, setCategoriesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const session = useSession(!configMissing);
@@ -201,7 +196,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
     project={configMissing ? '' : firebaseWebConfig.projectId} email={email} cache={persistentCache ? 'Salvata sul dispositivo' : 'Solo in memoria'} />;
   const account = session.status === 'signed-in'
     ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
-      onOpenCategories={() => setCategoriesRequest((n) => n + 1)}
+      onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)}
       onOpenBackup={openBackup} /> : null;
 
   // Startup: while Auth restores the session and the first data load, the workspace shell shows loading status.
@@ -228,7 +223,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
             onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} backupRequest={backupRequest}
-            settingsRequest={settingsRequest} renderSettings={(onDone) => renderSettings(onDone, storage(session.user.email, openBackup))}
+            settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={(onDone) => renderSettings(onDone, storage(session.user.email, openBackup))}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
             topActions={<>{themeToggle}{account}</>} />
         </View>

@@ -101,7 +101,8 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     });
     await refresh(stores);
     try { channel?.postMessage(stores); } catch { /* other tabs refresh when they next write or reload */ }
-    for (const listener of changeListeners) listener();
+    // The write is already final: a failing listener must not turn it into a reported failure.
+    for (const listener of changeListeners) { try { listener(); } catch { /* listener's own problem */ } }
     return result;
   }
   // Checklist edits answer at once and are saved in order in the background, like the SDK's queued writes.

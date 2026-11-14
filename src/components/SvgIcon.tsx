@@ -48,5 +48,11 @@ export const iconShapes = {
   star: '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
   // Shopping lists (navigation, «Lista spesa» mark on expenses).
   checklist: '<path d="m3.5 6.5 1.5 1.5 3-3M3.5 15.5 5 17l3-3M11 7h9.5M11 16h9.5"/>',
+  // Notifications (account menu, in-app notices).
+  bell: '<path d="M18 16v-5a6 6 0 0 0-12 0v5l-1.5 2h15L18 16Z"/><path d="M10 18a2 2 0 0 0 4 0"/>',
+  // Protection of the device archive (Settings → Archiviazione e backup).
+  shield: '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6l-7-3Z"/>',
+  shieldCheck: '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6l-7-3Z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+  shieldOff: '<path d="M8 4.7 12 3l7 3v5.5c0 1.8-.5 3.5-1.5 5M16 19a12 12 0 0 1-4 2c-4.1-1.6-7-5.3-7-9.5V7M3 3l18 18"/>',
   copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
 } as const;

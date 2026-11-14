@@ -34,7 +34,11 @@ import { UpcomingRenewals } from '../history/UpcomingRenewals';
 import { SubscriptionList } from '../history/SubscriptionList';
 import { makeBackup } from '../../domain/backup';
 import { backendMode, firestoreEmulator } from '../../services/backendConfig';
-import { BackupActions, download } from '../backup/BackupActions';
+import { BackupActions, download, downloadBackup } from '../backup/BackupActions';
+import { message } from '../expenses/useRemoteExpenses';
+import { NotificationCards } from '../notifications/NotificationCards';
+import { NotificationsPage } from '../notifications/NotificationsPage';
+import { useNotifications, type LocalArchive } from '../notifications/useNotifications';
 import { getDatabase } from '../../services/firebase';
 import { createFirestoreStore } from '../../services/firestoreStore';
 import type { DataStore } from '../../services/dataStore';
@@ -48,7 +52,7 @@ import { ListsPage } from '../lists/ListsPage';
 import { useRemoteLists, type RemoteLists } from '../lists/useRemoteLists';
 
 const forecastDays = 30;
-type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categories' | 'backup' | 'settings';
+type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categories' | 'backup' | 'settings' | 'notifications';
 // «Nuova spesa» is the primary action (FAB), not a destination: one primary navigation only.
 // Categories and import/export open from the account menu, outside the main destinations.
 const destinations: readonly Destination<Section>[] = [
@@ -61,10 +65,10 @@ const destinations: readonly Destination<Section>[] = [
 type ListView = 'expenses' | 'subscriptions';
 // Short labels keep the segmented button on one line at every width; the accessible name of the second is the full one.
 const listViews = [{ value: 'expenses', label: 'Spese', full: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Importa ed esporta', settings: 'Impostazioni' };
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Importa ed esporta', settings: 'Impostazioni', notifications: 'Notifiche' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
-const accountPages: ReadonlySet<Section> = new Set(['categories', 'backup', 'settings']);
+const accountPages: ReadonlySet<Section> = new Set(['categories', 'backup', 'settings', 'notifications']);
 
 const startGateMs = 4000;
 
@@ -75,10 +79,10 @@ type DashboardSettingsProps = {
 };
 
 // `renderSettings` draws the settings page (preferences live in App); `onDone` returns to the originating section.
-type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; renderSettings?: (onDone: () => void) => ReactNode };
+type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void) => ReactNode };
 
-// `notice`: a short message of the app above the pages (e.g. an automatic backup waiting for authorisation).
-type WorkspaceProps = { storageNote: string; topActions?: ReactNode; onReleased?: () => void; notice?: ReactNode } & AccountPageProps & DashboardSettingsProps;
+// `localArchive`: the device archive's change clock, given only in the Standard mode (backup reminder).
+type WorkspaceProps = { storageNote: string; topActions?: ReactNode; onReleased?: () => void; localArchive?: LocalArchive } & AccountPageProps & DashboardSettingsProps;
 
 // «Avanzata»: the archive of the signed-in owner in their Firebase project.
 export function RemoteWorkspace({ uid, ...props }: { uid: string } & WorkspaceProps) {
@@ -88,7 +92,7 @@ export function RemoteWorkspace({ uid, ...props }: { uid: string } & WorkspacePr
 
 // The workspace on any store (Firestore or this device). `scope` names the archive for the few browser-side
 // identifiers kept per archive (default fund, one-time default categories): the UID, or `local`.
-export function DataWorkspace({ backend, scope: uid, storageNote, topActions, onReleased, notice, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, renderSettings }: { backend: DataStore; scope: string } & WorkspaceProps) {
+export function DataWorkspace({ backend, scope: uid, storageNote, topActions, onReleased, localArchive, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, renderSettings }: { backend: DataStore; scope: string } & WorkspaceProps) {
   const local = backend.kind === 'local';
   const store = useRemoteExpenses(backend, storageNote);
   const categoryState = useRemoteCategories(backend);
@@ -130,15 +134,15 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   // Tells the app that the real screen is ready to replace the startup placeholder (App.tsx).
   useEffect(() => { if (released) onReleased?.(); }, [released]);
   return <WorkspaceNavigation dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences}
-    uid={uid} backend={backend} store={store} notice={notice} categoryState={categoryState} starting={!released}
+    uid={uid} backend={backend} store={store} localArchive={localArchive} categoryState={categoryState} starting={!released}
     listState={listState} occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon}
     online={online} synchronized={synchronized} error={error} fundState={fundState} today={today}
-    renderSettings={renderSettings} settingsRequest={settingsRequest} categoriesRequest={categoriesRequest}
+    renderSettings={renderSettings} settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} categoriesRequest={categoriesRequest}
     backupRequest={backupRequest} topActions={topActions} status={status} />;
 }
 
 // Navigation is presentation state: switching pages does not rerun the remote hooks or recreate their store objects.
-function WorkspaceNavigation({ categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, topActions, status, ...props }:
+function WorkspaceNavigation({ categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, topActions, status, ...props }:
   Omit<SectionsProps, 'section' | 'onNavigate' | 'returnTo'> & AccountPageProps & {
     topActions?: ReactNode; status: ReturnType<typeof describeSync>;
   }) {
@@ -163,6 +167,12 @@ function WorkspaceNavigation({ categoriesRequest = 0, backupRequest = 0, setting
     lastSettingsRequest.current = settingsRequest;
     navigate('settings');
   }, [settingsRequest]);
+  const lastNotificationsRequest = useRef(notificationsRequest);
+  useEffect(() => {
+    if (notificationsRequest === lastNotificationsRequest.current) return;
+    lastNotificationsRequest.current = notificationsRequest;
+    navigate('notifications');
+  }, [notificationsRequest]);
   return <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
     fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
     actions={<><SyncChip status={status} />{topActions}</>}>
@@ -200,10 +210,10 @@ type SectionsProps = DashboardSettingsProps & {
   subscriptions: ReturnType<typeof subscriptionSummaries>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
-  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void) => ReactNode; notice?: ReactNode;
+  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void) => ReactNode; localArchive?: LocalArchive;
 };
 
-function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings, notice }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings, localArchive }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -266,11 +276,24 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       description={[(linked ? t("La lista collegata tornerà tra quelle attive. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
       onDelete={() => store.remove!(record)} />;
   }, [expensesById, listState.lists, store.remove, store.error, t]);
+  // In-app notifications (backup reminder in the Standard mode, spending summary in both).
+  const notifications = useNotifications({ scope: uid, expenses: store.expenses, categories: categoryState.categories,
+    ready: !starting && store.ready && categoryState.ready, archive: localArchive });
+  const [exporting, setExporting] = useState(false);
+  const exportFromReminder = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const at = await downloadBackup(backend);
+      notify("Backup completo esportato.");
+      notifications.backupDownloaded(at);
+    } catch (reason) { notify(message(reason)); } finally { setExporting(false); }
+  };
   const listNote = editing?.list_id ? (listState.lists.some((l) => l.id === editing.list_id && l.expense_id === editing.id) ? 'linked' : 'unlinked') : undefined;
   return <>
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
     {section !== 'lists' && section !== 'settings' && <PageHeader title={heading}
-      action={section === 'categories' || section === 'backup' ? (
+      action={section === 'categories' || section === 'backup' || section === 'notifications' ? (
         <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}
           onPress={() => onNavigate(returnTo)}>{t("Fatto")}</Button>
       ) : undefined} />}
@@ -282,7 +305,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         </View>
       </Card>
     )}
-    {!starting && section !== 'settings' && notice}
+    {!starting && section !== 'settings' && section !== 'notifications' &&
+      <NotificationCards notifications={notifications} exporting={exporting} onExport={() => void exportFromReminder()} />}
     {backend.kind === 'firestore' && backendMode === 'hybrid' && firestoreEmulator && (
       <HybridConnectionNotice waiting={!synchronized && !error} endpoint={firestoreEmulator} />
     )}
@@ -311,7 +335,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </VisitedSection>
     {/* Preserve import previews and in-flight actions when leaving this page; no reads until an explicit action. */}
     <View style={section === 'backup' && !starting ? undefined : styles.hidden}>
-      <BackupActions backend={backend} enabled={synchronized} />
+      <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
     </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} />}
     <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} expenses={store.expenses}
@@ -321,6 +345,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}
       preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} /></VisitedSection>
     {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo))}
+    {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} />}
     {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}

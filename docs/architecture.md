@@ -5,11 +5,41 @@ Decisione BYOF: 2 novembre 2026; revisione UI e contesto: 12 novembre 2026. La r
 incrementale: [migrazione-byof.md](migrazione-byof.md).
 
 Le sezioni datate conservano anche decisioni successivamente sostituite. Comportamento corrente:
-quattro destinazioni Spese, Analisi, Fondi e Liste; Impostazioni, Categorie e Importa ed esporta dal menu account.
+quattro destinazioni Spese, Analisi, Fondi e Liste; Impostazioni, Notifiche, Categorie e Importa ed esporta dal menu account.
 Impostazioni è una pagina (anche prima del login), con due colonne solo da 872 px effettivi di contenuto.
 Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella senza totale centrale e Blocchi;
 l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
 convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
+
+## Rimozione di Google Drive, protezione locale e notifiche in-app — 14 novembre 2026
+
+Su richiesta, sostituisce il punto «Google Drive» della decisione del 12 novembre (sotto, conservato come storia).
+
+- **Niente Drive.** Rimossi servizi (`googleAuth.ts`, `googleDrive.ts`), regole (`domain/driveBackup.ts`), hook, UI,
+  test e la variabile `EXPO_PUBLIC_GOOGLE_CLIENT_ID` (ora rifiutata da `build:cloud` come ogni variabile sconosciuta).
+  La Standard ha solo backup JSON manuale; nessun altro servizio cloud lo sostituisce. Login Google, Firebase Auth e
+  BYOF invariati; formato del backup (v6), importazione, esportazione e ripristino invariati. La chiave
+  `nummo.driveBackup.v1` eventualmente rimasta nei browser non viene più letta né cancellata.
+- **Protezione dell'archivio locale** (`services/storageProtection.ts`, `features/storage/useStorageProtection.ts`):
+  `navigator.storage.persist()` chiesto in automatico solo in Standard, quando l'archivio contiene dati (all'avvio o
+  dopo la prima modifica), al massimo ogni 30 giorni (`nummo.storageProtection.v1` registra solo l'ora del tentativo,
+  prima di chiedere). Stato da `persisted()`, riletto al ritorno in primo piano; API assente o in errore = «non
+  disponibile». Nessun interruttore; l'app funziona uguale con ogni esito. Le scritture IndexedDB chiedono durabilità
+  `strict`: la transazione si conclude solo a dati scritti, e solo allora il salvataggio è confermato; un listener che
+  fallisce dopo il commit non trasforma più un salvataggio riuscito in errore.
+- **Notifiche in-app.** Regole pure in `domain/notifications.ts` (`dueNotifications` restituisce gli avvisi dovuti:
+  un futuro canale push potrà riusarle cambiando solo la presentazione); preferenze per browser
+  `nummo.notifications.v1`, stato per archivio `nummo.notifications.v1.<scope>` (le due modalità non si mescolano),
+  sincronizzati tra schede con l'evento `storage`. Pagina `NotificationsPage` dal menu account (sotto Impostazioni),
+  avvisi `NotificationCards` sopra le pagine, nel flusso, mai modali. Controllo all'avvio, al ritorno in primo piano e
+  ogni 15 minuti ad app aperta. Promemoria backup solo in Standard (serve l'orologio `lastChange` dell'archivio locale,
+  passato come `localArchive`; `DataStore` invariato): intervallo dall'ultimo backup **confermato** o dall'attivazione,
+  dati cambiati dopo il backup, rinvio di 3 giorni; il download avviato non conta finché l'utente non conferma.
+  Riepilogo in entrambe le modalità su periodi allineati (settimana lun–dom, blocchi di 14 giorni dal 1° gennaio 2024,
+  mese di calendario), sole spese singole fino a oggi via `expandOccurrences` sulle voci senza ricorrenza. Attivazione,
+  riattivazione e cambio di frequenza del riepilogo partono da adesso: nessun avviso per il tempo passato.
+  Alternative scartate: Notification API/push (permessi, nessuna garanzia ad app chiusa senza service worker),
+  conferma implicita del backup al download (il browser non dice se il file è stato salvato).
 
 ## Icone ritirate e chiave — 14 novembre 2026
 
@@ -37,7 +67,7 @@ sola modalità Standard, il principio «Firestore unica fonte di verità»; in A
 - **Scelta e separazione.** `nummo.storageMode.v1`; senza scelta salvata, un browser con indizio di sessione Firebase
   resta in Avanzata (utenti esistenti), gli altri vedono la schermata di scelta. Firebase non viene inizializzato in
   Standard. Il cambio di modalità smonta il workspace e non tocca nessuno dei due archivi.
-- **Google Drive.** Solo backup e ripristino, via REST su `appDataFolder` con ambito `drive.appdata`. Autorizzazione
+- **Google Drive (rimosso il 14 novembre, vedi sopra).** Solo backup e ripristino, via REST su `appDataFolder` con ambito `drive.appdata`. Autorizzazione
   con Google Identity Services (modello a token, nessun segreto, nessun backend): il token dura circa un'ora e resta
   in memoria. Conseguenza accettata: nessun rinnovo silenzioso; il backup automatico gira mentre l'app è aperta e
   l'accesso è valido, altrimenti resta in attesa di un tocco. Alternative scartate: refresh token (richiede un server
@@ -149,24 +179,25 @@ supporto e procedura di collaudo sono in [icone-installazione.md](icone-installa
 
 ```text
 Expo web / React Native Web / Material 3
-  ├─ Firebase Authentication: Google, sessione gestita dall’SDK
-  └─ SDK Firestore: listener, cache, coda e retry nativi
-       └─ Security Rules: UID proprietario + provider Google + validazione
-            └─ Cloud Firestore del progetto configurato dall’utente
+  └─ App (tema, lingua, modalità in nummo.storageMode.v1)
+       ├─ Standard: StandardRoot → localStore.ts su IndexedDB `nummo-local` (nessun account, backup JSON manuale)
+       └─ Avanzata: AdvancedRoot → Firebase Authentication (Google) → SDK Firestore
+            └─ Security Rules: UID proprietario + provider Google + validazione
+                 └─ Cloud Firestore del progetto configurato dall'utente
 ```
 
-Firestore è l'unica fonte di verità per spese e categorie. Nessuna callable, Sheets
-API, Drive, database locale indipendente, backend gestito dallo sviluppatore o servizio
-aggiuntivo nel percorso attivo. La cache IndexedDB opzionale appartiene all'SDK
-Firestore: non è un archivio applicativo parallelo. Il client non contiene Admin SDK,
-chiavi private o token copiati manualmente.
+In ciascuna modalità c'è una sola fonte di verità: IndexedDB in Standard, Firestore in Avanzata; mai entrambe,
+mai copie o migrazioni automatiche tra le due. Firebase si inizializza solo in Avanzata. Nessuna callable, Sheets
+API, Drive, backend gestito dallo sviluppatore o servizio aggiuntivo nel percorso attivo. In Avanzata la cache
+IndexedDB opzionale appartiene all'SDK Firestore: non è un archivio applicativo parallelo. Il client non contiene
+Admin SDK, chiavi private o token copiati manualmente.
 
 Stack effettivo: Expo 58.0.22, React 19.3, React Native 0.88.1, RN Web 0.21.4,
 Paper 5.15.4, Firebase JS SDK 13.1.0, TypeScript 6.0.3. Nessuna nuova dipendenza.
-`App` gestisce tema/sessione; `RemoteWorkspace`, montato con chiave UID, gestisce sezioni,
-listener e bozze. Il dominio rimane puro. Le sezioni ricevono `ExpenseStore`, categorie
-e callback; il servizio `createFirestoreStore` riceve database e UID ed è testato con
-veri SDK contro emulatori.
+`App` gestisce tema, lingua e modalità; `DataWorkspace` gestisce sezioni, listener e bozze, con ambito `local` in
+Standard o UID in Avanzata (l'involucro `RemoteWorkspace` è montato con chiave UID). Il dominio rimane puro.
+Hook e pagine conoscono solo il contratto `DataStore`: `createFirestoreStore` (database e UID, testato con veri SDK
+contro emulatori) oppure lo store locale (testato con il gemello in memoria in `tests/localStore.test.ts`).
 
 Avvio del modulo (7 novembre 2026): la lettura iniziale delle due collezioni è distinta
 dall'archivio vuoto. Il campo Categoria mantiene il proprio ingombro e indica
@@ -889,7 +920,7 @@ ricodificano nella forma compatta nella stessa transazione). Le Rules impongono 
 campo non venga tolto né accorciato; il caso peggiore (8 prezzi, 8 stati, fondo, prova, 4 cambi) è verificato in emulatore.
 
 **Backup v6.** `calendar_changes` come array solo quando presente; lettori v1–v5 invariati, e i file precedenti con schema 3
-o `calendar_changes` sono rifiutati con messaggio dedicato. Fixture `docs/testing/nummo-cambio-frequenza-2026-11-10.json`.
+o `calendar_changes` sono rifiutati con messaggio dedicato. Fixture `tests/fixtures/nummo-cambio-frequenza-2026-11-10.json`.
 
 **Compatibilità.** Rilascio: prima le Rules, poi il sito. I client aperti vanno ricaricati; quelli vecchi rifiutano un archivio
 con serie schema 3. CSV: una riga per occorrenza con la frequenza in vigore alla data; elenco abbonamenti: frequenza del

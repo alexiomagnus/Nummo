@@ -57,35 +57,6 @@ Le 89 righe del backup includono le sei serie; non sono 89 pagamenti del mese.
 Il file valido serve a esplorare situazioni difficili ma ammesse; importi negativi o date impossibili non sono
 inclusi perché renderebbero inutilizzabile l’intero backup.
 
-## Spese standard di un utente comune
-
-File: [`nummo-spese-standard-2026-11-08.json`](nummo-spese-standard-2026-11-08.json), backup v5.
-Profilo fittizio di una persona che vive in affitto: **66 spese singole e 6 pagamenti ricorrenti**, da settembre
-all’8 novembre 2026, in 8 categorie. Supermercato, bar, pranzi, bollette, autobus, carburante, farmacia,
-abbigliamento e tempo libero, con normali differenze tra un mese e l’altro.
-Ricorrenti: affitto 650 €, internet 26,90 €, telefono 9,99 €, musica 10,99 €, palestra 29,90 € e antivirus annuale 24,99 €.
-
-Include 3 fondi (conto quotidiano, contanti e risparmi), stipendio mensile simulato da 1.850 €, un rimborso da 35 €,
-trasferimenti per prelievi/risparmio e 2 liste della spesa (una registrata, una da completare).
-Nomi di categorie, fondi e liste prefissati `Demo ·`; descrizioni delle spese naturali, nessun importo estremo,
-riferimento mancante, pausa o annullamento. Gli ID sono distinti da quelli del file dei casi limite.
-
-Su archivio contenente solo questo file, all’8 novembre 2026:
-
-| Periodo | Speso maturato | Entrate, ricariche incluse |
-| --- | ---: | ---: |
-| Settembre 2026 | 1.456,65 € | 1.850,00 € |
-| Ottobre 2026 | 1.555,79 € | 1.885,00 € |
-| Novembre fino all’8 | 828,77 € | 1.850,00 € |
-
-Totale disponibile attuale, tutti i fondi: **3.893,79 €**; **80 occorrenze** maturate.
-Valori calcolati con il dominio; variano dopo l’8 novembre o unendo dati preesistenti.
-
-Importare da **menu account → Importa ed esporta → Importa backup (JSON) → Unisci ai dati esistenti**, preferibilmente nella demo.
-Le categorie con nomi uguali ma ID diversi possono produrre un conflitto: usare un archivio demo vuoto in tal caso.
-File verificato con parser, piano su archivio vuoto, riferimenti completi e reimportazione identica senza aggiunte.
-Importazione UI/Firestore con questo specifico file non eseguita.
-
 ## Utente medio (backup v6)
 
 File: [`nummo-utente-medio.json`](nummo-utente-medio.json), backup **v6**, dati fittizi.
@@ -123,33 +94,11 @@ entrano in conflitto. Verificato con `parseBackup`, piano di unione su archivio 
 mancante) e, nell'emulatore demo con le Rules del checkout, importazione reale con `importRecords`: l'export successivo
 è identico al file byte per byte e una seconda unione non trova conflitti. Importazione dall'interfaccia non eseguita.
 
-## Prove gratuite degli abbonamenti
+## Fixture dei test automatici
 
-File: [`nummo-prove-gratuite-2026-11-09.json`](nummo-prove-gratuite-2026-11-09.json), backup v5, solo dati TEST.
-Al 9 novembre 2026, su archivio contenente solo questo file:
-
-- `TEST Spotify in prova`: attivo, «In prova gratuita», primo pagamento 9 dicembre, nessun pagamento né spesa.
-- `TEST Prova annullata`: annullato durante la prova, nessun pagamento e nessun prossimo addebito.
-- `TEST Prova terminata`: attivo, un pagamento di 15,99 € il 1° novembre; prossimo il 1° dicembre.
-- Totale speso di novembre: 15,99 €. CSV: una sola occorrenza, nessuna riga da zero euro.
-
-Preferire la demo isolata. Importazione e reimportazione sono esplicite; nessun dato viene scritto aprendo il file.
-I client precedenti alla prova gratuita non leggono i backup v5. Un documento con prova usa schema 2: il vecchio
-client rifiuta l'archivio, evitando di trattare l'inizio della prova come un pagamento. Non aprire questi dati con
-un vecchio client; prima di un rilascio occorre aggiornare separatamente le Rules e il sito, con autorizzazione.
-
-## Cambio di frequenza degli abbonamenti
-
-File: [`nummo-cambio-frequenza-2026-11-10.json`](nummo-cambio-frequenza-2026-11-10.json), backup **v6**, solo dati TEST.
-Al 10 novembre 2026, su archivio contenente solo questo file:
-
-- `TEST Mensile poi annuale`: 3 pagamenti da 10,00 € (15 ago, 15 set, 15 ott), totale 30,00 €; il prossimo rinnovo è l'**1 dicembre 2026**, poi annuale.
-- `TEST Settimanale poi mensile`: 10 pagamenti da 5,00 € dal 7 settembre al 9 novembre; il prossimo è il **30 novembre 2026**, poi mensile.
-- `TEST Mensile senza cambi`: serie di controllo (schema 1), pagamenti del 20 settembre e 20 ottobre, prossimo 20 novembre.
-- Le serie con cambio usano schema 3; gli elenchi mostrano la frequenza in vigore («Annuale», «Mensile»).
-
-I tre backup precedenti restano **v5** di proposito: esercitano il lettore storico. I client precedenti al cambio di
-frequenza non leggono i backup v6 con schema 3 e rifiutano l'archivio: pubblicare prima le Rules, poi il sito (con autorizzazione).
+I backup usati solo dai test di regressione sono in `tests/fixtures/`, non qui: spese standard (v5, lettore storico),
+prove gratuite (v5) e cambio di frequenza (v6), verificati da `tests/trial.test.ts` e `tests/frequency.test.ts`.
+Il file dei casi limite qui sopra resta **v5** di proposito: esercita il lettore storico anche dall'interfaccia.
 
 ## Budget mensile generale
 

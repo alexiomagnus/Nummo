@@ -2,25 +2,120 @@
 
 ## Stato corrente — 14 novembre 2026
 
-Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle singole fasi e possono dire cose superate.
+Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
+cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` a `57dba1f` («docs: realign HANDOFF/AGENTS…», solo documentazione), allineato al riferimento locale
-  `origin/main` (nessun fetch). Commit del 14 novembre: `ed21a87` (pulsanti mobile, «Nuova lista», anteprima Blocchi),
-  `6956a56` (icone) e `57dba1f` (riallineamento documenti, rimozione del doppione `logo`).
-  Sotto, `73034ba` contiene tutte le fasi del 12–13 novembre, comprese quelle marcate «nessun commit» (modalità
-  Standard/Avanzata e Drive, azioni di Spese/abbonamenti, contorno delle azioni distruttive, icona utente e avatar).
-- **Produzione.** Ultimo rilascio Hosting registrato: `e2eee92` (12 novembre); `73034ba`, `ed21a87` e `6956a56` sono
-  **non pubblicati** finché non lo si verifica. Anche `firestore.rules` è cambiato dopo l'ultima pubblicazione Rules
-  registrata: icone rimosse in `d7e1504`, icona `key` aggiunta in `6956a56`. Le Rules vanno pubblicate a parte, con
-  autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key` viene
-  rifiutata dal cloud.
-- **Verifiche il 14 novembre.** `npm run check` OK su `6956a56` e di nuovo su `57dba1f`: typecheck, **396/396** test, build demo. Suite SDK/Rules
-  18/18 nella fase icone (sotto); hybrid non rieseguito (ultimo esito 8/8 in una revisione precedente).
-- **Ambiente.** Un runner hybrid dell'utente era attivo (ancora attivo il 14 novembre, lock `.firebase/hybrid.lock` suo) (`node scripts/dev-hybrid.ts`, PID 18290, config
-  `.nummo-hybrid-18290.json` in radice, ignorata da Git): non toccarlo; per le suite usare porte dedicate.
-- **Cosa resta aperto** (dettagli in «Prossime attività»): Google OAuth/Drive reali mai provati (nessun client configurato),
-  telefoni reali e Safari/iOS, collaudo in demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup,
-  pubblicazione Hosting e Rules (solo con autorizzazione).
+- **Git.** Base `main` a `7132480` («feat: reorganize recurring options…»), allineato al riferimento locale `origin/main`
+  (nessun fetch). Sopra, **modifiche locali non committate** della fase «Rimozione di Google Drive, protezione locale e
+  notifiche» (sotto): nessun commit, push o deploy. Nel working tree ci sono anche modifiche **di fasi distinte**, ciascuna
+  con la propria sezione datata sotto, da attribuire prima del commit: `src/features/funds/FundsPage.tsx` (Budget come
+  ultima azione), `src/components/AccountMenu.tsx` (hover a filo e larghezza minima 232), `src/features/history/SubscriptionList.tsx`
+  e la relativa chiave in `src/i18n/en.ts` (stato vuoto «Nessun abbonamento.»).
+- **Produzione.** Ultimo rilascio Hosting registrato: `e2eee92` (12 novembre); `73034ba`, `ed21a87`, `6956a56`,
+  `7132480` e le modifiche locali sono **non pubblicati**. `firestore.rules` è cambiato dopo l'ultima pubblicazione
+  Rules registrata (icone rimosse in `d7e1504`, `key` aggiunta in `6956a56`): pubblicazione separata, con
+  autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key`
+  viene rifiutata dal cloud. Questa fase non tocca le Rules.
+- **Verifiche il 14 novembre.** `npm run check` OK su tutte le modifiche locali (rieseguito a fine giornata dopo il
+  riallineamento documentale): typecheck, **399/399** test, build demo; `git diff --check` OK. Chromium headless sulla
+  build demo in Standard: 43/43 controlli per la fase Drive/notifiche, controlli dedicati per il menu account (dettagli
+  sotto). Suite SDK/Rules non rieseguita (Firestore, Rules e `DataStore` invariati; ultimo esito 18/18 nella fase icone);
+  hybrid non rieseguito.
+- **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts`, PID 18290, lock `.firebase/hybrid.lock`,
+  config `.nummo-hybrid-18290.json` in radice, ignorata da Git): non toccarlo; per le suite usare porte dedicate.
+- **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
+  (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
+  demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, pubblicazione Hosting e Rules
+  (solo con autorizzazione).
+
+## Riallineamento documentale dopo la rimozione di Drive — 14 novembre 2026
+
+- `docs/architecture.md`, «Flusso attivo»: diagramma e testo descrivono ora le due modalità (IndexedDB in Standard,
+  Firestore in Avanzata, una sola fonte di verità per modalità, Firebase solo in Avanzata) e `DataWorkspace`/`DataStore`
+  al posto del solo `RemoteWorkspace`/Firestore.
+- HANDOFF: «Stato corrente» riportato in apertura ed elencate tutte le modifiche locali di fasi distinte; la vecchia
+  sezione del 12–13 novembre rinominata «Storico» con nota di superamento.
+- `docs/testing/` ridotto dall'utente a due backup (casi limite v5, utente medio v6). I tre file usati dai test
+  (spese standard, prove gratuite, cambio di frequenza) spostati in `tests/fixtures/` con contenuto invariato;
+  `trial.test.ts`/`frequency.test.ts`, README di `docs/testing/`, architettura e AGENTS aggiornati.
+
+## Abbonamenti: testo dello stato vuoto — 14 novembre 2026
+
+- Rimossa su richiesta la frase «Per aggiungerne uno, crea una spesa che si ripete.»;
+  resta «Nessun abbonamento.». Traduzione inglese allineata.
+- `npm run check` OK (399/399, typecheck e build demo); diff check OK.
+  Nessuna nuova verifica browser, commit o deploy; modifiche concorrenti conservate.
+
+## Menu account: maggiore larghezza — 14 novembre 2026
+
+- Larghezza minima del pannello `AccountMenu` a 232 dp (prima circa 202 dp in Standard), per dare più spazio
+  dopo «Importa ed esporta», mantenendo l'hover a filo del contorno.
+- `npm run check` OK (399/399, typecheck e build demo), diff check OK. Chromium demo Standard a 320/1280 px
+  chiaro/scuro: pannello 232 px, voci a tutta larghezza; screenshot 320 scuro osservato, nessun errore JS.
+  Processi propri arrestati; nessun test dispositivo reale, commit o deploy.
+
+## Menu account: hover allineato al pannello — 14 novembre 2026
+
+- `AccountMenu`: rimosso il margine laterale delle voci, il loro raggio indipendente e il padding verticale
+  del pannello. Hover/ripple a tutta larghezza, ritagliati dagli angoli esterni del menu anche sull'ultima voce.
+- `npm run check` OK (399/399, typecheck e build demo); `git diff --check` OK.
+  Chromium su build demo in Standard, profilo temporaneo e HTTPS esterno bloccato: 320/1280 px, chiaro/scuro,
+  larghezza delle voci identica al pannello e ultima voce a filo fondo; screenshot hover scuro osservato,
+  nessun errore JS. Percorso Avanzata/Esci e dispositivi reali non provati. Processi propri arrestati.
+  Modifiche concorrenti conservate; nessun commit o deploy.
+
+## Fondi: Budget come ultima azione — 14 novembre 2026
+
+- Su richiesta, ordine delle azioni in `FundsPage`: Nuovo fondo, Aggiungi, Trasferisci, Budget.
+  Condizioni di visibilità, stile e comportamento invariati, su tutte le dimensioni.
+- `npm run check` OK (typecheck, test e build demo); `git diff --check` OK.
+  Nessuna nuova verifica browser; modifiche concorrenti conservate. Nessun commit o deploy.
+
+## Rimozione di Google Drive, protezione locale e notifiche in-app — 14 novembre 2026
+
+- **Google Drive rimosso del tutto:** eliminati `services/googleAuth.ts`, `services/googleDrive.ts`,
+  `domain/driveBackup.ts`, `features/storage/useDriveBackup.ts`, `tests/driveBackup.test.ts` (12 test), la UI in
+  `StorageSection` (collega/scollega, backup manuale/automatico, ripristino da Drive) e l'avviso «backup automatico in
+  attesa» in `App.tsx`; `EXPO_PUBLIC_GOOGLE_CLIENT_ID` tolta da `envPolicy` (ora rifiutata come variabile sconosciuta;
+  assente in `.env.local` e `.env.production.local`, controllato solo il nome), `.env.example`, README, Guida, testi
+  della scelta modalità e traduzioni EN. Nessuna dipendenza npm era dedicata a Drive. Invariati login Google, Firebase
+  Auth, BYOF, formato del backup (v6), importazione/esportazione/ripristino JSON (ripristino verificato nel browser).
+- **Protezione locale:** `services/storageProtection.ts` + `features/storage/useStorageProtection.ts` (Standard): stato da
+  `persisted()`, richiesta `persist()` solo con archivio non vuoto (subito o dopo la prima modifica), al massimo ogni 30
+  giorni, tentativo registrato prima di chiedere (`nummo.storageProtection.v1`); errori e API mancanti = «Protezione non
+  disponibile», app invariata. In Impostazioni → Archiviazione e backup: «Archivio locale protetto», «Protezione
+  aggiuntiva non attiva», «Protezione non disponibile», con icona scudo e testo semplice. Tolta la vecchia chiamata
+  `persist()` a ogni avvio. Scritture IndexedDB con durabilità `strict`; un listener che lancia dopo il commit non fa più
+  apparire fallito un salvataggio riuscito; errore di apertura di una transazione di scrittura ora riporta il messaggio
+  di salvataggio fallito (prima quello di lettura).
+- **Notifiche in-app:** voce «Notifiche» (campana) nel menu account sotto Impostazioni, in entrambe le modalità; pagina
+  con Notifiche generali, Promemoria backup (solo Standard) e Riepilogo spese, interruttori e frequenze (settimana
+  consigliata, 14 giorni, mese); predefiniti tutti attivi e settimanali. Avvisi `NotificationCards` sopra le pagine
+  (non in Impostazioni/Notifiche): promemoria con «Esporta backup» (export JSON esistente) e «Ricordamelo dopo» (3
+  giorni); dopo ogni download del backup completo (anche da Importa ed esporta) «Hai salvato il backup?» → solo «Sì, è
+  salvato» aggiorna la data; riepilogo con intervallo, totale, numero, categoria principale, «Abbonamenti esclusi»,
+  «Chiudi». Regole in `domain/notifications.ts`; decisione in `docs/architecture.md`.
+- **Test:** nuovi `tests/notifications.test.ts` (8), `tests/storageProtection.test.ts` (4), caso in `localStore.test.ts`
+  (scrittura fallita / listener in errore), caso i18n (testi nuovi, nessun «Google Drive» nel catalogo), `envPolicy`
+  aggiornato. Totale 397 − 12 + 14 = **399/399**.
+- **Browser:** Chromium headless/CDP, build demo in Standard, rete HTTPS bloccata, profilo temporaneo, backup TEST
+  `docs/testing/nummo-utente-medio.json` importato con «Sostituisci tutti i dati»: **43/43**. Primo avvio senza avvisi;
+  ordine del menu Impostazioni/Notifiche/Categorie/Importa ed esporta; con stato di avvio retrodatato di 40 giorni
+  compaiono promemoria e riepilogo (2–8 nov: 305,15 € in 7 spese, Alimentari 129,92 €, uguale al calcolo indipendente
+  sul file, 9 serie escluse); rinvio di 3,000 giorni; chiusura e ricarica senza duplicati; download dal promemoria senza
+  aggiornare la data finché non si conferma, poi data aggiornata; predefiniti, generale spento con altri controlli
+  disabilitati e scelte conservate, persistenza dopo ricarica, riattivazione con date inizializzate; Impostazioni con un
+  solo stato di protezione coerente con `persisted()` (headless: «Protezione aggiuntiva non attiva»), nessun «Drive» né
+  nome tecnico; 412 IT chiaro, 320 EN scuro, 820 EN chiaro, 1280 IT scuro senza overflow; nessun errore JS. Screenshot
+  osservati (412 avvisi/pagina/Impostazioni, 320 EN scuro). Probe e risultati nello scratchpad della sessione
+  (temporanei).
+- **Non verificato:** modalità Avanzata nel browser (notifiche, riepilogo, assenza del promemoria: solo test di dominio
+  e typecheck); comportamento reale di `persist()` su Firefox (richiesta all'utente), Safari/iOS, Chrome Android e app
+  installata; telefoni reali; screen reader; movimento ridotto. Nessun commit.
+- **Google Cloud non più necessario per Nummo** (nessuna modifica fatta, solo da valutare a mano): Google Drive API
+  abilitata per Nummo, il client OAuth «Applicazione web» creato per Drive e l'ambito `drive.appdata` nella schermata di
+  consenso. Mai configurati secondo i registri; il client OAuth usato da Firebase Auth per il login Google va
+  **mantenuto**.
 
 ## Nuova spesa: sezione ricorrente riorganizzata — 14 novembre 2026
 
@@ -43,7 +138,7 @@ Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle sin
 - Verifiche: `npm run check` OK (typecheck, test, build demo), poi `npm test` **397/397**. Chromium headless/CDP sulla build
   demo in Standard, HTTPS esterno bloccato: 360 IT chiaro e 1280 IT chiaro (tutte le opzioni attive, confronto prima/dopo),
   320 e 360 EN scuro con errori di validazione, spegnimento/riaccensione di Ricorrente; nessun overflow orizzontale né errore JS.
-  Non provati: telefono reale, movimento ridotto nel browser, dialogo di modifica nel browser. Nessun commit.
+  Non provati: telefono reale, movimento ridotto nel browser, dialogo di modifica nel browser. Integrata poi nel commit `7132480`.
 
 ## Riallineamento documenti e logo — 14 novembre 2026
 
@@ -157,7 +252,9 @@ Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle sin
   Server/Chromium propri arrestati; nessun dato personale o cloud, telefono reale non verificato.
   Nessun commit o pubblicazione; modifiche concorrenti conservate.
 
-## Stato corrente — modalità Standard (IndexedDB + Google Drive) e Avanzata (Firebase BYOF), 12–13 novembre 2026
+## Storico — modalità Standard (IndexedDB + Google Drive) e Avanzata (Firebase BYOF), 12–13 novembre 2026
+
+> Superato: Google Drive è stato rimosso il 14 novembre; lo stato attuale è nello «Stato corrente» in apertura.
 
 Implementazione integrata nel commit `73034ba` (push su `origin/main`; Hosting non pubblicato). Decisione e limiti in `docs/architecture.md` (prima sezione),
 uso e configurazione nel README, convenzioni in AGENTS.md. Le sezioni sotto restano cronologia.
@@ -1518,11 +1615,11 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-0. **Modalità Standard/Avanzata (aggiornato 14 novembre):** configurare un client OAuth web reale e provare Google
-   Drive (consenso, origini, popup su mobile e app installata, errori e quote reali); provare l'Avanzata con accesso e
-   dati reali dopo il cambio di architettura; Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per inattività,
-   `navigator.storage.persist`), due schede reali, archivi grandi. Pubblicare `main` (oggi `57dba1f`) su Hosting e,
-   separatamente, le Rules solo con autorizzazione (vedi punto 1).
+0. **Modalità Standard/Avanzata (aggiornato 14 novembre, Drive rimosso):** provare l'Avanzata con accesso e dati reali
+   dopo il cambio di architettura, comprese pagina Notifiche e riepilogo; Standard su Safari/iOS e Firefox (IndexedDB,
+   cancellazione per inattività, richiesta di `navigator.storage.persist`), Chrome Android e app installata, due schede
+   reali, archivi grandi. Committare su richiesta le modifiche locali, poi pubblicare su Hosting e, separatamente, le
+   Rules solo con autorizzazione (vedi punto 1).
    Ancora da fare dall'elenco dell'11 novembre: collaudo sui dati reali e sul Pixel 8 (elenco storico in
    `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`) e approvazione degli sprite #11 ridisegnati.
    Già fatti il 12 novembre: Escape in `AppDialog` e riallineamento README/architettura.
@@ -1541,6 +1638,7 @@ screen reader, concorrenza tra due dispositivi.
 5. **Avvio/guida:** misurare rete su `#guida`; procedura `docs/avvio-prestazioni.md` su dispositivo e rete lenta;
    popup dopo logout/scadenza, Safari/Firefox/Edge.
 6. **Riproducibilità:** `npm ci` da clone pulito su Node LTS, audit aggiornato, scelta della licenza.
-   Riallineare README e sezioni superate di `docs/architecture.md` alle funzioni attuali, preservandone le decisioni valide.
+   Riallineare README e le altre sezioni superate di `docs/architecture.md` («Flusso attivo» fatto il 14 novembre) alle
+   funzioni attuali, preservandone le decisioni valide.
    Unicità server dei nomi fondo, sincronizzazione del predefinito, paginazione e service worker sono evoluzioni da
    valutare, non lavori pianificati né implementati.

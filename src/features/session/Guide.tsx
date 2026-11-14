@@ -34,7 +34,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
       </View>
 
       <Section title={t("Come iniziare")}>
-        {p(t("Alla prima apertura scegli dove salvare i dati. Con la modalità Standard inizi subito, senza account: i dati restano su questo dispositivo e puoi proteggerli con un backup su Google Drive o con un file."))}
+        {p(t("Alla prima apertura scegli dove salvare i dati. Con la modalità Standard inizi subito, senza account: i dati restano su questo dispositivo e ne conservi una copia esportando un backup in un file."))}
         {p(t("Con la modalità Avanzata i dati stanno in un progetto Firebase personale e si sincronizzano tra i dispositivi: entra con Google solo il proprietario del progetto. Non c'è una registrazione aperta e gli altri account Google non vedono né salvano alcun dato."))}
         {p(t("Le due modalità hanno archivi separati: cambiare modalità dalle Impostazioni non copia e non elimina nulla."))}
       </Section>
@@ -82,11 +82,18 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
       <Section title={t("Esportare i dati")}>
         {p(t("Dalla pagina Importa ed esporta, nel menu account sotto Categorie, esporti le transazioni in CSV, da aprire con Excel, LibreOffice o Google Fogli, e scarichi il backup completo in JSON. Solo il backup JSON si può importare di nuovo per ripristinare i dati, con riepilogo prima della conferma. In modalità Avanzata servono la connessione e la sincronizzazione completata."))}
-        {p(t("In modalità Standard, da Impostazioni, sezione Archiviazione e backup, puoi collegare Google Drive: Nummo salva una copia dei dati in una cartella riservata all'app, quando lo chiedi o in automatico mentre la usi, e la ripristina su richiesta dopo averti mostrato data e contenuto del backup. Il ripristino sostituisce i dati del dispositivo. È un backup, non una sincronizzazione: i dati non si aggiornano da soli tra dispositivi."))}
+        {p(t("In modalità Standard il backup JSON è l'unica copia dei dati fuori dal dispositivo: conservalo in un posto sicuro, per esempio un altro disco o un servizio di archiviazione che usi già. Nummo non carica i dati da nessuna parte."))}
+      </Section>
+
+      <Section title={t("Notifiche")}>
+        {p(t("Dal menu account, Notifiche, scegli quali avvisi ricevere e ogni quanto. Gli avvisi compaiono dentro Nummo quando apri l'app o torni a usarla: non sono notifiche del sistema e non arrivano ad app chiusa."))}
+        {p(t("In modalità Standard il promemoria backup ricorda di esportare una copia solo se i dati sono cambiati dall'ultimo backup. Dopo il download ti chiede di confermare che il file sia stato salvato; Ricordamelo dopo lo rimanda di tre giorni."))}
+        {p(t("Il riepilogo spese mostra, al termine di ogni periodo, il totale, il numero di spese e la categoria principale. Considera solo le spese singole già effettuate: abbonamenti e pagamenti ricorrenti sono esclusi."))}
       </Section>
 
       <Section title={t("Dove sono i dati")}>
         {p(t("In modalità Standard le spese sono salvate nel browser di questo dispositivo e non vengono inviate a nessun server. Se cancelli i dati del sito, disinstalli l'app o cambi browser o dispositivo senza un backup, vanno perse."))}
+        {p(t("Nummo chiede al browser di proteggere questi dati quando lo spazio scarseggia; in Impostazioni vedi se la protezione è attiva. Riduce il rischio, ma non sostituisce un backup."))}
         {p(t("In modalità Avanzata le spese sono salvate in Cloud Firestore, il database di Firebase (Google), nel progetto del proprietario. Possono leggerle e scriverle solo l'accesso con Google e le regole di sicurezza del database, riservate al proprietario."))}
         {p(t("Il segnale in alto mostra lo stato dei dati; in modalità Avanzata, senza rete alcune operazioni non sono disponibili."))}
       </Section>

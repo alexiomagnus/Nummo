@@ -1,5 +1,5 @@
 // Where the archive lives, chosen on the first screen and remembered in this browser (a preference, never data):
-// - standard: on this device (IndexedDB), no account, optional Google Drive backups;
+// - standard: on this device (IndexedDB), no account, manual JSON backups;
 // - advanced: the user's own Firebase project (BYOF), Google sign-in, Firestore.
 // The two archives are separate: changing mode never copies, moves or deletes anything.
 import type { SessionHint } from './sessionHint.ts';

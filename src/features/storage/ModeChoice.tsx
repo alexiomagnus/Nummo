@@ -10,7 +10,7 @@ import { useGuide } from '../session/SignIn';
 type Option = { mode: StorageMode; title: string; badge?: string; text: string; action: string };
 const options: readonly Option[] = [
   { mode: 'standard', title: 'Standard', badge: 'Consigliata', action: 'Inizia subito',
-    text: 'Utilizza Nummo immediatamente. I dati vengono salvati sul dispositivo e puoi proteggerli con backup su Google Drive.' },
+    text: 'Utilizza Nummo immediatamente. I dati vengono salvati sul dispositivo e puoi conservarne una copia esportando un backup.' },
   { mode: 'advanced', title: 'Avanzata', badge: 'Firebase', action: 'Continua con Firebase',
     text: 'Collega il tuo progetto Firebase per salvare e sincronizzare i dati nel cloud.' },
 ];

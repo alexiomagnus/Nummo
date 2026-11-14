@@ -145,9 +145,9 @@ test('backup v6: round trip con cambi di frequenza, lettore v5, rifiuto dei file
   assert.throws(() => parseBackup({ ...file, expenses: [{ ...file.expenses[0], calendar_changes: [{ index: 3, start: '2026-10-15', recurrence: 'yearly' }] }] }));
 });
 
-test('fixture docs/testing: cambio di frequenza, valori attesi al 10 novembre 2026', async () => {
+test('fixture: cambio di frequenza, valori attesi al 10 novembre 2026', async () => {
   const { readFileSync } = await import('node:fs');
-  const file = parseBackup(JSON.parse(readFileSync(new URL('../docs/testing/nummo-cambio-frequenza-2026-11-10.json', import.meta.url), 'utf8')));
+  const file = parseBackup(JSON.parse(readFileSync(new URL('./fixtures/nummo-cambio-frequenza-2026-11-10.json', import.meta.url), 'utf8')));
   const byName = (name: string) => file.expenses.find((e) => e.description === name)!;
   const monthly = subscriptionSummary(byName('TEST Mensile poi annuale'), today);
   assert.deepEqual(monthly.payments.map((p) => p.date), ['2026-10-15', '2026-09-15', '2026-08-15']);
