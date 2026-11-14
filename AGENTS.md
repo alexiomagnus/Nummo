@@ -9,7 +9,8 @@ In ciascuna modalità c'è una sola fonte di verità (IndexedDB oppure Firestore
 - Codice e verifiche descrivono lo stato effettivo; requisiti e registri storici non provano implementazione o pubblicazione.
 - `docs/architecture.md` e `docs/migrazione-byof.md`: decisione BYOF del 2 novembre 2026, che sostituisce Sheets/callable.
 - `recap.md`: specifica originale v0.4, storica; leggerla integralmente prima di modifiche funzionali, non modificarla.
-- `README.md` e `docs/firebase-personale.md`: configurazione e uso; `docs/progress.md`: registro storico.
+- `README.md`: configurazione e uso delle due modalità; `docs/firebase-personale.md` e `docs/migrazione-byof.md` descrivono
+  solo l'Avanzata. Registri storici: `docs/progress.md` e `IMPLEMENTATION_PLAN.md` (piano issue del 10 novembre, su `ab7a72a`).
 - Mantenere qui architettura, strumenti e convenzioni stabili; aggiornare `HANDOFF.md` a fine fase o prima del passaggio di contesto.
 
 ## Architettura e directory
@@ -31,7 +32,7 @@ La navigazione mobile si nasconde già al tocco su un campo scrivibile (anticipo
 ma conserva il proprio spazio fino alla conferma dal viewport: il bersaglio non deve spostarsi tra pressione e rilascio;
 e, dopo conferma dal viewport, resta nascosta durante la chiusura fino al recupero dell'altezza;
 il solo focus da tastiera fisica non la nasconde. `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
-Barre sticky in fondo a uno scroller: pubblicarne l'altezza con `reserveScrollPadding` (`viewport.ts`), applicata
+Barre sticky in fondo a uno scroller: pubblicarne l'altezza con `reserveScrollPadding` (`src/theme/viewport.ts`), applicata
 come scroll padding solo in navigazione da tastiera fisica (il focus programmatico dei `Menu` Paper non deve scorrere).
 
 | Percorso | Responsabilità |
@@ -60,7 +61,8 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 `dist/` (cloud) e `dist-demo/` sono generati e ignorati. `.firebaserc` è personale e ignorato: nessun progetto CLI
 predefinito nel repository. `functions/` può contenere `.env` personali ignorati del vecchio backend: non versionarli
 né cancellarli senza conferma. Backend storico recuperabile da `fe759d5`, adapter localStorage da `e2b84d3`.
-Gli SVG in `docs/design/logo-concepts/` sono studi separati: non integrarli senza richiesta esplicita.
+Logo adottato: «Arco» (`docs/design/logo-concepts/hybrids-10/01-arco-*`), già nelle icone di `public/icons/`, che restano la
+fonte per l'app. Gli altri SVG in `docs/design/logo-concepts/` sono studi separati: non integrarli senza richiesta esplicita.
 Chiavi `localStorage` dell'app: `nummo.storageMode.v1` (modalità), `nummo.driveBackup.v1` (scelte del backup Drive: mai token), `nummo.preferences.v1`, `nummo.boot-theme.v1`, `nummo.session.hint.v1`,
 `nummo.defaultCategories.v1.<uid>`, `nummo.defaultFund.v1.<uid>` (solo ID del fondo predefinito; in Standard `<uid>` = `local`); nessun dato di spesa. L'indizio di sessione serve solo alla presentazione
 (segnaposto d'avvio, connessioni anticipate): non concede mai accesso, l'app attende sempre Firebase Auth.

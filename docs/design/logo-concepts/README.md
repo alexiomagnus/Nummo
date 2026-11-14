@@ -27,6 +27,10 @@ Il logotipo comune usa **Google Sans 600**, dal file locale già presente nell�
 
 **Direzione consigliata: 01 · Nastro**, per il legame immediato con Nummo e la continuità con la N esistente. La scelta finale resta aperta.
 
+**Logo adottato: Arco** (`hybrids-10/01-arco-*.svg`, una «n» in due volumi), già integrato nelle icone dell'app
+(`public/icons/`: `icon.svg`, `icon-monochrome.svg` e i PNG). Gli altri concept restano studi; la raccomandazione sopra
+è storica.
+
 ## File
 
 Ogni concept comprende simbolo (viewBox 64 × 64) e composizione orizzontale con nome (284 × 64), entrambi su fondo trasparente:

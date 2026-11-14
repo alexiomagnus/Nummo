@@ -4,18 +4,30 @@
 
 Leggere questa sezione per prima: le sezioni datate sotto sono cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` a `ed21a87` (pulsanti mobile, «Nuova lista», anteprima Blocchi, riallineamento documenti), pubblicato su
-  `origin/main`; sotto c'è `73034ba` («Standard (on-device) and Advanced (Firebase) storage modes»). Quel commit contiene tutte le fasi del 12–13 novembre, comprese quelle marcate «nessun commit»
-  (modalità Standard/Avanzata e Drive, azioni di Spese/abbonamenti, contorno delle azioni distruttive, icona utente e avatar).
-  Non c'è un rilascio Hosting registrato dopo `e2eee92` (12 novembre): il commit `73034ba` è da considerare **non pubblicato**
-  finché non lo si verifica, come `ed21a87`. La fase icone del 14 novembre è nel commit successivo («feat: pixel icon redesign, key icon,
-  retired sofa»), con push; le Rules modificate (icona `key`) **non sono pubblicate**.
-- **Verifiche il 14 novembre.** `npm run check` OK su `73034ba`: typecheck, **393/393** test, build demo. Emulatori e hybrid
-  non rieseguiti (ultimo esito: SDK/Rules 18/18 il 12–13 novembre, hybrid 8/8 in una revisione precedente).
-- **Ambiente.** Un runner hybrid dell'utente era attivo (`node scripts/dev-hybrid.ts`, PID 18290, config
+- **Git.** `main` a `6956a56` («pixel icon redesign, key icon, retired sofa»), allineato al riferimento locale `origin/main`
+  (nessun fetch). Commit del 14 novembre: `ed21a87` (pulsanti mobile, «Nuova lista», anteprima Blocchi) e `6956a56` (icone).
+  Sotto, `73034ba` contiene tutte le fasi del 12–13 novembre, comprese quelle marcate «nessun commit» (modalità
+  Standard/Avanzata e Drive, azioni di Spese/abbonamenti, contorno delle azioni distruttive, icona utente e avatar).
+- **Produzione.** Ultimo rilascio Hosting registrato: `e2eee92` (12 novembre); `73034ba`, `ed21a87` e `6956a56` sono
+  **non pubblicati** finché non lo si verifica. Anche `firestore.rules` è cambiato dopo l'ultima pubblicazione Rules
+  registrata: icone rimosse in `d7e1504`, icona `key` aggiunta in `6956a56`. Le Rules vanno pubblicate a parte, con
+  autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key` viene
+  rifiutata dal cloud.
+- **Verifiche il 14 novembre.** `npm run check` OK su `6956a56`: typecheck, **396/396** test, build demo. Suite SDK/Rules
+  18/18 nella fase icone (sotto); hybrid non rieseguito (ultimo esito 8/8 in una revisione precedente).
+- **Ambiente.** Un runner hybrid dell'utente era attivo (ancora attivo il 14 novembre, lock `.firebase/hybrid.lock` suo) (`node scripts/dev-hybrid.ts`, PID 18290, config
   `.nummo-hybrid-18290.json` in radice, ignorata da Git): non toccarlo; per le suite usare porte dedicate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Google OAuth/Drive reali mai provati (nessun client configurato),
-  telefoni reali e Safari/iOS, collaudo in demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup.
+  telefoni reali e Safari/iOS, collaudo in demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup,
+  pubblicazione Hosting e Rules (solo con autorizzazione).
+
+## Riallineamento documenti e logo — 14 novembre 2026
+
+- HANDOFF (stato Git a `6956a56`, produzione/Rules non pubblicate, prossime attività) e AGENTS (fonti storiche
+  `IMPLEMENTATION_PLAN.md`/`docs/progress.md`, documenti della sola Avanzata, percorso `src/theme/viewport.ts`) allineati al codice.
+- Su conferma eliminato il file `logo` nella radice: doppione identico di `docs/design/logo-concepts/hybrids-10/01-arco-light.svg`,
+  non usato dall'app. Logo adottato «Arco» annotato in AGENTS e nel README dei concept (icone in `public/icons/`).
+- `npm run check` OK su `6956a56` (396/396) prima di queste modifiche solo documentali. Nessun commit.
 
 ## Icone: sprite pixel ridisegnati, chiave, divano ritirato — 14 novembre 2026
 
@@ -1481,13 +1493,14 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-0. **Aggiornamento 14 novembre — modalità Standard/Avanzata:** configurare un client OAuth web reale e provare Google
+0. **Modalità Standard/Avanzata (aggiornato 14 novembre):** configurare un client OAuth web reale e provare Google
    Drive (consenso, origini, popup su mobile e app installata, errori e quote reali); provare l'Avanzata con accesso e
    dati reali dopo il cambio di architettura; Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per inattività,
-   `navigator.storage.persist`), due schede reali, archivi grandi. Pubblicare `73034ba` su Hosting solo con autorizzazione.
-   **Aggiornamento 11 novembre (ancora valido in parte):** collaudo del rilascio del 10 novembre sui dati reali e sul Pixel 8 (elenco in
-   `IMPLEMENTATION_PLAN.md`), approvazione degli sprite #11, Escape in `AppDialog`, riallineamento README/architettura.
-   Il punto 4 sotto è concluso (10 novembre).
+   `navigator.storage.persist`), due schede reali, archivi grandi. Pubblicare `main` (oggi `6956a56`) su Hosting e,
+   separatamente, le Rules solo con autorizzazione (vedi punto 1).
+   Ancora da fare dall'elenco dell'11 novembre: collaudo sui dati reali e sul Pixel 8 (elenco storico in
+   `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`) e approvazione degli sprite #11 ridisegnati.
+   Già fatti il 12 novembre: Escape in `AppDialog` e riallineamento README/architettura.
 
 1. **Collaudo produzione e compatibilità:** dopo la pubblicazione Rules verificata sopra, ricaricare l’app e verificare
    caricamento e sincronizzazione. Per prove CRUD cloud serve autorizzazione. Decidere conservazione o migrazione
@@ -1497,7 +1510,7 @@ screen reader, concorrenza tra due dispositivi.
    sospensione ricarica, dialoghi Fondi/Liste a 320 px e in landscape, CSV in foglio di calcolo reale.
 3. **Collaudo dispositivi:** telefono reale (touch, tastiera virtuale, safe area, rotazione), screen reader, Tab/Invio
    su Blocchi e Ciambella, riduzione movimento; riprodurre i problemi UI mobile elencati sopra.
-4. **Igiene Git:** `.nummo-hybrid-*.json` già ignorato e non tracciato (fatto). Non ripulire `.firebase/`, lock, staging o `emulator-data/`
+4. **Igiene Git:** `.nummo-hybrid-*.json` già ignorato e non tracciato (fatto il 10 novembre). Non ripulire `.firebase/`, lock, staging o `emulator-data/`
    senza ispezione. Nessun commit automatico.
 5. **Avvio/guida:** misurare rete su `#guida`; procedura `docs/avvio-prestazioni.md` su dispositivo e rete lenta;
    popup dopo logout/scadenza, Safari/Firefox/Edge.
