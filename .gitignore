@@ -20,3 +20,14 @@ emulator-data/
 
 # Config temporanea del runner hybrid (rimossa all'arresto, mai versionata)
 .nummo-hybrid-*.json
+
+# Servizio push: chiavi e dati locali, configurazione personale di Cloudflare (mai versionati)
+push-service/.local/
+push-service/.wrangler/
+push-service/wrangler.toml
+push-service/.dev.vars
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example

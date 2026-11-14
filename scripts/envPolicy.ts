@@ -9,7 +9,9 @@ export const FIREBASE_KEYS = [
 export const SCRIPT_OWNED_KEYS = [
   'EXPO_PUBLIC_NUMMO_BACKEND', 'EXPO_PUBLIC_FIRESTORE_EMULATOR', 'EXPO_PUBLIC_AUTH_EMULATOR', 'EXPO_PUBLIC_FUNCTIONS_EMULATOR',
 ] as const;
-const CLOUD_ALLOWED = new Set<string>([...FIREBASE_KEYS, 'EXPO_PUBLIC_NUMMO_BACKEND', 'EXPO_PUBLIC_FIRESTORE_CACHE']);
+// Optional system notifications: address of the push service and its public VAPID key (never the private one).
+export const PUSH_KEYS = ['EXPO_PUBLIC_NUMMO_PUSH_URL', 'EXPO_PUBLIC_NUMMO_PUSH_KEY'] as const;
+const CLOUD_ALLOWED = new Set<string>([...FIREBASE_KEYS, ...PUSH_KEYS, 'EXPO_PUBLIC_NUMMO_BACKEND', 'EXPO_PUBLIC_FIRESTORE_CACHE']);
 const filled = (value: string | undefined): value is string => typeof value === 'string' && value.trim() !== '';
 
 /** Development env files (`.env`, `.env.local`, …) may carry only the Firebase web config. */
@@ -36,6 +38,12 @@ export function cloudEnvProblems(env: Env): string[] {
   if (project && (project.startsWith('demo-') || /\s/.test(project))) problems.push('EXPO_PUBLIC_FIREBASE_PROJECT_ID non valido per il cloud (demo-* o spazi)');
   const domain = env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ?? '';
   if (domain && /^(https?:|localhost|127\.|\[::1\])/.test(domain)) problems.push('EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN deve essere un dominio, senza schema né localhost');
+  const pushUrl = env.EXPO_PUBLIC_NUMMO_PUSH_URL?.trim() ?? '';
+  const pushKey = env.EXPO_PUBLIC_NUMMO_PUSH_KEY?.trim() ?? '';
+  if (Boolean(pushUrl) !== Boolean(pushKey)) problems.push('EXPO_PUBLIC_NUMMO_PUSH_URL e EXPO_PUBLIC_NUMMO_PUSH_KEY vanno impostate insieme (o nessuna delle due)');
+  if (pushUrl && !/^https:\/\/[^/\s:]+(\/[^\s]*)?$/.test(pushUrl)) problems.push('EXPO_PUBLIC_NUMMO_PUSH_URL deve essere un indirizzo https:// pubblico, senza porta');
+  if (pushUrl && /^https:\/\/(localhost|127\.|\[::1\])/.test(pushUrl)) problems.push('EXPO_PUBLIC_NUMMO_PUSH_URL non può essere locale in una build cloud');
+  if (pushKey && !/^[A-Za-z0-9_-]{86,88}$/.test(pushKey)) problems.push('EXPO_PUBLIC_NUMMO_PUSH_KEY non è una chiave pubblica VAPID (base64url)');
   if (env.EXPO_PUBLIC_FIRESTORE_CACHE !== undefined && !['', 'persistent'].includes(env.EXPO_PUBLIC_FIRESTORE_CACHE)) problems.push('EXPO_PUBLIC_FIRESTORE_CACHE ammette solo "persistent"');
   return problems;
 }

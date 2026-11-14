@@ -38,7 +38,8 @@ export function useGuide() {
 export function SignIn({ error, onSignIn, onChangeMode }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const { guide, openGuide, closeGuide } = useGuide();
+  // No link to the guide here (it stays on the mode choice); a direct `#guida` link still opens it.
+  const { guide, closeGuide } = useGuide();
   if (guide) return <Guide onBack={closeGuide} />;
   return (
     <View style={styles.wrap}>
@@ -51,7 +52,6 @@ export function SignIn({ error, onSignIn, onChangeMode }: Props) {
         <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>{t("Accedi con Google")}</Button>
       </Card>
       <View style={styles.links}>
-        <Button mode="text" compact onPress={openGuide} style={styles.guideLink}>{t("Cos'è Nummo e come funziona?")}</Button>
         {onChangeMode && <Button mode="text" compact onPress={onChangeMode} style={styles.guideLink}>{t("Usa Nummo senza account")}</Button>}
       </View>
     </View>

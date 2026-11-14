@@ -7,7 +7,8 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { spacing } from '../../theme/tokens';
 
 // Public introduction, shown on the mode choice and sign-in screens. Static text only: no data access and no
-// dependency on the session. Every statement below describes something the app does today.
+// dependency on the session. Every statement below describes something the app does today. Wording rule: short,
+// plain sentences an average user understands at once (no technical terms unless they are named in the interface).
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View role="region" aria-label={title} style={styles.section}>
@@ -22,6 +23,10 @@ export function Guide({ onBack }: { onBack: () => void }) {
   const { colors } = useTheme();
   const muted = { color: colors.onSurfaceVariant };
   const p = (text: string) => <Text variant="bodyLarge" style={styles.paragraph}>{text}</Text>;
+  // A short bold lead-in followed by its explanation, in one paragraph.
+  const item = (lead: string, text: string) => (
+    <Text variant="bodyLarge" style={styles.paragraph}><Text variant="bodyLarge" style={styles.lead}>{t(lead)}</Text>{": "}{t(text)}</Text>
+  );
   return (
     <View role="article" aria-label={t("Cos'è Nummo e come funziona")} style={styles.wrap}>
       <Button mode="text" compact onPress={onBack} style={styles.back}
@@ -29,73 +34,27 @@ export function Guide({ onBack }: { onBack: () => void }) {
         {t("Torna indietro")}</Button>
       <View style={styles.intro}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{t("Cos'è Nummo")}</Text>
-        <Text variant="bodyLarge" style={muted}>
-          {t("Un'app per registrare le spese di ogni giorno e capire dove va il denaro. Funziona dal browser, anche da smartphone.")}</Text>
+        <Text variant="bodyLarge" style={[styles.paragraph, muted]}>
+          {t("Nummo è un'app web per registrare le spese quotidiane e capire come gestisci il denaro. Funziona direttamente dal browser, sia da computer che da smartphone, senza dover creare necessariamente un account.")}</Text>
       </View>
 
-      <Section title={t("Come iniziare")}>
-        {p(t("Alla prima apertura scegli dove salvare i dati. Con la modalità Standard inizi subito, senza account: i dati restano su questo dispositivo e ne conservi una copia esportando un backup in un file."))}
-        {p(t("Con la modalità Avanzata i dati stanno in un progetto Firebase personale e si sincronizzano tra i dispositivi: entra con Google solo il proprietario del progetto. Non c'è una registrazione aperta e gli altri account Google non vedono né salvano alcun dato."))}
-        {p(t("Le due modalità hanno archivi separati: cambiare modalità dalle Impostazioni non copia e non elimina nulla."))}
+      <Section title={t("Le funzioni principali")}>
+        {item("Spese e categorie su misura", "Inserisci importo, descrizione e categoria (se lasci vuota la data, viene impostata automaticamente a oggi). Puoi creare infinite categorie con icone personalizzate, anche al volo mentre stai registrando una spesa.")}
+        {item("Liste della spesa intelligenti", "Prepara la lista e spunta i prodotti mentre li metti nel carrello. Alla cassa ti basta inserire il totale dello scontrino, senza dover digitare i prezzi dei singoli articoli: Nummo crea un'unica spesa con il riepilogo di ciò che hai comprato e archivia la lista, permettendoti di recuperarne eventuali prodotti rimasti fuori.")}
+        {item("Abbonamenti e spese fisse", "Imposta pagamenti ricorrenti (settimanali, mensili o annuali), gestendo anche periodi di prova gratuiti e prezzi promozionali. Puoi mettere in pausa, modificare o annullare un abbonamento in qualsiasi momento senza alterare lo storico passato.")}
+        {item("Fondi e budget (facoltativi)", "Raggruppa le spese per obiettivo (es. Casa, Vacanze, Università) e imposta tetti di spesa mensili. Gli avvisi ti segnalano quando ti avvicini o superi il limite, senza mai bloccarti.")}
+        {item("Analisi e grafici", "Controlla dove vanno i tuoi soldi da 1 a 12 mesi con grafici interattivi (a ciambella, a barre o a blocchi), andamento giornaliero e confronto con i periodi precedenti.")}
       </Section>
 
-      <Section title={t("Registrare una spesa")}>
-        {p(t("Tocca Nuova spesa e inserisci importo, data, descrizione e categoria. La categoria è obbligatoria; se lasci vuota la data vale oggi."))}
-        <Text variant="bodyMedium" style={muted}>{t("Esempio: 4,50 € · Caffè · Colazione.")}</Text>
+      <Section title={t("Dove sono i tuoi dati (Privacy e Backup)")}>
+        {p(t("Puoi scegliere come gestire il tuo archivio in base alle tue esigenze:"))}
+        {item("Modalità Standard (subito pronta, zero account)", "I dati vengono salvati esclusivamente nel browser del tuo dispositivo e non vengono inviati a nessun server. Per non perderli se cambi telefono o pulisci i dati di navigazione, scarica periodicamente un backup in formato JSON (oppure esporta in CSV per Excel e Google Fogli).")}
+        {item("Modalità Avanzata (sincronizzazione tra dispositivi)", "Collega un tuo progetto personale su Firebase (Google) con accesso riservato solo al tuo account. I dati si sincronizzano ovunque restando sotto il tuo esclusivo controllo.")}
+        <Text variant="bodyMedium" style={muted}>{t("Nota: le due modalità usano archivi separati; passare dall'una all'altra da Archiviazione e backup non sposta né cancella i dati esistenti.")}</Text>
       </Section>
 
-      <Section title={t("Organizzare le categorie")}>
-        {p(t("Dal menu dell'account, alla voce Categorie, crei le tue categorie con un nome e, se vuoi, un'icona. Puoi rinominarle o eliminarle, oppure aggiungere quelle già pronte."))}
-        {p(t("Mentre registri una spesa puoi crearne una anche da Nuova categoria, in fondo all'elenco del campo Categoria: diventa subito la categoria della spesa e i dati già inseriti restano. In modalità Avanzata serve la connessione."))}
-      </Section>
-
-      <Section title={t("Liste della spesa")}>
-        {p(t("In Liste prepari le liste della spesa: aggiungi i prodotti e spuntali mentre li metti nel carrello. Puoi rinominare, duplicare ed eliminare le liste; ogni lista mostra quanti prodotti hai già preso. Le modifiche si salvano da sole."))}
-        {p(t("In fondo alla lista scrivi il totale dello scontrino, senza prezzi per i singoli prodotti, e tocca Registra spesa, anche se non hai spuntato tutto. Confermi descrizione, importo, categoria, fondo e data: viene creata una sola spesa con l'elenco dei prodotti acquistati, che incide su saldo e budget del fondo come ogni altra spesa."))}
-        {p(t("La lista registrata viene archiviata: puoi consultarla, duplicarla o creare una nuova lista con i prodotti non acquistati. In Spese queste spese sono segnate con Lista spesa e nei dettagli mostrano i prodotti; se elimini la spesa, la lista torna tra quelle attive."))}
-      </Section>
-
-      <Section title={t("Consultare le spese")}>
-        {p(t("In Spese trovi due viste. Spese elenca le spese singole raggruppate per mese, con ricerca per nome, ordinamento e filtro per categoria; tocca una spesa per aprirne i dettagli, da cui la modifichi o la elimini. Abbonamenti raccoglie le spese che si ripetono."))}
-        {p(t("L’elenco mostra 50 spese alla volta: Mostra altre spese estende la lista. Ricerca, ordinamento e riepiloghi mensili considerano sempre tutti i risultati."))}
-        {p(t("La pagina Analisi mostra le spese per categoria nel mese corrente, nel mese scorso o negli ultimi 3, 6 o 12 mesi, con riepilogo, ciambella, blocchi o barre e andamento giornaliero interattivo."))}
-        {p(t("Grafico e periodo scelti vengono ricordati in questo browser. Il confronto usa un intervallo precedente di pari durata, mostrato con le sue date, quando lo storico lo consente. L’andamento include i giorni senza spese fino a oggi e si può nascondere dalle Impostazioni."))}
-        {p(t("Puoi creare categorie senza un limite di numero. I grafici mostrano solo quelle con spese nel periodo: se sono molte, le meno rilevanti sono riunite in Altre, con dettaglio consultabile. Nei Blocchi, i rettangoli sono proporzionali agli importi e la legenda sotto il grafico elenca tutte le categorie; tocca un blocco per vederne importo, quota e transazioni. Le barre sono proporzionali alla categoria con spesa maggiore; le percentuali indicano la quota sul totale. Seleziona una categoria per consultarne le spese."))}
-      </Section>
-
-      <Section title={t("Spese ricorrenti e abbonamenti")}>
-        {p(t("Una spesa può ripetersi ogni settimana, mese o anno: la inserisci una volta sola e compare a ogni scadenza maturata."))}
-        {p(t("Se il prezzo cambia, puoi indicare un prezzo promozionale per i primi rinnovi, oppure modificare solo il prossimo rinnovo o tutti quelli futuri: i pagamenti già maturati restano com'erano. Prossimi rinnovi mostra le scadenze dei prossimi 30 giorni."))}
-        {p(t("Alla creazione di un abbonamento puoi attivare Periodo di prova gratuito e scegliere il primo pagamento. Durante la prova non viene conteggiata alcuna spesa. La data è modificabile finché futura; dopo il primo addebito resta invariata. Puoi annullare durante la prova per evitare i pagamenti successivi."))}
-        {p(t("In Abbonamenti ogni serie mostra importo, frequenza, prossimo rinnovo e stato (Attivo, In pausa o Annullato). Aprendo i dettagli trovi lo storico dei pagamenti, quanti ne sono stati effettuati e il totale speso, anche per gli abbonamenti annullati."))}
-        {p(t("Puoi mettere in pausa, annullare o riattivare un abbonamento: la scelta vale dai rinnovi successivi a oggi, i rinnovi che cadono mentre è in pausa o annullato non vengono conteggiati e i pagamenti già registrati non cambiano. Alla riattivazione i rinnovi riprendono dalle date originali. La pagina Analisi e l'esportazione CSV includono sempre i pagamenti effettuati degli abbonamenti."))}
-        {p(t("Puoi cambiare la frequenza di un abbonamento da Modifica serie (settimanale, mensile o annuale) scegliendo la data del primo rinnovo con la nuova frequenza: i pagamenti già effettuati restano invariati e il prezzo segue il numero di rinnovo. Un abbonamento con la frequenza cambiata richiede la versione aggiornata dell’app e un backup versione 6."))}
-      </Section>
-
-      <Section title={t("Fondi")}>
-        {p(t("I fondi e i budget sono facoltativi: puoi usare Nummo senza crearne nessuno. Un fondo raggruppa alcune spese (ad esempio vacanze, casa o università) con nome, icona e colore; in Nuova spesa puoi sceglierlo oppure lasciare Nessun fondo, e puoi indicarne uno predefinito."))}
-        {p(t("La pagina Fondi mostra quanto hai speso nel mese, in totale e per fondo; aprendo un fondo vedi le sue spese del mese. Puoi impostare un budget mensile generale, per tutte le spese, e un budget per ciascun fondo: è un limite indicativo che mostra quanto hai speso e quanto resta, avvisa quando ti avvicini o lo superi, ma non blocca le spese. Vale dal mese corrente: i mesi passati restano come sono."))}
-        {p(t("Da Impostazioni, sezione Funzionalità, puoi nascondere il budget mensile generale e i controlli del budget in Nuovo fondo e Modifica fondo. I budget restano salvati e non cambiano quando modifichi gli altri dati del fondo; i controlli ricompaiono quando li riattivi."))}
-        {p(t("Le spese senza fondo restano valide; puoi assegnarle a un fondo solo se lo scegli. Un fondo con spese collegate si archivia invece di essere eliminato."))}
-        {p(t("I fondi creati con una versione precedente conservano saldo iniziale, ricariche, movimenti ed eccezioni del budget: restano consultabili e non vengono modificati quando salvi il fondo."))}
-      </Section>
-
-      <Section title={t("Esportare i dati")}>
-        {p(t("Dalla pagina Importa ed esporta, nel menu account sotto Categorie, esporti le transazioni in CSV, da aprire con Excel, LibreOffice o Google Fogli, e scarichi il backup completo in JSON. Solo il backup JSON si può importare di nuovo per ripristinare i dati, con riepilogo prima della conferma. In modalità Avanzata servono la connessione e la sincronizzazione completata."))}
-        {p(t("In modalità Standard il backup JSON è l'unica copia dei dati fuori dal dispositivo: conservalo in un posto sicuro, per esempio un altro disco o un servizio di archiviazione che usi già. Nummo non carica i dati da nessuna parte."))}
-      </Section>
-
-      <Section title={t("Notifiche")}>
-        {p(t("Dal menu account, Notifiche, scegli quali avvisi ricevere e ogni quanto. Gli avvisi compaiono dentro Nummo quando apri l'app o torni a usarla: non sono notifiche del sistema e non arrivano ad app chiusa."))}
-        {p(t("In modalità Standard il promemoria backup ricorda di esportare una copia solo se i dati sono cambiati dall'ultimo backup. Dopo il download ti chiede di confermare che il file sia stato salvato; Ricordamelo dopo lo rimanda di tre giorni."))}
-        {p(t("Il riepilogo spese mostra, al termine di ogni periodo, il totale, il numero di spese e la categoria principale. Considera solo le spese singole già effettuate: abbonamenti e pagamenti ricorrenti sono esclusi."))}
-      </Section>
-
-      <Section title={t("Dove sono i dati")}>
-        {p(t("In modalità Standard le spese sono salvate nel browser di questo dispositivo e non vengono inviate a nessun server. Se cancelli i dati del sito, disinstalli l'app o cambi browser o dispositivo senza un backup, vanno perse."))}
-        {p(t("Nummo chiede al browser di proteggere questi dati quando lo spazio scarseggia; in Impostazioni vedi se la protezione è attiva. Riduce il rischio, ma non sostituisce un backup."))}
-        {p(t("In modalità Avanzata le spese sono salvate in Cloud Firestore, il database di Firebase (Google), nel progetto del proprietario. Possono leggerle e scriverle solo l'accesso con Google e le regole di sicurezza del database, riservate al proprietario."))}
-        {p(t("Il segnale in alto mostra lo stato dei dati; in modalità Avanzata, senza rete alcune operazioni non sono disponibili."))}
+      <Section title={t("Avvisi e promemoria")}>
+        {p(t("Nummo ti invia un riepilogo periodico delle spese e, in modalità Standard, ti ricorda di salvare un backup quando ci sono nuove modifiche. Se attivi le notifiche di sistema dalla pagina Notifiche, gli avvisi arrivano anche con l'app chiusa; altrimenti compaiono quando apri Nummo."))}
       </Section>
 
       <Button mode="outlined" onPress={onBack} style={styles.bottom}>{t("Torna indietro")}</Button>
@@ -111,5 +70,6 @@ const styles = StyleSheet.create({
   section: { gap: spacing.sm },
   heading: { fontWeight: '700' },
   paragraph: { lineHeight: 26 },
+  lead: { fontWeight: '700' },
   bottom: { alignSelf: 'flex-start' },
 });

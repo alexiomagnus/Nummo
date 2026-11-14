@@ -25,7 +25,9 @@
     "emulators:personal": "firebase emulators:start --only firestore --import emulator-data --export-on-exit",
     "emulators:seed": "node scripts/seed-demo.ts",
     "emulators:seed:owner": "node scripts/seed-owner.ts",
-    "dev:demo": "npm run check:env && EXPO_PUBLIC_NUMMO_BACKEND=emulator expo start --web --host localhost"
+    "dev:demo": "npm run check:env && EXPO_PUBLIC_NUMMO_BACKEND=emulator expo start --web --host localhost",
+    "push:local": "node push-service/local.ts",
+    "push:keys": "node push-service/keys.ts"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.16",

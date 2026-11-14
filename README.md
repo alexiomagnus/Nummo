@@ -6,7 +6,7 @@ gestisci abbonamenti e ricorrenze e guardi l'andamento nella pagina Analisi.
 ## Due modalità: Standard e Avanzata
 
 Alla prima apertura Nummo chiede dove salvare i dati. La scelta resta in questo browser e si cambia da
-**Impostazioni → Archiviazione e backup → Cambia modalità**.
+**menu → Archiviazione e backup → Cambia modalità**.
 
 | | **Standard** (consigliata) | **Avanzata** (Firebase BYOF) |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ condiviso, in nessuna delle due modalità.
 
 1. Apri l'app e scegli **Standard → Inizia subito**. Non servono registrazione, accesso o Firebase.
 2. Al primo avvio vengono create cinque categorie predefinite; da lì registri spese, abbonamenti, fondi e liste.
-3. Proteggi i dati: **menu → Importa ed esporta → Scarica backup (JSON)** e conserva il file fuori dal browser.
+3. Proteggi i dati: **menu → Archiviazione e backup → Scarica backup (JSON)** e conserva il file fuori dal browser.
    Il **promemoria backup** (menu → Notifiche) te lo ricorda quando i dati sono cambiati.
 
 **I dati esistono solo su quel dispositivo e in quel browser.** Si perdono se cancelli i dati del sito o la cronologia
@@ -36,23 +36,34 @@ con «cookie e dati dei siti», se disinstalli l'app installata o reimposti il d
 sito non viene aperto per molto tempo (Safari elimina i dati dei siti non usati da alcune settimane, salvo app
 aggiunta alla schermata Home). Un altro browser o un altro profilo sullo stesso dispositivo è un archivio diverso.
 Nummo chiede al browser di rendere l'archivio persistente (una volta che contiene dati, al massimo ogni 30 giorni;
-alcuni browser, come Firefox, mostrano una richiesta). **Impostazioni → Archiviazione e backup** mostra l'esito:
+alcuni browser, come Firefox, mostrano una richiesta). **Archiviazione e backup** mostra l'esito:
 «Archivio locale protetto», «Protezione aggiuntiva non attiva» o «Protezione non disponibile». È una richiesta, non una
 garanzia, e non sostituisce un backup.
 
-**Recupero**: su un dispositivo nuovo o svuotato scegli Standard, poi **Importa ed esporta → Importa backup (JSON)**. Senza un backup i dati persi non sono recuperabili: nessuno ne ha una copia.
+**Recupero**: su un dispositivo nuovo o svuotato scegli Standard, poi **Archiviazione e backup → Importa backup (JSON)**. Senza un backup i dati persi non sono recuperabili: nessuno ne ha una copia.
 
 ### Notifiche
 
-Dal menu account, **Notifiche** (sotto Impostazioni). Sono **avvisi dentro l'app**, controllati all'apertura e quando si
-torna all'app: non sono notifiche di sistema, non chiedono permessi e non arrivano ad app chiusa. Preferenze e stato
-restano nel browser (`nummo.notifications.v1`, più lo stato per archivio `nummo.notifications.v1.<local|UID>`).
+Dal menu account, **Notifiche** (sotto Impostazioni). Due canali, mai insieme per lo stesso browser:
+
+- **Notifiche di sistema** (Web Push, anche **ad app chiusa**): si attivano per dispositivo con «Attiva notifiche di
+  sistema», che chiede il permesso del browser. Richiedono un piccolo servizio di invio (consigliato Cloudflare Workers,
+  piano gratuito) e le variabili `EXPO_PUBLIC_NUMMO_PUSH_URL`/`EXPO_PUBLIC_NUMMO_PUSH_KEY`: configurazione, privacy,
+  compatibilità (iPhone solo con Nummo nella schermata Home) e prove in [docs/notifiche-push.md](docs/notifiche-push.md).
+  Il servizio riceve solo gli orari dei promemoria, mai importi o descrizioni. «Invia notifica di prova» mostra subito
+  una notifica di sistema; «Prova con Nummo chiusa» fa arrivare una vera push dal servizio dopo circa 30 secondi.
+- **Avvisi dentro l'app** (ripiego finché le notifiche di sistema sono spente o non disponibili): controllati
+  all'apertura e quando si torna all'app; non arrivano ad app chiusa. Verranno rimossi dopo la verifica delle notifiche
+  di sistema sui dispositivi.
+
+Preferenze e stato restano nel browser (`nummo.notifications.v1`, più lo stato per archivio
+`nummo.notifications.v1.<local|UID>`; `nummo.push.v1` ricorda solo l'ultimo invio degli orari).
 
 - **Attiva notifiche**: interruttore generale. Spento, disattiva tutto ma conserva le scelte dei singoli avvisi.
 - **Promemoria backup** (solo Standard; predefinito attivo, ogni settimana; anche ogni 14 giorni o ogni mese): compare se
   è trascorso l'intervallo dall'ultimo backup confermato **e** i dati sono cambiati da allora. «Esporta backup» avvia
   l'esportazione JSON; poiché il browser non dice se il file è stato davvero salvato, Nummo chiede «Hai salvato il
-  backup?» e aggiorna la data solo dopo la conferma (anche per l'esportazione da Importa ed esporta). «Ricordamelo dopo»
+  backup?» e aggiorna la data solo dopo la conferma (anche per l'esportazione da Archiviazione e backup). «Ricordamelo dopo»
   rinvia di 3 giorni. In Avanzata non c'è: i dati sono in Firestore e il backup JSON resta una scelta manuale.
 - **Riepilogo spese** (entrambe le modalità; predefinito attivo, ogni settimana): alla fine di ogni periodo (settimana
   lunedì–domenica, blocchi di 14 giorni, mese di calendario) mostra totale, numero di spese, categoria principale e
@@ -80,12 +91,13 @@ Le sezioni [Installazione](#installazione) e [Pubblicazione](#pubblicazione) son
 - **Categorie** personalizzabili, con 39 icone selezionabili in tre stili, e **Analisi** con totali e grafici.
 - **Fondi e budget** facoltativi: spesa mensile per fondo e budget generale; i fondi già dotati di saldo conservano ricariche e movimenti.
 - **Liste della spesa** con checklist, totale manuale e registrazione di una sola spesa per acquisto.
-- **Importa ed esporta**, dal menu account: CSV per consultazione (Excel/LibreOffice) e backup JSON v6, unico formato di ripristino, con lettori delle versioni precedenti.
+- **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice) e backup JSON v6, unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.
-- **Notifiche in-app** configurabili: promemoria per il backup JSON (Standard) e riepilogo periodico delle spese.
+- **Notifiche** configurabili: promemoria per il backup JSON (Standard) e riepilogo periodico delle spese, come notifiche di
+  sistema anche ad app chiusa (Web Push, con servizio di invio da configurare) o, in mancanza, come avvisi dentro l'app.
 - **Due modalità di archiviazione**: Standard (sul dispositivo, senza account, backup JSON manuale) e Avanzata (Firestore, con sincronizzazione dell'SDK). Solo web; vedi i [limiti](#installazione-come-pwa).
 
 Stato: progetto personale con rilasci Hosting documentati in [HANDOFF.md](HANDOFF.md).
@@ -186,7 +198,7 @@ ogni dominio personalizzato.
 Esistono manifest e icone, quindi dal browser mobile (es. Chrome Android: ⋮ → «Installa app» o
 «Aggiungi a schermata Home») si può aggiungere Nummo alla schermata Home. Limiti reali:
 
-- Non c'è un service worker: **non è garantita l'apertura a freddo senza rete**.
+- Il service worker (`sw.js`) serve solo alle notifiche di sistema e non mette nulla in cache: **non è garantita l'apertura a freddo senza rete**.
 - In modalità Avanzata le modifiche, i backup e le importazioni richiedono la rete; gli inserimenti possono restare in coda nell'SDK fino alla conferma del server.
 - L'installazione e il login da app installata non sono ancora stati provati su dispositivi reali (iOS compreso).
 
@@ -230,7 +242,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 - **Avanzata**: l'accesso è riservato all'UID in `config/owner`, creato solo dalla Console: l'app non può nominare il proprietario.
 - Le regole in `firestore.rules` sono la vera protezione dei dati (la `apiKey` è pubblica). Pubblicale prima dell'uso e non usare la modalità test.
 - `.env.local`, `.env.production.local`, `.firebaserc` ed `emulator-data/` sono ignorati da Git: non versionarli e non pubblicarli. Non inserire chiavi di servizio nel frontend.
-- **Backup**: da menu account → «Importa ed esporta» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
+- **Backup**: da menu account → «Archiviazione e backup» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
 - Cache su disco (`EXPO_PUBLIC_FIRESTORE_CACHE=persistent`) solo su dispositivi fidati: contiene dati personali anche dopo il logout.
 - Costi, quote, fatturazione e conformità del progetto Firebase sono a tuo carico. Il software è fornito senza garanzie.
 

@@ -79,7 +79,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const mergeEmpty = !!merge && added.length === 0;
   const missing = merge ? merge.missingFundReferences + merge.missingCategoryReferences : 0;
   const finish = () => { setPreview(null); notify("Importazione completata."); };
-  return <Card>
+  return <Card style={styles.card}>
     <View style={styles.group}>
       <Text variant="titleSmall">{t("Consulta le spese")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
@@ -132,6 +132,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
 }
 
 const styles = StyleSheet.create({
+  card: { gap: spacing.xxxl },
   group: { gap: spacing.sm },
   lines: { gap: 2 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

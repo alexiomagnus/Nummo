@@ -19,7 +19,7 @@ In ciascuna modalità c'è una sola fonte di verità (IndexedDB oppure Firestore
 `AdvancedRoot` (sessione → `RemoteWorkspace` con key UID) → `AppShell` adattivo. Ogni radice è montata solo nella propria modalità;
 Firebase si inizializza solo in Avanzata. Hook e pagine conoscono solo il contratto `DataStore` (`services/dataStore.ts`).
 Stato React locale e Context di presentazione, nessun router/store globale. Quattro destinazioni (Spese, Analisi, Fondi, Liste) e «Nuova spesa»
-come azione primaria: mai due navigazioni. Impostazioni, Notifiche, Categorie e Importa ed esporta (in quest'ordine): pagine del menu account fuori dalle destinazioni (contatori
+come azione primaria: mai due navigazioni. Impostazioni, Notifiche, Categorie e Archiviazione e backup (in quest'ordine): pagine del menu account fuori dalle destinazioni (contatori
 `settingsRequest`/`notificationsRequest`/`categoriesRequest`/`backupRequest` da `App.tsx`; Categorie anche dal modulo), «Fatto» torna alla sezione di partenza.
 Da disconnessi Impostazioni sostituisce la schermata di accesso. Nessun dialogo per le impostazioni. Smartphone: pillola nel flusso del layout, destinazioni uguali
 con icona/etichetta (variante uniforme `labelMedium`/`labelSmall` scelta sullo spazio degli slot e sulla misura del testo in grassetto, riservando sempre il FAB), attiva su `primaryContainer`: un solo indicatore che scorre con la molla
@@ -27,7 +27,7 @@ con icona/etichetta (variante uniforme `labelMedium`/`labelSmall` scelta sullo s
 geometria pura in `navIndicator.ts`, click successivo al trascinamento soppresso); pulsante tondo in `primary`, nascosto nella pagina Nuova.
 Desktop: rail/drawer con FAB; la rail scorre verticalmente nelle finestre basse. Le azioni di Nuova spesa sono sempre nel flusso, dopo tutti i campi, senza barra sticky.
 Il contenuto occupa sempre tutta la larghezza del pannello, anche su monitor grandi: nessun limite
-di larghezza né colonna centrata in `AppShell`. Salva su expanded non cresce a tutta riga (minimo 192 px).
+di larghezza né colonna centrata in `AppShell`. Salva occupa sempre tutta la larghezza del modulo, anche su expanded.
 La navigazione mobile si nasconde già al tocco su un campo scrivibile (anticipo con scadenza se non segue la tastiera),
 ma conserva il proprio spazio fino alla conferma dal viewport: il bersaglio non deve spostarsi tra pressione e rilascio;
 e, dopo conferma dal viewport, resta nascosta durante la chiusura fino al recupero dell'altezza;
@@ -46,15 +46,16 @@ come scroll padding solo in navigazione da tastiera fisica (il focus programmati
 | `src/features/history/`, `dashboard/` | Occorrenze calcolate fino a oggi, non materializzate nel database; pagina Spese in due viste a segmenti, spese singole (`ExpenseList`) e abbonamenti = serie ricorrenti (`SubscriptionList`, stati e storico pagamenti); ciambella SVG DOM e blocchi/treemap puro su proiezione comune (`categoryPresentation.ts`), barre complete senza raggruppamenti, ordinate per spesa, lunghezza relativa alla categoria maggiore e quota sul totale esplicita, riepilogo e andamento SVG giornaliero (`insights.ts`). Variazione per categoria nelle Barre sui giorni precedenti di pari durata, solo con base positiva e storico sufficiente, nessun confronto globale; dettagli categoria in sola lettura sui dati già caricati; andamento con selezione del giorno e lettura di data/importo, senza apertura delle transazioni giornaliere. |
 | `src/features/lists/` | Liste della spesa: panoramica, checklist (`ListsPage`), dialoghi lista/prodotto, conferma `RegisterListDialog` (riusa `ExpenseFields`/`FundField`); `useRemoteLists` con scritture semplici accodate dall'SDK per liste e prodotti e registrazione in transazione server (una spesa + archiviazione). |
 | `src/features/funds/` | Pagina «Fondi e budget» (mese navigabile, effettivo/previsione): spesa del mese totale e per fondo, budget mensile generale facoltativo (`GeneralBudgetDialog`), fondi semplici (nome, icona, colore, budget; `FundEditor`/`fundFromForm`), spese del fondo nel mese, assegnazione esplicita delle spese senza fondo, `FundField` del modulo spesa. Saldo, ricariche e movimenti solo per i fondi che li avevano (`hasBalanceData`); `useRemoteFunds` con mutazioni solo in transazione server. |
-| `src/features/storage/` | `ModeChoice` (prima schermata), `StorageSection` (sezione «Archiviazione e backup» delle Impostazioni per le due modalità, stato della protezione locale in Standard, cambio modalità), `useStorageProtection` (richiesta automatica e stato; vive in `StandardWorkspace`). |
-| `src/features/notifications/` | Notifiche in-app: `NotificationsPage` (generale, promemoria backup solo Standard, riepilogo spese), `NotificationCards` (avvisi nel flusso sopra le pagine, mai modali), `useNotifications` (controllo all'avvio, al ritorno in primo piano e ogni 15 min; conferma esplicita del backup scaricato), `storage.ts` (localStorage sincronizzato tra schede). Regole pure in `domain/notifications.ts`. |
-| `src/features/backup/` | Pagina «Importa ed esporta» dal menu account sotto Categorie, fuori dalle destinazioni; azioni mantenute montate per conservare anteprima e operazioni al cambio sezione. CSV solo consultazione; JSON unico ripristino, riepilogo, unione senza sovrascritture o sostituzione con conferma/copia automatica. Nessun import CSV o adapter localStorage. |
+| `src/features/storage/` | `ModeChoice` (prima schermata), `StorageSection` (sezione in testa alla pagina «Archiviazione e backup» (non più nelle Impostazioni) per le due modalità, stato della protezione locale in Standard, cambio modalità), `useStorageProtection` (richiesta automatica e stato; vive in `StandardWorkspace`). |
+| `src/features/notifications/` | Notifiche: `NotificationsPage` (generale, «Notifiche di sistema» del browser, promemoria backup solo Standard con Esporta/Ricordamelo tra 3 giorni, riepilogo spese e riepilogo del periodo aperto da una notifica), `usePushNotifications` (stato Web Push e invio degli orari), `NotificationCards` (avvisi in-app nel flusso, mai modali: ripiego della fase 1, spenti quando il push è attivo nel browser), `useNotifications` (controllo all'avvio, al ritorno in primo piano e ogni 15 min; conferma esplicita del backup scaricato), `storage.ts` (localStorage sincronizzato tra schede). Regole pure in `domain/notifications.ts` e orari push in `domain/pushSchedule.ts`. |
+| `src/features/backup/` | Pagina «Archiviazione e backup» (ex «Importa ed esporta», icona database) dal menu account sotto Categorie, fuori dalle destinazioni; azioni mantenute montate per conservare anteprima e operazioni al cambio sezione. CSV solo consultazione; JSON unico ripristino, riepilogo, unione senza sovrascritture o sostituzione con conferma/copia automatica. Nessun import CSV o adapter localStorage. |
 | `src/features/settings/`, `src/i18n/` | Pagina `SettingsPage` (due colonne con almeno 872 px effettivi di contenuto); aspetto, IT/EN, stile delle icone di categoria e scelte di dashboard (grafico, periodo, andamento mostrato/nascosto) e visibilità del budget mensile generale in Fondi e dei controlli budget in Nuovo/Modifica fondo (`showGeneralBudget`, solo presentazione: i piani nascosti restano invariati al salvataggio) in `nummo.preferences.v1` nel browser; italiano iniziale. `I18nProvider` cambia lingua senza rimontare sessione/bozze; nessuna sincronizzazione Firebase. |
 | `src/components/`, `src/theme/` | Controlli Material 3, shell, icone, notifiche; palette e token condivisi, transizioni CSS in `motion.ts` e apertura dettagli con `Reveal`; overlay condivisi in `Overlay.tsx` (menu, fogli, base di `AppDialog`). `colors.panel`/`panelColor()` per pannelli desktop. |
 | `firestore.rules` | Accesso Google del solo UID in `config/owner` (amministrativo); namespace `users/{uid}` con `expenses/{uuid}` (con `fund_id` facoltativo), `categories/{uuid}`, `categoryNames/{name_key}`, `funds/{uuid}`, `movements/{uuid}` (immutabili), `settings/budget` (budget mensile generale, stringa compatta), `lists/{uuid}` e `listItems/{uuid}` (senza revisione), spese con `list_id`/`list_items` facoltativi; validazione di campi, tipi, importi, date, versioni e indici. |
+| `push-service/` | Servizio di invio Web Push, indipendente da Firebase: `service.ts` (API `/v1/subscription|test|snooze|renew`, invio pianificato, SQL), `webPush.ts` (RFC 8291/8292 con sola WebCrypto), `worker.ts` (Cloudflare Workers + D1), `local.ts` (Node + `node:sqlite`, chiavi e dati in `.local/` ignorata), `keys.ts`. Conserva solo endpoint, chiavi, lingua e orari: mai dati di spesa. Guida in `docs/notifiche-push.md`; `wrangler.toml` personale e ignorato. |
 | `scripts/` | Seed solo localhost; policy ambienti, runner hybrid, build cloud e pubblicazione solo Hosting. `measure-startup.mjs`: misura d'avvio in emulazione, procedura in `docs/avvio-prestazioni.md`. Config temporanea `.nummo-hybrid-<PID>.json` rimossa all'arresto: mai versionarla. |
 | `tests/` | Node runner per dominio/tema/i18n/config/strumenti; `emulator/` per SDK/Rules e `integration/` per lifecycle hybrid. |
-| `public/` | Modello HTML, manifest statico neutro, icone e font locali copiati nell'export; nessun service worker. `GlobalStyle` aggiorna theme-color e viewport via VisualViewport, senza reflow durante pinch zoom. Lo script inline `nummo-boot` di `index.html` legge solo valori di presentazione validati (`nummo.boot-theme.v1`, `nummo.session.hint.v1`) e ripiega sui colori statici. |
+| `public/` | Modello HTML, manifest statico neutro, icone (anche `badge-96.png` monocromatica delle notifiche) e font locali copiati nell'export; `sw.js` solo per le notifiche di sistema (push, tocco, rinvio, rinnovo), senza gestore `fetch` né cache. `GlobalStyle` aggiorna theme-color e viewport via VisualViewport, senza reflow durante pinch zoom. Lo script inline `nummo-boot` di `index.html` legge solo valori di presentazione validati (`nummo.boot-theme.v1`, `nummo.session.hint.v1`) e ripiega sui colori statici. |
 | `firebase.json` | Rules, emulatori e Hosting da `dist/`, fallback SPA, HTML/manifest no-cache, bundle Expo immutable, font/icone 1 giorno; niente COOP/COEP che interferirebbero col popup Google. |
 | `docs/testing/` | Backup JSON fittizi (dati TEST, date fisse) e guida ai risultati attesi per il collaudo d'importazione, preferibilmente in demo; aggiornarli con il `backupVersion`. Le fixture dei soli test automatici sono in `tests/fixtures/`. |
 | `emulator-data/`, `emulator-seed/` | Archivio personale persistente ignorato da Git; account Auth demo versionati. |
@@ -64,10 +65,15 @@ predefinito nel repository. `functions/` può contenere `.env` personali ignorat
 né cancellarli senza conferma. Backend storico recuperabile da `fe759d5`, adapter localStorage da `e2b84d3`.
 Logo adottato: «Arco» (`docs/design/logo-concepts/hybrids-10/01-arco-*`), già nelle icone di `public/icons/`, che restano la
 fonte per l'app. Gli altri SVG in `docs/design/logo-concepts/` sono studi separati: non integrarli senza richiesta esplicita.
-Chiavi `localStorage` dell'app: `nummo.storageMode.v1` (modalità), `nummo.notifications.v1` (preferenze delle notifiche) e `nummo.notifications.v1.<uid>` (date di avvio, ultimo backup confermato, rinvio, ultimo riepilogo chiuso), `nummo.storageProtection.v1` (solo ora dell'ultima richiesta di persistenza), `nummo.preferences.v1`, `nummo.boot-theme.v1`, `nummo.session.hint.v1`,
+Chiavi `localStorage` dell'app: `nummo.storageMode.v1` (modalità), `nummo.notifications.v1` (preferenze delle notifiche) e `nummo.notifications.v1.<uid>` (date di avvio, ultimo backup confermato, rinvio, ultimo riepilogo chiuso), `nummo.storageProtection.v1` (solo ora dell'ultima richiesta di persistenza), `nummo.push.v1` (firma e ora dell'ultimo invio degli orari push; IndexedDB `nummo-push` solo per i rinvii scelti sulla notifica), `nummo.preferences.v1`, `nummo.boot-theme.v1`, `nummo.session.hint.v1`,
 `nummo.defaultCategories.v1.<uid>`, `nummo.defaultFund.v1.<uid>` (solo ID del fondo predefinito; in Standard `<uid>` = `local`); nessun dato di spesa. L'indizio di sessione serve solo alla presentazione
 (segnaposto d'avvio, connessioni anticipate): non concede mai accesso, l'app attende sempre Firebase Auth.
-Aggiornare `Guide.tsx` quando cambiano le funzioni descritte; non presentare l’app come aperta a registrazioni.
+Aggiornare `Guide.tsx` (pagina pubblica «Cos'è Nummo») quando cambiano le funzioni descritte; non presentare l’app come aperta a registrazioni.
+La pagina è una presentazione, non un manuale: struttura fissa «Le funzioni principali» (una voce per funzione, titolo in grassetto + una o due frasi),
+«Dove sono i tuoi dati (Privacy e Backup)» con le due modalità e «Avvisi e promemoria». Comunicazione chiara, semplice e intuitiva per un utente medio:
+frasi brevi, seconda persona, parole dell'interfaccia (nomi di pagine e pulsanti come appaiono), niente termini tecnici (API, IndexedDB, Firestore,
+transazioni, schema) né dettagli di calcolo; ogni frase deve descrivere ciò che l'app fa oggi, senza promesse (notifiche ad app chiusa comprese).
+Nuove funzioni: aggiungere una voce breve, non un paragrafo per caso d'uso; testo in italiano più traduzione in `src/i18n/en.ts`, rimuovendo le chiavi non più usate.
 La splash Android usa colori/icone statici del manifest, non il tema o accento scelti nell’app.
 La barra di navigazione dell'app installata usa solo il `theme_color` del manifest (scuro, `#121212`), fissato nella
 WebAPK: la pagina e il tema di Nummo non possono cambiarla; non reintrodurre un `theme_color` chiaro.
@@ -91,6 +97,7 @@ Java per emulatori. La tabella descrive gli script del repository; esecuzioni ve
 | `npm run test:emulator` | SDK Auth/Firestore e Rules demo; avvia/arresta emulatori, richiede porte libere. |
 | `npm run test:hybrid` | Lifecycle con Firestore demo reale ed Expo simulato, porte/dati temporanei. |
 | `npm run build:cloud` / `npm run preview:cloud` | Build in `dist/` / serve l'export locale: usa progetto reale, nessuna scrittura senza autorizzazione. |
+| `npm run push:local` / `npm run push:keys` | Servizio push locale su 127.0.0.1:8790 per prove (origini da `PUSH_ALLOWED_ORIGINS`) / nuova coppia VAPID per la produzione. Deploy del Worker solo con autorizzazione (`docs/notifiche-push.md`). |
 | `npm run deploy:hosting` | Unico flusso previsto di pubblicazione, solo con autorizzazione; ricostruisce e pubblica solo Hosting sul progetto della build. `-- --dry-run` non pubblica; `-- --channel nome` pubblica anteprima per 7 giorni. |
 
 Modalità scelta **solo dai comandi npm**, `EXPO_PUBLIC_NUMMO_BACKEND=emulator|hybrid|cloud`;
@@ -125,13 +132,17 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   i record nella forma di dominio (array, non le stringhe compatte richieste dalle Rules) e li rivalida a ogni lettura.
   Schema locale: per cambiarlo aggiungere un passo a `localMigrations` (versione = numero di passi), mai modificare un passo
   esistente; dentro una transazione IndexedDB attendere solo le chiamate di `LocalTx`.
-- Backup: solo JSON manuale (Importa ed esporta). Google Drive e ogni backup automatico su cloud sono stati rimossi
+- Backup: solo JSON manuale (Archiviazione e backup). Google Drive e ogni backup automatico su cloud sono stati rimossi
   (14 novembre): non reintrodurli senza richiesta; `EXPO_PUBLIC_GOOGLE_CLIENT_ID` non è più ammessa da `build:cloud`.
 - Protezione locale (solo Standard): `persist()` automatico quando l'archivio ha dati, al massimo ogni 30 giorni, mai un
   interruttore; nella UI tre stati in parole semplici (protetto / protezione aggiuntiva non attiva / non disponibile),
   senza nomi di API né promesse di sicurezza assoluta. Scritture IndexedDB con durabilità `strict`; successo solo a
   transazione completata.
-- Notifiche: solo in-app (nessuna Notification API/push, nessun permesso, nessuna promessa ad app chiusa). Regole in
+- Notifiche: di sistema via Web Push (permesso chiesto solo da un gesto in Notifiche, per browser) con ripiego in-app
+  finché la fase 2 di `docs/notifiche-push.md` non è eseguita; mai due canali per lo stesso avviso nello stesso browser.
+  Il servizio push riceve solo orari, tipo, lingua e date del periodo, calcolati sul dispositivo (`pushSchedule.ts`);
+  testi scritti da `sw.js`, generici e veri anche senza dati (il riepilogo si calcola all'apertura). Distinguere sempre
+  la prova locale (aspetto) dalla consegna ad app chiusa (`/v1/test` con ritardo). Regole in
   `domain/notifications.ts`, mai scritture di dati di spesa. Il backup conta solo dopo la conferma esplicita dell'utente
   («Hai salvato il backup?»), mai al solo avvio del download. Promemoria backup solo in Standard (orologio `lastChange`
   dell'archivio locale via `localArchive`); riepilogo senza serie ricorrenti né date future. Attivazione e cambio di

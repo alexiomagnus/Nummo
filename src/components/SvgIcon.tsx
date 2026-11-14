@@ -22,6 +22,7 @@ export const iconShapes = {
   tag: '<path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="8.5" r="1"/>',
   logout: '<path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5M15 8l4 4-4 4M19 12H9"/>',
   checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',
+  cloud: '<path d="M7 18a4.5 4.5 0 0 1-1.6-8.7A6 6 0 0 1 18 10.5 3.75 3.75 0 0 1 17 18H7Z"/>',
   cloudOff: '<path d="M3 3l18 18M7 18a4.5 4.5 0 0 1-1.6-8.7M9.5 5.6A6 6 0 0 1 18 10.5 3.75 3.75 0 0 1 20 15M12 18H7"/>',
   sync: '<path d="M20 11a8 8 0 0 0-14-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14 4.5l2-2M20 20v-4.5h-4.5"/>',
   alert: '<path d="M12 3 2 20h20L12 3ZM12 10v4M12 17.5h.01"/>',
@@ -45,12 +46,14 @@ export const iconShapes = {
   wallet: '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M16 13.5h1.5"/>',
   swap: '<path d="M4 8h14m-3-3 3 3-3 3M20 16H6m3-3-3 3 3 3"/>',
   archive: '<rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V8.5M10 12h4"/>',
+  // Storage and backup (account menu): a database cylinder.
+  database: '<ellipse cx="12" cy="6" rx="7.5" ry="2.5"/><path d="M4.5 6v6c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5V6M4.5 12v6c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-6"/>',
   star: '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
   // Shopping lists (navigation, «Lista spesa» mark on expenses).
   checklist: '<path d="m3.5 6.5 1.5 1.5 3-3M3.5 15.5 5 17l3-3M11 7h9.5M11 16h9.5"/>',
   // Notifications (account menu, in-app notices).
   bell: '<path d="M18 16v-5a6 6 0 0 0-12 0v5l-1.5 2h15L18 16Z"/><path d="M10 18a2 2 0 0 0 4 0"/>',
-  // Protection of the device archive (Settings → Archiviazione e backup).
+  // Protection of the device archive (page Archiviazione e backup).
   shield: '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6l-7-3Z"/>',
   shieldCheck: '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6l-7-3Z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
   shieldOff: '<path d="M8 4.7 12 3l7 3v5.5c0 1.8-.5 3.5-1.5 5M16 19a12 12 0 0 1-4 2c-4.1-1.6-7-5.3-7-9.5V7M3 3l18 18"/>',

@@ -10,6 +10,8 @@ const cloud = {
 test('build cloud: configurazione valida, e ogni miscela è respinta', () => {
   assert.deepEqual(cloudEnvProblems(cloud), []);
   assert.deepEqual(cloudEnvProblems({ ...cloud, EXPO_PUBLIC_FIRESTORE_CACHE: 'persistent' }), []);
+  const push = { EXPO_PUBLIC_NUMMO_PUSH_URL: 'https://nummo-push.example.workers.dev', EXPO_PUBLIC_NUMMO_PUSH_KEY: 'B'.repeat(87) };
+  assert.deepEqual(cloudEnvProblems({ ...cloud, ...push }), []);
   const rejected: Record<string, Record<string, string | undefined>> = {
     'backend assente': { EXPO_PUBLIC_NUMMO_BACKEND: undefined },
     'backend hybrid': { EXPO_PUBLIC_NUMMO_BACKEND: 'hybrid' },
@@ -22,6 +24,11 @@ test('build cloud: configurazione valida, e ogni miscela è respinta', () => {
     'dominio locale': { EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: 'localhost' },
     'cache non valida': { EXPO_PUBLIC_FIRESTORE_CACHE: 'memory' },
     // Il backup su Google Drive è stato rimosso: la variabile del vecchio client OAuth non è più ammessa.
+    'push senza chiave': { EXPO_PUBLIC_NUMMO_PUSH_URL: 'https://nummo-push.example.workers.dev' },
+    'push senza indirizzo': { EXPO_PUBLIC_NUMMO_PUSH_KEY: 'B'.repeat(87) },
+    'push locale': { EXPO_PUBLIC_NUMMO_PUSH_URL: 'https://localhost/x', EXPO_PUBLIC_NUMMO_PUSH_KEY: 'B'.repeat(87) },
+    'push in http': { EXPO_PUBLIC_NUMMO_PUSH_URL: 'http://push.example', EXPO_PUBLIC_NUMMO_PUSH_KEY: 'B'.repeat(87) },
+    'push con chiave privata': { EXPO_PUBLIC_NUMMO_PUSH_URL: 'https://push.example', EXPO_PUBLIC_NUMMO_PUSH_KEY: 'x'.repeat(43) },
     'client Google del backup Drive rimosso': { EXPO_PUBLIC_GOOGLE_CLIENT_ID: '1234-abc.apps.googleusercontent.com' },
   };
   for (const [label, change] of Object.entries(rejected)) assert.ok(cloudEnvProblems({ ...cloud, ...change }).length > 0, label);

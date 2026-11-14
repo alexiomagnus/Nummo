@@ -7,7 +7,7 @@ import type { Category } from '../../domain/category';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { useI18n } from '../../i18n/I18nProvider';
 import { otherCategoriesKey, type Series } from '../../domain/history';
-import { radius, spacing } from '../../theme/tokens';
+import { shape, spacing } from '../../theme/tokens';
 import { categoryPercent } from './categoryPresentation';
 import { seriesColor, type ChartColors } from './charts';
 import { seriesLabel } from './seriesLabel';
@@ -24,6 +24,9 @@ function columnsOf<T>(items: readonly T[], count: number): T[][] {
   const size = Math.ceil(items.length / count);
   return Array.from({ length: count }, (_, i) => items.slice(i * size, (i + 1) * size)).filter((column) => column.length > 0);
 }
+
+// Selected/hovered legend rows (donut and blocks share this legend): a squarer highlight than cards and controls.
+const legendRadius = shape.md;
 
 export function CategoryLegend({ series, others, categories, total, colors, active, onActive, showSeries = true, onOpen, compact = false }: Props) {
   const { t, formatAmount } = useI18n();
@@ -58,7 +61,7 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
   const seriesRow = (item: Series) => {
     const index = series.indexOf(item);
     return <View key={item.key} nativeID={`dashboard-category-${item.key}`} role="listitem">
-      <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={compact ? radius.control : radius.card}
+      <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
         onPress={() => onActive(active === index ? null : index)} aria-pressed={active === index}
         accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
         style={[styles.row, compact && styles.compactRow, active === index && { backgroundColor: theme.colors.secondaryContainer }]}>
@@ -67,7 +70,7 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
     </View>;
   };
   const otherRow = (item: Series) => <View key={item.key} role="listitem">
-    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={compact ? radius.control : radius.card}
+    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
       onPress={() => onOpen?.(item.key)} style={[styles.row, compact && styles.compactRow]}>{content(item)}</StateLayerPressable>
   </View>;

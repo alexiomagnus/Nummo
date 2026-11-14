@@ -1,0 +1,19 @@
+# Copy to push-service/wrangler.toml (ignored by Git) and fill in the values. See docs/notifiche-push.md.
+name = "nummo-push"
+main = "worker.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true      # public address https://nummo-push.<subdomain>.workers.dev (needed by the app)
+
+[triggers]
+crons = ["* * * * *"]   # every minute: reminders and the "app closed" test are sent within about a minute
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nummo-push"
+database_id = "REPLACE_WITH_THE_ID_PRINTED_BY_wrangler_d1_create"
+
+[vars]
+VAPID_PUBLIC_KEY = "REPLACE_WITH_THE_PUBLIC_KEY"
+VAPID_SUBJECT = "https://REPLACE.web.app"          # the site's address (or mailto:...): contact for the push services
+ALLOWED_ORIGINS = "https://REPLACE.web.app,https://REPLACE.firebaseapp.com"
+# VAPID_PRIVATE_KEY is a secret: `npx wrangler secret put VAPID_PRIVATE_KEY`, never in this file.

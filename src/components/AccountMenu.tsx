@@ -63,8 +63,8 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
       <Menu.Item title={t("Categorie")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.tag} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenCategories(); }} />
-      <Menu.Item title={t("Importa ed esporta")} style={styles.item}
-        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.download} size={size} color={color} />}
+      <Menu.Item title={t("Archiviazione e backup")} style={styles.item}
+        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.database} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenBackup(); }} />
       {onSignOut && <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
@@ -75,7 +75,7 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
 }
 
 const styles = StyleSheet.create({
-  menu: { minWidth: 232, borderRadius: radius.control, paddingVertical: 0, overflow: 'hidden' },
+  menu: { minWidth: 264, borderRadius: radius.control, paddingVertical: 0, overflow: 'hidden' },
   // Size items against the account menu rather than Paper's independent width cap.
   // Edge-to-edge rows: the menu clips hover/ripple to its outer corners, including the final row.
   item: { maxWidth: '100%', borderRadius: 0, overflow: 'hidden' },

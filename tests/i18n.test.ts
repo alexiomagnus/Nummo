@@ -28,7 +28,7 @@ test('lingue: testo italiano, inglese, parametri e fallback senza alterare i dat
   assert.equal(t('Mostra altre spese'), 'Show more expenses');
   assert.equal(t('In prova gratuita'), 'On free trial');
   assert.equal(translate('en', 'Primo pagamento {p0}', { p0: '9 Dec 2026' }), 'First payment 9 Dec 2026');
-  assert.equal(translate('it', 'Periodo di prova gratuito'), 'Periodo di prova gratuito');
+  assert.equal(translate('it', 'Prova gratuita'), 'Prova gratuita');
   assert.equal(t('Ripristina predefiniti'), 'Restore defaults');
   assert.equal(translate('it', 'Ripristina predefiniti'), 'Ripristina predefiniti');
   assert.equal(translate('en', 'Mostrate {p0} di {p1} spese', { p0: 50, p1: 240 }), 'Showing 50 of 240 expenses');
@@ -138,7 +138,7 @@ test('impostazioni: interruttore del budget mensile tradotto in entrambe le ling
 });
 
 test('nuova spesa: etichette della sezione ricorrente tradotte, vecchia etichetta dei rinnovi rimossa', () => {
-  for (const [it, en] of [['Pagamento ricorrente', 'Recurring payment'], ['Rinnovi a prezzo promozionale', 'Renewals at promotional price'], ['Prezzo promozionale', 'Promotional price'], ['Periodo di prova gratuito', 'Free trial']] as const) {
+  for (const [it, en] of [['Pagamento ricorrente', 'Recurring payment'], ['Rinnovi a prezzo promozionale', 'Renewals at promotional price'], ['Prezzo promozionale', 'Promotional price'], ['Prova gratuita', 'Free trial']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
   }

@@ -24,14 +24,14 @@ export function TrialField({ enabled, firstPaymentDate, startDate, error, disabl
     error={Boolean(error)} disabled={disabled || locked} onChange={(value) => onChange({ firstPaymentDate: value || todayInRome() })} />;
   // Edit dialog: a saved trial cannot be removed, so a title replaces the switch and the date follows it directly.
   if (existing) return <View style={styles.group}>
-    <Text variant="titleSmall">{t('Periodo di prova gratuito')}</Text>
+    <Text variant="titleSmall">{t('Prova gratuita')}</Text>
     {date}
     {locked && <Text variant="bodySmall">{t('La prova è terminata: la data del primo pagamento resta invariata.')}</Text>}
     {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
   </View>;
   // New series: the switch, and the date (aligned with the switch label) only while the trial is on.
   return <View>
-    <SwitchRow label={t('Periodo di prova gratuito')} value={enabled} disabled={disabled}
+    <SwitchRow label={t('Prova gratuita')} value={enabled} disabled={disabled}
       onChange={(trial) => onChange({ trial, ...(trial && !firstPaymentDate && isValidDate(startDate)
         ? { firstPaymentDate: occurrenceDateAt(startDate, 'monthly', 1) } : {}) })} />
     <Disclosure open={enabled} style={styles.inset}>

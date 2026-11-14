@@ -5,11 +5,31 @@ Decisione BYOF: 2 novembre 2026; revisione UI e contesto: 12 novembre 2026. La r
 incrementale: [migrazione-byof.md](migrazione-byof.md).
 
 Le sezioni datate conservano anche decisioni successivamente sostituite. Comportamento corrente:
-quattro destinazioni Spese, Analisi, Fondi e Liste; Impostazioni, Notifiche, Categorie e Importa ed esporta dal menu account.
+quattro destinazioni Spese, Analisi, Fondi e Liste; Impostazioni, Notifiche, Categorie e Archiviazione e backup (ex Importa ed esporta) dal menu account.
 Impostazioni è una pagina (anche prima del login), con due colonne solo da 872 px effettivi di contenuto.
 Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella senza totale centrale e Blocchi;
 l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
 convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
+
+## Notifiche di sistema con Web Push (fase 1) — 14 novembre 2026
+
+Su richiesta, sostituisce progressivamente il punto «solo in-app» della decisione sotto. Dettagli in
+[notifiche-push.md](notifiche-push.md).
+
+- **Perché un servizio.** Senza un server non esiste un modo affidabile di consegnare notifiche ad app chiusa: Notification
+  Triggers è abbandonata, Periodic Background Sync è solo Chrome per app installate e non esiste su iOS.
+- **Un solo servizio per le due modalità, senza Firebase**: `push-service/` (API web standard: Cloudflare Workers + D1
+  gratuito in produzione, Node + `node:sqlite` in locale). Scartate le Cloud Functions: piano Blaze con fatturazione e
+  dipendenza da Firebase anche in Standard.
+- **Privacy.** Gli orari si calcolano sul dispositivo (`domain/pushSchedule.ts`, stesse regole di `notifications.ts`); il
+  servizio conserva solo sottoscrizione, lingua, tipo/orario/ripetizione dei promemoria, date del periodo e ultima consegna.
+  Messaggio cifrato (RFC 8291) senza testo né dati: lo scrive `sw.js`, generico e vero; il riepilogo si calcola
+  all'apertura. Nessun account: l'endpoint stesso fa da credenziale; solo origini ammesse e host dei servizi push noti.
+- **Nessun duplicato**: un promemoria per tipo, riepilogo per periodo consegnato una volta, backup mai anticipato dopo una
+  consegna, tag per tipo; con il push attivo gli avvisi in-app del browser sono spenti.
+- **Service worker** `public/sw.js` limitato alle notifiche: nessuna cache, nessuna promessa di avvio offline.
+- **Fase 2** (rimozione degli avvisi in-app e del controllo ogni 15 minuti) solo dopo la verifica sui dispositivi reali
+  con il servizio pubblicato.
 
 ## Rimozione di Google Drive, protezione locale e notifiche in-app — 14 novembre 2026
 

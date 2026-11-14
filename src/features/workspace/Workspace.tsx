@@ -39,6 +39,7 @@ import { message } from '../expenses/useRemoteExpenses';
 import { NotificationCards } from '../notifications/NotificationCards';
 import { NotificationsPage } from '../notifications/NotificationsPage';
 import { useNotifications, type LocalArchive } from '../notifications/useNotifications';
+import { onNotificationOpened, type OpenedNotification } from '../../services/pushNotifications';
 import { getDatabase } from '../../services/firebase';
 import { createFirestoreStore } from '../../services/firestoreStore';
 import type { DataStore } from '../../services/dataStore';
@@ -65,7 +66,7 @@ const destinations: readonly Destination<Section>[] = [
 type ListView = 'expenses' | 'subscriptions';
 // Short labels keep the segmented button on one line at every width; the accessible name of the second is the full one.
 const listViews = [{ value: 'expenses', label: 'Spese', full: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Importa ed esporta', settings: 'Impostazioni', notifications: 'Notifiche' };
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Archiviazione e backup', settings: 'Impostazioni', notifications: 'Notifiche' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
 const accountPages: ReadonlySet<Section> = new Set(['categories', 'backup', 'settings', 'notifications']);
@@ -79,7 +80,9 @@ type DashboardSettingsProps = {
 };
 
 // `renderSettings` draws the settings page (preferences live in App); `onDone` returns to the originating section.
-type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void) => ReactNode };
+type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void) => ReactNode;
+  // Storage section of the backup page (where the data is, protection, mode change), drawn by the app for the current mode.
+  storage?: ReactNode };
 
 // `localArchive`: the device archive's change clock, given only in the Standard mode (backup reminder).
 type WorkspaceProps = { storageNote: string; topActions?: ReactNode; onReleased?: () => void; localArchive?: LocalArchive } & AccountPageProps & DashboardSettingsProps;
@@ -92,7 +95,7 @@ export function RemoteWorkspace({ uid, ...props }: { uid: string } & WorkspacePr
 
 // The workspace on any store (Firestore or this device). `scope` names the archive for the few browser-side
 // identifiers kept per archive (default fund, one-time default categories): the UID, or `local`.
-export function DataWorkspace({ backend, scope: uid, storageNote, topActions, onReleased, localArchive, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, renderSettings }: { backend: DataStore; scope: string } & WorkspaceProps) {
+export function DataWorkspace({ backend, scope: uid, storageNote, topActions, onReleased, localArchive, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, renderSettings, storage }: { backend: DataStore; scope: string } & WorkspaceProps) {
   const local = backend.kind === 'local';
   const store = useRemoteExpenses(backend, storageNote);
   const categoryState = useRemoteCategories(backend);
@@ -137,7 +140,7 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
     uid={uid} backend={backend} store={store} localArchive={localArchive} categoryState={categoryState} starting={!released}
     listState={listState} occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon}
     online={online} synchronized={synchronized} error={error} fundState={fundState} today={today}
-    renderSettings={renderSettings} settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} categoriesRequest={categoriesRequest}
+    renderSettings={renderSettings} storage={storage} settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} categoriesRequest={categoriesRequest}
     backupRequest={backupRequest} topActions={topActions} status={status} />;
 }
 
@@ -210,10 +213,10 @@ type SectionsProps = DashboardSettingsProps & {
   subscriptions: ReturnType<typeof subscriptionSummaries>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
-  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void) => ReactNode; localArchive?: LocalArchive;
+  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void) => ReactNode; storage?: ReactNode; localArchive?: LocalArchive;
 };
 
-function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings, localArchive }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -289,6 +292,9 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       notifications.backupDownloaded(at);
     } catch (reason) { notify(message(reason)); } finally { setExporting(false); }
   };
+  // A system notification tapped: its page opens (the Notifications page, with the summary of that period).
+  const [opened, setOpened] = useState<OpenedNotification | null>(null);
+  useEffect(() => onNotificationOpened((next) => { setOpened(next); onNavigate('notifications'); }), [onNavigate]);
   const listNote = editing?.list_id ? (listState.lists.some((l) => l.id === editing.list_id && l.expense_id === editing.id) ? 'linked' : 'unlinked') : undefined;
   return <>
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
@@ -334,7 +340,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       </View>
     </VisitedSection>
     {/* Preserve import previews and in-flight actions when leaving this page; no reads until an explicit action. */}
-    <View style={section === 'backup' && !starting ? undefined : styles.hidden}>
+    <View style={section === 'backup' && !starting ? styles.backupPage : styles.hidden}>
+      {storage}
       <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
     </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} />}
@@ -345,7 +352,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}
       preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} /></VisitedSection>
     {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo))}
-    {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} />}
+    {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} opened={opened} onCloseOpened={() => setOpened(null)}
+      exporting={exporting} onExport={() => void exportFromReminder()} />}
     {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}
@@ -367,6 +375,7 @@ const styles = StyleSheet.create({
   // Pages fill the main area; the shell does not cap their width.
   list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
+  backupPage: { gap: layout.sectionGap },
   starting: { alignItems: 'center', padding: spacing.xxl },
   startingOverlay: { position: 'absolute', top: spacing.xxl, left: 0, right: 0, alignItems: 'center', zIndex: 1 },
   grow: { flexGrow: 1 },

@@ -109,11 +109,15 @@ function ExpenseFormView({ categories, store, onCreateCategory, canCreateCategor
 
   const startDate = draft.date || todayInRome();
   const billingStart = draft.trial && draft.firstPaymentDate ? draft.firstPaymentDate : startDate;
+  // One rhythm for the blocks that follow the fund field: recurrence, free trial, promotional price and Save are all
+  // spaced like the fund field and the recurrence switch (this gap plus the switch row's own inset).
+  const blockGap = desktop ? spacing.lg : spacing.xl;
+  const formGap = desktop ? spacing.md : spacing.lg;
   const repeat = (
-    <View style={[styles.repeat, desktop && styles.repeatDesktop]}>
+    <View style={{ gap: blockGap }}>
       {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
         onChange={(fundId) => update({ fundId })} />}
-      <RepeatField repeat={draft.repeat} recurrence={draft.recurrence}
+      <RepeatField gap={blockGap} repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })}>
         <TrialField enabled={draft.trial} firstPaymentDate={draft.firstPaymentDate} startDate={startDate}
@@ -146,9 +150,9 @@ function ExpenseFormView({ categories, store, onCreateCategory, canCreateCategor
             <View style={styles.actions}><Button mode="contained" onPress={store.retry}>{t("Verifica sul server")}</Button></View>
           </>
         ) : (
-          <View style={styles.actions}>
+          <View style={[styles.actions, { marginTop: blockGap - formGap }]}>
             <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
-              contentStyle={styles.button} labelStyle={styles.label} style={[styles.submit, desktop && styles.submitDesktop]}>
+              contentStyle={styles.button} labelStyle={styles.label} style={styles.submit}>
               {submission.status === 'sending' ? t("In attesa di conferma…") : t("Salva")}
             </Button>
           </View>
@@ -163,12 +167,9 @@ const styles = StyleSheet.create({
   page: { width: '100%' },
   form: { width: '100%', gap: spacing.lg },
   formDesktop: { gap: spacing.md },
-  repeatDesktop: { gap: spacing.lg },
-  repeat: { gap: spacing.xl },
   footer: { gap: spacing.md },
-  actions: { flexDirection: 'row', marginTop: spacing.sm },
+  actions: { flexDirection: 'row' },
   submit: { flexGrow: 1 },
-  submitDesktop: { flexGrow: 0, minWidth: 192 },
   label: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   button: { minHeight: layout.controlHeight },
 });

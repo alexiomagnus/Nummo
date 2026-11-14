@@ -26,6 +26,72 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, pubblicazione Hosting e Rules
   (solo con autorizzazione).
 
+## Notifiche di sistema Web Push, fase 1 — 14 novembre 2026
+
+- **Implementato** (dettagli, configurazione e fase 2 in `docs/notifiche-push.md`, decisione in `docs/architecture.md`):
+  `push-service/` (servizio di invio con sola WebCrypto: Cloudflare Workers + D1 o Node + `node:sqlite`), `public/sw.js`
+  (solo notifiche, nessuna cache), `domain/pushSchedule.ts` (orari calcolati sul dispositivo), `services/pushNotifications.ts`,
+  `usePushNotifications`, scheda «Notifiche di sistema» in Notifiche (attiva, prova locale, «Prova con Nummo chiusa»,
+  disattiva, stati non supportato / iPhone senza Home / non configurato / bloccato), riepilogo del periodo e azioni del
+  promemoria backup nella pagina aperta dalla notifica, badge `public/icons/badge-96.png`, variabili
+  `EXPO_PUBLIC_NUMMO_PUSH_URL`/`_KEY` in `envPolicy`, script `push:local`/`push:keys`, testo della Guida «Avvisi e promemoria».
+  Nessuna dipendenza nuova. Avvisi in-app **conservati** come ripiego e spenti nel browser con push attivo.
+- **Verifiche.** `npm run check` OK: typecheck, **416/416** test (nuovi `webPush` 3 con vettore RFC 8291, `pushService` 7,
+  `pushSchedule` 4, `serviceWorker` 3, `envPolicy` esteso), build demo; `git diff --check` OK. Prova reale su questo
+  computer: Chromium 156 headless, build demo Standard con push verso `push-service/local.ts`: **23/23**, compresa una
+  **push vera ricevuta tramite il servizio di Google e mostrata con nessuna pagina di Nummo aperta** (~30 s). Screenshot
+  412 px della pagina osservato, nessun overflow. Processi di prova arrestati; hybrid dell'utente non toccato.
+- **Non verificato:** clic reale sulla notifica del sistema (solo sandbox), Firefox, Safari, Android, iOS (solo da Home),
+  Windows/macOS, Avanzata nel browser, Cloudflare reale (nessun deploy né risorsa creata). Chiavi VAPID di prova in
+  `push-service/.local/` (ignorata), da non usare in produzione.
+- **Preparazione produzione (14 novembre, su richiesta, senza deploy):** D1 remoto `nummo-push` creato (regione EEUR) e
+  schema di `service.ts` applicato con `d1 execute --remote` (tabelle `subscriptions`, `jobs`, `sent`, indice `jobs_due`);
+  `push-service/wrangler.toml` (ignorato) con `database_id`, chiave VAPID pubblica di produzione, `VAPID_SUBJECT` mailto e
+  origini `web.app`/`firebaseapp.com`; in `.env.production.local` `EXPO_PUBLIC_NUMMO_PUSH_KEY` (VAPID pubblica) e
+  URL `https://nummo-push.artemis-nord.workers.dev`. Chiavi VAPID rigenerate dall'utente (la prima coppia era finita in chat);
+  segreto `VAPID_PRIVATE_KEY` e deploy del Worker eseguiti dall'utente. Hosting non pubblicato.
+- **Incidente 14 novembre (risolto):** `npx wrangler` lanciato in `push-service/` gira dalla radice del pacchetto: senza config
+  ha generato `wrangler.jsonc` e pubblicato `dist/` come Worker `nummo`. L'utente l'ha eliminato con i file generati e ha
+  pubblicato `nummo-push` con `--config push-service/wrangler.toml` (template ora con `workers_dev = true`, guida corretta).
+- **Verificato in remoto (17:23 UTC):** solo il Worker `nummo-push`; `/v1/health` 200 con la chiave pubblica nuova; preflight
+  CORS 204 da `web.app`, 403 da origine estranea; cron ogni minuto; binding `DB`, `VAPID_*`, `ALLOWED_ORIGINS`. Non verificati:
+  corrispondenza della chiave privata (solo con una push reale) e consegna sui dispositivi.
+- **Pubblicazione (14 novembre, dall'utente):** `deploy:hosting` eseguito; l'utente riferisce che tutto funziona, compresa
+  «Prova con Nummo chiusa» (dispositivi e browser non specificati, non verificati da questa sessione).
+  Brave: funziona dopo «Use Google services for push messaging» + riavvio (riferito dall'utente; nota in `docs/notifiche-push.md`).
+- **Prossimo passo possibile, solo su richiesta:**
+  fase 2 (rimozione di `NotificationCards`, del controllo ogni 15 minuti e spostamento di «Hai salvato il backup?»).
+- Durante il lavoro un'altra sessione ha modificato Guida, Archiviazione e backup, modulo spesa e documenti: modifiche
+  conservate e incluse nei controlli sopra. Nessun commit, push o deploy.
+
+## Nuova spesa: senza divisori, Salva a destra su desktop — 14 novembre 2026
+
+- `RepeatField`: tolti i divisori tra frequenza, Prova gratuita e Prezzo promozionale (spazio tra i gruppi allineato a quello tra campo Fondo e «Ricorrente»: `blockGap` in `ExpenseForm`, 24 dp su smartphone, 16 su desktop, più il margine interno delle righe con interruttore; vale anche per Salva).
+  `ExpenseForm`: su expanded Salva era stato allineato a destra, poi (su richiesta) di nuovo a tutta larghezza come su smartphone/medium.
+- `npm run check` OK. Resa nel browser non verificata.
+
+## Pagina «Cos'è Nummo» riscritta — 14 novembre 2026
+
+- `Guide.tsx` sostituita con il testo fornito dall'utente: introduzione, «Le funzioni principali» (cinque voci), «Dove sono i
+  tuoi dati (Privacy e Backup)» con modalità Standard/Avanzata e nota sugli archivi separati, «Avvisi e promemoria». Rimosse le
+  sezioni di dettaglio (categorie, liste, abbonamenti, fondi, esportazione, notifiche): la pagina è ora una presentazione.
+  Traduzioni EN aggiunte, 43 chiavi non più usate rimosse. In AGENTS.md la regola per aggiornare la pagina (chiara, semplice, per un utente medio).
+- Ritocchi al testo fornito: la nota sul cambio modalità cita «Archiviazione e backup» (non più Impostazioni) e gli avvisi dicono
+  che non arrivano notifiche ad app chiusa e che il promemoria backup vale in Standard (il testo originale parlava di «notifiche
+  invasive» e di backup per entrambe le modalità, non vero oggi).
+- `npm run check` OK (413/413, build demo). Resa nel browser non verificata.
+
+## Archiviazione e backup: sezione spostata dalle Impostazioni — 14 novembre 2026
+
+- Su richiesta la sezione «Archiviazione e backup» (dove sono i dati, protezione locale in Standard, progetto/account/cache
+  in Avanzata, «Cambia modalità») passa dalle Impostazioni alla testa della pagina, ora rinominata **«Archiviazione e backup»**
+  (prima «Importa ed esporta»; voce di menu, titolo, Guida, README, AGENTS). Icona del menu: nuovo glifo `database`.
+  Tutte le azioni di backup (CSV, JSON, importa, unisci/sostituisci) invariate. Rimosso dalla sezione il pulsante «Importa ed
+  esporta file» (ora puntava alla pagina stessa). `SettingsPage` non riceve più `storage`; `storage` è una prop di `DataWorkspace`.
+- Conseguenza: da disconnessi in Avanzata le Impostazioni non mostrano più progetto Firebase né «Cambia modalità»
+  (resta «Usa Nummo senza account» nella schermata di accesso).
+- `npm run check` OK (413/413, typecheck, build demo). Resa nel browser **non verificata**.
+
 ## Riallineamento documentale dopo la rimozione di Drive — 14 novembre 2026
 
 - `docs/architecture.md`, «Flusso attivo»: diagramma e testo descrivono ora le due modalità (IndexedDB in Standard,
@@ -46,7 +112,7 @@ cronaca delle singole fasi e possono dire cose superate.
 
 ## Menu account: maggiore larghezza — 14 novembre 2026
 
-- Larghezza minima del pannello `AccountMenu` a 232 dp (prima circa 202 dp in Standard), per dare più spazio
+- Larghezza minima del pannello `AccountMenu` a 232 dp (poi 264 dp il 14 novembre, per «Archiviazione e backup») (prima circa 202 dp in Standard), per dare più spazio
   dopo «Importa ed esporta», mantenendo l'hover a filo del contorno.
 - `npm run check` OK (399/399, typecheck e build demo), diff check OK. Chromium demo Standard a 320/1280 px
   chiaro/scuro: pannello 232 px, voci a tutta larghezza; screenshot 320 scuro osservato, nessun errore JS.

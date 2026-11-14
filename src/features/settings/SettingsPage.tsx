@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
@@ -22,8 +22,6 @@ type Props = {
   onChange: (change: Partial<Preferences>) => void;
   onReset: () => void;
   onDone: () => void;
-  // «Archiviazione e backup»: drawn by the app for the current mode (device archive or Firebase), first in the page.
-  storage?: ReactNode;
 };
 
 const themeOptions: { value: ThemeChoice; label: string }[] = [
@@ -41,7 +39,7 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 // Display settings page, opened from the account menu (or the sign-in screen), outside the main destinations.
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
 // Sections stack on phones and pair up in two columns when the window is wide enough.
-export function SettingsPage({ preferences, dark, onChange, onReset, onDone, storage }: Props) {
+export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
@@ -54,7 +52,6 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, sto
         <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}
           onPress={onDone}>{t("Fatto")}</Button>} />
       <View style={styles.grid}>
-        {storage}
         <Card title={t("Lingua")} style={section}>
           <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
             value={preferences.language} onChange={(language) => language && onChange({ language })} />

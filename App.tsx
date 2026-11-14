@@ -66,10 +66,10 @@ type RootProps = {
   dark: boolean; onToggleTheme: () => void; preferences: Preferences;
   onChangePreferences: (change: Partial<Preferences>) => void; onResetPreferences: () => void;
 };
-// What the three screens below share: the theme button, the settings page (with its storage section) and the mode switch.
+// What the three screens below share: the theme button, the settings page and the mode switch.
 type ModeProps = RootProps & {
   themeToggle: ReactNode;
-  renderSettings: (onDone: () => void, storage?: ReactNode) => ReactNode;
+  renderSettings: (onDone: () => void) => ReactNode;
   onChangeMode: (mode: StorageMode | null) => void;
 };
 
@@ -86,8 +86,8 @@ function Root(props: RootProps) {
     <IconButton size={24} style={styles.touch} icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
-  const renderSettings = (onDone: () => void, storage?: ReactNode) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
-    onReset={onResetPreferences} onDone={onDone} storage={storage} />;
+  const renderSettings = (onDone: () => void) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
+    onReset={onResetPreferences} onDone={onDone} />;
   const shared = { ...props, themeToggle, renderSettings, onChangeMode: changeMode };
   if (mode === 'advanced') return <AdvancedRoot {...shared} />;
   if (mode === 'standard') return <StandardRoot {...shared} />;
@@ -160,7 +160,8 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
         <DataWorkspace backend={store} scope="local" storageNote={t('Spese e categorie salvate su questo dispositivo.')}
           onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} backupRequest={backupRequest} settingsRequest={settingsRequest}
           notificationsRequest={notificationsRequest} localArchive={store}
-          renderSettings={(onDone) => renderSettings(onDone, <StandardStorage protection={protection} onOpenFiles={openBackup} onChangeMode={onChangeMode} style={styles.wide} />)}
+          renderSettings={renderSettings}
+          storage={<StandardStorage protection={protection} onChangeMode={onChangeMode} style={styles.wide} />}
           dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
           topActions={<>{themeToggle}{menu}</>} />
       </View>
@@ -191,9 +192,9 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       ? 'Cache offline SDK abilitata dove supportata: usa un dispositivo fidato.'
       : 'Cache in memoria: le scritture offline non sopravvivono alla chiusura.');
   const openBackup = () => setBackupRequest((n) => n + 1);
-  // The storage section of Settings: the connected project, and the account once signed in.
-  const storage = (email?: string | null, onOpenFiles?: () => void) => <AdvancedStorage style={styles.wide} onChangeMode={onChangeMode} onOpenFiles={onOpenFiles}
-    project={configMissing ? '' : firebaseWebConfig.projectId} email={email} cache={persistentCache ? 'Salvata sul dispositivo' : 'Solo in memoria'} />;
+  // The storage section of the backup page: the connected project and the offline cache.
+  const storage = () => <AdvancedStorage style={styles.wide} onChangeMode={onChangeMode}
+    project={configMissing ? '' : firebaseWebConfig.projectId} cache={persistentCache ? 'Locale' : 'Solo in memoria'} />;
   const account = session.status === 'signed-in'
     ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)}
@@ -223,7 +224,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
             onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} backupRequest={backupRequest}
-            settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={(onDone) => renderSettings(onDone, storage(session.user.email, openBackup))}
+            settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={renderSettings}
+            storage={storage()}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
             topActions={<>{themeToggle}{account}</>} />
         </View>
@@ -243,7 +245,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
               <View style={styles.start}><Button mode="outlined" onPress={() => onChangeMode(null)}>{t("Scegli un’altra modalità")}</Button></View>
             </Card>
           )}
-          {settingsOpen && renderSettings(() => setSettingsOpen(false), storage())}
+          {settingsOpen && renderSettings(() => setSettingsOpen(false))}
           {!settingsOpen && session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
           {!settingsOpen && session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} onChangeMode={() => onChangeMode(null)} />}
         </AppShell>
