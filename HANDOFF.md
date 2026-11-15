@@ -5,12 +5,14 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** Su richiesta, committato in `d9eefa6` (tastiera subito in Nuova lista/Nuovo fondo, modulo del fondo senza
-  «Tieni traccia del saldo», «Mostra fondi archiviati», «Mostra budget mensile» rimosso) e inviato a `origin/main`;
-  questo aggiornamento di HANDOFF in un commit successivo.
-- **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `d9eefa6` (progetto `nummo-6b6e2`,
-  solo Hosting, «Deploy complete!»): pagina principale 200, bundle pubblicato con `showArchivedFunds` e «Mostra fondi
-  archiviati», senza `showGeneralBudget`. Resa sui dispositivi e collegamento di un progetto reale non verificati. Worker `nummo-push`
+- **Git.** Su richiesta, `1889755` («fade out the startup placeholder»: dissolvenza d'uscita del segnaposto d'avvio, issue #5,
+  più la sezione di HANDOFF sulle issue #4/#5) inviato a `origin/main`, sopra `d9eefa6`/`4ff9722` (tastiera subito in Nuova
+  lista/Nuovo fondo, modulo del fondo senza «Tieni traccia del saldo», «Mostra fondi archiviati», «Mostra budget mensile»
+  rimosso). Questo aggiornamento di HANDOFF è **non committato**.
+- **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `1889755` (progetto `nummo-6b6e2`,
+  solo Hosting, «Deploy complete!»): pagina principale 200, con la dissolvenza del segnaposto d'avvio; il rilascio
+  precedente, `d9eefa6`, aveva `showArchivedFunds` e «Mostra fondi archiviati», senza `showGeneralBudget`. Resa sui
+  dispositivi (compresa la dissolvenza sul Pixel 8) e collegamento di un progetto reale non verificati. Worker `nummo-push`
   attivo su Cloudflare. **Rules pubblicate** su richiesta il 15 novembre (`firebase deploy --only firestore:rules
   --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `e79dfa6`: icona `key`
   ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
@@ -19,7 +21,9 @@ cronaca delle singole fasi e possono dire cose superate.
   rieseguito dopo `ownerAccess.ts` (sezione «Questo Nummo è privato»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
   `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
-- **Non committato:** dissolvenza d'uscita del segnaposto d'avvio (`App.tsx`, issue #5), sezione qui sotto; non pubblicato.
+- **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
+  `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
+  dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
 - **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
@@ -42,7 +46,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Verifiche: `npm run check` OK (**430/430**, build demo). Chromium headless 412 px, CPU ×4, build demo in Standard (profilo
   temporaneo cancellato): copertura a opacità 1 → in uscita con `pointer-events: none` → rimossa dopo ~150 ms; con
   `prefers-reduced-motion` rimossa subito; nessun errore JS. **Non provato:** Avanzata nel browser, Pixel 8 (serve la
-  pubblicazione e un nuovo video). Nessun commit, nessun deploy; issue non commentate né chiuse.
+  pubblicazione e un nuovo video). Poi, su richiesta: commit `1889755`, push, `deploy:hosting` (sito 200), issue #4 e #5 commentate e chiuse.
 
 ## Impostazioni: rimosso «Mostra budget mensile», budget sempre visibili — 15 novembre 2026
 
