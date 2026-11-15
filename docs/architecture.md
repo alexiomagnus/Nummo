@@ -628,7 +628,7 @@ elenca le variazioni `{ index, amount_minor, once }`:
   futuri»): le occorrenze maturate non cambiano. «Tutti i futuri» sostituisce le variazioni
   future programmate; una variazione uguale al prezzo già in vigore non viene salvata.
 - Previsioni (`forecastOccurrences`, `upcomingRenewals`): calcolate, mai nei totali, nella
-  dashboard o negli export; mostrate nella card «Prossimi rinnovi» della vista Abbonamenti (dall'8 novembre).
+  dashboard o negli export; mostrate nella card «Prossimo mese» (già «Prossimi rinnovi») della vista Abbonamenti (dall'8 novembre).
 - Rules: gli elementi della lista si controllano per posizione (niente cicli) e il limite di
   1000 espressioni per richiesta fissa il massimo a **8 variazioni per serie** (con 10 la
   creazione fallisce). Le Rules vanno ripubblicate dove già distribuite; per le spese
@@ -641,7 +641,7 @@ elenca le variazioni `{ index, amount_minor, once }`:
 ## Abbonamenti: vista separata e stati (8 novembre 2026)
 
 Su richiesta, la pagina Spese ha due viste in un controllo segmentato (`SegmentedButtons`): **Spese** (solo spese
-singole, `recurrence === null`) e **Abbonamenti** (ogni serie ricorrente, `SubscriptionList`, con «Prossimi rinnovi»).
+singole, `recurrence === null`) e **Abbonamenti** (ogni serie ricorrente, `SubscriptionList`, con «Prossimo mese», già «Prossimi rinnovi»).
 Un abbonamento è una spesa ricorrente: nessuna nuova collezione né duplicazione, gli stessi documenti `expenses`.
 
 - **Stati** `active` | `paused` | `cancelled` in `status_changes` (`src/domain/subscription.ts`): cronologia
@@ -1016,3 +1016,20 @@ Fotocamera, divano, pizza e borsa mantengono gli ID, con sprite più dettagliati
 Il popcorn conserva l'ID e usa nei due set illustrati una palette semantica dedicata: cartone rosso,
 strisce bianche, chicchi gialli in entrambi i temi. Colori nei token `iconPalette.ts`, nessun colore letterale
 nei disegni e controlli di contrasto comuni agli altri set.
+
+## Pausa/annullamento datati, filtro per fondo, promemoria dei rinnovi — 15 novembre 2026
+
+- **Stato con data (soluzione 1 concordata).** Dimenticare di mettere in pausa o annullare lasciava nello storico un
+  pagamento mai avvenuto. `setStatus` accetta ora la data di efficacia (non solo oggi): `StatusDialog` offre «Da oggi» o
+  «Da una data passata» (da max(inizio, ultimo cambio) a oggi) e mostra prima di salvare i pagamenti che smetterebbero di
+  contare (`paymentsRemoved`, stesse regole di `expandOccurrences`). Cambia solo `status_changes`: nessun documento
+  cancellato, nessuna modifica a Rules/schema/backup. Resta valido «il cambio vale per le occorrenze successive alla sua
+  data»; la regola «mai alterare i pagamenti già maturati» vale ora per il cambio di oggi, mentre una data passata li
+  toglie su scelta esplicita e con anteprima. La riattivazione non si data nel passato (inventerebbe pagamenti).
+- **Filtro «Fondo»** in Spese (viste Spese e Abbonamenti, scheda «Prossimo mese» compresa) e in Analisi: tutti, senza
+  fondo o un fondo (anche archiviato). Solo presentazione (stato locale, `effectiveFundFilter`), con `Occurrence.fund_id`.
+  Si attiva e disattiva in Impostazioni → Funzionalità («Filtra per fondo», `showFundFilter`, predefinito acceso).
+- **Promemoria dei rinnovi** (tipo `renewal` del servizio push): notifica alle 9:00 del giorno prima del primo rinnovo di
+  un abbonamento attivo, interruttore «Avvisa prima dei rinnovi» in Notifiche (`renewalEnabled`). Il servizio riceve solo
+  la data; tiene un promemoria alla volta (come il riepilogo), il successivo parte quando l'app rinvia gli orari. Il tocco
+  apre Spese → Abbonamenti. Richiede il deploy del Worker prima dell'Hosting (il vecchio Worker rifiuta il nuovo tipo).

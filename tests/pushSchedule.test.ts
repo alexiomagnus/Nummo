@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { ExpenseEntry } from '../src/domain/history.ts';
 import { defaultNotificationPreferences, newNotificationState, snoozeBackup, recordBackup } from '../src/domain/notifications.ts';
-import { backupJob, daytime, nextPeriod, pushJobs, romeInstant, summaryJob } from '../src/domain/pushSchedule.ts';
+import { backupJob, nextAtHour, nextPeriod, pushJobs, renewalJob, romeInstant, summaryJob } from '../src/domain/pushSchedule.ts';
 
 const p = defaultNotificationPreferences;
 const start = new Date('2026-11-01T10:00:00.000Z');
@@ -14,23 +14,26 @@ test('push: orari di Roma con ora legale e fascia diurna 9–21', () => {
   assert.equal(romeInstant('2026-11-16', 9).toISOString(), '2026-11-16T08:00:00.000Z');
   assert.equal(romeInstant('2026-07-06', 9).toISOString(), '2026-07-06T07:00:00.000Z');
   assert.equal(romeInstant('2026-03-29', 9).toISOString(), '2026-03-29T07:00:00.000Z'); // DST starts that night
-  assert.equal(daytime(new Date('2026-11-16T23:30:00Z')).toISOString(), '2026-11-17T08:00:00.000Z');
-  assert.equal(daytime(new Date('2026-11-16T05:00:00Z')).toISOString(), '2026-11-16T08:00:00.000Z');
-  assert.equal(daytime(new Date('2026-11-16T12:34:00Z')).toISOString(), '2026-11-16T12:34:00.000Z');
+  // The chosen hour: today's if still ahead, otherwise tomorrow's.
+  assert.equal(nextAtHour(new Date('2026-11-16T23:30:00Z'), 9).toISOString(), '2026-11-17T08:00:00.000Z');
+  assert.equal(nextAtHour(new Date('2026-11-16T05:00:00Z'), 9).toISOString(), '2026-11-16T08:00:00.000Z');
+  assert.equal(nextAtHour(new Date('2026-11-16T12:34:00Z'), 9).toISOString(), '2026-11-17T08:00:00.000Z');
+  assert.equal(nextAtHour(new Date('2026-11-16T12:34:00Z'), 19).toISOString(), '2026-11-16T18:00:00.000Z');
+  assert.equal(nextAtHour(new Date('2026-07-06T05:00:00Z'), 13).toISOString(), '2026-07-06T11:00:00.000Z'); // summer time
 });
 
 test('push: promemoria backup solo con dati cambiati dopo l’ultimo backup, rinvio di 3 giorni rispettato', () => {
   const now = new Date('2026-11-03T10:00:00Z');
   assert.equal(backupJob({ preferences: p, state, lastChange: null, now }), null);
   const job = backupJob({ preferences: p, state, lastChange: '2026-11-02T10:00:00Z', now });
-  assert.deepEqual(job, { kind: 'backup', at: '2026-11-08T10:00:00.000Z', key: 'backup', repeatDays: 7 });
+  assert.deepEqual(job, { kind: 'backup', at: '2026-11-09T08:00:00.000Z', key: 'backup', repeatDays: 7 }); // due on the 8th at 11:00 → next 9:00
   const backedUp = recordBackup(state, '2026-11-02T11:00:00.000Z');
   assert.equal(backupJob({ preferences: p, state: backedUp, lastChange: '2026-11-02T10:00:00Z', now }), null);
-  // Overdue at the moment of computing: delivered now (or at 9:00 if it is night), then repeated by the service.
+  // Overdue at the moment of computing: delivered at the next chosen hour, then repeated by the service.
   const overdue = backupJob({ preferences: p, state, lastChange: '2026-11-02T10:00:00Z', now: new Date('2026-11-20T21:30:00Z') });
   assert.equal(overdue?.at, '2026-11-21T08:00:00.000Z');
   const snoozed = snoozeBackup(state, new Date('2026-11-20T10:00:00Z'));
-  assert.equal(backupJob({ preferences: p, state: snoozed, lastChange: '2026-11-02T10:00:00Z', now: new Date('2026-11-20T10:00:00Z') })?.at, '2026-11-23T10:00:00.000Z');
+  assert.equal(backupJob({ preferences: p, state: snoozed, lastChange: '2026-11-02T10:00:00Z', now: new Date('2026-11-20T10:00:00Z') })?.at, '2026-11-24T08:00:00.000Z');
   assert.equal(backupJob({ preferences: { ...p, backupEnabled: false }, state, lastChange: '2026-11-02T10:00:00Z', now }), null);
   assert.equal((backupJob({ preferences: { ...p, backupFrequency: 'monthly' }, state, lastChange: '2026-11-02T10:00:00Z', now }) as { repeatDays?: number } | null)?.repeatDays, 30);
 });
@@ -65,4 +68,32 @@ test('push: entrambi gli avvisi spenti = nessun promemoria', () => {
   const input = { preferences: { ...p, backupEnabled: false, summaryEnabled: false }, state, expenses: [expense('a', '2026-11-17')], categories: [], now: new Date('2026-11-18T10:00:00Z'), lastChange: '2026-11-17T10:00:00Z' };
   assert.deepEqual(pushJobs(input), []);
   assert.equal(pushJobs({ ...input, preferences: p }).length, 2);
+});
+
+test('push: promemoria dei rinnovi alle 9 del giorno prima, solo per abbonamenti attivi, mai un orario già passato', () => {
+  const monthly = (id: string, date: string, over: object = {}) => ({ ...expense(id, date, 'monthly'), ...over }) as ExpenseEntry;
+  const now = new Date('2026-11-14T10:00:00Z'); // Saturday
+  const renewals = [monthly('a', '2026-01-20'), monthly('b', '2026-01-18')];
+  // Next renewals: 18 Nov (b) and 20 Nov (a) → reminder on the 17th at 9:00 Rome (8:00 UTC), for the earliest.
+  assert.deepEqual(renewalJob({ preferences: p, expenses: renewals, now }),
+    { kind: 'renewal', at: '2026-11-17T08:00:00.000Z', key: 'renewal:2026-11-18', from: '2026-11-18', to: '2026-11-18' });
+  // The 17th at 9:00 has passed: the next renewal's reminder is used (a, on the 19th).
+  assert.equal(renewalJob({ preferences: p, expenses: renewals, now: new Date('2026-11-17T09:30:00Z') })!.key, 'renewal:2026-11-20');
+  // Off, or nothing active: no job. A pause or cancellation removes the renewals that would not be paid.
+  assert.equal(renewalJob({ preferences: { ...p, renewalEnabled: false }, expenses: renewals, now }), null);
+  assert.equal(renewalJob({ preferences: p, expenses: [expense('x', '2026-11-01')], now }), null, 'spese singole: nessun rinnovo');
+  const cancelled = renewals.map((item) => ({ ...item, status_changes: [{ date: '2026-11-10', status: 'cancelled' }] }) as ExpenseEntry);
+  assert.equal(renewalJob({ preferences: p, expenses: cancelled, now }), null);
+  // Only a date leaves the device: no name and no amount in the job.
+  assert.deepEqual(Object.keys(renewalJob({ preferences: p, expenses: [monthly('Netflix', '2026-01-20', { amount_minor: 1299 })], now })!), ['kind', 'at', 'key', 'from', 'to']);
+  assert.deepEqual(pushJobs({ preferences: p, state, expenses: renewals, categories: [], now, lastChange: null }).map((job) => job.kind), ['renewal']);
+});
+
+test('push: l’orario scelto vale per promemoria backup, riepilogo e rinnovo', () => {
+  const evening = { ...p, reminderHour: 19 };
+  const now = new Date('2026-11-18T10:00:00Z');
+  assert.equal(summaryJob({ preferences: evening, state, expenses: [expense('a', '2026-11-17')], categories: [], now })?.at, '2026-11-23T18:00:00.000Z');
+  const monthly = (id: string, date: string) => ({ ...expense(id, date, 'monthly') }) as ExpenseEntry;
+  assert.equal(renewalJob({ preferences: { ...p, reminderHour: 13 }, expenses: [monthly('a', '2026-01-20')], now })?.at, '2026-11-19T12:00:00.000Z');
+  assert.equal(backupJob({ preferences: evening, state, lastChange: '2026-11-02T10:00:00Z', now: new Date('2026-11-03T10:00:00Z') })?.at, '2026-11-08T18:00:00.000Z');
 });

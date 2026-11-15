@@ -17,7 +17,9 @@ cronaca delle singole fasi e possono dire cose superate.
   --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `e79dfa6`: icona `key`
   ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
   diretto dei dati cloud). Caricamento e sincronizzazione dopo la pubblicazione da verificare ricaricando l'app.
-- **Verifiche.** Vedi la sezione più recente: `npm run check` OK (430/430) prima del commit. `test:emulator` 19/19
+- **Working tree.** Non committato (su richiesta): icone (regalo, carrello, set colorato, pizza), «Prossimo mese», filtro per
+  fondo, pausa/annullamento datati, promemoria dei rinnovi (richiede la ripubblicazione del Worker prima dell'Hosting).
+- **Verifiche.** Vedi la sezione più recente: `npm run check` OK (**438/438**, build demo). `test:emulator` 19/19
   rieseguito dopo `ownerAccess.ts` (sezione «Questo Nummo è privato»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
   `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
@@ -30,6 +32,64 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
+
+## Orario delle notifiche a scelta — 15 novembre 2026
+
+- Su richiesta: scheda **«Orario delle notifiche»** in Notifiche (Mattina 9:00 predefinito, Pranzo 13:00, Sera 19:00, «Altra» con
+  menu delle ore 7–22; ora di Roma). `reminderHour` in `nummo.notifications.v1` (valori fuori 7–22 → 9); vale per backup,
+  riepilogo e rinnovi (`nextAtHour`, `romeInstant`); sostituisce `daytime`/`quietHours` (fascia 9–21). Un backup in ritardo o
+  rinviato aspetta la prossima occorrenza dell'ora scelta. Nessuna modifica al Worker né ai dati: il servizio riceve solo
+  gli istanti già calcolati; cambiare l'ora rinvia gli orari al primo avvio/ricalcolo.
+- Verifiche: `npm run typecheck` e `npm test` OK (**439/439**: ora scelta per i tre tipi, estremi e valori non validi);
+  Chromium 412 px touch: scheda con «Altra» e menu «Ora», nessun errore JS. Consegna alle ore scelte non provata. Nessun commit.
+
+## Notifiche: tolta l'icona quadrata a destra — 15 novembre 2026
+
+- Segnalato dall'utente (Pixel, screenshot): l'icona dell'app compariva due volte, la seconda quadrata a destra del testo.
+  Era l'opzione `icon` (`/icons/icon-192.png`) di `showNotification` in `public/sw.js`, che Android mostra come immagine
+  grande. Tolta per **tutti** i tipi (backup, riepilogo, rinnovo, prova push, prova locale, generica: passano da un'unica
+  funzione); resta `badge` e la piccola a sinistra. Test aggiornato. Da riprovare sul telefono dopo la pubblicazione
+  (`sw.js` cambia: il browser lo aggiorna al prossimo avvio). Nessun commit.
+
+## Prossimo mese, filtro per fondo, pausa/annullamento datati, promemoria dei rinnovi — 15 novembre 2026
+
+- **«Prossimi rinnovi» → «Prossimo mese»** (card della vista Abbonamenti; etichetta accessibile e traduzione EN).
+- **Filtro «Fondo»** in Spese (viste Spese e Abbonamenti, card compresa) e in Analisi (tutti, senza fondo, un fondo, anche
+  archiviato); `FundFilter`, `filterByFund`/`effectiveFundFilter` in `history.ts`, `Occurrence.fund_id` facoltativo. Interruttore
+  **«Filtra per fondo»** in Impostazioni → Funzionalità (`showFundFilter`, predefinito acceso); spento, il filtro scompare e
+  vale «tutti». Nessun dato cambia.
+- **Pausa/annullamento con data (soluzione 1):** `StatusDialog` («Da oggi» / «Da una data passata», anteprima dei pagamenti
+  tolti, `paymentsRemoved`); `setStatus(changes, status, data)`; la riattivazione resta da oggi. Nessuna modifica a Rules,
+  schema o backup (le Rules accettano già qualsiasi data in `status_changes`).
+- **Promemoria dei rinnovi:** prima non esisteva nessuna notifica per gli abbonamenti. Nuovo tipo `renewal` (domain
+  `renewalJob`, `push-service/service.ts`, `public/sw.js`, apertura su Spese → Abbonamenti), interruttore «Avvisa prima dei
+  rinnovi» in Notifiche (card «Rinnovi degli abbonamenti», `renewalEnabled`, predefinito acceso). Alle 9:00 del giorno prima;
+  il servizio tiene un solo promemoria alla volta (il successivo parte quando l'app rinvia gli orari); riceve solo la data.
+  **Attenzione al deploy:** il Worker `nummo-push` pubblicato rifiuta il tipo `renewal` (e con esso tutto l'elenco degli
+  orari): ripubblicare prima il Worker (`wrangler deploy --config push-service/wrangler.toml`, solo con autorizzazione), poi
+  l'Hosting. Nessuna migrazione D1.
+- **Notifiche su smartphone:** più spazio (20 invece di 12) tra «Frequenza del promemoria/riepilogo» e i pulsanti a segmenti.
+- Verifiche: `npm run check` OK; test nuovi (stato datato, filtro per fondo, `renewalJob`, servizio push, service worker,
+  preferenze, icone). Chromium 500 px touch su archivio di prova (Standard, `nummo-utente-medio.json`, profilo temporaneo
+  cancellato): filtro e card «Prossimo mese» (830,87 € → 10,99 € con un fondo), filtro in Analisi, dialogo con anteprima
+  («Verranno tolti 3 pagamenti (8,97 €)») e annullamento al 1 ago confermato («Annullato dal 1 ago 2026», card 4 rinnovi),
+  interruttore che nasconde il filtro, pagina Notifiche con la nuova scheda; nessun errore JS. **Non provati:** Avanzata,
+  consegna reale del promemoria (servono Worker ripubblicato e un dispositivo), tablet/desktop. Nessun commit.
+
+## Icone: regalo viola/bianco, carrello ridisegnato, set colorato ingrandito, pizza pixel più piccola — 15 novembre 2026
+
+- Su richiesta, dopo il riallineamento dei documenti (HANDOFF «Prossime attività» punti 0–1 aggiornati; nessuna altra
+  incoerenza tra AGENTS e codice).
+- **Regalo (`gift`):** nuova tinta `purple` in `iconPalette.ts` (base viola, tinta lavanda, dettagli `o` **bianchi in
+  entrambi i temi**, base abbastanza chiara nel tema scuro per il bianco); disegno colorato e sprite pixel viola con nastro e
+  fiocco bianchi. Le altre icone viola (`violet`: musica, film, tv, gamepad…) restano invariate.
+- **Carrello (`cart`)** ridisegnato in tutte e tre le versioni: outline con tre doghe e ruote, colorato (cestino pieno, doghe
+  chiare, contorno nero come richiesto, ruote chiare), pixel (maniglia, cestino con doghe, due ruote); stessa tinta `green`.
+- **Set colorato ingrandito** del 10 % (`colorfulZoom` = 1,1 in `categoryIconSets.ts`, trasformazione attorno al centro
+  applicata al disegno risolto; il pixel non viene mai scalato). **Pizza pixel** da 12×12 a 10×10 celle.
+- Verifiche: `npm run typecheck` e `npm test` OK (**432/432** al momento di quella fase (poi 438/438), due test nuovi in `categoryIcons.test.ts`; contrasti della
+  palette verificati anche per `purple`). Anteprima in Chromium headless (chiaro/scuro, 144 e 24 px) osservata; non verificate
+  le dimensioni nelle liste reali dell'app, né `build:demo`. Nessun commit.
 
 ## Issue #4 e #5: riscontri dal Pixel 8, dissolvenza del segnaposto d'avvio — 15 novembre 2026
 
@@ -2108,19 +2168,17 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-0. **Modalità Standard/Avanzata (aggiornato 14 novembre, Drive rimosso):** provare l'Avanzata con accesso e dati reali
-   dopo il cambio di architettura, comprese pagina Notifiche e riepilogo; Standard su Safari/iOS e Firefox (IndexedDB,
-   cancellazione per inattività, richiesta di `navigator.storage.persist`), Chrome Android e app installata, due schede
-   reali, archivi grandi. Committare su richiesta le modifiche locali, poi pubblicare su Hosting e, separatamente, le
-   Rules solo con autorizzazione (vedi punto 1).
-   Ancora da fare dall'elenco dell'11 novembre: collaudo sui dati reali e sul Pixel 8 (elenco storico in
-   `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`) e approvazione degli sprite #11 ridisegnati.
-   Già fatti il 12 novembre: Escape in `AppDialog` e riallineamento README/architettura.
+0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
+   Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
+   inattività, richiesta di `navigator.storage.persist`), Chrome Android e app installata, due schede reali, archivi grandi.
+   Commit, push, Hosting e Rules sono già pubblicati (vedi «Stato corrente»). Ancora da fare dall'elenco dell'11 novembre:
+   collaudo sui dati reali e sul Pixel 8 (elenco storico in `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`).
+   Già fatti: Escape in `AppDialog` e riallineamento README/architettura (12 novembre).
 
-1. **Collaudo produzione e compatibilità:** l'ultima pubblicazione Rules registrata è dell'8 novembre (sezione «Produzione»
-   sotto); da allora `firestore.rules` è cambiato (icone rimosse in `d7e1504`, `key` aggiunta in `6956a56`). Dopo la nuova
-   pubblicazione autorizzata, ricaricare l’app e verificare caricamento e sincronizzazione. Per prove CRUD cloud serve autorizzazione. Decidere conservazione o migrazione
-   esplicita degli ID icona rimossi, con regressioni decoder/import; nessuna migrazione automatica dei dati personali.
+1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 15 novembre (allineate a `firestore.rules` di
+   `e79dfa6`, che non è più cambiato). Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
+   serve autorizzazione. Decidere conservazione o migrazione esplicita degli ID icona rimossi, con regressioni
+   decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino, eccezioni di budget e
    sospensione ricarica, dialoghi Fondi/Liste a 320 px e in landscape, CSV in foglio di calcolo reale.

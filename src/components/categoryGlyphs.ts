@@ -3,7 +3,7 @@
 import type { CategoryIcon } from '../domain/category.ts';
 
 export const categoryGlyphs: Record<CategoryIcon, string> = {
-  cart: '<path d="M3 3.5h2.4l2.4 11.1a1.7 1.7 0 0 0 1.7 1.3h8.2a1.7 1.7 0 0 0 1.7-1.4L21 7.5H6.2M8 11h11.8M8.8 14h10.3"/><circle cx="10" cy="20" r="1.35"/><circle cx="17.5" cy="20" r="1.35"/>',
+  cart: '<path d="M2.5 4h2.4l2.2 10.3a1.6 1.6 0 0 0 1.6 1.2h8.5a1.6 1.6 0 0 0 1.6-1.2L20.8 8H5.6"/><path d="M10.2 8l.4 5.5M14 8v5.5M17.8 8l-.5 5.5"/><circle cx="9.6" cy="19.5" r="1.4"/><circle cx="16.8" cy="19.5" r="1.4"/>',
   burger: '<path d="M4 10.5a8 6 0 0 1 16 0Z"/><path d="M3 14.5h18"/><path d="M4.5 18h15a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2Z"/>',
   pizza: '<path d="M12 21 3.5 6.5a17 17 0 0 1 17 0L12 21Z"/><circle cx="10.5" cy="9.5" r="1"/><circle cx="14" cy="12" r="1"/>',
   pasta: '<path d="M3 12h18c0 4.5-4 8-9 8s-9-3.5-9-8Z"/><path d="M8 8c0-1.5 1-1.5 1-3M12 8c0-1.5 1-1.5 1-3M16 8c0-1.5 1-1.5 1-3"/>',

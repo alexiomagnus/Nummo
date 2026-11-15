@@ -19,7 +19,8 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
   `domain/notifications.ts` e a inviarli quando cambiano (al massimo un aggiornamento per pausa di 1,5 s, e almeno uno
   al giorno quando l'app viene aperta). Il servizio conserva solo: endpoint e chiavi della sottoscrizione, lingua
   (it/en), per ogni promemoria tipo, orario, intervallo di ripetizione (backup) e date del periodo (riepilogo), e l'ultima
-  consegna per tipo. Nessun account, UID, indirizzo IP, importo, categoria o descrizione.
+  consegna per tipo. Nessun account, UID, indirizzo IP, importo, categoria o descrizione. Per i rinnovi degli abbonamenti
+  solo la data del rinnovo (nessun nome).
 - **Un unico servizio per Standard e Avanzata**: non dipende da Firebase. In Standard non serve alcun account; in
   Avanzata non serve configurare nulla nel progetto Firebase personale.
 - **Testi generici, mai inventati.** Il messaggio porta solo tipo e date; il testo lo scrive `public/sw.js`:
@@ -31,9 +32,15 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
   (settimana lunedì–domenica, blocchi di 14 giorni dal 1° gennaio 2024, mese), solo se il periodo contiene già almeno
   una spesa singola (abbonamenti esclusi), mai per periodi conclusi prima dell'attivazione. Promemoria backup
   quando è passato l'intervallo dall'ultimo backup (o dall'attivazione) e i dati sono cambiati, ripetuto a
-  ogni intervallo finché l'app non lo annulla; mai tra le 21 e le 9. «Ricordamelo tra 3 giorni» c'è sia sulla
+  ogni intervallo finché l'app non lo annulla; all'**orario scelto** dall'utente (7–22, Europe/Rome, predefinito 9:00: Mattina/Pranzo/Sera/Altra); un promemoria in ritardo aspetta la prossima occorrenza di quell'ora. «Ricordamelo tra 3 giorni» c'è sia sulla
   notifica (dove il sistema mostra le azioni: Chrome desktop/Android) sia nella pagina Notifiche. Il backup conta al
   download del backup completo, senza conferma (dal 15 novembre).
+  - Rinnovo (entrambe le modalità, dal 15 novembre): «Rinnovo in arrivo — Un abbonamento si rinnova il 18 novembre. Tocca per
+    vedere i rinnovi.» Il tocco apre Spese → Abbonamenti. Orario: l'ora scelta del giorno prima del primo rinnovo di un abbonamento
+    attivo (`renewalJob`, finestra di 45 giorni); un rinnovo il cui promemoria è già passato si salta. Il servizio tiene un solo
+    promemoria `renewal` alla volta (chiave `renewal:AAAA-MM-GG`, mai consegnato due volte): il successivo viene programmato
+    quando l'app invia di nuovo gli orari. **Il Worker va ripubblicato** prima dell'Hosting: la versione precedente rifiuta il
+    nuovo tipo e quindi l'intero elenco degli orari.
 - **Nessun duplicato**: un solo promemoria in attesa per tipo e sottoscrizione; un riepilogo già consegnato per quel
   periodo non viene rinviato; un backup già consegnato non viene anticipato da un nuovo invio degli orari; tag per tipo
   nel sistema (`nummo-backup`, `nummo-summary`) e header `Topic` presso il servizio push. Non esistono avvisi in-app.

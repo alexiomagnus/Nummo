@@ -26,13 +26,13 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
   return (
     <View style={[styles.card, { backgroundColor: colors.primaryContainer }]}>
       <StateLayerPressable onPress={() => setOpen(!open)} layerColor={colors.onPrimaryContainer} radius={radius.card}
-        accessibilityRole="button" aria-expanded={open} accessibilityLabel={t("Prossimi rinnovi, {p0} entro {p1} giorni", { p0: formatAmount(soon), p1: days })}
+        accessibilityRole="button" aria-expanded={open} accessibilityLabel={t("Prossimo mese, {p0} entro {p1} giorni", { p0: formatAmount(soon), p1: days })}
         style={styles.header}>
         <View style={[styles.tile, { backgroundColor: colors.primary }]}>
           <SvgIcon shape={iconShapes.calendar} size={26} color={colors.onPrimary} />
         </View>
         <View style={styles.text}>
-          <Text variant="titleMedium" style={[tone, styles.strong]}>{t("Prossimi rinnovi")}</Text>
+          <Text variant="titleMedium" style={[tone, styles.strong]}>{t("Prossimo mese")}</Text>
           <Text variant="bodyLarge" style={tone}><Text variant="headlineSmall" style={[tone, styles.amount, styles.strong]}>{formatAmount(soon)}</Text> · {count}</Text>
         </View>
         <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={24} color={colors.onPrimaryContainer} />

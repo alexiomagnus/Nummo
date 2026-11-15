@@ -20,10 +20,18 @@ export const backupSnoozeDays = 3;
 export type NotificationPreferences = Readonly<{
   backupEnabled: boolean; backupFrequency: NotificationFrequency; backupSince: string | null;
   summaryEnabled: boolean; summaryFrequency: NotificationFrequency; summarySince: string | null;
+  // Subscription reminder: a notice the day before a renewal of an active subscription (nothing to configure but the switch).
+  renewalEnabled: boolean;
+  // Hour of the day (Europe/Rome) at which every reminder is delivered, 7–22.
+  reminderHour: number;
 }>;
+export const reminderHourRange = { min: 7, max: 22 } as const;
+// Quick choices of the Notifications page; any hour in the range is allowed («Altra»).
+export const reminderPresets = { morning: 9, lunch: 13, evening: 19 } as const;
 export const notificationPreferencesKey = 'nummo.notifications.v1';
 export const defaultNotificationPreferences: NotificationPreferences = {
   backupEnabled: true, backupFrequency: 'weekly', backupSince: null, summaryEnabled: true, summaryFrequency: 'weekly', summarySince: null,
+  renewalEnabled: true, reminderHour: reminderPresets.morning,
 };
 
 // State of one archive (`nummo.notifications.v1.<scope>`, scope = `local` or the Firebase UID), so the two modes never mix.
@@ -59,6 +67,8 @@ export function parseNotificationPreferences(raw: string | null): NotificationPr
   return {
     backupEnabled: !off && flag(o.backupEnabled, d.backupEnabled), backupFrequency: frequency(o.backupFrequency, d.backupFrequency), backupSince: timestamp(o.backupSince),
     summaryEnabled: !off && flag(o.summaryEnabled, d.summaryEnabled), summaryFrequency: frequency(o.summaryFrequency, d.summaryFrequency), summarySince: timestamp(o.summarySince),
+    renewalEnabled: !off && flag(o.renewalEnabled, d.renewalEnabled),
+    reminderHour: Number.isInteger(o.reminderHour) && (o.reminderHour as number) >= reminderHourRange.min && (o.reminderHour as number) <= reminderHourRange.max ? o.reminderHour as number : d.reminderHour,
   };
 }
 // A missing or damaged state starts afresh at `now`: nothing becomes due at once.
@@ -71,6 +81,7 @@ export function parseNotificationState(raw: string | null, now: Date): Notificat
 
 export const backupActive = (p: NotificationPreferences): boolean => p.backupEnabled;
 export const summaryActive = (p: NotificationPreferences): boolean => p.summaryEnabled;
+export const renewalActive = (p: NotificationPreferences): boolean => p.renewalEnabled;
 
 // Applies a change from the settings page. A reminder that becomes active (again) starts counting from now; a new
 // summary frequency starts with the period in progress, so neither fires at once for time already passed.

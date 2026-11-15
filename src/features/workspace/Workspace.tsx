@@ -14,7 +14,7 @@ import { layout, radius, spacing } from '../../theme/tokens';
 import { describeSync, hasUsableCategorySnapshot } from './syncStatus';
 import { seededKey, shouldSeedDefaultCategories } from './seedDefaults';
 import { HybridConnectionNotice } from './HybridConnectionNotice';
-import { addDays, expandOccurrences, forecastOccurrences, subscriptionSummaries, upcomingRenewals } from '../../domain/history';
+import { addDays, allFunds, effectiveFundFilter, expandOccurrences, filterByFund, forecastOccurrences, matchesFund, subscriptionSummaries, upcomingRenewals } from '../../domain/history';
 import { dataOf } from '../../domain/expense';
 import { setStatus, type SubscriptionStatus } from '../../domain/subscription';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
@@ -43,6 +43,7 @@ import { createFirestoreStore } from '../../services/firestoreStore';
 import type { DataStore } from '../../services/dataStore';
 import type { ExpenseStore } from '../expenses/expenseStore';
 import { FundsPage } from '../funds/FundsPage';
+import { FundFilter } from '../funds/FundFilter';
 import { useRemoteFunds, type RemoteFunds } from '../funds/useRemoteFunds';
 import { readDefaultFund, writeDefaultFund } from '../funds/defaultFund';
 import { DoneButton } from '../../components/DoneButton';
@@ -115,9 +116,6 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   }, []);
   const occurrences = useMemo(() => expandOccurrences(store.expenses, today), [store.expenses, today]);
   const subscriptions = useMemo(() => subscriptionSummaries(store.expenses, today), [store.expenses, today]);
-  // Same window as `soon`: the card lists only the renewals its total counts.
-  const renewals = useMemo(() => upcomingRenewals(store.expenses, today, addDays(today, forecastDays)), [store.expenses, today]);
-  const soon = useMemo(() => forecastOccurrences(store.expenses, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [store.expenses, today]);
   // Lists count once loaded: a list listener that fails (e.g. Rules not yet published) must not block expenses and funds.
   const pending = Boolean(store.sync?.pending || categoryState.sync.pending || fundState.sync.pending || listState.sync.pending);
   const cached = Boolean(store.sync?.fromCache || categoryState.sync.fromCache || fundState.sync.fromCache || (listState.ready && listState.sync.fromCache));
@@ -140,7 +138,7 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   useEffect(() => { if (released) onReleased?.(); }, [released]);
   return <WorkspaceNavigation dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences}
     uid={uid} backend={backend} store={store} localArchive={localArchive} categoryState={categoryState} starting={!released}
-    listState={listState} occurrences={occurrences} subscriptions={subscriptions} renewals={renewals} soon={soon}
+    listState={listState} occurrences={occurrences} subscriptions={subscriptions}
     online={online} synchronized={synchronized} error={error} fundState={fundState} today={today}
     renderSettings={renderSettings} storage={storage} settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} categoriesRequest={categoriesRequest}
     backupRequest={backupRequest} topActions={topActions} status={status} />;
@@ -213,12 +211,11 @@ type SectionsProps = DashboardSettingsProps & {
   listState: RemoteLists;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
   subscriptions: ReturnType<typeof subscriptionSummaries>;
-  renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
   fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode; storage?: ReactNode; localArchive?: LocalArchive;
 };
 
-function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -244,11 +241,23 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
   const oneOff = useMemo(() => occurrences.filter((item) => item.recurrence === null), [occurrences]);
   const edit = useCallback((id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null), [store.expenses]);
-  // Only today's change is written: past occurrences never change (see subscription.ts). Confirmed by the server transaction.
-  const changeStatus = async (id: string, status: SubscriptionStatus) => {
+  // Only the change itself is written (see subscription.ts). Confirmed by the server transaction.
+  // Fund filter of the Spese page (both views, the renewals card included): presentation only, the setting can turn it off.
+  const [fundChoice, setFundChoice] = useState(allFunds);
+  const fundFilterShown = dashboardPreferences.showFundFilter && fundState.funds.length > 0;
+  const fundFilter = fundFilterShown ? effectiveFundFilter(fundChoice, fundState.funds.map((fund) => fund.id)) : allFunds;
+  const shownOneOff = useMemo(() => filterByFund(oneOff, fundFilter), [oneOff, fundFilter]);
+  const shownSubscriptions = useMemo(() => subscriptions.filter((item) => matchesFund(item.entry, fundFilter)), [subscriptions, fundFilter]);
+  // Same window for the card's total and its list: it lists only the renewals its total counts (the next 30 days).
+  const shownEntries = useMemo(() => filterByFund(store.expenses, fundFilter), [store.expenses, fundFilter]);
+  const renewals = useMemo(() => upcomingRenewals(shownEntries, today, addDays(today, forecastDays)), [shownEntries, today]);
+  const soon = useMemo(() => forecastOccurrences(shownEntries, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [shownEntries, today]);
+  // `from`: today, or an earlier day chosen in the dialog to correct a pause/cancellation that was forgotten (never before
+  // the last change, never in the future). The payments after it stop being counted; the dialog listed them first.
+  const changeStatus = async (id: string, status: SubscriptionStatus, from: string = todayInRome()) => {
     const record = store.expenses.find((r) => r.id === id);
-    if (!record || !store.update) return false;
-    const changes = setStatus(record.status_changes, status, todayInRome());
+    if (!record || !store.update || from > todayInRome()) return false;
+    const changes = setStatus(record.status_changes, status, from);
     if (!changes) { notify("Troppe variazioni di stato per questo abbonamento: per continuare creane uno nuovo."); return false; }
     const saved = await store.update(record, { ...dataOf(record), status_changes: changes });
     if (saved) notify(status === 'paused' ? "Abbonamento messo in pausa." : status === 'cancelled' ? "Abbonamento annullato." : "Abbonamento riattivato.");
@@ -286,9 +295,13 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       notifications.backupDownloaded(at);
     } catch (reason) { notify(message(reason)); } finally { setExporting(false); }
   };
-  // A system notification tapped: its page opens (the Notifications page, with the summary of that period).
+  // A system notification tapped: its page opens.
   const [opened, setOpened] = useState<OpenedNotification | null>(null);
-  useEffect(() => onNotificationOpened((next) => { setOpened(next); onNavigate('notifications'); }), [onNavigate]);
+  // A renewal reminder leads to the subscriptions themselves (Spese, Abbonamenti); the other kinds to the Notifications page.
+  useEffect(() => onNotificationOpened((next) => {
+    if (next.kind === 'renewal') { setListView('subscriptions'); onNavigate('list'); return; }
+    setOpened(next); onNavigate('notifications');
+  }), [onNavigate]);
   const listNote = editing?.list_id ? (listState.lists.some((l) => l.id === editing.list_id && l.expense_id === editing.id) ? 'linked' : 'unlinked') : undefined;
   return <>
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
@@ -320,11 +333,13 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <View style={styles.list}>
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
-        {listView === 'expenses' && <ExpenseList occurrences={oneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} />}
+        {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
+        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems}
+          emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
-          <SubscriptionList subscriptions={subscriptions} categories={categoryState.categories} error={error}
-            canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} />
+          <SubscriptionList subscriptions={shownSubscriptions} emptyLabel={fundFilter === allFunds ? undefined : "Nessun abbonamento per questo fondo."} categories={categoryState.categories} error={error}
+            canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} today={today} />
         </>}
       </View>
     </VisitedSection>
@@ -340,7 +355,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <VisitedSection active={section === 'funds' && !starting}><FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
       defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify}
       showArchivedFunds={dashboardPreferences.showArchivedFunds} /></VisitedSection>
-    <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}
+    <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories} funds={fundState.funds}
       preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} /></VisitedSection>
     {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo),
       <>
@@ -371,6 +386,7 @@ const styles = StyleSheet.create({
   // Pages fill the main area; the shell does not cap their width.
   list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
+  fundFilter: { alignSelf: 'flex-start', minWidth: 200, maxWidth: '100%' },
   backupPage: { gap: layout.sectionGap },
   starting: { alignItems: 'center', padding: spacing.xxl },
   startingOverlay: { position: 'absolute', top: spacing.xxl, left: 0, right: 0, alignItems: 'center', zIndex: 1 },

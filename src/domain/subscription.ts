@@ -58,15 +58,17 @@ export function currentStatus(changes: readonly StatusChange[]): SubscriptionSta
   return changes.length ? changes[changes.length - 1]!.status : 'active';
 }
 
-// New schedule after the user sets `status` today. Earlier changes are never touched; a second change on
-// the same day replaces the first (both only affect future renewals). Returns the unchanged list when the
-// status is already in force, null when `today` precedes the last change or the limit is reached.
-export function setStatus(changes: readonly StatusChange[], status: SubscriptionStatus, today: string): StatusChange[] | null {
+// New schedule after the user sets `status` as of `date`: today, or (to correct a pause or cancellation that was
+// forgotten) an earlier day, never before the last change. The payments dated after `date` are then no longer counted
+// (the caller shows which ones, see `paymentsRemoved` in history.ts). Earlier changes are never touched; a second
+// change on the same day replaces the first. Returns the unchanged list when the status is already in force, null
+// when `date` precedes the last change or the limit is reached.
+export function setStatus(changes: readonly StatusChange[], status: SubscriptionStatus, date: string): StatusChange[] | null {
   const last = changes[changes.length - 1];
-  if (last && last.date > today) return null;
+  if (last && last.date > date) return null;
   if (currentStatus(changes) === status) return [...changes];
-  const kept = last && last.date === today ? changes.slice(0, -1) : [...changes];
-  const next = currentStatus(kept) === status ? kept : [...kept, { date: today, status }];
+  const kept = last && last.date === date ? changes.slice(0, -1) : [...changes];
+  const next = currentStatus(kept) === status ? kept : [...kept, { date, status }];
   return next.length > maxStatusChanges ? null : next;
 }
 

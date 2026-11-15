@@ -17,8 +17,12 @@ const categories: Category[] = [{ id: 'food', label: 'Alimentari', icon: null },
 
 test('notifiche: predefiniti richiesti e preferenze danneggiate ripristinate campo per campo', () => {
   assert.deepEqual(defaultNotificationPreferences, {
-    backupEnabled: true, backupFrequency: 'weekly', backupSince: null, summaryEnabled: true, summaryFrequency: 'weekly', summarySince: null,
+    backupEnabled: true, backupFrequency: 'weekly', backupSince: null, summaryEnabled: true, summaryFrequency: 'weekly', summarySince: null, renewalEnabled: true, reminderHour: 9,
   });
+  assert.equal(parseNotificationPreferences('{"reminderHour":19}').reminderHour, 19);
+  for (const bad of ['6', '23', '9.5', '"9"', 'null']) assert.equal(parseNotificationPreferences(`{"reminderHour":${bad}}`).reminderHour, 9, bad);
+  assert.equal(parseNotificationPreferences('{"renewalEnabled":false}').renewalEnabled, false);
+  assert.equal(parseNotificationPreferences('{"enabled":false}').renewalEnabled, false, 'vecchio interruttore generale spento: anche i rinnovi');
   assert.deepEqual(parseNotificationPreferences(null), defaultNotificationPreferences);
   assert.deepEqual(parseNotificationPreferences('{rotto'), defaultNotificationPreferences);
   assert.deepEqual(parseNotificationPreferences('[]'), defaultNotificationPreferences);

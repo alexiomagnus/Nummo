@@ -10,6 +10,7 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import { searchSubscriptions, type SubscriptionSummary } from '../../domain/history';
+import { StatusDialog } from './StatusDialog';
 import { recurrenceLabels } from '../../domain/recurrence';
 import { statusLabels, type SubscriptionStatus } from '../../domain/subscription';
 import { inputOutline, motion, radius, spacing } from '../../theme/tokens';
@@ -21,8 +22,12 @@ type Props = {
   error: string | null;
   // Status changes need the server (transaction on the revision seen here).
   canChange: boolean;
+  // Shown instead of «Nessun abbonamento.» when the list is empty because of the fund filter (source text, translated here).
+  emptyLabel?: string;
   onEdit: (expenseId: string) => void;
-  onSetStatus: (expenseId: string, status: SubscriptionStatus) => Promise<boolean>;
+  // `from`: the day a pause or cancellation takes effect (today unless the user corrects a forgotten one).
+  onSetStatus: (expenseId: string, status: SubscriptionStatus, from?: string) => Promise<boolean>;
+  today: string;
 };
 
 // Latest payments shown at first in the history; the rest on request (a weekly series grows quickly).
@@ -44,7 +49,7 @@ export function StatusBadge({ status, inTrial = false }: { status: SubscriptionS
   );
 }
 
-export function SubscriptionList({ subscriptions: allSeries, categories, error, canChange, onEdit, onSetStatus }: Props) {
+export function SubscriptionList({ subscriptions: allSeries, categories, error, canChange, emptyLabel, onEdit, onSetStatus, today }: Props) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -61,15 +66,19 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
   });
+  // Pause and cancellation ask «from when?» first (a forgotten one can be dated in the past); resuming acts at once.
+  const [asking, setAsking] = useState<{ id: string; status: 'paused' | 'cancelled' } | null>(null);
+  const askingSummary = asking ? allSeries.find((item) => item.entry.id === asking.id) : undefined;
   const change = async (id: string, status: SubscriptionStatus) => {
     if (busy) return;
+    if (status !== 'active') { setAsking({ id, status }); return; }
     setBusy(id);
     try { await onSetStatus(id, status); } finally { setBusy(null); }
   };
   if (allSeries.length === 0) {
     return <View style={styles.root}>
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
-      <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun abbonamento.")}</Text>
+      <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t(emptyLabel ?? "Nessun abbonamento.")}</Text>
     </View>;
   }
   return (
@@ -89,6 +98,8 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
             onEdit={() => onEdit(summary.entry.id)} onChange={(status) => void change(summary.entry.id, status)} />
         ))}
       </View>
+      {asking && askingSummary && <StatusDialog summary={askingSummary} status={asking.status} today={today}
+        onConfirm={(from) => onSetStatus(asking.id, asking.status, from)} close={() => setAsking(null)} />}
     </View>
   );
 }

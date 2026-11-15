@@ -23,6 +23,8 @@ type Props = {
   onEdit?: (expenseId: string) => void;
   // Expenses that registered a shopping list → the products bought (marked «Lista spesa», listed in the details).
   listItems?: ReadonlyMap<string, readonly string[]>;
+  // Shown instead of «Nessuna spesa.» when the list is empty because of the fund filter (source text, translated here).
+  emptyLabel?: string;
 };
 
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -39,7 +41,7 @@ const pageSize = 50;
 
 export const ExpenseList = memo(ExpenseListView);
 
-function ExpenseListView({ occurrences, categories, error, onEdit, listItems }: Props) {
+function ExpenseListView({ occurrences, categories, error, onEdit, listItems, emptyLabel }: Props) {
   const { t, locale } = useI18n();
   const dates = useMemo(() => dateFormat(locale), [locale]);
   const shortDates = useMemo(() => shortDateFormat(locale), [locale]);
@@ -95,7 +97,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems }: 
             products={listItems?.get(item.expenseId)} open={expanded.has(item.key)} setExpanded={setExpanded}
             dates={dates} shortDates={shortDates} months={months} amounts={amounts} onEdit={onEdit} />;
         })}
-        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna spesa.")}</Text>}
+        {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t(emptyLabel ?? "Nessuna spesa.")}</Text>}
         {occurrences.length > 0 && results.length === 0 && (
           <View style={styles.empty}>
             <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>

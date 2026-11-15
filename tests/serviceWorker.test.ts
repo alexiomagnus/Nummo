@@ -37,7 +37,7 @@ function load(registered = 'https://nummo.example/sw.js?push=https%3A%2F%2Fpush.
 }
 const push = (data: unknown) => ({ data: { json: () => { if (data === 'bad') throw new Error('x'); return data; } } });
 
-test('service worker: testi in italiano e inglese, nome e icona di Nummo, un solo avviso per tipo', async () => {
+test('service worker: testi in italiano e inglese, nome di Nummo, niente immagine grande, un solo avviso per tipo', async () => {
   const sw = load();
   await sw.dispatch('push', push({ kind: 'summary', lang: 'it', from: '2026-11-09', to: '2026-11-15' }));
   await sw.dispatch('push', push({ kind: 'backup', lang: 'en' }));
@@ -46,7 +46,9 @@ test('service worker: testi in italiano e inglese, nome e icona di Nummo, un sol
   assert.equal(summary!.title, 'Riepilogo spese pronto');
   assert.equal(summary!.options.body, 'Il riepilogo dal 9 novembre al 15 novembre è pronto. Tocca per vederlo.');
   assert.equal(summary!.options.tag, 'nummo-summary');
-  assert.equal(summary!.options.icon, '/icons/icon-192.png');
+  // No large square image: Android would repeat the app icon at the right of the text.
+  assert.equal('icon' in summary!.options, false);
+  assert.ok(sw.shown.every((shown) => !('icon' in shown.options)), 'nessun tipo di notifica ha l’immagine a destra');
   assert.equal(summary!.options.badge, '/icons/badge-96.png');
   assert.equal(backup!.title, 'Backup reminder');
   assert.deepEqual(JSON.parse(JSON.stringify(backup!.options.actions.map((a: { title: string }) => a.title))), ['Remind me in 3 days']);
@@ -55,6 +57,22 @@ test('service worker: testi in italiano e inglese, nome e icona di Nummo, un sol
   assert.equal(other!.options.body, 'Tocca per aprire Nummo.');
   // No amount or category ever appears: the payload has none.
   assert.ok(!sw.shown.some((n) => /€|\d+,\d\d/.test(n.options.body)));
+});
+
+test('service worker: promemoria rinnovo con la sola data, in italiano e inglese, e apertura sulla pagina dei rinnovi', async () => {
+  const sw = load();
+  await sw.dispatch('push', push({ kind: 'renewal', lang: 'it', from: '2026-11-18', to: '2026-11-18' }));
+  await sw.dispatch('push', push({ kind: 'renewal', lang: 'en', from: '2026-11-18', to: '2026-11-18' }));
+  await sw.dispatch('push', push({ kind: 'renewal', lang: 'it' }));
+  const [it, en, bare] = sw.shown;
+  assert.equal(it!.title, 'Rinnovo in arrivo');
+  assert.equal(it!.options.body, 'Un abbonamento si rinnova il 18 novembre. Tocca per vedere i rinnovi.');
+  assert.equal(it!.options.tag, 'nummo-renewal');
+  assert.equal(en!.options.body, 'A subscription renews on November 18. Tap to see your renewals.');
+  assert.equal(bare!.options.body, 'Un abbonamento si rinnova a breve. Tocca per vedere i rinnovi.');
+  const closed = load();
+  await closed.dispatch('notificationclick', { action: '', notification: { data: { kind: 'renewal', from: '2026-11-18', to: '2026-11-18' }, close: () => {} } });
+  assert.deepEqual(closed.opened, ['https://nummo.example/?notifica=renewal&dal=2026-11-18&al=2026-11-18']);
 });
 
 test('service worker: il tocco apre Nummo sulla notifica, o riusa la finestra già aperta', async () => {

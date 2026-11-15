@@ -13,18 +13,20 @@ export type ExpenseEntry = Readonly<{
   first_payment_date?: string;
   // Absent on expenses saved before subscription statuses existed (= always active).
   status_changes?: readonly StatusChange[];
+  // Absent or null = no fund.
+  fund_id?: string | null;
   // Absent on series that never changed frequency (the original calendar).
   calendar_changes?: readonly CalendarChange[];
 }>;
 export type Occurrence = Readonly<{
   key: string; expenseId: string; date: string; amount_minor: number;
-  description: string; category_id: string | null; recurrence: Recurrence | null;
+  description: string; category_id: string | null; fund_id?: string | null; recurrence: Recurrence | null;
 }>;
 
 function toOccurrence(entry: ExpenseEntry, date: string, index: number): Occurrence {
   return {
     key: `${entry.id}:${date}`, expenseId: entry.id, date, amount_minor: priceAt(entry.amount_minor, entry.price_changes ?? [], index),
-    description: entry.description, category_id: entry.category_id,
+    description: entry.description, category_id: entry.category_id, fund_id: entry.fund_id ?? null,
     recurrence: entry.recurrence ? recurrenceAt(entry.recurrence, entry.calendar_changes ?? [], index) : null,
   };
 }
@@ -97,10 +99,31 @@ export function subscriptionSummaries(entries: readonly ExpenseEntry[], today: s
       || a.entry.description.localeCompare(b.entry.description) || a.entry.id.localeCompare(b.entry.id));
 }
 
+// Payments (up to `today`) that a new status schedule takes out of the history: the preview of a pause or cancellation
+// dated in the past. Same occurrence rules as `expandOccurrences`, so the figures match what the lists will show.
+export function paymentsRemoved(entry: ExpenseEntry, next: readonly StatusChange[], today: string): Occurrence[] {
+  const kept = new Set(expandOccurrences([{ ...entry, status_changes: next }], today).map((item) => item.key));
+  return expandOccurrences([entry], today).filter((item) => !kept.has(item.key));
+}
+
 // Name search over the series (same normalisation as the expense list); an empty query keeps every series.
 export function searchSubscriptions(items: readonly SubscriptionSummary[], query: string): SubscriptionSummary[] {
   const needle = searchKey(query);
   return needle ? items.filter((item) => searchKey(item.entry.description).includes(needle)) : [...items];
+}
+
+// Fund filter of the Spese and Analisi pages: every fund, the expenses without a fund, or one fund ID. Presentation only:
+// nothing is stored, and a fund that no longer exists counts as «all».
+export const allFunds = 'all';
+export const noFund = 'none';
+export function effectiveFundFilter(filter: string, fundIds: Iterable<string>): string {
+  return filter === allFunds || filter === noFund || new Set(fundIds).has(filter) ? filter : allFunds;
+}
+export function matchesFund(item: Readonly<{ fund_id?: string | null }>, filter: string): boolean {
+  return filter === allFunds || (filter === noFund ? !item.fund_id : item.fund_id === filter);
+}
+export function filterByFund<T extends Readonly<{ fund_id?: string | null }>>(items: readonly T[], filter: string): readonly T[] {
+  return filter === allFunds ? items : items.filter((item) => matchesFund(item, filter));
 }
 
 export function addDays(date: string, days: number): string {

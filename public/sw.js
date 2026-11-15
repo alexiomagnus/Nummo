@@ -9,18 +9,20 @@ const texts = {
   it: {
     backup: { title: 'Promemoria backup', body: 'I dati di Nummo sono cambiati dall’ultimo backup. Tocca per esportarne una copia.' },
     summary: { title: 'Riepilogo spese pronto', body: 'Il riepilogo {period} è pronto. Tocca per vederlo.' },
+    renewal: { title: 'Rinnovo in arrivo', body: 'Un abbonamento si rinnova {date}. Tocca per vedere i rinnovi.' },
     test: { title: 'Notifica push di prova', body: 'Arrivata dal servizio di notifiche: funzionano anche ad app chiusa.' },
     local: { title: 'Notifica di prova', body: 'Così appariranno le notifiche di Nummo su questo dispositivo.' },
     other: { title: 'Nummo', body: 'Tocca per aprire Nummo.' },
-    snooze: 'Ricordamelo tra 3 giorni', period: 'dal {from} al {to}', months: ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'],
+    snooze: 'Ricordamelo tra 3 giorni', period: 'dal {from} al {to}', on: 'il {date}', months: ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'],
   },
   en: {
     backup: { title: 'Backup reminder', body: 'Your Nummo data changed since the last backup. Tap to export a copy.' },
     summary: { title: 'Spending summary ready', body: 'Your summary {period} is ready. Tap to see it.' },
+    renewal: { title: 'Upcoming renewal', body: 'A subscription renews {date}. Tap to see your renewals.' },
     test: { title: 'Test push notification', body: 'Delivered by the notification service: they work even with the app closed.' },
     local: { title: 'Test notification', body: 'This is how Nummo notifications look on this device.' },
     other: { title: 'Nummo', body: 'Tap to open Nummo.' },
-    snooze: 'Remind me in 3 days', period: 'for {from} – {to}', months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    snooze: 'Remind me in 3 days', period: 'for {from} – {to}', on: 'on {date}', months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   },
 };
 const civil = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -32,17 +34,24 @@ const day = (lang, date) => {
 
 function notification(data) {
   const lang = data && data.lang === 'en' ? 'en' : 'it';
-  const kind = data && ['backup', 'summary', 'test', 'local'].includes(data.kind) ? data.kind : 'other';
+  const kind = data && ['backup', 'summary', 'renewal', 'test', 'local'].includes(data.kind) ? data.kind : 'other';
   const t = texts[lang];
   let body = t[kind].body;
   if (kind === 'summary') {
     const period = civil(data.from) && civil(data.to) ? t.period.replace('{from}', day(lang, data.from)).replace('{to}', day(lang, data.to)) : '';
     body = body.replace(' {period}', period ? ` ${period}` : '');
   }
+  if (kind === 'renewal') {
+    // Without a valid date the sentence still reads: «Un abbonamento si rinnova a breve.».
+    body = civil(data.from) ? body.replace('{date}', t.on.replace('{date}', day(lang, data.from)))
+      : body.replace(' {date}', lang === 'it' ? ' a breve' : ' soon');
+  }
   return {
     title: t[kind].title,
     options: {
-      body, lang, icon: '/icons/icon-192.png', badge: '/icons/badge-96.png',
+      // No `icon`: Android shows it as a second, square image at the right of the text; the app's mark is already the
+      // small icon at the left (the badge, or the site icon where a badge is not supported).
+      body, lang, badge: '/icons/badge-96.png',
       // One notification per kind: a newer one replaces the older instead of piling up.
       tag: `nummo-${kind}`, renotify: kind === 'test' || kind === 'local', timestamp: Date.now(),
       actions: kind === 'backup' ? [{ action: 'snooze', title: t.snooze }] : [],

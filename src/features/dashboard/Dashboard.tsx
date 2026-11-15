@@ -11,7 +11,9 @@ import { iconShapes } from '../../components/SvgIcon';
 import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
-import { breakdown, periodLabels, periods, type Occurrence, type Period } from '../../domain/history';
+import { breakdown, effectiveFundFilter, filterByFund, allFunds, periodLabels, periods, type Occurrence, type Period } from '../../domain/history';
+import type { Fund } from '../../domain/funds';
+import { FundFilter } from '../funds/FundFilter';
 import { todayInRome } from '../../domain/policy';
 import { BarChart } from './BarChart';
 import { dashboardInsights } from './insights';
@@ -31,13 +33,13 @@ const chartLabels: Record<ChartType, string> = { donut: 'Ciambella', blocks: 'Bl
 // Existing validated 12-colour palette (shared with the funds); slots come from `categoryColorSlots` (distinct up to 12 used categories); labels disambiguate repeats beyond that.
 const palette = chartPalette;
 
-type Props = { occurrences: readonly Occurrence[]; categories: readonly Category[];
+type Props = { occurrences: readonly Occurrence[]; categories: readonly Category[]; funds: readonly Fund[];
   preferences: DashboardPreferences; onChangePreferences: (change: Partial<DashboardPreferences>) => void;
 };
 
 export const Dashboard = memo(DashboardView);
 
-function DashboardView({ occurrences, categories, preferences, onChangePreferences }: Props) {
+function DashboardView({ occurrences: all, categories, funds, preferences, onChangePreferences }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
   const theme = useTheme();
   const size = useSizeClass();
@@ -47,6 +49,11 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
   const [chartWidth, setChartWidth] = useState(0);
   const chartSideBySide = chartWidth >= donutMaxSize + donutLegendWidth + spacing.lg;
   const { dashboardChart: chart, dashboardPeriod: period } = preferences;
+  // The «Fondo» filter (when the setting is on and there are funds): every figure of the page follows the chosen fund.
+  const [fundChoice, setFundChoice] = useState(allFunds);
+  const fundFilterShown = preferences.showFundFilter && funds.length > 0;
+  const fundFilter = fundFilterShown ? effectiveFundFilter(fundChoice, funds.map((fund) => fund.id)) : allFunds;
+  const occurrences = useMemo(() => filterByFund(all, fundFilter), [all, fundFilter]);
   const [detail, setDetail] = useState<{ title: string; items: readonly Occurrence[] } | null>(null);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const source = useMemo(() => breakdown(occurrences, categories, period, todayInRome()), [occurrences, categories, period]);
@@ -78,6 +85,7 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
 
   const changePeriod = (value: Period | '') => { if (value) { onChangePreferences({ dashboardPeriod: value }); setActive(null); } };
   const changeChart = (value: ChartType | '') => { if (value) { onChangePreferences({ dashboardChart: value }); } };
+  const changeFund = (value: string) => { setFundChoice(value); setActive(null); };
 
 
   return (
@@ -99,6 +107,7 @@ function DashboardView({ occurrences, categories, preferences, onChangePreferenc
               onChange={(value) => changeChart(value)} options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />
           </>
         )}
+        {fundFilterShown && <FundFilter funds={funds} value={fundFilter} onChange={changeFund} style={styles.select} />}
       </View>
 
       <View style={styles.summary}>

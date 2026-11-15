@@ -126,6 +126,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
           <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
+          <SwitchRow label={t("Filtra per fondo")} supporting={t("Nelle pagine Spese e Analisi, un filtro per vedere solo i pagamenti di un fondo.")}
+            value={preferences.showFundFilter} onChange={(showFundFilter) => onChange({ showFundFilter })} />
         </Card>
         {archiveSections}
       </View>

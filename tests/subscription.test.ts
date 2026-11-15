@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { parseExpenseRecord, parseExpenseRequest } from '../src/domain/contract.ts';
 import { applyPriceEdit, type ExpenseData } from '../src/domain/expense.ts';
-import { breakdown, expandOccurrences, forecastOccurrences, subscriptionSummaries, subscriptionSummary, upcomingRenewals, type ExpenseEntry } from '../src/domain/history.ts';
+import { allFunds, breakdown, effectiveFundFilter, expandOccurrences, filterByFund, matchesFund, noFund, paymentsRemoved, forecastOccurrences, subscriptionSummaries, subscriptionSummary, upcomingRenewals, type ExpenseEntry } from '../src/domain/history.ts';
 import { backupVersion, exportCsv, makeBackup, parseBackup, planImport } from '../src/domain/backup.ts';
 import { makeChange } from '../src/domain/pricing.ts';
 import { currentStatus, decodeStatusChanges, encodeStatusChanges, nextPaidRenewal, parseStatusChanges, setStatus, statusAt, type StatusChange } from '../src/domain/subscription.ts';
@@ -161,4 +161,47 @@ test('searchSubscriptions filters by normalised name and keeps all on empty quer
   assert.deepEqual(searchSubscriptions(list, 'NETF').map((s) => s.entry.id), ['a']);
   assert.deepEqual(searchSubscriptions(list, 'caffe').map((s) => s.entry.id), ['b']);
   assert.equal(searchSubscriptions(list, 'zzz').length, 0);
+});
+
+test('pausa o annullamento datati nel passato: i pagamenti dopo la data non contano, quelli fino alla data restano', () => {
+  const today = '2026-05-20'; // paid on the 5th of January…May
+  const all = dates(expandOccurrences([entry()], today));
+  assert.deepEqual(all, ['2026-01-05', '2026-02-05', '2026-03-05', '2026-04-05', '2026-05-05']);
+  const changes = setStatus([], 'cancelled', '2026-03-20')!;
+  assert.deepEqual(changes, [cancelled('2026-03-20')]);
+  assert.deepEqual(dates(expandOccurrences([entry({ status_changes: changes })], today)), ['2026-01-05', '2026-02-05', '2026-03-05']);
+  assert.deepEqual(dates(paymentsRemoved(entry(), changes, today)), ['2026-04-05', '2026-05-05']);
+  // The day of the payment itself keeps it (a change takes effect for the occurrences after its day)…
+  assert.deepEqual(dates(paymentsRemoved(entry(), setStatus([], 'paused', '2026-04-05')!, today)), ['2026-05-05']);
+  // …and today's change removes nothing.
+  assert.deepEqual(paymentsRemoved(entry(), setStatus([], 'cancelled', today)!, today), []);
+});
+
+test('pausa datata: mai prima dell’ultima variazione, due variazioni nello stesso giorno si sostituiscono, limite rispettato', () => {
+  assert.equal(setStatus([paused('2026-03-10')], 'cancelled', '2026-03-09'), null);
+  assert.deepEqual(setStatus([paused('2026-03-10')], 'cancelled', '2026-03-10'), [cancelled('2026-03-10')]);
+  assert.deepEqual(setStatus([paused('2026-03-10')], 'cancelled', '2026-04-01'), [paused('2026-03-10'), cancelled('2026-04-01')]);
+  assert.deepEqual(setStatus([paused('2026-03-10')], 'paused', '2026-04-01'), [paused('2026-03-10')], 'già in vigore: nulla cambia');
+  // From a pause to a cancellation the payments between the two dates were already skipped: nothing else is removed.
+  const e = entry({ status_changes: [paused('2026-03-10')] });
+  assert.deepEqual(paymentsRemoved(e, setStatus(e.status_changes!, 'cancelled', '2026-04-01')!, '2026-05-20'), []);
+  const full = Array.from({ length: 8 }, (_, i) => (i % 2 ? active : paused)(`2026-01-${String(10 + i).padStart(2, '0')}`));
+  assert.equal(setStatus(full, 'paused', '2026-02-01'), null);
+});
+
+test('filtro per fondo: tutti, senza fondo o un fondo; un fondo scomparso vale «tutti»', () => {
+  const items = [{ id: 'a', fund_id: 'f1' }, { id: 'b', fund_id: null }, { id: 'c' }, { id: 'd', fund_id: 'f2' }];
+  const ids = (filter: string) => filterByFund(items, filter).map((item) => item.id);
+  assert.deepEqual(ids(allFunds), ['a', 'b', 'c', 'd']);
+  assert.deepEqual(ids(noFund), ['b', 'c']);
+  assert.deepEqual(ids('f1'), ['a']);
+  assert.equal(matchesFund({ fund_id: 'f2' }, 'f1'), false);
+  assert.equal(effectiveFundFilter('f9', ['f1', 'f2']), allFunds);
+  assert.equal(effectiveFundFilter('f2', ['f1', 'f2']), 'f2');
+  assert.equal(effectiveFundFilter(noFund, []), noFund);
+  // Occurrences carry the fund of their series, so the filter works on paid payments and on forecasts alike.
+  const series = entry({ fund_id: 'f1' });
+  assert.deepEqual(new Set(expandOccurrences([series], '2026-03-20').map((item) => item.fund_id)), new Set(['f1']));
+  assert.deepEqual(new Set(forecastOccurrences([series], '2026-03-20', '2026-06-01').map((item) => item.fund_id)), new Set(['f1']));
+  assert.deepEqual(expandOccurrences([entry()], '2026-01-10').map((item) => item.fund_id), [null]);
 });

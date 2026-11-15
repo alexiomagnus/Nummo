@@ -18,7 +18,7 @@ export type ServiceConfig = Readonly<{
 // Chrome/Edge on Android and desktop (FCM: fcm.googleapis.com, jmt17.google.com, legacy android.googleapis.com),
 // Firefox (Mozilla autopush), Safari and iOS (Apple), legacy Edge (WNS). Exact hosts or their subdomains.
 export const defaultPushHosts = ['fcm.googleapis.com', 'jmt17.google.com', 'android.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com'];
-export const jobKinds = ['backup', 'summary'] as const;
+export const jobKinds = ['backup', 'summary', 'renewal'] as const;
 type JobKind = (typeof jobKinds)[number] | 'test';
 const day = 86_400_000;
 const maxBody = 8 * 1024;
@@ -37,7 +37,7 @@ export const schema = [
 
 // ---- validation of untrusted input ----------------------------------------------------------------------------
 type Subscription = { endpoint: string; p256dh: string; auth: string };
-type Job = { kind: 'backup' | 'summary'; at: number; key: string; repeatDays: number | null; from: string | null; to: string | null };
+type Job = { kind: 'backup' | 'summary' | 'renewal'; at: number; key: string; repeatDays: number | null; from: string | null; to: string | null };
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const b64 = (value: unknown, min: number, max: number): value is string => typeof value === 'string' && value.length >= min && value.length <= max && /^[A-Za-z0-9_-]+$/.test(value);
 const civil = (value: unknown): value is string => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -60,9 +60,13 @@ function parseJobs(value: unknown, now: number): Job[] | null {
     if (item.kind === 'backup') {
       if (item.key !== 'backup' || ![7, 14, 30].includes(item.repeatDays as number)) return null;
       jobs.push({ kind: 'backup', at, key: 'backup', repeatDays: item.repeatDays as number, from: null, to: null });
-    } else {
+    } else if (item.kind === 'summary') {
       if (!civil(item.from) || !civil(item.to) || item.from > item.to || item.key !== `summary:${item.to}`) return null;
       jobs.push({ kind: 'summary', at, key: item.key, repeatDays: null, from: item.from, to: item.to });
+    } else {
+      // Renewal reminder: the renewal date only (twice, to share the payload of a period), never a name or an amount.
+      if (!civil(item.from) || item.to !== item.from || item.key !== `renewal:${item.from}`) return null;
+      jobs.push({ kind: 'renewal', at, key: item.key, repeatDays: null, from: item.from, to: item.from });
     }
   }
   return jobs;
@@ -85,7 +89,7 @@ async function forget(sql: Sql, id: string) {
 }
 
 // Replaces the reminders of one subscription with what the app computed now. Never twice for the same moment: a
-// summary already delivered for that period is dropped, a backup reminder due before its last delivery waits one
+// summary or renewal reminder already delivered for that period or date is dropped, a backup reminder due before its last delivery waits one
 // more interval (the app cannot know the reminder already went out).
 export async function replaceJobs(sql: Sql, id: string, jobs: readonly Job[]) {
   const sent = new Map((await sql.all<{ kind: string; key: string; sent_at: number }>(`SELECT kind, key, sent_at FROM sent WHERE subscription_id = ?`, id)).map((row) => [row.kind, row]));
@@ -93,7 +97,7 @@ export async function replaceJobs(sql: Sql, id: string, jobs: readonly Job[]) {
   for (const job of jobs) {
     const last = sent.get(job.kind);
     let at = job.at;
-    if (job.kind === 'summary' && last?.key === job.key) continue;
+    if ((job.kind === 'summary' || job.kind === 'renewal') && last?.key === job.key) continue;
     if (job.kind === 'backup' && last && at <= last.sent_at) at = last.sent_at + job.repeatDays! * day;
     await sql.run(`INSERT INTO jobs (subscription_id, kind, due_at, key, repeat_days, period_from, period_to) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       id, job.kind, at, job.key, job.repeatDays, job.from, job.to);

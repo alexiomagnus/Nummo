@@ -18,6 +18,11 @@ export const iconStyleText: Record<IconStyle, { label: string }> = {
 // `color` is the stroke the SVG root needs; null means «use the caller's content colour» (outline glyphs).
 export type ResolvedGlyph = Readonly<{ shape: string; color: string | null }>;
 
+// The colourful drawings are enlarged a little around the centre of the canvas (they looked small next to the outlines);
+// their shapes stay inside the 24×24 box at this scale. The pixel set is never scaled: it needs whole cells.
+export const colorfulZoom = 1.1;
+const colorfulScale = `translate(12 12) scale(${colorfulZoom}) translate(-12 -12)`;
+
 const roles = /\{([btiol])\}/g;
 const painted = new Map<string, ResolvedGlyph>();
 
@@ -49,7 +54,8 @@ export function resolveCategoryGlyph(style: IconStyle, icon: string | null | und
     let glyph = drawings === builtIn ? painted.get(key) : undefined;
     if (!glyph) {
       const ramp = iconRamp(entry.hue, dark);
-      glyph = { shape: paint(entry.shape, !pixel && icon === 'cart' ? { ...ramp, i: cartOutlineColor } : ramp), color: ramp.i };
+      const shape = paint(entry.shape, !pixel && icon === 'cart' ? { ...ramp, i: cartOutlineColor } : ramp);
+      glyph = { shape: pixel ? shape : `<g transform="${colorfulScale}">${shape}</g>`, color: ramp.i };
       if (drawings === builtIn) painted.set(key, glyph);
     }
     return glyph;

@@ -140,10 +140,10 @@ export function takeSnoozes(): Promise<string[]> {
 }
 
 // A notification tapped: the page to open. From the URL at start (new window) or a message (window already open).
-export type OpenedNotification = { kind: 'backup' | 'summary' | 'test' | 'local' | 'other'; from: string | null; to: string | null };
+export type OpenedNotification = { kind: 'backup' | 'summary' | 'renewal' | 'test' | 'local' | 'other'; from: string | null; to: string | null };
 const civil = (value: unknown): value is string => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
 export function parseOpened(kind: unknown, from: unknown, to: unknown): OpenedNotification | null {
-  if (typeof kind !== 'string' || !['backup', 'summary', 'test', 'local', 'other'].includes(kind)) return null;
+  if (typeof kind !== 'string' || !['backup', 'summary', 'renewal', 'test', 'local', 'other'].includes(kind)) return null;
   return { kind: kind as OpenedNotification['kind'], from: civil(from) ? from : null, to: civil(to) ? to : null };
 }
 let pending: OpenedNotification | null = null;

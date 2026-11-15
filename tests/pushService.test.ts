@@ -131,3 +131,21 @@ test('push: rinvio di 3 giorni dalla notifica e rinnovo della sottoscrizione sen
   assert.deepEqual(rows.map((row) => row.endpoint), [renewed.endpoint]);
   assert.equal((await jobs()).length, 2);
 });
+
+test('push: promemoria dei rinnovi — solo la data, una consegna per data, la successiva alla riapertura dell’app', async () => {
+  const { call, subscription, sends, jobs, sql, config } = await setup();
+  const renewal = (at: number, date = '2026-11-18') => ({ kind: 'renewal', at: new Date(at).toISOString(), key: `renewal:${date}`, from: date, to: date });
+  assert.equal((await call('PUT', '/v1/subscription', { subscription, jobs: [{ ...renewal(t0 + day), to: '2026-11-19' }] })).status, 400);
+  assert.equal((await call('PUT', '/v1/subscription', { subscription, jobs: [{ ...renewal(t0 + day), key: 'renewal:2026-11-19' }] })).status, 400);
+  assert.equal((await call('PUT', '/v1/subscription', { subscription, jobs: [{ ...renewal(t0 + day), name: 'Netflix' }, renewal(t0 + day)] })).status, 400, 'uno solo per tipo');
+  await call('PUT', '/v1/subscription', { subscription, jobs: [renewal(t0 + day)] });
+  assert.deepEqual((await jobs()).map((job) => job.kind), ['renewal']);
+  await deliverDue(sql, config, t0 + day + 1);
+  assert.equal(sends.length, 1);
+  assert.equal(sends[0]!.topic, 'renewal');
+  // The same date is never delivered twice, even if the app sends it again; the next date is.
+  await call('PUT', '/v1/subscription', { subscription, jobs: [renewal(t0 + day)] }, t0 + day + 2);
+  assert.deepEqual(await jobs(), []);
+  await call('PUT', '/v1/subscription', { subscription, jobs: [renewal(t0 + 3 * day, '2026-11-20')] }, t0 + day + 3);
+  assert.deepEqual((await jobs()).map((job) => job.key), ['renewal:2026-11-20']);
+});
