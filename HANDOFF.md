@@ -5,25 +5,26 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** Su richiesta, tutto il worktree committato in `e79dfa6` (Firebase collegato dall'app, dettagli spesa mobile,
-  Blocchi, frequenza Notifiche, più il lavoro parallelo su saldo dei fondi e selezione del testo su touch, scelta
-  dell'utente «Tutto») e inviato a `origin/main`; questo aggiornamento di HANDOFF in un commit successivo.
-- **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `e79dfa6` (progetto `nummo-6b6e2`,
-  solo Hosting, «Deploy complete!»): pagina principale 200, `/firestore.rules` servito, bundle con
-  `nummo.firebaseConfig.v1`. Resa sui dispositivi e collegamento di un progetto reale non verificati. Worker `nummo-push`
+- **Git.** Su richiesta, committato in `d9eefa6` (tastiera subito in Nuova lista/Nuovo fondo, modulo del fondo senza
+  «Tieni traccia del saldo», «Mostra fondi archiviati», «Mostra budget mensile» rimosso) e inviato a `origin/main`;
+  questo aggiornamento di HANDOFF in un commit successivo.
+- **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `d9eefa6` (progetto `nummo-6b6e2`,
+  solo Hosting, «Deploy complete!»): pagina principale 200, bundle pubblicato con `showArchivedFunds` e «Mostra fondi
+  archiviati», senza `showGeneralBudget`. Resa sui dispositivi e collegamento di un progetto reale non verificati. Worker `nummo-push`
   attivo su Cloudflare. **Rules pubblicate** su richiesta il 15 novembre (`firebase deploy --only firestore:rules
   --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `e79dfa6`: icona `key`
   ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
   diretto dei dati cloud). Caricamento e sincronizzazione dopo la pubblicazione da verificare ricaricando l'app.
-- **Verifiche.** Vedi la sezione più recente: `npm run check` OK (429/429) prima del commit. `test:emulator` 19/19
+- **Verifiche.** Vedi la sezione più recente: `npm run check` OK (430/430) prima del commit. `test:emulator` 19/19
   rieseguito dopo `ownerAccess.ts` (sezione «Questo Nummo è privato»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
   `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
 - **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
-  demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, pubblicazione Hosting e Rules
-  (solo con autorizzazione).
+  demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
+  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
+  «Prossime attività» sulla pubblicazione sono superati.
 
 ## Impostazioni: rimosso «Mostra budget mensile», budget sempre visibili — 15 novembre 2026
 
