@@ -36,6 +36,16 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Notifiche: immagine grande trasparente (cerchio grigio con «N») — 15 novembre 2026
+
+- Dopo la pubblicazione di `f454d12` l'utente (Pixel, screenshot) vede, senza `icon`, un cerchio grigio con la «N» a destra:
+  Chrome per Android genera quel segnaposto quando l'immagine grande manca (le altre app non lo mostrano). Correzione in
+  `public/sw.js`: `icon` è un PNG 64×64 **completamente trasparente** in data URI (nessuna richiesta di rete, vale anche
+  offline), uguale per tutti i tipi; `badge` (la piccola a sinistra) invariato. Test sul formato e sull'uguaglianza per tipo.
+- `npm test` OK (439/439). **Non verificato su telefono** (il rendering delle notifiche Android non è osservabile qui): se
+  Chrome mostrasse ancora qualcosa a destra, l'alternativa è installare Nummo come app (le notifiche della WebAPK non
+  usano il segnaposto del sito). Non committato né pubblicato.
+
 ## Orario delle notifiche a scelta — 15 novembre 2026
 
 - Su richiesta: scheda **«Orario delle notifiche»** in Notifiche (Mattina 9:00 predefinito, Pranzo 13:00, Sera 19:00, «Altra» con

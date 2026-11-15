@@ -25,6 +25,8 @@ const texts = {
     snooze: 'Remind me in 3 days', period: 'for {from} – {to}', on: 'on {date}', months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   },
 };
+// 64×64 fully transparent PNG, inline: no network request, so it also works offline.
+const blankIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAJ0lEQVR42u3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAAAAAAAAAAIB3A0BAAAGveg7oAAAAAElFTkSuQmCC';
 const civil = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
 const day = (lang, date) => {
   const [, month, dd] = date.split('-').map(Number);
@@ -49,9 +51,10 @@ function notification(data) {
   return {
     title: t[kind].title,
     options: {
-      // No `icon`: Android shows it as a second, square image at the right of the text; the app's mark is already the
-      // small icon at the left (the badge, or the site icon where a badge is not supported).
-      body, lang, badge: '/icons/badge-96.png',
+      // The app's mark is the small icon at the left (the badge). Android also shows `icon` as a large square image at the
+      // right of the text, and when it is missing Chrome draws a grey circle with the site's initial instead: so `icon` is a
+      // fully transparent image, which leaves nothing visible there (no app icon repeated, no placeholder).
+      body, lang, icon: blankIcon, badge: '/icons/badge-96.png',
       // One notification per kind: a newer one replaces the older instead of piling up.
       tag: `nummo-${kind}`, renotify: kind === 'test' || kind === 'local', timestamp: Date.now(),
       actions: kind === 'backup' ? [{ action: 'snooze', title: t.snooze }] : [],

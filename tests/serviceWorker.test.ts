@@ -46,9 +46,14 @@ test('service worker: testi in italiano e inglese, nome di Nummo, niente immagin
   assert.equal(summary!.title, 'Riepilogo spese pronto');
   assert.equal(summary!.options.body, 'Il riepilogo dal 9 novembre al 15 novembre è pronto. Tocca per vederlo.');
   assert.equal(summary!.options.tag, 'nummo-summary');
-  // No large square image: Android would repeat the app icon at the right of the text.
-  assert.equal('icon' in summary!.options, false);
-  assert.ok(sw.shown.every((shown) => !('icon' in shown.options)), 'nessun tipo di notifica ha l’immagine a destra');
+  // Large image at the right of the text: fully transparent (an app icon would be repeated, and with no `icon` Chrome on
+  // Android draws a grey circle with the initial). Same for every kind of notification.
+  const blank = summary!.options.icon as string;
+  assert.match(blank, /^data:image\/png;base64,/);
+  const png = Buffer.from(blank.split(',')[1]!, 'base64');
+  assert.equal(png.subarray(1, 4).toString(), 'PNG');
+  assert.equal(png.readUInt8(25), 6, 'RGBA');
+  assert.ok(sw.shown.every((shown) => shown.options.icon === blank), 'stessa immagine trasparente per ogni tipo');
   assert.equal(summary!.options.badge, '/icons/badge-96.png');
   assert.equal(backup!.title, 'Backup reminder');
   assert.deepEqual(JSON.parse(JSON.stringify(backup!.options.actions.map((a: { title: string }) => a.title))), ['Remind me in 3 days']);
