@@ -8,7 +8,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Git.** Su richiesta, `1889755` («fade out the startup placeholder»: dissolvenza d'uscita del segnaposto d'avvio, issue #5,
   più la sezione di HANDOFF sulle issue #4/#5) inviato a `origin/main`, sopra `d9eefa6`/`4ff9722` (tastiera subito in Nuova
   lista/Nuovo fondo, modulo del fondo senza «Tieni traccia del saldo», «Mostra fondi archiviati», «Mostra budget mensile»
-  rimosso). Questo aggiornamento di HANDOFF è **non committato**.
+  rimosso). Aggiornamento di HANDOFF in `8712ef1`, anch'esso inviato.
 - **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `1889755` (progetto `nummo-6b6e2`,
   solo Hosting, «Deploy complete!»): pagina principale 200, con la dissolvenza del segnaposto d'avvio; il rilascio
   precedente, `d9eefa6`, aveva `showArchivedFunds` e «Mostra fondi archiviati», senza `showGeneralBudget`. Resa sui
