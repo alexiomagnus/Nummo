@@ -101,10 +101,8 @@ test('fondi archiviati: visibili di base, solo booleani accettati, scelta conser
   assert.equal(defaultPreferences.showArchivedFunds, true);
   assert.equal(parsePreferences('{"showArchivedLists":false}').showArchivedFunds, true); // preferenze salvate prima della scelta
   assert.equal(parsePreferences('{"showArchivedFunds":false}').showArchivedFunds, false);
-  assert.equal(defaultPreferences.showFundFilter, true);
-  assert.equal(parsePreferences('{"showArchivedFunds":false}').showFundFilter, true); // preferenze salvate prima della scelta
-  assert.equal(parsePreferences('{"showFundFilter":false}').showFundFilter, false);
-  assert.equal(parsePreferences('{"showFundFilter":"no"}').showFundFilter, true);
+  // «Filtra per fondo» was removed (the filter is always there): a saved value is ignored.
+  assert.equal('showFundFilter' in parsePreferences('{"showFundFilter":false}'), false);
   for (const bad of ['"false"', '0', 'null']) assert.equal(parsePreferences(`{"showArchivedFunds":${bad}}`).showArchivedFunds, true);
   const saved = { ...defaultPreferences, showArchivedFunds: false };
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);

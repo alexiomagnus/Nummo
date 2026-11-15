@@ -40,7 +40,7 @@ export const categoryGlyphs: Record<CategoryIcon, string> = {
   cross: '<path d="M9 3.5h6v5.5h5.5v6H15v5.5H9V15H3.5V9H9V3.5Z"/>',
   sparkles: '<path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3Z"/>',
   tv: '<rect x="3" y="5.5" width="18" height="12" rx="2"/><path d="M8 20.5h8M12 17.5v3"/>',
-  utensils: '<path d="M6 3v6a2.5 2.5 0 0 0 5 0V3M8.5 3v18"/><path d="M17.5 21V3c-2.5 1.5-4 4.5-4 8h4"/>',
+  utensils: '<path d="M6 3v6a2.5 2.5 0 0 0 5 0V3M8.5 3v18"/><path d="M18 3C15 4.6 13.5 8 13.5 12.5H15.6V19.5a1.2 1.2 0 0 0 2.4 0Z"/>',
   heartpulse: '<path d="M12 20.5s-8.5-5-8.5-11A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8.5 2.5c0 6-8.5 11-8.5 11Z"/><path d="M7 12.5h2.5l1.5-2.5 2 5 1.5-2.5H17"/>',
   cloud: '<path d="M7 18a4.5 4.5 0 0 1-.5-8.97A6 6 0 0 1 18 10.5 3.75 3.75 0 0 1 17.25 18H7Z"/>',
 };

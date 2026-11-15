@@ -42,6 +42,77 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Icona «posate»: coltello ridisegnato (minimale e colorato) — 15 novembre 2026
+
+- Segnalato dall'utente (screenshot piccolo): il coltello non sembrava un coltello (nel colorato, tema scuro, una barra chiara con una
+  punta appena accennata). `utensils` in `categoryGlyphs.ts` (minimale) e `categoryColorGlyphs.ts` (colorato): lama con dorso dritto e
+  filo curvo, poi manico più stretto con fondo tondo; nel colorato lama in tinta, manico nel colore base e forchetta con la testa
+  piena e il dente centrale. **Sprite pixel invariato** (il coltello è ancora una colonna di celle: da ridisegnare solo su richiesta).
+  `npm run check` OK (**451/451**, contrasti compresi); anteprima con la tavolozza vera (chiaro/scuro, 96 e 24 px) osservata. Nessun commit.
+
+## Templates: testo dell'interruttore e avviso in Nuova spesa — 15 novembre 2026
+
+- Su richiesta: sotto «Usa i template», con l'interruttore spento, il testo è solo «In Nuova spesa non compare il campo Template.»
+  (acceso resta «In Nuova spesa compare il campo Template.»). Con i template accesi **ma nessuno salvato** (il campo non può comparire),
+  Nuova spesa mostra sotto Fondo «Il campo Template compare quando crei un template nella pagina Templates.»; con almeno un template
+  c'è il campo stesso (questo reintroduce un avviso tolto il 15 novembre per i template vuoti: lettura della richiesta «se attivo avvisa
+  l'utente sotto Fondo»). `npm run check` OK; Chromium 1280 px osservato, nessun errore JS. Nessun commit.
+- Poi, su richiesta: il campo Template mostra «Nessun template» con la stessa icona tratteggiata di «Nessun fondo» (`NoFundAvatar`), sia nel
+  campo chiuso (valore predefinito) sia nell'elenco. `npm run check` OK; Chromium 1280 px: campo chiuso e aperto con un template di prova
+  osservati (profilo temporaneo), nessun errore JS.
+
+## Impostazioni: tolto «Filtra per fondo», colonne riordinate — 15 novembre 2026
+
+- Su richiesta: eliminati l'interruttore «Filtra per fondo» e tutta l'implementazione per nasconderlo (preferenza `showFundFilter`,
+  controlli in `Dashboard` e `Workspace`, traduzioni, test). Il filtro «Fondo» di Spese e Analisi è ora sempre presente con almeno un
+  fondo; un `showFundFilter` già salvato in `nummo.preferences.v1` viene ignorato (test). AGENTS e `docs/architecture.md` aggiornati.
+- Poi, su richiesta: la riga sotto «Automatico» in «Fuso orario» ora dice solo «Fuso orario: Europe/Rome» (il fuso del dispositivo), al posto di
+  «Gli orari delle notifiche seguono il fuso del dispositivo: …»; con «Scegli un fuso» resta il menu «Fuso».
+- Impostazioni su desktop: colonna sinistra **Lingua, Carattere, Formato dell'ora, Fuso orario**; colonna destra **Tema, Colore**
+  (su smartphone stesso ordine in una colonna). `npm run check` OK (**451/451**); Chromium 1280 px osservato (controllo a 390 px:
+  nessun overflow), il filtro Fondo c'è ancora in Spese, nessun errore JS. Nessun commit.
+
+## Fuso orario a scelta per le notifiche — 15 novembre 2026
+
+- Su richiesta (dopo la discussione: automatico di base, manuale facoltativo): scheda **«Fuso orario»** in Impostazioni (colonna destra,
+  sotto «Formato dell'ora»): «Automatico» (predefinito, mostra «Gli orari delle notifiche seguono il fuso del dispositivo: …») o «Scegli
+  un fuso» con un menu «Fuso» di 52 fusi comuni (da ovest a est, «Tokyo (GMT+9)», ora legale compresa) più quello del dispositivo e
+  quello salvato. `timeZone` in `nummo.preferences.v1` (`auto` o nome IANA validato, altro → `auto`); `domain/timeZones.ts`,
+  `resolveTimeZone` in `pushSchedule.ts`, passato da `Workspace` a `useNotifications` → `usePushNotifications`. In Notifiche la
+  nota nomina il fuso solo se scelto e diverso da quello del dispositivo: «Arrivano alle 9:00 (Tokyo).».
+- Limiti: lista ridotta ai fusi comuni (non tutti i ~400, nessuna ricerca); chi viaggia con l'app chiusa riceve comunque gli orari già
+  inviati (con la scelta manuale restano quelli del fuso scelto, ricalcolati alla prossima apertura). Nessuna modifica a Worker, Rules o dati.
+- Verifiche: `npm run check` (OK, **451/451**), test nuovi in `timeZones.test.ts`; Chromium 1280 px: scheda, menu a scorrimento, scelta
+  Tokyo salvata, nota in Notifiche, nessun errore JS. Consegna reale con fuso diverso da Roma non provata. Nessun commit.
+
+## Orario delle notifiche: fuso del dispositivo e formato 24/12 ore — 15 novembre 2026
+
+- Su richiesta: tolta la scritta «ora italiana» («Arrivano alle 9:00.»). **Decisione:** l'ora scelta vale ora sull'orologio del
+  **fuso orario del dispositivo** (`deviceTimeZone()`, Roma se il browser non lo dice), non più su Roma: chi è a Londra e sceglie
+  le 9:00 riceve alle 9:00 di Londra. `pushSchedule.ts`: `zoneInstant`/`nextAtHour(from, hour, zone)` (stessi risultati di prima
+  con Roma, `romeInstant` resta come scorciatoia), `timeZone` facoltativo in `backupJob`/`summaryJob`/`renewalJob`, passato da
+  `usePushNotifications`. Le date civili (periodi del riepilogo, date dei rinnovi, spese) restano di Roma. Nessuna modifica al
+  Worker né ai dati: il servizio riceve solo gli istanti già calcolati; chi cambia fuso (viaggio) ottiene istanti diversi e il
+  nuovo elenco viene inviato al primo avvio/ricalcolo (la firma contiene gli istanti). **Limite:** in viaggio con l'app chiusa gli
+  orari restano quelli del fuso di prima fino alla prossima apertura.
+- **Formato dell'ora** (preferenza utente): nuova scheda «Formato dell'ora» in Impostazioni (colonna destra, sotto Colore),
+  «24 ore» (predefinito, `9:00`, `21:00`) o «12 ore (AM/PM)» (`9:00 AM`, `9:00 PM`); `timeFormat` in `nummo.preferences.v1`
+  (`domain/timeFormat.ts`, `formatHour`), usato nell'orario delle notifiche (nota e menu «Ora»). Traduzioni EN. README, AGENTS e
+  `docs/notifiche-push.md` aggiornati.
+- Verifiche: `npm run check` OK (**448/448**: fuso Londra/New York/Roma in `pushSchedule.test.ts`, nuovo `timeFormat.test.ts`);
+  Chromium 1280 px: scheda in Impostazioni, «Arrivano alle 9:00 AM.» e menu delle ore in 12 ore, nessun errore JS. **Non provati:**
+  consegna reale con un fuso diverso da Roma, Avanzata. Nessun commit.
+
+## Notifiche: nota sul riepilogo, spazio nell'orario — 15 novembre 2026
+
+- Su richiesta: sotto «Attiva riepilogo spese» la riga di supporto «Un riepilogo delle tue spese del periodo appena concluso.»
+  (traduzione EN aggiunta); nella scheda «Orario delle notifiche» spazio di 16 dp (prima 8) tra la domanda, i pulsanti a
+  segmenti e la nota «Arrivano alle …» (`hourBlock`). `npm run check` OK (445/445); Chromium 1280 e 390 px osservato, nessun
+  overflow né errore JS. Nessun commit.
+- Poi, su richiesta: nella scheda «Riepilogo spese» tolta la scritta visibile «Frequenza del riepilogo» e i pulsanti a segmenti
+  (Ogni settimana / 14 giorni / mese) occupano tutta la larghezza, sotto l'interruttore (`frequency(…, showLabel = false)`;
+  il nome resta accessibile). «Frequenza del promemoria» del backup invariata. `npm run check` OK; Chromium 1280 px osservato.
+
 ## Filtri di Spese e Analisi riorganizzati — 15 novembre 2026
 
 - **Rilascio:** commit `c0b418c` inviato a `origin/main`, poi `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo Hosting, «Deploy complete!», sito 200). Rules non toccate. Resa su telefono non verificata.

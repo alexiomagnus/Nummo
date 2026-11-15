@@ -19,6 +19,7 @@ import { FundField, type FundChoice } from '../funds/FundField';
 import { SelectField } from '../../components/SelectField';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { draftOfTemplate, type TemplateRecord } from '../../domain/template';
+import { NoFundAvatar } from '../funds/FundAvatar';
 import { noFund, resolveFund } from '../../domain/funds';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
@@ -123,10 +124,12 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     <View style={{ gap: blockGap }}>
       {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
         onChange={(fundId) => update({ fundId })} />}
-      {templates && templates.length > 0 && <SelectField label={t("Template")} disabled={!enabled} value={templates.some((item) => item.id === templateId) ? templateId : ''}
-        options={[{ value: noTemplate, label: t("Nessun template") },
+      {templates && templates.length > 0 && <SelectField label={t("Template")} disabled={!enabled} value={templates.some((item) => item.id === templateId) ? templateId : noTemplate}
+        options={[{ value: noTemplate, label: t("Nessun template"), icon: <NoFundAvatar size={24} /> },
           ...templates.map((item) => ({ value: item.id, label: item.description, icon: <TemplateGlyph template={item} categories={categories} /> }))]}
         onChange={(value) => applyTemplate(value === noTemplate ? '' : value)} />}
+      {/* Templates turned on but none saved yet: the field cannot appear, so say why (under the fund field). */}
+      {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il campo Template compare quando crei un template nella pagina Templates.")}</Text>}
       <RepeatField gap={blockGap} repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })}>

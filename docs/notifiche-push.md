@@ -32,7 +32,7 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
   (settimana lunedì–domenica, blocchi di 14 giorni dal 1° gennaio 2024, mese), solo se il periodo contiene già almeno
   una spesa singola (abbonamenti esclusi), mai per periodi conclusi prima dell'attivazione. Promemoria backup
   quando è passato l'intervallo dall'ultimo backup (o dall'attivazione) e i dati sono cambiati, ripetuto a
-  ogni intervallo finché l'app non lo annulla; all'**orario scelto** dall'utente (7–22, Europe/Rome, predefinito 9:00: Mattina/Pranzo/Sera/Altra); un promemoria in ritardo aspetta la prossima occorrenza di quell'ora. «Ricordamelo tra 3 giorni» c'è sia sulla
+  ogni intervallo finché l'app non lo annulla; all'**orario scelto** dall'utente (7–22 sull'orologio del fuso orario del dispositivo, predefinito 9:00; 24 o 12 ore a scelta in Impostazioni: Mattina/Pranzo/Sera/Altra); un promemoria in ritardo aspetta la prossima occorrenza di quell'ora. «Ricordamelo tra 3 giorni» c'è sia sulla
   notifica (dove il sistema mostra le azioni: Chrome desktop/Android) sia nella pagina Notifiche. Il backup conta al
   download del backup completo, senza conferma (dal 15 novembre).
   - Rinnovo (entrambe le modalità, dal 15 novembre): «Rinnovo in arrivo — Un abbonamento si rinnova il 18 novembre. Tocca per

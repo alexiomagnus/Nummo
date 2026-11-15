@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { ExpenseEntry } from '../src/domain/history.ts';
 import { defaultNotificationPreferences, newNotificationState, snoozeBackup, recordBackup } from '../src/domain/notifications.ts';
-import { backupJob, nextAtHour, nextPeriod, pushJobs, renewalJob, romeInstant, summaryJob } from '../src/domain/pushSchedule.ts';
+import { backupJob, deviceTimeZone, nextAtHour, nextPeriod, pushJobs, renewalJob, romeInstant, summaryJob, zoneInstant } from '../src/domain/pushSchedule.ts';
 
 const p = defaultNotificationPreferences;
 const start = new Date('2026-11-01T10:00:00.000Z');
@@ -20,6 +20,22 @@ test('push: orari di Roma con ora legale e fascia diurna 9–21', () => {
   assert.equal(nextAtHour(new Date('2026-11-16T12:34:00Z'), 9).toISOString(), '2026-11-17T08:00:00.000Z');
   assert.equal(nextAtHour(new Date('2026-11-16T12:34:00Z'), 19).toISOString(), '2026-11-16T18:00:00.000Z');
   assert.equal(nextAtHour(new Date('2026-07-06T05:00:00Z'), 13).toISOString(), '2026-07-06T11:00:00.000Z'); // summer time
+});
+
+test('push: l’orario scelto vale nel fuso del dispositivo (Londra, New York), non su Roma', () => {
+  assert.equal(zoneInstant('2026-11-16', 9, 'Europe/London').toISOString(), '2026-11-16T09:00:00.000Z');
+  assert.equal(zoneInstant('2026-07-06', 9, 'Europe/London').toISOString(), '2026-07-06T08:00:00.000Z'); // BST
+  assert.equal(zoneInstant('2026-11-16', 9, 'America/New_York').toISOString(), '2026-11-16T14:00:00.000Z');
+  assert.equal(zoneInstant('2026-11-16', 9).toISOString(), romeInstant('2026-11-16', 9).toISOString()); // default: Rome
+  // «Today» is the zone's day: 23:30 UTC is already the 17th in Rome, still the 16th in New York.
+  assert.equal(nextAtHour(new Date('2026-11-16T23:30:00Z'), 9, 'Europe/London').toISOString(), '2026-11-17T09:00:00.000Z');
+  assert.equal(nextAtHour(new Date('2026-11-16T23:30:00Z'), 9, 'America/New_York').toISOString(), '2026-11-17T14:00:00.000Z');
+  assert.equal(nextAtHour(new Date('2026-11-16T15:00:00Z'), 9, 'America/New_York').toISOString(), '2026-11-17T14:00:00.000Z');
+  assert.equal(nextAtHour(new Date('2026-11-16T05:00:00Z'), 9, 'America/New_York').toISOString(), '2026-11-16T14:00:00.000Z');
+  // Jobs follow the zone: a renewal on the 20th, reminded the 19th at 9:00 in London.
+  const renewal = renewalJob({ preferences: p, expenses: [expense('a', '2026-01-20', 'monthly')], now: new Date('2026-11-16T10:00:00Z'), timeZone: 'Europe/London' });
+  assert.equal(renewal?.at, '2026-11-19T09:00:00.000Z');
+  assert.ok(deviceTimeZone().length > 0);
 });
 
 test('push: promemoria backup solo con dati cambiati dopo l’ultimo backup, rinvio di 3 giorni rispettato', () => {

@@ -1042,7 +1042,7 @@ nei disegni e controlli di contrasto comuni agli altri set.
   toglie su scelta esplicita e con anteprima. La riattivazione non si data nel passato (inventerebbe pagamenti).
 - **Filtro «Fondo»** in Spese (viste Spese e Abbonamenti, scheda «Prossimo mese» compresa) e in Analisi: tutti, senza
   fondo o un fondo (anche archiviato). Solo presentazione (stato locale, `effectiveFundFilter`), con `Occurrence.fund_id`.
-  Si attiva e disattiva in Impostazioni → Funzionalità («Filtra per fondo», `showFundFilter`, predefinito acceso).
+  Sempre presente con almeno un fondo (l'interruttore «Filtra per fondo», `showFundFilter`, è stato rimosso il 15 novembre su richiesta).
 - **Promemoria dei rinnovi** (tipo `renewal` del servizio push): notifica alle 9:00 del giorno prima del primo rinnovo di
   un abbonamento attivo, interruttore «Avvisa prima dei rinnovi» in Notifiche (`renewalEnabled`). Il servizio riceve solo
   la data; tiene un promemoria alla volta (come il riepilogo), il successivo parte quando l'app rinvia gli orari. Il tocco

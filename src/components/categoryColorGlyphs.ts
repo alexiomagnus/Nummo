@@ -23,7 +23,8 @@ export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
   pasta: { hue: 'amber', shape: `<path ${T} d="M5.5 12a6.5 5 0 0 1 13 0Z"/><path ${L} d="M8 8.5c0-1.5 1-1.5 1-3M12 8.5c0-1.5 1-1.5 1-3M16 8.5c0-1.5 1-1.5 1-3"/><path ${B} d="M3 12h18c0 4.5-4 8-9 8s-9-3.5-9-8Z"/>` },
   popcorn: { hue: 'popcorn', shape: `<path ${T} d="M6 10a2.5 2.5 0 0 1 2-4 2.5 2.5 0 0 1 4-2 2.5 2.5 0 0 1 4 2 2.5 2.5 0 0 1 2 4Z"/><path ${B} d="M6 10h12l-1.5 11h-9L6 10Z"/><path stroke="{o}" d="M9.8 10.8l.4 9.4M14.2 10.8l-.4 9.4"/>` },
   coffee: { hue: 'amber', shape: `<path ${B} d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/><path ${T} d="M4 9h13v2.5H4Z"/><path ${L} d="M17 10h1.5a2.5 2.5 0 0 1 0 5H16.5"/><path ${L} d="M8 3v3M12 3v3"/>` },
-  utensils: { hue: 'orange', shape: `<path ${B} d="M6 3v6a2.5 2.5 0 0 0 5 0V3Z"/><path ${L} d="M8.5 9.5V21"/><path ${T} d="M17.5 3c-2.5 1.5-4 4.5-4 8h4V3Z"/><path ${L} d="M17.5 11v10"/>` },
+  // Fork (tines on a base-filled head, centre tine) and a knife: tinted blade with a curved edge, handle in the base colour.
+  utensils: { hue: 'orange', shape: `<path ${B} d="M6 3v6a2.5 2.5 0 0 0 5 0V3Z"/><path d="M8.5 3v6"/><path ${L} d="M8.5 9.5V21"/><path ${T} d="M18 3C15 4.6 13.5 8 13.5 12.5H18Z"/><rect ${B} x="15.4" y="12.5" width="2.6" height="8.5" rx="1.3"/>` },
   cake: { hue: 'pink', shape: `<path ${B} d="M4 20h16v-6.5H4V20Z"/><path ${T} d="M4 13.5h16v3c-2-1.5-3-1.5-4 0s-3 1.5-4 0-2.5-1.5-4 0-3 1.5-4 0v-3Z"/><path ${L} d="M12 13.5V10"/><path ${T} d="M12 3.5c1 1.5 1 2.5 0 3.5-1-1-1-2 0-3.5Z"/>` },
   // Shopping and gifts
   bag: { hue: 'pink', shape: `<path ${B} d="M5 8h14l-1 12H6L5 8Z"/><path ${L} d="M9 8V6.5a3 3 0 0 1 6 0V8"/>${dot(9.5, 11.5)}${dot(14.5, 11.5)}` },

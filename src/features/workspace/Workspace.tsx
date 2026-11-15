@@ -254,7 +254,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Only the change itself is written (see subscription.ts). Confirmed by the server transaction.
   // Fund filter of the Spese page (both views, the renewals card included): presentation only, the setting can turn it off.
   const [fundChoice, setFundChoice] = useState(allFunds);
-  const fundFilterShown = dashboardPreferences.showFundFilter && fundState.funds.length > 0;
+  const fundFilterShown = fundState.funds.length > 0;
   const fundFilter = fundFilterShown ? effectiveFundFilter(fundChoice, fundState.funds.map((fund) => fund.id)) : allFunds;
   const shownOneOff = useMemo(() => filterByFund(oneOff, fundFilter), [oneOff, fundFilter]);
   const shownSubscriptions = useMemo(() => subscriptions.filter((item) => matchesFund(item.entry, fundFilter)), [subscriptions, fundFilter]);
@@ -294,7 +294,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const listItems = useMemo(() => new Map(store.expenses.filter((e) => e.list_id).map((e) => [e.id, e.list_items])), [store.expenses]);
   // System notifications (backup reminder in the Standard mode, spending summary in both) and the Notifications page.
   const notifications = useNotifications({ scope: uid, expenses: store.expenses, categories: categoryState.categories,
-    ready: !starting && store.ready && categoryState.ready, archive: localArchive });
+    ready: !starting && store.ready && categoryState.ready, archive: localArchive, timeZone: dashboardPreferences.timeZone });
   const [exporting, setExporting] = useState(false);
   const exportFromReminder = async () => {
     if (exporting) return;
@@ -375,7 +375,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         {fundState.funds.some((fund) => !fund.archived) && <PreferredFundCard funds={fundState.funds.filter((fund) => !fund.archived)}
           value={defaultFundId} onChange={changeDefaultFund} />}
       </>)}
-    {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} opened={opened} onCloseOpened={() => setOpened(null)}
+    {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} opened={opened} onCloseOpened={() => setOpened(null)} timeFormat={dashboardPreferences.timeFormat} timeZone={dashboardPreferences.timeZone}
       exporting={exporting} onExport={() => void exportFromReminder()} />}
     {section === 'templates' && !starting && <TemplatesPage remote={templateState} categories={categoryState.categories} fundChoices={fundChoices}
       fundNames={fundNames} enabled={dashboardPreferences.templatesEnabled} onToggle={(templatesEnabled) => onChangeDashboardPreferences({ templatesEnabled })} />}

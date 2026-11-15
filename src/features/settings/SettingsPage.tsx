@@ -16,6 +16,10 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { accentLabels, accents, buildScheme, type ColorMode } from '../../theme/palette';
 import { layout, radius, spacing } from '../../theme/tokens';
 import type { FontChoice, Preferences, ThemeChoice } from './preferences';
+import type { TimeFormat } from '../../domain/timeFormat';
+import { deviceTimeZone } from '../../domain/pushSchedule';
+import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
+import { MenuSelect } from '../../components/MenuSelect';
 
 type Props = {
   preferences: Preferences;
@@ -36,13 +40,16 @@ const modeOptions: { value: ColorMode; label: string }[] = [
 const fontOptions: { value: FontChoice; label: string }[] = [
   { value: 'google', label: 'Google Sans' }, { value: 'system', label: 'Sistema' },
 ];
+const timeFormatOptions: { value: TimeFormat; label: string }[] = [
+  { value: '24h', label: '24 ore' }, { value: '12h', label: '12 ore (AM/PM)' },
+];
 // Sample of four categories, drawn in each style whatever the chosen one is.
 const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 
 // Display settings page, opened from the account menu (or the sign-in screen), outside the main destinations.
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
-// Sections stack on phones (Lingua, Carattere, Tema, then Colore); when the page is wide enough, Lingua, Carattere and
-// Tema form the left column and Colore the right one, and the wider sections follow at full width.
+// Sections stack on phones (Lingua, Carattere, Formato dell'ora, Fuso orario, then Tema and Colore); when the page is wide enough, Lingua,
+// Carattere, Formato dell'ora and Fuso orario form the left column and Tema and Colore the right one, and the wider sections follow at full width.
 export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -50,6 +57,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   // Measure the actual page: the desktop navigation and browser zoom reduce its usable width.
   // 360 dp per column: the colour swatches wrap onto a second row rather than squeeze, every chip row still fits.
   const wide = contentWidth >= 2 * 360 + spacing.xxl;
+  const device = deviceTimeZone();
+  const zones = timeZoneChoices([device, preferences.timeZone]);
   const general = (
     <View key="general" style={[styles.column, wide && styles.half]}>
       <Card title={t("Lingua")} style={styles.section}>
@@ -59,13 +68,26 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
       <Card title={t("Carattere")} style={styles.section}>
         <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
       </Card>
-      <Card title={t("Tema")} style={styles.section}>
-        <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
+      <Card title={t("Formato dell’ora")} style={styles.section}>
+        <ChoiceChips label={t("Formato dell’ora")} options={timeFormatOptions.map((entry) => ({ ...entry, label: t(entry.label) }))}
+          value={preferences.timeFormat} onChange={(value) => value && onChange({ timeFormat: value })} />
+      </Card>
+      <Card title={t("Fuso orario")} style={styles.section}>
+        <ChoiceChips label={t("Fuso orario")} value={preferences.timeZone === autoTimeZone ? 'auto' : 'custom'}
+          options={[{ value: 'auto', label: t("Automatico") }, { value: 'custom', label: t("Scegli un fuso") }]}
+          onChange={(value) => { if (value === 'auto') onChange({ timeZone: autoTimeZone }); else if (value) onChange({ timeZone: device }); }} />
+        {preferences.timeZone === autoTimeZone
+          ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Fuso orario: {p0}", { p0: device.replace(/_/g, ' ') })}</Text>
+          : <MenuSelect label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
+              onChange={(timeZone) => onChange({ timeZone })} />}
       </Card>
     </View>
   );
   const look = (
     <View key="look" style={[styles.column, wide && styles.half]}>
+      <Card title={t("Tema")} style={styles.section}>
+        <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
+      </Card>
       <Card title={t("Colore")} style={styles.section}>
         <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
         <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
@@ -126,8 +148,6 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
           <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
-          <SwitchRow label={t("Filtra per fondo")} supporting={t("Nelle pagine Spese e Analisi, un filtro per vedere solo i pagamenti di un fondo.")}
-            value={preferences.showFundFilter} onChange={(showFundFilter) => onChange({ showFundFilter })} />
         </Card>
         {archiveSections}
       </View>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Category } from '../../domain/category';
 import type { ExpenseEntry } from '../../domain/history';
 import { snoozeBackup, type NotificationPreferences, type NotificationState } from '../../domain/notifications';
-import { pushJobs, type PushJob } from '../../domain/pushSchedule';
+import { pushJobs, resolveTimeZone, type PushJob } from '../../domain/pushSchedule';
 import {
   disablePush, enablePush, pushStatus, pushSupport, requestPushTest, showLocalTest, syncPush, takeSnoozes,
   type PushStatus, type PushSupport,
@@ -41,16 +41,16 @@ export type PushState = {
 
 // System notifications of this browser, for one archive. While they are active, the reminder times are computed here
 // from the data (which the push service never sees) and sent again whenever they change.
-export function usePushNotifications({ preferences, state, updateState, lastChange, expenses, categories, ready, lang, backupReminders }: {
+export function usePushNotifications({ preferences, state, updateState, lastChange, expenses, categories, ready, lang, backupReminders, timeZone }: {
   preferences: NotificationPreferences; state: NotificationState; updateState: (update: (current: NotificationState) => NotificationState) => void;
-  lastChange: string | null; expenses: readonly ExpenseEntry[]; categories: readonly Category[]; ready: boolean; lang: string; backupReminders: boolean;
+  lastChange: string | null; expenses: readonly ExpenseEntry[]; categories: readonly Category[]; ready: boolean; lang: string; backupReminders: boolean; timeZone: string;
 }): PushState {
   const [support] = useState(() => pushSupport());
   const [status, setStatus] = useState<PushStatus | null>(support === 'supported' ? null : 'off');
   const [failure, setFailure] = useState<'browser' | 'service' | null>(null);
   const [busy, setBusy] = useState(false);
   const jobs = useRef<PushJob[]>([]);
-  const compute = () => pushJobs({ preferences, state, expenses, categories, now: new Date(), lastChange: backupReminders ? lastChange : null });
+  const compute = () => pushJobs({ preferences, state, expenses, categories, now: new Date(), lastChange: backupReminders ? lastChange : null, timeZone: resolveTimeZone(timeZone) });
 
   // Status at start and when the page comes back (the permission may have changed in the browser settings).
   useEffect(() => {

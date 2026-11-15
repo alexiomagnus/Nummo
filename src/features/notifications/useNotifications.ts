@@ -16,8 +16,9 @@ export type LocalArchive = { lastChange(): Promise<string | null>; onChange(list
 // Notifications of one archive: only system notifications (Web Push, `usePushNotifications`), when the user turned them
 // on in this browser. There are no notices inside the app; the Notifications page, where a tapped notification leads,
 // shows the settings, the backup reminder's actions and the summary of the tapped period.
-export function useNotifications({ scope, expenses, categories, ready, archive }: {
-  scope: string; expenses: readonly ExpenseEntry[]; categories: readonly Category[]; ready: boolean; archive?: LocalArchive;
+export function useNotifications({ scope, expenses, categories, ready, archive, timeZone }: {
+  // The zone of the notification hour: «auto» (device) or an IANA name.
+  timeZone: string; scope: string; expenses: readonly ExpenseEntry[]; categories: readonly Category[]; ready: boolean; archive?: LocalArchive;
 }) {
   const [preferences, changePreferences] = useNotificationPreferences();
   const [state, updateState] = useNotificationState(scope);
@@ -42,7 +43,7 @@ export function useNotifications({ scope, expenses, categories, ready, archive }
 
   const { language } = useI18n();
   const push = usePushNotifications({ preferences, state, updateState, lastChange: archive ? lastChange : null, expenses, categories, ready,
-    lang: language, backupReminders: Boolean(archive) });
+    lang: language, backupReminders: Boolean(archive), timeZone });
 
   return {
     preferences, changePreferences,

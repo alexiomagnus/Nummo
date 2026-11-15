@@ -10,6 +10,9 @@ import { useSnackbar } from '../../components/SnackbarHost';
 import { notificationFrequencies, notificationFrequencyLabels, reminderHourRange, reminderPresets, type NotificationFrequency } from '../../domain/notifications';
 import { MenuSelect } from '../../components/MenuSelect';
 import { useI18n } from '../../i18n/I18nProvider';
+import { formatHour, type TimeFormat } from '../../domain/timeFormat';
+import { autoTimeZone, timeZoneCity } from '../../domain/timeZones';
+import { deviceTimeZone } from '../../domain/pushSchedule';
 import type { OpenedNotification } from '../../services/pushNotifications';
 import { layout, spacing } from '../../theme/tokens';
 import type { Notifications } from './useNotifications';
@@ -90,8 +93,8 @@ type TimeChoice = 'morning' | 'lunch' | 'evening' | 'custom';
 const timeChoiceOf = (hour: number): TimeChoice => (Object.entries(reminderPresets).find(([, value]) => value === hour)?.[0] as TimeChoice | undefined) ?? 'custom';
 const hours = Array.from({ length: reminderHourRange.max - reminderHourRange.min + 1 }, (_, index) => reminderHourRange.min + index);
 
-// The hour at which every notification is delivered (Italian time): three quick choices or any hour of the day.
-function ReminderTime({ hour, onChange }: { hour: number; onChange: (hour: number) => void }) {
+// The hour at which every notification is delivered (clock of the device's time zone, written in 24 or 12 hours as chosen in the settings): three quick choices or any hour of the day.
+function ReminderTime({ hour, timeFormat, timeZone, onChange }: { hour: number; timeFormat: TimeFormat; timeZone: string; onChange: (hour: number) => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   // «Altra» stays selected while the chosen hour happens to equal a preset.
@@ -102,16 +105,18 @@ function ReminderTime({ hour, onChange }: { hour: number; onChange: (hour: numbe
     if (next === 'custom') { setCustom(true); return; }
     setCustom(false); onChange(reminderPresets[next]);
   };
-  const time = (value: number) => `${value}:00`;
+  const time = (value: number) => formatHour(value, timeFormat);
+  // The zone is named only when it is not the device's own (a chosen one): the usual case stays a plain «alle 9:00».
+  const zoneNote = timeZone !== autoTimeZone && timeZone !== deviceTimeZone() ? timeZoneCity(timeZone) : null;
   return (
     <Card title={t("Orario delle notifiche")}>
-      <View style={styles.block}>
+      <View style={styles.hourBlock}>
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("A che ora vuoi riceverle? Vale per promemoria backup, riepiloghi e rinnovi.")}</Text>
         <SegmentedButtons label={t("Orario delle notifiche")} value={choice} onChange={pick}
           options={(['morning', 'lunch', 'evening', 'custom'] as const).map((value) => ({ value, label: labels[value] }))} />
         {custom && <MenuSelect label={t("Ora")} icon={iconShapes.bell} value={String(hour)} onChange={(value) => onChange(Number(value))}
           options={hours.map((value) => ({ value: String(value), label: time(value) }))} />}
-        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{t("Arrivano alle {p0}, ora italiana.", { p0: time(hour) })}</Text>
+        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{zoneNote ? t("Arrivano alle {p0} ({p1}).", { p0: time(hour), p1: zoneNote }) : t("Arrivano alle {p0}.", { p0: time(hour) })}</Text>
       </View>
     </Card>
   );
@@ -121,8 +126,8 @@ function ReminderTime({ hour, onChange }: { hour: number; onChange: (hour: numbe
 // only: in the Advanced mode the data is in Firebase, and a JSON backup is a separate, manual choice), the spending
 // summary and the subscription renewals, each with its own switch. Every change applies at once and is kept in this browser. A tapped notification
 // leads here.
-export function NotificationsPage({ notifications, opened, onCloseOpened, exporting, onExport }: { notifications: Notifications;
-  opened: OpenedNotification | null; onCloseOpened: () => void; exporting: boolean; onExport: () => void }) {
+export function NotificationsPage({ notifications, opened, onCloseOpened, exporting, onExport, timeFormat, timeZone }: { notifications: Notifications;
+  opened: OpenedNotification | null; onCloseOpened: () => void; exporting: boolean; onExport: () => void; timeFormat: TimeFormat; timeZone: string }) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const { preferences: p, changePreferences: change, backupReminders, lastBackupAt, backupDue } = notifications;
@@ -134,12 +139,13 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
   const shortLabels: Record<NotificationFrequency, string> = { weekly: 'Settimana', biweekly: '14 giorni', monthly: 'Mese' };
   const frequencyOptions = notificationFrequencies.map((value) => ({ value, label: t(compact ? shortLabels[value] : notificationFrequencyLabels[value]),
     accessibilityLabel: t(notificationFrequencyLabels[value]) }));
-  const frequency = (label: string, value: NotificationFrequency, onChange: (value: NotificationFrequency) => void, disabled: boolean) => (
+  // `showLabel` off: the choices alone, over the whole width (the switch above already says what they are for); the name stays accessible.
+  const frequency = (label: string, value: NotificationFrequency, onChange: (value: NotificationFrequency) => void, disabled: boolean, showLabel = true) => (
     // Laid out like the switch row above it: same text style and padding, the choices on the right (below when narrow).
-    <View style={[styles.frequency, compact && styles.frequencyNarrow]}>
-      <Text variant="bodyLarge" style={[styles.frequencyLabel, disabled && muted]}>{label}</Text>
+    <View style={[styles.frequency, compact && styles.frequencyNarrow, !showLabel && styles.frequencyFull]}>
+      {showLabel && <Text variant="bodyLarge" style={[styles.frequencyLabel, disabled && muted]}>{label}</Text>}
       {/* Segmented buttons: always one line, full width under the label on narrow pages, beside it on wide ones. */}
-      <View style={[styles.frequencyChoices, compact && styles.frequencyChoicesNarrow]}>
+      <View style={[styles.frequencyChoices, (compact || !showLabel) && styles.frequencyChoicesNarrow]}>
         <SegmentedButtons label={label} options={frequencyOptions} value={value} disabled={disabled} onChange={onChange} />
       </View>
     </View>
@@ -149,7 +155,7 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
       {opened?.kind === 'summary' && opened.from && opened.to &&
         <OpenedSummary notifications={notifications} from={opened.from} to={opened.to} onClose={onCloseOpened} />}
       <SystemNotifications push={notifications.push} />
-      <ReminderTime hour={p.reminderHour} onChange={(reminderHour) => change({ reminderHour })} />
+      <ReminderTime hour={p.reminderHour} timeFormat={timeFormat} timeZone={timeZone} onChange={(reminderHour) => change({ reminderHour })} />
       {backupReminders && <Card title={t("Promemoria backup")}>
         <Text variant="bodyMedium" style={muted}>{t("Ricevi un promemoria per esportare una copia dei tuoi dati.")}</Text>
         <SwitchRow label={t("Attiva promemoria backup")} value={p.backupEnabled} onChange={(backupEnabled) => change({ backupEnabled })}
@@ -167,8 +173,9 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
         </View>}
       </Card>}
       <Card title={t("Riepilogo spese")}>
-        <SwitchRow label={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })} />
-        {frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.summaryEnabled)}
+        <SwitchRow label={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })}
+          supporting={t("Un riepilogo delle tue spese del periodo appena concluso.")} />
+        {frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.summaryEnabled, false)}
       </Card>
       <Card title={t("Rinnovi degli abbonamenti")}>
         <SwitchRow label={t("Avvisa prima dei rinnovi")} value={p.renewalEnabled} onChange={(renewalEnabled) => change({ renewalEnabled })}
@@ -184,9 +191,12 @@ const styles = StyleSheet.create({
     rowGap: spacing.md, minHeight: 56, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
   // Phones: the choices sit a little lower under the label (20 instead of 12).
   frequencyNarrow: { rowGap: spacing.lg + spacing.xs },
+  frequencyFull: { justifyContent: 'flex-start' },
   frequencyLabel: { flexShrink: 1 },
   frequencyChoices: { width: 420, maxWidth: '100%' },
   frequencyChoicesNarrow: { width: '100%' },
   block: { gap: spacing.sm },
+  // Orario: room (16) around the choices, between the question above and the note below.
+  hourBlock: { gap: spacing.lg },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

@@ -42,7 +42,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, enab
       <Card>
         <Text variant="bodyMedium" style={muted}>{t("Un template è una spesa già pronta, semplifica la gestione delle spese.")}</Text>
         <SwitchRow label={t("Usa i template")} value={enabled} onChange={onToggle}
-          supporting={enabled ? t("In Nuova spesa compare il campo Template.") : t("Spenti: in Nuova spesa il campo Template non compare. I template salvati restano.")} />
+          supporting={enabled ? t("In Nuova spesa compare il campo Template.") : t("In Nuova spesa non compare il campo Template.")} />
       </Card>
       {enabled && <>
         <Card title={t("Nuovo template")}>

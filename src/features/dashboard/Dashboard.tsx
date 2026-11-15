@@ -50,7 +50,7 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
   const { dashboardChart: chart, dashboardPeriod: period } = preferences;
   // The «Fondo» filter (when the setting is on and there are funds): every figure of the page follows the chosen fund.
   const [fundChoice, setFundChoice] = useState(allFunds);
-  const fundFilterShown = preferences.showFundFilter && funds.length > 0;
+  const fundFilterShown = funds.length > 0;
   const fundFilter = fundFilterShown ? effectiveFundFilter(fundChoice, funds.map((fund) => fund.id)) : allFunds;
   const occurrences = useMemo(() => filterByFund(all, fundFilter), [all, fundFilter]);
   const [detail, setDetail] = useState<{ title: string; items: readonly Occurrence[] } | null>(null);

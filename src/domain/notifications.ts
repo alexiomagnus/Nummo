@@ -22,7 +22,7 @@ export type NotificationPreferences = Readonly<{
   summaryEnabled: boolean; summaryFrequency: NotificationFrequency; summarySince: string | null;
   // Subscription reminder: a notice the day before a renewal of an active subscription (nothing to configure but the switch).
   renewalEnabled: boolean;
-  // Hour of the day (Europe/Rome) at which every reminder is delivered, 7–22.
+  // Hour of the day (clock of the device's time zone) at which every reminder is delivered, 7–22.
   reminderHour: number;
 }>;
 export const reminderHourRange = { min: 7, max: 22 } as const;
