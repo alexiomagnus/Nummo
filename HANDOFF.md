@@ -44,6 +44,8 @@ cronaca delle singole fasi e possono dire cose superate.
 
 ## Filtri di Spese e Analisi riorganizzati — 15 novembre 2026
 
+- **Rilascio:** commit `c0b418c` inviato a `origin/main`, poi `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo Hosting, «Deploy complete!», sito 200). Rules non toccate. Resa su telefono non verificata.
+
 - Su richiesta, solo layout (nessuna modifica a stato, dati, token o stili dei componenti condivisi).
   - **Spese:** il filtro «Fondo» è nella riga del titolo (`PageHeader` `action`, a destra; 220 dp, max 55 %), per entrambe le
     viste; sotto i segmenti Spese/Abbonamenti resta una sola barra: ricerca + «Ordina» e «Categoria» in un gruppo
