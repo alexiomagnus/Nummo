@@ -1017,6 +1017,20 @@ Il popcorn conserva l'ID e usa nei due set illustrati una palette semantica dedi
 strisce bianche, chicchi gialli in entrambi i temi. Colori nei token `iconPalette.ts`, nessun colore letterale
 nei disegni e controlli di contrasto comuni agli altri set.
 
+## Templates di «Nuova spesa» — 15 novembre 2026
+
+- **Cosa sono:** preimpostazioni (descrizione, importo facoltativo, data, categoria, fondo; mai la ricorrenza) scelte da un
+  campo «Template» sotto Fondo in Nuova spesa. Si gestiscono nella pagina Templates (menu account, sotto Categorie): interruttore
+  (spento di base, `templatesEnabled` nelle preferenze del browser), nuovo template, elenco con modifica ed eliminazione.
+- **Dove vivono:** sono dati d'archivio, non preferenze, quindi seguono la regola delle due modalità: `DataStore`
+  (`watchTemplates`, `saveTemplate`, `removeTemplate`) in Firestore (`users/{uid}/templates/{uuid}`, Rules con campi, importo,
+  data, UUID e timestamp; scritture semplici come le liste, ultima vince, nessuna revisione) e in IndexedDB (store `templates`,
+  **passo 2** dello schema locale; il passo 1 elenca ora i soli store originali). Nel backup JSON **v7** (`templates`,
+  assente se vuoto; unione/sostituzione come per i movimenti, lettore v7, file precedenti senza template). `onQueuedWriteError`
+  accetta più ascoltatori (liste e template).
+- **Scelte da confermare:** il nome nel selettore è la descrizione (nessun campo «nome» a parte); la data del template è
+  quella salvata (compilata così in Nuova spesa); con più fondi il fondo va scelto (anche «Nessun fondo») come nella spesa.
+
 ## Pausa/annullamento datati, filtro per fondo, promemoria dei rinnovi — 15 novembre 2026
 
 - **Stato con data (soluzione 1 concordata).** Dimenticare di mettere in pausa o annullare lasciava nello storico un

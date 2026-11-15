@@ -2,7 +2,9 @@
 // store (localStore.ts) works on the small transactional contract below, which also has an in-memory twin for tests.
 // Never localStorage: records live in object stores keyed by `id`, written in atomic transactions.
 
-export const localStoreNames = ['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'meta'] as const;
+// `templates` came with schema step 2: step 1 keeps the stores it always created.
+const firstStoreNames = ['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'meta'] as const;
+export const localStoreNames = [...firstStoreNames, 'templates'] as const;
 export type LocalStoreName = (typeof localStoreNames)[number];
 export type LocalRow = { id: string } & Record<string, unknown>;
 
@@ -30,7 +32,9 @@ type Migration = (db: IDBDatabase, tx: IDBTransaction) => void;
 export const localMigrations: readonly Migration[] = [
   // 1: one object store per kind of record, keyed by `id`. `settings` holds single documents (the general budget),
   //    `meta` bookkeeping that is not part of a backup (time of the last change).
-  (db) => { for (const name of localStoreNames) db.createObjectStore(name, { keyPath: 'id' }); },
+  (db) => { for (const name of firstStoreNames) db.createObjectStore(name, { keyPath: 'id' }); },
+  // 2: the templates of «Nuova spesa».
+  (db) => { db.createObjectStore('templates', { keyPath: 'id' }); },
 ];
 export const localSchemaVersion = localMigrations.length;
 

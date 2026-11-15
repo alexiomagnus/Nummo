@@ -130,7 +130,7 @@ test('backup v6: round trip con cambi di frequenza, lettore v5, rifiuto dei file
   const e = record({ schema_version: 3, calendar_changes: [{ index: 3, start: '2026-12-01', recurrence: 'yearly' }] });
   const file = JSON.parse(makeBackup({ expenses: [e], categories: [] }));
   assert.equal(file.version, backupVersion);
-  assert.equal(backupVersion, 6);
+  assert.equal(backupVersion, 7);
   const restored = parseBackup(file);
   assert.deepEqual(restored.expenses[0], e);
   assert.equal(planImport(restored, restored, 'merge').sameExpenses, 1);

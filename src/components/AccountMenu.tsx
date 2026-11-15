@@ -8,12 +8,12 @@ import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
-type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenBackup: () => void };
+type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
 // `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
-export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenBackup }: Props) {
+export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -63,6 +63,9 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
       <Menu.Item title={t("Categorie")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.tag} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenCategories(); }} />
+      <Menu.Item title={t("Templates")} style={styles.item}
+        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.template} size={size} color={color} />}
+        onPress={() => { setOpen(false); onOpenTemplates(); }} />
       <Menu.Item title={t("Archiviazione e backup")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.database} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenBackup(); }} />

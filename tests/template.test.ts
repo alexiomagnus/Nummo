@@ -1,0 +1,69 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { makeBackup, parseBackup, planImport } from '../src/domain/backup.ts';
+import { sameTemplate, sortTemplates, parseTemplate, templateFields, validateTemplateDraft, draftOfTemplate, newTemplateDraft, type TemplateRecord } from '../src/domain/template.ts';
+import { parseSyncedTemplate } from '../src/domain/firestore.ts';
+
+const cat = '11111111-1111-4111-8111-111111111111';
+const fund = '22222222-2222-4222-8222-222222222222';
+const categories = [{ id: cat, label: 'Alimentari', icon: 'cart' as const }];
+const now = new Date('2026-11-15T10:00:00Z');
+const ok = { description: 'Caffè', amount: '', date: '2026-11-10', categoryId: cat, fundId: '' };
+const record = (over: Partial<TemplateRecord> = {}): TemplateRecord => ({ id: '33333333-3333-4333-8333-333333333333', description: 'Caffè', amount_minor: null,
+  date: '2026-11-10', category_id: cat, fund_id: null, created_at: '2026-11-11T10:00:00.000Z', ...over });
+
+test('template: l’importo è facoltativo, descrizione, data e categoria no', () => {
+  const result = validateTemplateDraft(ok, categories, [], { fundChosen: false, now });
+  assert.deepEqual(result, { ok: true, data: { description: 'Caffè', amount_minor: null, date: '2026-11-10', category_id: cat, fund_id: null } });
+  const withAmount = validateTemplateDraft({ ...ok, amount: '1,80' }, categories, [], { fundChosen: false, now });
+  assert.equal(withAmount.ok && withAmount.data.amount_minor, 180);
+  const empty = validateTemplateDraft({ ...ok, description: ' ', categoryId: '', date: '' }, categories, [], { fundChosen: false, now });
+  assert.ok(!empty.ok && empty.errors.description && empty.errors.categoryId && empty.errors.date && !empty.errors.amount);
+  const bad = validateTemplateDraft({ ...ok, amount: 'abc', date: '2026-12-01', description: 'x'.repeat(101) }, categories, [], { fundChosen: false, now });
+  assert.ok(!bad.ok && bad.errors.amount && bad.errors.date && bad.errors.description);
+  assert.ok(!validateTemplateDraft({ ...ok, categoryId: '44444444-4444-4444-8444-444444444444' }, categories, [], { fundChosen: false, now }).ok, 'categoria inesistente');
+});
+
+test('template: con dei fondi il fondo va scelto (anche «Nessun fondo»), come in Nuova spesa', () => {
+  const funds = [{ id: fund }];
+  const missing = validateTemplateDraft(ok, categories, funds, { fundChosen: false, now });
+  assert.ok(!missing.ok && missing.errors.fundId);
+  const none = validateTemplateDraft(ok, categories, funds, { fundChosen: true, now });
+  assert.ok(none.ok && none.data.fund_id === null);
+  const picked = validateTemplateDraft({ ...ok, fundId: fund }, categories, funds, { fundChosen: true, now });
+  assert.ok(picked.ok && picked.data.fund_id === fund);
+  assert.ok(!validateTemplateDraft({ ...ok, fundId: '55555555-5555-4555-8555-555555555555' }, categories, funds, { fundChosen: true, now }).ok, 'fondo inesistente');
+});
+
+test('template: lettura di dati non fidati, bozza di modifica, uguaglianza e ordine', () => {
+  assert.deepEqual(parseTemplate(record()), record());
+  for (const bad of [{ description: '' }, { description: ' Caffè' }, { amount_minor: 0 }, { amount_minor: 1.5 }, { date: '2026-02-30' }, { date: '1999-12-31' },
+    { category_id: 'x' }, { fund_id: 'x' }, { created_at: 'ieri' }, { id: 'x' }]) assert.equal(parseTemplate({ ...record(), ...bad }), null, JSON.stringify(bad));
+  assert.equal(parseSyncedTemplate({ ...record(), updated_at: '2026-11-12T10:00:00.000Z' })?.updated_at, '2026-11-12T10:00:00.000Z');
+  assert.equal(parseSyncedTemplate({ ...record(), updated_at: 'no' }), null);
+  assert.deepEqual(draftOfTemplate(record({ amount_minor: 1250, fund_id: fund })), { description: 'Caffè', amount: '12,50', date: '2026-11-10', categoryId: cat, fundId: fund });
+  assert.equal(newTemplateDraft('2026-11-15').date, '2026-11-15');
+  assert.ok(sameTemplate(record(), record()) && !sameTemplate(record(), record({ amount_minor: 5 })));
+  assert.deepEqual(Object.keys(templateFields(record())), ['description', 'amount_minor', 'date', 'category_id', 'fund_id']);
+  assert.deepEqual(sortTemplates([record({ id: 'b', description: 'Zeta' }), record({ id: 'a', description: 'Alfa' })]).map((x) => x.id), ['a', 'b']);
+});
+
+test('template: backup v7 con round trip, piano di importazione e file precedenti senza template', () => {
+  const t1 = record(); const t2 = record({ id: '66666666-6666-4666-8666-666666666666', description: 'Abbonamento sala', amount_minor: 3000, fund_id: fund });
+  const file = JSON.parse(makeBackup({ expenses: [], categories, templates: [t1, t2] }, now));
+  assert.equal(file.version, 7);
+  assert.deepEqual(file.templates.map((x: { description: string }) => x.description), ['Abbonamento sala', 'Caffè']);
+  const restored = parseBackup(file);
+  assert.deepEqual(restored.templates, [t2, t1]);
+  assert.equal('templates' in JSON.parse(makeBackup({ expenses: [], categories }, now)), false, 'nessuna chiave senza template');
+  assert.throws(() => parseBackup({ ...file, templates: [t1, t1] }), /Template nel backup/);
+  assert.throws(() => parseBackup({ ...file, templates: [{ ...t1, date: '2099-01-01' }] }), /Template nel backup/);
+  assert.throws(() => parseBackup({ ...file, templates: 'x' }), /Template nel backup/);
+  const data = { expenses: [], categories, templates: [t1, t2] };
+  const merge = planImport(data, { expenses: [], categories, templates: [t1] }, 'merge');
+  assert.deepEqual([merge.addTemplates.length, merge.sameTemplates, merge.conflicts.length], [1, 1, 0]);
+  const conflict = planImport(data, { expenses: [], categories, templates: [{ ...t1, amount_minor: 9 }] }, 'merge');
+  assert.deepEqual(conflict.conflicts.map((c) => c.kind), ['template']);
+  const replace = planImport({ expenses: [], categories, templates: [t2] }, { expenses: [], categories, templates: [t1, t2] }, 'replace');
+  assert.deepEqual([replace.removeTemplateIds, replace.sameTemplates], [[t1.id], 1]);
+});

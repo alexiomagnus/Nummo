@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { existingCategory } from '../categories/preferredCategories';
 import { memo, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, Text } from 'react-native-paper';
+import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { layout, spacing } from '../../theme/tokens';
@@ -16,6 +16,9 @@ import { TrialField } from './TrialField';
 import { RepeatField } from './RepeatField';
 import { todayInRome } from '../../domain/policy';
 import { FundField, type FundChoice } from '../funds/FundField';
+import { SelectField } from '../../components/SelectField';
+import { CategoryGlyph } from '../../components/CategoryGlyph';
+import { draftOfTemplate, type TemplateRecord } from '../../domain/template';
 import { noFund, resolveFund } from '../../domain/funds';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
@@ -24,14 +27,18 @@ type Props = {
   categories: readonly Category[]; store: ExpenseStore; fundChoices?: readonly FundChoice[]; defaultFundId?: string;
   // Preferred category from Settings: used while the draft has none of its own (also after each save).
   defaultCategoryId?: string;
+  // Saved templates, given only when they are turned on (Templates page): the field below the fund fills the form from one.
+  templates?: readonly TemplateRecord[];
 };
+const noTemplate = 'none';
 
 
 export const ExpenseForm = memo(ExpenseFormView);
 
-function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '' }: Props) {
+function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '', templates }: Props) {
   const { t } = useI18n();
   const notify = useSnackbar();
+  const { colors } = useTheme();
   const size = useSizeClass();
   const desktop = size === 'expanded';
   const { submission } = store;
@@ -39,6 +46,8 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   const [errors, setErrors] = useState<FieldErrors>({});
   // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
   const [formKey, setFormKey] = useState(0);
+  // The template the form was filled from (shown in its field until saved); the fields stay editable afterwards.
+  const [templateId, setTemplateId] = useState('');
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
   const busy = submission.status === 'sending' || submission.status === 'uncertain';
   const dataState = store.ready ? 'ready' : store.error ? 'error' : 'loading';
@@ -50,6 +59,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     setDraft(newDraft());
     setErrors({});
     setFormKey((key) => key + 1);
+    setTemplateId('');
     notify(submission.request.first_payment_date ? "Abbonamento salvato." : store.local ? "Spesa salvata." : "Spesa salvata e confermata da Firestore.");
     store.startNew();
   }, [submission.status]);
@@ -62,6 +72,17 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   const funds = fundChoices.map((choice) => choice.fund);
   const fundMissing = fundChoices.length > 0 && fundValue === '' ? { fundId: "Scegli il fondo che paga la spesa, oppure Nessun fondo." } : {};
 
+  // Fills amount (when the template has one), date, description, category and fund; never the repeat. A category or fund
+  // that no longer exists is left to be chosen again.
+  const applyTemplate = (id: string) => {
+    const template = templates?.find((item) => item.id === id);
+    setTemplateId(template ? template.id : '');
+    if (!template) return;
+    const filled = draftOfTemplate(template);
+    const fundId = template.fund_id === null ? noFund : fundChoices.some((choice) => choice.fund.id === template.fund_id) ? template.fund_id : '';
+    update({ description: filled.description, date: filled.date, categoryId: existingCategory(template.category_id, categories), fundId,
+      ...(template.amount_minor !== null ? { amount: filled.amount } : {}) });
+  };
   const update = (patch: Partial<ExpenseDraft>) => {
     setDraft((previous) => ({ ...previous, ...patch }));
     setErrors((previous) => {
@@ -102,6 +123,10 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     <View style={{ gap: blockGap }}>
       {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
         onChange={(fundId) => update({ fundId })} />}
+      {templates && templates.length > 0 && <SelectField label={t("Template")} disabled={!enabled} value={templates.some((item) => item.id === templateId) ? templateId : ''}
+        options={[{ value: noTemplate, label: t("Nessun template") },
+          ...templates.map((item) => ({ value: item.id, label: item.description, icon: <TemplateGlyph template={item} categories={categories} /> }))]}
+        onChange={(value) => applyTemplate(value === noTemplate ? '' : value)} />}
       <RepeatField gap={blockGap} repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })}>
@@ -144,6 +169,12 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     </View>
     </View>
   );
+}
+
+// Category icon of a template in the picker.
+function TemplateGlyph({ template, categories }: { template: TemplateRecord; categories: readonly Category[] }) {
+  const icon = categories.find((category) => category.id === template.category_id)?.icon;
+  return icon ? <CategoryGlyph icon={icon} size={20} /> : null;
 }
 
 const styles = StyleSheet.create({

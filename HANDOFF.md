@@ -50,6 +50,59 @@ cronaca delle singole fasi e possono dire cose superate.
   pulita, senza icona quadrata né cerchio grigio con la «N»; resta la piccola a sinistra. Non ancora verificati: consegna reale
   ad app chiusa del promemoria dei rinnovi e dell'orario scelto; filtro per fondo e stato con data in Avanzata.
 
+## Templates: testi del form — 15 novembre 2026
+
+- Introduzione della pagina ora: «Un template è una spesa già pronta, semplifica la gestione delle spese.»
+
+- Su richiesta: etichetta visibile **«Importo (facoltativo)»** nel form dei template (prop `amountOptional` di `ExpenseFields`),
+  elenco vuoto → «Nessun template.» (tolto «Creane uno qui sopra.»), pulsante **«Crea»** (era «Crea template»), grande come «Salva» di Nuova spesa per altezza ed etichetta (`controlHeight`, 16/600), a **destra** (larghezza minima 140), con 8 dp in più sopra per avere la stessa distanza che separa gli altri campi. `npm run
+  check` OK. Nessun commit.
+
+## Icone minimali ingrandite, niente messaggio sui template vuoti — 15 novembre 2026
+
+- Su richiesta: il set **minimale** è ora ingrandito del 10 % come il colorato (`glyphZoom`/`zoomed` in `categoryIconSets.ts`,
+  al posto di `colorfulZoom`; applicato alla forma risolta, i glifi in `categoryGlyphs.ts` restano invariati; il pixel resta
+  a celle intere). Test aggiornati. In Nuova spesa, con i template accesi ma nessun template salvato, il campo semplicemente
+  non compare (tolto «Nessun template: creane uno dal menu Templates.»). `npm run check` OK (445/445). Nessun commit.
+
+## Templates: campi identici a Nuova spesa — 15 novembre 2026
+
+- Su richiesta: il form di un template usa ora **gli stessi campi di Nuova spesa** (`ExpenseFields`: importo e data sulla stessa
+  riga, descrizione, categoria, poi Fondo; stessa versione compatta su desktop), senza la ricorrenza; solo l'importo può
+  restare vuoto (prop `amountOptional`, cambia solo il nome accessibile). Tolta dalla spiegazione la frase «Poi controlli e
+  salvi.»; rimosse le traduzioni non più usate. `npm run check` OK (445/445); Chromium 1280 px osservato, nessun errore JS.
+  Nessun commit.
+
+## Icona dell'app più stondata, carrello semplificato — 15 novembre 2026
+
+- Segnalato dall'utente (launcher desktop): l'icona risultava troppo squadrata. Causa: `icon-192.png`/`icon-512.png` erano
+  quadrati **opachi** (RGB, nessun alpha), quindi i launcher li mostravano a spigoli vivi. Ora `icon.svg`, `icon-192.png` e
+  `icon-512.png` hanno un fondo «squircle» di stondatura ampia (stile Material 3 Expressive) con angoli **trasparenti** (PNG
+  RGBA resi con Chromium headless). `icon-maskable-512.png` e `apple-touch-icon.png` restano quadrati (li maschera il sistema).
+  Dopo la pubblicazione, il launcher/WebAPK può tenere in cache la vecchia icona: potrebbe servire reinstallare l'app.
+- **Carrello** ridisegnato solo in **minimale** e **colorato**: maniglia, cestino pieno e due ruote, senza doghe (pixel art
+  invariata, su richiesta). Colorato con contorno nero come prima.
+- Verifiche: anteprima in Chromium (chiaro/scuro) e test; non verificato su un launcher reale. Nessun commit.
+
+## Templates di «Nuova spesa» — 15 novembre 2026
+
+- Su richiesta: pagina **Templates** nel menu account (sotto Categorie, icona documento) con interruttore «Usa i template»
+  (spento di base), breve introduzione, form «Nuovo template» (descrizione, importo **facoltativo**, data, categoria, fondo) ed
+  elenco con modifica/elimina; in Nuova spesa, con l'interruttore acceso, compare il campo **Template** sotto Fondo (stesso
+  `SelectField`): scegliendolo compila importo (se presente), data, descrizione, categoria e fondo, mai la ricorrenza.
+- Architettura (decisione in `docs/architecture.md`): dati d'archivio in **entrambe** le modalità. `domain/template.ts`;
+  `DataStore` + `firestoreStore` + `localStore`; Firestore `templates/{uuid}` con Rules (**da pubblicare**, copia in
+  `public/firestore.rules` aggiornata); IndexedDB: store `templates`, passo 2 dello schema locale; backup **v7**
+  (`templates`), importazione unione/sostituzione; `onQueuedWriteError` con più ascoltatori. Limite 100 template.
+- Verifiche: `npm run typecheck`, `npm test` (nuovi: `template.test.ts`, template e backup in `localStore.test.ts`, schema,
+  preferenze), `test:emulator` **20/20** su porte dedicate (Auth 19099, Firestore 18180, config temporanea rimossa; nuovo caso
+  «template»: regole, scritture, modifica, eliminazione, backup). Chromium 412 px touch (Standard, archivio di prova,
+  profilo temporaneo cancellato): voce di menu, interruttore, creazione, campo Template in Nuova spesa (importo, data,
+  descrizione, categoria e fondo compilati), dialogo di modifica ed eliminazione con conferma; nessun errore JS.
+  **Non provati:** Avanzata nel browser (solo emulatore/Rules), tablet/desktop, Safari. **Per usarli in Avanzata servono le
+  Rules pubblicate** (`firebase deploy --only firestore:rules --project nummo-6b6e2`, solo con autorizzazione): senza, la
+  scrittura di un template viene rifiutata dal server. Nessun commit.
+
 ## Orario delle notifiche a scelta — 15 novembre 2026
 
 - Su richiesta: scheda **«Orario delle notifiche»** in Notifiche (Mattina 9:00 predefinito, Pranzo 13:00, Sera 19:00, «Altra» con

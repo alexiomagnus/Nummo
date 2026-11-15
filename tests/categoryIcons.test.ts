@@ -4,7 +4,7 @@ import { categoryIcons, isCategoryIcon, retiredCategoryIcons, selectableCategory
 import { categoryGlyphs } from '../src/components/categoryGlyphs.ts';
 import { categoryColorGlyphs } from '../src/components/categoryColorGlyphs.ts';
 import { categoryPixelGlyphs, detailGrid, pixelGrid, pixelSprites, snapPixelSize, spriteMarkup } from '../src/components/categoryPixelGlyphs.ts';
-import { colorfulZoom, defaultIconStyle, glyphSize, iconStyles, resolveCategoryGlyph } from '../src/components/categoryIconSets.ts';
+import { defaultIconStyle, glyphSize, glyphZoom, iconStyles, resolveCategoryGlyph, zoomed } from '../src/components/categoryIconSets.ts';
 import { iconHues, iconRamp } from '../src/theme/iconPalette.ts';
 import { accents, buildScheme } from '../src/theme/palette.ts';
 
@@ -35,7 +35,7 @@ test('stile minimale: identico al set originale, il colore resta a chi disegna',
   assert.equal(defaultIconStyle, 'minimal');
   assert.deepEqual([...iconStyles], ['minimal', 'colorful', 'pixel']);
   for (const icon of categoryIcons) for (const dark of [false, true]) {
-    assert.deepEqual(resolveCategoryGlyph('minimal', icon, dark), { shape: categoryGlyphs[icon], color: null }, icon);
+    assert.deepEqual(resolveCategoryGlyph('minimal', icon, dark), { shape: zoomed(categoryGlyphs[icon]), color: null }, icon);
   }
 });
 
@@ -48,7 +48,7 @@ test('stile colorato: ruoli sostituiti per tema, stesso soggetto, nessun segnapo
     assert.equal(dark.color, iconRamp(hue, true).i, icon);
     assert.doesNotMatch(light.shape + dark.shape, /[{}]/, icon);
     assert.notEqual(light.shape, dark.shape, icon);
-    assert.notEqual(light.shape, categoryGlyphs[icon], icon);
+    assert.notEqual(light.shape, zoomed(categoryGlyphs[icon]), icon);
   }
 });
 
@@ -93,9 +93,9 @@ test('stile pixel: la dimensione si aggancia a multipli della griglia, gli altri
 
 test('fallback: pixel mancante → colorato → contorno; icona colorata mancante → contorno, mancante ovunque, assente o ereditata → null', () => {
   const only = { outline: { cart: '<path d="M0 0"/>' }, color: {} };
-  assert.deepEqual(resolveCategoryGlyph('colorful', 'cart', false, only), { shape: '<path d="M0 0"/>', color: null });
+  assert.deepEqual(resolveCategoryGlyph('colorful', 'cart', false, only), { shape: zoomed('<path d="M0 0"/>'), color: null });
   assert.equal(resolveCategoryGlyph('colorful', 'sconosciuta', false, only), null);
-  assert.deepEqual(resolveCategoryGlyph('pixel', 'cart', false, only), { shape: '<path d="M0 0"/>', color: null });
+  assert.deepEqual(resolveCategoryGlyph('pixel', 'cart', false, only), { shape: zoomed('<path d="M0 0"/>'), color: null });
   const colour = { hue: 'green', shape: '<path fill="{b}" d="M0 0"/>' } as const;
   assert.equal(resolveCategoryGlyph('pixel', 'cart', false, { outline: {}, color: { cart: colour } })!.color, iconRamp('green', false).i);
   assert.equal(resolveCategoryGlyph('pixel', 'cart', true, { outline: {}, color: {}, pixel: { cart: { hue: 'red', shape: '<path fill="{t}" d="M0 0"/>' } } })!.shape, `<path fill="${iconRamp('red', true).t}" d="M0 0"/>`);
@@ -186,10 +186,10 @@ test('regalo: viola e bianco in entrambi gli stili e temi (dettagli bianchi anch
   for (const style of ['colorful', 'pixel'] as const) assert.match(resolveCategoryGlyph(style, 'gift', true)!.shape, /#FFFFFF/i, style);
 });
 
-test('stile colorato: ingrandito attorno al centro, il pixel mai (servono celle intere)', () => {
-  assert.ok(colorfulZoom > 1 && colorfulZoom <= 1.15);
+test('stili minimale e colorato: ingranditi attorno al centro alla stessa misura, il pixel mai (servono celle intere)', () => {
+  assert.ok(glyphZoom > 1 && glyphZoom <= 1.15);
   for (const icon of categoryIcons) {
-    assert.match(resolveCategoryGlyph('colorful', icon, false)!.shape, new RegExp(`^<g transform="translate\\(12 12\\) scale\\(${colorfulZoom}\\) translate\\(-12 -12\\)">`), icon);
+    for (const style of ['minimal', 'colorful'] as const) assert.match(resolveCategoryGlyph(style, icon, false)!.shape, new RegExp(`^<g transform="translate\\(12 12\\) scale\\(${glyphZoom}\\) translate\\(-12 -12\\)">`), `${style}:${icon}`);
     assert.doesNotMatch(resolveCategoryGlyph('pixel', icon, false)!.shape, /translate\(12 12\)/, icon);
   }
 });

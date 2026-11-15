@@ -10,12 +10,13 @@ export type FontChoice = 'google' | 'system';
 export const chartTypes = ['donut', 'bars', 'blocks'] as const;
 export type ChartType = (typeof chartTypes)[number];
 // `showArchivedLists` hides the archived lists of the Lists page,
-// `showArchivedFunds` the archived funds of the Funds page, `showFundFilter` the «Fondo» filter of Spese and Analisi.
-export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; showFundFilter: boolean };
+// `showArchivedFunds` the archived funds of the Funds page, `showFundFilter` the «Fondo» filter of Spese and Analisi,
+// `templatesEnabled` the Template field of «Nuova spesa» (off by default; the saved templates are archive data).
+export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; showFundFilter: boolean; templatesEnabled: boolean };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, showFundFilter: true, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, showFundFilter: true, templatesEnabled: false, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -38,5 +39,6 @@ export function parsePreferences(raw: string | null): Preferences {
     showArchivedLists: typeof o.showArchivedLists === 'boolean' ? o.showArchivedLists : defaultPreferences.showArchivedLists,
     showArchivedFunds: typeof o.showArchivedFunds === 'boolean' ? o.showArchivedFunds : defaultPreferences.showArchivedFunds,
     showFundFilter: typeof o.showFundFilter === 'boolean' ? o.showFundFilter : defaultPreferences.showFundFilter,
+    templatesEnabled: typeof o.templatesEnabled === 'boolean' ? o.templatesEnabled : defaultPreferences.templatesEnabled,
   };
 }

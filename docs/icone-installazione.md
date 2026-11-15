@@ -8,13 +8,13 @@ degli asset di installazione nel repository.
 
 | Asset in `public/icons/` | Uso |
 | --- | --- |
-| `icon.svg` | Favicon a colori, simbolo scalato a 0,72 |
-| `icon-192.png`, `icon-512.png` | Manifest `any`, installazione/splash secondo il browser |
+| `icon.svg` | Favicon a colori, simbolo scalato a 0,72, fondo «squircle» (stondatura ampia, stile Material 3 Expressive) |
+| `icon-192.png`, `icon-512.png` | Manifest `any`, installazione/splash secondo il browser: **RGBA con angoli trasparenti** (stessa forma di `icon.svg`, resa con Chromium headless a sfondo trasparente). Prima erano quadrati opachi, e i launcher desktop li mostravano squadrati |
 | `icon-maskable-512.png` | Manifest `maskable`, sfondo pieno e simbolo centrale |
 | `apple-touch-icon.png` | Collegamento Apple, 180×180 |
 | `icon-monochrome.svg` | Manifest `monochrome`, silhouette vettoriale dedicata |
 
-I PNG esistenti sono completamente opachi; il simbolo occupa circa il 46,5% del
+Dal 15 novembre `icon-192`/`icon-512` hanno gli angoli trasparenti; `icon-maskable-512` e `apple-touch-icon` restano quadrati opachi perché il sistema applica la propria maschera. Prima, tutti i PNG erano completamente opachi; il simbolo occupa circa il 46,5% del
 lato nelle icone `any` e il 37,5% nella maskable. Non è stata dimostrata sul Pixel
 la causa del contrasto debole: non ci sono sfumature o alpha parziali nei loro sfondi.
 
