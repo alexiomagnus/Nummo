@@ -17,8 +17,11 @@ cronaca delle singole fasi e possono dire cose superate.
   --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `e79dfa6`: icona `key`
   ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
   diretto dei dati cloud). Caricamento e sincronizzazione dopo la pubblicazione da verificare ricaricando l'app.
-- **Working tree.** Non committato (su richiesta): icone (regalo, carrello, set colorato, pizza), «Prossimo mese», filtro per
-  fondo, pausa/annullamento datati, promemoria dei rinnovi (richiede la ripubblicazione del Worker prima dell'Hosting).
+- **Rilascio del 15 novembre (sera).** Commit `f454d12` inviato a `origin/main`: icone (regalo, carrello, set colorato, pizza),
+  «Prossimo mese», filtro per fondo, pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche, niente icona
+  quadrata a destra. Worker `nummo-push` ripubblicato dall'utente, poi `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo
+  Hosting, «Deploy complete!», sito 200, `sw.js` con `renewal`). Rules non toccate. Resa su telefono, consegna reale delle
+  notifiche (orario scelto, rinnovi) e assenza dell'icona a destra da verificare.
 - **Verifiche.** Vedi la sezione più recente: `npm run check` OK (**438/438**, build demo). `test:emulator` 19/19
   rieseguito dopo `ownerAccess.ts` (sezione «Questo Nummo è privato»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
