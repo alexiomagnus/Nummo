@@ -1,15 +1,15 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 15 novembre 2026
+## Stato corrente — 15 novembre 2026 (sera)
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main` a `336ca60` (campi senza `<button>` annidati, slot di «Nuova spesa» `inert`), dopo
-  `b12ba59` (HANDOFF) e `f77f42a`. Modifiche locali non committate di questa fase: focus dei dialoghi su touch e
-  riallineamento documentale (sezione più recente).
-- **Produzione.** Hosting pubblicato con autorizzazione con `npm run deploy:hosting` su `f77f42a`: le correzioni di
-  `336ca60` e le modifiche locali **non sono online**. Worker `nummo-push` attivo su Cloudflare. `firestore.rules` è
+- **Git.** Tutte le modifiche del 15 novembre (sezioni sotto, fino a «Dialoghi: niente tastiera automatica su touch»)
+  committate in `407713d` e inviate a `origin/main` su richiesta; questo aggiornamento di HANDOFF in un commit successivo.
+- **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `407713d` (progetto `nummo-6b6e2`,
+  solo Hosting, «Deploy complete!»): pagina principale 200, `sw.js` online con i testi nuovi (prima lettura dalla cache
+  della CDN, poi aggiornata). Resa sui dispositivi non verificata. Worker `nummo-push` attivo su Cloudflare. `firestore.rules` è
   cambiato dopo l'ultima pubblicazione Rules registrata (8 novembre; icone rimosse in `d7e1504`, `key` aggiunta in
   `6956a56`): pubblicazione separata, con autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad
   allora in Avanzata una categoria `key` viene rifiutata dal cloud.
