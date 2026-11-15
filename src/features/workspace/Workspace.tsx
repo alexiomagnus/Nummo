@@ -231,10 +231,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Balance now and remaining budget of this month, for the fund field of the forms (same figures as the Funds page).
   const fundSummary = useMemo(() => monthOverview({ funds: fundState.funds, movements: fundState.movements, expenses: store.expenses }, monthOf(today), today),
     [fundState.funds, fundState.movements, store.expenses, today]);
-  // «Mostra budget mensile» off: no remaining budget under the fund field either (the plans stay saved).
-  const showBudget = dashboardPreferences.showGeneralBudget;
-  const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, balance: item.balance, remaining: showBudget ? item.remaining : null, tracksBalance: hasBalanceData(item.fund, fundState.movements) });
-  const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary, showBudget]);
+  const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, balance: item.balance, remaining: item.remaining, tracksBalance: hasBalanceData(item.fund, fundState.movements) });
+  const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary]);
   const editorFundChoices = editing ? fundSummary.funds.filter((item) => !item.fund.archived || item.fund.id === editing.fund_id).map(choiceOf) : [];
   const fundsError = fundState.ready ? null : fundState.error;
   // Releasing the startup cover after 4 seconds enables navigation, not incomplete form controls.
@@ -340,7 +338,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify}
       showArchivedLists={dashboardPreferences.showArchivedLists} /></VisitedSection>
     <VisitedSection active={section === 'funds' && !starting}><FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
-      defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} showGeneralBudget={dashboardPreferences.showGeneralBudget} /></VisitedSection>
+      defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify}
+      showArchivedFunds={dashboardPreferences.showArchivedFunds} /></VisitedSection>
     <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}
       preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} /></VisitedSection>
     {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo),

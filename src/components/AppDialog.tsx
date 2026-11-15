@@ -10,6 +10,9 @@ import { Scrim, useEscape, useFocusHandoff, useOverlayMotion, usePresence } from
 
 type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dismissable' | 'testID'> & {
   style?: StyleProp<ViewStyle>;
+  // Focus the first text field on opening also on touch-first devices, bringing up the keyboard. Only for creation
+  // dialogs that start from typing a name (Nuova lista, Nuovo fondo): every other dialog keeps the keyboard closed.
+  focusTextEntry?: boolean;
   children: ReactNode;
 };
 
@@ -22,7 +25,7 @@ const surfaceExit = transitions([['opacity', motion.fade, motion.exitEasing], ['
 // Shared surface and viewport bounds for settings, editors, dates and confirmations.
 // Matching `background` also makes outlined-field label notches blend with the modal.
 // Layout of Paper's Dialog (Title/Content/ScrollArea/Actions keep working), animated by the shared overlay layer.
-function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID, style, children }: Props) {
+function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID, style, focusTextEntry = false, children }: Props) {
   const { t } = useI18n();
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -33,7 +36,7 @@ function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID,
   const { mounted, shown } = usePresence(visible, motion.short, animate);
   const container = useRef<ComponentRef<typeof View>>(null);
   useEscape(visible, () => { if (dismissable) onDismiss?.(); });
-  useFocusHandoff(visible, shown, container);
+  useFocusHandoff(visible, shown, container, focusTextEntry);
   if (!mounted) return null;
   const maxHeight = `calc(var(--nummo-viewport-height, 100dvh) - ${insets.top + insets.bottom + spacing.lg * 2}px)` as DimensionValue;
   // As in Paper's Material 3 dialog, the first block (title or content) keeps 24 dp from the top edge.

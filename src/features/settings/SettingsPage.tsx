@@ -122,10 +122,10 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         <Card title={t("Funzionalità")} style={styles.section}>
           <SwitchRow label={t("Mostra andamento nel tempo")} supporting={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}
             onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
-          <SwitchRow label={t("Mostra budget mensile")} supporting={t("Mostra il budget generale e quello dei fondi. I budget nascosti restano salvati.")}
-            value={preferences.showGeneralBudget} onChange={(showGeneralBudget) => onChange({ showGeneralBudget })} />
           <SwitchRow label={t("Mostra liste archiviate")} supporting={t("Nella pagina Liste, le liste già registrate come spesa.")}
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
+          <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
+            value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
         </Card>
         {archiveSections}
       </View>

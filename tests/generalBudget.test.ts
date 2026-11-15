@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { backupVersion, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
 import { parseSyncedBudget } from '../src/domain/firestore.ts';
 import {
-  balanceLocked, budgetFor, decodeBudgets, emptyFund, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, rechargeCredits, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
+  budgetFor, decodeBudgets, emptyFund, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, rechargeCredits, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
   type Fund, type FundData,
 } from '../src/domain/funds.ts';
 
@@ -121,7 +121,7 @@ test('saldo del fondo dal modulo: nuovo fondo con saldo iniziale e ricarica, mai
   assert.equal(hasBalanceData({ ...plain, id: 'f' }, []), false);
 });
 
-test('saldo del fondo dal modulo: attivato su un fondo esistente, ricarica dalla prossima scadenza, saldo spento solo senza storico', () => {
+test('saldo del fondo dal modulo: su un fondo esistente, ricarica dalla prossima scadenza, saldo iniziale svuotato', () => {
   const old: FundData = emptyFund('Risparmi', '2026-03-01', 1);
   const on = fundFromForm(old, { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 0, recharge: { amount_minor: 10000, day: 5 } } }, today)!;
   assert.deepEqual(on.recharges, [{ month: '2026-12', amount_minor: 10000, day: 5, active: true }], 'il 5 novembre è già passato: nessun accredito retroattivo');
@@ -131,13 +131,12 @@ test('saldo del fondo dal modulo: attivato su un fondo esistente, ricarica dalla
   const initialOnly = fundFromForm(old, { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 2500, recharge: null } }, today)!;
   assert.equal(initialOnly.initial_minor, 2500);
   assert.deepEqual(initialOnly.recharges, []);
-  assert.equal(balanceLocked({ ...initialOnly, id: 'f' }, []), false);
-  const off = fundFromForm(initialOnly, { name: 'Risparmi', icon: null, color: 1, balance: null }, today)!;
+  // The form has no balance switch: an emptied initial balance with no recharge is a plain fund again.
+  const off = fundFromForm(initialOnly, { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 0, recharge: null } }, today)!;
   assert.equal(off.initial_minor, 0);
   assert.equal(hasBalanceData({ ...off, id: 'f' }, []), false);
   // With a recharge or a movement the balance stays: switching the recharge off pauses it, the history remains.
-  assert.ok(balanceLocked({ ...later, id: 'f' }, []));
-  assert.ok(balanceLocked({ ...initialOnly, id: 'f' }, [{ to_fund_id: 'f', from_fund_id: null }]));
+  assert.ok(hasBalanceData({ ...off, id: 'f' }, [{ to_fund_id: 'f', from_fund_id: null }]));
   const paused = fundFromForm({ ...later, recharges: [{ month: '2026-06', amount_minor: 10000, day: 20, active: true }] },
     { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 0, recharge: null } }, today)!;
   assert.equal(paused.recharges.at(-1)?.active, false);

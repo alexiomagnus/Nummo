@@ -131,7 +131,7 @@ test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
 });
 
 test('impostazioni: interruttore del budget mensile tradotto in entrambe le lingue', () => {
-  for (const [it, en] of [['Funzionalità', 'Features'], ['Mostra budget mensile', 'Show monthly budget'], ['Nella pagina Analisi, il grafico delle spese giorno per giorno.', 'On the Analysis page, a chart of spending day by day.'], ['Mostra il budget generale e quello dei fondi. I budget nascosti restano salvati.', "Shows the general budget and the funds' budgets. Hidden budgets stay saved."], ['Mostra liste archiviate', 'Show archived lists'], ['Nella pagina Liste, le liste già registrate come spesa.', 'On the Lists page, the lists already recorded as an expense.'], ['Categorie preferite', 'Preferred categories'], ['Nuove liste', 'New lists']] as const) {
+  for (const [it, en] of [['Funzionalità', 'Features'], ['Nella pagina Analisi, il grafico delle spese giorno per giorno.', 'On the Analysis page, a chart of spending day by day.'], ['Mostra liste archiviate', 'Show archived lists'], ['Mostra fondi archiviati', 'Show archived funds'], ['Nella pagina Liste, le liste già registrate come spesa.', 'On the Lists page, the lists already recorded as an expense.'], ['Categorie preferite', 'Preferred categories'], ['Nuove liste', 'New lists']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
   }

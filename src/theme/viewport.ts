@@ -37,8 +37,9 @@ export function isTextEntry(element: FocusTarget): boolean {
 
 // Whether an overlay may move the focus to `element` on opening. On touch-first devices (no hover, coarse pointer) a
 // text field would bring up the on-screen keyboard over half of the dialog before the user has chosen a field.
-export function initialFocusAllowed(element: FocusTarget, touchFirst: boolean): boolean {
-  return !(touchFirst && isTextEntry(element));
+// `textEntry` lifts that rule for the few dialogs whose whole purpose is to type a name (Nuova lista, Nuovo fondo).
+export function initialFocusAllowed(element: FocusTarget, touchFirst: boolean, textEntry = false): boolean {
+  return textEntry || !(touchFirst && isTextEntry(element));
 }
 
 // `update` hides navigation immediately; `onConfirmedChange` permits layout changes only after viewport confirmation.

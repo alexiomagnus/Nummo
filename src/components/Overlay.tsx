@@ -64,8 +64,9 @@ export function useEscape(active: boolean, onEscape: () => void) {
 
 // Focus moves to the first item once the overlay is shown (as Paper's menu did) and goes back, without scrolling, to the
 // element that had it when the overlay opened (the field), unless the user has meanwhile moved it elsewhere. On
-// touch-first devices a text field is never focused on opening: the overlay itself takes the focus instead.
-export function useFocusHandoff(visible: boolean, shown: boolean, container: { current: unknown }) {
+// touch-first devices a text field is not focused on opening (the overlay itself takes the focus instead), unless the
+// caller asks for it with `textEntry`.
+export function useFocusHandoff(visible: boolean, shown: boolean, container: { current: unknown }, textEntry = false) {
   const opener = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!visible || typeof document === 'undefined') return;
@@ -84,11 +85,11 @@ export function useFocusHandoff(visible: boolean, shown: boolean, container: { c
     const first = node.querySelector<HTMLElement>('input:not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly]), button:not([disabled]):not([tabindex="-1"]):not([aria-hidden="true"]), [role="menuitem"]:not([aria-disabled="true"]), [tabindex="0"]');
     if (!first) return;
     const touchFirst = typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(hover: none) and (pointer: coarse)').matches;
-    if (initialFocusAllowed(first, touchFirst)) { first.focus({ preventScroll: true }); return; }
+    if (initialFocusAllowed(first, touchFirst, textEntry)) { first.focus({ preventScroll: true }); return; }
     // The overlay itself takes the focus, out of the page behind: Tab still reaches the field, Escape still closes.
     if (!node.hasAttribute('tabindex')) { node.setAttribute('tabindex', '-1'); node.style.outline = 'none'; }
     node.focus({ preventScroll: true });
-  }, [shown, container]);
+  }, [shown, container, textEntry]);
 }
 
 const scrimEnter = transitions([['opacity', motion.medium]]);

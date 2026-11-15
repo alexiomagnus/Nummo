@@ -25,6 +25,62 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, pubblicazione Hosting e Rules
   (solo con autorizzazione).
 
+## Impostazioni: rimosso «Mostra budget mensile», budget sempre visibili — 15 novembre 2026
+
+- Su richiesta: eliminati l'interruttore «Mostra budget mensile» e tutta l'implementazione per nascondere i budget
+  (preferenza `showGeneralBudget`, prop `showGeneralBudget`/`showBudget` di `FundsPage`, `FundCard`, `FundEditor`, budget
+  residuo azzerato in `Workspace`). Ora sempre visibili: budget generale e «Imposta un budget mensile» in Fondi,
+  misuratori sulle schede, «Budget mensile» in Nuovo/Modifica fondo, budget residuo sotto il campo Fondo. Un
+  `showGeneralBudget` già salvato in `nummo.preferences.v1` viene ignorato (test). Traduzioni rimosse; AGENTS e
+  `docs/architecture.md` (sezione del 12 novembre segnata come superata) aggiornati. `fundFromForm` accetta ancora un
+  budget omesso (nessuna modifica), usato dai test.
+- Verifiche: `npm run check` OK (**430/430**, build demo). Chromium 360 px touch con `showGeneralBudget: false` salvato
+  (Standard, profilo temporaneo poi cancellato): «Imposta un budget mensile» presente in Fondi, interruttore «Budget
+  mensile» in Nuovo fondo, in Impostazioni solo andamento, liste e fondi archiviati; nessun errore JS. Nessun commit.
+
+## Impostazioni: «Mostra fondi archiviati»; tolta la nota del saldo iniziale — 15 novembre 2026
+
+- Su richiesta: in Impostazioni → Funzionalità, sotto «Mostra liste archiviate», nuovo interruttore **«Mostra fondi
+  archiviati»** («Nella pagina Fondi, i fondi che non usi più.»), preferenza `showArchivedFunds` in `nummo.preferences.v1`
+  (predefinito acceso, solo booleani, come `showArchivedLists`). Spento, la pagina Fondi non offre «Fondi archiviati (n)»;
+  nessun dato cambia. Tolta da Modifica fondo la nota «Saldo iniziale al … Correggerlo ricalcola tutti i saldi del fondo.»
+  (traduzione rimossa). AGENTS aggiornato.
+- Verifiche: `npm run check` OK (**430/430**, nuovo test in `preferences.test.ts`, caso in `i18n.test.ts`, build demo).
+  Chromium 360 px touch (Standard, profilo temporaneo poi cancellato): nota assente in Modifica fondo; fondo archiviato →
+  «Fondi archiviati (1)»; interruttore spento → voce assente e `showArchivedFunds: false` salvato; riacceso → voce di nuovo
+  presente; nessun errore JS. Nessun commit.
+
+## Modulo del fondo: niente «Tieni traccia del saldo», saldo iniziale facoltativo — 15 novembre 2026
+
+- Su richiesta: tolto l'interruttore «Tieni traccia del saldo». Ordine del modulo: nome, colore, icona, **«Saldo iniziale
+  (facoltativo)»** sempre visibile, poi gli interruttori **Ricarica mensile** e **Budget mensile** (quest'ultimo solo con
+  «Mostra budget mensile»). Tolte le scritte «I soldi presenti oggi nel fondo.» e «Le modifiche valgono dalla prossima
+  scadenza: gli accrediti già ricevuti non cambiano. Nei mesi più corti un giorno 29, 30 o 31 diventa l'ultimo del mese.»
+  (restano le regole: ricarica da ora in poi, giorno limitato alla fine del mese). In Modifica resta la nota «Saldo
+  iniziale al …». Il modulo invia sempre `balance` (vuoto = 0, ricarica spenta = nessuna da ora): un fondo con solo nome è
+  un gruppo di spese, con saldo iniziale o ricarica ha il saldo (`hasBalanceData`). Svuotare il saldo iniziale lo riporta
+  a 0; ricariche passate e movimenti restano. Rimossi `balanceLocked`, la prop `movements` di `FundEditor`, l'errore
+  «Inserisci un saldo iniziale o attiva la ricarica mensile.» e le traduzioni non più usate. Nessuna modifica a Rules,
+  schema, backup o `DataStore`. AGENTS, README, `docs/architecture.md` aggiornati.
+- Verifiche: `npm run check` OK (**429/429**, test del modulo aggiornati, build demo). Chromium 360 px touch (Standard,
+  profilo temporaneo poi cancellato): scritte assenti, ordine Saldo iniziale → Ricarica → Budget, due interruttori spenti;
+  fondo con solo nome → nessun «Aggiungi»; fondo con saldo 500 → «Aggiungi» presente e 500,00 mostrato; screenshot con
+  Ricarica accesa corretto; nessun errore JS. Non provati: Avanzata, modifica di un fondo con ricariche passate. Nessun commit.
+
+## Nuova lista e Nuovo fondo: tastiera subito su smartphone — 15 novembre 2026
+
+- Su richiesta: su touch-first i dialoghi **Nuova lista** (Liste) e **Nuovo fondo** (Fondi) danno il focus al campo del
+  nome all'apertura, così la tastiera si apre subito. Solo questi due e solo in creazione: Modifica lista/fondo, prodotti,
+  budget e ogni altro dialogo o foglio continuano a dare il focus all'overlay. Nuova prop `focusTextEntry` di `AppDialog`
+  → `useFocusHandoff(…, textEntry)` → `initialFocusAllowed(element, touchFirst, textEntry)`. Nuovo fondo con archivio non
+  pronto: il nome è `readonly`, quindi niente focus né tastiera (come prima). AGENTS «Overlay» aggiornato.
+- Verifiche: `npm run check` OK (**429/429**, due asserzioni nuove in `viewport.test.ts`, build demo). Chromium headless
+  360 px con emulazione touch (`hover: none`, `pointer: coarse`) sul server di sviluppo, Standard, profilo temporaneo poi
+  cancellato, tocchi via CDP: Nuova lista → focus su «Nome della lista», Nuovo fondo → «Nome del fondo», «Imposta un
+  budget mensile» → focus sul dialogo (nessun campo); nessun errore JS. La tastiera virtuale **non** è osservabile in
+  headless: da confermare su telefono reale. Su Safari/iOS il focus arriva dopo l'animazione d'apertura, fuori dal gesto
+  del tocco, e iOS di norma non apre la tastiera in quel caso. Nessun commit.
+
 ## Fondi: saldo facoltativo per fondo («Tieni traccia del saldo») — 15 novembre 2026
 
 - Segnalato dall'utente: in un archivio importato mancavano Aggiungi/Trasferisci e nell'app non c'era modo di impostare

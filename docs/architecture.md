@@ -14,11 +14,12 @@ convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove
 ## Saldo facoltativo per fondo — 15 novembre 2026
 
 Su richiesta (opzione 3 tra: lasciare i fondi come gruppi di spesa, mostrare sempre Aggiungi/Trasferisci, saldo per fondo).
-Rivede in parte la #7: un fondo resta di base un gruppo di spese, ma il modulo offre «Tieni traccia del saldo» con saldo
-iniziale (alla `start_date`, oggi per i nuovi) e ricarica mensile. **Nessun nuovo campo**: un flag avrebbe richiesto Rules,
+Rivede in parte la #7: un fondo resta di base un gruppo di spese, ma il modulo offre saldo iniziale (alla `start_date`, oggi
+per i nuovi) e ricarica mensile, facoltativi. *Aggiornamento dello stesso giorno, su richiesta:* tolto l'interruttore «Tieni
+traccia del saldo»; «Saldo iniziale (facoltativo)» è sempre visibile, seguito dagli interruttori Ricarica mensile e Budget mensile. **Nessun nuovo campo**: un flag avrebbe richiesto Rules,
 decoder, backup e pubblicazione Rules prima di poter scrivere in Avanzata. Il saldo esiste finché il fondo ha saldo iniziale,
-ricariche o movimenti (`hasBalanceData`); acceso senza nulla da contare è rifiutato dal modulo; con ricariche o movimenti
-non si spegne (`balanceLocked`), perché quei dati non si cancellano né si riscrivono nel passato. Aggiungi/Trasferisci
+ricariche o movimenti (`hasBalanceData`); ricariche e movimenti già registrati restano (spegnere la ricarica la sospende da ora),
+perché quei dati non si cancellano né si riscrivono nel passato. Aggiungi/Trasferisci
 operano solo tra fondi attivi con saldo. `setRecharge` non crea più accrediti datati nel passato: una ricarica attivata o
 spostata a un giorno già trascorso del mese parte dal mese successivo.
 
@@ -128,6 +129,9 @@ sola modalità Standard, il principio «Firestore unica fonte di verità»; in A
   è verificato in Chromium, non dai test Node (che usano il gemello in memoria).
 
 ## Visibilità dei controlli budget — 12 novembre 2026
+
+*Superata il 15 novembre 2026, su richiesta:* rimossi l'interruttore «Mostra budget mensile» e la preferenza
+`showGeneralBudget`; i budget sono sempre visibili e il valore già salvato nel browser viene ignorato. Testo storico:
 
 La preferenza locale `showGeneralBudget` nasconde anche la sezione budget nei moduli Nuovo fondo e Modifica fondo.
 Il modulo non valida né invia una modifica del budget quando i controlli sono nascosti: `fundFromForm` riceve il

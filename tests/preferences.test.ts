@@ -82,20 +82,26 @@ test('dashboard: andamento visibile di base, scelta booleana conservata, valori 
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
 });
 
-test('budget mensile generale: visibile di base, solo booleani accettati, scelta conservata', () => {
-  assert.equal(defaultPreferences.showGeneralBudget, true);
-  assert.equal(parsePreferences('{"dashboardTrend":false}').showGeneralBudget, true); // preferenze salvate prima della scelta
-  assert.equal(parsePreferences('{"showGeneralBudget":false}').showGeneralBudget, false);
-  for (const bad of ['"false"', '0', 'null', '{}']) assert.equal(parsePreferences(`{"showGeneralBudget":${bad}}`).showGeneralBudget, true);
-  const saved = { ...defaultPreferences, showGeneralBudget: false };
-  assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+test('budget sempre visibili: la vecchia scelta «showGeneralBudget» salvata viene ignorata', () => {
+  const parsed = parsePreferences('{"showGeneralBudget":false,"dashboardTrend":false}');
+  assert.equal('showGeneralBudget' in parsed, false);
+  assert.equal(parsed.dashboardTrend, false);
 });
 
 test('liste archiviate: visibili di base, solo booleani accettati, scelta conservata', () => {
   assert.equal(defaultPreferences.showArchivedLists, true);
-  assert.equal(parsePreferences('{"showGeneralBudget":false}').showArchivedLists, true); // preferenze salvate prima della scelta
+  assert.equal(parsePreferences('{"dashboardTrend":false}').showArchivedLists, true); // preferenze salvate prima della scelta
   assert.equal(parsePreferences('{"showArchivedLists":false}').showArchivedLists, false);
   for (const bad of ['"false"', '0', 'null']) assert.equal(parsePreferences(`{"showArchivedLists":${bad}}`).showArchivedLists, true);
   const saved = { ...defaultPreferences, showArchivedLists: false };
+  assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+});
+
+test('fondi archiviati: visibili di base, solo booleani accettati, scelta conservata', () => {
+  assert.equal(defaultPreferences.showArchivedFunds, true);
+  assert.equal(parsePreferences('{"showArchivedLists":false}').showArchivedFunds, true); // preferenze salvate prima della scelta
+  assert.equal(parsePreferences('{"showArchivedFunds":false}').showArchivedFunds, false);
+  for (const bad of ['"false"', '0', 'null']) assert.equal(parsePreferences(`{"showArchivedFunds":${bad}}`).showArchivedFunds, true);
+  const saved = { ...defaultPreferences, showArchivedFunds: false };
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
 });

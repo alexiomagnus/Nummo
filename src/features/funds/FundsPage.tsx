@@ -33,7 +33,7 @@ type Props = {
   onSetDefault: (id: string) => void;
   notify: (message: string) => void;
   // Display preference (Settings → Features): hides every budget (general, fund cards, editor controls), preserving their data.
-  showGeneralBudget: boolean;
+  showArchivedFunds: boolean;
 };
 
 const kindLabels: Record<MonthKind, string> = { past: 'Mese concluso', current: 'Mese in corso', future: 'Previsione' };
@@ -44,7 +44,7 @@ const entryLabels: Record<FundEntry['kind'], string> = {
 
 export const FundsPage = memo(FundsPageView);
 
-function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSetDefault, notify, showGeneralBudget }: Props) {
+function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSetDefault, notify, showArchivedFunds }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
   const sizeClass = useSizeClass();
@@ -64,13 +64,13 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const active = overview.funds.filter((item) => !item.fund.archived);
   const archived = overview.funds.filter((item) => item.fund.archived);
   const activeFunds = funds.filter((fund) => !fund.archived);
-  // Balances, recharges and manual money movements only for funds that keep a balance («Tieni traccia del saldo» in the fund
+  // Balances, recharges and manual money movements only for funds that keep a balance (initial balance or recharge in the fund
   // form, or data from earlier versions): the others are plain spending groups. Money can be added or moved only between those.
   const balanceFunds = useMemo(() => new Set(funds.filter((fund) => hasBalanceData(fund, movements)).map((fund) => fund.id)), [funds, movements]);
   const anyBalance = balanceFunds.size > 0;
   const movableFunds = activeFunds.filter((fund) => balanceFunds.has(fund.id));
   const general = useMemo(() => generalBudgetMonth(remote.budgets, overview), [remote.budgets, overview]);
-  const budgetShown = showGeneralBudget && general.budget !== null;
+  const budgetShown = general.budget !== null;
   const balances = useMemo(() => new Map(overview.funds.map((item) => [item.fund.id, item.balance])), [overview]);
   const orphans = useMemo(() => unassignedExpenses(expenses, funds), [expenses, funds]);
   // Earliest month with data (first fund start or oldest expense), up to one year ahead (forecasts only).
@@ -137,7 +137,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           icon={({ size, color }) => <SvgIcon shape={iconShapes.euro} size={size} color={color} />}>{t("Aggiungi")}</Button>}
         {movableFunds.length > 1 && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite} onPress={() => setMoving({ kind: 'transfer' })}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.swap} size={size} color={color} />}>{t("Trasferisci")}</Button>}
-        {showGeneralBudget && general.budget === null && <Button compact={tablet} mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
+        {general.budget === null && <Button compact={tablet} mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
           accessibilityLabel={t("Imposta un budget mensile")}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.chart} size={size} color={color} />}>{t("Budget")}</Button>}
       </View>
@@ -159,7 +159,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
 
       <View role="list" accessibilityLabel={t("Fondi")} style={styles.list}>
         {active.map((item) => <FundCard key={item.fund.id} item={item} funds={funds} open={open.has(item.fund.id)} onToggle={() => toggle(item.fund.id)}
-          isDefault={item.fund.id === defaultFundId} canWrite={canWrite} tracksBalance={balanceFunds.has(item.fund.id)} showBudget={showGeneralBudget}
+          isDefault={item.fund.id === defaultFundId} canWrite={canWrite} tracksBalance={balanceFunds.has(item.fund.id)}
           inUse={fundInUse(item.fund.id, sources)}
           onEdit={() => setEditing(item.fund as SyncedFund)}
           onArchive={() => void archive(item.fund as SyncedFund, true)}
@@ -173,7 +173,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           }} movements={movements} />)}
       </View>
 
-      {archived.length > 0 && <View style={styles.list}>
+      {showArchivedFunds && archived.length > 0 && <View style={styles.list}>
         <Button mode="text" style={styles.start} aria-expanded={showArchived} onPress={() => setShowArchived(!showArchived)}
           icon={({ size, color }) => <SvgIcon shape={showArchived ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>
           {t("Fondi archiviati ({p0})", { p0: archived.length })}</Button>
@@ -196,7 +196,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
         </Reveal>}
       </View>}
 
-      {editing && <FundEditor record={editing === 'new' ? undefined : editing} funds={funds} movements={movements} showBudget={showGeneralBudget} ready={canWrite} error={remote.error}
+      {editing && <FundEditor record={editing === 'new' ? undefined : editing} funds={funds} ready={canWrite} error={remote.error}
         onSave={async (data) => {
           const saved = editing === 'new' ? await remote.createFund(data) : await remote.updateFund(editing, data);
           if (saved) notify(editing === 'new' ? "Fondo creato." : "Fondo aggiornato.");
@@ -225,14 +225,12 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
 type CardProps = {
   // Fund that keeps a balance: shows balance, recharge and movements, and offers «Aggiungi denaro».
   tracksBalance: boolean;
-  // «Mostra budget mensile» off: the fund's budget meter is hidden (its plan stays saved).
-  showBudget: boolean;
   item: FundMonth; funds: readonly SyncedFund[]; movements: readonly SyncedMovement[]; open: boolean; isDefault: boolean; canWrite: boolean; inUse: boolean;
   onToggle: () => void; onEdit: () => void; onArchive: () => void; onAdd: () => void;
   onDelete: () => Promise<boolean>; onRemoveMovement: (id: string) => Promise<boolean>;
 };
 
-function FundCard({ tracksBalance, showBudget, item, funds, open, isDefault, canWrite, inUse, onToggle, onEdit, onArchive, onAdd, onDelete, onRemoveMovement }: CardProps) {
+function FundCard({ tracksBalance, item, funds, open, isDefault, canWrite, inUse, onToggle, onEdit, onArchive, onAdd, onDelete, onRemoveMovement }: CardProps) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
   const { fund } = item;
@@ -271,7 +269,7 @@ function FundCard({ tracksBalance, showBudget, item, funds, open, isDefault, can
           <Text variant="labelSmall" style={muted}>{forecast ? t("previsti") : t("speso nel mese")}</Text>
         </View>
       </View>
-      {showBudget && item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
+      {item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
         spent={spentNow} budget={item.budget} state={item.state} forecast={forecast} />}
       <View style={styles.cardActions}>
         <Button mode="text" aria-expanded={open} aria-controls={open ? detailsId : undefined} onPress={onToggle}

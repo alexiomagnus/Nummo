@@ -492,15 +492,11 @@ export function generalBudgetMonth(budgets: readonly BudgetChange[], overview: P
 }
 
 // A fund that keeps balance accounting: an initial balance, a recharge schedule (even paused) or a money movement. There is no
-// separate flag: the switch «Tieni traccia del saldo» of the fund form writes exactly these data, and funds without them are
-// plain spending groups (issue #7). Once a fund has movements or recharges its balance cannot be turned off any more: those
-// data are never deleted or rewritten in the past.
+// separate flag: the optional initial balance and monthly recharge of the fund form write exactly these data, and funds without
+// them are plain spending groups (issue #7). Once a fund has movements or recharges its balance stays: those data are never
+// deleted or rewritten in the past.
 export function hasBalanceData(fund: Pick<Fund, 'id' | 'initial_minor' | 'recharges'>, movements: readonly Pick<Movement, 'to_fund_id' | 'from_fund_id'>[]): boolean {
   return fund.initial_minor > 0 || fund.recharges.length > 0 || movements.some((m) => m.to_fund_id === fund.id || m.from_fund_id === fund.id);
-}
-// The balance can still be switched off only while it rests on the initial balance alone (setting it back to 0).
-export function balanceLocked(fund: Pick<Fund, 'id' | 'recharges'>, movements: readonly Pick<Movement, 'to_fund_id' | 'from_fund_id'>[]): boolean {
-  return fund.recharges.length > 0 || movements.some((m) => m.to_fund_id === fund.id || m.from_fund_id === fund.id);
 }
 
 export type FundBalanceForm = Readonly<{ initial_minor: number; recharge: Readonly<{ amount_minor: number; day: number }> | null }>;
@@ -522,7 +518,7 @@ export function fundFromForm(record: FundData | undefined,
       initial_minor: form.balance?.initial_minor ?? 0,
       recharges: recharge ? [{ month: monthOf(today), amount_minor: recharge.amount_minor, day: recharge.day, active: true }] : [] };
   }
-  // An omitted budget means its controls are hidden: preserve the exact plan, including future changes.
+  // An omitted budget (no change asked) preserves the exact plan, including future changes.
   const budgets = form.budget === undefined ? record.budgets : setRecurringBudget(record, form.budget, today);
   const recharge = form.balance?.recharge;
   const recharges = form.balance === undefined ? record.recharges
