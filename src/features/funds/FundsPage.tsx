@@ -64,10 +64,11 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const active = overview.funds.filter((item) => !item.fund.archived);
   const archived = overview.funds.filter((item) => item.fund.archived);
   const activeFunds = funds.filter((fund) => !fund.archived);
-  // Balances, recharges and manual money movements only exist for funds that already had them (earlier versions): new funds are
-  // plain spending groups. Their data stays; their buttons appear only while some fund still carries them.
+  // Balances, recharges and manual money movements only for funds that keep a balance («Tieni traccia del saldo» in the fund
+  // form, or data from earlier versions): the others are plain spending groups. Money can be added or moved only between those.
   const balanceFunds = useMemo(() => new Set(funds.filter((fund) => hasBalanceData(fund, movements)).map((fund) => fund.id)), [funds, movements]);
   const anyBalance = balanceFunds.size > 0;
+  const movableFunds = activeFunds.filter((fund) => balanceFunds.has(fund.id));
   const general = useMemo(() => generalBudgetMonth(remote.budgets, overview), [remote.budgets, overview]);
   const budgetShown = showGeneralBudget && general.budget !== null;
   const balances = useMemo(() => new Map(overview.funds.map((item) => [item.fund.id, item.balance])), [overview]);
@@ -131,10 +132,10 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       <View style={[styles.actions, compact && styles.actionsCompact, tablet && styles.actionsTablet]}>
         <Button compact={tablet} mode="contained" disabled={!canWrite} onPress={() => setEditing('new')}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{t("Nuovo fondo")}</Button>
-        {anyBalance && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite || activeFunds.length === 0} onPress={() => setMoving({ kind: 'income' })}
+        {movableFunds.length > 0 && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite} onPress={() => setMoving({ kind: 'income' })}
           accessibilityLabel={t("Aggiungi denaro")}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.euro} size={size} color={color} />}>{t("Aggiungi")}</Button>}
-        {anyBalance && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite || activeFunds.length < 2} onPress={() => setMoving({ kind: 'transfer' })}
+        {movableFunds.length > 1 && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite} onPress={() => setMoving({ kind: 'transfer' })}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.swap} size={size} color={color} />}>{t("Trasferisci")}</Button>}
         {showGeneralBudget && general.budget === null && <Button compact={tablet} mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
           accessibilityLabel={t("Imposta un budget mensile")}
@@ -195,7 +196,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
         </Reveal>}
       </View>}
 
-      {editing && <FundEditor record={editing === 'new' ? undefined : editing} funds={funds} showBudget={showGeneralBudget} ready={canWrite} error={remote.error}
+      {editing && <FundEditor record={editing === 'new' ? undefined : editing} funds={funds} movements={movements} showBudget={showGeneralBudget} ready={canWrite} error={remote.error}
         onSave={async (data) => {
           const saved = editing === 'new' ? await remote.createFund(data) : await remote.updateFund(editing, data);
           if (saved) notify(editing === 'new' ? "Fondo creato." : "Fondo aggiornato.");
@@ -204,7 +205,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       {editingBudget && <GeneralBudgetDialog budgets={remote.budgets} month={month} today={today} ready={canWrite && remote.budgetReady} error={remote.error}
         onSave={async (budgets: BudgetChange[]) => { const saved = await remote.saveBudget(budgets); if (saved) notify("Budget mensile aggiornato."); return saved; }}
         close={() => { setEditingBudget(false); remote.clearError(); }} />}
-      {moving && <MovementDialog funds={activeFunds} balances={balances} kind={moving.kind} to={moving.to} ready={canWrite} error={remote.error}
+      {moving && <MovementDialog funds={movableFunds} balances={balances} kind={moving.kind} to={moving.to} ready={canWrite} error={remote.error}
         onCreate={async (id, data) => {
           const saved = await remote.createMovement(id, data);
           if (saved) notify(data.kind === 'transfer' ? "Trasferimento registrato." : "Entrata registrata.");
@@ -222,7 +223,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
 }
 
 type CardProps = {
-  // Fund with balance data from earlier versions: shows balance, recharge and movements (read-only plus the old entries).
+  // Fund that keeps a balance: shows balance, recharge and movements, and offers «Aggiungi denaro».
   tracksBalance: boolean;
   // «Mostra budget mensile» off: the fund's budget meter is hidden (its plan stays saved).
   showBudget: boolean;

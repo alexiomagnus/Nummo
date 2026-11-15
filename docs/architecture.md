@@ -11,6 +11,34 @@ Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella s
 l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
 convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
 
+## Saldo facoltativo per fondo — 15 novembre 2026
+
+Su richiesta (opzione 3 tra: lasciare i fondi come gruppi di spesa, mostrare sempre Aggiungi/Trasferisci, saldo per fondo).
+Rivede in parte la #7: un fondo resta di base un gruppo di spese, ma il modulo offre «Tieni traccia del saldo» con saldo
+iniziale (alla `start_date`, oggi per i nuovi) e ricarica mensile. **Nessun nuovo campo**: un flag avrebbe richiesto Rules,
+decoder, backup e pubblicazione Rules prima di poter scrivere in Avanzata. Il saldo esiste finché il fondo ha saldo iniziale,
+ricariche o movimenti (`hasBalanceData`); acceso senza nulla da contare è rifiutato dal modulo; con ricariche o movimenti
+non si spegne (`balanceLocked`), perché quei dati non si cancellano né si riscrivono nel passato. Aggiungi/Trasferisci
+operano solo tra fondi attivi con saldo. `setRecharge` non crea più accrediti datati nel passato: una ricarica attivata o
+spostata a un giorno già trascorso del mese parte dal mese successivo.
+
+## Firebase collegato dall'app (soluzione «a» di BYOF senza installazione) — 15 novembre 2026
+
+Su richiesta, affianca alla copia installata (configurazione a build) un progetto collegato dall'utente nel browser.
+
+- **Configurazione a runtime, solo pubblica**: `services/customFirebase.ts` (puro) legge dal blocco `firebaseConfig`
+  incollato le quattro chiavi, le valida e le salva in `nummo.firebaseConfig.v1`; `backendConfig.ts` ne ricava
+  `activeFirebaseConfig` (collegata, altrimenti quella del sito). Build `cloud`: solo progetti reali; `emulator`: solo
+  `demo-`; `hybrid`: mai (Firestore emulato del progetto del sito). Una modalità o un ambiente non validi restano errori.
+- **Ricaricamento** a ogni collegamento/scollegamento: l'SDK si inizializza una volta per pagina; un account connesso esce
+  prima (dopo le scritture pendenti), l'indizio di sessione si azzera.
+- **Proprietario sempre dalla Console** (scelta dell'utente, «manuale guidato»): nessuna regola di auto-nomina. Per un
+  progetto collegato il rifiuto di `config/owner` mostra `OwnerSetup` (UID da copiare, Regole da pubblicare, «Controlla
+  di nuovo»); per il progetto del sito resta «Questo Nummo è privato», con «Collega il tuo Firebase».
+- **Regole offerte da copiare**: `public/firestore.rules`, copia statica identica a `firestore.rules` (test).
+- Scartata l'auto-nomina del primo accesso (finestra in cui un estraneo poteva arrivare prima) e la soluzione «c»
+  (`TODO.md`), che renderebbe il proprietario del sito responsabile dei dati altrui.
+
 ## Notifiche di sistema con Web Push (fase 1) — 14 novembre 2026
 
 Su richiesta, sostituisce progressivamente il punto «solo in-app» della decisione sotto. Dettagli in

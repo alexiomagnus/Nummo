@@ -5,11 +5,11 @@ import { Card } from '../../components/Card';
 import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
 
-type Props = { email: string | null; busy: boolean; error: string | null; onUseStandard: () => void; onSignOut: () => void };
+type Props = { email: string | null; busy: boolean; error: string | null; onUseStandard: () => void; onSignOut: () => void; onConnect?: () => void };
 
 // Advanced mode, signed in with a Google account that is not the owner of this Nummo: a clear way out instead of
 // a workspace full of «access denied» errors.
-export function AccessDenied({ email, busy, error, onUseStandard, onSignOut }: Props) {
+export function AccessDenied({ email, busy, error, onUseStandard, onSignOut, onConnect }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   return (
@@ -30,6 +30,12 @@ export function AccessDenied({ email, busy, error, onUseStandard, onSignOut }: P
           <Button mode="outlined" disabled={busy} onPress={onSignOut} contentStyle={styles.button}>{t("Esci")}</Button>
         </View>
       </Card>
+      {onConnect && <Card>
+        <Text variant="bodyMedium">{t("Hai un progetto Firebase tuo? Collegalo per usare la modalità Avanzata con i tuoi dati, sincronizzati tra i tuoi dispositivi.")}</Text>
+        <View style={styles.actions}>
+          <Button mode="outlined" disabled={busy} onPress={onConnect} contentStyle={styles.button}>{t("Collega il tuo Firebase")}</Button>
+        </View>
+      </Card>}
     </View>
   );
 }

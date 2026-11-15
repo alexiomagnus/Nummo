@@ -42,14 +42,14 @@ export function Guide({ onBack }: { onBack: () => void }) {
         {item("Spese e categorie su misura", "Inserisci importo, descrizione e categoria (se lasci vuota la data, viene impostata automaticamente a oggi). Puoi creare infinite categorie con icone personalizzate, anche al volo mentre stai registrando una spesa.")}
         {item("Liste della spesa intelligenti", "Prepara la lista e spunta i prodotti mentre li metti nel carrello. Alla cassa ti basta inserire il totale dello scontrino, senza dover digitare i prezzi dei singoli articoli: Nummo crea un'unica spesa con il riepilogo di ciò che hai comprato e archivia la lista, permettendoti di recuperarne eventuali prodotti rimasti fuori.")}
         {item("Abbonamenti e spese fisse", "Imposta pagamenti ricorrenti (settimanali, mensili o annuali), gestendo anche periodi di prova gratuiti e prezzi promozionali. Puoi mettere in pausa, modificare o annullare un abbonamento in qualsiasi momento senza alterare lo storico passato.")}
-        {item("Fondi e budget (facoltativi)", "Raggruppa le spese per obiettivo (es. Casa, Vacanze, Università) e imposta tetti di spesa mensili. Gli avvisi ti segnalano quando ti avvicini o superi il limite, senza mai bloccarti.")}
+        {item("Fondi e budget (facoltativi)", "Raggruppa le spese per obiettivo (es. Casa, Vacanze, Università) e imposta tetti di spesa mensili. Gli avvisi ti segnalano quando ti avvicini o superi il limite, senza mai bloccarti. Se vuoi, un fondo tiene anche il conto dei soldi che contiene, con una ricarica mensile automatica.")}
         {item("Analisi e grafici", "Controlla dove vanno i tuoi soldi da 1 a 12 mesi con grafici interattivi (a ciambella, a barre o a blocchi), andamento giornaliero e confronto con i periodi precedenti.")}
       </Section>
 
       <Section title={t("Dove sono i tuoi dati (Privacy e Backup)")}>
         {p(t("Puoi scegliere come gestire il tuo archivio in base alle tue esigenze:"))}
         {item("Modalità Standard (subito pronta, zero account)", "I dati vengono salvati esclusivamente nel browser del tuo dispositivo e non vengono inviati a nessun server. Per non perderli se cambi telefono o pulisci i dati di navigazione, scarica periodicamente un backup in formato JSON (oppure esporta in CSV per Excel e Google Fogli).")}
-        {item("Modalità Avanzata (sincronizzazione tra dispositivi)", "Per chi ha installato la propria copia di Nummo collegata a un progetto Firebase (Google): entra solo il tuo account e i dati si sincronizzano tra i tuoi dispositivi, sotto il tuo controllo. Con un altro account Google l'accesso non è consentito.")}
+        {item("Modalità Avanzata (sincronizzazione tra dispositivi)", "Colleghi un progetto Firebase (Google) tuo seguendo i passaggi indicati da Nummo: entra solo il tuo account e i dati si sincronizzano tra i tuoi dispositivi, sotto il tuo controllo.")}
         <Text variant="bodyMedium" style={muted}>{t("Nota: le due modalità usano archivi separati; passare dall'una all'altra da Archiviazione e backup non sposta né cancella i dati esistenti.")}</Text>
       </Section>
 

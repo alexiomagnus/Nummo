@@ -7,14 +7,14 @@ import {
   connectFirestoreEmulator, initializeFirestore, memoryLocalCache, persistentLocalCache,
   persistentMultipleTabManager, waitForPendingWrites, type Firestore,
 } from 'firebase/firestore';
-import { authEmulator, firebaseWebConfig, firestoreEmulator, persistentCache } from './backendConfig';
+import { activeFirebaseConfig, authEmulator, firestoreEmulator, persistentCache } from './backendConfig';
 import { readSessionHint } from './sessionHint';
 import { profilePhotoURL } from './sessionProfile';
 
 let services: { auth: Auth; db: Firestore } | undefined;
 function getServices() {
   if (services) return services;
-  const app = initializeApp(firebaseWebConfig);
+  const app = initializeApp(activeFirebaseConfig);
   // On mobile browsers a popup resolver given here is initialised eagerly (Google's gapi script and an iframe) and the
   // saved session is restored only afterwards. Restoring needs none of it, so when the last visit ended signed in the
   // resolver is only supplied at sign-in (below), where the SDK initialises it on demand.

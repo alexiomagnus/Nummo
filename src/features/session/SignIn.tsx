@@ -7,7 +7,9 @@ import { spacing } from '../../theme/tokens';
 import { Guide } from './Guide';
 
 // `onChangeMode`: back to the choice between the device archive and Firebase.
-type Props = { error: string | null; onSignIn: () => void; onChangeMode?: () => void };
+// `firebase`: the project connected from this browser (null: the site's one) and the way to change it.
+type Props = { error: string | null; onSignIn: () => void; onChangeMode?: () => void;
+  firebase?: { connected: string | null; onOpen: () => void } };
 
 // The guide lives at `#guida` (no router in the app): a direct link and a reload keep working, and the
 // browser's Back button returns to the sign-in. Hosting needs no rewrite for a fragment.
@@ -34,7 +36,7 @@ export function useGuide() {
   return { guide, openGuide, closeGuide: leaveGuide };
 }
 
-export function SignIn({ error, onSignIn, onChangeMode }: Props) {
+export function SignIn({ error, onSignIn, onChangeMode, firebase }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   // No link to the guide here (it stays on the mode choice); a direct `#guida` link still opens it.
@@ -52,6 +54,11 @@ export function SignIn({ error, onSignIn, onChangeMode }: Props) {
         <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>{t("Accedi con Google")}</Button>
         {onChangeMode && <Button mode="outlined" onPress={onChangeMode} contentStyle={styles.button}>{t("Usa Nummo senza account")}</Button>}
       </View>
+      {firebase && <View style={styles.firebase}>
+        {firebase.connected && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
+          {t("Progetto Firebase collegato: {p0}", { p0: firebase.connected })}</Text>}
+        <Button mode="text" compact onPress={firebase.onOpen}>{firebase.connected ? t("Cambia progetto Firebase") : t("Usa il tuo progetto Firebase")}</Button>
+      </View>}
     </View>
   );
 }
@@ -62,4 +69,5 @@ const styles = StyleSheet.create({
   helper: { paddingHorizontal: 0 },
   button: { minHeight: 48 },
   actions: { alignItems: 'stretch', gap: spacing.md },
+  firebase: { alignItems: 'center', gap: spacing.xs },
 });

@@ -12,11 +12,12 @@ const options: readonly Option[] = [
   { mode: 'standard', title: 'Standard', badge: 'Consigliata', action: 'Inizia subito',
     text: 'Utilizza Nummo immediatamente. I dati vengono salvati sul dispositivo e puoi conservarne una copia esportando un backup.' },
   { mode: 'advanced', title: 'Avanzata', badge: 'Firebase', action: 'Continua con Firebase',
-    text: 'Per chi ha installato la propria copia di Nummo con Firebase: accedi con Google e sincronizza i dati tra i tuoi dispositivi.' },
+    text: 'Collega un progetto Firebase tuo, accedi con Google e sincronizza i dati tra i tuoi dispositivi.' },
 ];
 
 // First screen, before any sign-in: where the data will live. Standard opens the app at once, with no account;
-// Advanced continues to the existing Firebase sign-in. The choice is remembered and can be changed from Settings.
+// Advanced continues to the Firebase sign-in, where a project of the user's own can be connected. The choice is remembered
+// and can be changed from «Archiviazione e backup».
 export function ModeChoice({ onChoose }: { onChoose: (mode: StorageMode) => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();

@@ -1,4 +1,5 @@
 // Expo inlines literal public environment accesses at build time. No credentials here.
+import { readCustomFirebase, type CustomFirebaseTarget } from './customFirebase.ts';
 // emulator = everything local (demo-nummo); hybrid = real Google sign-in + Firestore emulator;
 // cloud = real Auth + real Firestore. No default: a missing/unknown mode is a configuration error.
 export type BackendMode = 'emulator' | 'hybrid' | 'cloud';
@@ -43,6 +44,17 @@ export const missingFirebaseConfig: readonly string[] = modeProblems();
 export const firebaseWebConfig: FirebaseWebConfig = backendMode === 'emulator'
   ? { apiKey: 'demo-key', authDomain: 'demo-nummo.firebaseapp.com', projectId: 'demo-nummo', appId: 'demo-app' }
   : { apiKey: realConfig.apiKey ?? '', authDomain: realConfig.authDomain ?? '', projectId: realConfig.projectId ?? '', appId: realConfig.appId ?? '' };
+// A project connected from the app (customFirebase.ts) replaces the site's one in this browser: real projects in cloud
+// builds, `demo-` projects with the local emulators. Not in hybrid, where Firestore is the emulator of the site's project.
+// An invalid or missing mode keeps its configuration error.
+export const customFirebaseTarget: CustomFirebaseTarget | null = requested === 'cloud' ? 'cloud' : requested === 'emulator' ? 'demo' : null;
+export const customFirebaseConfig: FirebaseWebConfig | null = customFirebaseTarget && typeof localStorage !== 'undefined'
+  ? readCustomFirebase(customFirebaseTarget) : null;
+// The configuration the SDK starts with; missing build values do not matter when the user connected a project.
+export const activeFirebaseConfig: FirebaseWebConfig = customFirebaseConfig ?? firebaseWebConfig;
+// A connected project covers only the missing build values; every other configuration problem still blocks.
+export const firebaseConfigProblems: readonly string[] = customFirebaseConfig
+  ? missingFirebaseConfig.filter((problem) => !problem.startsWith('EXPO_PUBLIC_FIREBASE_')) : missingFirebaseConfig;
 export const authEmulator: Endpoint | null = backendMode === 'emulator' ? (parseEndpoint(authEmulatorValue) ?? { host: '127.0.0.1', port: 9099 }) : null;
 export const firestoreEmulator: Endpoint | null = backendMode === 'emulator'
   ? (parseEndpoint(emulatorValue) ?? { host: '127.0.0.1', port: 8180 })

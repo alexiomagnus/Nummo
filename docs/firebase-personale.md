@@ -4,6 +4,30 @@ Nummo usa il tuo progetto Firebase. La configurazione web è pubblica: protegge 
 la combinazione UID + Security Rules, non la segretezza di `apiKey`. Non inserire mai
 chiavi di servizio, client secret o credenziali Admin in `.env` del frontend.
 
+## Collegare il tuo Firebase dall'app (senza installare nulla)
+
+Dal sito pubblicato, in modalità Avanzata: «Usa il tuo progetto Firebase» sotto «Accedi con Google», oppure «Collega il tuo
+Firebase» nella schermata «Questo Nummo è privato». La pagina elenca i passaggi nella Console Firebase:
+
+1. progetto e app Web;
+2. Authentication → Google attivo e, in Impostazioni → Domini autorizzati, l'indirizzo del sito che si sta usando (mostrato
+   con «Copia»): senza, l'accesso fallisce con `auth/unauthorized-domain`;
+3. Firestore in modalità produzione e Regole di Nummo («Copia le regole» copia `public/firestore.rules`, copia identica a
+   `firestore.rules` imposta dai test; «Apri il file» la mostra);
+4. il blocco `firebaseConfig` da Impostazioni progetto, incollato nel campo. Si leggono solo `apiKey`, `authDomain`,
+   `projectId`, `appId` (validati; le altre chiavi sono ignorate).
+
+La configurazione è salvata **solo in quel browser** (`nummo.firebaseConfig.v1`), mai inviata altrove; la pagina si
+ricarica sul nuovo progetto (l'SDK si inizializza una volta per pagina; un account connesso esce prima). Dopo il primo
+accesso con Google, finché `config/owner` manca o le Regole non sono pubblicate, compare «Ultimo passaggio»: UID con
+«Copia» e istruzioni per creare `config/owner` con il campo stringa `uid`, poi «Controlla di nuovo». L'app non scrive mai
+il proprietario: le Regole restano invariate. In «Archiviazione e backup» il progetto appare come «Progetto collegato da
+te», con «Scollega progetto» (esce e torna al progetto del sito; i dati restano nel progetto dell'utente).
+
+Vincoli: solo build `cloud` con progetti reali; nella demo locale (`emulator`) solo progetti `demo-`, per le prove (serve
+un emulatore senza `singleProjectMode`); non disponibile in `hybrid`. Su un altro browser o dispositivo il collegamento va
+ripetuto. Le notifiche push restano indipendenti da Firebase.
+
 ## Prova senza servizi cloud
 
 Node conforme a `package.json`, npm e Java 21 consigliati per la CLI corrente:
@@ -131,7 +155,7 @@ persistenza); non basta attivare questa opzione. Vedi le
 
 ## Backup e passaggio dai vecchi dati
 
-Da Spese → «Dati» ci sono due cose distinte:
+Da «Archiviazione e backup» (menu account) ci sono due cose distinte:
 
 - **Esporta transazioni (CSV)**: tabella per consultare e analizzare le spese, una riga per ogni occorrenza fino a oggi
   (un abbonamento compare una volta per rinnovo, al prezzo di quel rinnovo). Colonne: Data, Descrizione, Categoria,

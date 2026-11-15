@@ -23,6 +23,84 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, pubblicazione Hosting e Rules
   (solo con autorizzazione).
 
+## Fondi: saldo facoltativo per fondo («Tieni traccia del saldo») — 15 novembre 2026
+
+- Segnalato dall'utente: in un archivio importato mancavano Aggiungi/Trasferisci e nell'app non c'era modo di impostare
+  saldo iniziale o ricarica automatica. Causa: dalla #7 erano offerti solo ai fondi con dati di saldo di versioni
+  precedenti. Scelta dall'utente l'opzione 3 (decisione in `docs/architecture.md`).
+- `FundEditor`: interruttore «Tieni traccia del saldo» con «Saldo iniziale» e «Ricarica mensile» (importo, giorno);
+  bloccato acceso con ricariche o movimenti; acceso senza saldo né ricarica → «Inserisci un saldo iniziale o attiva la
+  ricarica mensile.». `fundFromForm` accetta `balance` (omesso = dati invariati); nuovo `balanceLocked`. `setRecharge`:
+  scadenza di questo mese già passata → dal mese dopo (prima l'accredito retroattivo veniva contato). `FundsPage`:
+  Aggiungi con almeno un fondo attivo con saldo, Trasferisci con almeno due, `MovementDialog` solo su quei fondi.
+  Nessuna modifica a Rules, schema, backup o `DataStore`. Guida, README, AGENTS ed EN aggiornati.
+- Verifiche: `npm run check` OK (**429/429**, 2 test nuovi in `generalBudget.test.ts`, build demo). Chromium 1280 px
+  (Standard, profilo temporaneo poi cancellato): errore con interruttore acceso e campi vuoti; fondo «Prova» 500 € +
+  ricarica 100 € il giorno 1 creato, «Disponibile ora» 500 €, ricarica mostrata, Aggiungi presente e Trasferisci assente
+  (un solo fondo con saldo, anche dopo un fondo semplice), in Modifica interruttore acceso e disabilitato; dialogo
+  Aggiungi aperto; nessun errore JS. Non provati: Avanzata (stesse scritture `updateFund`/`createFund` già ammesse dalle
+  Rules), smartphone, trasferimento effettivo. Nessun commit.
+
+## Smartphone: niente selezione del testo con doppio tocco — 15 novembre 2026
+
+- Segnalato dall'utente: su telefono un doppio tocco su una scritta la selezionava e Chrome apriva dal basso la ricerca
+  Google della parola (Tocca per cercare). `GlobalStyle`: solo su dispositivi touch-first
+  (`(hover: none) and (pointer: coarse)`) `user-select: none` e `-webkit-touch-callout: none` sul `body`; `input`,
+  `textarea` e `contenteditable` restano selezionabili, come i valori da copiare con `Text selectable` (email nel menu
+  account, valori di `StorageSection` e `FirebaseSetup`). Desktop invariato.
+- Verifiche: Chromium headless con emulazione touch sul server di sviluppo (8081, profilo temporaneo poi cancellato):
+  etichette con `user-select: none`, `input` con `text`; senza touch `auto` e il doppio clic seleziona ancora. Il doppio
+  tocco sintetico via CDP non seleziona nemmeno senza la regola, quindi la ricerca di Chrome **non** è riprodotta: da
+  confermare su telefono reale. `npm run check` OK (**427/427** con modifiche parallele non mie sul Firebase
+  personale, build demo). Nessun commit.
+
+## Avanzata: collegare il proprio Firebase dall'app (soluzione A) — 15 novembre 2026
+
+- Su richiesta, dopo la discussione delle alternative (A configurazione nell'app, B un Firebase per tutti, C invariato):
+  **A**, con proprietario **manuale guidato** (scelta dell'utente: Rules invariate, nessuna auto-nomina).
+- **Implementato:** `services/customFirebase.ts` (parser del blocco `firebaseConfig` incollato, 4 chiavi validate,
+  `nummo.firebaseConfig.v1`); `backendConfig.ts` → `activeFirebaseConfig`/`firebaseConfigProblems` (cloud: progetti reali;
+  emulator: solo `demo-`; hybrid: mai); `firebase.ts` usa la configurazione attiva. `features/session/FirebaseSetup.tsx`:
+  `FirebaseConnect` (4 passaggi della Console, indirizzo e regole con «Copia», campo di incolla, «Collega»/«Annulla»,
+  «Torna al progetto di questo sito») e `OwnerSetup` («Ultimo passaggio»: UID con «Copia», `config/owner`, «Controlla di
+  nuovo», «Cambia progetto Firebase», «Esci»); `firebaseConnection.ts` (`switchFirebase`: esce, salva, ricarica).
+  Punti d'ingresso: link sotto «Accedi con Google», scheda in «Questo Nummo è privato», scheda «Configurazione Firebase
+  mancante»; in «Archiviazione e backup» «Progetto collegato da te» e «Scollega progetto» (dialogo). `public/firestore.rules`
+  copia identica (test). Testi di scelta modalità e Guida aggiornati; README, `docs/firebase-personale.md` (anche il vecchio
+  «Spese → Dati»), `docs/architecture.md`, AGENTS. Traduzioni EN; tolte le due chiavi «Per chi ha installato…».
+- **Verifiche:** `npm run check` OK (typecheck, **427/427** con `tests/customFirebase.test.ts`, build demo). E2E Chromium
+  360 px touch su build demo dedicata (Auth 19099, Firestore 18180 senza `singleProjectMode`, config temporanea in radice
+  rimossa, server statico 8099 fermato): link nella schermata di accesso, pagina, regole servite e copiate negli appunti,
+  errori (testo non riconosciuto, `appId` non valido), salvataggio di sole 4 chiavi, ricaricamento con «Progetto Firebase
+  collegato: demo-mio», accesso dal popup dell'emulatore, «Ultimo passaggio» con UID, «Controlla di nuovo» senza
+  proprietario → resta, `config/owner` creato come amministratore dell'emulatore → area di lavoro, Archiviazione con
+  «Progetto collegato da te», «Scollega» → chiave rimossa e accesso al progetto del sito. Nessun errore JS.
+  **Non verificato:** progetto Firebase reale (dominio autorizzato, Regole pubblicate da Console), Safari/iOS (appunti),
+  desktop. `test:emulator` non rieseguito (Rules invariate). Hosting non ripubblicato; nessun commit.
+- Nel worktree ci sono modifiche **di un'altra sessione in parallelo**, lasciate intatte: `src/domain/funds.ts`,
+  `features/funds/FundEditor.tsx`, `FundsPage.tsx`, `tests/generalBudget.test.ts`, parte di `src/i18n/en.ts` (saldo nel
+  modulo del fondo, `balanceLocked`, ricarica mai nel passato) e `src/theme/GlobalStyle.tsx` (niente selezione del testo
+  su touch). Un loro duplicato temporaneo in `en.ts` ha fatto fallire un typecheck, poi corretto da loro; ultimo stato
+  complessivo: typecheck 0 errori, `npm test` **429/429**, `build:cloud` verificata (`dist/`, nessuna pubblicazione).
+
+## Dettagli spesa su smartphone e anteprima dei Blocchi senza tocco — 15 novembre 2026
+
+- **Spese → dettagli su smartphone** (segnalato: spazio inutilizzato). «Modifica» stava fra Categoria e Prodotti e, non
+  entrando accanto a Data e Categoria, occupava una riga da solo. Ora su compact (`ExpenseList`) chiude l'ultima riga:
+  accanto ai prodotti per le spese da lista, accanto ai campi (che vanno a capo nello spazio rimasto) per le altre.
+  Desktop invariato (ordine Data, Categoria, Ripetizione, Prodotti, Modifica; una spesa non ha insieme prodotti e
+  ripetizione). Chromium 360 px con touch: spesa da lista 9 prodotti → prodotti in colonna a sinistra, Modifica in basso a
+  destra; spesa semplice → Data/Categoria a sinistra, Modifica a destra, nessuna riga vuota; 1280 px una riga (87 px).
+- **Analisi → Blocchi: anteprima senza tocco** (segnalato: pannello con il blocco maggiore e «Seleziona il blocco…»
+  senza averlo toccato). Causa: il tocco lascia il focus sulla tessera e il browser riemette `focus` quando finestra o
+  scheda tornano attive; `onFocus` attivava l'anteprima. Ora l'anteprima da focus vale solo con `:focus-visible`
+  (tastiera). Riprodotto in Chromium (tocco, ritocco, blur/focus) con il codice precedente; dopo la correzione il pannello
+  resta sull'invito, mentre Tab mostra ancora l'anteprima. Nessun errore JS.
+- Verifiche: `npm run check` OK (typecheck, **423/423**, build demo); `git diff --check` OK. Telefono reale non provato.
+  Nessun commit.
+- Poi, su richiesta: Notifiche → «Frequenza del promemoria/riepilogo» su pagina stretta, spazio tra etichetta e pulsanti
+  a segmenti da 8 a 12 px (`rowGap` di `styles.frequency`); desktop invariato. `npm run check` OK; non osservato nel browser.
+
 ## Solo notifiche di sistema (fase 2), backup contato al download, ritocchi — 15 novembre 2026
 
 - **Avvisi dentro l'app eliminati** su richiesta («voglio solo le notifiche mediante il sistema operativo»): rimossi

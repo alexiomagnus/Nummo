@@ -78,21 +78,27 @@ export function StandardStorage({ protection, onChangeMode, style }: Common & { 
 }
 
 // Storage section of the «Archiviazione e backup» page, Advanced mode: the Firebase project this build is connected to.
-export function AdvancedStorage({ project, cache, onChangeMode, style }: Common & { project: string; cache: string }) {
+// `connected`: the project was connected from this browser (not the site's); `onDisconnect` goes back to the site's one.
+export function AdvancedStorage({ project, cache, onChangeMode, style, connected = false, onDisconnect }: Common & {
+  project: string; cache: string; connected?: boolean; onDisconnect?: () => Promise<string | null>;
+}) {
   const { t } = useI18n();
   const compact = useSizeClass() === 'compact';
   const [changing, setChanging] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
   return (
     <Card style={style}>
       <View style={styles.rows}>
         <InfoRow shape={iconShapes.database} label={t("Archiviazione")} value="Firebase" />
-        {project !== '' && <InfoRow shape={iconShapes.cloud} label={t("Nome progetto")} value={project} />}
+        {project !== '' && <InfoRow shape={iconShapes.cloud} label={connected ? t("Progetto collegato da te") : t("Nome progetto")} value={project} />}
         <InfoRow shape={iconShapes.cloudOff} label={t("Cache offline")} value={t(cache)} />
       </View>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
+        {connected && onDisconnect && <Button mode="text" icon={icon(iconShapes.logout)} onPress={() => setDisconnecting(true)}>{t("Scollega progetto")}</Button>}
         <Button mode="text" icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
       </View>
       <ChangeModeDialog visible={changing} target="standard" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('standard')} />
+      {onDisconnect && <DisconnectDialog visible={disconnecting} project={project} onDismiss={() => setDisconnecting(false)} onConfirm={onDisconnect} />}
     </Card>
   );
 }
@@ -113,6 +119,27 @@ function DialogFrame({ visible, title, label, onDismiss, children, actions }: { 
         </View>
       </Dialog>
     </Portal>
+  );
+}
+
+// Back to the site's project: signs out and reloads; the data stay in the user's project, to be connected again later.
+function DisconnectDialog({ visible, project, onDismiss, onConfirm }: { visible: boolean; project: string; onDismiss: () => void; onConfirm: () => Promise<string | null> }) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const title = t("Scollegare il progetto?");
+  return (
+    <DialogFrame visible={visible} title={title} label={title} onDismiss={() => { if (!busy) { setError(null); onDismiss(); } }} actions={<>
+      <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={() => { setError(null); onDismiss(); }}>{t("Annulla")}</Button>
+      <Button mode="contained" disabled={busy} loading={busy} contentStyle={styles.button} onPress={() => {
+        setBusy(true); setError(null);
+        void onConfirm().then((failure) => { if (failure) { setError(failure); setBusy(false); } });
+      }}>{t("Scollega")}</Button>
+    </>}>
+      <Text variant="bodyMedium">{t("Esci e questo browser torna al progetto Firebase del sito. I dati restano nel tuo progetto {p0}: puoi ricollegarlo quando vuoi.", { p0: project })}</Text>
+      {error && <Text variant="bodySmall" accessibilityRole="alert" style={{ color: colors.error }}>{t(error)}</Text>}
+    </DialogFrame>
   );
 }
 

@@ -84,14 +84,20 @@ Ogni installazione usa il **tuo** progetto Firebase (Authentication Google + Clo
 e, se vuoi, il tuo Firebase Hosting. I dati restano nel tuo database; solo l'account Google
 il cui UID è scritto in `config/owner` può leggerli e scriverli. Costi, quote, backup e
 sicurezza del progetto sono una tua responsabilità (vedi [Sicurezza](#sicurezza-e-responsabilità)).
-Le sezioni [Installazione](#installazione) e [Pubblicazione](#pubblicazione) sono la guida BYOF.
+Due strade:
+
+- **Collegare il tuo Firebase dall'app**, senza installare nulla: in Avanzata, «Usa il tuo progetto Firebase» (schermata di
+  accesso) o «Collega il tuo Firebase» (schermata «Questo Nummo è privato») guidano i passaggi nella Console e chiedono il
+  blocco `firebaseConfig`, salvato solo in quel browser (`nummo.firebaseConfig.v1`). Dopo il primo accesso, «Ultimo
+  passaggio» mostra l'UID da scrivere in `config/owner`. Dettagli in [docs/firebase-personale.md](docs/firebase-personale.md).
+- **Installare la tua copia**: le sezioni [Installazione](#installazione) e [Pubblicazione](#pubblicazione).
 
 ## Funzionalità
 
 - **Nuova spesa** con importo, data, descrizione e categoria; **Spese** con ricerca, filtri, modifica ed eliminazione.
 - **Abbonamenti** settimanali, mensili e annuali, con prove gratuite, variazioni di prezzo, pausa/annullamento e cambi di frequenza futuri che conservano i pagamenti maturati.
 - **Categorie** personalizzabili, con 39 icone selezionabili in tre stili, e **Analisi** con totali e grafici.
-- **Fondi e budget** facoltativi: spesa mensile per fondo e budget generale; i fondi già dotati di saldo conservano ricariche e movimenti.
+- **Fondi e budget** facoltativi: spesa mensile per fondo e budget generale; per ogni fondo, se vuoi, saldo iniziale, ricarica mensile, entrate e trasferimenti («Tieni traccia del saldo»).
 - **Liste della spesa** con checklist, totale manuale e registrazione di una sola spesa per acquisto.
 - **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice) e backup JSON v6, unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
@@ -241,7 +247,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 ## Sicurezza e responsabilità
 
 - **Standard**: i dati non lasciano il dispositivo, salvo i file di backup che esporti tu. Chiunque usi quel browser li vede: non c'è accesso.
-- **Avanzata**: l'accesso è riservato all'UID in `config/owner`, creato solo dalla Console: l'app non può nominare il proprietario.
+- **Avanzata**: l'accesso è riservato all'UID in `config/owner`, creato solo dalla Console: l'app non può nominare il proprietario, nemmeno per un progetto collegato dall'app.
 - Le regole in `firestore.rules` sono la vera protezione dei dati (la `apiKey` è pubblica). Pubblicale prima dell'uso e non usare la modalità test.
 - `.env.local`, `.env.production.local`, `.firebaserc` ed `emulator-data/` sono ignorati da Git: non versionarli e non pubblicarli. Non inserire chiavi di servizio nel frontend.
 - **Backup**: da menu account → «Archiviazione e backup» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.

@@ -144,7 +144,7 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   frequency: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: spacing.lg,
-    rowGap: spacing.sm, minHeight: 56, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
+    rowGap: spacing.md, minHeight: 56, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
   frequencyLabel: { flexShrink: 1 },
   frequencyChoices: { width: 420, maxWidth: '100%' },
   frequencyChoicesNarrow: { width: '100%' },

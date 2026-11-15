@@ -51,6 +51,13 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       [role='menuitem']:focus-visible { outline-offset: -3px; border-radius: 12px; }
       /* Programmatic focus on load (Paper Menu anchors) must not draw a ring: only after a real key press. */
       html:not([data-input='key']) :focus-visible { outline: none; }
+      /* Touch-first devices: a double tap or long press on a label must not select it (and open the browser's search
+         sheet or callout, as Chrome Android's Touch to Search does). Fields and the values meant to be copied
+         (Text with \`selectable\`, which sets user-select: text on itself) stay selectable. Desktop unchanged. */
+      @media (hover: none) and (pointer: coarse) {
+        body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+      }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
       }`;

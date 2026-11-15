@@ -57,11 +57,11 @@ export function BlockChart({ data, colors, active, onActive, percent, onOpen }: 
           const dimmed = active !== null && !selected && hovered !== index;
           return (
             <StateLayerPressable key={series.key} layerColor={layer} radius={corner} role="button"
-              // A press ends any preview: a tap also focuses the tile (after a dialog closes too), and that focus preview
-              // must not keep the details of a tile just deselected.
+              // A press ends any preview. Focus previews only from the keyboard: a tap leaves the focus on the tile, and the
+              // browser fires focus again when the window or tab comes back, which must not open details nobody chose.
               onPress={() => { setHovered(null); onActive(selected ? null : index); }} aria-pressed={selected}
               onHoverIn={() => setHovered(index)} onHoverOut={() => setHovered((current) => (current === index ? null : current))}
-              onFocus={() => setHovered(index)} onBlur={() => setHovered((current) => (current === index ? null : current))}
+              onFocus={(event) => { if (isKeyboardFocus(event.currentTarget)) setHovered(index); }} onBlur={() => setHovered((current) => (current === index ? null : current))}
               accessibilityLabel={`${name}: ${amount}, ${share}`}
               tabIndex={0}
               style={[styles.tile, tileTransition, {
@@ -108,3 +108,10 @@ const styles = StyleSheet.create({
   grow: { flex: 1, minWidth: 0 },
   start: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
 });
+
+// Keyboard focus only (`:focus-visible`): pointer focus and the focus restored to the last focused tile when the window
+// or tab is reactivated do not count.
+function isKeyboardFocus(target: unknown): boolean {
+  const element = target as { matches?: (selector: string) => boolean } | null;
+  try { return element?.matches?.(':focus-visible') ?? false; } catch { return false; }
+}

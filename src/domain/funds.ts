@@ -113,7 +113,8 @@ export function currentRecharge(fund: Pick<Fund, 'recharges'>): RechargeChange |
 }
 
 // New schedule after editing the recharge on `today`. Credits already due stay untouched: when this month's credit has
-// already been received, the new settings apply from next month; otherwise already from this month's due date.
+// already been received, or the new due date of this month is already past, the new settings apply from next month;
+// otherwise already from this month's due date.
 // Past entries are never rewritten; an entry for the same month is replaced (several edits in one month).
 export function setRecharge(fund: Pick<Fund, 'start_date' | 'recharges'>, next: { amount_minor: number; day: number; active: boolean } | null, today: string): RechargeChange[] | null {
   const current = monthOf(today);
@@ -121,7 +122,10 @@ export function setRecharge(fund: Pick<Fund, 'start_date' | 'recharges'>, next: 
   const base = current < startMonth ? startMonth : current;
   const inForceNow = inForce(fund.recharges, base);
   const credited = Boolean(inForceNow?.active && base === current && dueDate(current, inForceNow.day) <= today && dueDate(current, inForceNow.day) >= fund.start_date);
-  const month = credited ? addMonths(current, 1) : base;
+  // A due date this month already behind today (a recharge switched on, or moved to an earlier day) starts next month:
+  // a change never adds a credit dated in the past.
+  const missed = Boolean(next?.active && base === current && dueDate(current, next.day) < today);
+  const month = credited || missed ? addMonths(current, 1) : base;
   // A fund that never had a recharge and keeps none.
   if (!next && fund.recharges.length === 0) return [];
   const entry: RechargeChange = next ? { month, ...next } : { month, amount_minor: inForceNow?.amount_minor ?? 1, day: inForceNow?.day ?? 1, active: false };
@@ -487,26 +491,45 @@ export function generalBudgetMonth(budgets: readonly BudgetChange[], overview: P
   return { budget, spent, remaining: budget === null ? null : budget - spent, state: budgetState(spent, budget) };
 }
 
-// A fund that still carries balance accounting from the earlier version (initial balance, recharges or movements). New funds
-// never get any: the page keeps showing balances, recharges and movements only for those, read-only plus the old entries.
+// A fund that keeps balance accounting: an initial balance, a recharge schedule (even paused) or a money movement. There is no
+// separate flag: the switch «Tieni traccia del saldo» of the fund form writes exactly these data, and funds without them are
+// plain spending groups (issue #7). Once a fund has movements or recharges its balance cannot be turned off any more: those
+// data are never deleted or rewritten in the past.
 export function hasBalanceData(fund: Pick<Fund, 'id' | 'initial_minor' | 'recharges'>, movements: readonly Pick<Movement, 'to_fund_id' | 'from_fund_id'>[]): boolean {
   return fund.initial_minor > 0 || fund.recharges.length > 0 || movements.some((m) => m.to_fund_id === fund.id || m.from_fund_id === fund.id);
 }
+// The balance can still be switched off only while it rests on the initial balance alone (setting it back to 0).
+export function balanceLocked(fund: Pick<Fund, 'id' | 'recharges'>, movements: readonly Pick<Movement, 'to_fund_id' | 'from_fund_id'>[]): boolean {
+  return fund.recharges.length > 0 || movements.some((m) => m.to_fund_id === fund.id || m.from_fund_id === fund.id);
+}
 
-// Data to save from the simplified fund form (name, icon, colour, optional monthly budget). A new fund starts empty today; an
-// existing one is written back with everything the form does not show exactly as saved (initial balance, start date, recharges,
-// per-month budget exceptions, archived flag), and only its recurring budget changes, from the current month on.
-// null = too many scheduled budget changes.
-export function fundFromForm(record: FundData | undefined, form: { name: string; icon: CategoryIcon | null; color: number; budget?: number | null }, today: string): FundData | null {
+export type FundBalanceForm = Readonly<{ initial_minor: number; recharge: Readonly<{ amount_minor: number; day: number }> | null }>;
+
+// Data to save from the fund form (name, icon, colour, optional monthly budget, optional balance). A new fund starts today;
+// an existing one is written back with everything the form does not show exactly as saved (start date, per-month budget
+// exceptions, archived flag, and balance data when `balance` is omitted). The recurring budget and the recharge change from now
+// on only (setRecurringBudget, setRecharge): credits already due and closed months stay as they were. The initial balance is
+// the money in the fund on its start date; correcting it recalculates every balance of the fund.
+// `balance: null` = no balance (initial 0, recharge off); undefined = keep the saved balance data untouched.
+// null = too many scheduled changes.
+export function fundFromForm(record: FundData | undefined,
+  form: { name: string; icon: CategoryIcon | null; color: number; budget?: number | null; balance?: FundBalanceForm | null }, today: string): FundData | null {
   const name = normalizeCategoryName(form.name);
   if (!record) {
     const base = emptyFund(name, today, form.color);
-    return { ...base, icon: form.icon, budgets: form.budget == null ? [] : [{ month: monthOf(today), amount_minor: form.budget }] };
+    const recharge = form.balance?.recharge;
+    return { ...base, icon: form.icon, budgets: form.budget == null ? [] : [{ month: monthOf(today), amount_minor: form.budget }],
+      initial_minor: form.balance?.initial_minor ?? 0,
+      recharges: recharge ? [{ month: monthOf(today), amount_minor: recharge.amount_minor, day: recharge.day, active: true }] : [] };
   }
   // An omitted budget means its controls are hidden: preserve the exact plan, including future changes.
   const budgets = form.budget === undefined ? record.budgets : setRecurringBudget(record, form.budget, today);
-  if (!budgets) return null;
-  return { name, icon: form.icon, color: form.color, initial_minor: record.initial_minor, start_date: record.start_date, recharges: record.recharges,
+  const recharge = form.balance?.recharge;
+  const recharges = form.balance === undefined ? record.recharges
+    : setRecharge(record, recharge ? { amount_minor: recharge.amount_minor, day: recharge.day, active: true } : null, today);
+  if (!budgets || !recharges) return null;
+  const initial_minor = form.balance === undefined ? record.initial_minor : form.balance?.initial_minor ?? 0;
+  return { name, icon: form.icon, color: form.color, initial_minor, start_date: record.start_date, recharges,
     budgets, budget_exceptions: record.budget_exceptions, archived: record.archived };
 }
 

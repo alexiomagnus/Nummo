@@ -13,6 +13,8 @@ import type { Preferences } from './src/features/settings/preferences';
 import { SettingsPage } from './src/features/settings/SettingsPage';
 import { usePreferences } from './src/features/settings/usePreferences';
 import { AccessDenied } from './src/features/session/AccessDenied';
+import { FirebaseConnect, OwnerSetup } from './src/features/session/FirebaseSetup';
+import { switchFirebase } from './src/features/session/firebaseConnection';
 import { SignIn, leaveGuide } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
 import { readSessionHint, writeSessionHint } from './src/services/sessionHint';
@@ -23,7 +25,10 @@ import { useStorageProtection } from './src/features/storage/useStorageProtectio
 import { openLocalDatabase } from './src/services/localDatabase';
 import { createLocalStore, type LocalStore } from './src/services/localStore';
 import { initialStorageMode, readStorageMode, writeStorageMode, type StorageMode } from './src/services/storageMode';
-import { backendMode, firebaseWebConfig, firestoreEmulator, missingFirebaseConfig, persistentCache } from './src/services/backendConfig';
+import {
+  activeFirebaseConfig, backendMode, customFirebaseConfig, customFirebaseTarget, firebaseConfigProblems, firebaseWebConfig,
+  firestoreEmulator, missingFirebaseConfig, persistentCache,
+} from './src/services/backendConfig';
 import { getDatabase, warmUpServices } from './src/services/firebase';
 import { checkOwnerAccess, type OwnerAccess } from './src/services/ownerAccess';
 import { GlobalStyle } from './src/theme/GlobalStyle';
@@ -34,7 +39,9 @@ import { useReducedMotion } from './src/theme/useSizeClass';
 import { I18nProvider, useI18n } from './src/i18n/I18nProvider';
 
 const demo = backendMode === 'emulator';
-const configMissing = missingFirebaseConfig.length > 0;
+const configMissing = firebaseConfigProblems.length > 0;
+// The project built into the site, when complete (a project connected from this browser replaces it).
+const siteFirebase = missingFirebaseConfig.length === 0 ? firebaseWebConfig : null;
 // Standard (this device) or Advanced (Firebase): the saved choice, or Firebase for a browser that was already using it.
 const startMode = initialStorageMode(readStorageMode(), readSessionHint());
 // Firebase is started only for the Advanced mode: the Standard mode never contacts it.
@@ -182,6 +189,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const theme = useTheme();
   // Signed out, Settings replaces the sign-in screen until «Fatto».
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // «Collega il tuo Firebase» replaces the sign-in screen (or the private-Nummo screen) until «Annulla».
+  const [connectOpen, setConnectOpen] = useState(false);
   // Account menu pages (Settings, Notifications, Categories, import/export): each request (a counter) opens its page in the workspace.
   const [settingsRequest, setSettingsRequest] = useState(0);
   const [notificationsRequest, setNotificationsRequest] = useState(0);
@@ -196,7 +205,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const openBackup = () => setBackupRequest((n) => n + 1);
   // The storage section of the backup page: the connected project and the offline cache.
   const storage = () => <AdvancedStorage style={styles.wide} onChangeMode={onChangeMode}
-    project={configMissing ? '' : firebaseWebConfig.projectId} cache={persistentCache ? 'Locale' : 'Solo in memoria'} />;
+    project={configMissing ? '' : activeFirebaseConfig.projectId} cache={persistentCache ? 'Locale' : 'Solo in memoria'}
+    connected={customFirebaseConfig !== null} onDisconnect={() => switchFirebase(null, true)} />;
   const account = session.status === 'signed-in'
     ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)}
@@ -215,14 +225,17 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   // A Google account that is not the owner gets a clear screen instead of a workspace full of «access denied».
   // Checked alongside the workspace (the owner's startup does not wait for it); only a refusal changes the screen.
   const uid = signedIn ? session.user.uid : null;
-  const [access, setAccess] = useState<{ uid: string; value: OwnerAccess } | null>(null);
+  const [access, setAccess] = useState<{ uid: string; value: OwnerAccess; attempt: number } | null>(null);
+  // «Controlla di nuovo» (connected project, owner not set yet) repeats the check.
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     if (uid === null) return;
     let live = true;
-    void checkOwnerAccess(getDatabase(), uid).then((value) => { if (live) setAccess({ uid, value }); });
+    void checkOwnerAccess(getDatabase(), uid).then((value) => { if (live) setAccess({ uid, value, attempt }); });
     return () => { live = false; };
-  }, [uid]);
+  }, [uid, attempt]);
   const denied = signedIn && access?.uid === session.user.uid && access.value === 'denied';
+  const checking = denied && access.attempt !== attempt;
   const showStartup = (session.status === 'loading' && hint !== null) || (signedIn && !denied && releasedUid !== session.user.uid);
 
   // One fixed list of slots: the placeholder keeps its place from «loading» to «signed in».
@@ -235,8 +248,17 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       ) : null}
       {denied ? (
         <AppShell actions={themeToggle} brand={{ label: t("accesso"), onPress: leaveGuide }}>
-          <AccessDenied email={session.user.email} busy={session.busy} error={session.error}
-            onSignOut={session.signOut} onUseStandard={() => { session.signOut(); onChangeMode('standard'); }} />
+          {connectOpen && customFirebaseTarget
+            ? <FirebaseConnect target={customFirebaseTarget} connected={customFirebaseConfig} site={siteFirebase} signedIn
+              onCancel={() => setConnectOpen(false)} />
+            // A project connected from this browser: the owner is still to be set (or the Rules to be published).
+            : customFirebaseConfig
+              ? <OwnerSetup project={customFirebaseConfig.projectId} uid={session.user.uid} email={session.user.email} busy={session.busy}
+                error={session.error} checking={checking} onCheck={() => setAttempt((n) => n + 1)}
+                onChangeProject={() => setConnectOpen(true)} onSignOut={session.signOut} />
+              : <AccessDenied email={session.user.email} busy={session.busy} error={session.error}
+                onSignOut={session.signOut} onUseStandard={() => { session.signOut(); onChangeMode('standard'); }}
+                onConnect={customFirebaseTarget ? () => setConnectOpen(true) : undefined} />}
         </AppShell>
       ) : null}
       {signedIn && !denied ? (
@@ -257,16 +279,20 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       ) : null}
       {!signedIn && !showStartup ? (
         <AppShell actions={<>{themeToggle}<SettingsButton onPress={() => setSettingsOpen(true)} /></>} brand={{ label: t("accesso"), onPress: leaveGuide }}>
-          {configMissing && !settingsOpen && (
+          {configMissing && !settingsOpen && !connectOpen && (
             <Card title={t("Configurazione Firebase mancante")}>
               <Text variant="bodyMedium">
-                {t("Mancano: ")}{missingFirebaseConfig.join(', ')}{t(". Copia `.env.example` in `.env.local`, compila i valori e riavvia Expo.")}</Text>
+                {t("Mancano: ")}{firebaseConfigProblems.join(', ')}{t(". Copia `.env.example` in `.env.local`, compila i valori e riavvia Expo.")}</Text>
               <View style={styles.start}><Button mode="outlined" onPress={() => onChangeMode(null)}>{t("Scegli un’altra modalità")}</Button></View>
+              {customFirebaseTarget && <View style={styles.start}><Button mode="text" onPress={() => setConnectOpen(true)}>{t("Collega il tuo Firebase")}</Button></View>}
             </Card>
           )}
           {settingsOpen && renderSettings(() => setSettingsOpen(false))}
-          {!settingsOpen && session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
-          {!settingsOpen && session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} onChangeMode={() => onChangeMode(null)} />}
+          {!settingsOpen && connectOpen && customFirebaseTarget && <FirebaseConnect target={customFirebaseTarget} connected={customFirebaseConfig}
+            site={siteFirebase} signedIn={false} onCancel={() => setConnectOpen(false)} />}
+          {!settingsOpen && !connectOpen && session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
+          {!settingsOpen && !connectOpen && session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} onChangeMode={() => onChangeMode(null)}
+            firebase={customFirebaseTarget ? { connected: customFirebaseConfig?.projectId ?? null, onOpen: () => setConnectOpen(true) } : undefined} />}
         </AppShell>
       ) : null}
     </>

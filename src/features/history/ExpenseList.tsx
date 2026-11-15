@@ -126,8 +126,8 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
   const theme = useTheme();
   const animate = useOverlayMotion();
   const { mounted, shown } = usePresence(open, motion.fade, animate);
-  // Phones: «Modifica» joins Data and Categoria on the first line (products follow at full width); wider pages keep it
-  // at the end of the line, after the products.
+  // Phones: «Modifica» at the right of the last line (see the details below); wider pages keep it at the end of the line,
+  // after the products.
   const compact = useSizeClass() === 'compact';
   const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
   const formatAmount = (minor: number) => amounts.format(minor / 100);
@@ -143,6 +143,27 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
             <Button mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: item.description })}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
               onPress={() => onEdit(item.expenseId)}>{t("Modifica")}</Button>
+          </View>;
+          const fields = <>
+            <View style={styles.detailField}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Data")}</Text>
+              <Text variant="bodyMedium">{formatDate(item.date)}</Text>
+            </View>
+            <View style={styles.detailField}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
+              <Text variant="bodyMedium">{category?.label ?? t("Senza categoria")}</Text>
+            </View>
+            {item.recurrence && <View style={styles.detailField}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
+              <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
+            </View>}
+          </>;
+          const productsField = products && <View style={styles.products}>
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Prodotti acquistati")}</Text>
+            {products.length === 0 ? <Text variant="bodyMedium">{t("Nessun prodotto spuntato")}</Text>
+              : <View role="list" accessibilityLabel={t("Prodotti acquistati")} style={styles.productList}>
+                {products.map((name, i) => <Text key={i} role="listitem" variant="bodyMedium">{`• ${name}`}</Text>)}
+              </View>}
           </View>;
           return (
             <Fragment key={item.key}>
@@ -168,28 +189,20 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
                 })}
                 trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>}>
                 {mounted && <View nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: item.description })}
-                  style={[styles.details, { borderColor: theme.colors.outlineVariant, opacity: shown ? 1 : 0 }, animate && fadeTransition]}>
-                  <View style={styles.detailField}>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Data")}</Text>
-                    <Text variant="bodyMedium">{formatDate(item.date)}</Text>
-                  </View>
-                  <View style={styles.detailField}>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
-                    <Text variant="bodyMedium">{category?.label ?? t("Senza categoria")}</Text>
-                  </View>
-                  {compact && editButton}
-                  {products && <View style={styles.products}>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Prodotti acquistati")}</Text>
-                    {products.length === 0 ? <Text variant="bodyMedium">{t("Nessun prodotto spuntato")}</Text>
-                      : <View role="list" accessibilityLabel={t("Prodotti acquistati")} style={styles.productList}>
-                        {products.map((name, i) => <Text key={i} role="listitem" variant="bodyMedium">{`• ${name}`}</Text>)}
-                      </View>}
-                  </View>}
-                  {item.recurrence && <View style={styles.detailField}>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
-                    <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
-                  </View>}
-                  {!compact && editButton}
+                  style={[compact ? styles.compactDetails : styles.details, { borderColor: theme.colors.outlineVariant, opacity: shown ? 1 : 0 }, animate && fadeTransition]}>
+                  {compact ? <>
+                    {/* Phones: «Modifica» closes the last line (beside the products, or beside the fields without them), never
+                        a line of its own; the fields wrap in the room left of it. */}
+                    <View style={styles.compactLine}>
+                      <View style={styles.compactFields}>{fields}</View>
+                      {!productsField && editButton}
+                    </View>
+                    {productsField && <View style={styles.compactLine}>{productsField}{editButton}</View>}
+                  </> : <>
+                    {fields}
+                    {productsField}
+                    {editButton}
+                  </>}
                 </View>}
               </ListRow>
               </View>
@@ -216,6 +229,10 @@ const styles = StyleSheet.create({
   details: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.xxl, rowGap: spacing.md, borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: spacing.md, paddingBottom: spacing.md, paddingHorizontal: spacing.md },
   detailField: { minWidth: 0, gap: spacing.xs },
+  compactDetails: { gap: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md,
+    paddingHorizontal: spacing.md },
+  compactLine: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.lg },
+  compactFields: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: spacing.md },
   empty: { gap: spacing.sm },
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
   // Takes the room left on the line (beside Data and Categoria on wide pages), so «Modifica» can stay at its right.

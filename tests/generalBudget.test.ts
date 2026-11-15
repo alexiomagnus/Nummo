@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { backupVersion, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
 import { parseSyncedBudget } from '../src/domain/firestore.ts';
 import {
-  budgetFor, decodeBudgets, emptyFund, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
+  balanceLocked, budgetFor, decodeBudgets, emptyFund, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, rechargeCredits, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
   type Fund, type FundData,
 } from '../src/domain/funds.ts';
 
@@ -107,6 +107,43 @@ test('fondi con dati di saldo: riconosciuti solo se hanno saldo iniziale, ricari
   assert.equal(hasBalanceData(fund({ recharges: [{ month: '2026-01', amount_minor: 100, day: 1, active: true }] }), []), true);
   assert.equal(hasBalanceData(fund(), [{ to_fund_id: fund().id, from_fund_id: null }]), true);
   assert.equal(hasBalanceData(fund(), [{ to_fund_id: 'altro', from_fund_id: null }]), false);
+});
+
+test('saldo del fondo dal modulo: nuovo fondo con saldo iniziale e ricarica, mai accrediti prima di oggi', () => {
+  const created = fundFromForm(undefined, { name: 'Famiglia', icon: null, color: 0,
+    balance: { initial_minor: 50000, recharge: { amount_minor: 120000, day: 1 } } }, today)!;
+  assert.equal(created.initial_minor, 50000);
+  assert.deepEqual(created.recharges, [{ month: '2026-11', amount_minor: 120000, day: 1, active: true }]);
+  const credits = rechargeCredits({ ...created, id: 'f' }, '2026-01-01', '2026-12-31');
+  assert.deepEqual(credits.map((c) => c.date), ['2026-12-01'], 'il 1° novembre è prima della creazione: si parte da dicembre');
+  assert.ok(hasBalanceData({ ...created, id: 'f' }, []));
+  const plain = fundFromForm(undefined, { name: 'Casa', icon: null, color: 0, balance: null }, today)!;
+  assert.equal(hasBalanceData({ ...plain, id: 'f' }, []), false);
+});
+
+test('saldo del fondo dal modulo: attivato su un fondo esistente, ricarica dalla prossima scadenza, saldo spento solo senza storico', () => {
+  const old: FundData = emptyFund('Risparmi', '2026-03-01', 1);
+  const on = fundFromForm(old, { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 0, recharge: { amount_minor: 10000, day: 5 } } }, today)!;
+  assert.deepEqual(on.recharges, [{ month: '2026-12', amount_minor: 10000, day: 5, active: true }], 'il 5 novembre è già passato: nessun accredito retroattivo');
+  assert.equal(on.start_date, '2026-03-01');
+  const later = fundFromForm(old, { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 0, recharge: { amount_minor: 10000, day: 20 } } }, today)!;
+  assert.deepEqual(later.recharges, [{ month: '2026-11', amount_minor: 10000, day: 20, active: true }], 'scadenza ancora futura: vale già questo mese');
+  const initialOnly = fundFromForm(old, { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 2500, recharge: null } }, today)!;
+  assert.equal(initialOnly.initial_minor, 2500);
+  assert.deepEqual(initialOnly.recharges, []);
+  assert.equal(balanceLocked({ ...initialOnly, id: 'f' }, []), false);
+  const off = fundFromForm(initialOnly, { name: 'Risparmi', icon: null, color: 1, balance: null }, today)!;
+  assert.equal(off.initial_minor, 0);
+  assert.equal(hasBalanceData({ ...off, id: 'f' }, []), false);
+  // With a recharge or a movement the balance stays: switching the recharge off pauses it, the history remains.
+  assert.ok(balanceLocked({ ...later, id: 'f' }, []));
+  assert.ok(balanceLocked({ ...initialOnly, id: 'f' }, [{ to_fund_id: 'f', from_fund_id: null }]));
+  const paused = fundFromForm({ ...later, recharges: [{ month: '2026-06', amount_minor: 10000, day: 20, active: true }] },
+    { name: 'Risparmi', icon: null, color: 1, balance: { initial_minor: 0, recharge: null } }, today)!;
+  assert.equal(paused.recharges.at(-1)?.active, false);
+  assert.ok(hasBalanceData({ ...paused, id: 'f' }, []));
+  // Balance omitted (no change asked): saved data untouched.
+  assert.deepEqual(fundFromForm(paused, { name: 'Risparmi', icon: null, color: 1 }, today)!.recharges, paused.recharges);
 });
 
 test('modulo spesa: con fondi esistenti nessuna scelta obbligatoria, «Nessun fondo» di base', () => {
