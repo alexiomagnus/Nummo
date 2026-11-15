@@ -18,5 +18,5 @@ export function FundFilter({ funds, value, onChange, style }: { funds: readonly 
       .map((fund) => ({ value: fund.id, label: fund.archived ? t("{p0} (archiviato)", { p0: fund.name }) : fund.name })),
   ], [funds, t]);
   if (funds.length === 0) return null;
-  return <MenuSelect label={t("Fondo")} icon={iconShapes.wallet} options={options} value={value} onChange={onChange} style={style} />;
+  return <MenuSelect label={t("Fondo")} icon={iconShapes.wallet} options={options} value={value} onChange={onChange} style={style} matchFieldWidth large />;
 }

@@ -5,9 +5,9 @@ import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { chartTypes, type ChartType, type DashboardPreferences } from '../settings/preferences';
 import { Card } from '../../components/Card';
-import { ChoiceChips } from '../../components/ChoiceChips';
 import { MenuSelect } from '../../components/MenuSelect';
 import { iconShapes } from '../../components/SvgIcon';
+import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
@@ -44,8 +44,7 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
   const theme = useTheme();
   const size = useSizeClass();
   const sideBySide = size !== 'compact';
-  // Chips only on desktop: on phones and tablets they wrap over several rows, so the two compact selectors are used.
-  const chips = size === 'expanded';
+  const compact = size === 'compact';
   const [chartWidth, setChartWidth] = useState(0);
   const chartSideBySide = chartWidth >= donutMaxSize + donutLegendWidth + spacing.lg;
   const { dashboardChart: chart, dashboardPeriod: period } = preferences;
@@ -90,24 +89,18 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
 
   return (
     <View style={styles.layout}>
-      <View style={styles.toolbar}>
-        {chips ? (
-          <>
-            <ChoiceChips label={t("Periodo")} value={period} onChange={changePeriod}
-              options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />
-            <ChoiceChips label={t("Tipo di grafico")} value={chart} onChange={changeChart}
-              options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />
-          </>
-        ) : (
-          // Phones and tablets: two compact selectors share one row.
-          <>
-            <MenuSelect label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.select}
-              onChange={(value) => changePeriod(value)} options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />
-            <MenuSelect label={t("Grafico")} icon={iconShapes.chart} value={chart} style={styles.select}
-              onChange={(value) => changeChart(value)} options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />
-          </>
-        )}
-        {fundFilterShown && <FundFilter funds={funds} value={fundFilter} onChange={changeFund} style={styles.select} />}
+      {/* The two selectors (fund, period) together on the left, chart type on the right; on phones the selectors share the first row and the
+          chart type takes the next one. */}
+      <View style={[styles.toolbar, compact && styles.toolbarCompact]}>
+        <View style={styles.filters}>
+          {fundFilterShown && <FundFilter funds={funds} value={fundFilter} onChange={changeFund} style={compact ? styles.fundSelectCompact : styles.fundSelect} />}
+          <MenuSelect large label={t("Periodo")} icon={iconShapes.calendar} value={period} style={compact ? styles.periodSelectCompact : styles.select}
+            onChange={(value) => changePeriod(value)} options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />
+        </View>
+        <View style={compact ? styles.chartTypeCompact : styles.chartType}>
+          <SegmentedButtons prominent label={t("Tipo di grafico")} value={chart} onChange={changeChart}
+            options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />
+        </View>
       </View>
 
       <View style={styles.summary}>
@@ -156,9 +149,16 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
 
 const styles = StyleSheet.create({
   layout: { gap: layout.sectionGap },
-  // Period on the left, chart type on the right; they wrap on narrow windows.
-  toolbar: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.sm },
-  select: { flexGrow: 1, flexBasis: 140, minWidth: 0 },
+  // Fund and period selectors together on the left, chart type on the right; the chart type wraps below on narrow pages (still at the right).
+  toolbar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  toolbarCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch', gap: spacing.lg + spacing.xs },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  select: { width: 220 },
+  fundSelect: { width: 300 },
+  fundSelectCompact: { flex: 1, minWidth: 0 },
+  periodSelectCompact: { flex: 1.2, minWidth: 0 },
+  chartType: { width: 360, maxWidth: '100%', marginLeft: 'auto' },
+  chartTypeCompact: { alignSelf: 'stretch' },
   total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
   donutHint: { marginTop: spacing.xxl },

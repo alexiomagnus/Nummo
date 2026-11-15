@@ -71,16 +71,19 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, em
 
   const filters = (
     <>
-      <View style={styles.toolbar}>
+      <View style={[styles.toolbar, compact && styles.toolbarCompact]}>
         <TextInput outlineStyle={inputOutline} label={t("Cerca per nome")} accessibilityLabel={t("Cerca per nome")} mode="outlined" value={query}
-          onChangeText={(value) => { setQuery(value); setVisibleCount(pageSize); }} autoCorrect={false} style={styles.search}
+          onChangeText={(value) => { setQuery(value); setVisibleCount(pageSize); }} autoCorrect={false} style={compact ? styles.searchCompact : styles.search}
           left={leadingIcon(iconShapes.search)}
           right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => { setQuery(''); setVisibleCount(pageSize); }}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
-        <MenuSelect label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
-          onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
-        <MenuSelect label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
-          onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
+        {/* Secondary filters: they sit side by side under the search on phones, in the same line on wider pages. */}
+        <View style={compact ? styles.selectsCompact : styles.selects}>
+          <MenuSelect label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
+            onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
+          <MenuSelect label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
+            onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
+        </View>
       </View>
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>
@@ -215,8 +218,13 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
 const styles = StyleSheet.create({
   // Search grows twice as much as each selector; everything wraps naturally when space runs out.
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', gap: spacing.md },
+  toolbarCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   search: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
-  select: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
+  searchCompact: { minWidth: 0 },
+  // Ordina and Categoria stay one group: equal halves of the row, or of what the search leaves.
+  selects: { flexGrow: 2, flexBasis: 340, flexDirection: 'row', gap: spacing.md, minWidth: 0 },
+  selectsCompact: { flexDirection: 'row', gap: spacing.md },
+  select: { flex: 1, minWidth: 0 },
   root: { gap: spacing.lg },
   // The first month already sits below the root gap (lg) plus lg of padding; later months get the same total (xxl = 2 × lg) from the previous row.
   month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, paddingTop: spacing.xxl, paddingBottom: spacing.md },

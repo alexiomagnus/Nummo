@@ -14,6 +14,8 @@ type Props<T extends string> = {
   label: string;
   error?: boolean;
   disabled?: boolean;
+  // Larger and bolder (52 dp, 16/600) for a control that leads its section; the default stays 40 dp.
+  prominent?: boolean;
 };
 
 const checkSize = 18;
@@ -24,7 +26,7 @@ const steps = [{ padding: spacing.md, gap: spacing.sm }, { padding: spacing.sm, 
 // after dropping the check and narrowing the padding).
 // The check mark of the selected segment is optional in M3: it is drawn only when it fits beside the label, measured
 // from the segment width and the label's natural width (hidden nowrap clone); the filled colour still marks selection.
-export function SegmentedButtons<T extends string>({ options, value, onChange, label, error, disabled }: Props<T>) {
+export function SegmentedButtons<T extends string>({ options, value, onChange, label, error, disabled, prominent }: Props<T>) {
   const { colors } = useTheme();
   const border = error ? colors.error : colors.outline;
   const [widths, setWidths] = useState<Readonly<Record<string, { segment?: number; text?: number }>>>({});
@@ -46,9 +48,10 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
     const room = roomOf(option.value, index, step.padding);
     return room === null || room >= step.gap + checkSize;
   }));
+  const textStyle = prominent ? styles.prominentLabel : undefined;
   const { padding, gap } = steps[level >= 0 ? level : tight ? 1 : 0]!;
   return (
-    <View style={[styles.row, { borderColor: border }]} accessibilityRole="radiogroup" accessibilityLabel={label}>
+    <View style={[styles.row, prominent && styles.prominentRow, { borderColor: border }]} accessibilityRole="radiogroup" accessibilityLabel={label}>
       {options.map((option, index) => {
         const selected = option.value === value;
         const color = selected ? colors.onSecondaryContainer : colors.onSurface;
@@ -66,10 +69,10 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
               { paddingHorizontal: padding, gap },
               selected && { backgroundColor: colors.secondaryContainer }]}>
             {selected && fits && <SvgIcon shape={iconShapes.check} size={checkSize} color={color} />}
-            <Text variant="labelLarge" numberOfLines={1} style={[styles.label, { color }]}>{option.label}</Text>
+            <Text variant="labelLarge" numberOfLines={1} style={[styles.label, textStyle, { color }]}>{option.label}</Text>
             {/* Natural width of the label, out of the layout and invisible; +2 because onLayout rounds. */}
             <View aria-hidden style={styles.clip} pointerEvents="none">
-              <Text variant="labelLarge" style={styles.clone}
+              <Text variant="labelLarge" style={[styles.clone, textStyle]}
                 onLayout={(event) => measure(option.value, 'text', Math.ceil(event.nativeEvent.layout.width) + 2)}>{option.label}</Text>
             </View>
           </StateLayerPressable>
@@ -81,6 +84,8 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', minHeight: 40, borderWidth: 1, borderRadius: radius.pill, overflow: 'hidden' },
+  prominentRow: { minHeight: 48 },
+  prominentLabel: { fontSize: 15, lineHeight: 22, fontWeight: '600' },
   segment: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   label: { flexShrink: 1, minWidth: 0, textAlign: 'center' },

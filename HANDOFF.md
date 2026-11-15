@@ -42,6 +42,63 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Filtri di Spese e Analisi riorganizzati — 15 novembre 2026
+
+- Su richiesta, solo layout (nessuna modifica a stato, dati, token o stili dei componenti condivisi).
+  - **Spese:** il filtro «Fondo» è nella riga del titolo (`PageHeader` `action`, a destra; 220 dp, max 55 %), per entrambe le
+    viste; sotto i segmenti Spese/Abbonamenti resta una sola barra: ricerca + «Ordina» e «Categoria» in un gruppo
+    (`ExpenseList`). Su smartphone la ricerca occupa la riga e le due selezioni stanno affiancate sotto, a metà ciascuna.
+  - **Analisi (rivisto subito dopo):** «Periodo» e «Fondo» sono due `MenuSelect` affiancati a sinistra (200 dp ciascuno; su
+    smartphone metà riga ciascuno); il tipo di grafico è un `SegmentedButtons` (Ciambella/Barre/Blocchi) a destra, dove prima
+    stava «Fondo» (320 dp; sotto i selettori, a destra, se la pagina è stretta, a tutta larghezza su smartphone), sempre
+    visibile anche senza spese nel periodo. I chip del periodo scorrevoli e la prop `noWrap` di `ChoiceChips` sono stati
+    rimossi (`ChoiceChips` invariato rispetto a prima). Traduzione «Grafico» rimossa.
+  - **Tipo di grafico più rilevante, selettori invertiti** (su richiesta): `SegmentedButtons` ha la prop opzionale `prominent`
+    (52 dp, etichetta 16/600, usata solo dal tipo di grafico in Analisi, 400 dp a destra); i due selettori ora sono **Fondo** a
+    sinistra e **Periodo** accanto. Il predefinito di `SegmentedButtons` (40 dp) non cambia. Chromium a 1280, 768 e 390 px
+    osservato, nessun overflow né errore JS.
+  - **Ordine della riga invertito** (su richiesta): il tipo di grafico è a **sinistra** (400 dp), Fondo e Periodo insieme a **destra**
+    (a capo sotto, sempre a destra, se la pagina è stretta; su smartphone il tipo di grafico è la prima riga, i due selettori
+    la seconda). Chromium 1280, 768 e 390 px osservato, nessun overflow. Sostituisce l'ordine delle voci precedenti.
+  - **Spese: «Fondo» sotto i segmenti** (su richiesta, sostituisce la collocazione nel titolo): il filtro è sotto
+    Spese/Abbonamenti e occupa tutta la larghezza della sezione (`fundFilter: { alignSelf: 'stretch' }` in `Workspace`), sopra la
+    barra di ricerca/ordina/categoria; il titolo torna senza azione. Il menu `matchFieldWidth` ha un tetto di 480 dp
+    (`matchedMenuMax`), così un campo largo come la pagina non produce un menu largo come la pagina. Chromium 1280, 700 e
+    390 px: campo 936 px e menu 480 px a 1280, nessun overflow.
+  - **«Fondo» più grande, menu a tutta larghezza** (su richiesta; sostituisce il tetto di 480 dp): nuova prop `large` di
+    `MenuSelect` (campo 58 dp, poi 50, didascalia `labelMedium`, valore `bodyLarge`, icone 24, padding 16), usata da «Fondo» (sempre, in
+    Spese e Analisi) e da «Periodo» in Analisi, per tenerli alla stessa altezza; Ordina e Categoria restano a 50 dp. In Analisi
+    Fondo 270 dp e Periodo 220 dp. Il menu di «Fondo» è largo quanto il campo senza tetto (936 px a 1280 in Spese). Chromium
+    1280, 700 e 390 px osservato, nessun overflow.
+  - **Ordine, testo del menu, campi più piccoli** (su richiesta): in Analisi di nuovo **Fondo e Periodo a sinistra**, tipo di
+    grafico a destra (a capo sotto, a destra, se la pagina è stretta; su smartphone i selettori sono la prima riga). Testo
+    delle voci del menu «Fondo» più grande: fino a 18 con spazio (campo largo, es. Spese), minimo 16 (prima 16 → 15), poi su
+    due righe. Campi `large` a 54 dp (prima 58); Fondo 290 dp (poi allungato da 250) e Periodo 210 dp in Analisi. Sostituisce l'ordine e le misure
+    delle voci precedenti. Chromium 1280, 768 e 390 px osservato, nessun overflow.
+  - **Riga dei filtri di Analisi più piccola e coerente con le altre pagine** (su richiesta): campi `large` ora alti 50 dp come
+    gli altri selettori (testo ancora più grande, icone 24); `SegmentedButtons` `prominent` 48 dp, etichetta 15/600 (prima 52 e
+    16); larghezze Fondo 260, Periodo 220 (a 190 «Questo mese» si troncava) e tipo di grafico 360 dp. Sostituisce le misure
+    precedenti (54/58 dp, 290/210/400). Chromium 1280, 768 e 390 px osservato.
+  - **«Fondo» più lungo, testo coerente col resto** (su richiesta): le voci del menu «Fondo» ora usano 16 dp fissi, come i menu
+    di `SelectField` (tolta la scala 16–18 e `rowChrome`; il nome lungo va su due righe), il valore del campo resta `bodyLarge`
+    (16, come i campi di testo). Analisi: Fondo 300 dp, Periodo 220; su smartphone Fondo e Periodo dividono la riga 1 : 1,2
+    (Periodo un po' più largo: «Ultimi 12 mesi» entra intero a 360 px; con 1 : 1,15 e 3 : 2 si troncava), con padding 12 e
+    freccia 20 nei campi `large` su smartphone. Chromium 1280, 768, 390 e 360 px osservato, nessun errore JS.
+  - **Ritocchi** (su richiesta): testo minimo delle voci del menu «Fondo» da 13 a 15 (più leggibile su desktop; il nome lungo va
+    su due righe); su smartphone più spazio (20 dp, prima 12) tra la riga del tipo di grafico e i due selettori. Chromium
+    1280 e 390 px osservato.
+  - **Menu del filtro «Fondo»** (segnalato due volte con screenshot; **sostituisce** la prima soluzione, il campo allargato):
+    nuova prop `matchFieldWidth` di `MenuSelect`, usata solo da `FundFilter`: da medium in su il menu è largo **esattamente
+    quanto il campo** (240 dp in Analisi e nel titolo di Spese); le voci rimpiccioliscono il testo in blocco (16 → min 15) in
+    base alla voce più lunga misurata, poi vanno su due righe. Gli altri `MenuSelect` (Ordina, Categoria, Periodo) mantengono
+    max(campo, voce più lunga); su smartphone nulla cambia (foglio). Misurato in Chromium con un fondo «Demo · Conto
+    quotidiano (archiviato)»: campo 240 px = menu 240 px a 1280 e 700 px; nome lungo su due righe. Fondo di prova creato nel
+    profilo temporaneo, poi non conservato.
+- Verifiche: `npm run check` OK (typecheck, **445/445**, build demo). Chromium headless (Standard, backup `nummo-utente-medio.json`
+  importato in un profilo temporaneo, server di sviluppo 8081) a 1280, 768 e 390 px: Spese e Analisi osservate, nessun overflow
+  orizzontale, nessun errore JS. **Non provati:** touch reale, Avanzata, 320 px e landscape.
+  Nessun commit.
+
 ## Notifiche: immagine grande trasparente (cerchio grigio con «N») — 15 novembre 2026
 
 - Dopo la pubblicazione di `f454d12` l'utente (Pixel, screenshot) vede, senza `icon`, un cerchio grigio con la «N» a destra:

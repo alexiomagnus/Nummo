@@ -21,12 +21,18 @@ type Props<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   style?: StyleProp<ViewStyle>;
+  // The menu is exactly as wide as the field: long choices wrap on two lines (same 16 dp text as the other menus) instead of
+  // widening the menu. Phones use a sheet, unchanged.
+  matchFieldWidth?: boolean;
+  // Larger text (bigger caption and value, 24 dp icons) in the standard field height for the filters that lead a page.
+  large?: boolean;
 };
+
 
 // Compact single-choice selector: a 50 dp field showing the caption and the current value. Used where chips would eat
 // too much width (sort, filters). On phones the choices open in a modal bottom sheet, as in SelectField; from medium
 // width in a Material 3 menu below the field (or above it when there is no room), which returns focus to the field.
-export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style }: Props<T>) {
+export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style, matchFieldWidth, large }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -48,7 +54,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
     <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
       onPress={() => { closeMenu(); onChange(option.value); }}
       accessibilityLabel={`${option.label}${option.value === value ? t(", selezionato") : ''}`}>
-      <Text variant="bodyLarge" numberOfLines={1} style={styles.itemLabel}>{option.label}</Text>
+      <Text variant="bodyLarge" numberOfLines={matchFieldWidth && !compact ? 2 : 1} style={styles.itemLabel}>{option.label}</Text>
       {/* Fixed slot on every row: the check always sits at the right edge, whatever the label length. */}
       <View style={styles.check}>{option.value === value && <SvgIcon shape={iconShapes.check} size={24} color={colors.onSurface} />}</View>
     </StateLayerPressable>
@@ -58,13 +64,13 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
       <View ref={anchorRef}>
         <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
-          onPress={openMenu} style={[styles.field, { borderColor: colors.outline }]}>
-          {showIcon && <SvgIcon shape={icon} size={20} color={colors.onSurfaceVariant} />}
+          onPress={openMenu} style={[styles.field, large && styles.fieldLarge, large && compact && styles.fieldLargeCompact, { borderColor: colors.outline }]}>
+          {showIcon && <SvgIcon shape={icon} size={large ? 24 : 20} color={colors.onSurfaceVariant} />}
           <View style={styles.text}>
-            <Text variant="labelSmall" style={{ color: colors.onSurfaceVariant }}>{label}</Text>
-            <Text variant="bodyMedium" numberOfLines={1}>{current?.label ?? ''}</Text>
+            <Text variant={large ? 'labelMedium' : 'labelSmall'} style={{ color: colors.onSurfaceVariant }}>{label}</Text>
+            <Text variant={large ? 'bodyLarge' : 'bodyMedium'} numberOfLines={1}>{current?.label ?? ''}</Text>
           </View>
-          <SvgIcon shape={iconShapes.chevronDown} size={20} color={colors.onSurfaceVariant} />
+          <SvgIcon shape={iconShapes.chevronDown} size={large && !compact ? 24 : 20} color={colors.onSurfaceVariant} />
         </StateLayerPressable>
       </View>
       {/* Measuring copy of the rows: same paddings, gap and check slot, no width limit; never visible nor focusable.
@@ -81,7 +87,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
       </View>
       {compact
         ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
-        : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={Math.max(anchor.width, contentWidth)} label={label}>{rows}</AnchoredMenu>}
+        : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={matchFieldWidth ? anchor.width : Math.max(anchor.width, contentWidth)} label={label}>{rows}</AnchoredMenu>}
     </View>
   );
 }
@@ -91,6 +97,9 @@ const styles = StyleSheet.create({
     height: layout.fieldBoxHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1,
     paddingHorizontal: spacing.md,
   },
+  fieldLarge: { height: layout.fieldBoxHeight, paddingHorizontal: spacing.lg },
+  // Phones: two large fields share a row, so the chevron and padding stay as in the standard field.
+  fieldLargeCompact: { paddingHorizontal: spacing.md },
   text: { flex: 1, minWidth: 0 },
   // Rows fit the field width; long labels shrink while the check keeps its fixed slot.
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl, minHeight: 48, minWidth: 0, paddingHorizontal: spacing.lg },

@@ -344,6 +344,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <View style={styles.list}>
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
+        {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
         {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
@@ -399,7 +400,7 @@ const styles = StyleSheet.create({
   // Pages fill the main area; the shell does not cap their width.
   list: { width: '100%', gap: layout.sectionGap },
   hidden: { display: 'none' },
-  fundFilter: { alignSelf: 'flex-start', minWidth: 200, maxWidth: '100%' },
+  fundFilter: { alignSelf: 'stretch' },
   backupPage: { gap: layout.sectionGap },
   starting: { alignItems: 'center', padding: spacing.xxl },
   startingOverlay: { position: 'absolute', top: spacing.xxl, left: 0, right: 0, alignItems: 'center', zIndex: 1 },
