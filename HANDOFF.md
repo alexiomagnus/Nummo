@@ -42,6 +42,11 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Analisi su smartphone: Fondo e Periodo uguali — 15 novembre 2026
+
+- Su richiesta: su smartphone i due selettori dividono la riga a metà (flex 1 : 1, prima 1 : 1,2). Dopo la riduzione del padding dei
+  campi `large` su smartphone, «Ultimi 12 mesi» entra intero anche a 360 px (Chromium, due campi da 162 px). `npm run check` OK. Nessun commit.
+
 ## Rilascio del 15 novembre (sera, seconda parte)
 
 - Commit `cdd957f` (fuso orario e formato 24/12 ore delle notifiche, «Filtra per fondo» rimosso, colonne delle Impostazioni, ritocchi

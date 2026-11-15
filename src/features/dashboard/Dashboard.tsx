@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   select: { width: 220 },
   fundSelect: { width: 300 },
   fundSelectCompact: { flex: 1, minWidth: 0 },
-  periodSelectCompact: { flex: 1.2, minWidth: 0 },
+  periodSelectCompact: { flex: 1, minWidth: 0 },
   chartType: { width: 360, maxWidth: '100%', marginLeft: 'auto' },
   chartTypeCompact: { alignSelf: 'stretch' },
   total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
