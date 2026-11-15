@@ -11,10 +11,10 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `e79dfa6` (progetto `nummo-6b6e2`,
   solo Hosting, «Deploy complete!»): pagina principale 200, `/firestore.rules` servito, bundle con
   `nummo.firebaseConfig.v1`. Resa sui dispositivi e collegamento di un progetto reale non verificati. Worker `nummo-push`
-  attivo su Cloudflare. `firestore.rules` è
-  cambiato dopo l'ultima pubblicazione Rules registrata (8 novembre; icone rimosse in `d7e1504`, `key` aggiunta in
-  `6956a56`): pubblicazione separata, con autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad
-  allora in Avanzata una categoria `key` viene rifiutata dal cloud.
+  attivo su Cloudflare. **Rules pubblicate** su richiesta il 15 novembre (`firebase deploy --only firestore:rules
+  --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `e79dfa6`: icona `key`
+  ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
+  diretto dei dati cloud). Caricamento e sincronizzazione dopo la pubblicazione da verificare ricaricando l'app.
 - **Verifiche.** Vedi la sezione più recente: `npm run check` OK (429/429) prima del commit. `test:emulator` 19/19
   rieseguito dopo `ownerAccess.ts` (sezione «Questo Nummo è privato»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
