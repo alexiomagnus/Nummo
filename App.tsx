@@ -7,6 +7,7 @@ import { AppShell } from './src/components/AppShell';
 import { Button } from './src/components/Button';
 import { Card } from './src/components/Card';
 import { IconStyleProvider } from './src/components/CategoryGlyph';
+import { useOverlayMotion, usePresence } from './src/components/Overlay';
 import { ThemeIcon } from './src/components/ThemeIcon';
 import { SvgIcon, iconShapes } from './src/components/SvgIcon';
 import type { Preferences } from './src/features/settings/preferences';
@@ -34,7 +35,8 @@ import { checkOwnerAccess, type OwnerAccess } from './src/services/ownerAccess';
 import { GlobalStyle } from './src/theme/GlobalStyle';
 import { initialSafeAreaMetrics } from './src/theme/initialMetrics';
 import { createTheme } from './src/theme/theme';
-import { spacing } from './src/theme/tokens';
+import { fadeTransition } from './src/theme/motion';
+import { motion, spacing } from './src/theme/tokens';
 import { useReducedMotion } from './src/theme/useSizeClass';
 import { I18nProvider, useI18n } from './src/i18n/I18nProvider';
 
@@ -174,11 +176,7 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
           dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
           topActions={<>{themeToggle}{menu}</>} />
       </View>
-      {!released ? (
-        <View style={[StyleSheet.absoluteFill, styles.startup]} aria-hidden>
-          <div inert style={fillDiv}><StartupWorkspace topActions={themeToggle} /></div>
-        </View>
-      ) : null}
+      <StartupCover visible={!released} topActions={themeToggle} />
     </>
   );
 }
@@ -271,12 +269,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
             topActions={<>{themeToggle}{account}</>} />
         </View>
       ) : null}
-      {showStartup ? (
-        // Covers the real screen until it is ready; decorative (hidden from assistive technology, not focusable).
-        <View style={[StyleSheet.absoluteFill, styles.startup]} aria-hidden>
-          <div inert style={fillDiv}><StartupWorkspace topActions={themeToggle} /></div>
-        </View>
-      ) : null}
+      <StartupCover visible={showStartup} topActions={themeToggle} />
       {!signedIn && !showStartup ? (
         <AppShell actions={<>{themeToggle}<SettingsButton onPress={() => setSettingsOpen(true)} /></>} brand={{ label: t("accesso"), onPress: leaveGuide }}>
           {configMissing && !settingsOpen && !connectOpen && (
@@ -296,6 +289,18 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
         </AppShell>
       ) : null}
     </>
+  );
+}
+
+// Covers the real screen until it is ready; decorative (hidden from assistive technology, not focusable). It appears at
+// once and leaves with a short fade, so the form does not pop in (issue #5); with reduced motion it leaves at once.
+function StartupCover({ visible, topActions }: { visible: boolean; topActions: ReactNode }) {
+  const { mounted } = usePresence(visible, motion.short, useOverlayMotion());
+  if (!mounted) return null;
+  return (
+    <View style={[StyleSheet.absoluteFill, styles.startup, fadeTransition, { opacity: visible ? 1 : 0 }]} pointerEvents={visible ? 'auto' : 'none'} aria-hidden>
+      <div inert style={fillDiv}><StartupWorkspace topActions={topActions} /></div>
+    </View>
   );
 }
 

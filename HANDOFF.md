@@ -19,12 +19,30 @@ cronaca delle singole fasi e possono dire cose superate.
   rieseguito dopo `ownerAccess.ts` (sezione «Questo Nummo è privato»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
   `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
+- **Non committato:** dissolvenza d'uscita del segnaposto d'avvio (`App.tsx`, issue #5), sezione qui sotto; non pubblicato.
 - **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
+
+## Issue #4 e #5: riscontri dal Pixel 8, dissolvenza del segnaposto d'avvio — 15 novembre 2026
+
+- **#4 (dal telefono dell'utente, screenshot):** app installata con barra di navigazione `#121212` in entrambi i temi, come
+  previsto; nella scheda di Chrome la barra segue la pagina (edge-to-edge del browser, non disponibile alle app installate:
+  `WebAppShortEdgesCutoutMode` con `enable_standalone` spento di default nel sorgente Chromium). Alternative discusse
+  (togliere `theme_color`, colore chiaro, TWA, flag): nessuna scelta; issue ancora aperta, nessuna modifica.
+- **#5 (video dell'utente, tema chiaro, Avanzata):** una sola splash, nessun ricaricamento, titolo fermo. Restano: dissolvenza
+  di Chrome splash scura → pagina chiara con logo sovrapposto (~0,3 s, piattaforma; l'utente ha scelto di **lasciare la splash
+  com'è**) e ~0,7 s di guscio con indicatore prima che il modulo comparisse di scatto.
+- **Modifica (su richiesta):** `StartupCover` in `App.tsx` sostituisce i due montaggi condizionali del segnaposto sopra l'area di
+  lavoro (Standard e Avanzata): compare subito, esce con dissolvenza di `motion.short` (150 ms, `usePresence` +
+  `fadeTransition`), senza intercettare tocchi durante l'uscita; con movimento ridotto esce subito. L'attesa dei dati non cambia.
+- Verifiche: `npm run check` OK (**430/430**, build demo). Chromium headless 412 px, CPU ×4, build demo in Standard (profilo
+  temporaneo cancellato): copertura a opacità 1 → in uscita con `pointer-events: none` → rimossa dopo ~150 ms; con
+  `prefers-reduced-motion` rimossa subito; nessun errore JS. **Non provato:** Avanzata nel browser, Pixel 8 (serve la
+  pubblicazione e un nuovo video). Nessun commit, nessun deploy; issue non commentate né chiuse.
 
 ## Impostazioni: rimosso «Mostra budget mensile», budget sempre visibili — 15 novembre 2026
 
