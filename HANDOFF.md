@@ -42,6 +42,13 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Rilascio del 15 novembre (sera, seconda parte)
+
+- Commit `cdd957f` (fuso orario e formato 24/12 ore delle notifiche, «Filtra per fondo» rimosso, colonne delle Impostazioni, ritocchi
+  ai Templates, coltello delle posate) inviato a `origin/main`, poi `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo Hosting,
+  «Deploy complete!», sito 200). Rules e Worker `nummo-push` non toccati (`push-service/` invariato). Le sezioni qui sotto dicono
+  «Nessun commit»: sono tutte comprese in `cdd957f`. Consegna reale con un fuso diverso da Roma e resa su telefono non verificate.
+
 ## Icona «posate»: coltello ridisegnato (minimale e colorato) — 15 novembre 2026
 
 - Segnalato dall'utente (screenshot piccolo): il coltello non sembrava un coltello (nel colorato, tema scuro, una barra chiara con una
