@@ -17,6 +17,7 @@ cronaca delle singole fasi e possono dire cose superate.
   --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `e79dfa6`: icona `key`
   ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
   diretto dei dati cloud). Caricamento e sincronizzazione dopo la pubblicazione da verificare ricaricando l'app.
+- **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
 - **Rilascio del 15 novembre (sera).** Commit `f454d12` inviato a `origin/main`: icone (regalo, carrello, set colorato, pizza),
   «Prossimo mese», filtro per fondo, pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche, niente icona
   quadrata a destra. Worker `nummo-push` ripubblicato dall'utente, poi `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo
@@ -45,7 +46,9 @@ cronaca delle singole fasi e possono dire cose superate.
 - `npm test` OK (439/439). **Non verificato su telefono** (il rendering delle notifiche Android non è osservabile qui): se
   Chrome mostrasse ancora qualcosa a destra, l'alternativa è installare Nummo come app (le notifiche della WebAPK non
   usano il segnaposto del sito). Committato in `e0c2850`, inviato a `origin/main` e pubblicato su Hosting (sito 200, `sw.js` con `blankIcon`); Worker non
-  ripubblicato (`push-service/` invariato).
+  ripubblicato (`push-service/` invariato). **Verificato dall'utente sul telefono (Pixel, Chrome):** la notifica di prova è
+  pulita, senza icona quadrata né cerchio grigio con la «N»; resta la piccola a sinistra. Non ancora verificati: consegna reale
+  ad app chiusa del promemoria dei rinnovi e dell'orario scelto; filtro per fondo e stato con data in Avanzata.
 
 ## Orario delle notifiche a scelta — 15 novembre 2026
 
