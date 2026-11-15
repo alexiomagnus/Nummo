@@ -18,6 +18,11 @@ cronaca delle singole fasi e possono dire cose superate.
   ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
   diretto dei dati cloud). Caricamento e sincronizzazione dopo la pubblicazione da verificare ricaricando l'app.
 - **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
+- **Ultimo rilascio (15 novembre, sera).** Commit `ec150a1` inviato a `origin/main`: Templates (pagina, campo in Nuova spesa,
+  backup v7), icona dell'app stondata, carrello semplificato, icone minimali ingrandite. **Rules pubblicate** (`firebase deploy
+  --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»; includono `templates/{uuid}`) e poi
+  Hosting (`npm run deploy:hosting`, sito 200). Worker non toccato. Da verificare su dispositivo: icona (cache del launcher),
+  Templates in Avanzata con un progetto reale (provati solo su emulatore/Rules), campo Template su telefono.
 - **Rilascio del 15 novembre (sera).** Commit `f454d12` inviato a `origin/main`: icone (regalo, carrello, set colorato, pizza),
   «Prossimo mese», filtro per fondo, pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche, niente icona
   quadrata a destra. Worker `nummo-push` ripubblicato dall'utente, poi `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo
