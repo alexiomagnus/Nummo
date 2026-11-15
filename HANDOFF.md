@@ -44,7 +44,8 @@ cronaca delle singole fasi e possono dire cose superate.
   offline), uguale per tutti i tipi; `badge` (la piccola a sinistra) invariato. Test sul formato e sull'uguaglianza per tipo.
 - `npm test` OK (439/439). **Non verificato su telefono** (il rendering delle notifiche Android non è osservabile qui): se
   Chrome mostrasse ancora qualcosa a destra, l'alternativa è installare Nummo come app (le notifiche della WebAPK non
-  usano il segnaposto del sito). Non committato né pubblicato.
+  usano il segnaposto del sito). Committato in `e0c2850`, inviato a `origin/main` e pubblicato su Hosting (sito 200, `sw.js` con `blankIcon`); Worker non
+  ripubblicato (`push-service/` invariato).
 
 ## Orario delle notifiche a scelta — 15 novembre 2026
 
