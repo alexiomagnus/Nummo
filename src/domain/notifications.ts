@@ -9,7 +9,7 @@ import { todayInRome } from './policy.ts';
 export const notificationFrequencies = ['weekly', 'biweekly', 'monthly'] as const;
 export type NotificationFrequency = (typeof notificationFrequencies)[number];
 export const notificationFrequencyLabels: Record<NotificationFrequency, string> = {
-  weekly: 'Ogni settimana (consigliato)', biweekly: 'Ogni 14 giorni', monthly: 'Ogni mese',
+  weekly: 'Ogni settimana', biweekly: 'Ogni 14 giorni', monthly: 'Ogni mese',
 };
 // «Ricordamelo dopo» on the backup reminder.
 export const backupSnoozeDays = 3;
@@ -115,8 +115,8 @@ export function backupReminderDue(input: { preferences: NotificationPreferences;
 // Postpones the reminder by `backupSnoozeDays`.
 export const snoozeBackup = (state: NotificationState, now: Date): NotificationState =>
   ({ ...state, backupSnoozedUntil: new Date(now.getTime() + backupSnoozeDays * 86_400_000).toISOString() });
-// The user confirmed that the file exported at `exportedAt` is saved. Never moves the date backwards.
-export const confirmBackup = (state: NotificationState, exportedAt: string): NotificationState =>
+// A full backup was downloaded at `exportedAt`. Never moves the date backwards.
+export const recordBackup = (state: NotificationState, exportedAt: string): NotificationState =>
   ({ ...state, lastBackupAt: later(state.lastBackupAt, exportedAt), backupSnoozedUntil: null });
 
 // Summary periods are calendar-aligned civil dates (Europe/Rome): Monday–Sunday weeks, two-week blocks counted from
@@ -155,28 +155,6 @@ export function spendingSummary(expenses: readonly ExpenseEntry[], categories: r
   return { period, total: oneOff.reduce((sum, item) => sum + item.amount_minor, 0), count: oneOff.length, top };
 }
 
-// The summary to show now, if any: the latest ended period, not yet closed, ending after the summary became active,
-// with at least one expense. Older missed periods are skipped rather than shown in a row.
-export function summaryDue(input: { preferences: NotificationPreferences; state: NotificationState; expenses: readonly ExpenseEntry[];
-  categories: readonly Category[]; today: string }): SpendingSummary | null {
-  const { preferences, state, expenses, categories, today } = input;
-  if (!summaryActive(preferences)) return null;
-  const period = summaryPeriod(preferences.summaryFrequency, today);
-  const since = todayInRome(new Date(later(state.startedAt, preferences.summarySince)!));
-  if (period.to < since) return null;
-  if (state.summaryShownThrough && period.to <= state.summaryShownThrough) return null;
-  const summary = spendingSummary(expenses, categories, period, today);
-  return summary.count > 0 ? summary : null;
-}
+// A summary period seen (its notification opened): remembered so that it is not offered again.
 export const closeSummary = (state: NotificationState, period: Period): NotificationState =>
   ({ ...state, summaryShownThrough: state.summaryShownThrough && state.summaryShownThrough > period.to ? state.summaryShownThrough : period.to });
-
-// Everything due now, in display order. `lastChange` is null outside the Standard mode (no backup reminder there).
-export type DueNotification = { kind: 'backup' } | { kind: 'summary'; summary: SpendingSummary };
-export function dueNotifications(input: Parameters<typeof summaryDue>[0] & { lastChange: string | null; now: Date }): DueNotification[] {
-  const due: DueNotification[] = [];
-  if (backupReminderDue(input)) due.push({ kind: 'backup' });
-  const summary = summaryDue(input);
-  if (summary) due.push({ kind: 'summary', summary });
-  return due;
-}

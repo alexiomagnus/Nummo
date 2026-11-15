@@ -12,7 +12,7 @@ const options: readonly Option[] = [
   { mode: 'standard', title: 'Standard', badge: 'Consigliata', action: 'Inizia subito',
     text: 'Utilizza Nummo immediatamente. I dati vengono salvati sul dispositivo e puoi conservarne una copia esportando un backup.' },
   { mode: 'advanced', title: 'Avanzata', badge: 'Firebase', action: 'Continua con Firebase',
-    text: 'Collega il tuo progetto Firebase per salvare e sincronizzare i dati nel cloud.' },
+    text: 'Per chi ha installato la propria copia di Nummo con Firebase: accedi con Google e sincronizza i dati tra i tuoi dispositivi.' },
 ];
 
 // First screen, before any sign-in: where the data will live. Standard opens the app at once, with no account;

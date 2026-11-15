@@ -17,8 +17,6 @@ type Props<T extends string> = {
   onChange: (value: T) => void;
   error?: string;
   disabled?: boolean;
-  // Optional last row after the choices (e.g. «Nuova categoria»): closes the list, then runs `onPress`.
-  action?: { label: string; onPress: () => void; disabled?: boolean };
 };
 
 // Material 3 exposed dropdown: an outlined text field (label, trailing arrow). On phones the choices open in a modal
@@ -28,7 +26,7 @@ type Props<T extends string> = {
 // Selected/hover highlight is inset in the list and rounded like the keyboard focus ring (GlobalStyle: 12).
 const itemRadius = 12;
 
-export function SelectField<T extends string>({ label, options, value, onChange, error, disabled, action }: Props<T>) {
+export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -52,15 +50,6 @@ export function SelectField<T extends string>({ label, options, value, onChange,
       </StateLayerPressable>
     );
   });
-  // Set apart from the choices by a divider; a command, not a value, so it never shows the selection check.
-  if (action) rows.push(
-    <View key="__action" style={[styles.actionDivider, { backgroundColor: colors.outlineVariant }]} role="separator" />,
-    <StateLayerPressable key="__action-row" layerColor={colors.primary} radius={itemRadius} accessibilityRole="menuitem" style={styles.item}
-      disabled={action.disabled} aria-disabled={action.disabled} onPress={() => { closeMenu(); action.onPress(); }} accessibilityLabel={action.label}>
-      <View style={styles.icon}><SvgIcon shape={iconShapes.plus} size={20} color={colors.primary} /></View>
-      <Text variant="labelLarge" numberOfLines={1} style={[styles.itemLabel, { color: colors.primary }]}>{action.label}</Text>
-    </StateLayerPressable>,
-  );
   return (
     <View>
       <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu}
@@ -91,5 +80,4 @@ const styles = StyleSheet.create({
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },
   check: { width: 20, height: 20 },
-  actionDivider: { height: StyleSheet.hairlineWidth, marginHorizontal: spacing.md, marginVertical: spacing.xs },
 });

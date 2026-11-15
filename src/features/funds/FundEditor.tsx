@@ -49,7 +49,6 @@ export function FundEditor({ record, funds, showBudget, ready, error, onSave, cl
   const [busy, setBusy] = useState(false);
   const blocked = busy || !ready;
   const keptExceptions = (record?.budget_exceptions ?? []).filter((c) => c.month >= monthOf(today)).length;
-  const keptBalance = Boolean(record && (record.initial_minor > 0 || record.recharges.length > 0));
 
   const save = async () => {
     if (blocked) return;
@@ -74,7 +73,7 @@ export function FundEditor({ record, funds, showBudget, ready, error, onSave, cl
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome del fondo")} value={name} readOnly={blocked} aria-disabled={blocked}
               accessibilityLabel={t("Nome del fondo, obbligatorio")} error={Boolean(errors.name)}
-              placeholder={t("Es. Vacanze")} onChangeText={(value) => { setName(value); setErrors({ ...errors, name: undefined }); }} />
+              placeholder={t("Es. Risparmi")} onChangeText={(value) => { setName(value); setErrors({ ...errors, name: undefined }); }} />
             {field('name')}
           </View>
           <View style={styles.section}>
@@ -96,23 +95,17 @@ export function FundEditor({ record, funds, showBudget, ready, error, onSave, cl
               {icon ? t("Cambia icona") : t("Scegli un'icona")}</Button>
             {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={blocked} />}
           </View>
-          {(showBudget || keptBalance) && <View style={styles.section}>
-            {showBudget && <>
-              <SwitchRow label={t("Budget mensile")} supporting={t("Facoltativo: un limite di spesa indicativo per il mese, non blocca le spese.")}
-                value={budgetOn} disabled={blocked} onChange={setBudgetOn} />
-              {budgetOn && <View>
-                <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo del budget")} value={budgetAmount} inputMode="decimal" placeholder="0,00"
-                  readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.budgetAmount)} left={leadingIcon(iconShapes.euro)}
-                  onChangeText={(value) => { setBudgetAmount(value); setErrors({ ...errors, budgetAmount: undefined }); }} />
-                {field('budgetAmount')}
-              </View>}
-              {record && budgetOn && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-                {t("Vale dal mese corrente: i mesi passati restano come sono.")}</Text>}
-              {keptExceptions > 0 && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-                {t("Eccezioni programmate per singoli mesi: {p0}. Restano attive.", { p0: keptExceptions })}</Text>}
-            </>}
-            {keptBalance && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-              {t("Saldo iniziale e ricariche di una versione precedente restano conservati.")}</Text>}
+          {showBudget && <View style={styles.section}>
+            <SwitchRow label={t("Budget mensile")} supporting={t("Facoltativo: un limite di spesa indicativo per il mese, non blocca le spese.")}
+              value={budgetOn} disabled={blocked} onChange={setBudgetOn} />
+            {budgetOn && <View>
+              <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo del budget")} value={budgetAmount} inputMode="decimal" placeholder="0,00"
+                readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.budgetAmount)} left={leadingIcon(iconShapes.euro)}
+                onChangeText={(value) => { setBudgetAmount(value); setErrors({ ...errors, budgetAmount: undefined }); }} />
+              {field('budgetAmount')}
+            </View>}
+            {keptExceptions > 0 && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+              {t("Eccezioni programmate per singoli mesi: {p0}. Restano attive.", { p0: keptExceptions })}</Text>}
           </View>}
           {field('form')}
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}

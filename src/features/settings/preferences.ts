@@ -9,12 +9,13 @@ export type ThemeChoice = 'system' | 'light' | 'dark';
 export type FontChoice = 'google' | 'system';
 export const chartTypes = ['donut', 'bars', 'blocks'] as const;
 export type ChartType = (typeof chartTypes)[number];
-// `showGeneralBudget` hides the general budget and fund editor budget controls; saved budget plans stay intact.
-export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showGeneralBudget: boolean };
+// `showGeneralBudget` hides every budget (general, fund cards, remaining budget under the fund field, fund editor
+// controls); saved budget plans stay intact. `showArchivedLists` hides the archived lists of the Lists page.
+export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showGeneralBudget: boolean; showArchivedLists: boolean };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showGeneralBudget: true, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showGeneralBudget: true, showArchivedLists: true, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -35,5 +36,6 @@ export function parsePreferences(raw: string | null): Preferences {
     dashboardPeriod: oneOf(periods, o.dashboardPeriod, defaultPreferences.dashboardPeriod),
     dashboardTrend: typeof o.dashboardTrend === 'boolean' ? o.dashboardTrend : defaultPreferences.dashboardTrend,
     showGeneralBudget: typeof o.showGeneralBudget === 'boolean' ? o.showGeneralBudget : defaultPreferences.showGeneralBudget,
+    showArchivedLists: typeof o.showArchivedLists === 'boolean' ? o.showArchivedLists : defaultPreferences.showArchivedLists,
   };
 }

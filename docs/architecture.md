@@ -28,8 +28,9 @@ Su richiesta, sostituisce progressivamente il punto «solo in-app» della decisi
 - **Nessun duplicato**: un promemoria per tipo, riepilogo per periodo consegnato una volta, backup mai anticipato dopo una
   consegna, tag per tipo; con il push attivo gli avvisi in-app del browser sono spenti.
 - **Service worker** `public/sw.js` limitato alle notifiche: nessuna cache, nessuna promessa di avvio offline.
-- **Fase 2** (rimozione degli avvisi in-app e del controllo ogni 15 minuti) solo dopo la verifica sui dispositivi reali
-  con il servizio pubblicato.
+- **Fase 2** (rimozione degli avvisi in-app e del controllo ogni 15 minuti) **eseguita il 15 novembre** su richiesta:
+  solo notifiche di sistema; eliminata anche la domanda «Hai salvato il backup?», il download del backup completo conta
+  come backup (prima contava solo dopo la conferma).
 
 ## Rimozione di Google Drive, protezione locale e notifiche in-app — 14 novembre 2026
 

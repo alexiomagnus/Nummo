@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { transitions } from '../theme/motion';
 import { motion, radius, spacing } from '../theme/tokens';
 import { useReducedMotion } from '../theme/useSizeClass';
+import { initialFocusAllowed } from '../theme/viewport';
 import { menuHorizontalBounds, menuVerticalPlacement, recentVelocity, sheetDragOutcome, sheetGestureOwner, type DragSample } from './menuGeometry';
 
 // Shared overlay layer for menus, bottom sheets and dialogs. Every surface stays opaque while it moves: entering, it
@@ -62,7 +63,8 @@ export function useEscape(active: boolean, onEscape: () => void) {
 }
 
 // Focus moves to the first item once the overlay is shown (as Paper's menu did) and goes back, without scrolling, to the
-// element that had it when the overlay opened (the field), unless the user has meanwhile moved it elsewhere.
+// element that had it when the overlay opened (the field), unless the user has meanwhile moved it elsewhere. On
+// touch-first devices a text field is never focused on opening: the overlay itself takes the focus instead.
 export function useFocusHandoff(visible: boolean, shown: boolean, container: { current: unknown }) {
   const opener = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -80,7 +82,12 @@ export function useFocusHandoff(visible: boolean, shown: boolean, container: { c
     const node = container.current;
     if (!shown || !(node instanceof HTMLElement)) return;
     const first = node.querySelector<HTMLElement>('input:not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly]), button:not([disabled]):not([tabindex="-1"]):not([aria-hidden="true"]), [role="menuitem"]:not([aria-disabled="true"]), [tabindex="0"]');
-    first?.focus({ preventScroll: true });
+    if (!first) return;
+    const touchFirst = typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    if (initialFocusAllowed(first, touchFirst)) { first.focus({ preventScroll: true }); return; }
+    // The overlay itself takes the focus, out of the page behind: Tab still reaches the field, Escape still closes.
+    if (!node.hasAttribute('tabindex')) { node.setAttribute('tabindex', '-1'); node.style.outline = 'none'; }
+    node.focus({ preventScroll: true });
   }, [shown, container]);
 }
 

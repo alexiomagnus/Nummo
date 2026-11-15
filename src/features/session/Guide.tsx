@@ -49,12 +49,12 @@ export function Guide({ onBack }: { onBack: () => void }) {
       <Section title={t("Dove sono i tuoi dati (Privacy e Backup)")}>
         {p(t("Puoi scegliere come gestire il tuo archivio in base alle tue esigenze:"))}
         {item("Modalità Standard (subito pronta, zero account)", "I dati vengono salvati esclusivamente nel browser del tuo dispositivo e non vengono inviati a nessun server. Per non perderli se cambi telefono o pulisci i dati di navigazione, scarica periodicamente un backup in formato JSON (oppure esporta in CSV per Excel e Google Fogli).")}
-        {item("Modalità Avanzata (sincronizzazione tra dispositivi)", "Collega un tuo progetto personale su Firebase (Google) con accesso riservato solo al tuo account. I dati si sincronizzano ovunque restando sotto il tuo esclusivo controllo.")}
+        {item("Modalità Avanzata (sincronizzazione tra dispositivi)", "Per chi ha installato la propria copia di Nummo collegata a un progetto Firebase (Google): entra solo il tuo account e i dati si sincronizzano tra i tuoi dispositivi, sotto il tuo controllo. Con un altro account Google l'accesso non è consentito.")}
         <Text variant="bodyMedium" style={muted}>{t("Nota: le due modalità usano archivi separati; passare dall'una all'altra da Archiviazione e backup non sposta né cancella i dati esistenti.")}</Text>
       </Section>
 
       <Section title={t("Avvisi e promemoria")}>
-        {p(t("Nummo ti invia un riepilogo periodico delle spese e, in modalità Standard, ti ricorda di salvare un backup quando ci sono nuove modifiche. Se attivi le notifiche di sistema dalla pagina Notifiche, gli avvisi arrivano anche con l'app chiusa; altrimenti compaiono quando apri Nummo."))}
+        {p(t("Se attivi le notifiche di sistema dalla pagina Notifiche, Nummo ti invia un riepilogo periodico delle spese e, in modalità Standard, ti ricorda di salvare un backup quando ci sono nuove modifiche. Gli avvisi arrivano come notifiche del dispositivo, anche con l'app chiusa."))}
       </Section>
 
       <Button mode="outlined" onPress={onBack} style={styles.bottom}>{t("Torna indietro")}</Button>

@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { ChoiceChips } from '../../components/ChoiceChips';
+import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { SwitchRow } from '../../components/SwitchRow';
 import { useSnackbar } from '../../components/SnackbarHost';
@@ -33,13 +33,13 @@ function SystemNotifications({ push }: { push: PushState }) {
       : result === 'gone' ? t("Questo dispositivo non è più iscritto: riattiva le notifiche di sistema.") : t("Il servizio delle notifiche non risponde. Riprova più tardi."));
   };
   let body;
-  if (support === 'unsupported') body = line(t("Questo browser non supporta le notifiche di sistema. Restano gli avvisi dentro Nummo."));
+  if (support === 'unsupported') body = line(t("Questo browser non supporta le notifiche di sistema."));
   else if (support === 'needs-install') body = line(t("Su iPhone e iPad le notifiche arrivano solo se aggiungi Nummo alla schermata Home: tocca Condividi, poi «Aggiungi alla schermata Home», e apri Nummo da lì."));
-  else if (support === 'unconfigured') body = line(t("Le notifiche di sistema non sono configurate in questa installazione di Nummo. Restano gli avvisi dentro Nummo."));
+  else if (support === 'unconfigured') body = line(t("Le notifiche di sistema non sono configurate in questa installazione di Nummo."));
   else if (status === null) body = line(t("Controllo in corso…"));
   else if (status === 'denied') body = line(t("Le notifiche sono bloccate per questo sito. Per attivarle consenti le notifiche nelle impostazioni del browser, poi torna qui."));
   else if (status === 'off') body = <>
-    {line(t("Spente su questo dispositivo. Attivale per ricevere promemoria e riepiloghi anche con Nummo chiusa."))}
+    {line(t("Spente su questo dispositivo. Attivale per ricevere promemoria e riepiloghi."))}
     {failure === 'browser' && line(t("Il browser non è riuscito a iscriversi al proprio servizio di notifiche. Riprova più tardi o con un altro browser."), true)}
     {failure === 'service' && line(t("Il servizio delle notifiche non risponde. Riprova più tardi."), true)}
     <View style={styles.actions}>
@@ -93,37 +93,40 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
   opened: OpenedNotification | null; onCloseOpened: () => void; exporting: boolean; onExport: () => void }) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
-  const { preferences: p, changePreferences: change, backupReminders, lastBackupAt, backupDue, exportedAt } = notifications;
+  const { preferences: p, changePreferences: change, backupReminders, lastBackupAt, backupDue } = notifications;
   const muted = { color: colors.onSurfaceVariant };
-  const frequencyOptions = notificationFrequencies.map((value) => ({ value, label: t(notificationFrequencyLabels[value]) }));
+  // Narrow page (phones, narrow windows, any zoom): short labels so the three choices fit one line under the label; the
+  // accessible name stays the full one. Decided on the page's measured width, not the window class.
+  const [pageWidth, setPageWidth] = useState(0);
+  const compact = pageWidth > 0 && pageWidth < 640;
+  const shortLabels: Record<NotificationFrequency, string> = { weekly: 'Settimana', biweekly: '14 giorni', monthly: 'Mese' };
+  const frequencyOptions = notificationFrequencies.map((value) => ({ value, label: t(compact ? shortLabels[value] : notificationFrequencyLabels[value]),
+    accessibilityLabel: t(notificationFrequencyLabels[value]) }));
   const frequency = (label: string, value: NotificationFrequency, onChange: (value: NotificationFrequency) => void, disabled: boolean) => (
+    // Laid out like the switch row above it: same text style and padding, the choices on the right (below when narrow).
     <View style={styles.frequency}>
-      <Text variant="labelLarge" style={disabled ? muted : undefined}>{label}</Text>
-      <ChoiceChips label={label} options={frequencyOptions} value={value} disabled={disabled} onChange={(next) => next && onChange(next)} />
+      <Text variant="bodyLarge" style={[styles.frequencyLabel, disabled && muted]}>{label}</Text>
+      {/* Segmented buttons: always one line, full width under the label on narrow pages, beside it on wide ones. */}
+      <View style={[styles.frequencyChoices, compact && styles.frequencyChoicesNarrow]}>
+        <SegmentedButtons label={label} options={frequencyOptions} value={value} disabled={disabled} onChange={onChange} />
+      </View>
     </View>
   );
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={({ nativeEvent }) => setPageWidth(nativeEvent.layout.width)}>
       {opened?.kind === 'summary' && opened.from && opened.to &&
         <OpenedSummary notifications={notifications} from={opened.from} to={opened.to} onClose={onCloseOpened} />}
       <SystemNotifications push={notifications.push} />
       {backupReminders && <Card title={t("Promemoria backup")}>
         <Text variant="bodyMedium" style={muted}>{t("Ricevi un promemoria per esportare una copia dei tuoi dati.")}</Text>
         <SwitchRow label={t("Attiva promemoria backup")} value={p.backupEnabled} onChange={(backupEnabled) => change({ backupEnabled })}
-          supporting={t("Solo se i dati sono cambiati dall’ultimo backup confermato.")} />
+          supporting={t("Solo se i dati sono cambiati dall’ultimo backup.")} />
         {frequency(t("Frequenza del promemoria"), p.backupFrequency, (backupFrequency) => change({ backupFrequency }), !p.backupEnabled)}
         <Text variant="bodyMedium" style={muted}>{lastBackupAt
-          ? t("Ultimo backup confermato: {p0}", { p0: new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastBackupAt)) })
-          : t("Nessun backup confermato finora.")}</Text>
-        {exportedAt ? <View style={styles.block}>
-          <Text variant="titleSmall">{t("Hai salvato il backup?")}</Text>
-          <Text variant="bodyMedium" style={muted}>{t("Il download è stato avviato. Conferma solo dopo aver controllato che il file sia stato salvato.")}</Text>
-          <View style={styles.actions}>
-            <Button mode="contained-tonal" onPress={notifications.confirmBackup}>{t("Sì, è salvato")}</Button>
-            <Button mode="text" onPress={notifications.notConfirmed}>{t("Non ancora")}</Button>
-          </View>
-        </View> : backupDue && <View style={styles.block}>
-          <Text variant="bodyMedium">{t("I dati sono cambiati dall’ultimo backup confermato: è il momento di esportarne una copia.")}</Text>
+          ? t("Ultimo backup: {p0}", { p0: new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastBackupAt)) })
+          : t("Nessun backup finora.")}</Text>
+        {backupDue && <View style={styles.block}>
+          <Text variant="bodyMedium">{t("I dati sono cambiati dall’ultimo backup: è il momento di esportarne una copia.")}</Text>
           <View style={styles.actions}>
             <Button mode="contained-tonal" icon={icon(iconShapes.download)} loading={exporting} disabled={exporting} onPress={onExport}>{t("Esporta backup")}</Button>
             <Button mode="text" disabled={exporting} onPress={notifications.snoozeBackup}>{t("Ricordamelo tra 3 giorni")}</Button>
@@ -131,9 +134,7 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
         </View>}
       </Card>}
       <Card title={t("Riepilogo spese")}>
-        <Text variant="bodyMedium" style={muted}>{t("Ricevi un riepilogo periodico delle tue spese.")}</Text>
-        <SwitchRow label={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })}
-          supporting={t("Totale, numero di spese e categoria principale del periodo concluso. Abbonamenti esclusi.")} />
+        <SwitchRow label={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })} />
         {frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.summaryEnabled)}
       </Card>
     </View>
@@ -142,7 +143,11 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
 
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
-  frequency: { gap: spacing.sm, paddingHorizontal: spacing.lg },
+  frequency: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: spacing.lg,
+    rowGap: spacing.sm, minHeight: 56, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
+  frequencyLabel: { flexShrink: 1 },
+  frequencyChoices: { width: 420, maxWidth: '100%' },
+  frequencyChoicesNarrow: { width: '100%' },
   block: { gap: spacing.sm },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

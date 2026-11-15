@@ -10,7 +10,6 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { leadingIcon } from '../../components/FieldIcon';
 import type { Category } from '../../domain/category';
-import type { CategoryCreation } from '../categories/CategoryEditor';
 import type { ExpenseRecord } from '../../domain/contract';
 import { parseAmountMinor, type ExpenseData } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
@@ -27,13 +26,16 @@ import type { RemoteLists } from './useRemoteLists';
 type Props = {
   remote: RemoteLists;
   categories: readonly Category[];
+  // Preferred category for new lists (Settings), '' for none.
+  defaultCategoryId: string;
   expenses: readonly ExpenseRecord[];
   fundChoices: readonly FundChoice[];
   defaultFundId: string;
   // Registration needs the server (online, nothing pending, not from cache); checklist edits do not.
   canRegister: boolean;
   notify: (message: string) => void;
-  categoryCreation: CategoryCreation;
+  // Display preference (Settings → Features): without it the archived lists are not offered at all.
+  showArchivedLists: boolean;
 };
 
 const fillTransition = transition(['transform'], 400);
@@ -42,7 +44,7 @@ const fillTransition = transition(['transform'], 400);
 // The page draws its own header, so the open list's name is the page title.
 export const ListsPage = memo(ListsPageView);
 
-function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundId, canRegister, notify, categoryCreation }: Props) {
+function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundChoices, defaultFundId, canRegister, notify, showArchivedLists }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -61,7 +63,7 @@ function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundI
   useEffect(() => { if (openId && !open && seen.current === openId) setOpenId(null); }, [openId, open]);
   const muted = { color: colors.onSurfaceVariant };
 
-  const editor = editing && <ListEditor record={editing === 'new' ? undefined : editing} categories={categories} categoryCreation={categoryCreation} notify={notify} close={() => setEditing(null)}
+  const editor = editing && <ListEditor record={editing === 'new' ? undefined : editing} categories={categories} defaultCategoryId={defaultCategoryId} close={() => setEditing(null)}
     onSave={(name, categoryId) => {
       if (editing === 'new') {
         const id = remote.createList({ name, category_id: categoryId });
@@ -76,7 +78,7 @@ function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundI
   if (open) return <>
     <ListDetail key={open.id} list={open} items={remote.itemsFor(open.id)} state={listState(open, expenseIds)} remote={remote} categories={categories}
       expense={open.expense_id ? expenses.find((e) => e.id === open.expense_id) : undefined}
-      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={canRegister} notify={notify} categoryCreation={categoryCreation}
+      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={canRegister} notify={notify}
       onBack={() => setOpenId(null)} onEdit={() => setEditing(open)} onOpen={setOpenId} />
     {editor}
   </>;
@@ -126,7 +128,7 @@ function ListsPageView({ remote, categories, expenses, fundChoices, defaultFundI
       </View>}
       {active.length > 0 && <View role="list" accessibilityLabel={t("Liste attive")} style={styles.list}>{active.map(card)}</View>}
       {remote.ready && remote.lists.length > 0 && active.length === 0 && <Text variant="bodyMedium" style={muted}>{t("Nessuna lista attiva.")}</Text>}
-      {archived.length > 0 && <View style={styles.list}>
+      {showArchivedLists && archived.length > 0 && <View style={styles.list}>
         <Button mode="text" style={styles.start} aria-expanded={showArchived} onPress={() => setShowArchived(!showArchived)}
           icon={({ size, color }) => <SvgIcon shape={showArchived ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>
           {t("Liste archiviate ({p0})", { p0: archived.length })}</Button>
@@ -158,10 +160,10 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
 type DetailProps = {
   list: SyncedList; items: readonly SyncedListItem[]; state: ListState; expense?: ExpenseRecord; remote: RemoteLists;
   categories: readonly Category[]; fundChoices: readonly FundChoice[]; defaultFundId: string; canRegister: boolean;
-  notify: (message: string) => void; categoryCreation: CategoryCreation; onBack: () => void; onEdit: () => void; onOpen: (id: string) => void;
+  notify: (message: string) => void; onBack: () => void; onEdit: () => void; onOpen: (id: string) => void;
 };
 
-function ListDetail({ list, items, state, expense, remote, categories, fundChoices, defaultFundId, canRegister, notify, categoryCreation, onBack, onEdit, onOpen }: DetailProps) {
+function ListDetail({ list, items, state, expense, remote, categories, fundChoices, defaultFundId, canRegister, notify, onBack, onEdit, onOpen }: DetailProps) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
   const editable = state === 'active';
@@ -290,7 +292,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
         onSave={(next) => remote.updateItem(editingItem, { name: next })}
         onDelete={() => remote.removeItem(editingItem)} />}
       {registering && <RegisterListDialog list={list} initialAmount={totalText} items={items} categories={categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
-        canRegister={canRegister} error={remote.error} close={() => setRegistering(false)} categoryCreation={categoryCreation} notify={notify}
+        canRegister={canRegister} error={remote.error} close={() => setRegistering(false)}
         onRegister={async (expenseId: string, data: ExpenseData, remember: boolean) => {
           const saved = await remote.register(list, expenseId, data, remember);
           if (saved) notify("Spesa registrata: la lista è stata archiviata.");

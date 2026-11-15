@@ -3,8 +3,7 @@ import { useMemo, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import type { Category } from '../../domain/category';
-import { expensePolicy } from '../../domain/policy';
-import { Button } from '../../components/Button';
+import { clipToLength, expensePolicy } from '../../domain/policy';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DateField } from '../../components/DateField';
 import { SelectField } from '../../components/SelectField';
@@ -24,12 +23,6 @@ type Props = {
   dense?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
-  // Shown as an action when there are no categories yet (opens the Categories section).
-  onCreateCategory?: () => void;
-  // Creates a category in place (new-expense form): last row of the picker and the empty-archive action,
-  // shown disabled with `addCategoryDisabled` (offline: the save needs the server).
-  onAddCategory?: () => void;
-  addCategoryDisabled?: boolean;
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
@@ -37,7 +30,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
 // Every field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, onCreateCategory, onAddCategory, addCategoryDisabled = false, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -65,7 +58,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
           multiline numberOfLines={dense ? 2 : 4} style={[styles.description, dense && styles.denseDescription]}
-          onChangeText={(value) => onChange('description', value)} onBlur={() => onBlur('description')}
+          onChangeText={(value) => onChange('description', clipToLength(value, expensePolicy.maxDescriptionLength))} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {(errors.description || length > 0) && <View style={styles.helperRow}>
           <HelperText type="error" visible={Boolean(errors.description)} accessibilityRole="alert" style={styles.helper}>{t(errors.description ?? ' ')}</HelperText>
@@ -81,14 +74,13 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
         <View style={[styles.empty, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label={t("Categoria")}>
           <View style={styles.emptyText}>
             <Text variant="titleSmall">{t("Nessuna categoria")}</Text>
-            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Serve almeno una categoria per salvare la spesa.")}</Text>
+            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Serve almeno una categoria per salvare la spesa: creala nella pagina Categorie.")}</Text>
           </View>
-          {(onAddCategory ?? onCreateCategory) && <Button mode="contained-tonal" onPress={onAddCategory ?? onCreateCategory} disabled={disabled || (Boolean(onAddCategory) && addCategoryDisabled)}>{t("Crea categoria")}</Button>}
           {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.categoryId)}</HelperText>}
         </View>
       ) : (
         <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
-          disabled={disabled} error={errors.categoryId} action={onAddCategory && { label: t("Nuova categoria"), onPress: onAddCategory, disabled: addCategoryDisabled }} />
+          disabled={disabled} error={errors.categoryId} />
       )}
       {extra ? <View style={[styles.extra, dense && styles.denseExtra]}>{extra}</View> : null}
     </View>

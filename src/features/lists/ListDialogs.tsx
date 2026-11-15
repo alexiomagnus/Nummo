@@ -6,36 +6,26 @@ import { Button } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction } from '../../components/DeleteAction';
 import { SelectField } from '../../components/SelectField';
-import type { Category, CategoryIcon } from '../../domain/category';
+import type { Category } from '../../domain/category';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listNameError } from '../../domain/shoppingList';
-import { CategoryEditor, type CategoryCreation } from '../categories/CategoryEditor';
+import { existingCategory } from '../categories/preferredCategories';
 import { useI18n } from '../../i18n/I18nProvider';
 import { inputOutline, layout, spacing } from '../../theme/tokens';
 
 // New list or rename: name and the category proposed when the list is registered.
-export function ListEditor({ record, categories, categoryCreation, notify, onSave, close }: {
-  record?: SyncedList; categories: readonly Category[]; categoryCreation: CategoryCreation; notify: (message: string) => void;
+export function ListEditor({ record, categories, defaultCategoryId = '', onSave, close }: {
+  record?: SyncedList; categories: readonly Category[]; defaultCategoryId?: string;
   onSave: (name: string, categoryId: string | null) => boolean; close: () => void;
 }) {
   const { t } = useI18n();
   const [name, setName] = useState(record?.name ?? '');
-  // No «no category» choice: the list's own category when it still exists, otherwise the first one of the picker. Derived
-  // at render, so categories that arrive after the dialog opened (or a deleted one) still leave a valid selection.
+  // No «no category» choice: the list's own category when it still exists, otherwise the preferred one (Settings), otherwise
+  // the first one of the picker. Derived at render, so categories that arrive after the dialog opened (or a deleted one)
+  // still leave a valid selection.
   const [chosen, setCategoryId] = useState<string | null>(record?.category_id ?? null);
-  const categoryId = chosen && categories.some((c) => c.id === chosen) ? chosen : categories[0]?.id ?? null;
+  const categoryId = existingCategory(chosen ?? '', categories) || existingCategory(defaultCategoryId, categories) || (categories[0]?.id ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [tried, setTried] = useState(false);
-  // The name typed so far stays as it is: only the category changes, and only after the server confirmed the new one.
-  const createCategory = async (categoryName: string, icon: CategoryIcon | null) => {
-    setTried(true);
-    const id = await categoryCreation.create(categoryName, icon);
-    if (!id) return false;
-    setCategoryId(id);
-    notify("Categoria creata.");
-    return true;
-  };
   const save = () => {
     const problem = listNameError(name);
     setError(problem);
@@ -43,25 +33,21 @@ export function ListEditor({ record, categories, categoryCreation, notify, onSav
     if (!problem && onSave(name, categoryId)) close();
   };
   const options = categories.map((c) => ({ value: c.id, label: c.label, icon: c.icon ? <CategoryGlyph icon={c.icon} size={20} /> : undefined }));
-  return <><Portal><Dialog visible onDismiss={close} style={styles.dialog}>
+  return <Portal><Dialog visible onDismiss={close} style={styles.dialog}>
     <Dialog.Title>{record ? t("Modifica lista") : t("Nuova lista")}</Dialog.Title>
     <Dialog.Content style={styles.content}>
       <View>
-        <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome della lista")} value={name} autoFocus error={Boolean(error)}
+        <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome della lista")} value={name} error={Boolean(error)}
           onChangeText={(value) => { setName(value); setError(null); }} onSubmitEditing={save} accessibilityLabel={t("Nome della lista, obbligatorio")} />
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </View>
-      <SelectField label={t("Categoria predefinita")} options={options} value={categoryId ?? ''} onChange={setCategoryId}
-        action={{ label: t("Nuova categoria"), onPress: () => { setTried(false); setCreating(true); }, disabled: !categoryCreation.enabled }} />
+      <SelectField label={t("Categoria predefinita")} options={options} value={categoryId ?? ''} onChange={setCategoryId} />
     </Dialog.Content>
     <Dialog.Actions>
       <Button style={styles.listAction} onPress={close}>{t("Annulla")}</Button>
       <Button style={styles.listAction} mode="contained" onPress={save}>{record ? t("Salva") : t("Crea")}</Button>
     </Dialog.Actions>
-  </Dialog></Portal>
-  {creating && <CategoryEditor categories={categories} ready={categoryCreation.enabled} error={tried ? categoryCreation.error : null}
-    onSave={createCategory} close={() => setCreating(false)} />}
-  </>;
+  </Dialog></Portal>;
 }
 
 // Rename or delete one product. Ticking happens in the row itself.
@@ -80,7 +66,7 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
     <Dialog.Title>{t("Modifica prodotto")}</Dialog.Title>
     <Dialog.Content style={styles.content}>
       <View>
-        <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Prodotto")} value={name} autoFocus error={Boolean(error)}
+        <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Prodotto")} value={name} error={Boolean(error)}
           onChangeText={(value) => { setName(value); setError(null); }} onSubmitEditing={save} accessibilityLabel={t("Nome del prodotto, obbligatorio")} />
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </View>

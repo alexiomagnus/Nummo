@@ -7,7 +7,7 @@ const params = new URL(self.location.href).searchParams;
 const pushService = params.get('push') || '';
 const texts = {
   it: {
-    backup: { title: 'Promemoria backup', body: 'I dati di Nummo sono cambiati dall’ultimo backup confermato. Tocca per esportarne una copia.' },
+    backup: { title: 'Promemoria backup', body: 'I dati di Nummo sono cambiati dall’ultimo backup. Tocca per esportarne una copia.' },
     summary: { title: 'Riepilogo spese pronto', body: 'Il riepilogo {period} è pronto. Tocca per vederlo.' },
     test: { title: 'Notifica push di prova', body: 'Arrivata dal servizio di notifiche: funzionano anche ad app chiusa.' },
     local: { title: 'Notifica di prova', body: 'Così appariranno le notifiche di Nummo su questo dispositivo.' },
@@ -15,7 +15,7 @@ const texts = {
     snooze: 'Ricordamelo tra 3 giorni', period: 'dal {from} al {to}', months: ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'],
   },
   en: {
-    backup: { title: 'Backup reminder', body: 'Your Nummo data changed since the last confirmed backup. Tap to export a copy.' },
+    backup: { title: 'Backup reminder', body: 'Your Nummo data changed since the last backup. Tap to export a copy.' },
     summary: { title: 'Spending summary ready', body: 'Your summary {period} is ready. Tap to see it.' },
     test: { title: 'Test push notification', body: 'Delivered by the notification service: they work even with the app closed.' },
     local: { title: 'Test notification', body: 'This is how Nummo notifications look on this device.' },

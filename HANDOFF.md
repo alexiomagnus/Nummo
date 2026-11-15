@@ -1,36 +1,204 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 14 novembre 2026
+## Stato corrente — 15 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` a `8d9f225` (Web Push) più il commit di questa fase (barra mobile, ciclo di import, icona dei campi,
-  Impostazioni in due colonne, segmenti, Liste/Spese/Notifiche/accesso del 14 novembre), pubblicato su `origin/main`
-  con autorizzazione il 14 novembre sera. Codice in `f77f42a`.
-- **Produzione.** Hosting pubblicato dall'utente il 14 novembre con il push (commit non registrato) e, con autorizzazione,
-  di nuovo con `npm run deploy:hosting` su `f77f42a` (riuscito, sezione più recente). Worker
-  `nummo-push` attivo su Cloudflare. `firestore.rules` è cambiato dopo l'ultima pubblicazione Rules registrata (icone
-  rimosse in `d7e1504`, `key` aggiunta in `6956a56`): pubblicazione separata, con autorizzazione, dopo il controllo degli
-  ID icona rimossi nei dati; fino ad allora in Avanzata una categoria `key` viene rifiutata dal cloud.
-- **Verifiche il 14 novembre sera.** `npm run check` OK: typecheck, **417/417** test, build demo. Suite SDK/Rules e
-  hybrid non rieseguite (Rules, Firestore e `DataStore` invariati).
+- **Git.** `main` = `origin/main` a `336ca60` (campi senza `<button>` annidati, slot di «Nuova spesa» `inert`), dopo
+  `b12ba59` (HANDOFF) e `f77f42a`. Modifiche locali non committate di questa fase: focus dei dialoghi su touch e
+  riallineamento documentale (sezione più recente).
+- **Produzione.** Hosting pubblicato con autorizzazione con `npm run deploy:hosting` su `f77f42a`: le correzioni di
+  `336ca60` e le modifiche locali **non sono online**. Worker `nummo-push` attivo su Cloudflare. `firestore.rules` è
+  cambiato dopo l'ultima pubblicazione Rules registrata (8 novembre; icone rimosse in `d7e1504`, `key` aggiunta in
+  `6956a56`): pubblicazione separata, con autorizzazione, dopo il controllo degli ID icona rimossi nei dati; fino ad
+  allora in Avanzata una categoria `key` viene rifiutata dal cloud.
+- **Verifiche.** Vedi la sezione più recente. Suite SDK/Rules e hybrid non rieseguite da `f77f42a` (Rules, Firestore e
+  `DataStore` invariati).
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
   `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
+- **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, pubblicazione Hosting e Rules
   (solo con autorizzazione).
 
-## Impostazioni: due colonne su desktop, Colore e Carattere a sinistra — 14 novembre 2026
+## Solo notifiche di sistema (fase 2), backup contato al download, ritocchi — 15 novembre 2026
 
-- Su richiesta: `SettingsPage` su pagina larga (da 2 × 360 + 32 = 752 px effettivi, prima 872) mostra due colonne
-  indipendenti, poi invertite su richiesta: Colore e Carattere a sinistra, Lingua e Tema a destra (ordine del DOM
-  scambiato solo su pagina larga, così focus da tastiera e lettura seguono la vista); Stile delle icone e Funzionalità
-  seguono a tutta larghezza. Su smartphone ordine invariato, una colonna. AGENTS aggiornato.
-- `npm run check` OK (416/416, build demo). Chromium headless sulla build demo (schermata di scelta → Impostazioni):
-  screenshot 1280 scuro (due colonne) e 412 (una colonna) osservati, nessun overflow orizzontale a 1280/1024/412.
-  Con drawer/rail del workspace non provato nel browser; nessun commit.
+- **Avvisi dentro l'app eliminati** su richiesta («voglio solo le notifiche mediante il sistema operativo»): rimossi
+  `NotificationCards.tsx` e il suo montaggio, il controllo ogni 15 minuti, `dueNotifications`/`summaryDue` (con i test).
+  Restano la pagina Notifiche (interruttori, frequenze, «Esporta backup»/«Ricordamelo tra 3 giorni» quando il promemoria
+  è dovuto, riepilogo del periodo aperto da una notifica) e gli ascoltatori di ritorno in primo piano.
+- **«Hai salvato il backup?» eliminato**: il download del backup completo (Notifiche o Archiviazione e backup) conta come
+  backup (`recordBackup`, ex `confirmBackup`). Cambia la regola precedente «mai al solo avvio del download»: AGENTS,
+  README, `docs/notifiche-push.md` (fase 2 segnata come eseguita), `docs/architecture.md`, testi «confermato» tolti da
+  pagina, `sw.js` e Guida («Avvisi e promemoria» ora dice che gli avvisi arrivano come notifiche del dispositivo se attivate).
+- Tolta poi, su richiesta, la nota «Può accedere solo il proprietario di questo Nummo.» sotto «Accedi con Google».
+  Schermata di accesso resa omogenea: i due pulsanti in un solo gruppo (niente Card attorno ad «Accedi con Google»),
+  stessa larghezza e altezza 48, spazio 12 tra loro; verificata in Chromium a 1280 px (480×48 e 478×48, nessun errore JS).
+- Spese → dettagli di una spesa singola più compatti (`ExpenseList`): campi larghi quanto il testo, affiancati (spazio 32),
+  «Modifica» spinto a destra sulla stessa riga quando c'è spazio, altrimenti a capo; prodotti e ripetizione restano a tutta
+  riga. Chromium (Standard, spesa di prova in profilo temporaneo poi cancellato): dettagli alti 75 px su una riga sia a 1280
+  sia a 412 px, nessun errore JS. Abbonamenti (`SubscriptionList`) invariati.
+  Poi, per le spese da lista: «Prodotti acquistati» occupa lo spazio rimasto sulla riga (non più tutta la riga), così su
+  desktop Data, Categoria, Prodotti e «Modifica» stanno su una riga (75 px); su smartphone «Modifica» sale accanto a Data e
+  Categoria e i prodotti vanno sotto (127 px, prima 179). Verificato in Chromium con una lista di 6 prodotti registrata in
+  un profilo temporaneo (Standard), nessun errore JS.
+- **Creazione di categorie dai moduli abbandonata** su richiesta: tolta la voce «Nuova categoria» in fondo al selettore e il
+  pulsante «Crea categoria» dello stato vuoto in Nuova spesa, Nuova/Modifica lista e Registra spesa (Liste). Rimossi
+  `CategoryCreation`, la prop `action` di `SelectField` (non più usata), le props `onCreateCategory`/`canCreateCategory`/
+  `categoryError` di `ExpenseForm`, `onAddCategory` di `ExpenseFields`, `categoryCreation`/`notify` dei dialoghi di Liste.
+  Senza categorie lo stato vuoto dice «Serve almeno una categoria per salvare la spesa: creala nella pagina Categorie.».
+  Le categorie si creano solo nella pagina Categorie (invariata, `CategoryEditor` resta per la modifica). `npm run check`
+  OK (422/422, build demo); non verificato nel browser.
+- Abbonamenti (`SubscriptionList`): «Metti in pausa» / «Riattiva» spostati al centro, tra «Annulla abbonamento» e
+  «Modifica» (per un abbonamento annullato: Riattiva, Modifica). Stili e etichette brevi su smartphone invariati.
+  `npm run check` OK; non verificato nel browser.
+- Fondo preferito: nuova sezione «Fondo preferito» nelle Impostazioni (`funds/PreferredFundCard.tsx`, sotto «Categorie
+  preferite», solo con almeno un fondo attivo; selettore «Nuova spesa» con «Nessuno» + fondi attivi), stessa chiave
+  `nummo.defaultFund.v1.<uid>`. Tolto dalle schede di Fondi il pulsante «Usa come predefinito»/«Togli come predefinito»;
+  il segno sulla scheda ora dice «Preferito». Archiviare il fondo preferito lo toglie ancora come prima. Traduzioni non
+  più usate rimosse. `npm run check` OK (422/422). Chromium (Standard, profilo temporaneo): fondo «Risparmi» creato,
+  pulsante assente, sezione presente con «Nessuno»/«Risparmi», scelta salvata per `local`, badge in Fondi, Nuova spesa
+  propone «Risparmi»; nessun errore JS.
+- Fondi: tolta dalla scheda del fondo la nota «Un fondo con movimenti o spese collegate non si può eliminare: archivialo…»
+  (resta l'assenza di «Elimina» per i fondi in uso). Nuova icona `NoFundAvatar` (`FundAvatar.tsx`: cerchio tratteggiato
+  `outline` con trattino) per «Nessun fondo» nel campo Fondo e per «Nessuno» in «Fondo preferito». `npm run check` OK;
+  Chromium: campo Fondo di Nuova spesa con l'icona accanto a «Nessun fondo», nessun errore JS.
+- Descrizione della spesa (`ExpenseFields`: Nuova spesa, Modifica, Registra spesa): la scrittura e l'incolla si fermano a
+  100 caratteri (`clipToLength` in `domain/policy.ts`, conteggio per code point come il contatore; emoji = 1). Test in
+  `expense.test.ts` (**423/423**). Chromium: 200 + 5 caratteri inseriti → campo a 100, contatore «100/100», nessun
+  messaggio d'errore. Altri campi con limite (nomi di lista, prodotto, fondo, categoria) invariati.
+- Notifiche: tolto il testo di supporto «Totale, numero di spese e categoria principale del periodo concluso. Abbonamenti
+  esclusi.» sotto «Attiva riepilogo spese».
+- Notifiche, «Frequenza del promemoria/riepilogo»: riga omogenea all'interruttore sopra (stesso testo `bodyLarge`, padding
+  e altezza minima 56), scelte a destra su desktop; su smartphone sotto l'etichetta con etichette brevi «Settimana»,
+  «14 giorni», «Mese» su una riga (nome accessibile completo: nuovo campo facoltativo `accessibilityLabel` di
+  `ChoiceChips`). Chromium 1280 e 412 px osservati, nessun errore JS. **Superato subito dopo:** a 360 px le etichette
+  brevi andavano ancora a capo; la frequenza usa ora `SegmentedButtons` (una riga, 40 dp), larghi 420 a destra
+  dell'etichetta su pagina larga, a tutta larghezza sotto l'etichetta sotto i 640 px di pagina **misurata** (non la
+  classe di finestra), con etichette brevi e nome accessibile completo. `ChoiceChips` riportato com'era.
+  Chromium: 360 px con emulazione touch e 1280 px osservati, una riga, nessun errore JS.
+- Impostazioni: ordine ora **Lingua, Carattere, Tema** (sinistra) e Colore (destra), uguale su smartphone; verificato a
+  1280 e 412 px.
+- Barra inferiore che «sparisce e riappare» toccando un campo (segnalata in emulazione desktop): misurata con emulazione
+  touch a 360 px, nascosta al tocco e di nuovo visibile a 800 ms. È il comportamento previsto: senza tastiera virtuale
+  (emulazione desktop, tastiera fisica) l'anticipo scade dopo 800 ms e la barra torna; su telefono la tastiera riduce il
+  viewport e la barra resta nascosta finché è aperta. Nessuna modifica; da confermare su telefono reale.
+- Categorie: la conferma di eliminazione mostra ora «L’operazione non può essere annullata.» (traduzione già presente).
+- Altri ritocchi richiesti: Impostazioni nell'ordine Tema, Lingua, Carattere (sinistra) e Colore (destra), uguale su
+  smartphone; «Fatto» un po' più piccolo (48 dp, etichetta 16); tolta da «Questo Nummo è privato» la riga con l'UID
+  per chi installa; in Aggiungi/Trasferisci dei Fondi il segmento «Giroconto» diventa **«Spostamento»** (EN «Transfer»).
+- Verifiche: `npm run check` OK (typecheck, **422/422**, build demo); `git diff --check` OK. Chromium headless (Standard):
+  1280 e 412 px ordine Tema, Lingua, Carattere, Colore; «Fatto» 111×48; nessun errore JS. Non provati nel browser: pagina
+  Notifiche senza avvisi, download che aggiorna «Ultimo backup», dialogo dei movimenti. Hosting non ripubblicato
+  (`sw.js` cambiato: i testi nuovi arrivano dopo la pubblicazione). Nessun commit.
+
+## Impostazioni riordinate, «Fatto» più evidente, budget nascosti ovunque, liste archiviate — 15 novembre 2026
+
+- Su richiesta:
+  - Impostazioni: ordine Tema, Carattere, Lingua (colonna sinistra su desktop), poi Colore (colonna destra); su smartphone
+    stessa sequenza in una colonna.
+  - «Fatto» delle pagine del menu account: nuovo `components/DoneButton.tsx`, pillola `contained-tonal` alta 52 con
+    etichetta 17/600 (prima pulsante di testo); usato da `SettingsPage` e dall'intestazione di Categorie, Notifiche,
+    Archiviazione e backup (`Workspace.tsx`).
+  - Notifiche: tolti «Restano gli avvisi dentro Nummo.» (due stati delle notifiche di sistema), «Ricevi un riepilogo
+    periodico delle tue spese.» e «(consigliato)» dalla frequenza settimanale.
+  - Spese → dettagli di una spesa da lista: prodotti uno dopo l'altro senza larghezza minima di 140 px (spazio 12).
+  - Funzionalità: nuovo interruttore «Mostra liste archiviate» (`showArchivedLists` in `nummo.preferences.v1`,
+    predefinito acceso); spento, la pagina Liste non offre più «Liste archiviate (n)». Nessun dato cambia.
+  - **Soluzione A** sui budget: con «Mostra budget mensile» spento sono nascosti anche i misuratori «Budget di …» sulle
+    schede dei fondi e «Budget residuo del mese» / «Budget del mese superato» sotto il campo Fondo (Nuova spesa, modifica,
+    registrazione lista). I piani restano salvati; testo dell'interruttore aggiornato.
+- Domande poste all'utente (la prima risolta nella sezione sopra: avvisi eliminati), **senza modifiche**: eliminare gli avvisi dentro Nummo (`NotificationCards`, ancora attivi
+  quando le notifiche di sistema non sono attive, più «Hai salvato il backup?» dopo ogni download); promemoria backup in
+  Avanzata (oggi solo Standard per scelta, AGENTS «Notifiche»).
+- Verifiche: `npm run check` OK (typecheck, **423/423**, build demo). Chromium headless sul server di sviluppo
+  (Standard): 1280 px Tema/Carattere/Lingua a x 280, Colore a x 759; 412 px ordine Tema, Carattere, Lingua, Colore;
+  «Fatto» 125×52; quattro interruttori in Funzionalità compreso «Mostra liste archiviate»; nessun errore JS. Non provati
+  nel browser: Liste con interruttore spento, budget nascosti in Fondi e sotto il campo Fondo, dettagli prodotti.
+  Nessun commit.
+
+## Categorie preferite, barre di scorrimento dei dialoghi, Impostazioni e Analisi — 15 novembre 2026
+
+- Su richiesta:
+  - Tolta in Modifica serie la nota «Il fondo vale per tutti i pagamenti della serie, anche quelli già effettuati.»
+    (`ExpenseEditor`); comportamento invariato.
+  - Nei dialoghi e nei fogli la barra di scorrimento compare solo mentre si scorre e scompare ~0,9 s dopo:
+    `observeScrolling` (`src/theme/viewport.ts`, attributo `data-scrolling` sull'elemento scorso) e due regole CSS in
+    `GlobalStyle` limitate a `[role=dialog]`. Nessuna `transition` CSS (una regola su tutti gli elementi sovrascriverebbe
+    quelle di RN Web). Le pagine conservano la barra sottile sempre visibile.
+  - Impostazioni: nuova sezione **«Categorie preferite»** sotto Funzionalità, con due selettori «Nuova spesa» e «Nuove
+    liste» (prima voce «Nessuna»). Visibile solo con un archivio aperto (le categorie vengono dal workspace tramite il
+    nuovo argomento `archiveSections` di `renderSettings`), non nella scelta modalità né da disconnessi. Salvata per
+    archivio in `nummo.preferredCategories.v1.<uid>` (solo ID, validati in lettura). Nuova spesa parte dalla preferita
+    finché la bozza non ne ha una propria (anche dopo ogni salvataggio); Nuova/Modifica lista: categoria della lista, poi
+    preferita, poi la prima. Una categoria eliminata viene ignorata.
+  - Analisi: rimosso il periodo «Ultimi 6 mesi» (`periods` in `domain/history.ts`); una scelta salvata torna al periodo
+    predefinito (Questo mese).
+  - Impostazioni su desktop: colonne di nuovo **Lingua/Tema a sinistra, Colore/Carattere a destra** (stesso ordine del DOM
+    anche su smartphone).
+- Discusso, senza modifiche: cosa fare dei budget dei fondi quando «Mostra budget mensile» è spento (oggi restano visibili
+  i misuratori sulle schede dei fondi e il «Budget residuo del mese» sotto il campo Fondo).
+- Verifiche: `npm run check` OK (typecheck, **422/422** test, build demo; nuovi `preferredCategories` 2, caso in
+  `viewport`, preferenze con «half-year» → predefinito). Chromium headless/CDP sul server di sviluppo (Standard, profilo
+  temporaneo): Impostazioni a 1280 px con Lingua (x 280) e Tema a sinistra, Colore (x 759) e Carattere a destra, «Categorie
+  preferite» sotto Funzionalità, opzioni «Nessuna» + 5 predefinite; scelta «Trasporti» salvata per `local` e mostrata in
+  Nuova spesa; «Ultimi 6 mesi» assente; Nuovo fondo a 1280×420: `scrollbar-color` trasparente a riposo, colore
+  `outline` durante lo scorrimento, di nuovo trasparente dopo la pausa; nessun errore JS. Non provati: Liste nel browser,
+  Avanzata, smartphone reali (sugli overlay Android/iOS le barre sono già a scomparsa). Nessun commit.
+
+## Avanzata: schermata «Questo Nummo è privato» per account non autorizzati; `TODO.md` — 15 novembre 2026
+
+- Segnalato dall'utente: accedendo in Avanzata con un account Google diverso dal proprietario compariva l'area di lavoro
+  con «Dati non disponibili» e «Accesso negato: verifica UID del proprietario e regole Firestore del progetto.».
+  Discussa la situazione (BYOF: il sito pubblicato usa il progetto del proprietario) e scelta la soluzione «a».
+- **Implementato:** `src/services/ownerAccess.ts` (`checkOwnerAccess`: una lettura dal server di `config/owner` dopo
+  l'accesso; `permission-denied` → `denied`, offline o altri errori → `unknown`, che non blocca). In `AdvancedRoot`
+  (`App.tsx`) il controllo parte insieme all'area di lavoro, senza ritardarne l'avvio; se rifiutato l'area di lavoro
+  viene smontata (listener fermati) e compare `AccessDenied` (`src/features/session/`): «Questo Nummo è privato»,
+  account usato, «Usa la modalità Standard» (esce e passa a Standard) ed «Esci», più una riga con l'UID per chi ha
+  installato la propria copia. Lo stesso schermo vale per il proprietario finché `config/owner` o le Rules mancano.
+  Testi: scelta della modalità («Per chi ha installato la propria copia di Nummo con Firebase…»), nota sotto «Accedi
+  con Google» («Può accedere solo il proprietario di questo Nummo.»), voce Avanzata della Guida. Traduzioni EN.
+  Nessuna modifica a Rules, `DataStore` o dati.
+- **`TODO.md`** nuovo in radice (citato in AGENTS): link di precompilazione di Nuova spesa, soluzione «c» (un unico
+  Firebase per tutti, con le decisioni di prodotto da prendere), open banking e import estratto conto solo valutati.
+- **Verifiche:** `npm run check` OK (typecheck, **419/419** test, build demo); `test:emulator` su porte dedicate
+  (Auth 19099, Firestore 18180, config temporanea in radice rimossa) **19/19**, nuovo caso: proprietario `owner`,
+  estraneo e anonimo `denied`. **Non verificato nel browser** (schermata, pulsanti, cambio a Standard) né in cloud con un
+  secondo account reale. Hosting non ripubblicato; nessun commit.
+
+## Fondi: note di aiuto rimosse, esempio «Es. Risparmi» — 15 novembre 2026
+
+- Su richiesta, tolte quattro scritte: in `FundEditor` «Vale dal mese corrente: i mesi passati restano come sono.» (modifica
+  del budget) e «Saldo iniziale e ricariche di una versione precedente restano conservati.»; in `MovementDialog` le note di
+  Trasferisci («Un trasferimento sposta denaro…») e Aggiungi («Un'entrata aggiunge denaro…»). Comportamento invariato: i
+  dati di saldo restano riscritti da `fundFromForm` e il budget vale ancora dal mese corrente. Senza la nota sul saldo, la
+  sezione budget compare solo con `showBudget` (prima anche per i fondi con saldo, pur vuota). Resta la nota sulle eccezioni.
+- Segnaposto del nome del fondo: «Es. Vacanze» → «Es. Risparmi» (EN «E.g. Savings»); traduzioni non più usate rimosse.
+- `npm run check` OK (418/418, build demo). Resa nel browser non verificata; nessun commit.
+
+## Dialoghi: niente tastiera automatica su touch; riallineamento documenti — 15 novembre 2026
+
+- Segnalato dall'utente su Android (screenshot di «Modifica spesa» in Spese): all'apertura di un dialogo la tastiera
+  virtuale copriva metà del pannello. Causa: `useFocusHandoff` (`Overlay.tsx`, usato da `AppDialog`, `AnchoredMenu`,
+  `BottomSheet`) dava il focus al primo elemento, anche a un campo di testo (Importo); in più `autoFocus` espliciti in
+  Nuova/Modifica lista e Modifica prodotto (`ListDialogs.tsx`).
+- Correzione: nuova regola pura `initialFocusAllowed` (`src/theme/viewport.ts`): su dispositivi touch-first
+  (`(hover: none) and (pointer: coarse)`) un campo scrivibile non riceve mai il focus all'apertura; lo prende il
+  contenitore dell'overlay (`tabindex="-1"`, senza contorno), così il focus lascia la pagina sotto, Tab raggiunge il
+  campo ed Escape chiude. Sul desktop invariato (focus sul primo campo); voci di menu e pulsanti invariati. Tolti gli
+  `autoFocus` di `ListDialogs.tsx` (sul desktop il focus al primo campo resta dato da `useFocusHandoff`). Test in
+  `tests/viewport.test.ts`.
+- Documenti: questa sezione di stato, sezioni del 15 novembre marcate come committate, ordine cronologico, nota
+  superata sulla Guida, versioni dei backup di prova, `docs/testing/README.md` («Archiviazione e backup»), traduzione
+  orfana «Dalla pagina Importa ed esporta…» rimossa da `en.ts`, regola della Guida in AGENTS precisata sulle notifiche.
+- Verifiche: `npm run check` OK (typecheck, **418/418** test, build demo); `git diff --check` OK. Chromium headless/CDP
+  sul server di sviluppo dell'utente (8081, Standard, profilo temporaneo, 412 px), Liste → «Nuova»: con emulazione touch
+  (`hover: none`/`pointer: coarse` veri, tocchi CDP) focus sul contenitore del dialogo (`DIV tabindex=-1`), nessun campo
+  attivo; senza touch focus sul campo «Nome della lista»; Escape chiude in entrambi i casi. Modifica spesa non provata
+  nel browser (stesso `AppDialog`). **Non provato su telefono reale** (tastiera virtuale vera). Nessun commit.
 
 ## Console: «Blocked aria-hidden» sul pulsante «Nuova spesa» — 15 novembre 2026
 
@@ -40,7 +208,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Chromium headless sul server di sviluppo (Standard, 412 px), pressione reale dopo Spese: prima della correzione a 60 ms il
   focus era su un `BUTTON` dentro un antenato `aria-hidden="true"` (condizione dell'avviso); dopo, focus su `BODY` e nessun
   antenato nascosto. L'avviso in sé non arriva via CDP: verificata la condizione, non il testo. `npm run check` OK.
-  Non committato né pubblicato.
+  Committato in `336ca60` e inviato a `origin/main`; Hosting non ripubblicato.
 
 ## Console: `<button>` annidato anche in SelectField — 15 novembre 2026
 
@@ -51,7 +219,17 @@ cronaca delle singole fasi e possono dire cose superate.
   (non sono dentro un altro pulsante).
 - Verifica in Chromium headless (profilo temporaneo, server di sviluppo 8081, Standard, 412 px): 0 `button button`,
   adornamenti resi come `DIV`, console con i soli avvisi React DevTools e `useNativeDriver`. `npm run check` OK (417/417).
-  Non committato né pubblicato.
+  Committato in `336ca60` e inviato a `origin/main`; Hosting non ripubblicato.
+
+## Impostazioni: due colonne su desktop, Colore e Carattere a sinistra — 14 novembre 2026
+
+- Su richiesta: `SettingsPage` su pagina larga (da 2 × 360 + 32 = 752 px effettivi, prima 872) mostra due colonne
+  indipendenti, poi invertite su richiesta: Colore e Carattere a sinistra, Lingua e Tema a destra (ordine del DOM
+  scambiato solo su pagina larga, così focus da tastiera e lettura seguono la vista); Stile delle icone e Funzionalità
+  seguono a tutta larghezza. Su smartphone ordine invariato, una colonna. AGENTS aggiornato.
+- `npm run check` OK (416/416, build demo). Chromium headless sulla build demo (schermata di scelta → Impostazioni):
+  screenshot 1280 scuro (due colonne) e 412 (una colonna) osservati, nessun overflow orizzontale a 1280/1024/412.
+  Con drawer/rail del workspace non provato nel browser; nessun commit.
 
 ## Commit, push e pubblicazione Hosting — 14 novembre 2026
 
@@ -169,6 +347,8 @@ cronaca delle singole fasi e possono dire cose superate.
 - Ritocchi al testo fornito: la nota sul cambio modalità cita «Archiviazione e backup» (non più Impostazioni) e gli avvisi dicono
   che non arrivano notifiche ad app chiusa e che il promemoria backup vale in Standard (il testo originale parlava di «notifiche
   invasive» e di backup per entrambe le modalità, non vero oggi).
+  Superato dalla fase Web Push dello stesso giorno: oggi la Guida dice che, con le notifiche di sistema attivate dalla
+  pagina Notifiche, gli avvisi arrivano anche ad app chiusa.
 - `npm run check` OK (413/413, build demo). Resa nel browser non verificata.
 
 ## Archiviazione e backup: sezione spostata dalle Impostazioni — 14 novembre 2026
@@ -1783,7 +1963,7 @@ screen reader, concorrenza tra due dispositivi.
    pubblicazione autorizzata, ricaricare l’app e verificare caricamento e sincronizzazione. Per prove CRUD cloud serve autorizzazione. Decidere conservazione o migrazione
    esplicita degli ID icona rimossi, con regressioni decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
-   unione/conflitto/sostituzione v4 dall'interfaccia, riepilogo ed esiti del ripristino, eccezioni di budget e
+   unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino, eccezioni di budget e
    sospensione ricarica, dialoghi Fondi/Liste a 320 px e in landscape, CSV in foglio di calcolo reale.
 3. **Collaudo dispositivi:** telefono reale (touch, tastiera virtuale, safe area, rotazione), screen reader, Tab/Invio
    su Blocchi e Ciambella, riduzione movimento; riprodurre i problemi UI mobile elencati sopra.

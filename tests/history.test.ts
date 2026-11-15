@@ -43,10 +43,9 @@ test('ordinamento per data e importo, stabile a parità', () => {
   assert.deepEqual(ids('amount-desc'), ['c', 'a', 'b']);
   assert.deepEqual(ids('amount-asc'), ['b', 'a', 'c']);
 });
-test('periodi: giorni del mese corrente e ultimi 6/12 mesi a cavallo d’anno', () => {
+test('periodi: giorni del mese corrente e ultimi 3/12 mesi a cavallo d’anno', () => {
   assert.equal(bucketsFor('month', '2026-02-10').length, 28);
-  assert.deepEqual(bucketsFor('half-year', '2026-03-15').map((bucket) => bucket.key),
-    ['2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03']);
+  assert.deepEqual(bucketsFor('quarter', '2026-02-15').map((bucket) => bucket.key), ['2025-12', '2026-01', '2026-02']);
   const year = bucketsFor('year', '2026-11-02');
   assert.equal(year.length, 12);
   assert.equal(year[0]!.from, '2025-12-01');

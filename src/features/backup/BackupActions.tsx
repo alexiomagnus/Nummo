@@ -27,7 +27,7 @@ export async function downloadBackup(backend: DataStore): Promise<string> {
 }
 type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: ImportPlan };
 
-// `onBackupDownloaded`: told when a full backup download has started (Standard mode: the reminder asks for confirmation).
+// `onBackupDownloaded`: told when a full backup download has started (Standard mode: it resets the backup reminder).
 export function BackupActions({ backend, enabled, onBackupDownloaded }: { backend: DataStore; enabled: boolean; onBackupDownloaded?: (at: string) => void }) {
   const { t } = useI18n();
   const theme = useTheme();

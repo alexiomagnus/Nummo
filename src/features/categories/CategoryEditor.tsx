@@ -19,9 +19,6 @@ type Props = {
   close: () => void;
 };
 
-// What a screen needs to offer «Nuova categoria» inside a picker without leaving its dialog: `create` resolves with the
-// new ID once the server confirmed it (null when not saved), `enabled` is false offline or before the data is ready.
-export type CategoryCreation = { create: (name: string, icon: CategoryIcon | null) => Promise<string | null>; enabled: boolean; error: string | null };
 
 // Name and icon of a category, the only data a category has; same validation for creation and editing.
 export function CategoryEditor({ record, categories, ready, error, onSave, close }: Props) {

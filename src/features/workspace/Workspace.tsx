@@ -35,7 +35,6 @@ import { makeBackup } from '../../domain/backup';
 import { backendMode, firestoreEmulator } from '../../services/backendConfig';
 import { BackupActions, download, downloadBackup } from '../backup/BackupActions';
 import { message } from '../expenses/useRemoteExpenses';
-import { NotificationCards } from '../notifications/NotificationCards';
 import { NotificationsPage } from '../notifications/NotificationsPage';
 import { useNotifications, type LocalArchive } from '../notifications/useNotifications';
 import { onNotificationOpened, type OpenedNotification } from '../../services/pushNotifications';
@@ -46,6 +45,10 @@ import type { ExpenseStore } from '../expenses/expenseStore';
 import { FundsPage } from '../funds/FundsPage';
 import { useRemoteFunds, type RemoteFunds } from '../funds/useRemoteFunds';
 import { readDefaultFund, writeDefaultFund } from '../funds/defaultFund';
+import { DoneButton } from '../../components/DoneButton';
+import { PreferredCategoriesCard } from '../categories/PreferredCategoriesCard';
+import { PreferredFundCard } from '../funds/PreferredFundCard';
+import { readPreferredCategories, writePreferredCategories, type PreferredCategories } from '../categories/preferredCategories';
 import type { FundChoice } from '../funds/FundField';
 import { hasBalanceData, monthOf, monthOverview } from '../../domain/funds';
 import { ListsPage } from '../lists/ListsPage';
@@ -79,7 +82,7 @@ type DashboardSettingsProps = {
 };
 
 // `renderSettings` draws the settings page (preferences live in App); `onDone` returns to the originating section.
-type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void) => ReactNode;
+type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode;
   // Storage section of the backup page (where the data is, protection, mode change), drawn by the app for the current mode.
   storage?: ReactNode };
 
@@ -212,7 +215,7 @@ type SectionsProps = DashboardSettingsProps & {
   subscriptions: ReturnType<typeof subscriptionSummaries>;
   renewals: ReturnType<typeof upcomingRenewals>; soon: number;
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
-  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void) => ReactNode; storage?: ReactNode; localArchive?: LocalArchive;
+  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode; storage?: ReactNode; localArchive?: LocalArchive;
 };
 
 function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, renewals, soon, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
@@ -223,15 +226,15 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const [listView, setListView] = useState<ListView>('expenses');
   const [defaultFundId, setDefaultFundId] = useState(() => readDefaultFund(uid));
   const changeDefaultFund = useCallback((id: string) => { setDefaultFundId(id); writeDefaultFund(uid, id); }, [uid]);
-  const createCategory = categoryState.createCategory;
-  const categoryCreationEnabled = categoryState.ready && online;
-  const categoryCreation = useMemo(() => ({ create: createCategory, enabled: categoryCreationEnabled, error: categoryState.error }),
-    [createCategory, categoryCreationEnabled, categoryState.error]);
+  const [preferred, setPreferred] = useState(() => readPreferredCategories(uid));
+  const changePreferred = useCallback((value: PreferredCategories) => { setPreferred(value); writePreferredCategories(uid, value); }, [uid]);
   // Balance now and remaining budget of this month, for the fund field of the forms (same figures as the Funds page).
   const fundSummary = useMemo(() => monthOverview({ funds: fundState.funds, movements: fundState.movements, expenses: store.expenses }, monthOf(today), today),
     [fundState.funds, fundState.movements, store.expenses, today]);
-  const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, balance: item.balance, remaining: item.remaining, tracksBalance: hasBalanceData(item.fund, fundState.movements) });
-  const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary]);
+  // «Mostra budget mensile» off: no remaining budget under the fund field either (the plans stay saved).
+  const showBudget = dashboardPreferences.showGeneralBudget;
+  const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, balance: item.balance, remaining: showBudget ? item.remaining : null, tracksBalance: hasBalanceData(item.fund, fundState.movements) });
+  const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary, showBudget]);
   const editorFundChoices = editing ? fundSummary.funds.filter((item) => !item.fund.archived || item.fund.id === editing.fund_id).map(choiceOf) : [];
   const fundsError = fundState.ready ? null : fundState.error;
   // Releasing the startup cover after 4 seconds enables navigation, not incomplete form controls.
@@ -272,7 +275,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   }, [seedable]);
   // Products bought, for the expenses that registered a shopping list (shown in their details).
   const listItems = useMemo(() => new Map(store.expenses.filter((e) => e.list_id).map((e) => [e.id, e.list_items])), [store.expenses]);
-  // In-app notifications (backup reminder in the Standard mode, spending summary in both).
+  // System notifications (backup reminder in the Standard mode, spending summary in both) and the Notifications page.
   const notifications = useNotifications({ scope: uid, expenses: store.expenses, categories: categoryState.categories,
     ready: !starting && store.ready && categoryState.ready, archive: localArchive });
   const [exporting, setExporting] = useState(false);
@@ -293,8 +296,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
     {section !== 'lists' && section !== 'settings' && <PageHeader title={heading}
       action={section === 'categories' || section === 'backup' || section === 'notifications' ? (
-        <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}
-          onPress={() => onNavigate(returnTo)}>{t("Fatto")}</Button>
+        <DoneButton onPress={() => onNavigate(returnTo)} />
       ) : undefined} />}
     {!!store.recovery?.length && (
       <Card style={[styles.alert, { backgroundColor: theme.colors.errorContainer }]}>
@@ -304,8 +306,6 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         </View>
       </Card>
     )}
-    {!starting && section !== 'settings' && section !== 'notifications' &&
-      <NotificationCards notifications={notifications} exporting={exporting} onExport={() => void exportFromReminder()} />}
     {backend.kind === 'firestore' && backendMode === 'hybrid' && firestoreEmulator && (
       <HybridConnectionNotice waiting={!synchronized && !error} endpoint={firestoreEmulator} />
     )}
@@ -314,9 +314,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
       {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
       <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
-        <ExpenseForm categories={categoryState.categories} onCreateCategory={categoryState.createCategory}
-          canCreateCategory={categoryState.ready && online} categoryError={categoryState.error} fundChoices={fundChoices} defaultFundId={defaultFundId}
-          store={formStore} />
+        <ExpenseForm categories={categoryState.categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
+          defaultCategoryId={preferred.expense} store={formStore} />
       </div>
     </View>
     <VisitedSection active={section === 'list' && !starting}>
@@ -337,13 +336,19 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
     </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} />}
-    <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} expenses={store.expenses}
-      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify} categoryCreation={categoryCreation} /></VisitedSection>
+    <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} defaultCategoryId={preferred.list} expenses={store.expenses}
+      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify}
+      showArchivedLists={dashboardPreferences.showArchivedLists} /></VisitedSection>
     <VisitedSection active={section === 'funds' && !starting}><FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
       defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify} showGeneralBudget={dashboardPreferences.showGeneralBudget} /></VisitedSection>
     <VisitedSection active={section === 'dashboard' && !starting}><Dashboard occurrences={occurrences} categories={categoryState.categories}
       preferences={dashboardPreferences} onChangePreferences={onChangeDashboardPreferences} /></VisitedSection>
-    {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo))}
+    {section === 'settings' && !starting && renderSettings?.(() => onNavigate(returnTo),
+      <>
+        <PreferredCategoriesCard categories={categoryState.categories} value={preferred} onChange={changePreferred} />
+        {fundState.funds.some((fund) => !fund.archived) && <PreferredFundCard funds={fundState.funds.filter((fund) => !fund.archived)}
+          value={defaultFundId} onChange={changeDefaultFund} />}
+      </>)}
     {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} opened={opened} onCloseOpened={() => setOpened(null)}
       exporting={exporting} onExport={() => void exportFromReminder()} />}
     {section === 'categories' && !starting && <>

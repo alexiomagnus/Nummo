@@ -35,6 +35,12 @@ export function isTextEntry(element: FocusTarget): boolean {
   return !nonTextInputs.has((element.type ?? 'text').toLowerCase()) && !element.readOnly && !element.disabled;
 }
 
+// Whether an overlay may move the focus to `element` on opening. On touch-first devices (no hover, coarse pointer) a
+// text field would bring up the on-screen keyboard over half of the dialog before the user has chosen a field.
+export function initialFocusAllowed(element: FocusTarget, touchFirst: boolean): boolean {
+  return !(touchFirst && isTextEntry(element));
+}
+
 // `update` hides navigation immediately; `onConfirmedChange` permits layout changes only after viewport confirmation.
 export function observeVirtualKeyboard(target: Window, update: (open: boolean) => void, onConfirmedChange?: (confirmed: boolean) => void): () => void {
   const visual = target.visualViewport;
@@ -108,6 +114,28 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
     doc.removeEventListener('pointerdown', touchEntry, true);
     doc.removeEventListener('pointercancel', touchAbandoned, true);
     doc.removeEventListener('scroll', touchAbandoned, true);
+  };
+}
+
+// Scrollbars of overlays appear only while their content scrolls: each scrolled element is marked with
+// `data-scrolling` and unmarked `delay` ms after its last scroll event (CSS in GlobalStyle draws the thumb).
+export const scrollingAttribute = 'data-scrolling';
+type ScrollMark = { setAttribute(name: string, value: string): void; removeAttribute(name: string): void };
+export function observeScrolling(doc: Pick<Document, 'addEventListener' | 'removeEventListener'>, delay = 900): () => void {
+  const timers = new Map<ScrollMark, ReturnType<typeof setTimeout>>();
+  const onScroll = (event: Event) => {
+    const target = event.target as Partial<ScrollMark> | null;
+    if (!target || typeof target.setAttribute !== 'function' || typeof target.removeAttribute !== 'function') return; // the document itself
+    const element = target as ScrollMark;
+    element.setAttribute(scrollingAttribute, '');
+    clearTimeout(timers.get(element));
+    timers.set(element, setTimeout(() => { timers.delete(element); element.removeAttribute(scrollingAttribute); }, delay));
+  };
+  doc.addEventListener('scroll', onScroll, true);
+  return () => {
+    doc.removeEventListener('scroll', onScroll, true);
+    for (const [element, timer] of timers) { clearTimeout(timer); element.removeAttribute(scrollingAttribute); }
+    timers.clear();
   };
 }
 

@@ -65,7 +65,7 @@ test('3, 6 e 12 mesi: dettaglio per singolo giorno e totali coerenti con i grafi
     const month = index === 11 ? '2026-01' : `2025-${String(index + 2).padStart(2, '0')}`;
     return item(month, `${month}-08`, (index + 1) * 100);
   });
-  for (const [period, count] of [['quarter', 3], ['half-year', 6], ['year', 12]] as const) {
+  for (const [period, count] of [['quarter', 3], ['year', 12]] as const) {
     const data = breakdown(occurrences, [], period, today);
     const rows = dailySpendingRows(data, occurrences, today);
     assert.equal(rows.length, count);

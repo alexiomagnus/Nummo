@@ -81,8 +81,6 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
         extra={fundChoices.length > 0 ? <View style={{ gap: spacing.xs }}>
           <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}
             onChange={(fundId) => { setDraft((d) => ({ ...d, fundId })); setErrors((e) => ({ ...e, fundId: undefined })); }} />
-          {series && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, paddingHorizontal: spacing.md }}>
-            {t("Il fondo vale per tutti i pagamenti della serie, anche quelli già effettuati.")}</Text>}
         </View> : undefined}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
       {record.first_payment_date && <TrialField existing enabled firstPaymentDate={draft.firstPaymentDate} startDate={draft.date || today}

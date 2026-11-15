@@ -1,7 +1,7 @@
 # Notifiche di sistema (Web Push)
 
-Stato al 14 novembre 2026: **fase 1** (sistema push implementato e verificato in locale; avvisi in-app ancora presenti
-come ripiego). La fase 2, cioè la rimozione degli avvisi in-app, è descritta in fondo e **non è ancora stata eseguita**.
+Stato al 15 novembre 2026: **fase 1** (sistema push, verificato in locale e pubblicato) e **fase 2** (rimozione degli
+avvisi in-app, su richiesta dell'utente) eseguite. Nummo avvisa solo con le notifiche di sistema.
 
 ## Come funziona
 
@@ -25,19 +25,18 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
 - **Testi generici, mai inventati.** Il messaggio porta solo tipo e date; il testo lo scrive `public/sw.js`:
   - Riepilogo: «Riepilogo spese pronto — Il riepilogo dal 9 novembre al 15 novembre è pronto. Tocca per vederlo.» Il riepilogo
     vero (totale, numero, categoria principale, abbonamenti esclusi) è calcolato **all'apertura**, sui dati attuali.
-  - Backup (solo Standard): «I dati di Nummo sono cambiati dall'ultimo backup confermato.» È vero per costruzione:
-    in Standard i dati cambiano solo con l'app aperta, e ogni cambio o conferma di backup ricalcola l'orario.
+  - Backup (solo Standard): «I dati di Nummo sono cambiati dall'ultimo backup.» È vero per costruzione:
+    in Standard i dati cambiano solo con l'app aperta, e ogni cambio o backup scaricato ricalcola l'orario.
 - **Regole mantenute**: riepilogo alle 9:00 (Europe/Rome) del giorno dopo la fine del periodo di calendario
   (settimana lunedì–domenica, blocchi di 14 giorni dal 1° gennaio 2024, mese), solo se il periodo contiene già almeno
   una spesa singola (abbonamenti esclusi), mai per periodi conclusi prima dell'attivazione. Promemoria backup
-  quando è passato l'intervallo dall'ultimo backup confermato (o dall'attivazione) e i dati sono cambiati, ripetuto a
+  quando è passato l'intervallo dall'ultimo backup (o dall'attivazione) e i dati sono cambiati, ripetuto a
   ogni intervallo finché l'app non lo annulla; mai tra le 21 e le 9. «Ricordamelo tra 3 giorni» c'è sia sulla
-  notifica (dove il sistema mostra le azioni: Chrome desktop/Android) sia nella pagina Notifiche. Il backup conta solo
-  dopo «Sì, è salvato».
+  notifica (dove il sistema mostra le azioni: Chrome desktop/Android) sia nella pagina Notifiche. Il backup conta al
+  download del backup completo, senza conferma (dal 15 novembre).
 - **Nessun duplicato**: un solo promemoria in attesa per tipo e sottoscrizione; un riepilogo già consegnato per quel
   periodo non viene rinviato; un backup già consegnato non viene anticipato da un nuovo invio degli orari; tag per tipo
-  nel sistema (`nummo-backup`, `nummo-summary`) e header `Topic` presso il servizio push. Con le notifiche di sistema
-  attive su un browser, gli avvisi in-app di quel browser sono spenti.
+  nel sistema (`nummo-backup`, `nummo-summary`) e header `Topic` presso il servizio push. Non esistono avvisi in-app.
 - **Errori**: endpoint scaduto (404/410) → sottoscrizione dimenticata; errore temporaneo → nuovo tentativo dopo 15 min,
   al massimo 5; dispositivi non più aperti da 120 giorni → dimenticati. `pushsubscriptionchange` → il service worker
   si reiscrive e sposta i promemoria (`/v1/renew`).
@@ -120,7 +119,7 @@ da sola alla riattivazione, sostituendo la vecchia sottoscrizione).
 | Firefox desktop/Android | Supportato (servizio Mozilla); il permesso va chiesto da un gesto, come fa la pagina. |
 | Safari macOS 16+ | Supportato (servizio Apple); azioni sulla notifica non mostrate. |
 | iPhone/iPad (iOS/iPadOS 16.4+) | **Solo con Nummo aggiunta alla schermata Home** e aperta da lì; la pagina lo spiega. Azioni non mostrate. |
-| Browser senza Push API, finestre private di alcuni browser | La pagina dice «non supporta»; restano gli avvisi in-app (fase 1). |
+| Browser senza Push API, finestre private di alcuni browser | La pagina dice «non supporta»; nessun avviso (nessun ripiego in-app dalla fase 2). |
 
 ## Verifiche eseguite (14 novembre 2026)
 
@@ -138,9 +137,12 @@ da sola alla riattivazione, sostituendo la vecchia sottoscrizione).
   vero; coperto dal test in sandbox), Firefox, Safari, Android, iOS, app installata, Windows/macOS, modalità Avanzata nel
   browser (stessa logica, senza promemoria backup), Cloudflare Workers/D1 reali (nessun deploy).
 
-## Fase 2: rimozione degli avvisi in-app (da fare dopo la verifica sul dispositivo)
+## Fase 2: rimozione degli avvisi in-app — eseguita il 15 novembre 2026
 
-Da eseguire solo dopo aver pubblicato il servizio e provato «Prova con Nummo chiusa» sui tuoi dispositivi:
+Eseguita su richiesta dell'utente («voglio solo le notifiche del sistema operativo»), con queste differenze dal piano:
+«Hai salvato il backup?» è stato **eliminato** (non spostato): il download del backup completo conta come backup; gli
+ascoltatori `focus`/`visibilitychange` restano per aggiornare lo stato della pagina Notifiche. Piano originale:
+
 
 - eliminare `NotificationCards.tsx` e il suo montaggio in `Workspace.tsx`, il controllo ogni 15 minuti e gli ascoltatori
   `focus`/`visibilitychange` di `useNotifications` (l'ora serve solo per calcolare gli orari, all'apertura e ai cambi);

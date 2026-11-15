@@ -44,7 +44,8 @@ garanzia, e non sostituisce un backup.
 
 ### Notifiche
 
-Dal menu account, **Notifiche** (sotto Impostazioni). Due canali, mai insieme per lo stesso browser:
+Dal menu account, **Notifiche** (sotto Impostazioni). Nummo usa **solo le notifiche di sistema**: non mostra avvisi
+dentro l'app.
 
 - **Notifiche di sistema** (Web Push, anche **ad app chiusa**): si attivano per dispositivo con «Attiva notifiche di
   sistema», che chiede il permesso del browser. Richiedono un piccolo servizio di invio (consigliato Cloudflare Workers,
@@ -52,23 +53,22 @@ Dal menu account, **Notifiche** (sotto Impostazioni). Due canali, mai insieme pe
   compatibilità (iPhone solo con Nummo nella schermata Home) e prove in [docs/notifiche-push.md](docs/notifiche-push.md).
   Il servizio riceve solo gli orari dei promemoria, mai importi o descrizioni. «Invia notifica di prova» mostra subito
   una notifica di sistema; «Prova con Nummo chiusa» fa arrivare una vera push dal servizio dopo circa 30 secondi.
-- **Avvisi dentro l'app** (ripiego finché le notifiche di sistema sono spente o non disponibili): controllati
-  all'apertura e quando si torna all'app; non arrivano ad app chiusa. Verranno rimossi dopo la verifica delle notifiche
-  di sistema sui dispositivi.
+- Senza notifiche di sistema (spente, browser che non le supporta, installazione senza servizio) non arriva alcun
+  promemoria o riepilogo; la pagina Notifiche lo dice.
 
 Preferenze e stato restano nel browser (`nummo.notifications.v1`, più lo stato per archivio
 `nummo.notifications.v1.<local|UID>`; `nummo.push.v1` ricorda solo l'ultimo invio degli orari).
 
-Ogni avviso ha il proprio interruttore, senza un interruttore generale: con le notifiche di sistema attive gli avvisi
-arrivano sia ad app aperta sia ad app chiusa.
+Ogni avviso ha il proprio interruttore, senza un interruttore generale; con le notifiche di sistema attive arriva sia ad
+app aperta sia ad app chiusa.
 
-- **Promemoria backup** (solo Standard; predefinito attivo, ogni settimana; anche ogni 14 giorni o ogni mese): compare se
-  è trascorso l'intervallo dall'ultimo backup confermato **e** i dati sono cambiati da allora. «Esporta backup» avvia
-  l'esportazione JSON; poiché il browser non dice se il file è stato davvero salvato, Nummo chiede «Hai salvato il
-  backup?» e aggiorna la data solo dopo la conferma (anche per l'esportazione da Archiviazione e backup). «Ricordamelo dopo»
-  rinvia di 3 giorni. In Avanzata non c'è: i dati sono in Firestore e il backup JSON resta una scelta manuale.
+- **Promemoria backup** (solo Standard; predefinito attivo, ogni settimana; anche ogni 14 giorni o ogni mese): arriva se
+  è trascorso l'intervallo dall'ultimo backup **e** i dati sono cambiati da allora. Toccandolo si apre la pagina
+  Notifiche con «Esporta backup» (esportazione JSON) e «Ricordamelo tra 3 giorni». Ogni download del backup completo,
+  anche da Archiviazione e backup, conta come backup: il browser non dice se il file è stato davvero salvato e Nummo non
+  lo chiede. In Avanzata non c'è: i dati sono in Firestore e il backup JSON resta una scelta manuale.
 - **Riepilogo spese** (entrambe le modalità; predefinito attivo, ogni settimana): alla fine di ogni periodo (settimana
-  lunedì–domenica, blocchi di 14 giorni, mese di calendario) mostra totale, numero di spese, categoria principale e
+  lunedì–domenica, blocchi di 14 giorni, mese di calendario) una notifica apre la pagina Notifiche con totale, numero di spese, categoria principale e
   intervallo. Considera solo spese singole già effettuate: **abbonamenti e loro pagamenti esclusi**. Nessun avviso se
   nel periodo non ci sono spese; dopo una lunga assenza solo l'ultimo periodo concluso.
 

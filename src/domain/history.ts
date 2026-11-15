@@ -135,9 +135,9 @@ export function searchAndSort(items: readonly Occurrence[], query: string, sort:
 
 // ---- Dashboard aggregation ----
 
-export const periods = ['month', 'previous-month', 'quarter', 'half-year', 'year'] as const;
+export const periods = ['month', 'previous-month', 'quarter', 'year'] as const;
 export type Period = (typeof periods)[number];
-export const periodLabels: Record<Period, string> = { month: 'Questo mese', 'previous-month': 'Mese scorso', quarter: 'Ultimi 3 mesi', 'half-year': 'Ultimi 6 mesi', year: 'Ultimi 12 mesi' };
+export const periodLabels: Record<Period, string> = { month: 'Questo mese', 'previous-month': 'Mese scorso', quarter: 'Ultimi 3 mesi', year: 'Ultimi 12 mesi' };
 export const isDailyPeriod = (period: Period): boolean => period === 'month' || period === 'previous-month';
 
 export type Bucket = Readonly<{ key: string; label: string; from: string; to: string }>;
@@ -158,7 +158,7 @@ export function bucketsFor(period: Period, today: string): Bucket[] {
       return { key: date, label: String(index + 1), from: date, to: date };
     });
   }
-  const count = period === 'quarter' ? 3 : period === 'half-year' ? 6 : 12;
+  const count = period === 'quarter' ? 3 : 12;
   return Array.from({ length: count }, (_, index) => {
     const total = year * 12 + (month - 1) - (count - 1 - index);
     const y = Math.floor(total / 12);

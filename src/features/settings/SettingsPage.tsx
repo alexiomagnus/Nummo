@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { DoneButton } from '../../components/DoneButton';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { iconStyles, iconStyleText } from '../../components/categoryIconSets';
 import type { CategoryIcon } from '../../domain/category';
@@ -22,6 +23,8 @@ type Props = {
   onChange: (change: Partial<Preferences>) => void;
   onReset: () => void;
   onDone: () => void;
+  // Sections that need the open archive (preferred categories), given by the workspace; absent when signed out.
+  archiveSections?: ReactNode;
 };
 
 const themeOptions: { value: ThemeChoice; label: string }[] = [
@@ -38,9 +41,9 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 
 // Display settings page, opened from the account menu (or the sign-in screen), outside the main destinations.
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
-// Sections stack on phones; when the page is wide enough, Colore and Carattere move to a right-hand column beside
-// Lingua and Tema (two stacks of similar height), and the wider sections follow at full width.
-export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: Props) {
+// Sections stack on phones (Lingua, Carattere, Tema, then Colore); when the page is wide enough, Lingua, Carattere and
+// Tema form the left column and Colore the right one, and the wider sections follow at full width.
+export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
@@ -52,6 +55,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
       <Card title={t("Lingua")} style={styles.section}>
         <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
           value={preferences.language} onChange={(language) => language && onChange({ language })} />
+      </Card>
+      <Card title={t("Carattere")} style={styles.section}>
+        <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
       </Card>
       <Card title={t("Tema")} style={styles.section}>
         <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
@@ -84,19 +90,15 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
           })}
         </View>
       </Card>
-      <Card title={t("Carattere")} style={styles.section}>
-        <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
-      </Card>
     </View>
   );
   return (
     <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
-      <PageHeader title={t("Impostazioni")} action={
-        <Button mode="text" icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}
-          onPress={onDone}>{t("Fatto")}</Button>} />
+      <PageHeader title={t("Impostazioni")} action={<DoneButton onPress={onDone} />} />
       <View style={[styles.grid, wide && styles.columns]}>
-        {/* Desktop: Colore and Carattere on the left, Lingua and Tema on the right; phones keep the reading order. */}
-        {wide ? [look, general] : [general, look]}
+        {/* Lingua, Carattere and Tema first (left column on desktop), then Colore. */}
+        {general}
+        {look}
       </View>
       <View style={styles.grid}>
         <Card title={t("Stile delle icone")} style={styles.section}>
@@ -120,9 +122,12 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone }: P
         <Card title={t("Funzionalità")} style={styles.section}>
           <SwitchRow label={t("Mostra andamento nel tempo")} supporting={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}
             onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
-          <SwitchRow label={t("Mostra budget mensile")} supporting={t("Mostra il budget generale e i controlli del budget dei fondi. I budget nascosti restano salvati.")}
+          <SwitchRow label={t("Mostra budget mensile")} supporting={t("Mostra il budget generale e quello dei fondi. I budget nascosti restano salvati.")}
             value={preferences.showGeneralBudget} onChange={(showGeneralBudget) => onChange({ showGeneralBudget })} />
+          <SwitchRow label={t("Mostra liste archiviate")} supporting={t("Nella pagina Liste, le liste già registrate come spesa.")}
+            value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
         </Card>
+        {archiveSections}
       </View>
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}

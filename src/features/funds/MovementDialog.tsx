@@ -67,7 +67,7 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           {funds.length > 1 && <SegmentedButtons label={t("Tipo di movimento")} value={kind} disabled={blocked}
             onChange={(next) => { setKind(next); setErrors({}); if (next === 'transfer' && !from) setFrom(funds.find((f) => f.id !== to)?.id ?? ''); }}
-            options={[{ value: 'income', label: t("Entrata") }, { value: 'transfer', label: t("Giroconto"), accessibilityLabel: t("Trasferimento") }]} />}
+            options={[{ value: 'income', label: t("Entrata") }, { value: 'transfer', label: t("Spostamento"), accessibilityLabel: t("Spostamento") }]} />}
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo")} value={amount} inputMode="decimal" placeholder="0,00"
               readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.amount)} left={leadingIcon(iconShapes.euro)}
@@ -88,9 +88,6 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
               error={Boolean(errors.note)} onChangeText={(next) => { setNote(next); setErrors({ ...errors, note: undefined }); }} />
             {errors.note && <HelperText type="error" accessibilityRole="alert">{t(errors.note)}</HelperText>}
           </View>
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-            {kind === 'transfer' ? t("Un trasferimento sposta denaro tra i tuoi fondi: non è né un'entrata né una spesa nei totali.")
-              : t("Un'entrata aggiunge denaro al fondo una sola volta. Per un accredito ogni mese usa la ricarica mensile del fondo.")}</Text>
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
         </ScrollView>
       </Dialog.ScrollArea>

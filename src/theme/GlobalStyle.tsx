@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect } from 'react';
 import { useTheme } from 'react-native-paper';
 import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
-import { observeViewportHeight, stickyBottomProperty } from './viewport';
+import { observeScrolling, observeViewportHeight, scrollingAttribute, stickyBottomProperty } from './viewport';
 
 // Web-only rules RN Web cannot express: the font family (the @font-face rules live in public/index.html, so the font
 // is available from the first render), visible keyboard focus, dynamic
@@ -20,6 +20,10 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       body { overflow: hidden; margin: 0; font-family: ${family}; background: ${colors.background}; color-scheme: ${dark ? 'dark' : 'light'}; }
       /* Slim scrollbars (no scrollbar-gutter: on RN Web views, which clip with overflow hidden, it shrinks their content). */
       * { scrollbar-width: thin; scrollbar-color: ${colors.outline} transparent; }
+      /* Dialogs and sheets: the scrollbar shows only while the content scrolls, then disappears (observeScrolling).
+         No transition here: a rule on every element would override RN Web's own transitions. */
+      [role='dialog'] * { scrollbar-color: transparent transparent; }
+      [role='dialog'] [${scrollingAttribute}] { scrollbar-color: ${colors.outline} transparent; }
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }
       /* Keep focus within the actual control: outer rings are clipped by pills, menus and scroll containers. */
@@ -62,6 +66,7 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
     const stop = observeViewportHeight(window, (height) => root.style.setProperty('--nummo-viewport-height', `${height}px`));
     return () => { stop(); root.style.removeProperty('--nummo-viewport-height'); };
   }, []);
+  useEffect(() => observeScrolling(document), []);
   useEffect(() => {
     const root = document.documentElement;
     const onKey = (event: KeyboardEvent) => { if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key !== 'Shift') root.dataset.input = 'key'; };

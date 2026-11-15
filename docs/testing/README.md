@@ -8,7 +8,7 @@ Non è compatibile con versioni dell’app che leggono solo backup v1/v2/v3.
 ## Come usarlo
 
 1. Preferire la demo locale con le Rules del checkout. In un archivio personale fare prima un backup JSON.
-2. Da **menu account → Importa ed esporta → Importa backup (JSON)** scegliere il file e **Unisci ai dati esistenti**.
+2. Da **menu account → Archiviazione e backup → Importa backup (JSON)** scegliere il file e **Unisci ai dati esistenti**.
    Categorie, fondi, liste e descrizioni sono riconoscibili dal prefisso `TEST` (eccetto il testo di prova CSV).
    L’unione aggiunge comunque dati all’archivio: non selezionare Sostituisci su dati personali da conservare.
 3. I due riferimenti a una categoria e a un fondo inesistenti sono intenzionali: una spesa deve apparire senza

@@ -7,6 +7,12 @@ export const expensePolicy = {
   minDate: '2000-01-01',
 } as const;
 
+// Typing or pasting stops at `max` characters, counted as the length check counts them (code points: an emoji is one).
+export function clipToLength(text: string, max: number): string {
+  const chars = Array.from(text);
+  return chars.length > max ? chars.slice(0, max).join('') : text;
+}
+
 export function todayInRome(now = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: expensePolicy.timeZone, year: 'numeric', month: '2-digit', day: '2-digit',

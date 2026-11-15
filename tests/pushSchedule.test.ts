@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { ExpenseEntry } from '../src/domain/history.ts';
-import { defaultNotificationPreferences, newNotificationState, snoozeBackup, confirmBackup } from '../src/domain/notifications.ts';
+import { defaultNotificationPreferences, newNotificationState, snoozeBackup, recordBackup } from '../src/domain/notifications.ts';
 import { backupJob, daytime, nextPeriod, pushJobs, romeInstant, summaryJob } from '../src/domain/pushSchedule.ts';
 
 const p = defaultNotificationPreferences;
@@ -19,12 +19,12 @@ test('push: orari di Roma con ora legale e fascia diurna 9–21', () => {
   assert.equal(daytime(new Date('2026-11-16T12:34:00Z')).toISOString(), '2026-11-16T12:34:00.000Z');
 });
 
-test('push: promemoria backup solo con dati cambiati dopo l’ultimo backup confermato, rinvio di 3 giorni rispettato', () => {
+test('push: promemoria backup solo con dati cambiati dopo l’ultimo backup, rinvio di 3 giorni rispettato', () => {
   const now = new Date('2026-11-03T10:00:00Z');
   assert.equal(backupJob({ preferences: p, state, lastChange: null, now }), null);
   const job = backupJob({ preferences: p, state, lastChange: '2026-11-02T10:00:00Z', now });
   assert.deepEqual(job, { kind: 'backup', at: '2026-11-08T10:00:00.000Z', key: 'backup', repeatDays: 7 });
-  const backedUp = confirmBackup(state, '2026-11-02T11:00:00.000Z');
+  const backedUp = recordBackup(state, '2026-11-02T11:00:00.000Z');
   assert.equal(backupJob({ preferences: p, state: backedUp, lastChange: '2026-11-02T10:00:00Z', now }), null);
   // Overdue at the moment of computing: delivered now (or at 9:00 if it is night), then repeated by the service.
   const overdue = backupJob({ preferences: p, state, lastChange: '2026-11-02T10:00:00Z', now: new Date('2026-11-20T21:30:00Z') });

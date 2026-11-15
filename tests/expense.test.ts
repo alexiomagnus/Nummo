@@ -74,3 +74,13 @@ test('messaggi brevi per importo mancante o non valido', () => {
   const invalid = validateDraft({ ...draft, amount: '1,001' }, categories, now);
   assert.equal(!invalid.ok && invalid.errors.amount, 'Importo non valido (es. 12,50).');
 });
+
+test('descrizione: la scrittura si ferma a 100 caratteri, emoji contate come uno', async () => {
+  const { clipToLength, expensePolicy } = await import('../src/domain/policy.ts');
+  const max = expensePolicy.maxDescriptionLength;
+  assert.equal(clipToLength('d'.repeat(200), max).length, 100);
+  assert.equal(clipToLength('Caffè', max), 'Caffè');
+  const emoji = '🛒'.repeat(120);
+  assert.equal(Array.from(clipToLength(emoji, max)).length, 100);
+  assert.equal(clipToLength('d'.repeat(100), max), 'd'.repeat(100));
+});

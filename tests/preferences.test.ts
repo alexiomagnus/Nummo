@@ -29,11 +29,13 @@ test('dashboard: vecchie preferenze usano ciambella e mese corrente', () => {
 });
 test('dashboard: grafico e periodi sopravvivono al salvataggio e alla rilettura', () => {
   for (const dashboardChart of ['donut', 'blocks', 'bars'] as const) {
-    for (const dashboardPeriod of ['month', 'previous-month', 'quarter', 'half-year', 'year'] as const) {
+    for (const dashboardPeriod of ['month', 'previous-month', 'quarter', 'year'] as const) {
       const saved = { ...defaultPreferences, language: 'en', dashboardChart, dashboardPeriod };
       assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
     }
   }
+  // «Ultimi 6 mesi» was removed on 15 November: a saved choice falls back to the default period.
+  assert.equal(parsePreferences(JSON.stringify({ ...defaultPreferences, dashboardPeriod: 'half-year' })).dashboardPeriod, defaultPreferences.dashboardPeriod);
 });
 test('dashboard: valori corrotti ripristinati separatamente senza perdere le altre scelte', () => {
   const invalidChart = parsePreferences('{"dashboardChart":"pie","dashboardPeriod":"year","accent":"amber"}');
@@ -86,5 +88,14 @@ test('budget mensile generale: visibile di base, solo booleani accettati, scelta
   assert.equal(parsePreferences('{"showGeneralBudget":false}').showGeneralBudget, false);
   for (const bad of ['"false"', '0', 'null', '{}']) assert.equal(parsePreferences(`{"showGeneralBudget":${bad}}`).showGeneralBudget, true);
   const saved = { ...defaultPreferences, showGeneralBudget: false };
+  assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+});
+
+test('liste archiviate: visibili di base, solo booleani accettati, scelta conservata', () => {
+  assert.equal(defaultPreferences.showArchivedLists, true);
+  assert.equal(parsePreferences('{"showGeneralBudget":false}').showArchivedLists, true); // preferenze salvate prima della scelta
+  assert.equal(parsePreferences('{"showArchivedLists":false}').showArchivedLists, false);
+  for (const bad of ['"false"', '0', 'null']) assert.equal(parsePreferences(`{"showArchivedLists":${bad}}`).showArchivedLists, true);
+  const saved = { ...defaultPreferences, showArchivedLists: false };
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
 });

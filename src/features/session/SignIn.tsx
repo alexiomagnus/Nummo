@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
 import { spacing } from '../../theme/tokens';
 import { Guide } from './Guide';
 
@@ -47,11 +46,10 @@ export function SignIn({ error, onSignIn, onChangeMode }: Props) {
         <Text variant="displaySmall" accessibilityRole="header" aria-level={1}>{t("Semplifica le tue spese.")}</Text>
         <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Fallo in maniera pragmatica.")}</Text>
       </View>
-      <Card>
+      {/* One group: the two choices share width, height and spacing (primary filled, secondary outlined). */}
+      <View style={styles.actions}>
         {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
         <Button mode="contained" onPress={onSignIn} contentStyle={styles.button}>{t("Accedi con Google")}</Button>
-      </Card>
-      <View style={styles.links}>
         {onChangeMode && <Button mode="outlined" onPress={onChangeMode} contentStyle={styles.button}>{t("Usa Nummo senza account")}</Button>}
       </View>
     </View>
@@ -63,6 +61,5 @@ const styles = StyleSheet.create({
   intro: { gap: spacing.xs },
   helper: { paddingHorizontal: 0 },
   button: { minHeight: 48 },
-  // Secondary choice: outlined, as wide as «Accedi con Google» above, label centred.
-  links: { alignItems: 'stretch' },
+  actions: { alignItems: 'stretch', gap: spacing.md },
 });

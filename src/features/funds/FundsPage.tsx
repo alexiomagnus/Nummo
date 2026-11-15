@@ -32,7 +32,7 @@ type Props = {
   defaultFundId: string;
   onSetDefault: (id: string) => void;
   notify: (message: string) => void;
-  // Display preference (Settings → Features): hides the general budget and fund editor budget controls, preserving their data.
+  // Display preference (Settings → Features): hides every budget (general, fund cards, editor controls), preserving their data.
   showGeneralBudget: boolean;
 };
 
@@ -158,9 +158,9 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
 
       <View role="list" accessibilityLabel={t("Fondi")} style={styles.list}>
         {active.map((item) => <FundCard key={item.fund.id} item={item} funds={funds} open={open.has(item.fund.id)} onToggle={() => toggle(item.fund.id)}
-          isDefault={item.fund.id === defaultFundId} canWrite={canWrite} tracksBalance={balanceFunds.has(item.fund.id)}
+          isDefault={item.fund.id === defaultFundId} canWrite={canWrite} tracksBalance={balanceFunds.has(item.fund.id)} showBudget={showGeneralBudget}
           inUse={fundInUse(item.fund.id, sources)}
-          onEdit={() => setEditing(item.fund as SyncedFund)} onDefault={() => { onSetDefault(item.fund.id === defaultFundId ? '' : item.fund.id); notify(item.fund.id === defaultFundId ? "Nessun fondo predefinito." : "Fondo predefinito aggiornato."); }}
+          onEdit={() => setEditing(item.fund as SyncedFund)}
           onArchive={() => void archive(item.fund as SyncedFund, true)}
           onDelete={async () => { const done = await remote.removeFund(item.fund as SyncedFund); if (done) notify("Fondo eliminato."); return done; }}
           onAdd={() => setMoving({ kind: 'income', to: item.fund.id })}
@@ -224,12 +224,14 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
 type CardProps = {
   // Fund with balance data from earlier versions: shows balance, recharge and movements (read-only plus the old entries).
   tracksBalance: boolean;
+  // «Mostra budget mensile» off: the fund's budget meter is hidden (its plan stays saved).
+  showBudget: boolean;
   item: FundMonth; funds: readonly SyncedFund[]; movements: readonly SyncedMovement[]; open: boolean; isDefault: boolean; canWrite: boolean; inUse: boolean;
-  onToggle: () => void; onEdit: () => void; onDefault: () => void; onArchive: () => void; onAdd: () => void;
+  onToggle: () => void; onEdit: () => void; onArchive: () => void; onAdd: () => void;
   onDelete: () => Promise<boolean>; onRemoveMovement: (id: string) => Promise<boolean>;
 };
 
-function FundCard({ tracksBalance, item, funds, open, isDefault, canWrite, inUse, onToggle, onEdit, onDefault, onArchive, onAdd, onDelete, onRemoveMovement }: CardProps) {
+function FundCard({ tracksBalance, showBudget, item, funds, open, isDefault, canWrite, inUse, onToggle, onEdit, onArchive, onAdd, onDelete, onRemoveMovement }: CardProps) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
   const { fund } = item;
@@ -258,7 +260,7 @@ function FundCard({ tracksBalance, item, funds, open, isDefault, canWrite, inUse
             <Text variant="titleMedium" numberOfLines={2} style={styles.shrink}>{fund.name}</Text>
             {isDefault && <View style={[styles.badge, { backgroundColor: colors.secondaryContainer }]}>
               <SvgIcon shape={iconShapes.star} size={14} color={colors.onSecondaryContainer} />
-              <Text variant="labelSmall" style={{ color: colors.onSecondaryContainer }}>{t("Predefinito")}</Text>
+              <Text variant="labelSmall" style={{ color: colors.onSecondaryContainer }}>{t("Preferito")}</Text>
             </View>}
           </View>
           {tracksBalance && <Text variant="bodySmall" style={muted}>{rechargeText}</Text>}
@@ -268,7 +270,7 @@ function FundCard({ tracksBalance, item, funds, open, isDefault, canWrite, inUse
           <Text variant="labelSmall" style={muted}>{forecast ? t("previsti") : t("speso nel mese")}</Text>
         </View>
       </View>
-      {item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
+      {showBudget && item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
         spent={spentNow} budget={item.budget} state={item.state} forecast={forecast} />}
       <View style={styles.cardActions}>
         <Button mode="text" aria-expanded={open} aria-controls={open ? detailsId : undefined} onPress={onToggle}
@@ -329,15 +331,11 @@ function FundCard({ tracksBalance, item, funds, open, isDefault, canWrite, inUse
           </View>}
         </>}
         <View style={styles.cardActions}>
-          <Button mode="text" disabled={!canWrite} onPress={onDefault}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.star} size={size} color={color} />}>
-            {isDefault ? t("Togli come predefinito") : t("Usa come predefinito")}</Button>
           <Button mode="text" disabled={!canWrite} onPress={onArchive}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.archive} size={size} color={color} />}>{t("Archivia")}</Button>
           {!inUse && <DeleteAction labeled disabled={!canWrite} name={fund.name} title={t("Eliminare il fondo {p0}?", { p0: fund.name })}
             description={t("Il fondo non ha movimenti né spese collegate. L’operazione non può essere annullata.")} onDelete={onDelete} />}
         </View>
-        {inUse && <Text variant="bodySmall" style={muted}>{t("Un fondo con movimenti o spese collegate non si può eliminare: archivialo per toglierlo dalle scelte senza perdere lo storico.")}</Text>}
       </Reveal>}
     </View>
   );

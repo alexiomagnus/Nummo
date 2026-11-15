@@ -4,7 +4,7 @@ import { SelectField } from '../../components/SelectField';
 import { noFund, type Fund } from '../../domain/funds';
 import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
-import { FundAvatar } from './FundAvatar';
+import { FundAvatar, NoFundAvatar } from './FundAvatar';
 
 // What the expense form needs to know about a fund: its balance now and what remains of this month's budget.
 // `tracksBalance`: the fund keeps balance data from an earlier version; only then is its balance shown.
@@ -22,7 +22,7 @@ export function FundField({ choices, value, error, disabled, onChange }: {
   const selected = choices.find((choice) => choice.fund.id === value);
   const options = [
     ...choices.map(({ fund }) => ({ value: fund.id, label: fund.archived ? t("{p0} (archiviato)", { p0: fund.name }) : fund.name, icon: <FundAvatar fund={fund} size={24} /> })),
-    { value: noFund, label: t("Nessun fondo") },
+    { value: noFund, label: t("Nessun fondo"), icon: <NoFundAvatar size={24} /> },
   ];
   const over = selected && selected.remaining !== null && selected.remaining < 0;
   return (

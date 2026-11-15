@@ -12,6 +12,7 @@ import { SvgIcon, iconShapes } from './src/components/SvgIcon';
 import type { Preferences } from './src/features/settings/preferences';
 import { SettingsPage } from './src/features/settings/SettingsPage';
 import { usePreferences } from './src/features/settings/usePreferences';
+import { AccessDenied } from './src/features/session/AccessDenied';
 import { SignIn, leaveGuide } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
 import { readSessionHint, writeSessionHint } from './src/services/sessionHint';
@@ -23,7 +24,8 @@ import { openLocalDatabase } from './src/services/localDatabase';
 import { createLocalStore, type LocalStore } from './src/services/localStore';
 import { initialStorageMode, readStorageMode, writeStorageMode, type StorageMode } from './src/services/storageMode';
 import { backendMode, firebaseWebConfig, firestoreEmulator, missingFirebaseConfig, persistentCache } from './src/services/backendConfig';
-import { warmUpServices } from './src/services/firebase';
+import { getDatabase, warmUpServices } from './src/services/firebase';
+import { checkOwnerAccess, type OwnerAccess } from './src/services/ownerAccess';
 import { GlobalStyle } from './src/theme/GlobalStyle';
 import { initialSafeAreaMetrics } from './src/theme/initialMetrics';
 import { createTheme } from './src/theme/theme';
@@ -69,7 +71,7 @@ type RootProps = {
 // What the three screens below share: the theme button, the settings page and the mode switch.
 type ModeProps = RootProps & {
   themeToggle: ReactNode;
-  renderSettings: (onDone: () => void) => ReactNode;
+  renderSettings: (onDone: () => void, archiveSections?: ReactNode) => ReactNode;
   onChangeMode: (mode: StorageMode | null) => void;
 };
 
@@ -86,8 +88,8 @@ function Root(props: RootProps) {
     <IconButton size={24} style={styles.touch} icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
-  const renderSettings = (onDone: () => void) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
-    onReset={onResetPreferences} onDone={onDone} />;
+  const renderSettings = (onDone: () => void, archiveSections?: ReactNode) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
+    onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} />;
   const shared = { ...props, themeToggle, renderSettings, onChangeMode: changeMode };
   if (mode === 'advanced') return <AdvancedRoot {...shared} />;
   if (mode === 'standard') return <StandardRoot {...shared} />;
@@ -210,17 +212,34 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
     else if (session.status === 'signed-out') writeSessionHint(null);
   }, [session.status]);
   const signedIn = session.status === 'signed-in';
-  const showStartup = (session.status === 'loading' && hint !== null) || (signedIn && releasedUid !== session.user.uid);
+  // A Google account that is not the owner gets a clear screen instead of a workspace full of «access denied».
+  // Checked alongside the workspace (the owner's startup does not wait for it); only a refusal changes the screen.
+  const uid = signedIn ? session.user.uid : null;
+  const [access, setAccess] = useState<{ uid: string; value: OwnerAccess } | null>(null);
+  useEffect(() => {
+    if (uid === null) return;
+    let live = true;
+    void checkOwnerAccess(getDatabase(), uid).then((value) => { if (live) setAccess({ uid, value }); });
+    return () => { live = false; };
+  }, [uid]);
+  const denied = signedIn && access?.uid === session.user.uid && access.value === 'denied';
+  const showStartup = (session.status === 'loading' && hint !== null) || (signedIn && !denied && releasedUid !== session.user.uid);
 
   // One fixed list of slots: the placeholder keeps its place from «loading» to «signed in».
   return (
     <>
-      {signedIn && session.error ? (
+      {signedIn && session.error && !denied ? (
         <View style={[styles.alert, { backgroundColor: theme.colors.errorContainer }]}>
           <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{t(session.error)}</Text>
         </View>
       ) : null}
-      {signedIn ? (
+      {denied ? (
+        <AppShell actions={themeToggle} brand={{ label: t("accesso"), onPress: leaveGuide }}>
+          <AccessDenied email={session.user.email} busy={session.busy} error={session.error}
+            onSignOut={session.signOut} onUseStandard={() => { session.signOut(); onChangeMode('standard'); }} />
+        </AppShell>
+      ) : null}
+      {signedIn && !denied ? (
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
             onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} backupRequest={backupRequest}

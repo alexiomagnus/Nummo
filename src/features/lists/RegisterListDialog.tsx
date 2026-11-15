@@ -4,13 +4,12 @@ import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button } from '../../components/Button';
 import { SwitchRow } from '../../components/SwitchRow';
-import type { Category, CategoryIcon } from '../../domain/category';
+import type { Category } from '../../domain/category';
 import { newDraft, validateDraft, type ExpenseData, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { purchasedNames } from '../../domain/shoppingList';
 import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
-import { CategoryEditor, type CategoryCreation } from '../categories/CategoryEditor';
 import { ExpenseFields } from '../expenses/ExpenseFields';
 import { FundField, noFund, type FundChoice } from '../funds/FundField';
 
@@ -23,8 +22,6 @@ type Props = {
   // After a confirmed registration, when the user asked to move what was not bought into a new list (with the list's
   // default category after this registration).
   onMoveRemaining: (categoryId: string | null) => void;
-  categoryCreation: CategoryCreation;
-  notify: (message: string) => void;
   error: string | null;
   close: () => void;
 };
@@ -32,7 +29,7 @@ type Props = {
 // Confirmation before registering a list: the same fields as a new expense (amount required, date, description and
 // category, fund) prefilled from the list. The expense ID is chosen once per opening: pressing again after an uncertain
 // outcome repeats the same transaction, which finds the expense already saved instead of adding a second one.
-export function RegisterListDialog({ list, initialAmount, items, categories, fundChoices, defaultFundId, canRegister, onRegister, onMoveRemaining, categoryCreation, notify, error, close }: Props) {
+export function RegisterListDialog({ list, initialAmount, items, categories, fundChoices, defaultFundId, canRegister, onRegister, onMoveRemaining, error, close }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const expenseId = useRef(crypto.randomUUID()).current;
@@ -46,18 +43,6 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
   const [move, setMove] = useState(remaining > 0);
   const [busy, setBusy] = useState(false);
   const [attempted, setAttempted] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [tried, setTried] = useState(false);
-  // Amount, date and description stay as typed: only the category changes, once the server confirmed the new one.
-  const createCategory = async (name: string, icon: CategoryIcon | null) => {
-    setTried(true);
-    const id = await categoryCreation.create(name, icon);
-    if (!id) return false;
-    setDraft((d) => ({ ...d, categoryId: id }));
-    setErrors((e) => ({ ...e, categoryId: undefined }));
-    notify("Categoria creata.");
-    return true;
-  };
   const register = async () => {
     if (busy || !canRegister) return;
     const result = validateDraft({ ...draft, fundId: draft.fundId === noFund ? '' : draft.fundId }, categories, undefined, fundChoices.map((c) => c.fund));
@@ -74,13 +59,13 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
       }
     } finally { setBusy(false); }
   };
-  return <><Portal><Dialog visible onDismiss={() => { if (!busy) close(); }}>
+  return <Portal><Dialog visible onDismiss={() => { if (!busy) close(); }}>
     <Dialog.Title>{t("Registra spesa")}</Dialog.Title>
     <Dialog.ScrollArea style={styles.area}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         {bought.length === 0 ? t("Nessun prodotto spuntato: la spesa conterrà solo il totale.")
           : t("Verrà creata una sola spesa con {p0} di {p1} prodotti acquistati. La lista sarà archiviata.", { p0: bought.length, p1: items.length })}</Text>
-      <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy} onAddCategory={() => { setTried(false); setCreating(true); }} addCategoryDisabled={!categoryCreation.enabled}
+      <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}
         extra={fundChoices.length > 0 ? <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}
           onChange={(fundId) => { setDraft((d) => ({ ...d, fundId })); setErrors((e) => ({ ...e, fundId: undefined })); }} /> : undefined}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
@@ -100,10 +85,7 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
       <Button disabled={busy} onPress={close}>{t("Annulla")}</Button>
       <Button mode="contained" disabled={busy || !canRegister} loading={busy} onPress={() => void register()}>{attempted && error ? t("Riprova") : t("Registra")}</Button>
     </Dialog.Actions>
-  </Dialog></Portal>
-  {creating && <CategoryEditor categories={categories} ready={categoryCreation.enabled} error={tried ? categoryCreation.error : null}
-    onSave={createCategory} close={() => setCreating(false)} />}
-  </>;
+  </Dialog></Portal>;
 }
 
 const styles = StyleSheet.create({

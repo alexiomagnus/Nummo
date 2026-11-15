@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isTextEntry, keyboardOpen, nextKeyboardReference, observeVirtualKeyboard, observeViewportHeight, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight } from '../src/theme/viewport.ts';
+import { initialFocusAllowed, isTextEntry, keyboardOpen, nextKeyboardReference, observeVirtualKeyboard, observeViewportHeight, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight } from '../src/theme/viewport.ts';
 
 test('viewport: tastiera e barre browser riducono lo spazio disponibile; fallback senza API e zoom indipendente', () => {
   assert.equal(visibleViewportHeight(900, { height: 750.4, scale: 1 }), 750);
@@ -89,6 +89,14 @@ test('tastiera virtuale: campi che la aprono', () => {
   assert.equal(isTextEntry({ tagName: 'BUTTON' }), false);
   assert.equal(isTextEntry({ tagName: 'BODY' }), false);
   assert.equal(isTextEntry(null), false);
+});
+
+test('overlay: su touch nessun campo di testo riceve il focus all\'apertura, sul desktop sì', () => {
+  assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text' }, true), false, 'Importo in Modifica spesa su smartphone');
+  assert.equal(initialFocusAllowed({ tagName: 'TEXTAREA' }, true), false);
+  assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text' }, false), true, 'tastiera fisica e mouse');
+  assert.equal(initialFocusAllowed({ tagName: 'BUTTON' }, true), true, 'voci di menu e pulsanti restano il primo focus');
+  assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text', readOnly: true }, true), true);
 });
 
 test('tastiera virtuale: apertura, passaggio tra campi, chiusura, zoom e rimozione dei listener', async () => {
@@ -216,4 +224,25 @@ test('scroll padding: altezza della barra pubblicata sul contenitore scorrevole 
   reserveScrollPadding(footer, 0, overflowOf)();
   assert.equal(scroller.style.getPropertyValue(stickyBottomProperty), '4px', 'altezza ignota: nessuna modifica');
   reserveScrollPadding({ ...footer, parentElement: null }, 50, overflowOf)();
+});
+
+test('barre di scorrimento dei dialoghi: visibili solo durante lo scorrimento', async () => {
+  const { observeScrolling, scrollingAttribute } = await import('../src/theme/viewport.ts');
+  let listener: ((event: Event) => void) | null = null;
+  const doc = { addEventListener: (_: string, l: (event: Event) => void) => { listener = l; }, removeEventListener: () => { listener = null; } };
+  const attrs = new Set<string>();
+  const element = { setAttribute: (name: string) => attrs.add(name), removeAttribute: (name: string) => attrs.delete(name) };
+  const stop = observeScrolling(doc as never, 20);
+  listener!({ target: element } as never);
+  assert.ok(attrs.has(scrollingAttribute), 'compare scorrendo');
+  await new Promise((r) => setTimeout(r, 10));
+  listener!({ target: element } as never);
+  await new Promise((r) => setTimeout(r, 15));
+  assert.ok(attrs.has(scrollingAttribute), 'resta finché si continua a scorrere');
+  await new Promise((r) => setTimeout(r, 20));
+  assert.ok(!attrs.has(scrollingAttribute), 'scompare dopo la pausa');
+  listener!({ target: {} } as never); // the document: ignored
+  listener!({ target: element } as never);
+  stop();
+  assert.ok(!attrs.has(scrollingAttribute) && listener === null, 'arresto pulito');
 });

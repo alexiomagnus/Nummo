@@ -107,7 +107,7 @@ test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', (
 });
 
 test('abbonamenti: stati e azioni tradotti, nomi delle serie mai tradotti', () => {
-  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Pagamenti ricorrenti', 'Recurring payments'], ['Abbonamenti', 'Subscriptions'], ['Settimana', 'Week'], ['Anno', 'Year'], ['Giroconto', 'Transfer'], ['Budget', 'Budget'],
+  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Pagamenti ricorrenti', 'Recurring payments'], ['Abbonamenti', 'Subscriptions'], ['Settimana', 'Week'], ['Anno', 'Year'], ['Spostamento', 'Transfer'], ['Budget', 'Budget'],
     ['Metti in pausa', 'Pause'], ['Pausa', 'Pause'], ['Riattiva', 'Resume'], ['Annulla abbonamento', 'Cancel subscription']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
@@ -131,7 +131,7 @@ test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
 });
 
 test('impostazioni: interruttore del budget mensile tradotto in entrambe le lingue', () => {
-  for (const [it, en] of [['Funzionalità', 'Features'], ['Mostra budget mensile', 'Show monthly budget'], ['Nella pagina Analisi, il grafico delle spese giorno per giorno.', 'On the Analysis page, a chart of spending day by day.'], ['Mostra il budget generale e i controlli del budget dei fondi. I budget nascosti restano salvati.', 'Show the general budget and fund budget controls. Hidden budgets stay saved.']] as const) {
+  for (const [it, en] of [['Funzionalità', 'Features'], ['Mostra budget mensile', 'Show monthly budget'], ['Nella pagina Analisi, il grafico delle spese giorno per giorno.', 'On the Analysis page, a chart of spending day by day.'], ['Mostra il budget generale e quello dei fondi. I budget nascosti restano salvati.', "Shows the general budget and the funds' budgets. Hidden budgets stay saved."], ['Mostra liste archiviate', 'Show archived lists'], ['Nella pagina Liste, le liste già registrate come spesa.', 'On the Lists page, the lists already recorded as an expense.'], ['Categorie preferite', 'Preferred categories'], ['Nuove liste', 'New lists']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);
   }
@@ -147,7 +147,7 @@ test('nuova spesa: etichette della sezione ricorrente tradotte, vecchia etichett
 
 test('notifiche e protezione: testi della pagina, degli avvisi e dello stato tradotti in entrambe le lingue', () => {
   for (const [it, en] of [['Notifiche', 'Notifications'], ['Promemoria backup', 'Backup reminder'],
-    ['Riepilogo spese', 'Spending summary'], ['Ricordamelo dopo', 'Remind me later'], ['Ogni settimana (consigliato)', 'Every week (recommended)'],
+    ['Riepilogo spese', 'Spending summary'], ['Ricordamelo dopo', 'Remind me later'], ['Ogni settimana', 'Every week'],
     ['Ogni 14 giorni', 'Every 14 days'], ['Archivio locale protetto', 'Local archive protected'], ['Protezione aggiuntiva non attiva', 'Extra protection not active'],
     ['Protezione non disponibile', 'Protection not available']] as const) {
     assert.equal(translate('it', it), it);

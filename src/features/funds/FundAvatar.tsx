@@ -18,6 +18,16 @@ export function FundAvatar({ fund, size = 40 }: { fund: Pick<Fund, 'icon' | 'col
   );
 }
 
+// «Nessun fondo»: the same circle as a fund, dashed and neutral, with a dash inside (no colour: it is not a fund).
+export function NoFundAvatar({ size = 40 }: { size?: number }) {
+  const { colors } = useTheme();
+  return (
+    <View aria-hidden style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, borderColor: colors.outline, borderStyle: 'dashed' }]}>
+      <SvgIcon shape={iconShapes.minus} size={Math.round(size * 0.55)} color={colors.onSurfaceVariant} />
+    </View>
+  );
+}
+
 export function FundColorDot({ color, size = 12 }: { color: number; size?: number }) {
   const { dark } = useTheme();
   return <View aria-hidden style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: paletteColor(color, dark) }} />;

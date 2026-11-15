@@ -100,7 +100,7 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
                   <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
                     disabled={!ready} selected={isEditing} aria-haspopup="dialog" aria-expanded={isEditing} accessibilityLabel={t("Modifica {p0}", { p0: category.label })}
                     onPress={() => setEditing(category)} />
-                  <DeleteAction name={category.label} title={t("Eliminare la categoria {p0}?", { p0: category.label })} description=""
+                  <DeleteAction name={category.label} title={t("Eliminare la categoria {p0}?", { p0: category.label })} description={t("L’operazione non può essere annullata.")}
                     onDelete={() => onDelete(category.id)} />
                 </>} />
             );

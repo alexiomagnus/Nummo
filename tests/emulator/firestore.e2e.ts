@@ -7,6 +7,7 @@ import { initializeAuth, connectAuthEmulator, signInWithCredential, GoogleAuthPr
 import { initializeFirestore, connectFirestoreEmulator, doc, setDoc, getDocFromServer, getDocsFromServer, collection,
   updateDoc, deleteDoc, deleteField, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate, waitForPendingWrites } from 'firebase/firestore';
 import { createFirestoreStore } from '../../src/services/firestoreStore.ts';
+import { checkOwnerAccess } from '../../src/services/ownerAccess.ts';
 import { makeBackup, parseBackup } from '../../src/domain/backup.ts';
 import { todayInRome } from '../../src/domain/policy.ts';
 import { dataOf } from '../../src/domain/expense.ts';
@@ -48,6 +49,11 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await denied(getDocsFromServer(collection(owner.db, 'users', 'other-user', 'expenses')));
       await denied(getDocsFromServer(collection(otherProject.db, 'users', uid, 'expenses')));
       await denied(getDocFromServer(doc(owner.db, 'operations', 'anything')));
+    });
+    await t.test('controllo del proprietario: schermata «privato» solo per gli altri account', async () => {
+      assert.equal(await checkOwnerAccess(owner.db, uid), 'owner');
+      assert.equal(await checkOwnerAccess(intruder.db, intruder.auth.currentUser!.uid), 'denied');
+      assert.equal(await checkOwnerAccess(anonymous.db, 'nessuno'), 'denied');
     });
     await t.test('provider diverso da Google negato anche per UID proprietario', async () => {
       const app = initializeApp({ projectId, apiKey: 'demo-key', appId: 'demo-app' }, 'password-client');

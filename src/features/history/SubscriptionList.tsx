@@ -143,10 +143,7 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
               accessibilityLabel={t("Annulla abbonamento")}
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
               onPress={() => onChange('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
-            <Button compact={compact} mode="outlined" style={narrow && styles.narrowEdit}
-              contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
-              icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
-            {/* Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
+            {/* Pause/resume in the middle, between cancel and edit. Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
             {status === 'active' && <Button compact={compact} mode="outlined" style={compact && styles.statusAction} contentStyle={pausePad?.content} labelStyle={pausePad?.label} disabled={!canChange || working} loading={working}
               accessibilityLabel={t("Metti in pausa")}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
@@ -154,6 +151,9 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
             {status !== 'active' && <Button compact={compact} mode="contained-tonal" style={compact && styles.statusAction} contentStyle={iconPad?.content} labelStyle={iconPad?.label} disabled={!canChange || working} loading={working}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
               onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
+            <Button compact={compact} mode="outlined" style={narrow && styles.narrowEdit}
+              contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
+              icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
           </View>
           {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
             {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
