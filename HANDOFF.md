@@ -5,9 +5,10 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main`. Ultimo commit di codice `f9c4d8f` (Templates eliminati, riepilogo dei fondi a totali, icone dei fondi
-  nei selettori, «Nessuna categoria»), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`f9c4d8f`**, pubblicato su richiesta il 16 novembre con
+- **Git.** `main` = `origin/main`. Ultimo commit di codice `fd705f3` (Analisi: Fondo, poi Periodo e Grafico come menu a ogni larghezza;
+  icona del Fondo su smartphone; «Nuova lista» più grande), seguito dal solo aggiornamento di HANDOFF.
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
+  `npm run deploy:hosting` («Deploy complete!», sito 200). Prima: **`f9c4d8f`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200). **Rules pubblicate** su richiesta il 16 novembre (`firebase deploy --only
   firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `f9c4d8f`: `templates/{uuid}`
   ora rifiutato. Caricamento e sincronizzazione in Avanzata dopo la pubblicazione da verificare ricaricando l'app. Worker non toccato. Prima: **`4bf36e2`**, pubblicato su richiesta il 16 novembre con
@@ -44,7 +45,7 @@ cronaca delle singole fasi e possono dire cose superate.
 
 ## Liste: pulsante «Nuova lista» più grande anche su desktop — 16 novembre 2026
 
-- Su richiesta: il pulsante del titolo di Liste è alto 56 dp con etichetta 16/600 anche da medium in su (prima solo su smartphone).
+- Su richiesta: il pulsante del titolo di Liste è alto 56 dp con etichetta 16/600 anche da medium in su (prima solo su smartphone). Chromium 1280 px: 148×56. `npm run check` OK (**448/448**). Committato in `fd705f3`, inviato e pubblicato su Hosting.
 
 ## Analisi su desktop come su smartphone: Periodo e Grafico come menu — 16 novembre 2026
 
@@ -52,7 +53,7 @@ cronaca delle singole fasi e possono dire cose superate.
   al posto delle caselle (`ChoiceChips`); stesso codice per tutte le larghezze. Tolta la traduzione «Tipo di grafico», non più usata.
   Sostituisce la voce «Periodo e grafico a caselle su desktop» del 16 novembre.
 - Verifiche: `npm run check` OK (**448/448**, build demo); Chromium con `nummo-test-casi-limite-2026-11-08.json` (profilo temporaneo cancellato):
-  1280 px Fondo 926, Periodo e Grafico 457 ciascuno; 820 px 682 / 335 / 335; nessun overflow né errore JS. Nessun commit.
+  1280 px Fondo 926, Periodo e Grafico 457 ciascuno; 820 px 682 / 335 / 335; nessun overflow né errore JS. Committato in `fd705f3`, inviato e pubblicato su Hosting.
 
 ## Analisi su smartphone: Fondo da solo, poi Periodo e Grafico come menu — 16 novembre 2026
 
@@ -61,7 +62,7 @@ cronaca delle singole fasi e possono dire cose superate.
   «Grafico». AGENTS aggiornato.
 - Verifiche: `npm run check` OK (**448/448**, build demo); Chromium touch con `nummo-test-casi-limite-2026-11-08.json` (profilo temporaneo cancellato): a 390 px
   Fondo 366 px, Periodo e Grafico 177 px; a 360 px 336 / 162 / 162; foglio «Grafico» con le tre voci, scelta «Blocchi» applicata; nessun
-  overflow né errore JS. Nessun commit.
+  overflow né errore JS. Committato in `fd705f3`, inviato e pubblicato su Hosting.
 
 ## Filtro «Fondo»: icona anche su smartphone — 16 novembre 2026
 
@@ -69,7 +70,7 @@ cronaca delle singole fasi e possono dire cose superate.
   del fondo), come da desktop. Nuova prop `iconOnPhones` di `MenuSelect`, usata solo da `FundFilter`; gli altri selettori su smartphone restano
   senza icona. In Analisi il campo è a metà riga: i nomi lunghi dei fondi si troncano un po' prima. `npm run check` OK (**448/448**, build demo); Chromium
   390 px touch (`nummo-utente-medio.json`, profilo temporaneo cancellato): Spese con «Medio · Auto» e il suo avatar, Analisi con il
-  portafoglio e «Tutti i fondi» intero; nessun overflow né errore JS. Nessun commit.
+  portafoglio e «Tutti i fondi» intero; nessun overflow né errore JS. Committato in `fd705f3`, inviato e pubblicato su Hosting.
 
 ## Fondi: una sola riga «Ricarica mensile», saldo iniziale di nuovo nel modulo — 16 novembre 2026
 
