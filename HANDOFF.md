@@ -46,6 +46,12 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Abbonamenti: posizione di «Storico dei pagamenti» — 16 novembre 2026
+
+- Su richiesta (screenshot): su smartphone il pulsante tonale sta a destra, sotto Annulla/Pausa/Modifica (`alignSelf: 'flex-end'`);
+  da medium in su è nella stessa riga delle azioni, all'estremo sinistro (`marginRight: 'auto'`), separato da Annulla abbonamento.
+  `npm run check` OK (**453/453**, build demo). Non provato nel browser. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
+
 ## Riallineamento documenti, commit, push e Hosting — 16 novembre 2026 (sera)
 
 - Su richiesta, dopo una verifica documenti/codice: Guida (IT/EN) senza la promessa di creare categorie «al volo» durante la spesa (dal

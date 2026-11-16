@@ -134,6 +134,15 @@ function SubscriptionRow({ summary, category, open, compact, canChange, working,
   const frequency = inForce ? t(recurrenceLabels[inForce]) : '';
   const when = status === 'active' ? (next ? t(inTrial ? 'Primo pagamento {p0}' : 'Prossimo rinnovo {p0}', { p0: formatDate(next.date) }) : '')
     : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
+  // The payment history opens in a dialog (it can be long, and a payment can be removed there).
+  // Phones: on its own row below the actions, on the right; from medium: far left of the actions row.
+  const history = (
+    <Button mode="contained-tonal" aria-haspopup="dialog" onPress={onHistory}
+      accessibilityLabel={t("Storico dei pagamenti di {p0}, {p1}", { p0: entry.description, p1: payments.length })}
+      icon={({ size, color }) => <SvgIcon shape={iconShapes.list} size={size} color={color} />}>
+      {t("Storico dei pagamenti ({p0})", { p0: payments.length })}
+    </Button>
+  );
   return (
     <View>
       <ListRow outlined dense icon={category?.icon ?? null} title={entry.description}
@@ -153,6 +162,8 @@ function SubscriptionRow({ summary, category, open, compact, canChange, working,
             <Field label={t(inTrial ? "Primo pagamento" : "Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
           </View>
           <View style={[styles.actions, compact && styles.compactActions]}>
+            {/* Desktop: the history sits at the far left of the actions row (auto margin), apart from the status actions. */}
+            {!compact && <View style={styles.historySlot}>{history}</View>}
             {status !== 'cancelled' && <Button compact={compact} mode="outlined" textColor={colors.error} disabled={!canChange || working}
               contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label}
               accessibilityLabel={t("Annulla abbonamento")}
@@ -173,14 +184,7 @@ function SubscriptionRow({ summary, category, open, compact, canChange, working,
           {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
             {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
           </Text>}
-          {/* The payment history opens in a dialog (it can be long, and a payment can be removed there). */}
-          <View style={styles.start}>
-            <Button mode="contained-tonal" aria-haspopup="dialog" onPress={onHistory}
-              accessibilityLabel={t("Storico dei pagamenti di {p0}, {p1}", { p0: entry.description, p1: payments.length })}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.list} size={size} color={color} />}>
-              {t("Storico dei pagamenti ({p0})", { p0: payments.length })}
-            </Button>
-          </View>
+          {compact && <View style={styles.end}>{history}</View>}
         </View>}
       </ListRow>
     </View>
@@ -212,5 +216,6 @@ const styles = StyleSheet.create({
   narrowEdit: { minWidth: 50 },
   statusAction: { minWidth: 98 },
   textOnlyLabel: { marginHorizontal: spacing.md },
-  start: { alignSelf: 'flex-start' },
+  end: { alignSelf: 'flex-end' },
+  historySlot: { marginRight: 'auto' },
 });
