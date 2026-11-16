@@ -37,6 +37,46 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Spese: prodotti in un dialogo, card «Totale» — 16 novembre 2026
+
+- Su richiesta (screenshot): nei dettagli di una spesa registrata da una lista i prodotti non sono più elencati in riga
+  («• Latte • Pasta …»). Al loro posto il pulsante tonale **«Prodotti (n)»** (icona lista) apre `ProductsDialog`
+  (`features/history/`, `AppDialog` come `TransactionDetails`): titolo «Prodotti acquistati», descrizione della spesa e
+  numero di prodotti, elenco scorrevole con un segno di spunta per riga e separatori, «Chiudi» (Escape chiude). Senza prodotti
+  spuntati resta il testo «Nessun prodotto spuntato». Su smartphone il pulsante sta a sinistra di «Modifica» sull'ultima riga.
+- **Card «Totale»** sotto i filtri della vista Spese (scelta dell'utente: totale dei risultati): somma e numero di tutte le spese
+  mostrate da Fondo, ricerca e Categoria, su tutti i mesi (non solo la pagina caricata); stesso aspetto della card «Prossimo
+  mese» degli Abbonamenti (`primaryContainer`, riquadro con l'icona euro). Nascosta senza risultati; nessuna regione live
+  (la ricerca la cambierebbe a ogni tasto).
+- Traduzioni EN aggiunte. Nessuna modifica a dati, `DataStore`, Rules o backup.
+- Verifiche: `npm run check` OK (typecheck, **451/451**, build demo). Chromium headless sul server di sviluppo (8081),
+  Standard, `nummo-utente-medio.json` importato con «Sostituisci» in un profilo temporaneo poi cancellato: card «6540,09 € ·
+  187 spese», dettagli di «Spesa grande del mese» con «Prodotti (9)» e «Modifica», dialogo con 9 prodotti, a 1280 e 390 px;
+  nessun overflow né errore JS. Non provati: tema scuro, telefono reale, Avanzata. Nessun commit.
+
+## Analisi: riga dei filtri alla misura normale — 16 novembre 2026
+
+- Su richiesta (screenshot, «più piccola, coerente con gli input delle altre sezioni»): in Analisi Fondo e Periodo usano il
+  `MenuSelect` normale (didascalia `labelSmall`, valore `bodyMedium`, icone 20, 50 dp, come Ordina e Categoria di Spese;
+  `FundFilter large={false}`) e il tipo di grafico il `SegmentedButtons` normale (40 dp, `labelLarge`). Larghezze su desktop:
+  Fondo 260, Periodo 200, tipo di grafico 320 dp; su smartphone invariate. La prop `prominent` di `SegmentedButtons`, usata
+  solo qui, è stata rimossa. Il filtro «Fondo» di Spese resta `large` (predefinito di `FundFilter`). AGENTS aggiornato.
+- Verifiche: `npm run check` OK (typecheck, **451/451**, build demo). Chromium headless sul server di sviluppo (8081), Standard,
+  archivio vuoto, profilo temporaneo cancellato: Periodo 200×50 e tipo di grafico 320×40 a 1280 px, 366×50 e 366×40 a 390 px,
+  nessun overflow né errore JS. Il campo Fondo non era visibile (nessun fondo nell'archivio di prova): stesso componente di
+  Periodo. Non pubblicato; nessun commit.
+- Poi, su richiesta: **da desktop** (da medium in su) «Fondo» occupa da solo tutta la prima riga; sotto, Periodo (200 dp) a
+  sinistra e il tipo di grafico (320 dp) a destra, 16 dp tra le righe come in Spese. Senza fondi la prima riga non c'è.
+  Smartphone invariato (Fondo e Periodo a metà, poi il tipo di grafico). `npm run check` OK (**451/451**); Chromium con
+  `nummo-utente-medio.json` (profilo temporaneo cancellato): Fondo 926 px a 1280 e 682 px a 820, Periodo e grafico sulla
+  riga sotto; 390 px come prima; nessun overflow né errore JS.
+- Poi, su richiesta, **solo da desktop** (da medium): Periodo e tipo di grafico non sono più un menu a tendina e pulsanti a segmenti
+  ma due gruppi di `ChoiceChips` (filter chip M3 dell'app, una casella per alternativa, spunta sulla scelta), con didascalia
+  «Periodo» / «Tipo di grafico»: Periodo a sinistra, grafico a destra (a capo sotto, a destra, se la pagina è stretta).
+  Smartphone invariato (`MenuSelect` e `SegmentedButtons`). Nessuna nuova traduzione. `npm run check` OK; Chromium con
+  `nummo-utente-medio.json`: a 1280 px una riga (Periodo 534 px, grafico 297 px), a 820 px il grafico va a capo a destra, 390 px
+  invariato; nessun overflow né errore JS. Nota: la casella scelta si allarga della spunta, come in tutti i `ChoiceChips`.
+
 ## Riallineamento dei documenti — 16 novembre 2026
 
 - Su richiesta, solo documentazione: «Stato corrente» riscritto (ultimo rilascio `cdd957f`, `db43c00` non pubblicato,

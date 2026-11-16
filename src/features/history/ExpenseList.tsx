@@ -12,9 +12,10 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { usePresence, useOverlayMotion } from '../../components/Overlay';
 import { fadeTransition } from '../../theme/motion';
-import { inputOutline, motion, spacing } from '../../theme/tokens';
+import { inputOutline, motion, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { expenseMonths } from './expenseMonths';
+import { ProductsDialog } from './ProductsDialog';
 
 type Props = {
   occurrences: readonly Occurrence[];
@@ -65,6 +66,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, em
     return searchAndSort(scoped, query, sort);
   }, [occurrences, filter, query, sort]);
   const summaries = useMemo(() => expenseMonths(results), [results]);
+  const resultsTotal = useMemo(() => results.reduce((sum, item) => sum + item.amount_minor, 0), [results]);
   const byDate = sort === 'date-desc' || sort === 'date-asc';
   const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]) }));
   const categoryChoices = [{ value: ALL, label: t("Tutte le categorie") }, ...categories.map((category) => ({ value: category.id, label: category.label }))];
@@ -89,9 +91,27 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, em
     </>
   );
 
+  const totalCount = results.length === 1 ? t("1 spesa") : t("{p0} spese", { p0: results.length });
+  const tone = { color: theme.colors.onPrimaryContainer };
+
   return (
     <View style={styles.root}>
       {filters}
+      {/* Total of every result (all months, not only the loaded page), so it follows Fondo, the search and Categoria. */}
+      {results.length > 0 && (
+        <View style={[styles.total, { backgroundColor: theme.colors.primaryContainer }]} role="group"
+          accessibilityLabel={t("Totale: {p0}, {p1}", { p0: amounts.format(resultsTotal / 100), p1: totalCount })}>
+          <View style={[styles.totalTile, { backgroundColor: theme.colors.primary }]}>
+            <SvgIcon shape={iconShapes.euro} size={26} color={theme.colors.onPrimary} />
+          </View>
+          <View style={styles.totalText}>
+            <Text variant="titleMedium" style={[tone, styles.strong]}>{t("Totale")}</Text>
+            <Text variant="bodyLarge" style={tone}>
+              <Text variant="headlineSmall" style={[tone, styles.amount, styles.strong]}>{amounts.format(resultsTotal / 100)}</Text> · {totalCount}
+            </Text>
+          </View>
+        </View>
+      )}
       <View role="list">
         {results.slice(0, visibleCount).map((item, index) => {
           return <ExpenseRow key={item.key} item={item} index={index}
@@ -134,6 +154,7 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
   // Phones: «Modifica» at the right of the last line (see the details below); wider pages keep it at the end of the line,
   // after the products.
   const compact = useSizeClass() === 'compact';
+  const [showProducts, setShowProducts] = useState(false);
   const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
   const formatAmount = (minor: number) => amounts.format(minor / 100);
           const month = item.date.slice(0, 7);
@@ -163,13 +184,19 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
               <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
             </View>}
           </>;
-          const productsField = products && <View style={styles.products}>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Prodotti acquistati")}</Text>
-            {products.length === 0 ? <Text variant="bodyMedium">{t("Nessun prodotto spuntato")}</Text>
-              : <View role="list" accessibilityLabel={t("Prodotti acquistati")} style={styles.productList}>
-                {products.map((name, i) => <Text key={i} role="listitem" variant="bodyMedium">{`• ${name}`}</Text>)}
-              </View>}
-          </View>;
+          // Products of a registered list: a tonal button opens them all in a dialog (never an inline run of names).
+          const productsField = products && (products.length === 0
+            ? <View style={styles.detailField}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Prodotti acquistati")}</Text>
+              <Text variant="bodyMedium">{t("Nessun prodotto spuntato")}</Text>
+            </View>
+            : <View style={styles.start}>
+              <Button mode="contained-tonal" aria-haspopup="dialog" onPress={() => setShowProducts(true)}
+                accessibilityLabel={t("Prodotti acquistati di {p0}, {p1}", { p0: item.description, p1: products.length })}
+                icon={({ size, color }) => <SvgIcon shape={iconShapes.checklist} size={size} color={color} />}>
+                {t("Prodotti ({p0})", { p0: products.length })}
+              </Button>
+            </View>);
           return (
             <Fragment key={item.key}>
               {heading && (
@@ -210,6 +237,7 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
                   </>}
                 </View>}
               </ListRow>
+              {showProducts && products && <ProductsDialog description={item.description} products={products} onClose={() => setShowProducts(false)} />}
               </View>
             </Fragment>
           );
@@ -245,9 +273,11 @@ const styles = StyleSheet.create({
   compactFields: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: spacing.md },
   empty: { gap: spacing.sm },
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
-  // Takes the room left on the line (beside Data and Categoria on wide pages), so «Modifica» can stay at its right.
-  products: { flexGrow: 1, flexShrink: 1, flexBasis: 220, minWidth: 0, gap: spacing.xs },
-  // Products flow one after another (no fixed column width): many fit on one line.
-  productList: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.md, rowGap: 2 },
   start: { alignSelf: 'flex-start' },
+  // Total of the filtered results, same footprint and tone as the «Prossimo mese» card of the subscriptions view.
+  total: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, borderRadius: radius.control,
+    paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
+  totalTile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
+  totalText: { flex: 1, minWidth: 0 },
+  strong: { fontWeight: '600' },
 });
