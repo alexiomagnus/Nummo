@@ -5,11 +5,12 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main` = `db43c00` (Fondo e Periodo larghi uguali in Analisi su smartphone), worktree pulito al
-  16 novembre prima del riallineamento dei documenti.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio pubblicato: `cdd957f` (fuso orario e formato 24/12 ore,
-  «Filtra per fondo» rimosso, colonne delle Impostazioni, ritocchi ai Templates, coltello). **`db43c00` non è pubblicato.**
-  Rilasci precedenti del 15 novembre, dal più recente: `c0b418c` (filtri di Spese e Analisi), `ec150a1` (Templates, backup v7,
+- **Git.** `origin/main` = `db43c00` (Fondo e Periodo larghi uguali in Analisi su smartphone); in locale, sopra, i commit
+  di sola documentazione del 16 novembre (`1e0b923` e il successivo), **non inviati**.
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`db43c00`**, pubblicato su richiesta il 16 novembre
+  con `npm run deploy:hosting` (build da `1e0b923`, codice identico a `db43c00`; «Deploy complete!», sito 200). Resa su
+  telefono non verificata. Prima: `cdd957f` (fuso orario e formato 24/12 ore, «Filtra per fondo» rimosso, colonne delle
+  Impostazioni, ritocchi ai Templates, coltello). Rilasci precedenti del 15 novembre, dal più recente: `c0b418c` (filtri di Spese e Analisi), `ec150a1` (Templates, backup v7,
   icona stondata; con Rules), `e0c2850` (icona trasparente delle notifiche), `f454d12` (Prossimo mese, filtro per fondo,
   pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche; Worker ripubblicato prima), `1889755`
   (dissolvenza del segnaposto d'avvio). Tutti con `npm run deploy:hosting`, «Deploy complete!», sito 200.
@@ -42,13 +43,15 @@ cronaca delle singole fasi e possono dire cose superate.
   rilasci del 15 novembre in ordine, Rules ultime con `ec150a1`), punto 1 di «Prossime attività» e sezione dei Templates
   (Rules già pubblicate) corretti; in AGENTS aggiunto `templates/{uuid}` all'elenco delle collezioni della riga
   `firestore.rules`. Nessuna modifica al codice. `npm run check` OK (typecheck 0 errori, **451/451**, `dist-demo`
-  esportata). `test:emulator` non rieseguito (Rules e `DataStore` invariati). Nessun commit.
+  esportata). `test:emulator` non rieseguito (Rules e `DataStore` invariati). Committato in `1e0b923` (non inviato), poi
+  `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo Hosting, «Deploy complete!», sito 200): pubblica `db43c00`.
+  Rules e Worker non toccati.
 
 ## Analisi su smartphone: Fondo e Periodo uguali — 15 novembre 2026
 
 - Su richiesta: su smartphone i due selettori dividono la riga a metà (flex 1 : 1, prima 1 : 1,2). Dopo la riduzione del padding dei
   campi `large` su smartphone, «Ultimi 12 mesi» entra intero anche a 360 px (Chromium, due campi da 162 px). `npm run check` OK.
-  Committato in `db43c00` e inviato a `origin/main`; **non pubblicato** su Hosting.
+  Committato in `db43c00`, inviato a `origin/main` e pubblicato su Hosting il 16 novembre (sito 200).
 
 ## Rilascio del 15 novembre (sera, seconda parte)
 
