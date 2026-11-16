@@ -107,7 +107,7 @@ test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', (
 });
 
 test('abbonamenti: stati e azioni tradotti, nomi delle serie mai tradotti', () => {
-  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Pagamenti ricorrenti', 'Recurring payments'], ['Abbonamenti', 'Subscriptions'], ['Settimana', 'Week'], ['Anno', 'Year'], ['Spostamento', 'Transfer'], ['Budget', 'Budget'],
+  for (const [it, en] of [['Attivo', 'Active'], ['In pausa', 'Paused'], ['Annullato', 'Cancelled'], ['Pagamenti ricorrenti', 'Recurring payments'], ['Abbonamenti', 'Subscriptions'], ['Settimana', 'Week'], ['Anno', 'Year'],
     ['Metti in pausa', 'Pause'], ['Pausa', 'Pause'], ['Riattiva', 'Resume'], ['Annulla abbonamento', 'Cancel subscription']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);

@@ -21,7 +21,7 @@ function latest<T>(subscribe: (next: (value: T) => void, error: (reason: Error) 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
 const restore = (store: DataStore, json: string, mode: 'merge' | 'replace') => {
   const data = parseBackup(JSON.parse(json));
-  return store.importRecords(data.expenses, data.categories, mode, data.funds, data.movements, data.lists, data.budget, data.templates);
+  return store.importRecords(data.expenses, data.categories, mode, data.funds, data.movements, data.lists, data.budget);
 };
 
 test('schema locale: versione = numero di migrazioni, passi mancanti in ordine, versione futura rifiutata', () => {
@@ -344,54 +344,19 @@ test('salvataggio locale: riuscito solo se la scrittura è confermata; un listen
   assert.equal(typeof await store.lastChange(), 'string');
 });
 
-test('template locali: creazione, modifica che conserva la data di creazione, eliminazione, dati non validi rifiutati subito', async () => {
-  const { store } = open();
-  const templates = latest<SnapshotState<{ id: string; description: string; amount_minor: number | null; created_at: string; updated_at: string }>>(store.watchTemplates);
-  const errors: unknown[] = [];
-  store.onQueuedWriteError((reason) => errors.push(reason));
-  const category_id = randomUUID();
-  const data = { description: 'Caffè al bar', amount_minor: null, date: '2026-11-01', category_id, fund_id: null };
-  const id = randomUUID();
-  store.saveTemplate(id, data);
-  assert.throws(() => store.saveTemplate(randomUUID(), { ...data, description: '' }), /Template non valido/);
-  assert.throws(() => store.saveTemplate(randomUUID(), { ...data, amount_minor: 0 }), /Template non valido/);
-  assert.throws(() => store.saveTemplate(randomUUID(), { ...data, date: '2026-02-30' }), /Template non valido/);
-  assert.throws(() => store.saveTemplate(randomUUID(), { ...data, category_id: 'x' }), /Template non valido/);
-  await tick();
-  assert.equal(templates.state.value!.records.length, 1);
-  const saved = templates.state.value!.records[0]!;
-  assert.equal(saved.amount_minor, null);
-  store.saveTemplate(id, { ...data, description: 'Colazione', amount_minor: 180 }, saved as never);
-  await tick();
-  const edited = templates.state.value!.records[0]!;
-  assert.deepEqual([edited.description, edited.amount_minor, edited.created_at], ['Colazione', 180, saved.created_at]);
-  store.removeTemplate(edited as never);
-  await tick();
-  assert.deepEqual(templates.state.value!.records, []);
-  assert.deepEqual(errors, []);
-});
-
-test('template nel backup: ripristino completo su un dispositivo vuoto, unione con conflitto, sostituzione', async () => {
+test('template rimossi: un backup v7 con template si importa ignorandoli, l’esportazione (v8) non li contiene', async () => {
   const first = open();
-  const templateId = randomUUID();
-  first.store.saveTemplate(templateId, { description: 'Spesa settimanale', amount_minor: 4500, date: '2026-11-01', category_id: randomUUID(), fund_id: null });
-  await tick();
   const json = makeBackup(await first.store.exportSnapshot());
   const file = JSON.parse(json);
-  assert.equal(file.templates.length, 1);
-  assert.deepEqual(Object.keys(file.templates[0]).sort(), ['amount_minor', 'category_id', 'created_at', 'date', 'description', 'fund_id', 'id']);
+  assert.equal(file.version, 8);
+  assert.equal('templates' in file, false);
+  const template = { id: randomUUID(), description: 'Caffè al bar', amount_minor: 180, date: '2026-11-01', category_id: randomUUID(), fund_id: null, created_at: '2026-11-01T08:00:00.000Z' };
+  const v7 = { ...file, version: 7, templates: [template] };
+  assert.equal('templates' in parseBackup(v7), false);
   const second = open();
-  await restore(second.store, json, 'merge');
-  assert.equal(makeBackup(await second.store.exportSnapshot(), new Date(file.exported_at)), json, 'identico dopo il ripristino');
-  await restore(second.store, json, 'merge'); // repeatable: identical items are skipped
-  // The same ID with other content blocks a merge; a replace makes the archive equal to the file.
-  second.store.saveTemplate(templateId, { description: 'Altro', amount_minor: 1, date: '2026-11-01', category_id: randomUUID(), fund_id: null });
-  await tick();
-  await assert.rejects(restore(second.store, json, 'merge'), /Importazione bloccata/);
-  await restore(second.store, json, 'replace');
-  assert.equal(makeBackup(await second.store.exportSnapshot(), new Date(file.exported_at)), json);
-  // Older files have no templates; a v6 file with them is refused.
-  const { templates: _omitted, ...withoutTemplates } = file;
-  assert.equal(parseBackup({ ...withoutTemplates, version: 6 }).templates, undefined);
-  assert.throws(() => parseBackup({ ...file, version: 6 }), /versione 7/);
+  await restore(second.store, JSON.stringify(v7), 'merge');
+  await restore(second.store, JSON.stringify(v7), 'replace');
+  assert.equal(makeBackup(await second.store.exportSnapshot(), new Date(file.exported_at)), json, 'nessun template salvato né esportato');
+  // A v6 file that carries templates is read the same way (they are ignored, never an error).
+  assert.equal('templates' in parseBackup({ ...v7, version: 6 }), false);
 });

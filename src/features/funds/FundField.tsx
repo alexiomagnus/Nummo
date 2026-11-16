@@ -6,14 +6,14 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
 import { FundAvatar, NoFundAvatar } from './FundAvatar';
 
-// What the expense form needs to know about a fund: its balance now and what remains of this month's budget.
-// `tracksBalance`: the fund keeps balance data from an earlier version; only then is its balance shown.
-export type FundChoice = Readonly<{ fund: Fund; balance: number; remaining: number | null; tracksBalance?: boolean }>;
-// Explicit «no fund» choice (expenses that should not touch any balance).
+// What the expense form needs to know about a fund: what remains of this month's budget (no balance is shown since
+// 16 November 2026).
+export type FundChoice = Readonly<{ fund: Fund; remaining: number | null }>;
+// Explicit «no fund» choice.
 export { noFund };
 
 // Fund paying the expense. Shown only when at least one fund exists, so the form is unchanged for those who do not use
-// funds. The selected fund's balance and remaining budget are written below the field; nothing is ever blocked.
+// funds. The selected fund's remaining budget is written below the field; nothing is ever blocked.
 export function FundField({ choices, value, error, disabled, onChange }: {
   choices: readonly FundChoice[]; value: string; error?: string; disabled?: boolean; onChange: (value: string) => void;
 }) {
@@ -29,8 +29,6 @@ export function FundField({ choices, value, error, disabled, onChange }: {
     <View>
       <SelectField label={t("Fondo")} options={options} value={selected ? value : value === noFund ? noFund : ''} disabled={disabled} error={error} onChange={onChange} />
       {selected ? <View style={styles.info} aria-live="polite">
-        {selected.tracksBalance && <Text variant="bodySmall" style={{ color: selected.balance < 0 ? colors.error : colors.onSurfaceVariant }}>
-          {t("Saldo disponibile: {p0}", { p0: formatAmount(selected.balance) })}</Text>}
         {selected.remaining !== null && <Text variant="bodySmall" style={{ color: over ? colors.error : colors.onSurfaceVariant }}>
           {over ? t("Budget del mese superato di {p0}", { p0: formatAmount(-selected.remaining) }) : t("Budget residuo del mese: {p0}", { p0: formatAmount(selected.remaining) })}</Text>}
       </View> : null}

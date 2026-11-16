@@ -41,6 +41,86 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Fondi: una sola riga «Ricarica mensile», saldo iniziale di nuovo nel modulo — 16 novembre 2026
+
+- Su richiesta: tolta la riga «Ricarica di … il giorno …» dal riepilogo e sostituita la voce «Ricariche mensili» con **«Ricarica mensile»**:
+  la ricarica del mese, ricevuta o ancora attesa nel mese (prevista nei mesi futuri), + verde o 0,00. Traduzioni non più usate rimosse
+  («Ricariche mensili», «Ricariche previste», «Ricarica di {p0} il giorno {p1}», «Ricarica sospesa»).
+- **«Saldo iniziale (facoltativo)»** di nuovo nel modulo Nuovo/Modifica fondo, sopra «Ricarica mensile» (come prima: vuoto = 0, alla
+  `start_date`); traduzioni ripristinate.
+- Verifiche: `npm run check` OK (typecheck, **448/448**, build demo). Chromium 1280 px con `nummo-test-casi-limite-2026-11-08.json` (profilo
+  temporaneo cancellato): «TEST Quotidiano» con «Ricarica mensile +500,00 €» (attesa il 31), modulo Nuovo fondo con Saldo iniziale, Ricarica
+  mensile e Budget mensile; nessun errore JS. Nessun commit.
+
+## Fondi: riepilogo con Abbonamenti, Spese e Spesa totale, righe sempre presenti — 16 novembre 2026
+
+- Su richiesta: il «Riepilogo del mese» ha sempre le stesse sette righe, anche a zero (zero senza segno, nel colore attenuato): Aggiunte,
+  Ricariche mensili (Ricariche previste nei mesi futuri), Trasferimenti ricevuti (+ verde), Trasferimenti inviati, **Abbonamenti**, **Spese**
+  (− rosso) e **Spesa totale** (grassetto, ex «Speso in totale»; «Spesa totale prevista» nei mesi futuri). Abbonamenti + Spese = Spesa totale.
+- Dominio: `FundEntry.recurring` sulle spese (pagamento di una serie) e `FundMonth.subscriptions/singles` (stessa base dello speso: effettivo,
+  previsione nei mesi futuri); test nuovo in `funds.test.ts`. Traduzioni «Spesa totale», «Spesa totale prevista».
+- **Nota:** nel mese corrente «Ricariche mensili» conta solo le ricariche già ricevute; quella ancora attesa nel mese (prima mostrata come
+  «Ricariche previste») non compare finché non matura.
+- Verifiche: `npm run check` OK (typecheck, **448/448**, build demo). Chromium 1280 px chiaro/scuro con `nummo-test-casi-limite-2026-11-08.json`
+  (profilo temporaneo cancellato): «TEST Quotidiano» +123,45 / 0,00 / 0,00 / −50,00 / −12,99 / −111,92 / 124,91; gli altri fondi con tutte le
+  righe; nessun errore JS. Nessun commit.
+
+## Fondi: ricarica nel riepilogo, importi con segno e colore — 16 novembre 2026
+
+- Su richiesta: la riga «Ricarica di … il giorno …» non è più sotto il nome del fondo ma apre il «Riepilogo del mese». Importi del riepilogo
+  in semigrassetto: entrate con «+» in verde (Aggiunte, Ricariche mensili, Ricariche previste, Trasferimenti ricevuti), uscite con «−» in
+  rosso (`error`: Trasferimenti inviati), «Speso in totale» in grassetto nel colore del testo, senza segno. **Scelta mia da confermare:** la
+  richiesta diceva «− rosso per i trasferimenti»; ho messo il segno secondo la direzione, quindi i trasferimenti ricevuti sono «+» verdi.
+- Nuovo colore semantico `positiveColors` (`palette.ts`, chiaro `#18692C`, scuro `#7DD992`), esposto come `colors.positive`/`positiveColor()`;
+  test di contrasto ≥ 4,5:1 su tutte le superfici, accenti e temi in `theme.test.ts` (il primo verde, `#1E7B34`, si fermava a 4,35).
+- Verifiche: `npm run check` OK (typecheck, **447/447**, build demo). Chromium 1280 px, chiaro e scuro, `nummo-test-casi-limite-2026-11-08.json`
+  (profilo temporaneo cancellato): «TEST Quotidiano» con ricarica, +123,45 Aggiunte, +500,00 Ricariche previste, −50,00 Trasferimenti
+  inviati, Speso in totale 124,91; nessun errore JS. Nessun commit.
+
+## «Nessuna» con icona nelle Categorie preferite, più spazio dopo l'icona nei selettori — 16 novembre 2026
+
+- Su richiesta: in Impostazioni → «Categorie preferite» la voce «Nessuna» (Nuova spesa, Nuove liste) ha il cerchio tratteggiato
+  (`NoFundAvatar`), come «Nessuno» di «Fondo preferito». Nei campi `MenuSelect` (Fondo, Ordina, Categoria, Periodo) l'icona sta in uno slot di
+  24 dp con 4 dp in più prima del testo (circa 14 px invece di 8); su smartphone l'icona non c'è e nulla cambia. `npm run check` OK
+  (**446/446**, build demo); Chromium 1280 px (Spese e Impostazioni, profilo temporaneo cancellato), nessun errore JS. Nessun commit.
+
+## Fondi: Aggiungi/Trasferisci e ricarica di nuovo, riepilogo a soli totali; icona del fondo nel filtro — 16 novembre 2026
+
+- Su richiesta (sostituisce in parte la voce sotto): ripristinati come prima «Aggiungi»/«Trasferisci», `MovementDialog`, il «+» della scheda
+  (solo fondi con dati di saldo) e «Ricarica mensile» nel modulo, con la riga della ricarica sulla scheda (senza «Senza ricarica»). Il saldo
+  iniziale resta fuori dal modulo (si conserva quello salvato); nessuna cifra di saldo.
+- Scheda espansa: «Riepilogo del mese» / «Nascondi riepilogo» con soli totali (Aggiunte, Trasferimenti ricevuti/inviati, Ricariche mensili,
+  Ricariche previste se presenti, Speso in totale o Spese previste); tolto l'elenco delle spese del mese.
+- Filtro «Fondo»: il campo mostra l'icona della voce scelta (avatar del fondo, cerchio tratteggiato per «Senza fondo») invece del
+  portafoglio fisso (`MenuSelect`: icona della voce corrente quando c'è).
+- Traduzioni ripristinate da `HEAD` (30) e nuove (Aggiunte, Nascondi riepilogo, Ricariche mensili, Speso in totale); test i18n estesi.
+- Verifiche: `npm run check` OK (typecheck, **446/446**, build demo). Chromium 1280 px, Standard, `nummo-test-casi-limite-2026-11-08.json` importato (profilo
+  temporaneo cancellato): Aggiungi/Trasferisci e «+» presenti, dialogo Trasferisci come prima, riepilogo con «Speso in totale», campo
+  Fondo con l'avatar del fondo scelto; nessun errore JS. Non provati: salvataggio di un movimento e di una ricarica nel browser,
+  smartphone. Nessun commit.
+
+## Templates eliminati, Fondi senza saldo — 16 novembre 2026
+
+- **Su richiesta (screenshot di «Saldo e movimenti»), dopo due scelte dell'utente:** Fondi «tutto saldo/ricariche fuori
+  dall'interfaccia» e Templates «rimozione completa». Decisioni in `docs/architecture.md`.
+- **Fondi:** un fondo è un gruppo di spese con budget facoltativo. Tolti «Saldo e movimenti», «Senza ricarica», il «+» (aggiungi denaro),
+  «Aggiungi»/«Trasferisci», «Disponibile ora»/«Saldo a fine mese», saldo dei fondi archiviati, «Saldo iniziale» e «Ricarica mensile» dal
+  modulo, «Saldo disponibile» sotto il campo Fondo di Nuova spesa; `MovementDialog.tsx` eliminato. Testi di archiviazione e assegnazione
+  senza riferimenti al saldo. **Dati di saldo invariati** (dominio, `DataStore`, Rules, backup; `fundFromForm` li riscrive identici).
+- **Templates:** eliminati `features/templates/`, `domain/template.ts`, metodi `DataStore` e implementazioni, voce di menu,
+  `templatesRequest`, campo in Nuova spesa, `templatesEnabled`, icona `template`, prop `amountOptional` di `ExpenseFields`, voce della
+  Guida, Rules `templates/{id}` (anche in `public/firestore.rules`). **Backup v8** senza `templates`; v7/v6 letti ignorandoli. Lo store
+  IndexedDB `templates` resta nello schema, inutilizzato; i documenti Firestore restano, inaccessibili.
+- 75 traduzioni non più usate rimosse; Guida (IT/EN), README, AGENTS aggiornati. Test: tolto `template.test.ts`, nuovi casi (backup v7 con
+  template ignorato in `localStore.test.ts`; Rules che rifiutano `templates` nell'emulatore), versioni del backup 7 → 8 in tre test.
+  Le fixture di `docs/testing/` restano v6/v7 (ancora leggibili).
+- Verifiche: `npm run check` OK (typecheck, **446/446**, build demo). `test:emulator` **20/20** su porte dedicate (Auth 19099,
+  Firestore 18180, config temporanea in radice rimossa). Chromium 1280 px, Standard, `nummo-utente-medio.json` importato (profilo
+  temporaneo cancellato): Fondi senza saldo/ricarica/Aggiungi/Trasferisci/movimenti, modulo con solo nome, colore, icona e budget, menu
+  account Impostazioni / Notifiche / Categorie / Archiviazione e backup, nessun campo Template in Nuova spesa. Gli errori Metro nel log
+  riguardavano gli stati intermedi durante la rimozione dei file (build finale OK). **Per l'Avanzata vanno ripubblicate le Rules**
+  (solo con autorizzazione). Nessun commit.
+
 ## Icone dei fondi nel filtro «Fondo», budget mensile generale rimosso — 16 novembre 2026
 
 - **Filtro «Fondo»** (Spese e Analisi): ogni voce del menu ha la sua icona: «Tutti i fondi» il portafoglio, «Senza fondo» il cerchio

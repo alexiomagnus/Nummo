@@ -22,8 +22,6 @@ type Props = {
   disabled?: boolean;
   // Only the desktop new-expense page opts into a shorter, denser form.
   dense?: boolean;
-  // Templates: the amount may stay empty (the label and its accessible name say so).
-  amountOptional?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
   onChange: (field: BaseField, value: string) => void;
@@ -33,12 +31,12 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
 // Every field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, amountOptional = false, extra, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
   const compact = useSizeClass() === 'compact';
-  // «Nessuna categoria» (the dashed icon of «Nessun fondo» / «Nessun template») is what an empty choice shows: no preferred
+  // «Nessuna categoria» (the dashed icon of «Nessun fondo») is what an empty choice shows: no preferred
   // category means no category picked yet, never the first one of the list. Saving still asks for a category.
   const options = useMemo(() => [
     { value: '', label: t("Nessuna categoria"), icon: <NoFundAvatar size={24} /> },
@@ -51,9 +49,9 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       <View>
         <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
           <View style={[styles.amount, compact && styles.amountCompact]}>
-            <TextInput outlineStyle={inputOutline} label={amountOptional ? t("Importo (facoltativo)") : t("Importo")} value={values.amount} onChangeText={(value) => onChange('amount', value)}
+            <TextInput outlineStyle={inputOutline} label={t("Importo")} value={values.amount} onChangeText={(value) => onChange('amount', value)}
               mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'} error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
-              onBlur={() => onBlur('amount')} accessibilityLabel={amountOptional ? t("Importo in euro, facoltativo") : t("Importo in euro, obbligatorio")}
+              onBlur={() => onBlur('amount')} accessibilityLabel={t("Importo in euro, obbligatorio")}
               contentStyle={styles.amountText} left={leadingIcon(iconShapes.euro)} />
           </View>
           <View style={[styles.date, compact && styles.dateCompact]}>

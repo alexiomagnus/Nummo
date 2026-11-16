@@ -74,7 +74,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const added = merge ? [
     [merge.addExpenses.length, "1 spesa", "{p0} spese"], [merge.addCategories.length, "1 categoria", "{p0} categorie"],
     [merge.addFunds.length, "1 fondo", "{p0} fondi"], [merge.addMovements.length, "1 movimento", "{p0} movimenti"],
-    [merge.addLists.length, "1 lista", "{p0} liste"], [merge.addTemplates.length, "1 template", "{p0} template"],
+    [merge.addLists.length, "1 lista", "{p0} liste"],
   ].filter(([n]) => (n as number) > 0).map(([n, one, many]) => (n === 1 ? t(one as string) : t(many as string, { p0: n as number }))) : [];
   const mergeEmpty = !!merge && added.length === 0;
   const missing = merge ? merge.missingFundReferences + merge.missingCategoryReferences : 0;
@@ -106,7 +106,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         {missing === 1 ? t("1 riferimento a fondi o categorie mancanti.") : t("{p0} riferimenti a fondi o categorie mancanti.", { p0: missing })}</Text>}
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
         {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.templates); finish();
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget); finish();
         })}>{t("Unisci ai dati esistenti")}</Button>}
         <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
         <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
@@ -114,8 +114,8 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     </View>}
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
       description={replace && t("Verranno eliminati {p0} elementi e aggiunti {p1}. Prima viene scaricata una copia dei dati attuali.", {
-        p0: replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length + replace.removeMovementIds.length + replace.removeListIds.length + replace.removeTemplateIds.length,
-        p1: replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length + replace.addMovements.length + replace.addLists.length + replace.addTemplates.length })}
+        p0: replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length + replace.removeMovementIds.length + replace.removeListIds.length,
+        p1: replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length + replace.addMovements.length + replace.addLists.length })}
       onDismiss={() => setConfirmReplace(false)}
       onConfirm={async () => {
         if (!preview || busy) return false;
@@ -123,7 +123,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         try {
           // Safety copy before the first deletion: the current data stays on disk if anything goes wrong.
           download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.templates);
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />

@@ -13,12 +13,12 @@ export const chartTypes = ['donut', 'bars', 'blocks'] as const;
 export type ChartType = (typeof chartTypes)[number];
 // `showArchivedLists` hides the archived lists of the Lists page,
 // `showArchivedFunds` the archived funds of the Funds page,
-// `timeFormat` how hours are written (24 or 12 hours, AM/PM), `timeZone` the clock of the notification hour («auto» = the device's, or an IANA name), `templatesEnabled` the Template field of «Nuova spesa» (off by default; the saved templates are archive data).
-export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; timeFormat: TimeFormat; timeZone: string };
+// `timeFormat` how hours are written (24 or 12 hours, AM/PM), `timeZone` the clock of the notification hour («auto» = the device's, or an IANA name). A `templatesEnabled` saved before templates were removed (16 November 2026) is ignored.
+export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; timeFormat: TimeFormat; timeZone: string };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -40,7 +40,6 @@ export function parsePreferences(raw: string | null): Preferences {
     dashboardTrend: typeof o.dashboardTrend === 'boolean' ? o.dashboardTrend : defaultPreferences.dashboardTrend,
     showArchivedLists: typeof o.showArchivedLists === 'boolean' ? o.showArchivedLists : defaultPreferences.showArchivedLists,
     showArchivedFunds: typeof o.showArchivedFunds === 'boolean' ? o.showArchivedFunds : defaultPreferences.showArchivedFunds,
-    templatesEnabled: typeof o.templatesEnabled === 'boolean' ? o.templatesEnabled : defaultPreferences.templatesEnabled,
     timeFormat: oneOf(timeFormats, o.timeFormat, defaultPreferences.timeFormat),
     timeZone: parseTimeZoneChoice(o.timeZone),
   };

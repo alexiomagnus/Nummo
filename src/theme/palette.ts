@@ -88,3 +88,8 @@ export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean): Sch
   }
   return scheme;
 }
+
+// Semantic green for money coming in (additions, recharges), the counterpart of `error` for money going out. Fixed, not tied to
+// the accent: the meaning must not change with the chosen colour. Contrast ≥ 4.5:1 on every surface (tests/theme.test.ts).
+export const positiveColors = { light: '#18692C', dark: '#7DD992' } as const;
+

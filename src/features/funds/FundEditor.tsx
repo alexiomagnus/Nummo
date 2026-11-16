@@ -10,10 +10,7 @@ import { SwitchRow } from '../../components/SwitchRow';
 import type { CategoryIcon } from '../../domain/category';
 import { parseAmountMinor } from '../../domain/expense';
 import type { SyncedFund } from '../../domain/firestore';
-import {
-  budgetFor, currentRecharge, fundFromForm, fundNameError, fundPolicy, monthOf, nextFundColor, parseMoneyMinor,
-  type Fund, type FundData,
-} from '../../domain/funds';
+import { budgetFor, currentRecharge, fundFromForm, fundNameError, fundPolicy, monthOf, nextFundColor, parseMoneyMinor, type Fund, type FundData } from '../../domain/funds';
 import { todayInRome } from '../../domain/policy';
 import { useI18n } from '../../i18n/I18nProvider';
 import { paletteColor } from '../../theme/chartPalette';
@@ -32,10 +29,9 @@ type Errors = Partial<Record<'name' | 'budgetAmount' | 'initial' | 'rechargeAmou
 
 const amountText = (minor: number) => `${Math.floor(minor / 100)},${String(minor % 100).padStart(2, '0')}`;
 
-// Create or edit a fund: name, colour, icon, an optional initial balance, an optional monthly recharge and an optional
-// monthly budget. The balance has no switch of its own: it exists while the fund has an initial balance, recharges or
-// movements (hasBalanceData). Fields the form does not show (start date, per-month budget exceptions) are written back
-// exactly as they were. Budget and recharge change from now on only (fundFromForm); past recharges are never deleted.
+// Create or edit a fund: name, colour, icon, an optional initial balance, an optional monthly recharge and an optional monthly
+// budget. Fields the form does not show (start date, per-month budget exceptions) are written back exactly as they were.
+// Budget and recharge change from now on only (fundFromForm); past recharges are never deleted.
 export function FundEditor({ record, funds, ready, error, onSave, close }: Props) {
   const { t } = useI18n();
   const { colors, dark } = useTheme();
@@ -64,14 +60,15 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
     if (nameError) next.name = nameError;
     const budgetMinor = parseAmountMinor(budgetAmount);
     if (budgetOn && budgetMinor === null) next.budgetAmount = budgetAmount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo del budget.';
+    // Empty initial balance = 0.
     const initialMinor = initial.trim() === '' ? 0 : parseMoneyMinor(initial, true);
+    if (initialMinor === null) next.initial = 'Importo non valido (es. 12,50).';
     const rechargeMinor = parseAmountMinor(rechargeAmount);
     const day = /^\d{1,2}$/.test(rechargeDay.trim()) ? Number(rechargeDay) : 0;
-    if (initialMinor === null) next.initial = 'Importo non valido (es. 12,50).';
     if (rechargeOn && rechargeMinor === null) next.rechargeAmount = rechargeAmount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo della ricarica.';
     if (rechargeOn && (day < 1 || day > 31)) next.rechargeDay = 'Indica un giorno da 1 a 31.';
     if (Object.keys(next).length) { setErrors(next); return; }
-    // Empty initial balance = 0; recharge off = none from now on (a fund that never had one keeps none).
+    // Recharge off = none from now on (a fund that never had one keeps none).
     const balance = { initial_minor: initialMinor!, recharge: rechargeOn ? { amount_minor: rechargeMinor!, day } : null };
     const data = fundFromForm(record, { name, icon, color, budget: budgetOn ? budgetMinor : null, balance }, today);
     if (!data) { setErrors({ form: 'Troppe modifiche programmate per questo fondo: crea un nuovo fondo per continuare.' }); return; }

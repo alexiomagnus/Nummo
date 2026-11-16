@@ -40,10 +40,9 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
       <Section title={t("Le funzioni principali")}>
         {item("Spese e categorie su misura", "Inserisci importo, descrizione e categoria (se lasci vuota la data, viene impostata automaticamente a oggi). Puoi creare infinite categorie con icone personalizzate, anche al volo mentre stai registrando una spesa.")}
-        {item("Template per le spese", "Se attivi i Template dal menu, puoi salvare spese già pronte (descrizione, categoria, fondo, data e, se vuoi, importo) e sceglierle in Nuova spesa per compilare tutto in un attimo.")}
         {item("Liste della spesa intelligenti", "Prepara la lista e spunta i prodotti mentre li metti nel carrello. Alla cassa ti basta inserire il totale dello scontrino, senza dover digitare i prezzi dei singoli articoli: Nummo crea un'unica spesa con il riepilogo di ciò che hai comprato e archivia la lista, permettendoti di recuperarne eventuali prodotti rimasti fuori.")}
         {item("Abbonamenti e spese fisse", "Imposta pagamenti ricorrenti (settimanali, mensili o annuali), gestendo anche periodi di prova gratuiti e prezzi promozionali. Puoi mettere in pausa, modificare o annullare un abbonamento in qualsiasi momento. Se ti eri dimenticato di farlo, scegli da quale data vale e i pagamenti successivi non vengono più contati.")}
-        {item("Fondi e budget (facoltativi)", "Raggruppa le spese per obiettivo (es. Casa, Vacanze, Università) e imposta tetti di spesa mensili. Gli avvisi ti segnalano quando ti avvicini o superi il limite, senza mai bloccarti. Da Spese e Analisi puoi filtrare i pagamenti per fondo. Se vuoi, un fondo tiene anche il conto dei soldi che contiene, con una ricarica mensile automatica.")}
+        {item("Fondi e budget (facoltativi)", "Raggruppa le spese per obiettivo (es. Casa, Vacanze, Università) e imposta tetti di spesa mensili. Gli avvisi ti segnalano quando ti avvicini o superi il limite, senza mai bloccarti. Da Spese e Analisi puoi filtrare i pagamenti per fondo.")}
         {item("Analisi e grafici", "Controlla dove vanno i tuoi soldi da 1 a 12 mesi con grafici interattivi (a ciambella, a barre o a blocchi), andamento giornaliero e confronto con i periodi precedenti.")}
       </Section>
 

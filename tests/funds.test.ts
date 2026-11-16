@@ -27,6 +27,21 @@ const expense = (n: number, patch: Partial<ExpenseRecord> = {}): ExpenseRecord =
 const university = fund(1, { name: 'Vita universitaria', initial_minor: 50000, recharges: [{ month: '2026-01', amount_minor: 30000, day: 1, active: true }],
   budgets: [{ month: '2026-01', amount_minor: 25000 }] });
 
+test('riepilogo del fondo: spesa del mese divisa in abbonamenti e spese singole (previsione per i mesi futuri)', () => {
+  const f = fund(1);
+  const sources = { funds: [f], movements: [], expenses: [
+    expense(1, { expense_date: '2026-03-10', amount_minor: 4000 }),
+    expense(2, { expense_date: '2026-01-15', amount_minor: 999, recurrence: 'monthly' }),
+    expense(3, { expense_date: '2026-03-25', amount_minor: 500 }),
+  ] };
+  // 20 March: the single expense of the 10th and the subscription of the 15th are paid; the 25th is still ahead.
+  const march = fundMonth(sources, f.id, '2026-03', '2026-03-20')!;
+  assert.deepEqual([march.subscriptions, march.singles, march.spent], [999, 4000, 4999]);
+  // A future month counts what is expected: only the subscription repeats.
+  const may = fundMonth(sources, f.id, '2026-05', '2026-03-20')!;
+  assert.deepEqual([may.subscriptions, may.singles, may.forecastSpent], [999, 0, 999]);
+});
+
 test('ricariche: una per mese al giorno scelto, giorni 29–31 riportati all’ultimo del mese, mai prima dell’inizio', () => {
   assert.equal(dueDate('2026-02', 31), '2026-02-28');
   assert.equal(dueDate('2028-02', 30), '2028-02-29');
@@ -250,10 +265,10 @@ test('backup v3: fondi, movimenti e fund_id ricostruiti; v2 letto senza fondi; c
   assert.throws(() => parseBackup({ ...file, movements: [{ ...file.movements[0], date: '2999-01-01' }] }), /Movimenti nel backup/);
 });
 
-test('fondi: testi di stato e tipi di movimento tradotti in inglese', async () => {
+test('fondi: testi di stato tradotti in inglese', async () => {
   const { translate } = await import('../src/i18n/translate.ts');
-  for (const [it, en] of [['Fondi e budget', 'Funds and budgets'], ['Trasferimento inviato', 'Transfer sent'], ['Trasferimento ricevuto', 'Transfer received'],
-    ['Ricarica mensile', 'Monthly recharge'], ['Previsione', 'Forecast'], ['Mese in corso', 'Current month'], ['Mese concluso', 'Past month'],
+  for (const [it, en] of [['Fondi e budget', 'Funds and budgets'], ['Fondo archiviato.', 'Fund archived.'], ['Ricarica mensile', 'Monthly recharge'], ['Trasferisci', 'Transfer'],
+    ['Spesa totale', 'Total spent'], ['Riepilogo del mese', 'Month summary'], ['Previsione', 'Forecast'], ['Mese in corso', 'Current month'], ['Mese concluso', 'Past month'],
     ['Esiste già un fondo con questo nome.', 'A fund with this name already exists.'], ['Il fondo scelto non esiste più.', 'The chosen fund no longer exists.']] as const) {
     assert.equal(translate('en', it), en);
     assert.equal(translate('it', it), it);

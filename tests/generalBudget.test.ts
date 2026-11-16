@@ -146,7 +146,7 @@ test('saldo del fondo dal modulo: su un fondo esistente, ricarica dalla prossima
 });
 
 test('modulo spesa: con fondi esistenti nessuna scelta obbligatoria, «Nessun fondo» di base', () => {
-  const choices = [{ fund: fund(), balance: 0, remaining: null }];
+  const choices = [{ fund: fund(), remaining: null }];
   assert.equal(resolveFund('', choices, ''), 'none');
   assert.equal(resolveFund('', choices, fund().id), fund().id, 'il fondo predefinito resta rispettato');
   assert.equal(resolveFund('', choices, 'non-esiste'), 'none');

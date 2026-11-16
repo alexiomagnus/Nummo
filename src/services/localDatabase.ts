@@ -2,7 +2,8 @@
 // store (localStore.ts) works on the small transactional contract below, which also has an in-memory twin for tests.
 // Never localStorage: records live in object stores keyed by `id`, written in atomic transactions.
 
-// `templates` came with schema step 2: step 1 keeps the stores it always created.
+// `templates` came with schema step 2: step 1 keeps the stores it always created. Templates were removed from Nummo on
+// 16 November 2026: the store stays in the schema (steps never change) but nothing reads or writes it any more.
 const firstStoreNames = ['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'meta'] as const;
 export const localStoreNames = [...firstStoreNames, 'templates'] as const;
 export type LocalStoreName = (typeof localStoreNames)[number];

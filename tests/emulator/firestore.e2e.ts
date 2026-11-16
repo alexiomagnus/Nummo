@@ -579,43 +579,11 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.equal(final.lists.some((l) => l.id === listId), false);
       assert.equal((await getDocsFromServer(collection(owner.db, 'users', uid, 'listItems'))).docs.some((d) => d.data().list_id === listId), false);
     });
-    await t.test('template: regole, scritture dirette, modifica che conserva la creazione, eliminazione e ripristino nel backup', async () => {
-      const templateRef = (id: string) => doc(owner.db, 'users', uid, 'templates', id);
-      const category_id = randomUUID();
-      const data = { description: `Caffè ${suffix}`, amount_minor: null, date: '2026-11-10', category_id, fund_id: null };
-      const id = randomUUID();
-      owner.store.saveTemplate(id, data);
-      await waitForPendingWrites(owner.db);
-      const created = (await owner.store.exportSnapshot()).templates.find((x) => x.id === id)!;
-      assert.deepEqual([created.description, created.amount_minor, created.fund_id], [data.description, null, null]);
-      owner.store.saveTemplate(id, { ...data, amount_minor: 180, description: `Colazione ${suffix}` }, created);
-      await waitForPendingWrites(owner.db);
-      const edited = (await owner.store.exportSnapshot()).templates.find((x) => x.id === id)!;
-      assert.deepEqual([edited.amount_minor, edited.created_at], [180, created.created_at]);
-      // Isolation and Rules.
+    await t.test('template rimossi: la raccolta non è più ammessa dalle Rules', async () => {
+      const raw = { description: `Caffè ${suffix}`, amount_minor: null, date: '2026-11-10', category_id: randomUUID(), fund_id: null, created_at: serverTimestamp(), updated_at: serverTimestamp() };
+      await denied(setDoc(doc(owner.db, 'users', uid, 'templates', randomUUID()), raw));
+      await denied(getDocsFromServer(collection(owner.db, 'users', uid, 'templates')));
       await denied(getDocsFromServer(collection(intruder.db, 'users', uid, 'templates')));
-      await denied(setDoc(doc(intruder.db, 'users', uid, 'templates', randomUUID()), { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp() }));
-      const raw = { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp() };
-      for (const patch of [{ description: '' }, { description: ' x' }, { description: 'x'.repeat(101) }, { amount_minor: 0 }, { amount_minor: 1.5 }, { amount_minor: 10000000 },
-        { date: '2026-02-30' }, { date: '1999-12-31' }, { date: '2100-01-01' }, { date: 'ieri' }, { category_id: 'x' }, { category_id: null }, { fund_id: 'x' },
-        { extra: true }, { updated_at: Timestamp.fromMillis(1) }]) {
-        await denied(setDoc(templateRef(randomUUID()), { ...raw, ...patch }));
-      }
-      await denied(setDoc(templateRef('not-a-uuid'), raw));
-      await denied(updateDoc(templateRef(id), { created_at: Timestamp.fromMillis(1), updated_at: serverTimestamp() }));
-      // Backup: included, restored identically and repeatable; a replace brings the archive back to the file.
-      const file = makeBackup(await owner.store.exportSnapshot());
-      assert.ok(JSON.parse(file).templates.some((x: { id: string }) => x.id === id));
-      const restored = parseBackup(JSON.parse(file));
-      await owner.store.importRecords(restored.expenses, restored.categories, 'merge', restored.funds, restored.movements, restored.lists, restored.budget, restored.templates);
-      owner.store.removeTemplate(edited);
-      await waitForPendingWrites(owner.db);
-      assert.equal((await owner.store.exportSnapshot()).templates.some((x) => x.id === id), false);
-      await owner.store.importRecords(restored.expenses, restored.categories, 'merge', restored.funds, restored.movements, restored.lists, restored.budget, restored.templates);
-      const back = (await owner.store.exportSnapshot()).templates.find((x) => x.id === id)!;
-      assert.deepEqual([back.description, back.amount_minor, back.created_at], [edited.description, 180, created.created_at]);
-      owner.store.removeTemplate(back);
-      await waitForPendingWrites(owner.db);
     });
     await t.test('migrazione oltre il limite di accessi Rules: gruppi di categorie e spese ripetibili', async () => {
       const categories = Array.from({ length: 30 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));

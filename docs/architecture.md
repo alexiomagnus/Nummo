@@ -1055,3 +1055,28 @@ nei disegni e controlli di contrasto comuni agli altri set.
 - **Dati invariati:** `settings/budget` (Rules, `DataStore`, store locale), funzioni di dominio e campo `general_budget` del backup
   restano, così archivi e backup esistenti continuano a validarsi, esportarsi e importarsi senza perdite. Nessuna cancellazione
   automatica; un'eventuale dismissione dei dati richiede una decisione esplicita (nuovo `backupVersion`, Rules, migrazione locale).
+
+## Templates eliminati, Fondi senza saldo nell'interfaccia — 16 novembre 2026
+
+- **Templates (rimozione completa, scelta dell'utente):** tolti pagina, voce di menu, campo «Template» di Nuova spesa, preferenza
+  `templatesEnabled` (un valore salvato si ignora), dominio `template.ts`, `DataStore.watchTemplates/saveTemplate/removeTemplate` in
+  entrambe le implementazioni, Rules `users/{uid}/templates/{id}` (ora rifiutate come ogni percorso non elencato) e campo `templates` del
+  backup. **`backupVersion` 8**: nessun `templates`; i file v7 (e v6) si leggono ancora e i loro `templates` vengono ignorati, perché nessun
+  altro dato ne dipende. Dati esistenti: lo store IndexedDB `templates` (passo 2 dello schema) resta ma nessuno lo legge o scrive (un passo
+  esistente non si modifica e una cancellazione automatica di dati è esclusa); in Firestore i documenti restano, inaccessibili.
+  Serve ripubblicare le Rules (autorizzazione separata).
+- **Fondi «molto semplici» (scelta dell'utente: tutto il saldo fuori dall'interfaccia):** un fondo è un gruppo di spese con budget mensile
+  facoltativo. Tolti dalla pagina «Saldo e movimenti», «Senza ricarica»/ricarica, «Aggiungi denaro» (+), «Aggiungi»/«Trasferisci»,
+  «Disponibile ora»/«Saldo a fine mese», saldo dei fondi archiviati; dal modulo «Saldo iniziale» e «Ricarica mensile»; da Nuova spesa
+  «Saldo disponibile». `MovementDialog` eliminato, `createMovement/removeMovement` tolti da `useRemoteFunds`. **Dati invariati:** dominio,
+  `DataStore`, Rules e backup di saldo, ricariche e movimenti restano; `fundFromForm` senza `balance` riscrive invariati i dati di saldo
+  esistenti; un fondo con movimenti resta non eliminabile (si archivia).
+
+## Fondi: Aggiungi, Trasferisci e ricarica ripristinati, riepilogo a soli totali — 16 novembre 2026
+
+- Su richiesta, sostituisce in parte la voce precedente: tornano esattamente come prima «Aggiungi»/«Trasferisci» (`MovementDialog`) e il «+»
+  della scheda, solo per i fondi con dati di saldo, e «Ricarica mensile» nel modulo (con la riga «Ricarica di … il giorno …» sulla scheda;
+  niente «Senza ricarica»). Restano tolti il saldo iniziale dal modulo (quello salvato si riscrive invariato) e ogni cifra di saldo.
+- La scheda espansa («Riepilogo del mese») mostra solo totali: aggiunte, trasferimenti ricevuti/inviati, ricariche (ricevute/previste) se
+  presenti e lo speso totale; nessun elenco di spese o movimenti (quindi i movimenti non si eliminano dall'interfaccia).
+

@@ -67,7 +67,8 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
         <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
           onPress={openMenu} style={[styles.field, large && styles.fieldLarge, large && compact && styles.fieldLargeCompact, { borderColor: colors.outline }]}>
-          {showIcon && <SvgIcon shape={icon} size={large ? 24 : 20} color={colors.onSurfaceVariant} />}
+          {/* The chosen option's own icon when it has one (e.g. the fund avatar), otherwise the field's icon. */}
+          {showIcon && <View style={styles.fieldIcon}>{current?.icon ?? <SvgIcon shape={icon} size={large ? 24 : 20} color={colors.onSurfaceVariant} />}</View>}
           <View style={styles.text}>
             <Text variant={large ? 'labelMedium' : 'labelSmall'} style={{ color: colors.onSurfaceVariant }}>{label}</Text>
             <Text variant={large ? 'bodyLarge' : 'bodyMedium'} numberOfLines={1}>{current?.label ?? ''}</Text>
@@ -110,6 +111,8 @@ const styles = StyleSheet.create({
   check: { width: 24, height: 24 },
   // The row gap (xl) separates the label from the check; beside the icon the usual md.
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md - spacing.xl },
+  // 4 dp more than the row gap: 12 dp between the icon and the caption/value.
+  fieldIcon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center', marginRight: spacing.xs },
   // max-content: the rows keep their natural width instead of wrapping inside the (narrower) field container.
   measureBox: { position: 'absolute', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', opacity: 0 },
   // No numberOfLines here: RN Web line clamping understates the max-content width of the label.

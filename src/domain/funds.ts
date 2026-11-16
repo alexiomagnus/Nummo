@@ -291,6 +291,8 @@ export type FundEntry = Readonly<{
   // Signed: money in > 0, money out < 0.
   amount_minor: number;
   label: string; otherFundId?: string; movementId?: string; expenseId?: string; forecast: boolean;
+  // Expenses only: a payment of a recurring series (subscription) rather than a single expense.
+  recurring?: boolean;
 }>;
 
 type Sources = Readonly<{
@@ -334,7 +336,7 @@ export function fundEntries(sources: Sources, fundId: string, from: string, unti
   for (const occurrence of [...actual, ...planned]) {
     if (occurrence.date < from || occurrence.date > until) continue;
     entries.push({ key: occurrence.key, fundId, date: occurrence.date, kind: 'expense', amount_minor: -occurrence.amount_minor,
-      label: occurrence.description, expenseId: occurrence.expenseId, forecast: occurrence.date > today });
+      label: occurrence.description, expenseId: occurrence.expenseId, forecast: occurrence.date > today, recurring: occurrence.recurrence !== null });
   }
   return entries.sort((a, b) => a.date.localeCompare(b.date) || order[a.kind] - order[b.kind] || a.key.localeCompare(b.key));
 }
@@ -357,6 +359,9 @@ export type FundMonth = Readonly<{
   // Received (actual) and still expected (forecast) amounts of the month; `initial` only in the fund's first month.
   initial: number; recharges: number; income: number; transfersIn: number; transfersOut: number; spent: number;
   forecastRecharges: number; forecastSpent: number;
+  // The month's spending (actual; forecast for future months) split into subscription payments and single expenses:
+  // subscriptions + singles = spent (future: forecastSpent).
+  subscriptions: number; singles: number;
   // End of month: actual for past months; projected (actual so far + forecasts) for the current and future ones.
   closing: number;
   // Balance today (same for every month shown: the money in the fund now).
@@ -395,11 +400,14 @@ export function fundMonth(sources: Sources, fundId: string, month: Month, today:
   const forecastSpent = 0 - pick('expense', true);
   const budget = budgetFor(fund, month);
   const measured = kind === 'future' ? forecastSpent : spent;
+  const spending = entries.filter((e) => e.kind === 'expense' && e.forecast === (kind === 'future'));
+  const subscriptions = 0 - sum(spending.filter((e) => e.recurring));
   return {
     fund, month, kind, opening, entries,
     initial: pick('initial', false), recharges: pick('recharge', false), income: pick('income', false),
     transfersIn: pick('transfer-in', false), transfersOut: 0 - pick('transfer-out', false), spent,
     forecastRecharges: pick('recharge', true), forecastSpent,
+    subscriptions, singles: measured - subscriptions,
     closing: opening + sum(entries),
     balance: balanceAt(sources, fundId, today, today),
     budget, remaining: budget === null ? null : budget - measured, state: budgetState(measured, budget),

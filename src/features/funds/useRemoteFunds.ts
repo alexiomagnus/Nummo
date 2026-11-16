@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { SyncedExpense, SyncedFund, SyncedMovement } from '../../domain/firestore';
-import { parseSyncedFund, parseSyncedMovement } from '../../domain/firestore';
+import { parseSyncedFund } from '../../domain/firestore';
 import type { FundData, MovementData } from '../../domain/funds';
 import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
 
-// Funds and movements of the account, from two listeners. Every mutation is a server transaction: it reports success only
+// Funds and movements of the account, from two listeners (movements of earlier versions still count in fundInUse). Every
+// mutation is a server transaction: it reports success only
 // after the server has confirmed it (offline it fails with a clear message instead of queuing silently).
 export function useRemoteFunds(backend: DataStore) {
   const [funds, setFunds] = useState<SyncedFund[]>([]);
@@ -39,11 +40,6 @@ export function useRemoteFunds(backend: DataStore) {
     removeFund: (expected: SyncedFund) => mutate(() => backend.removeFund(checked(expected))),
     // The ID comes from the dialog (one per opening), so a repeated press never adds a second movement.
     createMovement: (id: string, data: MovementData) => mutate(() => backend.createMovement(id, data)),
-    removeMovement: (expected: SyncedMovement) => mutate(() => {
-      const parsed = parseSyncedMovement(expected);
-      if (!parsed) throw new Error('Movimento non valido.');
-      return backend.removeMovement(parsed);
-    }),
     assignFund: (records: readonly SyncedExpense[], fundId: string) => mutate(() => backend.assignFund(records, fundId)),
   };
 }
