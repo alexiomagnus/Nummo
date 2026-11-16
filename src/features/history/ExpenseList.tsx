@@ -10,6 +10,7 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ListRow, listRowStyles } from '../../components/ListRow';
+import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { usePresence, useOverlayMotion } from '../../components/Overlay';
 import { fadeTransition } from '../../theme/motion';
 import { inputOutline, motion, radius, spacing } from '../../theme/tokens';
@@ -47,6 +48,13 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, em
   const dates = useMemo(() => dateFormat(locale), [locale]);
   const shortDates = useMemo(() => shortDateFormat(locale), [locale]);
   const months = useMemo(() => monthFormat(locale), [locale]);
+  // Month of a date as the search reads it, in the current language: full and short name («novembre nov»); the year is added
+  // by the search itself.
+  const periodText = useMemo(() => {
+    const long = new Intl.DateTimeFormat(locale, { month: 'long', timeZone: 'UTC' });
+    const short = new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' });
+    return (date: string) => { const day = new Date(`${date}T00:00:00Z`); return `${long.format(day)} ${short.format(day)}`; };
+  }, [locale]);
   const amounts = useMemo(() => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }), [locale]);
   const theme = useTheme();
   const size = useSizeClass();
@@ -63,18 +71,19 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, em
   const results = useMemo(() => {
     const scoped = filter === ALL ? occurrences
       : occurrences.filter((item) => item.category_id === filter);
-    return searchAndSort(scoped, query, sort);
-  }, [occurrences, filter, query, sort]);
+    return searchAndSort(scoped, query, sort, periodText);
+  }, [occurrences, filter, query, sort, periodText]);
   const summaries = useMemo(() => expenseMonths(results), [results]);
   const resultsTotal = useMemo(() => results.reduce((sum, item) => sum + item.amount_minor, 0), [results]);
   const byDate = sort === 'date-desc' || sort === 'date-asc';
   const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]) }));
-  const categoryChoices = [{ value: ALL, label: t("Tutte le categorie") }, ...categories.map((category) => ({ value: category.id, label: category.label }))];
+  const categoryChoices = [{ value: ALL, label: t("Tutte le categorie"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={theme.colors.onSurfaceVariant} /> },
+    ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))];
 
   const filters = (
     <>
       <View style={[styles.toolbar, compact && styles.toolbarCompact]}>
-        <TextInput outlineStyle={inputOutline} label={t("Cerca per nome")} accessibilityLabel={t("Cerca per nome")} mode="outlined" value={query}
+        <TextInput outlineStyle={inputOutline} label={t("Cerca per nome, mese o anno")} accessibilityLabel={t("Cerca per nome, mese o anno")} mode="outlined" value={query}
           onChangeText={(value) => { setQuery(value); setVisibleCount(pageSize); }} autoCorrect={false} style={compact ? styles.searchCompact : styles.search}
           left={leadingIcon(iconShapes.search)}
           right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => { setQuery(''); setVisibleCount(pageSize); }}

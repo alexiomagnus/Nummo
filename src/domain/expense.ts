@@ -45,6 +45,8 @@ export type ExpenseData = Readonly<{
   first_payment_date?: string;
   // Frequency switches of a series (issue #9); absent = the original calendar. Present only with schema_version 3.
   calendar_changes?: readonly CalendarChange[];
+  // Payments of a series removed by hand (occurrence numbers, see skippedPayments.ts); absent = none.
+  skipped_payments?: readonly number[];
   schema_version: 1 | 2 | 3;
 }>;
 
@@ -180,5 +182,6 @@ export function dataOf(record: ExpenseData): ExpenseData {
   const list_id = record.list_id ?? null;
   const list_items = record.list_items ?? [];
   return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, list_id, list_items, source, schema_version, ...(record.first_payment_date ? { first_payment_date: record.first_payment_date } : {}),
-    ...(record.calendar_changes?.length ? { calendar_changes: record.calendar_changes } : {}) };
+    ...(record.calendar_changes?.length ? { calendar_changes: record.calendar_changes } : {}),
+    ...(record.skipped_payments?.length ? { skipped_payments: record.skipped_payments } : {}) };
 }

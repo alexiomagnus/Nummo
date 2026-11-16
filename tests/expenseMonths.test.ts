@@ -4,7 +4,7 @@ import { searchAndSort, type Occurrence } from '../src/domain/history.ts';
 import { expenseMonths } from '../src/features/history/expenseMonths.ts';
 
 const item = (key: string, date: string, amount_minor: number, description = 'Pane'): Occurrence => ({
-  key, expenseId: key, date, amount_minor, description, category_id: null, recurrence: null,
+  key, expenseId: key, index: 0, date, amount_minor, description, category_id: null, recurrence: null,
 });
 
 test('riepiloghi mensili: mesi civili distinti per anno, anche con righe non contigue', () => {

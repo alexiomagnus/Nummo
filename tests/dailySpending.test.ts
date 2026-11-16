@@ -4,7 +4,7 @@ import { breakdown, type Occurrence } from '../src/domain/history.ts';
 import { dailySpendingRows } from '../src/features/dashboard/dailySpending.ts';
 
 const item = (key: string, date: string, amount_minor: number): Occurrence => ({
-  key, expenseId: key, date, amount_minor, description: key, category_id: null, recurrence: null,
+  key, expenseId: key, index: 0, date, amount_minor, description: key, category_id: null, recurrence: null,
 });
 
 test('dettaglio giornaliero: giorni con spese dal più recente, importi e occorrenze coerenti con la dashboard', () => {

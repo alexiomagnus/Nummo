@@ -4,7 +4,7 @@ import { breakdown, expandOccurrences, type Occurrence } from '../src/domain/his
 import { dashboardInsights, rankCategories, variation } from '../src/features/dashboard/insights.ts';
 import { translate } from '../src/i18n/translate.ts';
 const item = (date: string, amount = 100, category: string | null = null): Occurrence => ({
-  key: date + category, expenseId: date, date, amount_minor: amount, category_id: category, description: 'Test', recurrence: null,
+  key: date + category, expenseId: date, index: 0, date, amount_minor: amount, category_id: category, description: 'Test', recurrence: null,
 });
 const analyze = (items: Occurrence[], period: 'month' | 'previous-month' | 'year' = 'month', today = '2026-11-08') =>
   dashboardInsights(breakdown(items, [], period, today), items, [], today);

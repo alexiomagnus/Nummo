@@ -28,11 +28,14 @@ export function TransactionDetails({ title, items, categories, onClose }: {
           meta={compact ? amount : undefined} trailing={compact ? undefined : amount} />;
       })}
     </ScrollView></AppDialog.ScrollArea>
-    <AppDialog.Actions><Button onPress={onClose}>{t('Chiudi')}</Button></AppDialog.Actions>
+    <AppDialog.Actions><Button onPress={onClose} style={styles.close} labelStyle={styles.closeLabel}>{t('Chiudi')}</Button></AppDialog.Actions>
   </AppDialog></Portal>;
 }
 
 const styles = StyleSheet.create({
   // Only ListRow draws separators; Paper's ScrollArea borders would double the final line.
   area: { minHeight: 0, borderTopWidth: 0, borderBottomWidth: 0 },
+  // The only action: a little larger than a standard text button (16/600 label, like «Salva»).
+  close: { minWidth: 96 },
+  closeLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
 });

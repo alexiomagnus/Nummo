@@ -69,9 +69,11 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
     if (!applied.ok) { setPriceError(applied.error); return; }
     setPriceError(null);
     setBusy(true);
-    // The shopping-list link and the products bought are not edited here: they stay as registered.
+    // The shopping-list link and the products bought are not edited here: they stay as registered. Payments removed from the
+    // history stay removed while the expense is still a series (occurrence numbers never change).
     const data = { ...applied.data, list_id: record.list_id ?? null, list_items: record.list_items ?? [],
-      ...(freq.calendar_changes.length ? { calendar_changes: freq.calendar_changes } : {}), schema_version: freq.schema_version === 3 ? 3 as const : applied.data.schema_version };
+      ...(freq.calendar_changes.length ? { calendar_changes: freq.calendar_changes } : {}), schema_version: freq.schema_version === 3 ? 3 as const : applied.data.schema_version,
+      ...(applied.data.recurrence && record.skipped_payments?.length ? { skipped_payments: record.skipped_payments } : {}) };
     try { if (await store.update(record, data)) close(); } finally { setBusy(false); }
   };
   return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }}>

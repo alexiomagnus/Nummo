@@ -252,7 +252,7 @@ function FundCard({ tracksBalance, item, open, isDefault, canWrite, inUse, onTog
       </View>
       {open && <Reveal nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: fund.name })} style={[styles.details, { borderColor: colors.outlineVariant }]}>
         <View role="list" accessibilityLabel={t("Riepilogo del mese")}>
-          {total(t("Aggiunte"), item.income, 'in')}
+          {total(t("Entrata"), item.income, 'in')}
           {/* The month's recharge: received or still due within the month (forecast for future months). */}
           {total(t("Ricarica mensile"), item.recharges + item.forecastRecharges, 'in')}
           {total(t("Trasferimenti ricevuti"), item.transfersIn, 'in')}

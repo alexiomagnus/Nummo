@@ -93,6 +93,12 @@ service cloud.firestore {
       return !('status_changes' in d) || (d.recurrence != null && d.status_changes is string && d.status_changes.size() <= 167
         && d.status_changes.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)(;[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)){0,7}'));
     }
+    // Payments of a series removed by hand (mirrors src/domain/skippedPayments.ts): ONE string of occurrence numbers
+    // "3,7,12" (1..60, 0..9999 each). Optional, only for series; increasing order is checked by the client decoder.
+    function skippedPayments(d) {
+      return !('skipped_payments' in d) || (d.recurrence != null && d.skipped_payments is string && d.skipped_payments.size() <= 299
+        && d.skipped_payments.matches('[0-9]{1,4}(,[0-9]{1,4}){0,59}'));
+    }
     // Shopping list registered by a one-off expense (mirrors src/domain/contract.ts): both fields or neither. The
     // product names are ONE string joined by '\n' (1..60 characters each, up to 100: checked by the client decoder);
     // here: size, no empty name (leading, trailing or double '\n') and no tab/CR. Absent on every other expense.
@@ -103,7 +109,7 @@ service cloud.firestore {
     }
     function expense(d) {
       // Required fields are read below (a missing map key denies access); hasOnly rejects extra fields.
-      return d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'first_payment_date', 'calendar_changes', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
+      return d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'first_payment_date', 'calendar_changes', 'skipped_payments', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
         && d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 9999999
         && d.currency == 'EUR' && d.description is string && d.description.size() > 0 && d.description.size() <= 100
         && d.description == d.description.trim() && !d.description.matches('.*[\\t\\r\\n].*')
@@ -112,7 +118,7 @@ service cloud.firestore {
         && (!('fund_id' in d) || uuid(d.fund_id))
         && d.expense_date is string && validDate(d.expense_date)
         && d.recurrence in [null, 'weekly', 'monthly', 'yearly']
-        && (d.schema_version >= 2 ? trialPrices(d.price_changes) : priceChanges(d.price_changes)) && (d.recurrence != null || d.price_changes.size() == 0) && statusChanges(d) && calendarChanges(d)
+        && (d.schema_version >= 2 ? trialPrices(d.price_changes) : priceChanges(d.price_changes)) && (d.recurrence != null || d.price_changes.size() == 0) && statusChanges(d) && calendarChanges(d) && skippedPayments(d)
         && d.source == 'web_app' && firstPaymentDate(d)
         && d.created_at is timestamp && d.created_at <= request.time
         && d.updated_at == request.time && d.revision is int && listLink(d);

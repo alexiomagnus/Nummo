@@ -23,7 +23,8 @@ export const backupFormat = 'nummo-backup';
 // v6 adds calendar_changes and schema_version 3 for subscriptions whose frequency was changed, and `general_budget`.
 // v7 added `templates` (presets of «Nuova spesa»). v8 drops them: templates were removed from Nummo (16 November 2026), so v8
 // files have none and the `templates` of a v7 file are ignored on import (nothing else in the file depends on them).
-export const backupVersion = 8;
+// v9 adds `skipped_payments` (payments of a subscription removed by hand); older files have none.
+export const backupVersion = 9;
 
 // --- JSON backup -----------------------------------------------------------------------------
 
@@ -37,6 +38,7 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
     list_id: e.list_id ?? null, list_items: [...(e.list_items ?? [])],
     ...(e.first_payment_date ? { first_payment_date: e.first_payment_date } : {}),
     ...(e.calendar_changes?.length ? { calendar_changes: e.calendar_changes.map((c) => ({ index: c.index, start: c.start, recurrence: c.recurrence })) } : {}),
+    ...(e.skipped_payments?.length ? { skipped_payments: [...e.skipped_payments] } : {}),
     source: e.source, schema_version: e.schema_version, created_at: e.created_at,
   })).sort((a, b) => a.expense_date.localeCompare(b.expense_date) || a.id.localeCompare(b.id));
   const categories = data.categories.map((c) => ({ id: c.id, label: c.label, icon: c.icon })).sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
@@ -121,6 +123,8 @@ const readers: Record<number, (file: Record<string, unknown>) => ImportData> = {
   // v7: its `templates` are ignored (templates no longer exist); v8 is v7 without them.
   7: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
   8: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
+  // v9: payments removed by hand (`skipped_payments`); older expenses have none.
+  9: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
 };
 
 export function parseBackup(value: unknown): ImportData {
@@ -131,6 +135,8 @@ export function parseBackup(value: unknown): ImportData {
     ('first_payment_date' in e || ('schema_version' in e && e.schema_version === 2)))) throw new Error('La prova gratuita richiede un backup versione 5 o successiva.');
   if (file.version < 6 && Array.isArray(file.expenses) && file.expenses.some((e: unknown) => e && typeof e === 'object' &&
     ('calendar_changes' in e || ('schema_version' in e && e.schema_version === 3)))) throw new Error('Il cambio di frequenza richiede un backup versione 6 o successiva.');
+  if (file.version < 9 && Array.isArray(file.expenses) && file.expenses.some((e: unknown) => e && typeof e === 'object' && 'skipped_payments' in e))
+    throw new Error('I pagamenti eliminati richiedono un backup versione 9 o successiva.');
   if (file.version < 6 && 'general_budget' in file) throw new Error('Il budget mensile generale richiede un backup versione 6 o successiva.');
   const reader = readers[file.version];
   if (!reader) throw new Error('Versione del backup non supportata.');
@@ -175,7 +181,8 @@ export type ImportPlan = Readonly<{
 const expenseKeys = ['first_payment_date', 'amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version', 'created_at'] as const;
 export function sameExpense(a: ExpenseRecord, b: ExpenseRecord): boolean {
   // Absent and empty frequency switches are the same original calendar.
-  return expenseKeys.every((key) => sameFieldValue(a[key], b[key])) && sameFieldValue(a.calendar_changes ?? [], b.calendar_changes ?? []);
+  return expenseKeys.every((key) => sameFieldValue(a[key], b[key])) && sameFieldValue(a.calendar_changes ?? [], b.calendar_changes ?? [])
+    && sameFieldValue(a.skipped_payments ?? [], b.skipped_payments ?? []);
 }
 export function sameCategory(a: Category, b: Category): boolean {
   return a.label === b.label && a.icon === b.icon;

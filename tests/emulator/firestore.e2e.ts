@@ -295,7 +295,9 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const worst = { ...raw, expense_date: '2026-01-01', first_payment_date: '2099-12-09', fund_id: randomUUID(),
         status_changes: Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';'),
         price_changes: encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false }))),
-        calendar_changes: '996:2099-12-31:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:w' };
+        calendar_changes: '996:2099-12-31:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:w',
+        // Plus the longest list of removed payments (60 numbers of 4 digits).
+        skipped_payments: Array.from({ length: 60 }, (_, i) => 9000 + i).join(',') };
       t.diagnostic('frequency budget: create');
       await setDoc(ref(worstId), worst);
       t.diagnostic('frequency budget: update description');
@@ -342,6 +344,29 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.deepEqual(file.expenses[0]!.status_changes, paused.status_changes);
       const latest = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
       await owner.store.removeExpense(latest);
+    });
+    await t.test('pagamenti eliminati: regole sulla stringa compatta, solo per le serie, salvataggio, rimozione del campo e backup', async () => {
+      const { expense_id, ...data } = expense();
+      const series = { ...data, recurrence: 'monthly' as const, expense_date: '2026-01-05', amount_minor: 999 };
+      const { fund_id: _fund, list_id: _list, list_items: _items, status_changes: _status, ...storedSeries } = series;
+      const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
+      await setDoc(ref(randomUUID()), { ...valid, skipped_payments: '0,3,12' });
+      for (const patch of [{ skipped_payments: '' }, { skipped_payments: '1,' }, { skipped_payments: 'a' }, { skipped_payments: '12345' }, { skipped_payments: [1, 2] },
+        { skipped_payments: Array.from({ length: 61 }, (_, i) => i).join(',') }, { recurrence: null, price_changes: [], skipped_payments: '0' }]) {
+        await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
+      }
+      await owner.store.createExpense({ expense_id, ...series });
+      const saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.ok(!('skipped_payments' in (await getDocFromServer(ref(expense_id))).data()!), 'campo assente senza pagamenti eliminati');
+      await owner.store.updateExpense(saved, { ...series, skipped_payments: [1, 4] });
+      assert.equal((await getDocFromServer(ref(expense_id))).data()!.skipped_payments, '1,4');
+      const skipped = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
+      assert.deepEqual(skipped.skipped_payments, [1, 4]);
+      assert.deepEqual(parseBackup(JSON.parse(makeBackup({ expenses: [skipped], categories: [] }))).expenses[0]!.skipped_payments, [1, 4]);
+      // Back to a one-off expense: the stored field is removed (it is valid only for series).
+      await owner.store.updateExpense(skipped, { ...series, recurrence: null });
+      assert.ok(!('skipped_payments' in (await getDocFromServer(ref(expense_id))).data()!));
+      await owner.store.removeExpense((await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!);
     });
     await t.test('categorie uniche, rinomina, icone, conflitti ed eliminazione atomica', async () => {
       const id = randomUUID();

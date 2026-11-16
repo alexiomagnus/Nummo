@@ -113,7 +113,7 @@ test('abbonamenti: stati e azioni tradotti, nomi delle serie mai tradotti', () =
     assert.equal(translate('en', it), en);
   }
   assert.equal(translate('en', 'In pausa dal {p0}', { p0: '10 Feb 2026' }), 'Paused since 10 Feb 2026');
-  assert.equal(translate('en', 'Mostra tutti i pagamenti ({p0})', { p0: 30 }), 'Show all payments (30)');
+  assert.equal(translate('en', 'Storico dei pagamenti ({p0})', { p0: 30 }), 'Payment history (30)');
 });
 
 test('dashboard: mostra e nascondi giorni tradotti in entrambe le lingue', () => {

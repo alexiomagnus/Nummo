@@ -11,6 +11,20 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 // onLayout reports whole pixels: a label a fraction wider than the rounded measure would still be ellipsized.
 const measureSlack = 2;
 
+// Width of the browser's classic scrollbar (0 with overlay scrollbars): a long menu scrolls, and its scrollbar takes room
+// from the rows, so it is added to the measured width. Measured once, lazily (never at import time).
+let scrollbar: number | null = null;
+function scrollbarWidth(): number {
+  if (scrollbar !== null) return scrollbar;
+  if (typeof document === 'undefined' || !document.body) return 0;
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;top:-9999px;width:100px;height:100px;overflow:scroll;';
+  document.body.appendChild(probe);
+  scrollbar = probe.offsetWidth - probe.clientWidth;
+  probe.remove();
+  return scrollbar;
+}
+
 // `icon`: optional decorative leading icon of the row (e.g. the fund avatar), in a fixed 24 dp slot.
 export type MenuOption<T extends string> = { value: T; label: string; icon?: ReactNode };
 
@@ -81,7 +95,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
       {/* Measuring copy of the rows: same paddings, gap and check slot, no width limit; never visible nor focusable.
           The zero-size clipping box keeps it from widening the page (horizontal overflow) next to the right edge. */}
       <View aria-hidden pointerEvents="none" style={styles.measureBox}>
-        <View style={styles.measure} onLayout={({ nativeEvent }) => setContentWidth(Math.ceil(nativeEvent.layout.width) + measureSlack)}>
+        <View style={styles.measure} onLayout={({ nativeEvent }) => setContentWidth(Math.ceil(nativeEvent.layout.width) + measureSlack + scrollbarWidth())}>
           {options.map((option) => (
             <View key={option.value} style={styles.item}>
               {option.icon && <View style={styles.icon} />}

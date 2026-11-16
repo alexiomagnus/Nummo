@@ -53,6 +53,28 @@ test('database: scritture atomiche, copie isolate, letture dentro la transazione
   assert.deepEqual(await db.read((tx) => tx.get('expenses', 'a')), { id: 'a', nested: { n: 1 } });
 });
 
+test('pagamenti eliminati in locale: salvati, conservati nelle modifiche, tolti se la serie diventa una spesa singola; nel backup', async () => {
+  const { store } = open();
+  // A monthly series started three months ago: three payments so far.
+  const start = new Date(`${today}T00:00:00Z`); start.setUTCMonth(start.getUTCMonth() - 2);
+  const request = expense({ recurrence: 'monthly', expense_date: start.toISOString().slice(0, 10) });
+  await store.createExpense(request);
+  const { expense_id: _id, ...data } = request;
+  const saved = (await store.exportSnapshot()).expenses[0]!;
+  await store.updateExpense(saved, { ...data, skipped_payments: [1] });
+  const skipped = (await store.exportSnapshot()).expenses[0]!;
+  assert.deepEqual(skipped.skipped_payments, [1]);
+  await assert.rejects(store.updateExpense(skipped, { ...data, skipped_payments: [1, 1] }), /Spesa non valida/);
+  const file = makeBackup(await store.exportSnapshot());
+  assert.deepEqual(JSON.parse(file).expenses[0].skipped_payments, [1]);
+  const other = open();
+  await restore(other.store, file, 'merge');
+  assert.deepEqual((await other.store.exportSnapshot()).expenses[0]!.skipped_payments, [1]);
+  // Turned into a one-off expense: the field goes away (it would make the record invalid).
+  await store.updateExpense(skipped, { ...data, recurrence: null });
+  assert.equal((await store.exportSnapshot()).expenses[0]!.skipped_payments, undefined);
+});
+
 test('spese locali: creazione idempotente, listener, modifica con revisione, conflitto ed eliminazione', async () => {
   const { store } = open();
   assert.equal(store.kind, 'local');
@@ -348,7 +370,7 @@ test('template rimossi: un backup v7 con template si importa ignorandoli, l’es
   const first = open();
   const json = makeBackup(await first.store.exportSnapshot());
   const file = JSON.parse(json);
-  assert.equal(file.version, 8);
+  assert.equal(file.version, 9);
   assert.equal('templates' in file, false);
   const template = { id: randomUUID(), description: 'Caffè al bar', amount_minor: 180, date: '2026-11-01', category_id: randomUUID(), fund_id: null, created_at: '2026-11-01T08:00:00.000Z' };
   const v7 = { ...file, version: 7, templates: [template] };

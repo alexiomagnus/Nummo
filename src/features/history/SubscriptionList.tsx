@@ -11,6 +11,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import { searchSubscriptions, type SubscriptionSummary } from '../../domain/history';
 import { StatusDialog } from './StatusDialog';
+import { PaymentsDialog } from './PaymentsDialog';
 import { recurrenceLabels } from '../../domain/recurrence';
 import { statusLabels, type SubscriptionStatus } from '../../domain/subscription';
 import { inputOutline, motion, radius, spacing } from '../../theme/tokens';
@@ -27,11 +28,11 @@ type Props = {
   onEdit: (expenseId: string) => void;
   // `from`: the day a pause or cancellation takes effect (today unless the user corrects a forgotten one).
   onSetStatus: (expenseId: string, status: SubscriptionStatus, from?: string) => Promise<boolean>;
+  // Removes one payment from the history (occurrence number of the series); the server must be reachable, like status changes.
+  onRemovePayment: (expenseId: string, index: number) => Promise<boolean>;
   today: string;
 };
 
-// Latest payments shown at first in the history; the rest on request (a weekly series grows quickly).
-const historyPreview = 12;
 const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 export function StatusBadge({ status, inTrial = false }: { status: SubscriptionStatus; inTrial?: boolean }) {
@@ -49,7 +50,7 @@ export function StatusBadge({ status, inTrial = false }: { status: SubscriptionS
   );
 }
 
-export function SubscriptionList({ subscriptions: allSeries, categories, error, canChange, emptyLabel, onEdit, onSetStatus, today }: Props) {
+export function SubscriptionList({ subscriptions: allSeries, categories, error, canChange, emptyLabel, onEdit, onSetStatus, onRemovePayment, today }: Props) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -57,7 +58,9 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
   const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
   const categoryById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
-  const [complete, setComplete] = useState<ReadonlySet<string>>(() => new Set());
+  // Subscription whose payment history is open (a dialog: the list can be long and payments can be removed there).
+  const [history, setHistory] = useState<string | null>(null);
+  const historySummary = history ? allSeries.find((item) => item.entry.id === history) : undefined;
   const [busy, setBusy] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const subscriptions = useMemo(() => searchSubscriptions(allSeries, query), [allSeries, query]);
@@ -92,23 +95,25 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
       <View role="list">
         {subscriptions.map((summary) => (
           <SubscriptionRow key={summary.entry.id} summary={summary} category={categoryById.get(summary.entry.category_id ?? '')}
-            open={expanded.has(summary.entry.id)} all={complete.has(summary.entry.id)} compact={compact} canChange={canChange}
+            open={expanded.has(summary.entry.id)} compact={compact} canChange={canChange}
             working={busy === summary.entry.id} formatDate={formatDate}
-            onToggle={() => toggle(setExpanded, summary.entry.id)} onToggleAll={() => toggle(setComplete, summary.entry.id)}
+            onToggle={() => toggle(setExpanded, summary.entry.id)} onHistory={() => setHistory(summary.entry.id)}
             onEdit={() => onEdit(summary.entry.id)} onChange={(status) => void change(summary.entry.id, status)} />
         ))}
       </View>
       {asking && askingSummary && <StatusDialog summary={askingSummary} status={asking.status} today={today}
         onConfirm={(from) => onSetStatus(asking.id, asking.status, from)} close={() => setAsking(null)} />}
+      {historySummary && <PaymentsDialog description={historySummary.entry.description} payments={historySummary.payments} total={historySummary.total}
+        canRemove={canChange} onRemove={(payment) => onRemovePayment(historySummary.entry.id, payment.index)} onClose={() => setHistory(null)} />}
     </View>
   );
 }
 
 // Same card as the expense list (issue #6): the whole card toggles its details, no chevron or edit button when closed,
 // amount right-aligned, status badge under the name; edit and status actions live in the expanded details.
-function SubscriptionRow({ summary, category, open, all, compact, canChange, working, formatDate, onToggle, onToggleAll, onEdit, onChange }: {
-  summary: SubscriptionSummary; category?: Category; open: boolean; all: boolean; compact: boolean; canChange: boolean; working: boolean;
-  formatDate: (date: string) => string; onToggle: () => void; onToggleAll: () => void; onEdit: () => void; onChange: (status: SubscriptionStatus) => void;
+function SubscriptionRow({ summary, category, open, compact, canChange, working, formatDate, onToggle, onHistory, onEdit, onChange }: {
+  summary: SubscriptionSummary; category?: Category; open: boolean; compact: boolean; canChange: boolean; working: boolean;
+  formatDate: (date: string) => string; onToggle: () => void; onHistory: () => void; onEdit: () => void; onChange: (status: SubscriptionStatus) => void;
 }) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
@@ -129,7 +134,6 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
   const frequency = inForce ? t(recurrenceLabels[inForce]) : '';
   const when = status === 'active' ? (next ? t(inTrial ? 'Primo pagamento {p0}' : 'Prossimo rinnovo {p0}', { p0: formatDate(next.date) }) : '')
     : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
-  const shown = all ? payments : payments.slice(0, historyPreview);
   return (
     <View>
       <ListRow outlined dense icon={category?.icon ?? null} title={entry.description}
@@ -169,22 +173,13 @@ function SubscriptionRow({ summary, category, open, all, compact, canChange, wor
           {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
             {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
           </Text>}
-          <View style={styles.history}>
-            <Text variant="titleSmall" accessibilityRole="header" style={styles.historyTitle}>{t("Storico dei pagamenti")}</Text>
-            {payments.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Nessun pagamento.")}</Text>}
-            <View role="list">
-              {shown.map((payment, index) => (
-                <View key={payment.key} role="listitem" style={[styles.payment, index < shown.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant }]}>
-                  <Text variant="bodyMedium">{formatDate(payment.date)}</Text>
-                  <Text variant="bodyMedium" style={listRowStyles.amount}>{formatAmount(payment.amount_minor)}</Text>
-                </View>
-              ))}
-            </View>
-            {payments.length > historyPreview && <View style={styles.start}>
-              <Button mode="text" aria-expanded={all} onPress={onToggleAll}>
-                {all ? t("Mostra solo i più recenti") : t("Mostra tutti i pagamenti ({p0})", { p0: payments.length })}
-              </Button>
-            </View>}
+          {/* The payment history opens in a dialog (it can be long, and a payment can be removed there). */}
+          <View style={styles.start}>
+            <Button mode="contained-tonal" aria-haspopup="dialog" onPress={onHistory}
+              accessibilityLabel={t("Storico dei pagamenti di {p0}, {p1}", { p0: entry.description, p1: payments.length })}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.list} size={size} color={color} />}>
+              {t("Storico dei pagamenti ({p0})", { p0: payments.length })}
+            </Button>
           </View>
         </View>}
       </ListRow>
@@ -217,9 +212,5 @@ const styles = StyleSheet.create({
   narrowEdit: { minWidth: 50 },
   statusAction: { minWidth: 98 },
   textOnlyLabel: { marginHorizontal: spacing.md },
-  // A little more than the details gap (lg): the history is a separate block from the actions above.
-  history: { marginTop: spacing.sm },
-  historyTitle: { marginBottom: spacing.xs },
-  payment: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, minHeight: 40, alignItems: 'center' },
   start: { alignSelf: 'flex-start' },
 });

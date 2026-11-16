@@ -172,8 +172,11 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
       if (timingError) throw new Error(timingError);
       await commit(['expenses'], async (tx) => {
         const current = await currentExpense(tx, previous);
-        // Optional fields the editor does not send (first payment, calendar) stay as saved, as with a Firestore update.
-        tx.put('expenses', { ...current, ...data, id: previous.id, revision: previous.revision + 1, updated_at: now() });
+        // Optional fields the editor does not send (first payment, calendar) stay as saved, as with a Firestore update; removed
+        // payments are always sent while they exist (dataOf, editor), so their absence clears them (as `deleteField` does).
+        const row: LocalRow = { ...current, ...data, id: previous.id, revision: previous.revision + 1, updated_at: now() };
+        if (!data.skipped_payments?.length) delete row.skipped_payments;
+        tx.put('expenses', row);
       });
     },
     // Deleting the expense that registered a shopping list brings that list back among the active ones, in the same write.

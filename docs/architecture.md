@@ -1077,6 +1077,18 @@ nei disegni e controlli di contrasto comuni agli altri set.
 - Su richiesta, sostituisce in parte la voce precedente: tornano esattamente come prima «Aggiungi»/«Trasferisci» (`MovementDialog`) e il «+»
   della scheda, solo per i fondi con dati di saldo, e «Ricarica mensile» nel modulo (con la riga «Ricarica di … il giorno …» sulla scheda;
   niente «Senza ricarica»). Restano tolti il saldo iniziale dal modulo (quello salvato si riscrive invariato) e ogni cifra di saldo.
+- *(Superato dalle scelte successive del 16 novembre: sette righe sempre presenti, «Entrata» … «Spesa totale»; vedi AGENTS «Fondi».)*
 - La scheda espansa («Riepilogo del mese») mostra solo totali: aggiunte, trasferimenti ricevuti/inviati, ricariche (ricevute/previste) se
   presenti e lo speso totale; nessun elenco di spese o movimenti (quindi i movimenti non si eliminano dall'interfaccia).
+
+## Pagamenti eliminati dallo storico di un abbonamento — 16 novembre 2026
+
+- Su richiesta (scelta dell'utente: «togli un singolo pagamento», non «da qui in poi»): i pagamenti sono calcolati, quindi eliminarne uno salva
+  il **numero dell'occorrenza** in `skipped_payments` (facoltativo, solo serie, 0–9999, crescente, max 60). Il numero non cambia mai (prezzi e
+  cambi di frequenza lo usano già), quindi gli altri pagamenti mantengono data e prezzo; la pausa/annullamento datati restano la soluzione per
+  «da qui in poi».
+- Forma: Firestore stringa «3,7,12» solo se non vuota (come `status_changes`), Rules con una regex e `hasOnly` aggiornato; IndexedDB e backup
+  array. **`backupVersion` 9**; un file < 9 con il campo è rifiutato. Nessun `schema_version` nuovo (scelta consapevole): un client non aggiornato
+  ignora il campo e conta ancora il pagamento eliminato finché non carica la versione nuova (nessun dato perso; uso personale, Hosting
+  aggiornato insieme). Rules da ripubblicare.
 

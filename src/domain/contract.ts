@@ -1,6 +1,7 @@
 // Shapes exchanged across trust boundaries (browser storage, Firestore, backups) and their
 // runtime checks. TypeScript types alone do not validate untrusted data.
 import { isValidDate, normalizeDescription, type ExpenseData, type ExpenseRequest } from './expense.ts';
+import { parseSkippedPayments } from './skippedPayments.ts';
 import { expensePolicy, listPolicy, todayInRome } from './policy.ts';
 import { validFirstPayment } from './trial.ts';
 import { parsePriceChanges } from './pricing.ts';
@@ -15,7 +16,7 @@ const requestKeys = [
   'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version',
 ] as const;
 // Optional on a request, like first_payment_date.
-const optionalRequestKeys = ['first_payment_date', 'calendar_changes'] as const;
+const optionalRequestKeys = ['first_payment_date', 'calendar_changes', 'skipped_payments'] as const;
 
 // A product name of a shopping list: one line, normalised like a description, 1..60 characters.
 export function isListItemName(value: unknown): value is string {
@@ -75,8 +76,10 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
   const price_changes = parsePriceChanges(v.price_changes);
   const status_changes = parseStatusChanges(v.status_changes);
   const list_items = parseListItems(v.list_items);
+  const skipped_payments = parseSkippedPayments(v.skipped_payments);
   const calendar = valid ? parseCalendarChanges(v.calendar_changes, (typeof v.first_payment_date === 'string' ? v.first_payment_date : v.expense_date) as string, v.recurrence as ExpenseData['recurrence']) : null;
-  if (!valid || !calendar || !price_changes || !status_changes || !list_items || (v.recurrence === null && status_changes.length > 0)) return null;
+  if (!valid || !calendar || !price_changes || !status_changes || !list_items || !skipped_payments
+    || (v.recurrence === null && (status_changes.length > 0 || skipped_payments.length > 0))) return null;
   const list_id = (v.list_id as string | null | undefined) ?? null;
   if (list_id === null && list_items.length > 0) return null;
   return {
@@ -85,6 +88,7 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     fund_id: (v.fund_id as string | null | undefined) ?? null, list_id, list_items, source: 'web_app', schema_version: v.schema_version as 1 | 2 | 3,
     ...(typeof v.first_payment_date === 'string' ? { first_payment_date: v.first_payment_date } : {}),
     ...(calendar.length ? { calendar_changes: calendar } : {}),
+    ...(skipped_payments.length ? { skipped_payments } : {}),
   };
 }
 

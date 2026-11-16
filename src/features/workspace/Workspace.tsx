@@ -1,3 +1,4 @@
+import { skipPayment } from '../../domain/skippedPayments';
 import { useI18n } from '../../i18n/I18nProvider';
 import { Activity, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -263,6 +264,17 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     if (saved) notify(status === 'paused' ? "Abbonamento messo in pausa." : status === 'cancelled' ? "Abbonamento annullato." : "Abbonamento riattivato.");
     return saved;
   };
+  // Removes one payment from a subscription's history (e.g. charged because a pause/cancellation was forgotten): only that
+  // occurrence stops counting, the others keep their dates and prices.
+  const removePayment = async (id: string, index: number) => {
+    const record = store.expenses.find((r) => r.id === id);
+    if (!record || !store.update || !record.recurrence) return false;
+    const skipped = skipPayment(record.skipped_payments ?? [], index);
+    if (!skipped) { notify("Troppi pagamenti eliminati per questo abbonamento: per continuare creane uno nuovo."); return false; }
+    const saved = await store.update(record, { ...dataOf(record), skipped_payments: skipped });
+    if (saved) notify("Pagamento eliminato.");
+    return saved;
+  };
   const heading = t(headings[section]);
   const addDefaults = () => backend.importRecords([], defaultCategories.map((c) => ({ ...c, label: t(c.label), id: crypto.randomUUID() })))
     .then(() => notify("Categorie predefinite aggiunte.")).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
@@ -340,7 +352,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
           <SubscriptionList subscriptions={shownSubscriptions} emptyLabel={fundFilter === allFunds ? undefined : "Nessun abbonamento per questo fondo."} categories={categoryState.categories} error={error}
-            canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} today={today} />
+            canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} onRemovePayment={removePayment} today={today} />
         </>}
       </View>
     </VisitedSection>

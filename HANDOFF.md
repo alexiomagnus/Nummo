@@ -22,15 +22,17 @@ cronaca delle singole fasi e possono dire cose superate.
   icona stondata; con Rules), `e0c2850` (icona trasparente delle notifiche), `f454d12` (Prossimo mese, filtro per fondo,
   pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche; Worker ripubblicato prima), `1889755`
   (dissolvenza del segnaposto d'avvio). Tutti con `npm run deploy:hosting`, «Deploy complete!», sito 200.
-- **Rules.** Pubblicate l'ultima volta il 16 novembre, allineate a `firestore.rules` di `f9c4d8f` (senza `templates`).
+- **Rules.** Pubblicate l'ultima volta il 16 novembre, allineate a `firestore.rules` di `f9c4d8f` (senza `templates`). **Il file attuale
+  ammette anche `skipped_payments`: da ripubblicare (solo con autorizzazione)**, altrimenti in Avanzata l'eliminazione di un pagamento
+  viene rifiutata dal server.
 - **Worker `nummo-push`.** Attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/`
   invariato da allora.
 - **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
   Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
-- **Da verificare su dispositivo:** icona dell'app (cache del launcher), campo Template, filtri di Spese/Analisi, dissolvenza
+- **Da verificare su dispositivo:** icona dell'app (cache del launcher), filtri di Spese/Analisi, dissolvenza
   sul Pixel 8.
-- **Verifiche.** `npm run check` del 16 novembre: vedi sezione «Riallineamento dei documenti». `test:emulator` **20/20**
-  con il caso dei template (sezione «Templates di Nuova spesa»); da allora Rules e `DataStore` invariati.
+- **Verifiche.** `npm run check` del 16 novembre (sera) OK, **453/453**, build demo. `test:emulator` **21/21** con `skipped_payments`
+  (sezione «Abbonamenti: storico dei pagamenti in un dialogo»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
   `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
 - **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
@@ -42,6 +44,52 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
+
+## Riallineamento documenti, commit, push e Hosting — 16 novembre 2026 (sera)
+
+- Su richiesta, dopo una verifica documenti/codice: Guida (IT/EN) senza la promessa di creare categorie «al volo» durante la spesa (dal
+  15 novembre si creano solo in Categorie); `docs/testing/README.md` cita il client v9; nota di superamento sul riepilogo dei fondi in
+  `docs/architecture.md`; «Stato corrente» e punto 1 delle «Prossime attività» aggiornati (Rules, verifiche, campo Template rimosso).
+- Committato insieme al lavoro del 16 novembre ancora aperto (pagamenti eliminabili, ricerca per mese/anno, icone nel menu Categoria,
+  «Chiudi» più grande, «Nuova lista» 52 dp, «Entrata»), inviato e pubblicato con `npm run deploy:hosting`. Rules **non** pubblicate.
+
+## Fondi: «Entrata» al posto di «Aggiunte» nel riepilogo — 16 novembre 2026
+
+- Su richiesta: la prima riga del «Riepilogo del mese» si chiama «Entrata» (stessa parola del dialogo Aggiungi; EN «Income»); traduzione
+  «Aggiunte» rimossa. `npm run check` OK. Nessun commit.
+
+## Abbonamenti: storico dei pagamenti in un dialogo, pagamenti eliminabili — 16 novembre 2026
+
+- Su richiesta: nei dettagli di un abbonamento lo storico non è più in riga; il pulsante tonale **«Storico dei pagamenti (n)»** apre
+  `PaymentsDialog` (nome, numero, totale; elenco scorrevole; «Chiudi»). Ogni pagamento ha il cestino (`DeleteAction`, conferma «Eliminare il
+  pagamento del …?»); serve la connessione sincronizzata come per gli stati. Tolti «Mostra tutti i pagamenti (n)» / «Mostra solo i più recenti».
+- Modello dati (scelta dell'utente «togli un singolo pagamento»): campo facoltativo `skipped_payments` (numeri di occorrenza) in dominio,
+  contratto, `dataOf`, editor (conservato finché è una serie), Firestore (stringa compatta, `deleteField`), locale (rimosso se assente),
+  Rules, backup **v9**. Decisione in `docs/architecture.md`, regole in AGENTS. Limite: un'app non aggiornata (cache)
+  ignora il campo e conta ancora il pagamento finché non si ricarica.
+- Verifiche: `npm run check` OK (**453/453**, build demo); test nuovi `tests/skippedPayments.test.ts` (3), caso in `localStore.test.ts`; `test:emulator`
+  **21/21** su porte dedicate (Auth 19099, Firestore 18180, config temporanea rimossa) con il caso nuovo e il caso peggiore del budget Rules
+  esteso a 60 numeri. Chromium 1280 px con `nummo-utente-medio.json` (profilo temporaneo cancellato): «Spazio cloud» → «Storico dei pagamenti (6)»,
+  eliminato il 20 ott 2026 → 5 pagamenti, 14,95 €; nessun errore JS. **Rules da ripubblicare** prima di usarlo in Avanzata (solo con
+  autorizzazione). Nessun commit.
+
+## Liste: «Nuova lista» leggermente più piccolo — 16 novembre 2026
+
+- Su richiesta, su desktop e smartphone: 52 dp (prima 56) ed etichetta 15/600 (prima 16/600); resta più grande del pulsante standard (48). Chromium: 142×52 a 1280 px, 95×52 a 390 px, nessun errore JS; `npm run check` OK (**449/449**). Nessun commit.
+
+## Spese: ricerca per mese/anno, icone nel menu Categoria, «Chiudi» più grande — 16 novembre 2026
+
+- Su richiesta: la ricerca di Spese («Cerca per nome, mese o anno») trova anche per periodo nella lingua dell'interfaccia: nome del mese intero o
+  breve e anno («ottobre», «ott 2026», «2026»), combinabili col nome («spesa ottobre»); ogni parola deve comparire nel nome o nel periodo
+  (`searchAndSort(…, dateText)`, test nuovo in `history.test.ts`; senza `dateText` resta solo il nome). Effetto noto: una parola breve può trovare
+  anche nomi che la contengono («ott» → «Prodotti»). Abbonamenti invariato.
+- Menu «Categoria» di Spese con il glifo di ogni categoria (filtro per «Tutte le categorie»); il campo mostra l'icona della categoria scelta.
+  **Correzione:** il menu misurava le voci senza la barra di scorrimento (10 px in Chromium) e troncava i nomi lunghi quando scorre; ora la
+  larghezza misurata include la barra classica del browser (`scrollbarWidth()` in `MenuSelect`, 0 con barre sovrapposte).
+- «Chiudi» dei dialoghi Prodotti acquistati e dettagli di Analisi: etichetta 16/600, larghezza minima 96.
+- Verifiche: `npm run check` OK (**449/449**, build demo). Chromium 1280 px con `nummo-utente-medio.json` (profilo temporaneo cancellato): «ottobre» 29 spese,
+  «2026» 187, «spesa ottobre» 9, «nov» 11; menu Categoria con icone e «Medio · Ristoranti e bar» intero (170/170 px); dialogo Prodotti con
+  «Chiudi» più grande; nessun errore JS. Nessun commit.
 
 ## Liste: pulsante «Nuova lista» più grande anche su desktop — 16 novembre 2026
 
@@ -2581,8 +2629,8 @@ screen reader, concorrenza tra due dispositivi.
    collaudo sui dati reali e sul Pixel 8 (elenco storico in `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`).
    Già fatti: Escape in `AppDialog` e riallineamento README/architettura (12 novembre).
 
-1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 15 novembre l'ultima volta con `ec150a1`
-   (comprese `templates/{uuid}`; `firestore.rules` invariato da allora). Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
+1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate l'ultima volta il 16 novembre (allineate a `f9c4d8f`,
+   senza `templates`); `firestore.rules` ora aggiunge `skipped_payments` ed è da ripubblicare con autorizzazione. Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
    serve autorizzazione. Decidere conservazione o migrazione esplicita degli ID icona rimossi, con regressioni
    decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):

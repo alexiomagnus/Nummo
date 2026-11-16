@@ -330,9 +330,9 @@ const styles = StyleSheet.create({
   // Title and lists are one block: `lg` between them instead of the page's section gap.
   overviewHeader: { marginBottom: spacing.lg - layout.sectionGap },
   headerButton: { flexShrink: 0 },
-  // A little larger than the standard button (every width): as tall as «Salva» in Nuova spesa, with its 16/600 label.
-  headerButtonContent: { minHeight: layout.controlHeight },
-  headerButtonLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
+  // A little larger than the standard button (every width): 52 dp, 15/600 label (between the standard 48 dp and «Salva»).
+  headerButtonContent: { minHeight: layout.minTouch + spacing.xs },
+  headerButtonLabel: { fontSize: 15, fontWeight: '600', letterSpacing: 0.1 },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', width: '100%', borderRadius: radius.pill, transformOrigin: 'left center' } as ViewStyle,
   detailTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

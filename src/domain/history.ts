@@ -17,22 +17,27 @@ export type ExpenseEntry = Readonly<{
   fund_id?: string | null;
   // Absent on series that never changed frequency (the original calendar).
   calendar_changes?: readonly CalendarChange[];
+  // Payments removed by hand (numbers of the occurrence, which never change): absent or empty = none.
+  skipped_payments?: readonly number[];
 }>;
 export type Occurrence = Readonly<{
-  key: string; expenseId: string; date: string; amount_minor: number;
+  // `index`: number of the occurrence in its series (0 for a one-off expense), the one prices and removed payments refer to.
+  key: string; expenseId: string; index: number; date: string; amount_minor: number;
   description: string; category_id: string | null; fund_id?: string | null; recurrence: Recurrence | null;
 }>;
 
 function toOccurrence(entry: ExpenseEntry, date: string, index: number): Occurrence {
   return {
-    key: `${entry.id}:${date}`, expenseId: entry.id, date, amount_minor: priceAt(entry.amount_minor, entry.price_changes ?? [], index),
+    key: `${entry.id}:${date}`, expenseId: entry.id, index, date, amount_minor: priceAt(entry.amount_minor, entry.price_changes ?? [], index),
     description: entry.description, category_id: entry.category_id, fund_id: entry.fund_id ?? null,
     recurrence: entry.recurrence ? recurrenceAt(entry.recurrence, entry.calendar_changes ?? [], index) : null,
   };
 }
 
 // A legacy series has already paid occurrence 0 at creation. A trial has not: its first billing slot also obeys status changes.
+// A payment removed by hand (`skipped_payments`) never counts.
 function paid(entry: ExpenseEntry, date: string, index: number): boolean {
+  if (entry.skipped_payments?.includes(index)) return false;
   return (index === 0 && !entry.first_payment_date) || statusAt(entry.status_changes ?? [], date) === 'active';
 }
 
@@ -143,9 +148,20 @@ export function searchKey(value: string): string {
   return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('it').trim().replace(/\s+/gu, ' ');
 }
 
-export function searchAndSort(items: readonly Occurrence[], query: string, sort: SortOption): Occurrence[] {
-  const needle = searchKey(query);
-  const found = needle ? items.filter((item) => searchKey(item.description).includes(needle)) : [...items];
+// Search by name and, with `dateText` (the UI gives the month and year of a date in the current language, e.g. «novembre 2026
+// nov»), by period too. Every word of the query must appear in the name or in that text: «novembre», «2026», «pane nov 2026».
+export function searchAndSort(items: readonly Occurrence[], query: string, sort: SortOption, dateText?: (date: string) => string): Occurrence[] {
+  const words = searchKey(query).split(' ').filter(Boolean);
+  const keys = new Map<string, string>();
+  const periodKey = (date: string) => {
+    const month = date.slice(0, 7);
+    if (!keys.has(month)) keys.set(month, searchKey(`${dateText?.(date) ?? ''} ${month.slice(0, 4)}`));
+    return keys.get(month)!;
+  };
+  const found = words.length ? items.filter((item) => {
+    const text = `${searchKey(item.description)} ${dateText ? periodKey(item.date) : ''}`;
+    return words.every((word) => text.includes(word));
+  }) : [...items];
   const byDate = (a: Occurrence, b: Occurrence) => a.date.localeCompare(b.date) || a.key.localeCompare(b.key);
   const compare: Record<SortOption, (a: Occurrence, b: Occurrence) => number> = {
     'date-desc': (a, b) => byDate(b, a),

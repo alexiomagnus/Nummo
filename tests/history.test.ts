@@ -31,6 +31,21 @@ test('ricerca per nome senza distinzione di maiuscole e accenti', () => {
   assert.equal(searchAndSort(items, '', 'date-desc').length, 2);
   assert.equal(searchAndSort(items, 'pizza', 'date-desc').length, 0);
 });
+test('ricerca anche per periodo: mese e anno nella lingua dell’interfaccia, parole combinabili col nome', () => {
+  const items = expandOccurrences([entry({ id: 'a', description: 'Pane', expense_date: '2026-10-05' }),
+    entry({ id: 'b', description: 'Pane', expense_date: '2025-11-20' }), entry({ id: 'c', description: 'Caffè', expense_date: '2026-11-01' })], '2026-11-02');
+  const months = new Intl.DateTimeFormat('it', { month: 'long', timeZone: 'UTC' });
+  const short = new Intl.DateTimeFormat('it', { month: 'short', timeZone: 'UTC' });
+  const dateText = (date: string) => { const d = new Date(`${date}T00:00:00Z`); return `${months.format(d)} ${short.format(d)}`; };
+  const ids = (query: string) => searchAndSort(items, query, 'date-asc', dateText).map((item) => item.expenseId);
+  assert.deepEqual(ids('novembre'), ['b', 'c']);
+  assert.deepEqual(ids('2026'), ['a', 'c']);
+  assert.deepEqual(ids('pane 2026'), ['a']);
+  assert.deepEqual(ids('Ott 2026'), ['a']);
+  assert.deepEqual(ids('pane novembre 2025'), ['b']);
+  // Without `dateText` only the name counts (as before).
+  assert.deepEqual(searchAndSort(items, 'novembre', 'date-asc').length, 0);
+});
 test('ordinamento per data e importo, stabile a parità', () => {
   const items = expandOccurrences([
     entry({ id: 'a', amount_minor: 500, expense_date: '2026-10-01' }),
@@ -108,7 +123,7 @@ test('colori: oltre 12 categorie restano nell’intervallo e deterministici', ()
 test('colori: i casi della segnalazione (Casa, Ristorazione, Alimentari, Trasporti) restano distinti e stabili tra i periodi', () => {
   const categories = ['Casa', 'Ristorazione', 'Alimentari', 'Trasporti'].map((label, i) => ({ id: `00000000-0000-4000-8000-00000000000${i}`, label, icon: null }));
   const today = '2026-11-10';
-  const items = categories.map((c, i) => ({ key: `${c.id}:x`, expenseId: `e${i}`, date: i === 0 ? '2026-06-01' : '2026-11-05', amount_minor: 1000,
+  const items = categories.map((c, i) => ({ key: `${c.id}:x`, expenseId: `e${i}`, index: 0, date: i === 0 ? '2026-06-01' : '2026-11-05', amount_minor: 1000,
     description: c.label, category_id: c.id, recurrence: null }));
   const month = breakdown(items, categories, 'month', today);
   const year = breakdown(items, categories, 'year', today);
