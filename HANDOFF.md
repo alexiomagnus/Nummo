@@ -5,6 +5,9 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
+- **Rilascio del 16 novembre (sera): `f5411fb`** (esercenti, elenco dei modelli AI, esercente nella scansione, scansione predefinita), inviato a
+  `origin/main`. **Rules pubblicate** (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»)
+  e poi **Hosting** (`npm run deploy:hosting`, «Deploy complete!», sito 200). Spesa con esercente in Avanzata sul cloud non ancora provata.
 - **Scansione: esercente separato dalla descrizione e scansione predefinita (16 novembre, sera): NON committato, NON pubblicato.**
   Sezione qui sotto. Dipende dagli esercenti (stesso ordine di pubblicazione: prima le Rules, poi l'Hosting).
 - **Elenco dei modelli AI nelle Impostazioni (16 novembre, sera): NON committato, NON pubblicato.** Il campo «Modello» di «Analisi
@@ -60,8 +63,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
-  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting è a `26b95e9` e le Rules a `1dbb396`:
-  esercenti (Rules + Hosting) ed elenco dei modelli AI (solo Hosting) restano da committare e pubblicare, su richiesta.
+  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting e Rules sono a `f5411fb`.
 
 ## Scansione: esercente e scansione predefinita — 16 novembre 2026 (sera)
 
