@@ -8,6 +8,7 @@ import type { ExpenseRecord, Receipt } from '../domain/contract.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import type { SyncedBudget, SyncedCategory, SyncedExpense, SyncedFund, SyncedList, SyncedListItem, SyncedMovement } from '../domain/firestore.ts';
 import type { BudgetChange, Fund, FundData, Movement, MovementData } from '../domain/funds.ts';
+import { parseMerchant, type Merchant } from '../domain/merchant.ts';
 import { sortItems, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 
 export type SnapshotState<T> = { records: T[]; fromCache: boolean; pending: boolean; pendingIds: string[] };
@@ -18,7 +19,7 @@ type Watch<T> = (next: (value: SnapshotState<T>) => void, error: (reason: Error)
 // A complete, confirmed copy of the archive (backups and CSV).
 export type ArchiveSnapshot = {
   expenses: SyncedExpense[]; categories: SyncedCategory[]; funds: SyncedFund[]; movements: SyncedMovement[];
-  lists: ShoppingListRecord[]; budget: BudgetChange[];
+  lists: ShoppingListRecord[]; budget: BudgetChange[]; merchants: Merchant[];
 };
 
 export type DataStore = {
@@ -31,11 +32,16 @@ export type DataStore = {
   watchLists: Watch<SyncedList>;
   watchListItems: Watch<SyncedListItem>;
   watchBudget(next: (value: BudgetSnapshot) => void, error: (reason: Error) => void): Unsubscribe;
+  // Merchants (merchant.ts): created only together with the first expense that uses them, never edited or deleted from
+  // the interface (only a «replace» import removes them).
+  watchMerchants: Watch<Merchant>;
   // Read-only verification of an uncertain save; never a second write.
   confirmExpense(request: ExpenseRequest): Promise<Receipt>;
-  createExpense(request: ExpenseRequest): Promise<Receipt>;
+  // `merchant`: a merchant used for the first time (its ID is `request.merchant_id`), saved in the same atomic write as the
+  // expense; a merchant that already exists keeps the name it has.
+  createExpense(request: ExpenseRequest, merchant?: Merchant | null): Promise<Receipt>;
   // Updates and removals act on the revision seen when the editor opened; a newer one is an explicit conflict.
-  updateExpense(previous: SyncedExpense, data: ExpenseData): Promise<void>;
+  updateExpense(previous: SyncedExpense, data: ExpenseData, merchant?: Merchant | null): Promise<void>;
   removeExpense(previous: SyncedExpense): Promise<void>;
   saveCategory(id: string, name: string, icon: CategoryIcon | null, previous?: SyncedCategory): Promise<void>;
   removeCategory(previous: SyncedCategory): Promise<void>;
@@ -58,7 +64,7 @@ export type DataStore = {
   exportSnapshot(): Promise<ArchiveSnapshot>;
   previewImport(data: ImportData): Promise<{ merge: ImportPlan; replace: ImportPlan }>;
   importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode?: ImportMode, fundRecords?: readonly Fund[],
-    movementRecords?: readonly Movement[], shoppingLists?: readonly ShoppingListRecord[], generalBudget?: readonly BudgetChange[]): Promise<void>;
+    movementRecords?: readonly Movement[], shoppingLists?: readonly ShoppingListRecord[], generalBudget?: readonly BudgetChange[], merchantRecords?: readonly Merchant[]): Promise<void>;
 };
 
 // Lists of the archive with their items (backups and import plans). Items whose list no longer exists are left out.
@@ -67,3 +73,10 @@ export function listRecords(lists: readonly SyncedList[], items: readonly Synced
     items: sortItems(items.filter((i) => i.list_id === l.id)).map((i) => ({ id: i.id, name: i.name, checked: i.checked, position: i.position })) }));
 }
 export const invalidArchive = 'Archivio non valido: esportazione e modifiche bloccate.';
+
+// The merchant sent with a new or edited expense must be the one its `merchant_id` names (checked by both stores).
+export function checkNewMerchant(data: Pick<ExpenseData, 'merchant_id'>, merchant: Merchant | null | undefined): Merchant | null {
+  if (!merchant) return null;
+  if (data.merchant_id !== merchant.id || !parseMerchant(merchant)) throw new Error('Esercente non valido.');
+  return merchant;
+}

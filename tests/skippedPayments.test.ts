@@ -50,7 +50,7 @@ test('record: campo facoltativo solo per le serie, conservato da dataOf; backup 
   assert.deepEqual(dataOf(record({ skipped_payments: [2] })).skipped_payments, [2]);
   const saved = record({ skipped_payments: [1, 2] });
   const file = JSON.parse(makeBackup({ expenses: [saved], categories: [] }));
-  assert.equal(file.version, 9);
+  assert.equal(file.version, 10);
   assert.deepEqual(file.expenses[0].skipped_payments, [1, 2]);
   assert.deepEqual(parseBackup(file).expenses[0]!.skipped_payments, [1, 2]);
   assert.throws(() => parseBackup({ ...file, version: 8 }), /versione 9/);

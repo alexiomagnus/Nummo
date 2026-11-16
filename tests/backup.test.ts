@@ -33,11 +33,11 @@ function readCsv(text: string): string[][] {
 
 test('CSV: BOM, intestazioni italiane, separatore ;, CRLF, importo con virgola e testi quotati', () => {
   const csv = exportCsv([record], categories, '2025-02-28');
-  assert.ok(csv.startsWith('﻿Data;Descrizione;Categoria;Importo;Valuta;Ricorrenza;Fondo\r\n'));
+  assert.ok(csv.startsWith('﻿Data;Descrizione;Categoria;Importo;Valuta;Ricorrenza;Fondo;Esercente\r\n'));
   const rows = readCsv(csv.slice(1));
-  assert.deepEqual(rows[0], ['Data', 'Descrizione', 'Categoria', 'Importo', 'Valuta', 'Ricorrenza', 'Fondo']);
-  assert.deepEqual(rows[1], ['2025-01-31', 'Caffè "buono"; sì', 'Caffè', '12,50', 'EUR', 'Mensile', '']);
-  assert.ok(rows.every((r) => r.length === 7));
+  assert.deepEqual(rows[0], ['Data', 'Descrizione', 'Categoria', 'Importo', 'Valuta', 'Ricorrenza', 'Fondo', 'Esercente']);
+  assert.deepEqual(rows[1], ['2025-01-31', 'Caffè "buono"; sì', 'Caffè', '12,50', 'EUR', 'Mensile', '', '']);
+  assert.ok(rows.every((r) => r.length === 8));
   assert.ok(csv.endsWith('\r\n'));
 });
 
@@ -56,7 +56,7 @@ test('CSV: serie ricorrente espansa per occorrenza, senza duplicati né rinnovi 
   assert.equal(rows.length, expandOccurrences([series], '2025-04-30').length);
   assert.equal(readCsv(exportCsv([series], categories, '2025-01-30')).length, 1);
   // A one-off expense is a single row without recurrence.
-  assert.deepEqual(readCsv(exportCsv([expense(2, { amount_minor: 5 })], categories, '2025-02-28'))[1], ['2025-01-31', 'Spesa 2', 'Caffè', '0,05', 'EUR', '', '']);
+  assert.deepEqual(readCsv(exportCsv([expense(2, { amount_minor: 5 })], categories, '2025-02-28'))[1], ['2025-01-31', 'Spesa 2', 'Caffè', '0,05', 'EUR', '', '', '']);
 });
 
 test('CSV: ordinato per data, categoria eliminata lasciata vuota, importi grandi e centesimi a una cifra', () => {

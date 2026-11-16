@@ -1,17 +1,21 @@
 // Receipt scanning, pure part: what can be read from the text of a receipt (local OCR) or from the JSON answer of an AI
 // model, and how a reviewed proposal reaches the new-expense draft. Nothing here saves an expense: a scan only proposes
-// values for the four fields of the form. Conservative on purpose: a value that is not on the receipt stays missing.
+// values for the base fields of the form (amount, date, description, merchant, category). Conservative on purpose: a value that is not on the receipt stays missing.
 import type { Category, CategoryIcon } from './category.ts';
 import type { ExpenseDraft } from './expense.ts';
+import { displayMerchantName, merchantPolicy } from './merchant.ts';
 import { clipToLength, expensePolicy, isValidDate, listPolicy } from './policy.ts';
 
-export type ReceiptField = 'description' | 'amount' | 'date' | 'categoryId';
-export const receiptFields: readonly ReceiptField[] = ['amount', 'date', 'description', 'categoryId'];
+export type ReceiptField = 'description' | 'merchant' | 'amount' | 'date' | 'categoryId';
+export const receiptFields: readonly ReceiptField[] = ['amount', 'date', 'description', 'merchant', 'categoryId'];
 // found = read plainly; uncertain = read but to be checked; missing = not on the receipt or unreadable.
 export type ReceiptStatus = 'found' | 'uncertain' | 'missing';
 
 export type ReceiptProposal = Readonly<{
+  // What was bought, in a word or two («Spesa», «Carburante»): a suggestion, never the shop's name. '' when unknown.
   description: string;
+  // The shop's name as printed («Esercente» of the form), '' when unreadable.
+  merchant: string;
   amountMinor: number | null;
   // Civil date YYYY-MM-DD, '' when missing.
   date: string;
@@ -150,29 +154,40 @@ function merchantOf(lines: readonly Line[]): string {
     if (name.length < 3) continue;
     // Receipts shout: «LIDL ITALIA SRL» reads better as «Lidl Italia Srl».
     const shown = name === name.toUpperCase() ? name.toLowerCase().replace(/(^|[\s\-'’.&])(\p{L})/gu, (_, before: string, letter: string) => before + letter.toUpperCase()) : name;
-    return clipToLength(shown, expensePolicy.maxDescriptionLength);
+    return clipToLength(shown, merchantPolicy.maxNameLength).trim();
   }
   return '';
 }
 
 // Kinds of shop recognised from words on the receipt. A kind proposes a category only if the archive already has a
 // fitting one: by a word of its name first, then by its icon. Nothing is ever created.
-const shopKinds: readonly { words: RegExp; labels: RegExp; icons: readonly CategoryIcon[] }[] = [
+const shopKinds: readonly { words: RegExp; labels: RegExp; icons: readonly CategoryIcon[]; description: string }[] = [
   { words: /\b(supermercat\w*|supermarket|ipermercat\w*|minimarket|market|lidl|conad|coop|esselunga|eurospin|carrefour|penny|despar|eurospar|interspar|aldi|iper|famila|sigma|crai|pam|tigre|bennet|unes|panificio|macelleria|ortofrutta|salumeria|alimentari|grocery|groceries)\b/,
-    labels: /aliment|spesa|supermerc|grocer|cibo|food/, icons: ['cart', 'bag'] },
+    labels: /aliment|spesa|supermerc|grocer|cibo|food/, icons: ['cart', 'bag'], description: 'Spesa' },
   { words: /\b(ristorante|pizzeria|trattoria|osteria|bar|caffe|caffetteria|tavola calda|rosticceria|mcdonald\w*|burger|sushi|pub|gelateria|pasticceria|restaurant|cafe|coperto|coperti)\b/,
-    labels: /ristor|\bbar\b|caff|mangiare|restaurant|eating|cene|pranz|dining/, icons: ['utensils', 'pizza', 'burger', 'pasta', 'coffee', 'cake'] },
+    labels: /ristor|\bbar\b|caff|mangiare|restaurant|eating|cene|pranz|dining/, icons: ['utensils', 'pizza', 'burger', 'pasta', 'coffee', 'cake'], description: 'Ristorante' },
   { words: /\b(carburante|carburanti|benzina|gasolio|diesel|gpl|metano|eni|q8|esso|tamoil|agip|fuel|petrol|litri|self service|stazione di servizio)\b/,
-    labels: /carbur|benzin|auto|fuel|car\b/, icons: ['fuel'] },
+    labels: /carbur|benzin|auto|fuel|car\b/, icons: ['fuel'], description: 'Carburante' },
   { words: /\b(farmacia|parafarmacia|pharmacy|farmaco|farmaci|ticket sanitario|erboristeria)\b/,
-    labels: /salute|farmac|medic|health|pharma/, icons: ['cross', 'heartpulse'] },
+    labels: /salute|farmac|medic|health|pharma/, icons: ['cross', 'heartpulse'], description: 'Farmacia' },
   { words: /\b(trenitalia|italo|trenord|biglietto|autobus|metro|taxi|parcheggio|pedaggio|autostrade|ticket|parking)\b/,
-    labels: /trasport|transport|viagg|travel/, icons: ['train', 'bike'] },
+    labels: /trasport|transport|viagg|travel/, icons: ['train', 'bike'], description: 'Trasporti' },
   { words: /\b(abbigliamento|calzature|scarpe|zara|ovs|decathlon|primark|benetton|clothing|fashion)\b/,
-    labels: /shopping|abbigl|vestit|cloth/, icons: ['shirt'] },
+    labels: /shopping|abbigl|vestit|cloth/, icons: ['shirt'], description: 'Abbigliamento' },
   { words: /\b(mediaworld|unieuro|euronics|trony|elettronica|informatica|electronics)\b/,
-    labels: /tecnolog|elettron|tech|electron/, icons: ['laptop'] },
+    labels: /tecnolog|elettron|tech|electron/, icons: ['laptop'], description: 'Elettronica' },
 ];
+
+// Descriptions the local scan may propose (source language, translated at the UI boundary).
+export const receiptDescriptions: readonly string[] = shopKinds.map((kind) => kind.description);
+
+// What was bought, from the kind of shop: '' when no kind, or two kinds equally, are recognised.
+export function suggestDescription(text: string): string {
+  const folded = fold(text);
+  const scored = shopKinds.map((kind) => ({ kind, hits: (folded.match(new RegExp(kind.words.source, 'g')) ?? []).length })).filter((entry) => entry.hits > 0)
+    .sort((a, b) => b.hits - a.hits);
+  return scored.length > 0 && !(scored[1] && scored[1].hits === scored[0]!.hits) ? scored[0]!.kind.description : '';
+}
 
 // A category among the existing ones that fits the receipt, or '' when none clearly does.
 export function suggestCategory(text: string, categories: readonly Category[]): string {
@@ -199,29 +214,32 @@ export function suggestCategory(text: string, categories: readonly Category[]): 
   return named.length === 1 ? named[0]!.id : '';
 }
 
-// Proposal from the text read by the local OCR. The shop's name and the category are always to be checked: a header
-// is often a logo the OCR misreads, and the category is only a suggestion.
+// Proposal from the text read by the local OCR. The shop's name, the description and the category are always to be
+// checked: a header is often a logo the OCR misreads, description and category are only suggestions from the kind of shop.
 export function parseReceiptText(text: string, categories: readonly Category[], today: string): ReceiptProposal {
   const lines: Line[] = text.split(/\r?\n/).map((raw) => raw.replace(/\s+/g, ' ').trim()).filter(Boolean)
     .map((line) => ({ text: line, folded: fold(line), amounts: amountsIn(line) }));
   const total = totalOf(lines);
   const dates = [...new Set(datesIn(lines.map((line) => line.text).join('\n'), today))];
-  const description = merchantOf(lines);
+  const merchant = merchantOf(lines);
+  const description = suggestDescription(text);
   const categoryId = suggestCategory(text, categories);
   const notes = [total.note, dates.length > 1 ? receiptNotes.manyDates : undefined].filter((note): note is NonNullable<typeof note> => Boolean(note));
   return {
-    description, amountMinor: total.amount, date: dates[0] ?? '', categoryId, items: [], discountMinor: null, notes,
+    description, merchant, amountMinor: total.amount, date: dates[0] ?? '', categoryId, items: [], discountMinor: null, notes,
     status: {
       amount: total.status,
       date: dates.length === 0 ? 'missing' : dates.length === 1 ? 'found' : 'uncertain',
       description: description ? 'uncertain' : 'missing',
+      merchant: merchant ? 'uncertain' : 'missing',
       categoryId: categoryId ? 'uncertain' : 'missing',
     },
   };
 }
 
 // True when a scan gave nothing to review (blurred or cut picture, not a receipt).
-export const emptyProposal = (proposal: ReceiptProposal) => receiptFields.every((field) => proposal.status[field] === 'missing');
+// A description alone does not count: it is a guess from a word, not something read.
+export const emptyProposal = (proposal: ReceiptProposal) => receiptFields.every((field) => field === 'description' || proposal.status[field] === 'missing');
 
 export const aiResponseError = 'La risposta dell’AI non è valida.';
 
@@ -232,7 +250,7 @@ function aiAmount(value: unknown): number | null {
   return match ? Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0')) : null;
 }
 
-const aiFieldNames: Readonly<Record<string, ReceiptField>> = { merchant: 'description', total: 'amount', date: 'date', category: 'categoryId' };
+const aiFieldNames: Readonly<Record<string, ReceiptField>> = { merchant: 'merchant', description: 'description', total: 'amount', date: 'date', category: 'categoryId' };
 
 // Proposal from the model's answer. The answer is untrusted text: it must be a JSON object, every field is checked on
 // its own (a wrong type is a missing value, not an error), amounts and dates must be possible for an expense and the
@@ -245,13 +263,16 @@ export function parseAiReceipt(raw: string, categories: readonly Category[], tod
   try { data = start >= 0 && end > start ? JSON.parse(raw.slice(start, end + 1)) : null; } catch { data = null; }
   if (typeof data !== 'object' || data === null || Array.isArray(data)) throw new Error(aiResponseError);
   const o = data as Record<string, unknown>;
-  const known = ['merchant', 'date', 'total', 'currency', 'items', 'discount_total', 'category', 'uncertain'];
+  const known = ['merchant', 'description', 'date', 'total', 'currency', 'items', 'discount_total', 'category', 'uncertain'];
   if (!known.some((key) => key in o)) throw new Error(aiResponseError);
   const notes: string[] = [];
   const doubted = new Set((Array.isArray(o.uncertain) ? o.uncertain : []).map((name) => (typeof name === 'string' ? aiFieldNames[name] : undefined)));
   const status = (field: ReceiptField, present: boolean): ReceiptStatus => (!present ? 'missing' : doubted.has(field) ? 'uncertain' : 'found');
 
-  const description = typeof o.merchant === 'string' ? clipToLength(o.merchant.normalize('NFC').replace(/\s+/gu, ' ').trim(), expensePolicy.maxDescriptionLength) : '';
+  const short = (value: unknown, max: number) => (typeof value === 'string' ? clipToLength(value.normalize('NFC').replace(/\s+/gu, ' ').trim(), max).trim() : '');
+  // Shown as it will be saved: receipts shout («SPAZIO CONAD» → «Spazio Conad»), mixed capitals are kept.
+  const merchant = displayMerchantName(short(o.merchant, merchantPolicy.maxNameLength));
+  const description = short(o.description, expensePolicy.maxDescriptionLength);
 
   let amountMinor = aiAmount(o.total);
   if (amountMinor !== null && !validAmount(amountMinor)) { amountMinor = null; notes.push(receiptNotes.amountRange); }
@@ -275,9 +296,11 @@ export function parseAiReceipt(raw: string, categories: readonly Category[], tod
   const discount = aiAmount(o.discount_total);
 
   return {
-    description, amountMinor, date, categoryId, items, notes, discountMinor: discount !== null && validAmount(discount) ? discount : null,
+    description, merchant, amountMinor, date, categoryId, items, notes, discountMinor: discount !== null && validAmount(discount) ? discount : null,
     status: {
-      description: status('description', description !== ''),
+      // Like the category, the description is the model's opinion, not something printed on the receipt.
+      description: description ? 'uncertain' : 'missing',
+      merchant: status('merchant', merchant !== ''),
       amount: amountMinor === null ? 'missing' : foreign ? 'uncertain' : status('amount', true),
       date: status('date', date !== ''),
       // A category is the model's opinion, not something printed on the receipt.
@@ -292,20 +315,23 @@ export function amountText(amountMinor: number | null, decimal: ',' | '.' = ',')
 }
 
 export type ReceiptValues = Readonly<Record<ReceiptField, string>>;
+// The form's draft: the merchant may be absent (drafts older than the field).
+type ScanDraft = Pick<ExpenseDraft, ReceiptField>;
+const typed = (draft: ScanDraft, field: ReceiptField) => (draft[field] ?? '').trim();
 
 // Fields the user already filled in the form with something else than the reviewed scan proposes.
-export function scanConflicts(draft: Pick<ExpenseDraft, ReceiptField>, values: ReceiptValues): ReceiptField[] {
-  return receiptFields.filter((field) => draft[field].trim() !== '' && values[field].trim() !== '' && draft[field].trim() !== values[field].trim());
+export function scanConflicts(draft: ScanDraft, values: ReceiptValues): ReceiptField[] {
+  return receiptFields.filter((field) => typed(draft, field) !== '' && values[field].trim() !== '' && typed(draft, field) !== values[field].trim());
 }
 
-// What a reviewed scan changes in the draft: only the four base fields, only with values the user accepted, and
+// What a reviewed scan changes in the draft: only the base fields, only with values the user accepted, and
 // never over something already typed unless `replace` was chosen. Recurrence, fund and prices are never touched.
-export function scanPatch(draft: Pick<ExpenseDraft, ReceiptField>, values: ReceiptValues, replace: boolean): Partial<Record<ReceiptField, string>> {
+export function scanPatch(draft: ScanDraft, values: ReceiptValues, replace: boolean): Partial<Record<ReceiptField, string>> {
   const patch: Partial<Record<ReceiptField, string>> = {};
   for (const field of receiptFields) {
     const value = values[field].trim();
-    if (value === '' || value === draft[field].trim()) continue;
-    if (draft[field].trim() === '' || replace) patch[field] = value;
+    if (value === '' || value === typed(draft, field)) continue;
+    if (typed(draft, field) === '' || replace) patch[field] = value;
   }
   return patch;
 }

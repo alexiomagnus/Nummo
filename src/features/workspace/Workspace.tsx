@@ -21,6 +21,7 @@ import { setStatus, type SubscriptionStatus } from '../../domain/subscription';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
+import type { Category } from '../../domain/category';
 import { defaultCategories } from '../../domain/category';
 import { CategorySettings } from '../categories/CategorySettings';
 import { useRemoteCategories } from '../categories/useRemoteCategories';
@@ -29,6 +30,8 @@ import { Dashboard } from '../dashboard/Dashboard';
 import { ExpenseForm } from '../expenses/ExpenseForm';
 import { ExpenseEditor } from '../expenses/ExpenseEditor';
 import { useRemoteExpenses } from '../expenses/useRemoteExpenses';
+import { useRemoteMerchants } from '../expenses/useRemoteMerchants';
+import { rankMerchants, type RankedMerchant } from '../../domain/merchant';
 import { ExpenseList } from '../history/ExpenseList';
 import { UpcomingRenewals } from '../history/UpcomingRenewals';
 import { SubscriptionList } from '../history/SubscriptionList';
@@ -105,6 +108,7 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   const categoryState = useRemoteCategories(backend);
   const fundState = useRemoteFunds(backend);
   const listState = useRemoteLists(backend);
+  const merchantState = useRemoteMerchants(backend);
   // The device archive needs no network: «online» only gates what waits for a server.
   const [browserOnline, setOnline] = useState(navigator.onLine);
   const online = local || browserOnline;
@@ -117,9 +121,12 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   }, []);
   const occurrences = useMemo(() => expandOccurrences(store.expenses, today), [store.expenses, today]);
   const subscriptions = useMemo(() => subscriptionSummaries(store.expenses, today), [store.expenses, today]);
-  // Lists count once loaded: a list listener that fails (e.g. Rules not yet published) must not block expenses and funds.
-  const pending = Boolean(store.sync?.pending || categoryState.sync.pending || fundState.sync.pending || listState.sync.pending);
-  const cached = Boolean(store.sync?.fromCache || categoryState.sync.fromCache || fundState.sync.fromCache || (listState.ready && listState.sync.fromCache));
+  // Merchants ranked by how often and how recently the expenses use them (suggestions of «Esercente»).
+  const merchants = useMemo(() => rankMerchants(merchantState.merchants, store.expenses, today), [merchantState.merchants, store.expenses, today]);
+  // Lists and merchants count once loaded: a listener that fails (e.g. Rules not yet published) must not block expenses and funds.
+  const pending = Boolean(store.sync?.pending || categoryState.sync.pending || fundState.sync.pending || listState.sync.pending || merchantState.sync.pending);
+  const cached = Boolean(store.sync?.fromCache || categoryState.sync.fromCache || fundState.sync.fromCache || (listState.ready && listState.sync.fromCache)
+    || (merchantState.ready && merchantState.sync.fromCache));
   // Funds are part of the archive: the form waits for them too, so the fund field never appears late.
   const ready = store.ready && categoryState.ready && fundState.ready;
   const synchronized = ready && !pending && !cached && online;
@@ -139,7 +146,7 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   useEffect(() => { if (released) onReleased?.(); }, [released]);
   return <WorkspaceNavigation dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences}
     uid={uid} backend={backend} store={store} localArchive={localArchive} categoryState={categoryState} starting={!released}
-    listState={listState} occurrences={occurrences} subscriptions={subscriptions}
+    listState={listState} occurrences={occurrences} subscriptions={subscriptions} merchants={merchants}
     online={online} synchronized={synchronized} error={error} fundState={fundState} today={today}
     renderSettings={renderSettings} storage={storage} settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} categoriesRequest={categoriesRequest}
     backupRequest={backupRequest} topActions={topActions} status={status} />;
@@ -207,16 +214,24 @@ export function StartupWorkspace({ topActions }: { topActions?: ReactNode }) {
   );
 }
 
+// Expenses the server never confirmed, as a backup to import later. A merchant that was lost with them (created in the same
+// write) is left out of the expense, so the file stays importable.
+function recoveryBackup(expenses: readonly ExpenseRecord[], categories: readonly Category[], merchants: readonly RankedMerchant[]) {
+  const known = new Set(merchants.map((m) => m.id));
+  const records = expenses.map((e) => (e.merchant_id && !known.has(e.merchant_id) ? { ...e, merchant_id: null } : e));
+  return makeBackup({ expenses: records, categories, merchants: merchants.filter((m) => records.some((e) => e.merchant_id === m.id)) });
+}
+
 type SectionsProps = DashboardSettingsProps & {
   uid: string; section: Section; onNavigate: (section: Section) => void; returnTo: Section; backend: DataStore; store: ExpenseStore;
   listState: RemoteLists;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
-  subscriptions: ReturnType<typeof subscriptionSummaries>;
+  subscriptions: ReturnType<typeof subscriptionSummaries>; merchants: readonly RankedMerchant[];
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
   fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode; storage?: ReactNode; localArchive?: LocalArchive;
 };
 
-function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, merchants, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -294,6 +309,10 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   }, [seedable]);
   // Products bought, for the expenses that registered a shopping list (shown in their details).
   const listItems = useMemo(() => new Map(store.expenses.filter((e) => e.list_id).map((e) => [e.id, e.list_items])), [store.expenses]);
+  const merchantNames = useMemo(() => {
+    const names = new Map(merchants.map((m) => [m.id, m.name]));
+    return new Map(store.expenses.flatMap((e) => { const name = e.merchant_id ? names.get(e.merchant_id) : undefined; return name ? [[e.id, name] as const] : []; }));
+  }, [merchants, store.expenses]);
   // System notifications (backup reminder in the Standard mode, spending summary in both) and the Notifications page.
   const notifications = useNotifications({ scope: uid, expenses: store.expenses, categories: categoryState.categories,
     ready: !starting && store.ready && categoryState.ready, archive: localArchive, timeZone: dashboardPreferences.timeZone });
@@ -325,7 +344,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <Card style={[styles.alert, { backgroundColor: theme.colors.errorContainer }]}>
         <Text accessibilityRole="alert" style={{ color: theme.colors.onErrorContainer }}>{store.recovery.length === 1 ? t("Una spesa in attesa non risulta confermata") : t("{p0} spese in attesa non risultano confermate", { p0: store.recovery.length })} {t(" sul server. Scaricane una copia prima di chiudere o uscire.")}</Text>
         <View style={styles.start}>
-          <Button mode="contained" buttonColor={theme.colors.error} textColor={theme.colors.onError} onPress={() => download('nummo-spese-da-recuperare.json', makeBackup({ expenses: store.recovery!, categories: categoryState.categories }), 'application/json')}>{t("Scarica spese da recuperare")}</Button>
+          <Button mode="contained" buttonColor={theme.colors.error} textColor={theme.colors.onError} onPress={() => download('nummo-spese-da-recuperare.json', recoveryBackup(store.recovery!, categoryState.categories, merchants), 'application/json')}>{t("Scarica spese da recuperare")}</Button>
         </View>
       </Card>
     )}
@@ -338,7 +357,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
       <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
         <ExpenseForm categories={categoryState.categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
-          defaultCategoryId={preferred.expense} store={formStore} />
+          defaultCategoryId={preferred.expense} store={formStore} merchants={merchants} />
       </div>
     </View>
     <VisitedSection active={section === 'list' && !starting}>
@@ -347,7 +366,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
-        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems}
+        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} merchantNames={merchantNames}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
@@ -361,7 +380,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       {storage}
       <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
     </View>
-    {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} />}
+    {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} merchants={merchants} />}
     <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} defaultCategoryId={preferred.list} expenses={store.expenses}
       fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify}
       showArchivedLists={dashboardPreferences.showArchivedLists} /></VisitedSection>

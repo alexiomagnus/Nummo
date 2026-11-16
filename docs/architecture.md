@@ -1116,3 +1116,69 @@ campi base del modulo vengono compilati. Decisioni:
   da qualunque script della pagina). Una chiave usata dal browser è comunque visibile a chi controlla il dispositivo. Un servizio
   compatibile che non consente CORS non è utilizzabile: non si aggiunge un proxy. HEIC e altri formati dipendono dal browser.
   L'accuratezza dell'OCR su scontrini reali (carta termica sbiadita, foto storte) non è stata misurata.
+
+## Esercenti in Nuova spesa — 16 novembre 2026
+
+Su richiesta (specifica incollata dall'utente). Campo **Esercente** facoltativo in Nuova spesa e nella modifica, dopo la Descrizione,
+con suggerimenti dagli esercenti già usati. Decisioni:
+
+- **Entità riutilizzabile, ID derivato dal nome.** `users/{uid}/merchants/{id}` con il solo `name` mostrato; le spese hanno `merchant_id`
+  facoltativo (assente = nessun esercente, come per tutte le spese precedenti). L'ID è la **chiave del nome** (`merchantKey`: NFC, spazi
+  normalizzati, minuscole, `%`/`/` codificati, prefisso `m-`), non un UUID: «amazon», «AMAZON» e «  Amazon  » sono lo stesso documento per
+  costruzione, anche offline, in due schede o su due dispositivi, e due backup con lo stesso esercente non vanno mai in conflitto. Nessun
+  indice dei nomi da mantenere (a differenza di `categoryNames`) e nessuna transazione necessaria per crearlo. Scartati: UUID + indice dei
+  nomi (una creazione contemporanea offline rifiuterebbe l'intera spesa e due archivi uniti andrebbero in conflitto sul nome) e nome copiato
+  in ogni spesa (duplicazione, nessuna entità). Limite consapevole: senza una pagina di gestione non c'è rinomina; una rinomina futura
+  dovrebbe aggiornare i riferimenti.
+- **Nome mostrato separato dal confronto.** Un nome scritto tutto minuscolo o tutto maiuscolo diventa «Iniziale maiuscola» parola per parola
+  (parole brevi di collegamento in minuscolo: «Bar da Mario»); una grafia con maiuscole miste («eBay», «McDonald's», «IKEA Bari») resta com'è.
+  Il nome è fissato al primo uso: una grafia diversa dello stesso nome riusa l'esercente senza rinominarlo. Unica eccezione in Avanzata: due
+  dispositivi che creano lo stesso esercente prima di sincronizzarsi scrivono lo stesso documento e resta l'ultima grafia (stesso nome).
+- **Creazione solo con la spesa.** Nessuna scrittura automatica: l'esercente nuovo parte con la spesa che lo usa per la prima volta, nello
+  stesso batch Firestore (accodato offline come la spesa) o nella stessa transazione IndexedDB; nella modifica, nella transazione della
+  spesa. Rimuovere l'esercente da una spesa non elimina l'esercente (resta tra i suggerimenti, in fondo); solo una sostituzione da backup
+  elimina quelli assenti dal file. Nessuna pagina di gestione, nessun catalogo, nessuna conferma.
+- **Uso calcolato, non salvato.** Frequenza e recenza vengono dalle spese (`rankMerchants`): ogni spesa pesa 0,5^(giorni dalla data / 90),
+  quindi le abitudini recenti prevalgono su quelle vecchie senza cancellarle. Nessun contatore da tenere allineato: modifiche, eliminazioni e
+  importazioni aggiornano l'ordine da sole. Suggerimenti: nome o parola che inizia con il testo (accenti facoltativi), poi testo contenuto da
+  3 caratteri; massimo 5; l'esercente già scritto esattamente non viene riproposto. Combobox nel flusso del modulo (nessun overlay): il campo
+  conserva il focus e la tastiera, frecce + Invio, Escape chiude.
+- **Forma dei dati.** Firestore `merchant_id` solo se presente (`deleteField` quando si toglie), Rules: forma dell'ID nella spesa
+  (budget di espressioni rimisurato con il caso peggiore), documento esercente con solo `name` (1–60, senza tabulazioni né doppi spazi) e ID
+  uguale a `merchantKey(name)`. IndexedDB: passo di schema **3** (`merchants`). **`backupVersion` 10**: `merchants` (solo se non vuoto) e
+  `merchant_id` nelle spese; una spesa che nomina un esercente assente dal file rende il file non valido; file < 10 con esercenti rifiutati.
+  Unione: stesso ID = stesso esercente, mai un conflitto, si conserva la grafia salvata; sostituzione: uguale al file. CSV: colonna finale
+  «Esercente». Nessun nuovo `schema_version`: un client non aggiornato ignora il campo. **Rules da pubblicare** prima di usare gli esercenti
+  in Avanzata (con le Rules attuali il salvataggio di una spesa con esercente è rifiutato; senza esercente nulla cambia).
+- Fuori ambito: liste della spesa (la registrazione non chiede l'esercente) e scansione dello scontrino (non compila l'esercente), ricerca
+  per esercente in Spese, filtri o grafici per esercente.
+
+## Elenco dei modelli AI nelle Impostazioni — 16 novembre 2026
+
+Su richiesta. Il campo «Modello» di «Analisi scontrini con AI» propone i modelli del servizio scelto. Decisioni:
+
+- **Combobox, non selettore chiuso.** Il campo resta un testo libero con l'elenco sotto (stesso schema dell'Esercente): l'elenco può
+  mancare (chiave non ancora scritta, CORS, rete), essere filtrato troppo o non aggiornato, e un nome scritto a mano deve restare valido.
+- **Richiesta automatica con ritardo di 500 ms** dopo l'ultima modifica della chiave o dell'indirizzo, annullata se cambiano ancora; è una
+  GET che invia la sola chiave al servizio a cui appartiene (cambiando destinazione la chiave viene già dimenticata), nessuna foto e
+  nessun dato: non richiede il consenso della scansione. L'elenco vive nello stato della scheda, mai salvato.
+- **Chiave sempre in un header**, anche per Gemini (`x-goog-api-key` invece di `?key=` della specifica): un indirizzo finisce in
+  cronologie e log.
+- **Filtro solo dove serve**: OpenAI elenca insieme ogni tipo di modello, quindi si tengono le famiglie chat; Gemini dichiara i metodi
+  (`generateContent`); Claude e i server compatibili non si filtrano. Nessuno dei servizi dichiara in modo uniforme la lettura delle
+  immagini: se il modello scelto non le accetta, l'errore arriva alla scansione («controlla che il modello accetti immagini»).
+- **Consigliato solo a campo vuoto**: una scelta dell'utente non viene mai sostituita; il modello si svuota al cambio di servizio.
+
+## Scansione: esercente separato dalla descrizione, scansione predefinita — 16 novembre 2026
+
+Su richiesta (screenshot: «Spazio Conad» finiva nella Descrizione). Decisioni:
+
+- **Il negozio è l'Esercente.** `ReceiptProposal.merchant` (massimo 60 caratteri) compila il campo Esercente della revisione, con gli
+  stessi suggerimenti del modulo; passa al modulo come gli altri campi (`scanPatch`: mai sopra un valore già scritto senza «Sostituisci i
+  dati già inseriti»). L'esercente nuovo nasce solo con il salvataggio della spesa, come sempre: la scansione non scrive nulla.
+- **La Descrizione è il tipo di acquisto.** Con l'OCR una parola fissa dal tipo di negozio riconosciuto («Spesa», «Ristorante»,
+  «Carburante», «Farmacia», «Trasporti», «Abbigliamento», «Elettronica»; tradotta al confine UI), vuota se il tipo non è chiaro; con
+  l'AI il campo `description` della risposta (una–tre parole nella lingua dell'interfaccia, mai il nome del negozio). È sempre «da
+  controllare» e da sola non rende valida una scansione (`emptyProposal` la ignora).
+- **Scansione predefinita** (`scan` in `nummo.receiptAi.v1`, `ocr` di base): scelta nella scheda delle Impostazioni, decide solo con
+  quale tipo si apre il dialogo quando l'AI è configurata; l'altro tipo, il consenso e il ripiego sull'OCR restano invariati.

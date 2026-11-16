@@ -44,7 +44,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   };
   const exportCsvFile = () => run(async () => {
     const data = await backend.exportSnapshot();
-    download('nummo-transazioni.csv', exportCsv(data.expenses, data.categories, undefined, data.funds), 'text/csv;charset=utf-8');
+    download('nummo-transazioni.csv', exportCsv(data.expenses, data.categories, undefined, data.funds, data.merchants), 'text/csv;charset=utf-8');
     notify("CSV delle transazioni esportato.");
   });
   const exportBackup = () => run(async () => {
@@ -106,7 +106,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         {missing === 1 ? t("1 riferimento a fondi o categorie mancanti.") : t("{p0} riferimenti a fondi o categorie mancanti.", { p0: missing })}</Text>}
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
         {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget); finish();
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants); finish();
         })}>{t("Unisci ai dati esistenti")}</Button>}
         <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
         <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
@@ -123,7 +123,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         try {
           // Safety copy before the first deletion: the current data stays on disk if anything goes wrong.
           download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget);
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />

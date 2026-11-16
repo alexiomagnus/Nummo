@@ -25,6 +25,8 @@ type Props = {
   onEdit?: (expenseId: string) => void;
   // Expenses that registered a shopping list → the products bought (marked «Lista spesa», listed in the details).
   listItems?: ReadonlyMap<string, readonly string[]>;
+  // Merchant name of each expense (by expense ID); expenses without one have no entry.
+  merchantNames?: ReadonlyMap<string, string>;
   // Shown instead of «Nessuna spesa.» when the list is empty because of the fund filter (source text, translated here).
   emptyLabel?: string;
 };
@@ -43,7 +45,7 @@ const pageSize = 50;
 
 export const ExpenseList = memo(ExpenseListView);
 
-function ExpenseListView({ occurrences, categories, error, onEdit, listItems, emptyLabel }: Props) {
+function ExpenseListView({ occurrences, categories, error, onEdit, listItems, merchantNames, emptyLabel }: Props) {
   const { t, locale } = useI18n();
   const dates = useMemo(() => dateFormat(locale), [locale]);
   const shortDates = useMemo(() => shortDateFormat(locale), [locale]);
@@ -126,7 +128,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, em
           return <ExpenseRow key={item.key} item={item} index={index}
             heading={byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== item.date.slice(0, 7))}
             summary={summaries.get(item.date.slice(0, 7))!} category={categoryById.get(item.category_id ?? '')}
-            products={listItems?.get(item.expenseId)} open={expanded.has(item.key)} setExpanded={setExpanded}
+            products={listItems?.get(item.expenseId)} merchant={merchantNames?.get(item.expenseId)} open={expanded.has(item.key)} setExpanded={setExpanded}
             dates={dates} shortDates={shortDates} months={months} amounts={amounts} onEdit={onEdit} />;
         })}
         {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t(emptyLabel ?? "Nessuna spesa.")}</Text>}
@@ -148,10 +150,10 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, em
 }
 
 // Stable props let expanding one detail or appending a page leave existing rows alone.
-const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, open, setExpanded,
+const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, merchant, open, setExpanded,
   dates, shortDates, months, amounts, onEdit }: {
   item: Occurrence; index: number; heading: boolean; summary: { count: number; total: number };
-  category?: Category; products?: readonly string[]; open: boolean;
+  category?: Category; products?: readonly string[]; merchant?: string; open: boolean;
   setExpanded: Dispatch<SetStateAction<ReadonlySet<string>>>;
   dates: Intl.DateTimeFormat; shortDates: Intl.DateTimeFormat; months: Intl.DateTimeFormat; amounts: Intl.NumberFormat;
   onEdit?: (id: string) => void;
@@ -188,6 +190,10 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
               <Text variant="bodyMedium">{category?.label ?? t("Senza categoria")}</Text>
             </View>
+            {merchant && <View style={styles.detailField}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Esercente")}</Text>
+              <Text variant="bodyMedium">{merchant}</Text>
+            </View>}
             {item.recurrence && <View style={styles.detailField}>
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
               <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>

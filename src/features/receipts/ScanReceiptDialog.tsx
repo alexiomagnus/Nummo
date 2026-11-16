@@ -7,9 +7,10 @@ import { ChoiceChips } from '../../components/ChoiceChips';
 import { SwitchRow } from '../../components/SwitchRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
+import type { RankedMerchant } from '../../domain/merchant';
 import { todayInRome } from '../../domain/policy';
 import {
-  amountText, emptyProposal, parseAiReceipt, parseReceiptText, receiptFields, scanConflicts, scanPatch,
+  amountText, emptyProposal, parseAiReceipt, parseReceiptText, receiptDescriptions, receiptFields, scanConflicts, scanPatch,
   type ReceiptField, type ReceiptProposal, type ReceiptValues,
 } from '../../domain/receipt';
 import { aiProviderLabels, aiSetupProblem, receiptPrompt } from '../../domain/receiptAi';
@@ -24,6 +25,8 @@ import { prepareImage, toBase64 } from './image';
 
 type Props = {
   categories: readonly Category[];
+  // Saved merchants ranked by use: the suggestions of «Esercente» in the review.
+  merchants: readonly RankedMerchant[];
   // What the form holds now, as typed by the user (an untouched field is '').
   draft: ReceiptValues;
   // The reviewed values the user accepted. The form only fills its fields: saving stays on its own Save button.
@@ -34,13 +37,13 @@ type Props = {
 type Method = 'ocr' | 'ai';
 type Stage = 'pick' | 'camera' | 'ready' | 'consent' | 'working' | 'review';
 
-const fieldLabels: Readonly<Record<ReceiptField, string>> = { amount: 'Importo', date: 'Data', description: 'Descrizione', categoryId: 'Categoria' };
+const fieldLabels: Readonly<Record<ReceiptField, string>> = { amount: 'Importo', date: 'Data', description: 'Descrizione', merchant: 'Esercente', categoryId: 'Categoria' };
 const unreadable = 'Non è stato possibile leggere lo scontrino: prova con una foto più nitida e completa.';
 
 // Scan of a receipt for the new-expense form, in one dialog: choose or take a picture, preview it, read it (on the
 // device, or with the user's AI provider when set up), then review. The picture exists only in this component's
 // memory and is released when the dialog closes. Nothing is ever saved from here.
-export function ScanReceiptDialog({ categories, draft, onApply, onClose }: Props) {
+export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClose }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const wide = useSizeClass() !== 'compact';
@@ -49,7 +52,8 @@ export function ScanReceiptDialog({ categories, draft, onApply, onClose }: Props
   const provider = ai.settings.provider === 'none' ? '' : aiProviderLabels[ai.settings.provider];
 
   const [stage, setStage] = useState<Stage>('pick');
-  const [method, setMethod] = useState<Method>('ocr');
+  // The kind of scan chosen in Settings, when the AI one can be used; the other stays one tap away.
+  const [method, setMethod] = useState<Method>(aiReady && ai.settings.scan === 'ai' ? 'ai' : 'ocr');
   const [image, setImage] = useState<Blob | null>(null);
   const [preview, setPreview] = useState('');
   const [preparing, setPreparing] = useState(false);
@@ -57,7 +61,7 @@ export function ScanReceiptDialog({ categories, draft, onApply, onClose }: Props
   const [error, setError] = useState<string | null>(null);
   const [failed, setFailed] = useState<Method | null>(null);
   const [proposal, setProposal] = useState<ReceiptProposal | null>(null);
-  const [values, setValues] = useState<ReceiptValues>({ amount: '', date: '', description: '', categoryId: '' });
+  const [values, setValues] = useState<ReceiptValues>({ amount: '', date: '', description: '', merchant: '', categoryId: '' });
   const [replace, setReplace] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const running = useRef<AbortController | null>(null);
@@ -139,13 +143,15 @@ export function ScanReceiptDialog({ categories, draft, onApply, onClose }: Props
       } else {
         const base64 = await toBase64(image);
         const raw = await analyzeReceipt(ai.settings, ai.apiKey, { mime: image.type || 'image/jpeg', base64 },
-          receiptPrompt(categories, today, ocrText.current || undefined), controller.signal);
+          receiptPrompt(categories, today, ocrText.current || undefined, locale === 'it-IT' ? 'Italian' : 'English'), controller.signal);
         result = parseAiReceipt(raw, categories, today);
       }
       if (controller.signal.aborted) return;
       if (emptyProposal(result)) { setError(unreadable); setFailed(how); setStage('ready'); return; }
       setProposal(result);
-      setValues({ amount: amountText(result.amountMinor, locale === 'it-IT' ? ',' : '.'), date: result.date, description: result.description, categoryId: result.categoryId });
+      setValues({ amount: amountText(result.amountMinor, locale === 'it-IT' ? ',' : '.'), date: result.date,
+        // The local scan proposes a fixed word («Spesa»): shown in the user's language. The AI already answers in it.
+        description: receiptDescriptions.includes(result.description) ? t(result.description) : result.description, merchant: result.merchant, categoryId: result.categoryId });
       setReplace(false);
       setStage('review');
     } catch (problem) {
@@ -186,7 +192,7 @@ export function ScanReceiptDialog({ categories, draft, onApply, onClose }: Props
   if (stage === 'pick') {
     body = <>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-        {t("Fotografa o carica lo scontrino: Nummo propone importo, data, descrizione e categoria. Controlli tutto prima di salvare.")}</Text>
+        {t("Fotografa o carica lo scontrino: Nummo propone importo, data, descrizione, esercente e categoria. Controlli tutto prima di salvare.")}</Text>
       {sourceButtons('contained-tonal')}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>;
@@ -262,6 +268,7 @@ export function ScanReceiptDialog({ categories, draft, onApply, onClose }: Props
         </View>
       )}
       <ExpenseFields dense values={values} errors={{}} categories={categories}
+        merchant={{ value: values.merchant, merchants, onChange: (merchant) => setValues((current) => ({ ...current, merchant })) }}
         onChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))} onBlur={() => {}} />
       {(proposal!.items.length > 0 || proposal!.discountMinor !== null) && <View style={styles.items}>
         {proposal!.items.length > 0 && <Text variant="labelLarge">{proposal!.items.length === 1 ? t("1 prodotto letto") : t("{p0} prodotti letti", { p0: proposal!.items.length })}</Text>}

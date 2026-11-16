@@ -15,7 +15,8 @@ import { parseFundData, parseMovementData, type BudgetChange, type Fund, type Fu
 import { todayInRome } from '../domain/policy.ts';
 import { itemNameError, listNameError, normalizeListText, parseListData, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 import { trialTimingError } from '../domain/trial.ts';
-import { invalidArchive, listRecords, type DataStore } from './dataStore.ts';
+import { parseMerchant, type Merchant } from '../domain/merchant.ts';
+import { checkNewMerchant, invalidArchive, listRecords, type DataStore } from './dataStore.ts';
 import type { LocalDatabase, LocalRow, LocalStoreName, LocalTx } from './localDatabase.ts';
 
 const budgetId = 'budget';
@@ -119,12 +120,21 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     return budget;
   };
   async function readArchive(tx: LocalTx) {
-    const [e, c, f, m, l, i, b] = [await tx.getAll('expenses'), await tx.getAll('categories'), await tx.getAll('funds'), await tx.getAll('movements'),
-      await tx.getAll('lists'), await tx.getAll('listItems'), await tx.get('settings', budgetId)];
+    const [e, c, f, m, l, i, b, s] = [await tx.getAll('expenses'), await tx.getAll('categories'), await tx.getAll('funds'), await tx.getAll('movements'),
+      await tx.getAll('lists'), await tx.getAll('listItems'), await tx.get('settings', budgetId), await tx.getAll('merchants')];
     const lists = parseAll(l, parseSyncedList);
     const items = parseAll(i, parseSyncedListItem);
     return { expenses: parseAll(e, parseSyncedExpense), categories: parseAll(c, parseSyncedCategory), funds: parseAll(f, parseSyncedFund),
-      movements: parseAll(m, parseSyncedMovement), lists: listRecords(lists, items), items, budgetRecord: readBudget(b), budget: readBudget(b)?.budgets ?? [] };
+      movements: parseAll(m, parseSyncedMovement), lists: listRecords(lists, items), items, budgetRecord: readBudget(b), budget: readBudget(b)?.budgets ?? [],
+      merchants: parseAll(s, parseMerchant) };
+  }
+  // The merchant of an expense being written: a new one is created (an existing one keeps its name), a named one must exist.
+  async function putMerchant(tx: LocalTx, merchantId: string | null, created: Merchant | null) {
+    if (!merchantId) return;
+    const saved = await tx.get('merchants', merchantId);
+    if (saved) return;
+    if (!created) throw new Error('L’esercente scelto non esiste più.');
+    tx.put('merchants', { id: created.id, name: created.name });
   }
   // The saved expense at the revision the editor saw, or a conflict.
   async function currentExpense(tx: LocalTx, previous: SyncedExpense) {
@@ -141,6 +151,7 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     watchMovements: watch('movements', parseSyncedMovement),
     watchLists: watch('lists', parseSyncedList),
     watchListItems: watch('listItems', parseSyncedListItem),
+    watchMerchants: watch('merchants', parseMerchant),
     watchBudget: (next, error) => subscribe('settings', (rows) => next({ budget: readBudget(rows.find((row) => row.id === budgetId)), fromCache: false, pending: false }), error),
 
     async confirmExpense(request) {
@@ -150,10 +161,11 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
       if (!record || !sameRequest(record, data)) throw new Error('La spesa non risulta salvata su questo dispositivo.');
       return { expense_id, created_at: record.created_at };
     },
-    async createExpense(request: ExpenseRequest) {
+    async createExpense(request: ExpenseRequest, merchant?: Merchant | null) {
       if (!parseExpenseRequest(request, new Date())) throw new Error('Spesa non valida.');
       const { expense_id, ...data } = request;
-      return commit(['expenses'], async (tx) => {
+      const created = checkNewMerchant(data, merchant);
+      return commit(['expenses', 'merchants'], async (tx) => {
         // The same request again (double press) finds its expense and writes nothing; a different one is a conflict.
         const existing = await tx.get('expenses', expense_id);
         if (existing) {
@@ -161,21 +173,26 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
           if (!saved || !sameRequest(saved, data)) throw conflict();
           return { expense_id, created_at: saved.created_at };
         }
+        await putMerchant(tx, data.merchant_id ?? null, created);
         const created_at = now();
         tx.put('expenses', { ...data, id: expense_id, created_at, updated_at: created_at, revision: 1 });
         return { expense_id, created_at };
       });
     },
-    async updateExpense(previous, data) {
+    async updateExpense(previous, data, merchant) {
       if (!parseExpenseRequest({ ...data, expense_id: previous.id }, new Date())) throw new Error('Spesa non valida.');
       const timingError = trialTimingError(previous, data, todayInRome());
       if (timingError) throw new Error(timingError);
-      await commit(['expenses'], async (tx) => {
+      const created = checkNewMerchant(data, merchant);
+      await commit(['expenses', 'merchants'], async (tx) => {
         const current = await currentExpense(tx, previous);
+        // The merchant the expense already had stays valid even if unchanged; a different one must exist or be new.
+        if (data.merchant_id !== (current.merchant_id ?? null)) await putMerchant(tx, data.merchant_id ?? null, created);
         // Optional fields the editor does not send (first payment, calendar) stay as saved, as with a Firestore update; removed
         // payments are always sent while they exist (dataOf, editor), so their absence clears them (as `deleteField` does).
         const row: LocalRow = { ...current, ...data, id: previous.id, revision: previous.revision + 1, updated_at: now() };
         if (!data.skipped_payments?.length) delete row.skipped_payments;
+        if (!data.merchant_id) delete row.merchant_id;
         tx.put('expenses', row);
       });
     },
@@ -338,8 +355,8 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
 
     async exportSnapshot() {
       await queue;
-      const { expenses, categories, funds, movements, lists, budget } = await db.read(readArchive);
-      return { expenses, categories, funds, movements, lists, budget };
+      const { expenses, categories, funds, movements, lists, budget, merchants } = await db.read(readArchive);
+      return { expenses, categories, funds, movements, lists, budget, merchants };
     },
     // Preview for the import dialog: what each mode would do on the data saved now. No writes.
     async previewImport(data: ImportData) {
@@ -351,10 +368,10 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     // to the file. Either way it is ONE local transaction: the plan is computed inside it on the data it will change, and
     // a failure at any point leaves the archive exactly as it was — never a half-restored database.
     async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [],
-      movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = []) {
-      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget);
+      movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = [], merchantRecords: readonly Merchant[] = []) {
+      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget, merchantRecords);
       await queue;
-      await commit(['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings'], async (tx) => {
+      await commit(['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'merchants'], async (tx) => {
         const current = await readArchive(tx);
         const plan = planImport(checked, current, mode);
         if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi diversi dai dati salvati. Nessuna modifica.`);
@@ -368,6 +385,8 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
         for (const item of removedItems) tx.delete('listItems', item.id);
         for (const id of plan.removeListIds) tx.delete('lists', id);
         for (const id of plan.removeCategoryIds) tx.delete('categories', id);
+        for (const id of plan.removeMerchantIds) tx.delete('merchants', id);
+        for (const m of plan.addMerchants) tx.put('merchants', { id: m.id, name: m.name });
         const takenNames = new Map(current.categories.filter((c) => !plan.removeCategoryIds.includes(c.id)).map((c) => [c.name_key, c.id]));
         for (const c of plan.addCategories) {
           const name_key = categoryNameKey(c.label);

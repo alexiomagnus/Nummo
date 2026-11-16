@@ -16,7 +16,8 @@ import { categoryNameKey, parseSyncedBudget, type SyncedBudget, parseSyncedCateg
 import { decodeListItems, encodeListItems, listNameError, itemNameError, normalizeListText, parseListData, sameListRecord, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFundData, parseMovementData, sameBudgets, type BudgetChange, type Fund, type FundData, type Movement, type MovementData } from '../domain/funds.ts';
 
-import { listRecords, type BudgetSnapshot, type DataStore, type SnapshotState } from './dataStore.ts';
+import { parseMerchant, type Merchant } from '../domain/merchant.ts';
+import { checkNewMerchant, listRecords, type BudgetSnapshot, type DataStore, type SnapshotState } from './dataStore.ts';
 export type { BudgetSnapshot, SnapshotState } from './dataStore.ts';
 // The stored schedule is a compact string (see firestore.rules); undecodable → the record check fails (archive invalid).
 function readBudget(data: DocumentData | undefined): SyncedBudget | null {
@@ -44,7 +45,7 @@ function storedFund(data: FundData) {
 const movementFields = (m: MovementData) => ({ kind: m.kind, amount_minor: m.amount_minor, date: m.date, to_fund_id: m.to_fund_id, from_fund_id: m.from_fund_id, note: m.note });
 const sameMovementData = (a: MovementData, b: MovementData) => a.kind === b.kind && a.amount_minor === b.amount_minor && a.date === b.date
   && a.to_fund_id === b.to_fund_id && a.from_fund_id === b.from_fund_id && a.note === b.note;
-function parseSnapshot<T>(snapshot: QuerySnapshot, parse: (value: unknown) => T | null, read = decode): SnapshotState<T> {
+function parseSnapshot<T>(snapshot: QuerySnapshot, parse: (value: unknown) => T | null, read: (data: DocumentData, id: string) => unknown = decode): SnapshotState<T> {
   const records = snapshot.docs.map((item) => parse(read(item.data({ serverTimestamps: 'estimate' }), item.id)));
   if (records.some((item) => !item)) throw new Error('Archivio non valido: esportazione e modifiche bloccate.');
   return { records: records as T[], fromCache: snapshot.metadata.fromCache, pending: snapshot.metadata.hasPendingWrites, pendingIds: snapshot.docs.filter((d) => d.metadata.hasPendingWrites).map((d) => d.id) };
@@ -53,12 +54,16 @@ function parseSnapshot<T>(snapshot: QuerySnapshot, parse: (value: unknown) => T 
 // one-off expense and series never paused) keep the exact shape that Rules published before statuses accept.
 // Likewise `fund_id` is stored only when the expense has a fund (expenses saved before funds existed have none), and
 // `list_id` + `list_items` (names joined by '\n') only for the expense that registered a shopping list.
-function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id' | 'list_id' | 'list_items' | 'schema_version' | 'price_changes' | 'calendar_changes' | 'skipped_payments'>>(data: T) {
-  const { status_changes, fund_id, list_id, list_items, calendar_changes, skipped_payments, ...rest } = data;
+// `merchant_id` likewise only when the expense has a merchant.
+function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id' | 'list_id' | 'list_items' | 'merchant_id' | 'schema_version' | 'price_changes' | 'calendar_changes' | 'skipped_payments'>>(data: T) {
+  const { status_changes, fund_id, list_id, list_items, merchant_id, calendar_changes, skipped_payments, ...rest } = data;
   return { ...rest, price_changes: data.schema_version >= 2 ? encodeTrialPrices(data.price_changes) : data.price_changes, ...(calendar_changes?.length ? { calendar_changes: encodeCalendarChanges(calendar_changes) } : {}), ...(status_changes.length ? { status_changes: encodeStatusChanges(status_changes) } : {}),
-    ...(skipped_payments?.length ? { skipped_payments: encodeSkippedPayments(skipped_payments) } : {}), ...(fund_id ? { fund_id } : {}),
+    ...(skipped_payments?.length ? { skipped_payments: encodeSkippedPayments(skipped_payments) } : {}), ...(fund_id ? { fund_id } : {}), ...(merchant_id ? { merchant_id } : {}),
     ...(list_id ? { list_id, list_items: encodeListItems(list_items) } : {}) };
 }
+// A merchant document holds only its displayed name: the document ID is the key of that name (merchant.ts).
+const decodeMerchant = (data: DocumentData, id: string) => ({ ...data, id });
+const storedMerchant = (m: Merchant) => ({ name: m.name });
 const storedList = (data: ShoppingListData) => ({ name: data.name, category_id: data.category_id, total_minor: data.total_minor, expense_id: data.expense_id });
 
 export function createFirestoreStore(db: Firestore, uid: string): DataStore {
@@ -69,23 +74,24 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
   const movements = collection(db, 'users', uid, 'movements');
   const lists = collection(db, 'users', uid, 'lists');
   const listItems = collection(db, 'users', uid, 'listItems');
+  const merchants = collection(db, 'users', uid, 'merchants');
   // General monthly budget (issue #7): the only document of `settings`.
   const budgetRef = doc(db, 'users', uid, 'settings', 'budget');
   const conflict = () => new Error('I dati sono cambiati in un’altra sessione. Riapri la modifica e riprova.');
   // Reads the saved archive from the server for a restore plan. Refuses while writes are pending.
   async function readAll() {
-    const [e, c, f, m, l, i, b] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements),
-      getDocsFromServer(lists), getDocsFromServer(listItems), getDocFromServer(budgetRef)]);
+    const [e, c, f, m, l, i, b, s] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements),
+      getDocsFromServer(lists), getDocsFromServer(listItems), getDocFromServer(budgetRef), getDocsFromServer(merchants)]);
     return [parseSnapshot(e, parseSyncedExpense), parseSnapshot(c, parseSyncedCategory), parseSnapshot(f, parseSyncedFund, decodeFund), parseSnapshot(m, parseSyncedMovement),
       parseSnapshot(l, parseSyncedList), parseSnapshot(i, parseSyncedListItem),
-      { records: b.exists() ? [readBudget(b.data())!] : [], pending: b.metadata.hasPendingWrites }] as const;
+      { records: b.exists() ? [readBudget(b.data())!] : [], pending: b.metadata.hasPendingWrites }, parseSnapshot(s, parseMerchant, decodeMerchant)] as const;
   }
   async function readArchive() {
     const states = await readAll();
-    const [savedExpenses, savedCategories, savedFunds, savedMovements, savedLists, savedItems, savedBudget] = states;
+    const [savedExpenses, savedCategories, savedFunds, savedMovements, savedLists, savedItems, savedBudget, savedMerchants] = states;
     if (states.some((state) => state.pending)) throw new Error('Attendi le scritture pendenti prima di importare.');
     return { expenses: savedExpenses.records, categories: savedCategories.records, funds: savedFunds.records, movements: savedMovements.records,
-      lists: listRecords(savedLists.records, savedItems.records), items: savedItems.records, budget: savedBudget.records[0]?.budgets ?? [] };
+      lists: listRecords(savedLists.records, savedItems.records), items: savedItems.records, budget: savedBudget.records[0]?.budgets ?? [], merchants: savedMerchants.records };
   }
   // Checklist edits are plain writes queued by the SDK (they work with a weak signal in a shop): the listener shows them
   // at once and the sync chip until the server has them. A rejected write is reported, never retried by the app.
@@ -103,6 +109,11 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
         try { next(parseSnapshot(s, parseSyncedCategory)); } catch (e) { error(e as Error); }
       }, error);
     },
+    watchMerchants(next: (value: SnapshotState<Merchant>) => void, error: (reason: Error) => void) {
+      return onSnapshot(merchants, { includeMetadataChanges: true }, (s) => {
+        try { next(parseSnapshot(s, parseMerchant, decodeMerchant)); } catch (e) { error(e as Error); }
+      }, error);
+    },
     async confirmExpense(request: ExpenseRequest) {
       const saved = await getDocFromServer(doc(expenses, request.expense_id));
       const record = saved.exists() ? parseSyncedExpense(decode(saved.data(), saved.id)) : null;
@@ -110,25 +121,36 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
       if (!record || Object.entries(data).some(([key, value]) => !sameFieldValue(record[key as keyof ExpenseData], value))) throw new Error('Spesa non ancora confermata dal server. Attendi la riconnessione.');
       return { expense_id, created_at: record.created_at };
     },
-    async createExpense(request: ExpenseRequest) {
+    async createExpense(request: ExpenseRequest, merchant?: Merchant | null) {
       if (!parseExpenseRequest(request, new Date())) throw new Error('Spesa non valida.');
       const { expense_id, ...data } = request;
-      // One stable document ID; SDK owns the queue/retries. No application retry queue.
-      await setDoc(doc(expenses, expense_id), { ...stored(data), created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 });
+      const created = checkNewMerchant(data, merchant);
+      // One stable document ID; SDK owns the queue/retries. No application retry queue. A new merchant goes in the same
+      // batch (queued offline like the expense, all or nothing); its ID is its name key, so a merchant created meanwhile
+      // elsewhere is the same document, never a duplicate.
+      const batch = writeBatch(db);
+      batch.set(doc(expenses, expense_id), { ...stored(data), created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 });
+      if (created) batch.set(doc(merchants, created.id), storedMerchant(created));
+      await batch.commit();
       const saved = await getDocFromServer(doc(expenses, expense_id));
       const record = saved.exists() ? parseSyncedExpense(decode(saved.data(), saved.id)) : null;
       if (!record || Object.entries(data).some(([key, value]) => !sameFieldValue(record[key as keyof ExpenseData], value))) throw new Error('Conferma non valida.');
       return { expense_id, created_at: record.created_at };
     },
-    async updateExpense(previous: SyncedExpense, data: ExpenseData) {
+    async updateExpense(previous: SyncedExpense, data: ExpenseData, merchant?: Merchant | null) {
       if (!parseExpenseRequest({ ...data, expense_id: previous.id }, new Date())) throw new Error('Spesa non valida.');
       const timingError = trialTimingError(previous, data, todayInRome());
       if (timingError) throw new Error(timingError);
+      const created = checkNewMerchant(data, merchant);
       await runTransaction(db, async (tx) => {
         const ref = doc(expenses, previous.id);
         const current = await tx.get(ref);
+        // A merchant saved meanwhile (other device) keeps its name: only a missing one is created.
+        const existing = created ? await tx.get(doc(merchants, created.id)) : null;
         if (!current.exists() || current.data().revision !== previous.revision) throw conflict();
+        if (created && !existing?.exists()) tx.set(doc(merchants, created.id), storedMerchant(created));
         tx.update(ref, { ...stored(data), ...(data.status_changes.length ? {} : { status_changes: deleteField() }), ...(data.fund_id ? {} : { fund_id: deleteField() }),
+          ...(data.merchant_id ? {} : { merchant_id: deleteField() }),
           ...(data.list_id ? {} : { list_id: deleteField(), list_items: deleteField() }), ...(data.skipped_payments?.length ? {} : { skipped_payments: deleteField() }),
           revision: previous.revision + 1, updated_at: serverTimestamp() });
       });
@@ -329,10 +351,10 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
     async exportSnapshot() {
       // Server-only: never label an incomplete offline cache as a complete backup.
       const states = await readAll();
-      const [expenseState, categoryState, fundState, movementState, listState, itemState, budgetState] = states;
+      const [expenseState, categoryState, fundState, movementState, listState, itemState, budgetState, merchantState] = states;
       if (states.some((state) => state.pending)) throw new Error('Attendi la sincronizzazione prima di esportare.');
       return { expenses: expenseState.records, categories: categoryState.records, funds: fundState.records, movements: movementState.records,
-        lists: listRecords(listState.records, itemState.records), budget: budgetState.records[0]?.budgets ?? [] };
+        lists: listRecords(listState.records, itemState.records), budget: budgetState.records[0]?.budgets ?? [], merchants: merchantState.records };
     },
     // Preview for the import dialog: what each mode would do, computed on the current server data. No writes.
     async previewImport(data: ImportData) {
@@ -342,8 +364,8 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
     // 'merge' only adds (identical items skipped; any conflict blocks the whole import before the first write).
     // 'replace' makes the archive equal to the file: it removes saved items that differ from the file, then adds the rest.
     // Nothing is written until the file and the plan have been validated against the server data.
-    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = []) {
-      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget);
+    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = [], merchantRecords: readonly Merchant[] = []) {
+      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget, merchantRecords);
       const current = await readArchive();
       const plan = planImport(checked, current, mode);
       if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi diversi dai dati salvati. Nessuna modifica.`);
@@ -355,7 +377,7 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
           const keptLists = new Set(current.lists.filter((l) => !plan.removeListIds.includes(l.id)).map((l) => l.id));
           const removeItemIds = current.items.filter((i) => !keptLists.has(i.list_id)).map((i) => i.id);
           for (const [target, ids] of [[expenses, plan.removeExpenseIds], [movements, plan.removeMovementIds], [funds, plan.removeFundIds],
-            [listItems, removeItemIds], [lists, plan.removeListIds]] as const) {
+            [listItems, removeItemIds], [lists, plan.removeListIds], [merchants, plan.removeMerchantIds]] as const) {
             for (let i = 0; i < ids.length; i += 200) {
               const batch = writeBatch(db);
               for (const id of ids.slice(i, i + 200)) batch.delete(doc(target, id));
@@ -389,6 +411,13 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
       for (let i = 0; i < plan.addMovements.length; i += 200) chunks.push({ records: [], categoryRecords: [], movementRecords: plan.addMovements.slice(i, i + 200) });
       for (let i = 0; i < plan.addExpenses.length; i += 200) chunks.push({ records: plan.addExpenses.slice(i, i + 200), categoryRecords: [] });
       try {
+        // Merchants before the expenses that name them. Plain batches: the ID is the name key, so writing a merchant again
+        // (the same import repeated, or the same merchant saved meanwhile) never makes a second one.
+        for (let i = 0; i < plan.addMerchants.length; i += 400) {
+          const batch = writeBatch(db);
+          for (const m of plan.addMerchants.slice(i, i + 400)) batch.set(doc(merchants, m.id), storedMerchant(m));
+          await batch.commit();
+        }
         for (const { records, categoryRecords, fundRecords = [], movementRecords = [] } of chunks) {
           // Each group rechecks its IDs inside the transaction: an item saved meanwhile must be identical or the import stops.
           await runTransaction(db, async (tx) => {

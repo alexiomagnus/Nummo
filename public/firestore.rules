@@ -11,6 +11,8 @@ service cloud.firestore {
       return id is string && id.matches('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
     }
     function nameKey(label) { return 'n-' + label.lower().replace('%', '%25').replace('/', '%2F'); }
+    // ID of a merchant: the key of its name (mirrors merchantKey in src/domain/merchant.ts).
+    function merchantKey(name) { return 'm-' + name.lower().replace('%', '%25').replace('/', '%2F'); }
     function validDate(value) {
       let parts = value.split('-');
       let year = int(parts[0]);
@@ -109,13 +111,15 @@ service cloud.firestore {
     }
     function expense(d) {
       // Required fields are read below (a missing map key denies access); hasOnly rejects extra fields.
-      return d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'first_payment_date', 'calendar_changes', 'skipped_payments', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
+      return d.keys().hasOnly(['amount_minor', 'currency', 'description', 'category_id', 'expense_date', 'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'merchant_id', 'first_payment_date', 'calendar_changes', 'skipped_payments', 'source', 'schema_version', 'created_at', 'updated_at', 'revision'])
         && d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 9999999
         && d.currency == 'EUR' && d.description is string && d.description.size() > 0 && d.description.size() <= 100
         && d.description == d.description.trim() && !d.description.matches('.*[\\t\\r\\n].*')
         && (d.category_id == null || uuid(d.category_id))
         // Optional like status_changes: absent = no fund, so records written under older Rules stay valid.
         && (!('fund_id' in d) || uuid(d.fund_id))
+        // Optional too: absent = no merchant. Shape of a merchant ID only (the merchant document is written with it).
+        && (!('merchant_id' in d) || (d.merchant_id is string && d.merchant_id.size() > 2 && d.merchant_id.size() <= 400 && d.merchant_id.matches('m-[^/\\t\\r\\n]+')))
         && d.expense_date is string && validDate(d.expense_date)
         && d.recurrence in [null, 'weekly', 'monthly', 'yearly']
         && (d.schema_version >= 2 ? trialPrices(d.price_changes) : priceChanges(d.price_changes)) && (d.recurrence != null || d.price_changes.size() == 0) && statusChanges(d) && calendarChanges(d) && skippedPayments(d)
@@ -131,6 +135,13 @@ service cloud.firestore {
         && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'gamepad', 'bag', 'box', 'house', 'key', 'bulb', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'wallet', 'bank', 'cash', 'safe', 'growth', 'train', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'sofa', 'cake', 'laptop', 'piggy', 'cross', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
         && d.name_key == nameKey(d.label) && d.revision is int && d.updated_at == request.time
         && getAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(d.name_key)).data.category_id == id;
+    }
+    // Merchant (mirrors parseMerchant in src/domain/merchant.ts): only the displayed name; the document ID is its key, so
+    // the same name in any spelling is always the same document. Rewriting it (two devices creating it together) is allowed.
+    function merchant(d, id) {
+      return d.keys().hasAll(['name']) && d.keys().hasOnly(['name'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 60 && d.name == d.name.trim()
+        && !d.name.matches('.*[\\t\\r\\n].*') && !d.name.matches('.*  .*') && id == merchantKey(d.name);
     }
     // Fund (mirrors parseFundData in src/domain/funds.ts). Schedules are compact strings, one regex each:
     // recharges "YYYY-MM:amount:day:a|p;…", budgets and exceptions "YYYY-MM:amount;…", 0..24 entries, possibly empty.
@@ -216,6 +227,11 @@ service cloud.firestore {
         && (request.resource.data.name_key == resource.data.name_key
           || !existsAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(resource.data.name_key)));
       allow delete: if owner(uid) && !existsAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(resource.data.name_key));
+    }
+    match /users/{uid}/merchants/{id} {
+      allow read: if owner(uid);
+      allow create, update: if owner(uid) && merchant(request.resource.data, id);
+      allow delete: if owner(uid);
     }
     match /users/{uid}/funds/{id} {
       allow read: if owner(uid);

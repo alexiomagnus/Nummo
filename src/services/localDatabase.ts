@@ -5,7 +5,8 @@
 // `templates` came with schema step 2: step 1 keeps the stores it always created. Templates were removed from Nummo on
 // 16 November 2026: the store stays in the schema (steps never change) but nothing reads or writes it any more.
 const firstStoreNames = ['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'meta'] as const;
-export const localStoreNames = [...firstStoreNames, 'templates'] as const;
+// `merchants` came with step 3.
+export const localStoreNames = [...firstStoreNames, 'templates', 'merchants'] as const;
 export type LocalStoreName = (typeof localStoreNames)[number];
 export type LocalRow = { id: string } & Record<string, unknown>;
 
@@ -36,6 +37,8 @@ export const localMigrations: readonly Migration[] = [
   (db) => { for (const name of firstStoreNames) db.createObjectStore(name, { keyPath: 'id' }); },
   // 2: the templates of «Nuova spesa».
   (db) => { db.createObjectStore('templates', { keyPath: 'id' }); },
+  // 3: merchants («Esercente» of an expense), keyed by the key of their name (merchant.ts).
+  (db) => { db.createObjectStore('merchants', { keyPath: 'id' }); },
 ];
 export const localSchemaVersion = localMigrations.length;
 

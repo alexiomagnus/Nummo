@@ -296,8 +296,8 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         status_changes: Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';'),
         price_changes: encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false }))),
         calendar_changes: '996:2099-12-31:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:w',
-        // Plus the longest list of removed payments (60 numbers of 4 digits).
-        skipped_payments: Array.from({ length: 60 }, (_, i) => 9000 + i).join(',') };
+        // Plus the longest list of removed payments (60 numbers of 4 digits) and the longest merchant ID.
+        skipped_payments: Array.from({ length: 60 }, (_, i) => 9000 + i).join(','), merchant_id: 'm-' + '%25'.repeat(60) };
       t.diagnostic('frequency budget: create');
       await setDoc(ref(worstId), worst);
       t.diagnostic('frequency budget: update description');
@@ -603,6 +603,64 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const final = await owner.store.exportSnapshot();
       assert.equal(final.lists.some((l) => l.id === listId), false);
       assert.equal((await getDocsFromServer(collection(owner.db, 'users', uid, 'listItems'))).docs.some((d) => d.data().list_id === listId), false);
+    });
+    await t.test('esercenti: regole, ID dal nome, creazione con la spesa, un solo esercente per grafia, modifica, rimozione, isolamento', async () => {
+      const merchantRef = (id: string) => doc(owner.db, 'users', uid, 'merchants', id);
+      const name = `Amazon ${suffix}`;
+      const id = `m-amazon ${suffix}`;
+      // Rules: only the name, the ID must be the key of the name, no extra fields, no padding or tabs, at most 60 characters.
+      for (const [badId, data] of [[id, { name: `Ebay ${suffix}` }], [id, { name, extra: 1 }], [id, { name: ` ${name}` }], [id, {}],
+        [`m-${'a'.repeat(61)}`, { name: 'a'.repeat(61) }], [`m-a\tb`, { name: 'A\tb' }], [`m-a  b`, { name: 'A  b' }]] as const) {
+        await denied(setDoc(merchantRef(badId), data));
+      }
+      // Other accounts can neither read nor write them.
+      await denied(getDocsFromServer(collection(intruder.db, 'users', uid, 'merchants')));
+      await denied(setDoc(doc(intruder.db, 'users', uid, 'merchants', id), { name }));
+      await denied(getDocsFromServer(collection(anonymous.db, 'users', uid, 'merchants')));
+      // Expense: merchant_id optional, only in the shape of a merchant ID.
+      const { expense_id: rawId, ...raw } = expense();
+      const { fund_id: _f, list_id: _l, list_items: _i, status_changes: _s, ...plain } = raw;
+      void rawId;
+      for (const merchant_id of ['', 'amazon', 'm-', 'm-a/b', 42, null]) {
+        await denied(setDoc(ref(randomUUID()), { ...plain, merchant_id, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 }));
+      }
+      // First use: merchant and expense in one write; the other spellings reuse it (the form resolves them to the same ID).
+      const first = { ...expense(), merchant_id: id };
+      await owner.store.createExpense(first, { id, name });
+      assert.deepEqual((await getDocFromServer(merchantRef(id))).data(), { name });
+      assert.equal((await getDocFromServer(ref(first.expense_id))).data()!.merchant_id, id);
+      const again = { ...expense(), merchant_id: id };
+      await owner.store.createExpense(again);
+      // Without merchant: the stored document has no field, exactly as before.
+      const plainRequest = expense();
+      await owner.store.createExpense(plainRequest);
+      assert.ok(!('merchant_id' in (await getDocFromServer(ref(plainRequest.expense_id))).data()!));
+      const snapshot = await second.store.exportSnapshot();
+      assert.deepEqual(snapshot.merchants.filter((m) => m.id === id), [{ id, name }]);
+      assert.equal(snapshot.expenses.filter((e) => e.merchant_id === id).length, 2);
+      // Listener of the second session.
+      const seen = await deadline(new Promise<string[]>((resolve, reject) => {
+        const stop = second.store.watchMerchants((s) => { if (s.records.some((m) => m.id === id)) { stop(); resolve(s.records.map((m) => m.id)); } }, reject);
+      }));
+      assert.ok(seen.includes(id));
+      // Edit: another (new) merchant in the same transaction, then removed; the merchants stay.
+      const saved = snapshot.expenses.find((e) => e.id === first.expense_id)!;
+      const { expense_id: _e, merchant_id: _m, ...data } = first;
+      const coopId = `m-coop ${suffix}`;
+      await owner.store.updateExpense(saved, { ...data, merchant_id: coopId }, { id: coopId, name: `Coop ${suffix}` });
+      assert.equal((await getDocFromServer(ref(first.expense_id))).data()!.merchant_id, coopId);
+      assert.ok((await getDocFromServer(merchantRef(coopId))).exists());
+      const changed = (await owner.store.exportSnapshot()).expenses.find((e) => e.id === first.expense_id)!;
+      await owner.store.updateExpense(changed, data);
+      assert.ok(!('merchant_id' in (await getDocFromServer(ref(first.expense_id))).data()!));
+      // An existing merchant keeps its name when an edit sends it again.
+      const removed = (await owner.store.exportSnapshot()).expenses.find((e) => e.id === first.expense_id)!;
+      await owner.store.updateExpense(removed, { ...data, merchant_id: id }, { id, name: name.toUpperCase() });
+      assert.equal((await getDocFromServer(merchantRef(id))).data()!.name, name);
+      // Backup: merchants and references round-trip.
+      const backup = parseBackup(JSON.parse(makeBackup(await owner.store.exportSnapshot())));
+      assert.ok(backup.merchants!.some((m) => m.id === id && m.name === name));
+      for (const e of (await owner.store.exportSnapshot()).expenses.filter((x) => ([first.expense_id, again.expense_id, plainRequest.expense_id] as string[]).includes(x.id))) await owner.store.removeExpense(e);
     });
     await t.test('template rimossi: la raccolta non è più ammessa dalle Rules', async () => {
       const raw = { description: `Caffè ${suffix}`, amount_minor: null, date: '2026-11-10', category_id: randomUUID(), fund_id: null, created_at: serverTimestamp(), updated_at: serverTimestamp() };

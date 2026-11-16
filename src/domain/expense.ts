@@ -4,6 +4,7 @@ import { changePrice, makeChange, maxPromoAfter, nextRenewal, priceAt, type Pric
 import { isRecurrence, recurrenceAt, switchFrequency, type CalendarChange, type Recurrence } from './recurrence.ts';
 import { paymentStart, trialTimingError, validFirstPayment } from './trial.ts';
 import type { StatusChange } from './subscription.ts';
+import { merchantNameError, resolveMerchant, type Merchant } from './merchant.ts';
 
 export type ExpenseDraft = {
   amount: string;
@@ -20,6 +21,8 @@ export type ExpenseDraft = {
   firstPaymentDate: string;
   // Fund that pays the expense ('' = none).
   fundId: string;
+  // Merchant as typed ('' or absent = none); resolved to an existing or new merchant when saving (merchant.ts).
+  merchant?: string;
 };
 
 export type ExpenseData = Readonly<{
@@ -40,6 +43,9 @@ export type ExpenseData = Readonly<{
   // registration so the expense stays complete even if the list changes or is deleted. null / [] for every other expense.
   list_id: string | null;
   list_items: readonly string[];
+  // Merchant paid (merchant.ts); null = none (also every expense saved before merchants existed).
+  // Optional in the type (like skipped_payments) so records built before merchants existed stay valid; read back as null.
+  merchant_id?: string | null;
   source: 'web_app';
   // Version 2 is used only for trials: older clients reject it instead of counting phantom payments.
   first_payment_date?: string;
@@ -52,10 +58,11 @@ export type ExpenseData = Readonly<{
 
 export type ExpenseRequest = Readonly<ExpenseData & { expense_id: string }>;
 export type FieldErrors = Partial<Record<keyof ExpenseDraft, string>>;
-export type Validation = { ok: true; data: ExpenseData } | { ok: false; errors: FieldErrors };
+// `merchant`: a merchant used for the first time, to be saved together with the expense (null = none or already saved).
+export type Validation = { ok: true; data: ExpenseData; merchant: Merchant | null } | { ok: false; errors: FieldErrors };
 
 export function newDraft(): ExpenseDraft {
-  return { amount: '', description: '', categoryId: '', date: '', repeat: false, recurrence: '', promo: false, promoAmount: '', promoAfter: '', fundId: '', trial: false, firstPaymentDate: '' };
+  return { amount: '', description: '', categoryId: '', date: '', repeat: false, recurrence: '', promo: false, promoAmount: '', promoAfter: '', fundId: '', trial: false, firstPaymentDate: '', merchant: '' };
 }
 
 // Parse digit strings, never multiply a floating-point monetary value.
@@ -74,7 +81,8 @@ export function normalizeDescription(value: string): string {
 }
 
 // `funds`: the funds that may pay a new or edited expense; a chosen fund must be one of them.
-export function validateDraft(draft: ExpenseDraft, categories: readonly Category[], now = new Date(), funds: readonly { id: string }[] = []): Validation {
+// `merchants`: the saved ones; the merchant typed is optional and never blocks the save except for its length.
+export function validateDraft(draft: ExpenseDraft, categories: readonly Category[], now = new Date(), funds: readonly { id: string }[] = [], merchants: readonly Merchant[] = []): Validation {
   const errors: FieldErrors = {};
   const amount = parseAmountMinor(draft.amount);
   if (amount === null) errors.amount = draft.amount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo.';
@@ -88,6 +96,9 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
   if (draft.categoryId && !category) errors.categoryId = 'La categoria scelta non esiste più.';
   const fund = draft.fundId ? funds.find((item) => item.id === draft.fundId) : undefined;
   if (draft.fundId && !fund) errors.fundId = 'Il fondo scelto non esiste più.';
+  const merchantError = merchantNameError(draft.merchant ?? '');
+  if (merchantError) errors.merchant = merchantError;
+  const merchant = resolveMerchant(draft.merchant ?? '', merchants);
   const date = draft.date || todayInRome(now);
   if (!isValidDate(date) || date < expensePolicy.minDate || date > todayInRome(now)) {
     errors.date = 'Inserisci una data valida dal 01/01/2000 a oggi (AAAA-MM-GG).';
@@ -106,10 +117,10 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
     if (then !== null && !errors.promoAmount && !errors.promoAfter) price_changes = [makeChange(after, then, false)];
   }
   if (amount === null || Object.keys(errors).length > 0) return { ok: false, errors };
-  return { ok: true, data: {
+  return { ok: true, merchant: merchant.create, data: {
     amount_minor: amount, currency: expensePolicy.currency, description, category_id: category?.id ?? null,
     expense_date: date, recurrence: draft.repeat && isRecurrence(draft.recurrence) ? draft.recurrence : null, price_changes, status_changes: [],
-    fund_id: fund?.id ?? null, list_id: null, list_items: [], source: 'web_app',
+    fund_id: fund?.id ?? null, list_id: null, list_items: [], ...(merchant.merchant_id ? { merchant_id: merchant.merchant_id } : {}), source: 'web_app',
     ...(draft.repeat && draft.trial ? { first_payment_date: draft.firstPaymentDate, schema_version: 2 as const } : { schema_version: 1 as const }),
   } };
 }
@@ -181,7 +192,9 @@ export function dataOf(record: ExpenseData): ExpenseData {
   // Likewise expenses saved before shopping lists existed have no list.
   const list_id = record.list_id ?? null;
   const list_items = record.list_items ?? [];
-  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, list_id, list_items, source, schema_version, ...(record.first_payment_date ? { first_payment_date: record.first_payment_date } : {}),
+  return { amount_minor, currency, description, category_id, expense_date, recurrence, price_changes, status_changes, fund_id, list_id, list_items, source, schema_version,
+    // Absent = no merchant (also every expense saved before merchants existed).
+    ...(record.merchant_id ? { merchant_id: record.merchant_id } : {}), ...(record.first_payment_date ? { first_payment_date: record.first_payment_date } : {}),
     ...(record.calendar_changes?.length ? { calendar_changes: record.calendar_changes } : {}),
     ...(record.skipped_payments?.length ? { skipped_payments: record.skipped_payments } : {}) };
 }

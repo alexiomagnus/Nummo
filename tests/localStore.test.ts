@@ -21,7 +21,7 @@ function latest<T>(subscribe: (next: (value: T) => void, error: (reason: Error) 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
 const restore = (store: DataStore, json: string, mode: 'merge' | 'replace') => {
   const data = parseBackup(JSON.parse(json));
-  return store.importRecords(data.expenses, data.categories, mode, data.funds, data.movements, data.lists, data.budget);
+  return store.importRecords(data.expenses, data.categories, mode, data.funds, data.movements, data.lists, data.budget, data.merchants);
 };
 
 test('schema locale: versione = numero di migrazioni, passi mancanti in ordine, versione futura rifiutata', () => {
@@ -31,12 +31,13 @@ test('schema locale: versione = numero di migrazioni, passi mancanti in ordine, 
   const steps = [() => {}, () => {}, () => {}];
   assert.deepEqual(pendingMigrations(1, steps), steps.slice(1));
   assert.throws(() => pendingMigrations(steps.length + 1, steps), new RegExp(newerDatabase.slice(0, 20)));
-  // Step 1 creates the original object stores, step 2 the templates; together every store, keyed by `id`.
+  // Step 1 creates the original object stores, step 2 the templates, step 3 the merchants; together every store, keyed by `id`.
   const created: [string, unknown][] = [];
   const fake = { createObjectStore: (name: string, options: unknown) => { created.push([name, options]); } } as unknown as IDBDatabase;
   localMigrations[0]!(fake, {} as IDBTransaction);
-  assert.deepEqual(created.map(([name]) => name), localStoreNames.filter((name) => name !== 'templates'));
+  assert.deepEqual(created.map(([name]) => name), localStoreNames.filter((name) => name !== 'templates' && name !== 'merchants'));
   localMigrations[1]!(fake, {} as IDBTransaction);
+  localMigrations[2]!(fake, {} as IDBTransaction);
   assert.deepEqual(created, localStoreNames.map((name) => [name, { keyPath: 'id' }]));
 });
 
@@ -370,7 +371,7 @@ test('template rimossi: un backup v7 con template si importa ignorandoli, l’es
   const first = open();
   const json = makeBackup(await first.store.exportSnapshot());
   const file = JSON.parse(json);
-  assert.equal(file.version, 9);
+  assert.equal(file.version, 10);
   assert.equal('templates' in file, false);
   const template = { id: randomUUID(), description: 'Caffè al bar', amount_minor: 180, date: '2026-11-01', category_id: randomUUID(), fund_id: null, created_at: '2026-11-01T08:00:00.000Z' };
   const v7 = { ...file, version: 7, templates: [template] };
@@ -381,4 +382,79 @@ test('template rimossi: un backup v7 con template si importa ignorandoli, l’es
   assert.equal(makeBackup(await second.store.exportSnapshot(), new Date(file.exported_at)), json, 'nessun template salvato né esportato');
   // A v6 file that carries templates is read the same way (they are ignored, never an error).
   assert.equal('templates' in parseBackup({ ...v7, version: 6 }), false);
+});
+
+test('esercenti locali: creati con la prima spesa, un solo esercente per Amazon/amazon/AMAZON, modifica e rimozione', async () => {
+  const { store } = open();
+  const merchants = latest(store.watchMerchants);
+  const expenses = latest(store.watchExpenses);
+  await tick();
+  // Without merchant: exactly as before.
+  const plain = expense();
+  await store.createExpense(plain);
+  // First use: the merchant is created in the same write.
+  const first = expense({ merchant_id: 'm-amazon' });
+  await store.createExpense(first, { id: 'm-amazon', name: 'Amazon' });
+  // Same merchant typed again in other capitals: the app resolves it to the saved one and sends no new merchant; even a
+  // stale form that sends it again (merchant not loaded yet) never makes a second one nor renames it.
+  await store.createExpense(expense({ merchant_id: 'm-amazon' }));
+  await store.createExpense(expense({ merchant_id: 'm-amazon' }), { id: 'm-amazon', name: 'AMAZON' });
+  await tick();
+  assert.deepEqual(merchants.state.value!.records, [{ id: 'm-amazon', name: 'Amazon' }]);
+  assert.equal(expenses.state.value!.records.filter((e) => e.merchant_id === 'm-amazon').length, 3);
+  assert.equal(expenses.state.value!.records.find((e) => e.id === plain.expense_id)!.merchant_id, undefined);
+  // A merchant ID that names nothing (and no merchant to create) is refused, with nothing written.
+  await assert.rejects(store.createExpense(expense({ merchant_id: 'm-nessuno' })), /non esiste più/);
+  await assert.rejects(store.createExpense(expense({ merchant_id: 'm-coop' }), { id: 'm-esselunga', name: 'Esselunga' }), /Esercente non valido/);
+  await assert.rejects(store.createExpense(expense({ merchant_id: 'm-coop' }), { id: 'm-coop', name: 'Esselunga' }), /Esercente non valido/);
+  await tick();
+  assert.equal(expenses.state.value!.records.length, 4);
+  // Edit: change to a new merchant, then remove it; the merchant stays for the suggestions.
+  const saved = () => expenses.state.value!.records.find((e) => e.id === first.expense_id)!;
+  const { expense_id: _id, ...data } = first;
+  await store.updateExpense(saved(), { ...data, merchant_id: 'm-coop' }, { id: 'm-coop', name: 'Coop' });
+  await tick();
+  assert.equal(saved().merchant_id, 'm-coop');
+  const { merchant_id: _m, ...withoutMerchant } = data as typeof data & { merchant_id?: string };
+  await store.updateExpense(saved(), withoutMerchant);
+  await tick();
+  assert.equal('merchant_id' in saved(), false);
+  assert.deepEqual(merchants.state.value!.records.map((m) => m.id).sort(), ['m-amazon', 'm-coop']);
+  // Back to an existing merchant without sending it again.
+  await store.updateExpense(saved(), { ...data, merchant_id: 'm-amazon' });
+  await tick();
+  assert.equal(saved().merchant_id, 'm-amazon');
+  merchants.stop(); expenses.stop();
+});
+
+test('esercenti locali: backup e ripristino; archivi diversi restano separati', async () => {
+  const { store } = open();
+  await store.createExpense(expense({ merchant_id: 'm-ebay' }), { id: 'm-ebay', name: 'eBay' });
+  const json = makeBackup(await store.exportSnapshot());
+  assert.deepEqual(JSON.parse(json).merchants, [{ id: 'm-ebay', name: 'eBay' }]);
+  // Another archive (another browser profile or device) does not see them until a backup is imported explicitly.
+  const other = open();
+  assert.deepEqual((await other.store.exportSnapshot()).merchants, []);
+  await restore(other.store, json, 'merge');
+  const copy = await other.store.exportSnapshot();
+  assert.deepEqual(copy.merchants, [{ id: 'm-ebay', name: 'eBay' }]);
+  assert.equal(copy.expenses[0]!.merchant_id, 'm-ebay');
+  // Repeating it changes nothing; a replace with a file without merchants removes them with the expenses.
+  await restore(other.store, json, 'merge');
+  assert.equal((await other.store.exportSnapshot()).expenses.length, 1);
+  await restore(other.store, makeBackup({ expenses: [], categories: [] }), 'replace');
+  const empty = await other.store.exportSnapshot();
+  assert.deepEqual([empty.expenses.length, empty.merchants.length], [0, 0]);
+  // The first archive is untouched.
+  assert.equal((await store.exportSnapshot()).merchants.length, 1);
+});
+
+test('esercenti locali: un record corrotto blocca lettura ed esportazione', async () => {
+  const { db, store } = open();
+  await db.write(async (tx) => { tx.put('merchants', { id: 'm-amazon', name: 'Ebay' }); });
+  const merchants = latest(store.watchMerchants);
+  await tick();
+  assert.ok(merchants.state.error);
+  await assert.rejects(store.exportSnapshot(), /Archivio non valido/);
+  merchants.stop();
 });

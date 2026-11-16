@@ -19,6 +19,7 @@ import { FundField, type FundChoice } from '../funds/FundField';
 import { noFund, resolveFund } from '../../domain/funds';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ScanReceiptDialog } from '../receipts/ScanReceiptDialog';
+import type { RankedMerchant } from '../../domain/merchant';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
 // Categories are created only in the Categories page, never from this form.
@@ -26,12 +27,16 @@ type Props = {
   categories: readonly Category[]; store: ExpenseStore; fundChoices?: readonly FundChoice[]; defaultFundId?: string;
   // Preferred category from Settings: used while the draft has none of its own (also after each save).
   defaultCategoryId?: string;
+  // Saved merchants ranked by use (suggestions of «Esercente»).
+  merchants?: readonly RankedMerchant[];
 };
 
 
 export const ExpenseForm = memo(ExpenseFormView);
 
-function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '' }: Props) {
+const noMerchants: readonly RankedMerchant[] = [];
+
+function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '', merchants = noMerchants }: Props) {
   const { t } = useI18n();
   const notify = useSnackbar();
   const size = useSizeClass();
@@ -77,13 +82,13 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // Leaving a field empty is not an error yet: missing values are reported on save.
   const validateField = (field: BaseField) => {
     if (!current[field].trim()) return;
-    const result = validateDraft(current, categories, undefined, funds);
+    const result = validateDraft(current, categories, undefined, funds, merchants);
     setErrors((previous) => ({ ...previous, [field]: result.ok ? undefined : result.errors[field] }));
   };
   const categoryMissing = categories.length === 0 ? "Crea prima una categoria nella sezione Categorie." : "Seleziona una categoria.";
   const save = () => {
     // Today is resolved here, at save time, so a form left open past midnight is not stale.
-    const result = validateDraft(current, categories, undefined, funds);
+    const result = validateDraft(current, categories, undefined, funds, merchants);
     if (!result.ok) {
       setErrors({ ...result.errors, ...(current.categoryId ? {} : { categoryId: categoryMissing }), ...fundMissing });
       return;
@@ -92,7 +97,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       setErrors({ ...(current.categoryId ? {} : { categoryId: categoryMissing }), ...fundMissing });
       return;
     }
-    store.submit(result.data);
+    store.submit(result.data, result.merchant);
   };
 
   const startDate = draft.date || todayInRome();
@@ -125,11 +130,12 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
         <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{t("Scansiona scontrino")}</Button>
       </View>
-      {scanning && <ScanReceiptDialog categories={categories} onClose={() => setScanning(false)}
-        draft={{ amount: draft.amount, date: draft.date, description: draft.description, categoryId: draft.categoryId }}
+      {scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
+        draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={(patch) => { update(patch); notify("Dati dello scontrino inseriti: controlla e premi Salva."); }} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
         extra={repeat}
+        merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
       {submission.status === 'rejected' && (

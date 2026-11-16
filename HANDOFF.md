@@ -5,13 +5,23 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
+- **Scansione: esercente separato dalla descrizione e scansione predefinita (16 novembre, sera): NON committato, NON pubblicato.**
+  Sezione qui sotto. Dipende dagli esercenti (stesso ordine di pubblicazione: prima le Rules, poi l'Hosting).
+- **Elenco dei modelli AI nelle Impostazioni (16 novembre, sera): NON committato, NON pubblicato.** Il campo «Modello» di «Analisi
+  scontrini con AI» propone i modelli del servizio scelto appena c'è la chiave (sezione qui sotto). Nessuna modifica a `DataStore`, Rules
+  o backup: si pubblica con il solo Hosting.
+- **Esercenti in Nuova spesa (16 novembre, sera): NON committato, NON pubblicato.** Campo Esercente facoltativo con suggerimenti,
+  entità `merchants`, backup **v10**, IndexedDB passo 3, Rules aggiornate (sezione qui sotto). **Prima di pubblicare l'Hosting vanno
+  pubblicate le Rules** (`firestore.rules` = `public/firestore.rules`): con quelle in produzione una spesa con esercente in Avanzata è
+  rifiutata (senza esercente nulla cambia). Standard funziona subito. Commit, Rules e Hosting solo su richiesta.
 - **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
   inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
-- **Git.** `main` = `origin/main`. Ultimo commit di codice `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
+- **Git.** `main` = `origin/main` più le modifiche non committate degli esercenti. Ultimo commit di codice `26b95e9` (scansione dello scontrino), poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
   (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`26b95e9`** (scansione dello scontrino, vedi il punto in
+  apertura). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
   larghezza), pubblicato su richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`8a99fa6`** (posizione di «Storico dei pagamenti»), pubblicato su
   richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
@@ -38,10 +48,11 @@ cronaca delle singole fasi e possono dire cose superate.
   Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Da verificare su dispositivo:** icona dell'app (cache del launcher), filtri di Spese/Analisi, dissolvenza
   sul Pixel 8.
-- **Verifiche.** `npm run check` del 16 novembre (sera) OK, **453/453**, build demo. `test:emulator` **21/21** con `skipped_payments`
-  (sezione «Abbonamenti: storico dei pagamenti in un dialogo»); da allora Rules e `DataStore` invariati.
-- **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
-  `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
+- **Verifiche.** `npm run check` del 16 novembre (elenco dei modelli AI, sopra gli esercenti) OK, **488/488**, build demo. `test:emulator` **22/22** con gli esercenti
+  (porte dedicate 19099/18180, config temporanea rimossa), caso peggiore del budget Rules con `merchant_id` incluso.
+- **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 40726, config
+  `.nummo-hybrid-40726.json` in radice, ignorata; Firestore 8180, UI 4000, hub 4400): non toccarlo; per le suite usare porte dedicate.
+  Il suo Firestore emulato usa le Rules lette all'avvio: per provare gli esercenti in hybrid va riavviato dall'utente.
 - **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
   `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
   dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
@@ -49,8 +60,83 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
-  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
-  «Prossime attività» sulla pubblicazione sono superati.
+  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting è a `26b95e9` e le Rules a `1dbb396`:
+  esercenti (Rules + Hosting) ed elenco dei modelli AI (solo Hosting) restano da committare e pubblicare, su richiesta.
+
+## Scansione: esercente e scansione predefinita — 16 novembre 2026 (sera)
+
+- Su richiesta (screenshot della revisione con «Spazio Conad» nella Descrizione). Nella revisione «Controlla i dati letti» c'è ora il
+  campo **Esercente** (con i suggerimenti del modulo) e il nome del negozio va lì; la **Descrizione** proposta è il tipo di acquisto
+  («Spesa», …: dal tipo di negozio con l'OCR, dal modello con l'AI, nuovo campo `description` del prompt), sempre «da controllare». Il nome
+  letto dall'AI è mostrato come verrà salvato («SPAZIO CONAD» → «Spazio Conad»). «Usa questi dati» compila anche l'Esercente del modulo;
+  l'esercente nuovo si crea solo con «Salva».
+- Impostazioni → «Analisi scontrini con AI» → **«Scansione predefinita»** (Standard / Avanzata con AI), salvata in `nummo.receiptAi.v1`
+  (`scan`): con l'AI configurata il dialogo si apre sul tipo scelto; l'altro resta selezionabile.
+- File: `domain/receipt.ts` (`merchant`, `suggestDescription`, `receiptDescriptions`), `domain/receiptAi.ts` (`scan`, prompt),
+  `ScanReceiptDialog.tsx`, `ReceiptAiCard.tsx`, `ExpenseForm.tsx`, `useAiModels.ts`, Guida e testi IT/EN, README, AGENTS,
+  `docs/architecture.md`, `tests/receipt.test.ts`.
+- **Verifiche:** `npm run check` OK (**488/488**, build demo; test esistenti estesi, nessun test nuovo). Chromium headless su `dist-demo`,
+  Standard, 1280 px scuro, **Claude finto**: «Avanzata con AI» scelta nelle Impostazioni e salvata, dialogo aperto già su «Avanzata con
+  AI», consenso, revisione con Descrizione «Spesa» ed Esercente «SPAZIO CONAD» (prima della resa in «Spazio Conad», poi coperta da test),
+  descrizione già scritta conservata, Esercente arrivato nel modulo; nessun errore JS.
+- **Non provati:** OCR su uno scontrino vero o sintetico dopo questa modifica (solo test di dominio), salvataggio della spesa con
+  l'esercente letto nel browser, 390 px, AI reali (se il modello ignora `description` il campo resta vuoto), inglese nel browser.
+
+## Elenco dei modelli AI nelle Impostazioni — 16 novembre 2026 (sera)
+
+- Su richiesta (specifica incollata dall'utente). In «Analisi scontrini con AI» il campo **Modello** è un combobox con ricerca
+  (`ModelField`, stesso schema di `MerchantField`: elenco nel flusso, frecce + Invio, Escape): 500 ms dopo l'ultima modifica della chiave
+  (o dell'indirizzo, per l'API compatibile) `useAiModels` chiede l'elenco dei modelli al servizio. Indicatore di caricamento, numero dei
+  modelli trovati, oppure errore chiaro con «Riprova»; il nome si può **sempre** scrivere a mano. Con il campo vuoto si preseleziona un
+  modello consigliato se presente (`gpt-5-mini`/`gpt-4o-mini`, `gemini-2.5-flash`/`gemini-3.5-flash-lite`, `claude-haiku-4-5`/
+  `claude-sonnet-4-6`, anche nell'edizione datata); un modello già scritto non viene sostituito. Cambiando servizio il modello si svuota
+  (non spegnendo e riaccendendo l'AI). Ordine dei campi: Indirizzo, Chiave API, Modello.
+- Richieste (`buildModelsRequest`/`readAiModels` in `domain/receiptAi.ts`, `listAiModels` in `services/receiptAi.ts`, timeout 15 s):
+  OpenAI `GET /v1/models` filtrato sulle famiglie chat (`gpt-4…`, `gpt-5…`, `o1/o3/o4`, senza embedding, whisper, tts, dall-e, moderation,
+  audio, realtime, image); Gemini `GET /v1beta/models?pageSize=1000`, solo `generateContent`, senza `models/`; Claude `GET /v1/models?limit=1000`
+  con gli header per il browser; compatibile `<base>/models`, anche senza chiave, nessun filtro.
+- **Scostamento voluto dalla specifica:** per Gemini la chiave va nell'header `x-goog-api-key`, non in `?key=`: la regola del progetto è
+  «chiave mai in un URL» (come già per la scansione).
+- File: `domain/receiptAi.ts`, `services/receiptAi.ts`, `features/receipts/ModelField.tsx` e `useAiModels.ts` (nuovi), `ReceiptAiCard.tsx`,
+  `en.ts` (rimossa la chiave «Serve un modello che legga le immagini…»), `tests/receipt.test.ts`, AGENTS, `docs/architecture.md`.
+- **Verifiche:** `npm run check` OK (typecheck, **488/488**, build demo); 4 test nuovi (richieste per servizio e chiave assente
+  dall'indirizzo, filtri ed errori, consigliato e ricerca, rete assente/timeout/annullamento). Chromium headless su `dist-demo`, Standard,
+  tema scuro, **provider finti** (fetch sostituito nella pagina, nessuna chiave vera, profili temporanei cancellati): 1280 px, OpenAI →
+  caricamento, 9 modelli (esclusi whisper/embedding/dall-e/tts), `gpt-5-mini` preselezionato, ricerca «4o», frecce + Invio, testo a mano,
+  chiave sbagliata → «Chiave API non valida o senza permessi.» con Riprova e modello conservato; Claude → `claude-haiku-4-5-20251001`;
+  Gemini → `gemini-2.5-flash`; compatibile non raggiungibile → errore e modello scritto a mano; chiave assente da localStorage/
+  sessionStorage; 390 px touch: elenco, scelta con tocco, focus che resta nel campo, nessun overflow; nessun errore JS.
+- **Non provati:** chiamate reali ai quattro servizi (forma delle risposte e CORS veri: OpenAI, Gemini e Anthropic dichiarano di accettare
+  chiamate dal browser, non verificato qui), telefono reale, screen reader, tema chiaro, Safari/Firefox. `test:emulator` non rieseguito
+  per questa modifica (Rules e `DataStore` non toccati da essa).
+
+## Esercenti in Nuova spesa — 16 novembre 2026 (sera)
+
+- Su richiesta (specifica incollata dall'utente). Campo **Esercente** facoltativo dopo la Descrizione, in Nuova spesa e in Modifica spesa;
+  suggerimenti mentre si scrive dagli esercenti già usati (frequenza e recenza calcolate dalle spese), scelta con tocco/clic o frecce + Invio,
+  oppure testo libero. «amazon», «AMAZON», «  Amazon  » = un solo esercente «Amazon»; grafie miste («eBay») conservate. Nei dettagli della
+  spesa in Spese compare la riga «Esercente». Decisioni e forma dei dati in `docs/architecture.md` («Esercenti in Nuova spesa»).
+- File: `domain/merchant.ts` (nuovo), `expense.ts`, `contract.ts`, `backup.ts` (v10, CSV «Esercente»), `services/dataStore.ts`
+  (`watchMerchants`, parametro `merchant` di `createExpense`/`updateExpense`, `merchants` nello snapshot e nell'importazione),
+  `firestoreStore.ts`, `localStore.ts`, `localDatabase.ts` (passo 3), `features/expenses/MerchantField.tsx` e `useRemoteMerchants.ts`
+  (nuovi), `ExpenseFields`/`ExpenseForm`/`ExpenseEditor`, `useRemoteExpenses`, `expenseStore`, `Workspace.tsx` (listener, ordinamento,
+  backup di recupero senza esercenti persi), `ExpenseList.tsx`, `BackupActions.tsx`, icona `store` in `SvgIcon`, Guida IT/EN («Esercenti
+  ricordati»), `en.ts`, `firestore.rules` + `public/firestore.rules`, README, AGENTS, `docs/testing/README.md`.
+- **Migrazioni:** IndexedDB passo 3 (crea lo store `merchants`, nessun dato toccato); backup v10 con lettori v1–v9 invariati; Firestore:
+  nessuna migrazione, le spese esistenti restano senza `merchant_id`. Rules modificate, **non pubblicate**.
+- **Verifiche:** `npm run check` OK (typecheck, **484/484**, build demo); nuovi `tests/merchant.test.ts` (11: normalizzazione, Amazon/amazon/
+  AMAZON, spazi, nome mostrato, risoluzione, contratto, frequenza + recenza, suggerimenti, backup v10, piano d'importazione, CSV) e 3 test in
+  `localStore.test.ts` (creazione con la spesa, nessun duplicato né rinomina, modifica/rimozione, esercente inesistente rifiutato, backup e
+  ripristino, archivi separati, record corrotto); test esistenti aggiornati a v10, passo 3 e colonna CSV. `test:emulator` **22/22**: Rules
+  (ID = chiave del nome, campi, doppi spazi, 60 caratteri, forma di `merchant_id`), creazione nel batch della spesa, seconda sessione e
+  listener, modifica con nuovo esercente in transazione, rimozione con `deleteField`, nome esistente non riscritto, estranei e anonimi negati.
+  Chromium headless su `dist-demo`, Standard, profili temporanei cancellati: 1280 px e 390 px touch, spesa senza esercente, «amazon» →
+  «Amazon», «am» → suggerimento, frecce + Invio, clic sul suggerimento con il focus che resta nel campo, «  AMAZON  » senza scelta → stesso
+  esercente, «eBay» conservato; IndexedDB con 2 esercenti e 6 spese corrette; a 1280 px anche dettagli con «Esercente», editor precompilato,
+  rimozione (revisione 2, campo assente) e cambio con suggerimenti nel dialogo; nessun errore JS. Nota di prova: a 390 px lo snackbar
+  «Spesa salvata.» copre per qualche secondo il pulsante Salva (comportamento preesistente, non legato agli esercenti).
+- **Non provati:** Avanzata nel browser (serve pubblicare le Rules o riavviare il runner hybrid), telefono reale con tastiera virtuale,
+  screen reader sul combobox, tema scuro, Safari/Firefox.
 
 ## Scansione dello scontrino: OCR locale e AI facoltativa — 16 novembre 2026
 

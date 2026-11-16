@@ -12,6 +12,8 @@ import { iconShapes } from '../../components/SvgIcon';
 import { inputOutline, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { NoFundAvatar } from '../funds/FundAvatar';
+import type { RankedMerchant } from '../../domain/merchant';
+import { MerchantField } from './MerchantField';
 
 export type BaseField = 'amount' | 'description' | 'categoryId' | 'date';
 type Props = {
@@ -24,14 +26,16 @@ type Props = {
   dense?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
+  // «Esercente», after the description: only the new-expense form and the expense editor show it.
+  merchant?: { value: string; merchants: readonly RankedMerchant[]; error?: string; onChange: (value: string) => void };
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
 
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
-// amount (the prominent field) + date on the first row, then description, category and `extra` (repeat).
-// Every field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, onChange, onBlur }: Props) {
+// amount (the prominent field) + date on the first row, then description, merchant (optional), category and `extra` (repeat).
+// Every other field is required; the screen does not star them one by one.
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, merchant, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -71,6 +75,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
           {length > 0 && <Text variant="bodySmall" style={{ color: length > expensePolicy.maxDescriptionLength ? colors.error : colors.onSurfaceVariant }}>{length}/{expensePolicy.maxDescriptionLength}</Text>}
         </View>}
       </View>
+      {merchant && <MerchantField value={merchant.value} merchants={merchant.merchants} error={merchant.error} disabled={disabled} onChange={merchant.onChange} />}
       {dataState !== 'ready' ? (
         // Keep the category field's footprint while reading: [] is not an empty archive yet.
         <TextInput outlineStyle={inputOutline} label={t("Categoria")} mode="outlined" readOnly aria-disabled

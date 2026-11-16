@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { ExpenseData, ExpenseRequest } from '../../domain/expense';
+import type { Merchant } from '../../domain/merchant';
 import { sameFieldValue } from '../../domain/contract';
 import { parseSyncedExpense, type SyncedExpense } from '../../domain/firestore';
 import { submissionReducer } from '../../domain/submission';
@@ -45,13 +46,13 @@ export function useRemoteExpenses(backend: DataStore, storageNote: string): Expe
     });
     return () => { active.current = false; stop(); };
   }, [backend]);
-  const submit = (data: ExpenseData) => {
+  const submit = (data: ExpenseData, merchant?: Merchant | null) => {
     if (inFlight.current || !ready || !['draft', 'rejected'].includes(latest.current.status)) return;
     const request: ExpenseRequest = { ...data, expense_id: crypto.randomUUID() };
     inFlight.current = true;
     latest.current = { status: 'sending', request };
     dispatch({ type: 'send', request });
-    void backend.createExpense(request).then((receipt) => {
+    void backend.createExpense(request, merchant).then((receipt) => {
       if (active.current) dispatch({ type: 'confirmed', receipt });
     }).catch((reason: unknown) => {
       if (!active.current) return;
@@ -80,10 +81,10 @@ export function useRemoteExpenses(backend: DataStore, storageNote: string): Expe
       if (!parsed) throw new Error('Spesa non valida.');
       await backend.removeExpense(parsed);
     }),
-    update: (record, data) => mutate(async () => {
+    update: (record, data, merchant) => mutate(async () => {
       const parsed = parseSyncedExpense(record);
       if (!parsed) throw new Error('Spesa non valida.');
-      await backend.updateExpense(parsed, data);
+      await backend.updateExpense(parsed, data, merchant);
     }),
     storageNote, local: backend.kind === 'local',
   };

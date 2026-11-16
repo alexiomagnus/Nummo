@@ -7,6 +7,7 @@ import { validFirstPayment } from './trial.ts';
 import { parsePriceChanges } from './pricing.ts';
 import { isRecurrence, parseCalendarChanges } from './recurrence.ts';
 import { parseStatusChanges } from './subscription.ts';
+import { isMerchantId } from './merchant.ts';
 
 export type ExpenseRecord = Readonly<ExpenseData & { id: string; created_at: string }>;
 export type Receipt = Readonly<{ expense_id: string; created_at: string }>;
@@ -16,7 +17,7 @@ const requestKeys = [
   'recurrence', 'price_changes', 'status_changes', 'fund_id', 'list_id', 'list_items', 'source', 'schema_version',
 ] as const;
 // Optional on a request, like first_payment_date.
-const optionalRequestKeys = ['first_payment_date', 'calendar_changes', 'skipped_payments'] as const;
+const optionalRequestKeys = ['first_payment_date', 'calendar_changes', 'skipped_payments', 'merchant_id'] as const;
 
 // A product name of a shopping list: one line, normalised like a description, 1..60 characters.
 export function isListItemName(value: unknown): value is string {
@@ -69,6 +70,8 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     && (v.fund_id === undefined || v.fund_id === null || (typeof v.fund_id === 'string' && v.fund_id !== ''))
     // Absent on records saved before shopping lists existed (= not from a list). Only one-off expenses come from a list.
     && (v.list_id === undefined || v.list_id === null || (typeof v.list_id === 'string' && v.list_id !== '' && v.recurrence === null))
+    // Absent on records saved before merchants existed (= no merchant).
+    && (v.merchant_id === undefined || v.merchant_id === null || isMerchantId(v.merchant_id))
     && v.source === 'web_app' && (v.schema_version === 1 ? v.first_payment_date === undefined && v.calendar_changes === undefined
       : v.schema_version === 2 ? v.recurrence !== null && v.calendar_changes === undefined && validFirstPayment(v.expense_date as string, v.first_payment_date)
         // Schema 3 (frequency switches): a trial is optional, like on any series.
@@ -89,6 +92,8 @@ function readData(v: Record<string, unknown>): ExpenseData | null {
     ...(typeof v.first_payment_date === 'string' ? { first_payment_date: v.first_payment_date } : {}),
     ...(calendar.length ? { calendar_changes: calendar } : {}),
     ...(skipped_payments.length ? { skipped_payments } : {}),
+    // Present only when the expense has a merchant (absent and null are the same: none).
+    ...(typeof v.merchant_id === 'string' ? { merchant_id: v.merchant_id } : {}),
   };
 }
 
