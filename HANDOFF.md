@@ -5,9 +5,11 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main`. Ultimo commit di codice `536b31e` (filtri di Analisi a caselle su desktop, Fondo a tutta riga,
-  filtri più piccoli; prodotti in un dialogo e card «Totale» in Spese), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`536b31e`**, pubblicato su richiesta il 16 novembre con
+- **Git.** `main` = `origin/main`. Ultimo commit di codice `4bf36e2` (icone nel filtro Fondo, «Nessuna categoria» come
+  partenza, pulsante «Nuova» più grande in Liste, budget mensile generale tolto dall'interfaccia), seguito dal solo aggiornamento di HANDOFF.
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`4bf36e2`**, pubblicato su richiesta il 16 novembre con
+  `npm run deploy:hosting` («Deploy complete!», sito 200); Rules e Worker non toccati (il budget generale resta ammesso dalle Rules).
+  Prima: **`536b31e`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules e Worker non toccati. Resa su telefono e tema scuro non verificati.
   Prima: **`db43c00`**, pubblicato su richiesta il 16 novembre
   con `npm run deploy:hosting` (build da `1e0b923`, codice identico a `db43c00`; «Deploy complete!», sito 200). Resa su
@@ -50,7 +52,7 @@ cronaca delle singole fasi e possono dire cose superate.
   Rules, dominio e `general_budget` del backup invariati (un budget già salvato resta nell'archivio e nei backup, solo non mostrato).
 - Verifiche: `npm run check` OK (typecheck, **451/451**, build demo). Chromium con `nummo-utente-medio.json` (che contiene un
   `general_budget`; profilo temporaneo cancellato): menu Fondo con le icone a 1280 px e nel foglio a 390 px; Fondi senza card né
-  pulsante del budget generale, budget dei fondi visibili; nessun errore JS. Nessun commit.
+  pulsante del budget generale, budget dei fondi visibili; nessun errore JS. Committato in `4bf36e2`, inviato e pubblicato.
 
 ## «Nessuna categoria» in Nuova lista e Nuova spesa, pulsante «Nuova» più grande — 16 novembre 2026
 
@@ -66,7 +68,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Verifiche: `npm run check` (vedi sotto); Chromium 390 px touch, Standard, archivio nuovo con le categorie predefinite e nessuna
   preferita (profilo temporaneo cancellato): pulsante 99×56, «Categoria predefinita: Nessuna categoria» in Nuova lista,
   «Categoria: Nessuna categoria» in Nuova spesa, nessun errore JS. Non provati: salvataggio di una lista senza categoria e
-  registrazione successiva nel browser, desktop, Avanzata. `npm run check` OK (typecheck, **451/451**, build demo). Nessun commit.
+  registrazione successiva nel browser, desktop, Avanzata. `npm run check` OK (typecheck, **451/451**, build demo). Committato in `4bf36e2`, inviato e pubblicato.
 
 ## Spese: prodotti in un dialogo, card «Totale» — 16 novembre 2026
 
