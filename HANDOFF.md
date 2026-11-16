@@ -5,9 +5,10 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main`. Ultimo commit di codice `fd705f3` (Analisi: Fondo, poi Periodo e Grafico come menu a ogni larghezza;
-  icona del Fondo su smartphone; «Nuova lista» più grande), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
+- **Git.** `main` = `origin/main`. Ultimo commit di codice `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
+  nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
+  `npm run deploy:hosting` («Deploy complete!», sito 200); **Rules non ripubblicate** (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200). Prima: **`f9c4d8f`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200). **Rules pubblicate** su richiesta il 16 novembre (`firebase deploy --only
   firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `f9c4d8f`: `templates/{uuid}`
@@ -51,7 +52,7 @@ cronaca delle singole fasi e possono dire cose superate.
   15 novembre si creano solo in Categorie); `docs/testing/README.md` cita il client v9; nota di superamento sul riepilogo dei fondi in
   `docs/architecture.md`; «Stato corrente» e punto 1 delle «Prossime attività» aggiornati (Rules, verifiche, campo Template rimosso).
 - Committato insieme al lavoro del 16 novembre ancora aperto (pagamenti eliminabili, ricerca per mese/anno, icone nel menu Categoria,
-  «Chiudi» più grande, «Nuova lista» 52 dp, «Entrata»), inviato e pubblicato con `npm run deploy:hosting`. Rules **non** pubblicate.
+  «Chiudi» più grande, «Nuova lista» 52 dp, «Entrata»), inviato (`1dbb396`) e pubblicato con `npm run deploy:hosting` («Deploy complete!», sito 200). Rules **non** pubblicate.
 
 ## Fondi: «Entrata» al posto di «Aggiunte» nel riepilogo — 16 novembre 2026
 
