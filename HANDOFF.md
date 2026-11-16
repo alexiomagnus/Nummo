@@ -5,6 +5,9 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
+- **Lavoro non committato (16 novembre, pomeriggio):** scansione dello scontrino con OCR locale e AI facoltativa (sezione qui
+  sotto). Non committato, non inviato, non pubblicato. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`):
+  `package.json` e `package-lock.json` modificati. `npm run check` OK, **470/470**.
 - **Git.** `main` = `origin/main`. Ultimo commit di codice `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
   (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
@@ -48,6 +51,39 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
+
+## Scansione dello scontrino: OCR locale e AI facoltativa — 16 novembre 2026
+
+- Su richiesta (specifica incollata dall'utente). In Nuova spesa il pulsante tonale **«Scansiona scontrino»** apre
+  `ScanReceiptDialog`: «Scatta una foto» (sempre: fotocamera di sistema su touch, anteprima dal vivo con «Scatta» su computer) / «Scegli un'immagine» → anteprima → «Scansiona» (annullabile)
+  → «Controlla i dati letti» (foto accanto ai campi su desktop, sopra su smartphone; avviso «Da controllare» / «Non trovato»;
+  «Sostituisci i dati già inseriti» solo se il modulo ha già valori diversi) → «Usa questi dati» compila importo, data,
+  descrizione e categoria. Il salvataggio resta solo su «Salva».
+- **OCR standard:** Tesseract.js 7 nel browser, italiano + inglese, file serviti da `/ocr/` (`npm run ocr:sync`, cartella
+  generata e ignorata da Git, inclusa in `dev`, `dev:demo`, `build:demo`, `build:cloud`), cache di 1 giorno in `firebase.json`.
+- **AI (BYOK):** scheda «Analisi scontrini con AI» in fondo alle Impostazioni (Non attiva / OpenAI / Google Gemini / Claude / API
+  compatibile OpenAI, modello, indirizzo, chiave). Chiave solo in memoria; consenso prima del primo invio; ripiego «Usa la
+  scansione standard» dopo un errore. Decisioni e limiti in `docs/architecture.md`, regole in AGENTS.
+- Guida (IT/EN) con la voce «Scansione dello scontrino»; README aggiornato. Nessuna modifica a `DataStore`, Rules o backup.
+- **Verifiche:** `npm run check` OK (typecheck, **470/470**, build demo); 17 test nuovi in `tests/receipt.test.ts` (importi e date
+  italiane, totale contro subtotale/IVA/contanti/resto, valori mancanti, risposte AI valide e non valide, richieste ed errori dei
+  provider, timeout/annullamento, nessuna registrazione automatica). Chromium headless su `dist-demo`, Standard, scontrino
+  **sintetico disegnato su canvas** (profili temporanei cancellati): 1280 px, OCR in circa 1 s → 24,75 €, 12 nov 2026,
+  «Supermercato Prova Srl», Alimentari; modulo compilato, 0 spese nell'archivio, nessuna richiesta esterna, nessun errore JS;
+  file non valido → «Formato non supportato»; Annulla durante la lettura e nuova scansione; Escape chiude senza toccare il modulo.
+  390 px touch con **provider finto** (fetch sostituito nella pagina): consenso prima di ogni invio, errore 429 → ripiego
+  sull'OCR, risposta valida → revisione con prodotti e sconto, importo scritto a mano conservato, chiave assente da
+  localStorage/sessionStorage, nessun overflow.
+- Poi, su richiesta (screenshot): «Scatta una foto» è sempre accanto a «Scegli un'immagine», anche su computer (anteprima dal vivo
+  con `getUserMedia`, pulsante «Scatta», flusso video fermato allo scatto, ad Annulla e alla chiusura; senza permesso o senza
+  fotocamera un messaggio rimanda a «Scegli un'immagine»); aggiunto il servizio **Claude** (Messages API con `fetch` diretto,
+  nessun SDK). `npm run check` OK (**470/470**); Chromium 1280 px con fotocamera finta: anteprima, Annulla (traccia `ended`),
+  scatto → anteprima della foto, voce Claude nelle Impostazioni; nessun errore JS. Non provati: webcam vera, permesso negato
+  nel browser, chiamata reale a Claude.
+- **Non provati:** scontrini veri (foto storte, carta termica, sfocature), fotocamera su telefono reale, Safari/iOS/Firefox,
+  HEIC, chiamate reali a OpenAI/Gemini/servizi compatibili (nessuna chiave usata: nomi dei modelli d'esempio non verificati),
+  Avanzata, `build:cloud` e peso della pubblicazione su Hosting (+16 MB). `test:emulator` non rieseguito (Rules e `DataStore`
+  invariati). Nessun commit.
 
 ## Menu e fogli: evidenziazione a tutta larghezza — 16 novembre 2026
 

@@ -101,6 +101,10 @@ Due strade:
 
 ## Funzionalità
 
+- **Scansione dello scontrino** in Nuova spesa: la foto viene letta sul dispositivo (OCR, italiano e inglese) e propone importo,
+  data, descrizione e categoria da controllare prima di salvare. Facoltativa l'analisi con AI con una chiave API personale
+  (OpenAI, Google Gemini, Claude o API compatibile), configurata in Impostazioni: la chiave resta solo in memoria e la foto viene inviata
+  al servizio scelto solo dopo il consenso.
 - **Nuova spesa** con importo, data, descrizione e categoria; **Spese** con ricerca, filtri, modifica ed eliminazione.
 - **Abbonamenti** settimanali, mensili e annuali, con prove gratuite, variazioni di prezzo, pausa/annullamento e cambi di frequenza futuri che conservano i pagamenti maturati.
 - **Categorie** personalizzabili, con 39 icone selezionabili in tre stili, e **Analisi** con totali e grafici.

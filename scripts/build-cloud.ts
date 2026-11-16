@@ -8,6 +8,7 @@ import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseEnv } from 'node:util';
 import { BUNDLE_FORBIDDEN, cloudEnvProblems, conflictProblems } from './envPolicy.ts';
+import { syncOcr } from './sync-ocr.ts';
 
 const FILE = '.env.production.local';
 const outDir = 'dist';
@@ -30,6 +31,8 @@ if (problems.length > 0) fail([...problems, `Variabili in ${FILE} (non versionat
 const childEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('EXPO_PUBLIC_')));
 Object.assign(childEnv, publicEnv, { EXPO_NO_DOTENV: '1', NODE_ENV: 'production' });
 rmSync(outDir, { recursive: true, force: true });
+// The receipt reader is served by the app itself (public/ocr/, generated from node_modules).
+try { syncOcr(); } catch (error) { fail([error instanceof Error ? error.message : 'copia dei file OCR non riuscita']); }
 const require = createRequire(import.meta.url);
 const run = spawnSync(process.execPath, [require.resolve('expo/bin/cli'), 'export', '--platform', 'web', '--output-dir', outDir], { env: childEnv as NodeJS.ProcessEnv, stdio: 'inherit' });
 if (run.status !== 0) fail([run.error?.message ?? 'expo export non riuscito']);

@@ -1092,3 +1092,27 @@ nei disegni e controlli di contrasto comuni agli altri set.
   ignora il campo e conta ancora il pagamento eliminato finché non carica la versione nuova (nessun dato perso; uso personale, Hosting
   aggiornato insieme). Rules da ripubblicare.
 
+## Scansione dello scontrino con OCR e AI facoltativa — 16 novembre 2026
+
+Su richiesta. In Nuova spesa «Scansiona scontrino» apre un dialogo: foto o file → anteprima → lettura → revisione → i quattro
+campi base del modulo vengono compilati. Decisioni:
+
+- **Solo proposta.** Nessuna scrittura parte dalla scansione: il salvataggio resta su «Salva» con `validateDraft`. Nessun campo
+  nuovo nel modello dati, nessun metodo `DataStore`, Rules e backup invariati. Prodotti e sconti letti si mostrano nella revisione
+  e non si salvano.
+- **OCR standard locale.** Tesseract.js 7 (motore LSTM, dati `ita` + `eng` `best_int`) gira in un worker del browser. Libreria,
+  core WebAssembly e dati sono serviti dall'app da `/ocr/` (copiati da `node_modules` con `scripts/sync-ocr.ts`, non versionati,
+  circa 16 MB su disco; il browser ne scarica circa 8 MB alla prima scansione) e non da un CDN: nessun codice di terze parti
+  caricato a runtime, la foto non lascia il dispositivo. La libreria si carica con un tag `<script>` solo alla prima scansione,
+  quindi non entra nel bundle Metro. Le regole di lettura (`domain/receipt.ts`) sono prudenti: il totale viene da una riga di
+  totale (mai subtotale, IVA, sconti, contanti o resto); senza di essa l'importo è dedotto dal pagamento o è il più alto letto ed
+  è sempre segnalato «da controllare»; ciò che non c'è resta mancante.
+- **AI facoltativa, BYOK.** OpenAI, Google Gemini, Claude (Messages API, intestazione `anthropic-dangerous-direct-browser-access`) e API
+  compatibili OpenAI con chiamata `fetch` diretta dal browser (tutti accettano richieste CORS): nessun proxy, nessun backend, nessuna chiave del progetto. La chiave API resta solo in memoria
+  (persa a ogni ricarica): niente localStorage, Firestore o bundle. Consenso esplicito per destinazione prima del primo invio.
+  La risposta deve essere un oggetto JSON e ogni campo è validato (`parseAiReceipt`): importi e date possibili per una spesa,
+  categoria solo tra quelle esistenti. Se l'AI fallisce si può usare la scansione standard.
+- **Limiti noti.** La chiave va reinserita a ogni apertura (scelta di sicurezza: una chiave salvata nel browser sarebbe leggibile
+  da qualunque script della pagina). Una chiave usata dal browser è comunque visibile a chi controlla il dispositivo. Un servizio
+  compatibile che non consente CORS non è utilizzabile: non si aggiunge un proxy. HEIC e altri formati dipendono dal browser.
+  L'accuratezza dell'OCR su scontrini reali (carta termica sbiadita, foto storte) non è stata misurata.

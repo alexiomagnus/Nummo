@@ -21,6 +21,9 @@ emulator-data/
 # Config temporanea del runner hybrid (rimossa all'arresto, mai versionata)
 .nummo-hybrid-*.json
 
+# Lettore OCR degli scontrini: copiato da node_modules con `npm run ocr:sync` (mai versionato)
+public/ocr/
+
 # Servizio push: chiavi e dati locali, configurazione personale di Cloudflare (mai versionati)
 push-service/.local/
 push-service/.wrangler/

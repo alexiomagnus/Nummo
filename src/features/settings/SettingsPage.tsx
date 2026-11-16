@@ -20,6 +20,7 @@ import type { TimeFormat } from '../../domain/timeFormat';
 import { deviceTimeZone } from '../../domain/pushSchedule';
 import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
+import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 
 type Props = {
   preferences: Preferences;
@@ -150,6 +151,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
         </Card>
         {archiveSections}
+        <ReceiptAiCard />
       </View>
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}

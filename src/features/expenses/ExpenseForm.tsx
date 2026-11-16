@@ -17,6 +17,8 @@ import { RepeatField } from './RepeatField';
 import { todayInRome } from '../../domain/policy';
 import { FundField, type FundChoice } from '../funds/FundField';
 import { noFund, resolveFund } from '../../domain/funds';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { ScanReceiptDialog } from '../receipts/ScanReceiptDialog';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
 // Categories are created only in the Categories page, never from this form.
@@ -39,6 +41,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   const [errors, setErrors] = useState<FieldErrors>({});
   // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
   const [formKey, setFormKey] = useState(0);
+  const [scanning, setScanning] = useState(false);
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
   const busy = submission.status === 'sending' || submission.status === 'uncertain';
   const dataState = store.ready ? 'ready' : store.error ? 'error' : 'loading';
@@ -117,6 +120,14 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   return (
     <View style={styles.page}>
     <View style={[styles.form, desktop && styles.formDesktop]}>
+      {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. */}
+      <View style={styles.scan}>
+        <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{t("Scansiona scontrino")}</Button>
+      </View>
+      {scanning && <ScanReceiptDialog categories={categories} onClose={() => setScanning(false)}
+        draft={{ amount: draft.amount, date: draft.date, description: draft.description, categoryId: draft.categoryId }}
+        onApply={(patch) => { update(patch); notify("Dati dello scontrino inseriti: controlla e premi Salva."); }} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
         extra={repeat}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
@@ -152,6 +163,7 @@ const styles = StyleSheet.create({
   formDesktop: { gap: spacing.md },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row' },
+  scan: { flexDirection: 'row' },
   submit: { flexGrow: 1 },
   label: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   button: { minHeight: layout.controlHeight },
