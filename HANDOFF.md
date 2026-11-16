@@ -8,9 +8,9 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Git.** `main` = `origin/main`. Ultimo commit di codice `f9c4d8f` (Templates eliminati, riepilogo dei fondi a totali, icone dei fondi
   nei selettori, «Nessuna categoria»), seguito dal solo aggiornamento di HANDOFF.
 - **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`f9c4d8f`**, pubblicato su richiesta il 16 novembre con
-  `npm run deploy:hosting` («Deploy complete!», sito 200). **Rules non ripubblicate:** quelle online ammettono ancora `templates/{uuid}`
-  (innocuo: l'app non li usa più); per allinearle a `firestore.rules` serve `firebase deploy --only firestore:rules --project nummo-6b6e2`,
-  solo con autorizzazione. Worker non toccato. Prima: **`4bf36e2`**, pubblicato su richiesta il 16 novembre con
+  `npm run deploy:hosting` («Deploy complete!», sito 200). **Rules pubblicate** su richiesta il 16 novembre (`firebase deploy --only
+  firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `f9c4d8f`: `templates/{uuid}`
+  ora rifiutato. Caricamento e sincronizzazione in Avanzata dopo la pubblicazione da verificare ricaricando l'app. Worker non toccato. Prima: **`4bf36e2`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules e Worker non toccati (il budget generale resta ammesso dalle Rules).
   Prima: **`536b31e`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules e Worker non toccati. Resa su telefono e tema scuro non verificati.
@@ -21,9 +21,7 @@ cronaca delle singole fasi e possono dire cose superate.
   icona stondata; con Rules), `e0c2850` (icona trasparente delle notifiche), `f454d12` (Prossimo mese, filtro per fondo,
   pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche; Worker ripubblicato prima), `1889755`
   (dissolvenza del segnaposto d'avvio). Tutti con `npm run deploy:hosting`, «Deploy complete!», sito 200.
-- **Rules.** Pubblicate l'ultima volta con `ec150a1` (`firebase deploy --only firestore:rules --project nummo-6b6e2`,
-  includono `templates/{uuid}`); da allora `firestore.rules` è invariato. Caricamento e sincronizzazione in Avanzata dopo la
-  pubblicazione e Templates con un progetto reale non verificati.
+- **Rules.** Pubblicate l'ultima volta il 16 novembre, allineate a `firestore.rules` di `f9c4d8f` (senza `templates`).
 - **Worker `nummo-push`.** Attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/`
   invariato da allora.
 - **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
