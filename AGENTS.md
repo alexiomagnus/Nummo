@@ -221,7 +221,7 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
   contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.
   `Button` (unico pulsante), `ListRow`/`IconTile` (riga di Spese e Categorie), `ChoiceChips`,
-  `SegmentedButtons` (sempre una riga alta 40, anche per il tipo di grafico in Analisi su smartphone: etichette brevi su ogni dimensione, nome completo in `accessibilityLabel`,
+  `SegmentedButtons` (sempre una riga alta 40: etichette brevi su ogni dimensione, nome completo in `accessibilityLabel`,
   padding orizzontale 12 → 8 → 4 per tutto il gruppo, spunta solo se entra con il padding scelto), `SwitchRow`/`M3Switch`, `SelectField` (foglio dal basso su smartphone, menu da medium), `DateField` (picker modale), `Card`,
   `StateLayerPressable` per componenti Material 3 personalizzati.
   Raggi (`radius`: controlli 20, pulsanti/campi/card 16, dialog 28, `pill`), `inputOutline` (per ogni `TextInput` outlined) e `layout` da `src/theme/tokens.ts`. Font e spessore icone (`typefaces`, `iconStroke`) dai token; font in `public/fonts/`. Colori solo dai token (`src/theme/`, `useTheme()`; verde delle entrate `positiveColors`/`positiveColor()`, fisso e non legato all'accento, contrasto testato), niente hex sparsi;
@@ -242,7 +242,7 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   `menuGeometry.ts`); `AccountMenu` usa `AnchoredMenu` allineato a destra; `Menu.Item` Paper solo come riga.
   `MenuSelect` per selettori compatti (ordina/filtri), `FieldIcon` per icone decorative dei campi.
   Il menu di `MenuSelect` è largo max(campo, voce più lunga misurata da un clone nascosto) entro i margini dello schermo:
-  mai etichette troncate per un campo stretto. Eccezione, il filtro «Fondo» (`matchFieldWidth`, da medium): menu largo quanto il campo, voci a 16 dp come gli altri menu, su due righe se lunghe; con `large` (solo Fondo di Spese) il campo è alto 50 dp come gli altri, con testo più grande; in Analisi Fondo e Periodo usano la misura normale (`FundFilter large={false}`), come Ordina e Categoria; da medium Fondo occupa da solo la prima riga, sotto Periodo e tipo di grafico come gruppi di `ChoiceChips` (una casella per alternativa, nessun menu), Periodo a sinistra e grafico a destra; su smartphone Fondo e Periodo (`MenuSelect`) a metà riga, poi il grafico (`SegmentedButtons`). `#root` ha `overflow: clip`: overlay in movimento non allargano la pagina.
+  mai etichette troncate per un campo stretto. Eccezione, il filtro «Fondo» (`matchFieldWidth`, da medium): menu largo quanto il campo, voci a 16 dp come gli altri menu, su due righe se lunghe; con `large` (solo Fondo di Spese) il campo è alto 50 dp come gli altri, con testo più grande; in Analisi Fondo e Periodo usano la misura normale (`FundFilter large={false}`), come Ordina e Categoria; a ogni larghezza Fondo occupa da solo la prima riga e sotto «Periodo» e «Grafico» sono due `MenuSelect` a metà riga (foglio dal basso su smartphone, menu da medium). Il campo Fondo mostra l'icona della voce scelta anche su smartphone (`iconOnPhones`). `#root` ha `overflow: clip`: overlay in movimento non allargano la pagina.
   Nei campi-azione (`SelectField`, `DateField`) il `Pressable` esterno è l'unico
   bersaglio: input e icone decorativi in un contenitore DOM `inert`. Il solo
   `pointerEvents="none"` sul contenitore non neutralizza le Surface Paper interne.

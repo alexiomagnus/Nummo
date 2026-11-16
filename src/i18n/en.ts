@@ -234,7 +234,7 @@ export const english: Readonly<Record<string, string>> = {
   "Spese per categoria": "Expenses by category",
   "Legenda: categorie, importi e percentuali": "Legend: categories, amounts and percentages",
   "Periodo": "Period",
-  "Tipo di grafico": "Chart type",
+  "Grafico": "Chart",
   "Nessuna spesa in questo periodo.": "No expenses in this period.",
   "Spese per giorno, dalle più recenti": "Expenses by day, most recent first",
   ", oggi": ", today",

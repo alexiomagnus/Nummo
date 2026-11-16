@@ -24,5 +24,5 @@ export function FundFilter({ funds, value, onChange, style, large = true }: {
       .map((fund) => ({ value: fund.id, label: fund.archived ? t("{p0} (archiviato)", { p0: fund.name }) : fund.name, icon: <FundAvatar fund={fund} size={24} /> })),
   ], [funds, t, colors]);
   if (funds.length === 0) return null;
-  return <MenuSelect label={t("Fondo")} icon={iconShapes.wallet} options={options} value={value} onChange={onChange} style={style} matchFieldWidth large={large} />;
+  return <MenuSelect label={t("Fondo")} icon={iconShapes.wallet} options={options} value={value} onChange={onChange} style={style} matchFieldWidth large={large} iconOnPhones />;
 }

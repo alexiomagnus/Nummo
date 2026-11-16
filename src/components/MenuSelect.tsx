@@ -27,13 +27,15 @@ type Props<T extends string> = {
   matchFieldWidth?: boolean;
   // Larger text (bigger caption and value, 24 dp icons) in the standard field height for the filters that lead a page.
   large?: boolean;
+  // Keep the leading icon on phones too (e.g. the fund avatar of «Fondo»); otherwise phones drop it to leave room for the value.
+  iconOnPhones?: boolean;
 };
 
 
 // Compact single-choice selector: a 50 dp field showing the caption and the current value. Used where chips would eat
 // too much width (sort, filters). On phones the choices open in a modal bottom sheet, as in SelectField; from medium
 // width in a Material 3 menu below the field (or above it when there is no room), which returns focus to the field.
-export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style, matchFieldWidth, large }: Props<T>) {
+export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style, matchFieldWidth, large, iconOnPhones }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -48,8 +50,8 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
   // Natural width of the widest row, measured off-screen while the menu is closed: the menu is at least as wide as the
   // field and grows to show whole labels («Importo più basso» next to a half-width field), within the viewport margins.
   const [contentWidth, setContentWidth] = useState(0);
-  // On phones the leading icon is dropped to leave room for the value.
-  const showIcon = !compact;
+  // On phones the leading icon is dropped to leave room for the value, unless `iconOnPhones`.
+  const showIcon = !compact || iconOnPhones;
   const current = options.find((option) => option.value === value);
   const rows = options.map((option) => (
     <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}

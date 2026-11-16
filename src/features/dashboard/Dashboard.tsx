@@ -7,8 +7,6 @@ import { chartTypes, type ChartType, type DashboardPreferences } from '../settin
 import { Card } from '../../components/Card';
 import { MenuSelect } from '../../components/MenuSelect';
 import { iconShapes } from '../../components/SvgIcon';
-import { SegmentedButtons } from '../../components/SegmentedButtons';
-import { ChoiceChips } from '../../components/ChoiceChips';
 import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
@@ -45,7 +43,6 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
   const theme = useTheme();
   const size = useSizeClass();
   const sideBySide = size !== 'compact';
-  const compact = size === 'compact';
   const [chartWidth, setChartWidth] = useState(0);
   const chartSideBySide = chartWidth >= donutMaxSize + donutLegendWidth + spacing.lg;
   const { dashboardChart: chart, dashboardPeriod: period } = preferences;
@@ -88,45 +85,23 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
   const changeFund = (value: string) => { setFundChoice(value); setActive(null); };
 
   const fundSelect = fundFilterShown && <FundFilter funds={funds} value={fundFilter} onChange={changeFund} large={false}
-    style={compact ? styles.fundSelectCompact : styles.fundSelectWide} />;
-  // Phones only: on wider pages Periodo and the chart type are chip groups (see below).
-  const periodSelect = <MenuSelect label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.periodSelectCompact}
+    style={styles.fundSelectWide} />;
+  // A sheet from the bottom on phones, a menu below the field from medium width (MenuSelect).
+  const periodSelect = <MenuSelect label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.half}
     onChange={(value) => changePeriod(value)} options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />;
-  const chartTypeSelect = <View style={styles.chartTypeCompact}>
-    <SegmentedButtons label={t("Tipo di grafico")} value={chart} onChange={changeChart}
-      options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />
-  </View>;
+  const chartTypeSelect = <MenuSelect label={t("Grafico")} icon={iconShapes.chart} value={chart} style={styles.half}
+    onChange={(value) => changeChart(value)} options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />;
 
   return (
     <View style={styles.layout}>
-      {/* Wider pages: Fondo across the whole first row, then Periodo on the left and the chart type on the right. Phones: Fondo and
-          Periodo share the first row, the chart type takes the next one. */}
-      {compact ? (
-        <View style={styles.toolbarCompact}>
-          <View style={styles.filters}>
-            {fundSelect}
-            {periodSelect}
-          </View>
+      {/* Every width: Fondo across the whole first row, then Periodo and Grafico (two menus) sharing the second. */}
+      <View style={styles.toolbar}>
+        {fundSelect}
+        <View style={styles.filters}>
+          {periodSelect}
           {chartTypeSelect}
         </View>
-      ) : (
-        <View style={styles.toolbarStack}>
-          {fundSelect}
-          {/* Every alternative visible as its own chip (no drop-down): Periodo on the left, chart type on the right. */}
-          <View style={styles.toolbar}>
-            <View style={styles.chipGroup}>
-              <Text variant="labelMedium" style={muted}>{t("Periodo")}</Text>
-              <ChoiceChips label={t("Periodo")} value={period} onChange={changePeriod}
-                options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />
-            </View>
-            <View style={[styles.chipGroup, styles.chartChips]}>
-              <Text variant="labelMedium" style={muted}>{t("Tipo di grafico")}</Text>
-              <ChoiceChips label={t("Tipo di grafico")} value={chart} onChange={changeChart}
-                options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />
-            </View>
-          </View>
-        </View>
-      )}
+      </View>
 
       <View style={styles.summary}>
         <View style={styles.metric}>
@@ -174,18 +149,11 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
 
 const styles = StyleSheet.create({
   layout: { gap: layout.sectionGap },
-  // Wider pages: Fondo on its own row, then the Periodo chips on the left and the chart type chips on the right (wrapping below,
-  // still at the right, on narrow pages).
-  toolbarStack: { gap: spacing.lg },
-  toolbar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', columnGap: spacing.xxl, rowGap: spacing.lg },
-  chipGroup: { gap: spacing.sm, minWidth: 0 },
-  chartChips: { marginLeft: 'auto' },
-  toolbarCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch', gap: spacing.lg + spacing.xs },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  // Fondo alone on the first row, then Periodo and Grafico sharing the second in equal halves.
+  toolbar: { gap: spacing.lg },
+  filters: { flexDirection: 'row', gap: spacing.md },
   fundSelectWide: { alignSelf: 'stretch' },
-  fundSelectCompact: { flex: 1, minWidth: 0 },
-  periodSelectCompact: { flex: 1, minWidth: 0 },
-  chartTypeCompact: { alignSelf: 'stretch' },
+  half: { flex: 1, minWidth: 0 },
   total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
   donutHint: { marginTop: spacing.xxl },
