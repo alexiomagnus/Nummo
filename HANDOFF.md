@@ -5,9 +5,9 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Lavoro non committato (16 novembre, pomeriggio):** scansione dello scontrino con OCR locale e AI facoltativa (sezione qui
-  sotto). Non committato, non inviato, non pubblicato. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`):
-  `package.json` e `package-lock.json` modificati. `npm run check` OK, **470/470**.
+- **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
+  inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
+  toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
 - **Git.** `main` = `origin/main`. Ultimo commit di codice `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
   (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
@@ -83,7 +83,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Non provati:** scontrini veri (foto storte, carta termica, sfocature), fotocamera su telefono reale, Safari/iOS/Firefox,
   HEIC, chiamate reali a OpenAI/Gemini/servizi compatibili (nessuna chiave usata: nomi dei modelli d'esempio non verificati),
   Avanzata, `build:cloud` e peso della pubblicazione su Hosting (+16 MB). `test:emulator` non rieseguito (Rules e `DataStore`
-  invariati). Nessun commit.
+  invariati). Committato in `26b95e9`, inviato e pubblicato su Hosting.
 
 ## Menu e fogli: evidenziazione a tutta larghezza — 16 novembre 2026
 
