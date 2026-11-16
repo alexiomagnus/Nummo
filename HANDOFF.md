@@ -5,8 +5,8 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `origin/main` = `db43c00` (Fondo e Periodo larghi uguali in Analisi su smartphone); in locale, sopra, i commit
-  di sola documentazione del 16 novembre (`1e0b923` e il successivo), **non inviati**.
+- **Git.** `main` = `origin/main`: sopra `db43c00` (Fondo e Periodo larghi uguali in Analisi su smartphone, ultimo commit
+  di codice) solo commit di documentazione del 16 novembre (`1e0b923`, `086eef2` e questo aggiornamento), tutti inviati.
 - **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`db43c00`**, pubblicato su richiesta il 16 novembre
   con `npm run deploy:hosting` (build da `1e0b923`, codice identico a `db43c00`; «Deploy complete!», sito 200). Resa su
   telefono non verificata. Prima: `cdd957f` (fuso orario e formato 24/12 ore, «Filtra per fondo» rimosso, colonne delle
@@ -43,7 +43,7 @@ cronaca delle singole fasi e possono dire cose superate.
   rilasci del 15 novembre in ordine, Rules ultime con `ec150a1`), punto 1 di «Prossime attività» e sezione dei Templates
   (Rules già pubblicate) corretti; in AGENTS aggiunto `templates/{uuid}` all'elenco delle collezioni della riga
   `firestore.rules`. Nessuna modifica al codice. `npm run check` OK (typecheck 0 errori, **451/451**, `dist-demo`
-  esportata). `test:emulator` non rieseguito (Rules e `DataStore` invariati). Committato in `1e0b923` (non inviato), poi
+  esportata). `test:emulator` non rieseguito (Rules e `DataStore` invariati). Committato in `1e0b923`, poi
   `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo Hosting, «Deploy complete!», sito 200): pubblica `db43c00`.
   Rules e Worker non toccati.
 
