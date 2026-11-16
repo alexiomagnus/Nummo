@@ -5,9 +5,11 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main`: sopra `db43c00` (Fondo e Periodo larghi uguali in Analisi su smartphone, ultimo commit
-  di codice) solo commit di documentazione del 16 novembre (`1e0b923`, `086eef2` e questo aggiornamento), tutti inviati.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`db43c00`**, pubblicato su richiesta il 16 novembre
+- **Git.** `main` = `origin/main`. Ultimo commit di codice `536b31e` (filtri di Analisi a caselle su desktop, Fondo a tutta riga,
+  filtri più piccoli; prodotti in un dialogo e card «Totale» in Spese), seguito dal solo aggiornamento di HANDOFF.
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`536b31e`**, pubblicato su richiesta il 16 novembre con
+  `npm run deploy:hosting` («Deploy complete!», sito 200); Rules e Worker non toccati. Resa su telefono e tema scuro non verificati.
+  Prima: **`db43c00`**, pubblicato su richiesta il 16 novembre
   con `npm run deploy:hosting` (build da `1e0b923`, codice identico a `db43c00`; «Deploy complete!», sito 200). Resa su
   telefono non verificata. Prima: `cdd957f` (fuso orario e formato 24/12 ore, «Filtra per fondo» rimosso, colonne delle
   Impostazioni, ritocchi ai Templates, coltello). Rilasci precedenti del 15 novembre, dal più recente: `c0b418c` (filtri di Spese e Analisi), `ec150a1` (Templates, backup v7,
@@ -52,7 +54,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Verifiche: `npm run check` OK (typecheck, **451/451**, build demo). Chromium headless sul server di sviluppo (8081),
   Standard, `nummo-utente-medio.json` importato con «Sostituisci» in un profilo temporaneo poi cancellato: card «6540,09 € ·
   187 spese», dettagli di «Spesa grande del mese» con «Prodotti (9)» e «Modifica», dialogo con 9 prodotti, a 1280 e 390 px;
-  nessun overflow né errore JS. Non provati: tema scuro, telefono reale, Avanzata. Nessun commit.
+  nessun overflow né errore JS. Non provati: tema scuro, telefono reale, Avanzata. Committato in `536b31e`, inviato e pubblicato.
 
 ## Analisi: riga dei filtri alla misura normale — 16 novembre 2026
 
@@ -64,7 +66,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Verifiche: `npm run check` OK (typecheck, **451/451**, build demo). Chromium headless sul server di sviluppo (8081), Standard,
   archivio vuoto, profilo temporaneo cancellato: Periodo 200×50 e tipo di grafico 320×40 a 1280 px, 366×50 e 366×40 a 390 px,
   nessun overflow né errore JS. Il campo Fondo non era visibile (nessun fondo nell'archivio di prova): stesso componente di
-  Periodo. Non pubblicato; nessun commit.
+  Periodo. Committato in `536b31e` con le voci seguenti, inviato e pubblicato su Hosting il 16 novembre.
 - Poi, su richiesta: **da desktop** (da medium in su) «Fondo» occupa da solo tutta la prima riga; sotto, Periodo (200 dp) a
   sinistra e il tipo di grafico (320 dp) a destra, 16 dp tra le righe come in Spese. Senza fondi la prima riga non c'è.
   Smartphone invariato (Fondo e Periodo a metà, poi il tipo di grafico). `npm run check` OK (**451/451**); Chromium con
