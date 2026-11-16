@@ -5,9 +5,12 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main`. Ultimo commit di codice `4bf36e2` (icone nel filtro Fondo, «Nessuna categoria» come
-  partenza, pulsante «Nuova» più grande in Liste, budget mensile generale tolto dall'interfaccia), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`4bf36e2`**, pubblicato su richiesta il 16 novembre con
+- **Git.** `main` = `origin/main`. Ultimo commit di codice `f9c4d8f` (Templates eliminati, riepilogo dei fondi a totali, icone dei fondi
+  nei selettori, «Nessuna categoria»), seguito dal solo aggiornamento di HANDOFF.
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`f9c4d8f`**, pubblicato su richiesta il 16 novembre con
+  `npm run deploy:hosting` («Deploy complete!», sito 200). **Rules non ripubblicate:** quelle online ammettono ancora `templates/{uuid}`
+  (innocuo: l'app non li usa più); per allinearle a `firestore.rules` serve `firebase deploy --only firestore:rules --project nummo-6b6e2`,
+  solo con autorizzazione. Worker non toccato. Prima: **`4bf36e2`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules e Worker non toccati (il budget generale resta ammesso dalle Rules).
   Prima: **`536b31e`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules e Worker non toccati. Resa su telefono e tema scuro non verificati.
@@ -50,7 +53,7 @@ cronaca delle singole fasi e possono dire cose superate.
   `start_date`); traduzioni ripristinate.
 - Verifiche: `npm run check` OK (typecheck, **448/448**, build demo). Chromium 1280 px con `nummo-test-casi-limite-2026-11-08.json` (profilo
   temporaneo cancellato): «TEST Quotidiano» con «Ricarica mensile +500,00 €» (attesa il 31), modulo Nuovo fondo con Saldo iniziale, Ricarica
-  mensile e Budget mensile; nessun errore JS. Nessun commit.
+  mensile e Budget mensile; nessun errore JS. Committato in `f9c4d8f`, inviato e pubblicato su Hosting.
 
 ## Fondi: riepilogo con Abbonamenti, Spese e Spesa totale, righe sempre presenti — 16 novembre 2026
 
@@ -63,7 +66,7 @@ cronaca delle singole fasi e possono dire cose superate.
   «Ricariche previste») non compare finché non matura.
 - Verifiche: `npm run check` OK (typecheck, **448/448**, build demo). Chromium 1280 px chiaro/scuro con `nummo-test-casi-limite-2026-11-08.json`
   (profilo temporaneo cancellato): «TEST Quotidiano» +123,45 / 0,00 / 0,00 / −50,00 / −12,99 / −111,92 / 124,91; gli altri fondi con tutte le
-  righe; nessun errore JS. Nessun commit.
+  righe; nessun errore JS. Committato in `f9c4d8f`, inviato e pubblicato su Hosting.
 
 ## Fondi: ricarica nel riepilogo, importi con segno e colore — 16 novembre 2026
 
@@ -75,14 +78,14 @@ cronaca delle singole fasi e possono dire cose superate.
   test di contrasto ≥ 4,5:1 su tutte le superfici, accenti e temi in `theme.test.ts` (il primo verde, `#1E7B34`, si fermava a 4,35).
 - Verifiche: `npm run check` OK (typecheck, **447/447**, build demo). Chromium 1280 px, chiaro e scuro, `nummo-test-casi-limite-2026-11-08.json`
   (profilo temporaneo cancellato): «TEST Quotidiano» con ricarica, +123,45 Aggiunte, +500,00 Ricariche previste, −50,00 Trasferimenti
-  inviati, Speso in totale 124,91; nessun errore JS. Nessun commit.
+  inviati, Speso in totale 124,91; nessun errore JS. Committato in `f9c4d8f`, inviato e pubblicato su Hosting.
 
 ## «Nessuna» con icona nelle Categorie preferite, più spazio dopo l'icona nei selettori — 16 novembre 2026
 
 - Su richiesta: in Impostazioni → «Categorie preferite» la voce «Nessuna» (Nuova spesa, Nuove liste) ha il cerchio tratteggiato
   (`NoFundAvatar`), come «Nessuno» di «Fondo preferito». Nei campi `MenuSelect` (Fondo, Ordina, Categoria, Periodo) l'icona sta in uno slot di
   24 dp con 4 dp in più prima del testo (circa 14 px invece di 8); su smartphone l'icona non c'è e nulla cambia. `npm run check` OK
-  (**446/446**, build demo); Chromium 1280 px (Spese e Impostazioni, profilo temporaneo cancellato), nessun errore JS. Nessun commit.
+  (**446/446**, build demo); Chromium 1280 px (Spese e Impostazioni, profilo temporaneo cancellato), nessun errore JS. Committato in `f9c4d8f`, inviato e pubblicato su Hosting.
 
 ## Fondi: Aggiungi/Trasferisci e ricarica di nuovo, riepilogo a soli totali; icona del fondo nel filtro — 16 novembre 2026
 
@@ -97,7 +100,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Verifiche: `npm run check` OK (typecheck, **446/446**, build demo). Chromium 1280 px, Standard, `nummo-test-casi-limite-2026-11-08.json` importato (profilo
   temporaneo cancellato): Aggiungi/Trasferisci e «+» presenti, dialogo Trasferisci come prima, riepilogo con «Speso in totale», campo
   Fondo con l'avatar del fondo scelto; nessun errore JS. Non provati: salvataggio di un movimento e di una ricarica nel browser,
-  smartphone. Nessun commit.
+  smartphone. Committato in `f9c4d8f`, inviato e pubblicato su Hosting.
 
 ## Templates eliminati, Fondi senza saldo — 16 novembre 2026
 
@@ -119,7 +122,7 @@ cronaca delle singole fasi e possono dire cose superate.
   temporaneo cancellato): Fondi senza saldo/ricarica/Aggiungi/Trasferisci/movimenti, modulo con solo nome, colore, icona e budget, menu
   account Impostazioni / Notifiche / Categorie / Archiviazione e backup, nessun campo Template in Nuova spesa. Gli errori Metro nel log
   riguardavano gli stati intermedi durante la rimozione dei file (build finale OK). **Per l'Avanzata vanno ripubblicate le Rules**
-  (solo con autorizzazione). Nessun commit.
+  (solo con autorizzazione). Committato in `f9c4d8f`, inviato e pubblicato su Hosting.
 
 ## Icone dei fondi nel filtro «Fondo», budget mensile generale rimosso — 16 novembre 2026
 
