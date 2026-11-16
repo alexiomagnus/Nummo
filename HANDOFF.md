@@ -8,7 +8,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Git.** `main` = `origin/main`. Ultimo commit di codice `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
 - **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
-  `npm run deploy:hosting` («Deploy complete!», sito 200); **Rules non ripubblicate** (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
+  `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200). Prima: **`f9c4d8f`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200). **Rules pubblicate** su richiesta il 16 novembre (`firebase deploy --only
   firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `f9c4d8f`: `templates/{uuid}`
@@ -23,9 +23,9 @@ cronaca delle singole fasi e possono dire cose superate.
   icona stondata; con Rules), `e0c2850` (icona trasparente delle notifiche), `f454d12` (Prossimo mese, filtro per fondo,
   pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche; Worker ripubblicato prima), `1889755`
   (dissolvenza del segnaposto d'avvio). Tutti con `npm run deploy:hosting`, «Deploy complete!», sito 200.
-- **Rules.** Pubblicate l'ultima volta il 16 novembre, allineate a `firestore.rules` di `f9c4d8f` (senza `templates`). **Il file attuale
-  ammette anche `skipped_payments`: da ripubblicare (solo con autorizzazione)**, altrimenti in Avanzata l'eliminazione di un pagamento
-  viene rifiutata dal server.
+- **Rules.** Pubblicate su richiesta il 16 novembre (sera) con `firebase deploy --only firestore:rules --project nummo-6b6e2`
+  (compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `1dbb396` (con `skipped_payments`). Eliminazione di un
+  pagamento in Avanzata non ancora provata sul cloud.
 - **Worker `nummo-push`.** Attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/`
   invariato da allora.
 - **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
@@ -52,7 +52,7 @@ cronaca delle singole fasi e possono dire cose superate.
   15 novembre si creano solo in Categorie); `docs/testing/README.md` cita il client v9; nota di superamento sul riepilogo dei fondi in
   `docs/architecture.md`; «Stato corrente» e punto 1 delle «Prossime attività» aggiornati (Rules, verifiche, campo Template rimosso).
 - Committato insieme al lavoro del 16 novembre ancora aperto (pagamenti eliminabili, ricerca per mese/anno, icone nel menu Categoria,
-  «Chiudi» più grande, «Nuova lista» 52 dp, «Entrata»), inviato (`1dbb396`) e pubblicato con `npm run deploy:hosting` («Deploy complete!», sito 200). Rules **non** pubblicate.
+  «Chiudi» più grande, «Nuova lista» 52 dp, «Entrata»), inviato (`1dbb396`) e pubblicato con `npm run deploy:hosting` («Deploy complete!», sito 200). Rules pubblicate poi su richiesta (compilazione OK, «Deploy complete!»).
 
 ## Fondi: «Entrata» al posto di «Aggiunte» nel riepilogo — 16 novembre 2026
 
@@ -2631,7 +2631,7 @@ screen reader, concorrenza tra due dispositivi.
    Già fatti: Escape in `AppDialog` e riallineamento README/architettura (12 novembre).
 
 1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate l'ultima volta il 16 novembre (allineate a `f9c4d8f`,
-   senza `templates`); `firestore.rules` ora aggiunge `skipped_payments` ed è da ripubblicare con autorizzazione. Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
+   senza `templates`), poi la sera con `skipped_payments` (`1dbb396`). Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
    serve autorizzazione. Decidere conservazione o migrazione esplicita degli ID icona rimossi, con regressioni
    decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
