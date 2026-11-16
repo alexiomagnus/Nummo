@@ -1,35 +1,29 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 15 novembre 2026 (sera)
+## Stato corrente — 16 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** Su richiesta, `1889755` («fade out the startup placeholder»: dissolvenza d'uscita del segnaposto d'avvio, issue #5,
-  più la sezione di HANDOFF sulle issue #4/#5) inviato a `origin/main`, sopra `d9eefa6`/`4ff9722` (tastiera subito in Nuova
-  lista/Nuovo fondo, modulo del fondo senza «Tieni traccia del saldo», «Mostra fondi archiviati», «Mostra budget mensile»
-  rimosso). Aggiornamento di HANDOFF in `8712ef1`, anch'esso inviato.
-- **Produzione.** Hosting pubblicato su richiesta con `npm run deploy:hosting` su `1889755` (progetto `nummo-6b6e2`,
-  solo Hosting, «Deploy complete!»): pagina principale 200, con la dissolvenza del segnaposto d'avvio; il rilascio
-  precedente, `d9eefa6`, aveva `showArchivedFunds` e «Mostra fondi archiviati», senza `showGeneralBudget`. Resa sui
-  dispositivi (compresa la dissolvenza sul Pixel 8) e collegamento di un progetto reale non verificati. Worker `nummo-push`
-  attivo su Cloudflare. **Rules pubblicate** su richiesta il 15 novembre (`firebase deploy --only firestore:rules
-  --project nummo-6b6e2`, compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `e79dfa6`: icona `key`
-  ammessa, `star`/`graduation`/`beer` rifiutate in scrittura (già rifiutate dal client dal 12 novembre; nessun controllo
-  diretto dei dati cloud). Caricamento e sincronizzazione dopo la pubblicazione da verificare ricaricando l'app.
+- **Git.** `main` = `origin/main` = `db43c00` (Fondo e Periodo larghi uguali in Analisi su smartphone), worktree pulito al
+  16 novembre prima del riallineamento dei documenti.
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio pubblicato: `cdd957f` (fuso orario e formato 24/12 ore,
+  «Filtra per fondo» rimosso, colonne delle Impostazioni, ritocchi ai Templates, coltello). **`db43c00` non è pubblicato.**
+  Rilasci precedenti del 15 novembre, dal più recente: `c0b418c` (filtri di Spese e Analisi), `ec150a1` (Templates, backup v7,
+  icona stondata; con Rules), `e0c2850` (icona trasparente delle notifiche), `f454d12` (Prossimo mese, filtro per fondo,
+  pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche; Worker ripubblicato prima), `1889755`
+  (dissolvenza del segnaposto d'avvio). Tutti con `npm run deploy:hosting`, «Deploy complete!», sito 200.
+- **Rules.** Pubblicate l'ultima volta con `ec150a1` (`firebase deploy --only firestore:rules --project nummo-6b6e2`,
+  includono `templates/{uuid}`); da allora `firestore.rules` è invariato. Caricamento e sincronizzazione in Avanzata dopo la
+  pubblicazione e Templates con un progetto reale non verificati.
+- **Worker `nummo-push`.** Attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/`
+  invariato da allora.
 - **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
-- **Ultimo rilascio (15 novembre, sera).** Commit `ec150a1` inviato a `origin/main`: Templates (pagina, campo in Nuova spesa,
-  backup v7), icona dell'app stondata, carrello semplificato, icone minimali ingrandite. **Rules pubblicate** (`firebase deploy
-  --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»; includono `templates/{uuid}`) e poi
-  Hosting (`npm run deploy:hosting`, sito 200). Worker non toccato. Da verificare su dispositivo: icona (cache del launcher),
-  Templates in Avanzata con un progetto reale (provati solo su emulatore/Rules), campo Template su telefono.
-- **Rilascio del 15 novembre (sera).** Commit `f454d12` inviato a `origin/main`: icone (regalo, carrello, set colorato, pizza),
-  «Prossimo mese», filtro per fondo, pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche, niente icona
-  quadrata a destra. Worker `nummo-push` ripubblicato dall'utente, poi `npm run deploy:hosting` (progetto `nummo-6b6e2`, solo
-  Hosting, «Deploy complete!», sito 200, `sw.js` con `renewal`). Rules non toccate. Resa su telefono, consegna reale delle
-  notifiche (orario scelto, rinnovi) e assenza dell'icona a destra da verificare.
-- **Verifiche.** Vedi la sezione più recente: `npm run check` OK (**438/438**, build demo). `test:emulator` 19/19
-  rieseguito dopo `ownerAccess.ts` (sezione «Questo Nummo è privato»); da allora Rules e `DataStore` invariati.
+  Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
+- **Da verificare su dispositivo:** icona dell'app (cache del launcher), campo Template, filtri di Spese/Analisi, dissolvenza
+  sul Pixel 8.
+- **Verifiche.** `npm run check` del 16 novembre: vedi sezione «Riallineamento dei documenti». `test:emulator` **20/20**
+  con il caso dei template (sezione «Templates di Nuova spesa»); da allora Rules e `DataStore` invariati.
 - **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 583773, config
   `.nummo-hybrid-583773.json` in radice, ignorata): non toccarlo; per le suite usare porte dedicate.
 - **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
@@ -42,10 +36,19 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Riallineamento dei documenti — 16 novembre 2026
+
+- Su richiesta, solo documentazione: «Stato corrente» riscritto (ultimo rilascio `cdd957f`, `db43c00` non pubblicato,
+  rilasci del 15 novembre in ordine, Rules ultime con `ec150a1`), punto 1 di «Prossime attività» e sezione dei Templates
+  (Rules già pubblicate) corretti; in AGENTS aggiunto `templates/{uuid}` all'elenco delle collezioni della riga
+  `firestore.rules`. Nessuna modifica al codice. `npm run check` OK (typecheck 0 errori, **451/451**, `dist-demo`
+  esportata). `test:emulator` non rieseguito (Rules e `DataStore` invariati). Nessun commit.
+
 ## Analisi su smartphone: Fondo e Periodo uguali — 15 novembre 2026
 
 - Su richiesta: su smartphone i due selettori dividono la riga a metà (flex 1 : 1, prima 1 : 1,2). Dopo la riduzione del padding dei
-  campi `large` su smartphone, «Ultimi 12 mesi» entra intero anche a 360 px (Chromium, due campi da 162 px). `npm run check` OK. Nessun commit.
+  campi `large` su smartphone, «Ultimi 12 mesi» entra intero anche a 360 px (Chromium, due campi da 162 px). `npm run check` OK.
+  Committato in `db43c00` e inviato a `origin/main`; **non pubblicato** su Hosting.
 
 ## Rilascio del 15 novembre (sera, seconda parte)
 
@@ -246,9 +249,8 @@ cronaca delle singole fasi e possono dire cose superate.
   «template»: regole, scritture, modifica, eliminazione, backup). Chromium 412 px touch (Standard, archivio di prova,
   profilo temporaneo cancellato): voce di menu, interruttore, creazione, campo Template in Nuova spesa (importo, data,
   descrizione, categoria e fondo compilati), dialogo di modifica ed eliminazione con conferma; nessun errore JS.
-  **Non provati:** Avanzata nel browser (solo emulatore/Rules), tablet/desktop, Safari. **Per usarli in Avanzata servono le
-  Rules pubblicate** (`firebase deploy --only firestore:rules --project nummo-6b6e2`, solo con autorizzazione): senza, la
-  scrittura di un template viene rifiutata dal server. Nessun commit.
+  **Non provati:** Avanzata nel browser (solo emulatore/Rules), tablet/desktop, Safari. Le Rules necessarie sono state poi
+  pubblicate con `ec150a1` (vedi «Stato corrente»).
 
 ## Orario delle notifiche a scelta — 15 novembre 2026
 
@@ -2392,8 +2394,8 @@ screen reader, concorrenza tra due dispositivi.
    collaudo sui dati reali e sul Pixel 8 (elenco storico in `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`).
    Già fatti: Escape in `AppDialog` e riallineamento README/architettura (12 novembre).
 
-1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 15 novembre (allineate a `firestore.rules` di
-   `e79dfa6`, che non è più cambiato). Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
+1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 15 novembre l'ultima volta con `ec150a1`
+   (comprese `templates/{uuid}`; `firestore.rules` invariato da allora). Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
    serve autorizzazione. Decidere conservazione o migrazione esplicita degli ID icona rimossi, con regressioni
    decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
