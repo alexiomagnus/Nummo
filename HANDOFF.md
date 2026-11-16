@@ -39,6 +39,35 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Icone dei fondi nel filtro «Fondo», budget mensile generale rimosso — 16 novembre 2026
+
+- **Filtro «Fondo»** (Spese e Analisi): ogni voce del menu ha la sua icona: «Tutti i fondi» il portafoglio, «Senza fondo» il cerchio
+  tratteggiato (`NoFundAvatar`), ogni fondo il suo `FundAvatar` (colore e icona). `MenuOption` di `MenuSelect` ha ora un `icon`
+  facoltativo (slot di 24 dp, 16 dp dal testo); gli altri `MenuSelect` (Ordina, Categoria, Periodo su smartphone) invariati.
+- **Budget mensile generale rimosso dall'interfaccia** (su richiesta, decisione in `docs/architecture.md`): in Fondi niente card
+  «Budget mensile» né pulsante «Budget»; `GeneralBudgetDialog.tsx` eliminato, listener tolto da `useRemoteFunds`, 6 traduzioni non più
+  usate rimosse; README e AGENTS aggiornati. I budget dei singoli fondi restano. **Dati non toccati:** `settings/budget`, `DataStore`,
+  Rules, dominio e `general_budget` del backup invariati (un budget già salvato resta nell'archivio e nei backup, solo non mostrato).
+- Verifiche: `npm run check` OK (typecheck, **451/451**, build demo). Chromium con `nummo-utente-medio.json` (che contiene un
+  `general_budget`; profilo temporaneo cancellato): menu Fondo con le icone a 1280 px e nel foglio a 390 px; Fondi senza card né
+  pulsante del budget generale, budget dei fondi visibili; nessun errore JS. Nessun commit.
+
+## «Nessuna categoria» in Nuova lista e Nuova spesa, pulsante «Nuova» più grande — 16 novembre 2026
+
+- **Bug segnalato:** senza categoria preferita per le liste, Nuova lista proponeva la prima categoria del selettore. Ora
+  `ListEditor` parte dalla categoria preferita se esiste, altrimenti da **«Nessuna categoria»** (lista salvata con
+  `category_id: null`, già ammesso da dominio, Rules e backup); in Modifica lista parte dalla categoria della lista (nessuna se
+  manca o è stata eliminata). «Nessuna categoria» è la prima voce del selettore, con l'icona tratteggiata di «Nessun fondo».
+- **Nuova spesa** (e gli altri moduli con `ExpenseFields`: Modifica, Registra spesa, Templates): stessa prima voce e stessa
+  icona; senza preferita il campo mostra «Nessuna categoria» invece di restare vuoto. Il salvataggio chiede ancora una categoria
+  («Seleziona una categoria.»). Traduzione EN di «Nessuna categoria» corretta in «No category» (era «No categories», usata anche
+  dallo stato vuoto).
+- **Liste, smartphone:** il pulsante «Nuova» del titolo è alto 56 dp (come «Salva») con etichetta 16/600; desktop invariato.
+- Verifiche: `npm run check` (vedi sotto); Chromium 390 px touch, Standard, archivio nuovo con le categorie predefinite e nessuna
+  preferita (profilo temporaneo cancellato): pulsante 99×56, «Categoria predefinita: Nessuna categoria» in Nuova lista,
+  «Categoria: Nessuna categoria» in Nuova spesa, nessun errore JS. Non provati: salvataggio di una lista senza categoria e
+  registrazione successiva nel browser, desktop, Avanzata. `npm run check` OK (typecheck, **451/451**, build demo). Nessun commit.
+
 ## Spese: prodotti in un dialogo, card «Totale» — 16 novembre 2026
 
 - Su richiesta (screenshot): nei dettagli di una spesa registrata da una lista i prodotti non sono più elencati in riga

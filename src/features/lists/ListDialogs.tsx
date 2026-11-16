@@ -10,6 +10,7 @@ import type { Category } from '../../domain/category';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listNameError } from '../../domain/shoppingList';
 import { existingCategory } from '../categories/preferredCategories';
+import { NoFundAvatar } from '../funds/FundAvatar';
 import { useI18n } from '../../i18n/I18nProvider';
 import { inputOutline, layout, spacing } from '../../theme/tokens';
 
@@ -20,19 +21,19 @@ export function ListEditor({ record, categories, defaultCategoryId = '', onSave,
 }) {
   const { t } = useI18n();
   const [name, setName] = useState(record?.name ?? '');
-  // No «no category» choice: the list's own category when it still exists, otherwise the preferred one (Settings), otherwise
-  // the first one of the picker. Derived at render, so categories that arrive after the dialog opened (or a deleted one)
-  // still leave a valid selection.
-  const [chosen, setCategoryId] = useState<string | null>(record?.category_id ?? null);
-  const categoryId = existingCategory(chosen ?? '', categories) || existingCategory(defaultCategoryId, categories) || (categories[0]?.id ?? null);
+  // A list may have no category («Nessuna categoria», chosen at registration). Editing starts from the list's own category
+  // (none if it has none or it was deleted); a new list from the preferred one (Settings), otherwise none: never the first
+  // category of the picker. Derived at render, so categories that arrive after the dialog opened still resolve.
+  const [chosen, setCategoryId] = useState<string | undefined>(record ? record.category_id ?? '' : undefined);
+  const categoryId = existingCategory(chosen ?? defaultCategoryId, categories) || null;
   const [error, setError] = useState<string | null>(null);
   const save = () => {
     const problem = listNameError(name);
     setError(problem);
-    // Without any category yet the list is saved without one, as before.
     if (!problem && onSave(name, categoryId)) close();
   };
-  const options = categories.map((c) => ({ value: c.id, label: c.label, icon: c.icon ? <CategoryGlyph icon={c.icon} size={20} /> : undefined }));
+  const options = [{ value: '', label: t("Nessuna categoria"), icon: <NoFundAvatar size={24} /> },
+    ...categories.map((c) => ({ value: c.id, label: c.label, icon: c.icon ? <CategoryGlyph icon={c.icon} size={20} /> : undefined }))];
   return <Portal><Dialog visible onDismiss={close} style={styles.dialog} focusTextEntry={!record}>
     <Dialog.Title>{record ? t("Modifica lista") : t("Nuova lista")}</Dialog.Title>
     <Dialog.Content style={styles.content}>

@@ -11,6 +11,7 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { iconShapes } from '../../components/SvgIcon';
 import { inputOutline, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
+import { NoFundAvatar } from '../funds/FundAvatar';
 
 export type BaseField = 'amount' | 'description' | 'categoryId' | 'date';
 type Props = {
@@ -37,9 +38,14 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
   const compact = useSizeClass() === 'compact';
-  const options = useMemo(() => categories.map((category) => ({
-    value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
-  })), [categories]);
+  // «Nessuna categoria» (the dashed icon of «Nessun fondo» / «Nessun template») is what an empty choice shows: no preferred
+  // category means no category picked yet, never the first one of the list. Saving still asks for a category.
+  const options = useMemo(() => [
+    { value: '', label: t("Nessuna categoria"), icon: <NoFundAvatar size={24} /> },
+    ...categories.map((category) => ({
+      value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
+    })),
+  ], [categories, t]);
   return (
     <View style={[styles.layout, dense && styles.denseLayout]} aria-busy={dataState === 'loading'}>
       <View>

@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { useRef, useState, type ComponentRef } from 'react';
+import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { layout, radius, spacing } from '../theme/tokens';
@@ -11,7 +11,8 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 // onLayout reports whole pixels: a label a fraction wider than the rounded measure would still be ellipsized.
 const measureSlack = 2;
 
-export type MenuOption<T extends string> = { value: T; label: string };
+// `icon`: optional decorative leading icon of the row (e.g. the fund avatar), in a fixed 24 dp slot.
+export type MenuOption<T extends string> = { value: T; label: string; icon?: ReactNode };
 
 type Props<T extends string> = {
   // Short caption ("Ordina", "Categoria") and the shape of its leading icon.
@@ -54,6 +55,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
     <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
       onPress={() => { closeMenu(); onChange(option.value); }}
       accessibilityLabel={`${option.label}${option.value === value ? t(", selezionato") : ''}`}>
+      {option.icon && <View style={styles.icon}>{option.icon}</View>}
       <Text variant="bodyLarge" numberOfLines={matchFieldWidth && !compact ? 2 : 1} style={styles.itemLabel}>{option.label}</Text>
       {/* Fixed slot on every row: the check always sits at the right edge, whatever the label length. */}
       <View style={styles.check}>{option.value === value && <SvgIcon shape={iconShapes.check} size={24} color={colors.onSurface} />}</View>
@@ -79,6 +81,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
         <View style={styles.measure} onLayout={({ nativeEvent }) => setContentWidth(Math.ceil(nativeEvent.layout.width) + measureSlack)}>
           {options.map((option) => (
             <View key={option.value} style={styles.item}>
+              {option.icon && <View style={styles.icon} />}
               <Text variant="bodyLarge" style={styles.nowrap}>{option.label}</Text>
               <View style={styles.check} />
             </View>
@@ -105,6 +108,8 @@ const styles = StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl, minHeight: 48, minWidth: 0, paddingHorizontal: spacing.lg },
   itemLabel: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' },
   check: { width: 24, height: 24 },
+  // The row gap (xl) separates the label from the check; beside the icon the usual md.
+  icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md - spacing.xl },
   // max-content: the rows keep their natural width instead of wrapping inside the (narrower) field container.
   measureBox: { position: 'absolute', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', opacity: 0 },
   // No numberOfLines here: RN Web line clamping understates the max-content width of the label.

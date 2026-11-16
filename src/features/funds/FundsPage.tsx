@@ -9,7 +9,7 @@ import { SelectField } from '../../components/SelectField';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { parseSyncedExpense, type SyncedExpense, type SyncedFund, type SyncedMovement } from '../../domain/firestore';
 import {
-  addMonths, currentRecharge, firstOverviewMonth, fundInUse, generalBudgetMonth, hasBalanceData, monthOf, monthOverview, unassignedExpenses, type BudgetChange,
+  addMonths, currentRecharge, firstOverviewMonth, fundInUse, hasBalanceData, monthOf, monthOverview, unassignedExpenses,
   type FundEntry, type FundMonth, type MonthKind, type MovementKind,
 } from '../../domain/funds';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -19,7 +19,6 @@ import { useSizeClass } from '../../theme/useSizeClass';
 import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
 import { FundEditor } from './FundEditor';
-import { GeneralBudgetDialog } from './GeneralBudgetDialog';
 import { MovementDialog } from './MovementDialog';
 import type { RemoteFunds } from './useRemoteFunds';
 
@@ -32,7 +31,7 @@ type Props = {
   defaultFundId: string;
   onSetDefault: (id: string) => void;
   notify: (message: string) => void;
-  // Display preference (Settings → Features): hides every budget (general, fund cards, editor controls), preserving their data.
+  // Display preference (Settings → Features): offers the archived funds.
   showArchivedFunds: boolean;
 };
 
@@ -55,7 +54,6 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const [editing, setEditing] = useState<SyncedFund | 'new' | null>(null);
   const [moving, setMoving] = useState<{ kind: MovementKind; to?: string } | null>(null);
   const [assigning, setAssigning] = useState(false);
-  const [editingBudget, setEditingBudget] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
   const { funds, movements } = remote;
@@ -69,8 +67,6 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const balanceFunds = useMemo(() => new Set(funds.filter((fund) => hasBalanceData(fund, movements)).map((fund) => fund.id)), [funds, movements]);
   const anyBalance = balanceFunds.size > 0;
   const movableFunds = activeFunds.filter((fund) => balanceFunds.has(fund.id));
-  const general = useMemo(() => generalBudgetMonth(remote.budgets, overview), [remote.budgets, overview]);
-  const budgetShown = general.budget !== null;
   const balances = useMemo(() => new Map(overview.funds.map((item) => [item.fund.id, item.balance])), [overview]);
   const orphans = useMemo(() => unassignedExpenses(expenses, funds), [expenses, funds]);
   // Earliest month with data (first fund start or oldest expense), up to one year ahead (forecasts only).
@@ -113,21 +109,12 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       </View>
 
       {/* Spending overview first: what was spent in the month (every fund and «Senza fondo»). Balances only for funds that keep them. */}
-      {(funds.length > 0 || budgetShown) && <View style={styles.tiles}>
+      {funds.length > 0 && <View style={styles.tiles}>
         {tile(forecast ? t("Spese previste") : t("Speso nel mese"), formatAmount(forecast ? overview.forecastSpent : overview.spent),
           !forecast && overview.forecastSpent > 0 ? t("Altri {p0} di rinnovi previsti", { p0: formatAmount(overview.forecastSpent) }) : undefined)}
         {anyBalance && tile(t("Disponibile ora"), formatAmount(overview.available), undefined, overview.available < 0 ? colors.error : undefined)}
         {anyBalance && tile(overview.kind === 'past' ? t("Saldo a fine mese") : t("Saldo previsto a fine mese"), formatAmount(overview.closing))}
       </View>}
-      {budgetShown && general.budget !== null && <View style={[styles.budget, { backgroundColor: colors.elevation.level1 }]}>
-        <View style={styles.budgetHeader}>
-          <Text variant="titleMedium" style={styles.bold}>{t("Budget mensile")}</Text>
-          <Text variant="titleMedium" style={styles.number}>{formatAmount(general.budget)}</Text>
-        </View>
-        <BudgetMeter label={t("Budget mensile")} spent={general.spent} budget={general.budget} state={general.state} forecast={forecast} />
-        <Button mode="text" style={styles.start} disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}>{t("Modifica budget")}</Button>
-      </View>}
-
       {/* Short visible labels keep the actions on one row from tablet width up; accessible names stay complete. */}
       <View style={[styles.actions, compact && styles.actionsCompact, tablet && styles.actionsTablet]}>
         <Button compact={tablet} mode="contained" disabled={!canWrite} onPress={() => setEditing('new')}
@@ -137,9 +124,6 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           icon={({ size, color }) => <SvgIcon shape={iconShapes.euro} size={size} color={color} />}>{t("Aggiungi")}</Button>}
         {movableFunds.length > 1 && <Button compact={tablet} mode="contained-tonal" disabled={!canWrite} onPress={() => setMoving({ kind: 'transfer' })}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.swap} size={size} color={color} />}>{t("Trasferisci")}</Button>}
-        {general.budget === null && <Button compact={tablet} mode="outlined" disabled={!canWrite || !remote.budgetReady} onPress={() => setEditingBudget(true)}
-          accessibilityLabel={t("Imposta un budget mensile")}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.chart} size={size} color={color} />}>{t("Budget")}</Button>}
       </View>
       {!canWrite && <Text variant="bodySmall" style={muted}>{t("Le modifiche ai fondi richiedono la connessione e dati sincronizzati.")}</Text>}
 
@@ -202,9 +186,6 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           if (saved) notify(editing === 'new' ? "Fondo creato." : "Fondo aggiornato.");
           return saved;
         }} close={() => { setEditing(null); remote.clearError(); }} />}
-      {editingBudget && <GeneralBudgetDialog budgets={remote.budgets} month={month} today={today} ready={canWrite && remote.budgetReady} error={remote.error}
-        onSave={async (budgets: BudgetChange[]) => { const saved = await remote.saveBudget(budgets); if (saved) notify("Budget mensile aggiornato."); return saved; }}
-        close={() => { setEditingBudget(false); remote.clearError(); }} />}
       {moving && <MovementDialog funds={movableFunds} balances={balances} kind={moving.kind} to={moving.to} ready={canWrite} error={remote.error}
         onCreate={async (id, data) => {
           const saved = await remote.createMovement(id, data);
@@ -378,9 +359,6 @@ const styles = StyleSheet.create({
   capitalize: { textTransform: 'capitalize' },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   tile: { flexGrow: 1, flexBasis: 160, minWidth: 0, borderRadius: radius.card, padding: spacing.lg, gap: spacing.xs },
-  budget: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
-  budgetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
-  bold: { fontWeight: '700' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   actionsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   actionsTablet: { gap: spacing.xs },

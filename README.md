@@ -104,7 +104,7 @@ Due strade:
 - **Nuova spesa** con importo, data, descrizione e categoria; **Spese** con ricerca, filtri, modifica ed eliminazione.
 - **Abbonamenti** settimanali, mensili e annuali, con prove gratuite, variazioni di prezzo, pausa/annullamento e cambi di frequenza futuri che conservano i pagamenti maturati.
 - **Categorie** personalizzabili, con 39 icone selezionabili in tre stili, e **Analisi** con totali e grafici.
-- **Fondi e budget** facoltativi: spesa mensile per fondo e budget generale; per ogni fondo, se vuoi, saldo iniziale, ricarica mensile, entrate e trasferimenti (saldo iniziale e ricarica mensile facoltativi nel modulo del fondo).
+- **Fondi e budget** facoltativi: spesa mensile per fondo e budget mensile per fondo; per ogni fondo, se vuoi, saldo iniziale, ricarica mensile, entrate e trasferimenti (saldo iniziale e ricarica mensile facoltativi nel modulo del fondo).
 - **Liste della spesa** con checklist, totale manuale e registrazione di una sola spesa per acquisto.
 - **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice) e backup JSON v6, unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.

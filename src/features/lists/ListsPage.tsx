@@ -115,8 +115,8 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
       {/* The new-list action shares the title row (short label and balanced compact padding on phones); the title wraps
           before the button shrinks, so nothing overflows at 320 px. */}
       <PageHeader title={t("Liste della spesa")} style={styles.overviewHeader} action={
-        <Button mode="contained" compact={compact} style={styles.headerButton} contentStyle={compact ? compactIconPadding.roomy.content : undefined}
-          labelStyle={compact ? compactIconPadding.roomy.label : undefined} onPress={() => setEditing('new')} accessibilityLabel={t("Nuova lista")}
+        <Button mode="contained" compact={compact} style={styles.headerButton} contentStyle={compact ? [compactIconPadding.roomy.content, styles.headerButtonContent] : undefined}
+          labelStyle={compact ? [compactIconPadding.roomy.label, styles.headerButtonLabel] : undefined} onPress={() => setEditing('new')} accessibilityLabel={t("Nuova lista")}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{compact ? t("Nuova") : t("Nuova lista")}</Button>} />
       {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
       {!remote.ready && !remote.error && <View style={styles.loading}><ActivityIndicator accessibilityLabel={t("Caricamento delle liste")} /></View>}
@@ -330,6 +330,9 @@ const styles = StyleSheet.create({
   // Title and lists are one block: `lg` between them instead of the page's section gap.
   overviewHeader: { marginBottom: spacing.lg - layout.sectionGap },
   headerButton: { flexShrink: 0 },
+  // Phones: a little larger than the standard button, as tall as «Salva» in Nuova spesa, with its 16/600 label.
+  headerButtonContent: { minHeight: layout.controlHeight },
+  headerButtonLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', width: '100%', borderRadius: radius.pill, transformOrigin: 'left center' } as ViewStyle,
   detailTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

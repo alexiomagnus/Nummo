@@ -1047,3 +1047,11 @@ nei disegni e controlli di contrasto comuni agli altri set.
   un abbonamento attivo, interruttore «Avvisa prima dei rinnovi» in Notifiche (`renewalEnabled`). Il servizio riceve solo
   la data; tiene un promemoria alla volta (come il riepilogo), il successivo parte quando l'app rinvia gli orari. Il tocco
   apre Spese → Abbonamenti. Richiede il deploy del Worker prima dell'Hosting (il vecchio Worker rifiuta il nuovo tipo).
+
+## Budget mensile generale rimosso dall'interfaccia — 16 novembre 2026
+
+- Su richiesta dell'utente: la pagina Fondi non mostra più il budget mensile generale (card, «Budget»/«Imposta un budget mensile»,
+  `GeneralBudgetDialog` eliminato) e `useRemoteFunds` non ascolta più `settings/budget`. Restano i budget mensili dei singoli fondi.
+- **Dati invariati:** `settings/budget` (Rules, `DataStore`, store locale), funzioni di dominio e campo `general_budget` del backup
+  restano, così archivi e backup esistenti continuano a validarsi, esportarsi e importarsi senza perdite. Nessuna cancellazione
+  automatica; un'eventuale dismissione dei dati richiede una decisione esplicita (nuovo `backupVersion`, Rules, migrazione locale).
