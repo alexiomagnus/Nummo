@@ -5,9 +5,10 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Git.** `main` = `origin/main`. Ultimo commit di codice `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
+- **Git.** `main` = `origin/main`. Ultimo commit di codice `8a99fa6` (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`8a99fa6`** (posizione di «Storico dei pagamenti»), pubblicato su
+  richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200). Prima: **`f9c4d8f`**, pubblicato su richiesta il 16 novembre con
   `npm run deploy:hosting` («Deploy complete!», sito 200). **Rules pubblicate** su richiesta il 16 novembre (`firebase deploy --only
