@@ -81,13 +81,23 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
     }
   };
 
-  const tile = (label: string, value: string, detail?: string, tone?: string) => (
-    <View style={[styles.tile, { backgroundColor: colors.elevation.level1 }]} role="group" aria-label={`${label}: ${value}${detail ? `, ${detail}` : ''}`}>
-      <Text variant="labelLarge" style={muted}>{label}</Text>
-      <Text variant="headlineSmall" style={[styles.number, tone ? { color: tone } : null]}>{value}</Text>
-      {detail ? <Text variant="bodySmall" style={muted}>{detail}</Text> : null}
-    </View>
-  );
+  // The month's spending is the page's key figure: highlighted like the «Totale» card of Spese.
+  const highlight = (label: string, value: string, detail?: string) => {
+    const tone = { color: colors.onPrimaryContainer };
+    return (
+      <View style={[styles.highlight, { backgroundColor: colors.primaryContainer }]} role="group"
+        aria-label={`${label}: ${value}${detail ? `, ${detail}` : ''}`}>
+        <View style={[styles.highlightIcon, { backgroundColor: colors.primary }]}>
+          <SvgIcon shape={iconShapes.wallet} size={26} color={colors.onPrimary} />
+        </View>
+        <View style={styles.highlightText}>
+          <Text variant="titleMedium" style={[tone, styles.strong]}>{label}</Text>
+          <Text variant="headlineMedium" style={[tone, styles.number, styles.strong]}>{value}</Text>
+          {detail ? <Text variant="bodySmall" style={tone}>{detail}</Text> : null}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.root}>
@@ -105,10 +115,8 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       </View>
 
       {/* What was spent in the month (every fund and «Senza fondo»). */}
-      {funds.length > 0 && <View style={styles.tiles}>
-        {tile(forecast ? t("Spese previste") : t("Speso nel mese"), formatAmount(forecast ? overview.forecastSpent : overview.spent),
+      {funds.length > 0 && highlight(forecast ? t("Spese previste") : t("Speso nel mese"), formatAmount(forecast ? overview.forecastSpent : overview.spent),
           !forecast && overview.forecastSpent > 0 ? t("Altri {p0} di rinnovi previsti", { p0: formatAmount(overview.forecastSpent) }) : undefined)}
-      </View>}
       {/* Short visible labels keep the actions on one row from tablet width up; accessible names stay complete. */}
       <View style={[styles.actions, compact && styles.actionsCompact, tablet && styles.actionsTablet]}>
         <Button compact={tablet} mode="contained" disabled={!canWrite} onPress={() => setEditing('new')}
@@ -308,8 +316,10 @@ const styles = StyleSheet.create({
   monthBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
   monthTitle: { alignItems: 'center', minWidth: 160 },
   capitalize: { textTransform: 'capitalize' },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  tile: { flexGrow: 1, flexBasis: 160, minWidth: 0, borderRadius: radius.card, padding: spacing.lg, gap: spacing.xs },
+  highlight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 96, borderRadius: radius.card,
+    paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
+  highlightIcon: { width: 48, height: 48, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
+  highlightText: { flex: 1, minWidth: 0, gap: 2 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   actionsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   actionsTablet: { gap: spacing.xs },

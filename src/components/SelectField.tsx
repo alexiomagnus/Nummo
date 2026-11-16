@@ -23,8 +23,6 @@ type Props<T extends string> = {
 // bottom sheet (long lists, never over the navigation or the form's buttons); from medium width in a menu as wide as
 // the field, below it or above when there is no room. The field is read-only and not focusable itself: the surrounding
 // button owns focus, press and accessibility; the overlay returns focus to it without scrolling.
-// Selected/hover highlight is inset in the list and rounded like the keyboard focus ring (GlobalStyle: 12).
-const itemRadius = 12;
 
 export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
   const { t } = useI18n();
@@ -42,7 +40,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
   const rows = options.map((option) => {
     const selected = option.value === value;
     return (
-      <StateLayerPressable key={option.value} layerColor={colors.onSurface} radius={itemRadius} accessibilityRole="menuitem" style={[styles.item, selected && { backgroundColor: colors.secondaryContainer }]}
+      <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={[styles.item, selected && { backgroundColor: colors.secondaryContainer }]}
         onPress={() => { closeMenu(); onChange(option.value); }} accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}>
         {option.icon && <View style={styles.icon}>{option.icon}</View>}
         <Text variant="bodyLarge" numberOfLines={1} style={[styles.itemLabel, selected && { color: colors.onSecondaryContainer }]}>{option.label}</Text>
@@ -76,7 +74,7 @@ const styles = StyleSheet.create({
   // The shared keyboard focus style colours Paper's own outline without moving the input or its label.
   anchor: { borderRadius: radius.input },
   menu: { borderRadius: radius.card },
-  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.md, marginHorizontal: spacing.xs },
+  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48, paddingHorizontal: spacing.lg },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },
   check: { width: 20, height: 20 },

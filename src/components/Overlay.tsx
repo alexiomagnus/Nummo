@@ -161,7 +161,7 @@ export function AnchoredMenu({ visible, onDismiss, anchor, width, align = 'start
           style={[{ opacity: shown ? 1 : 0, transform: [{ translateY: shown ? 0 : offset }, { scale: shown ? 1 : 0.96 }],
             transformOrigin: below ? 'top' : 'bottom' } as ViewStyle, shown ? menuEnter : menuExit]}>
           <Surface elevation={2} style={[styles.menu, { backgroundColor: colors.elevation.level2, maxHeight: place.maxHeight }, contentStyle]}>
-            <ScrollView style={{ maxHeight: Math.max(0, place.maxHeight - 2 * spacing.xs) }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
+            <ScrollView style={{ maxHeight: Math.max(0, place.maxHeight) }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
           </Surface>
         </View>
       </View>
@@ -349,13 +349,17 @@ const styles = StyleSheet.create({
   // Paper's own overlays have no pointer cursor on the catcher either.
   scrim: { cursor: 'auto' } as ViewStyle,
   menuBox: { position: 'absolute' },
-  menu: { borderRadius: radius.control, paddingVertical: spacing.xs, overflow: 'hidden' },
+  // No inner padding: rows run edge to edge and the rounded menu clips them, so a hover/selected highlight covers the
+  // whole row and takes the menu's own corners on the first and last row.
+  menu: { borderRadius: radius.control, overflow: 'hidden' },
   sheet: {
     position: 'absolute', bottom: 0, alignSelf: 'center', width: '100%', maxWidth: 640,
     borderTopLeftRadius: radius.dialog, borderTopRightRadius: radius.dialog, overflow: 'hidden',
   },
-  sheetHeader: { alignItems: 'center', paddingTop: spacing.lg, paddingBottom: spacing.sm, paddingHorizontal: spacing.xl, gap: spacing.lg },
+  // Same 16 dp inset as the edge-to-edge rows' content, so the title lines up with the icons and labels below.
+  sheetHeader: { alignItems: 'center', paddingTop: spacing.lg, paddingBottom: spacing.sm, paddingHorizontal: spacing.lg, gap: spacing.lg },
   handle: { width: 32, height: 4, borderRadius: 2, opacity: 0.4 },
   sheetTitle: { alignSelf: 'stretch' },
-  sheetList: { paddingHorizontal: spacing.sm, paddingBottom: spacing.sm },
+  // Rows edge to edge, as in the menus: the highlight covers the whole row.
+  sheetList: { paddingBottom: spacing.sm },
 });

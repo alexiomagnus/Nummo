@@ -47,6 +47,26 @@ cronaca delle singole fasi e possono dire cose superate.
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). Hosting e Rules sono pubblicati; i punti 0–1 di
   «Prossime attività» sulla pubblicazione sono superati.
 
+## Menu e fogli: evidenziazione a tutta larghezza — 16 novembre 2026
+
+- Su richiesta (screenshot del filtro Fondo; la prima prova con voci rientrate e arrotondate è stata scartata: «la selezione deve coprire
+  interamente la parte selezionata»): `AnchoredMenu` senza padding verticale, voci a filo dei bordi e ritagliate dal menu arrotondato, quindi
+  l'evidenziazione (hover, selezione) copre tutta la voce e prende gli angoli del menu su prima e ultima. `SelectField` senza rientro né raggio
+  12 sulle voci (padding 16 come `MenuSelect`); `BottomSheet` con voci a tutta larghezza e titolo a 16 dp per allinearsi alle icone. Menu
+  account già a filo, invariato.
+- Verifiche: `npm run check` OK (**453/453**, build demo). Chromium headless, Standard, `nummo-utente-medio.json` (profilo temporaneo
+  cancellato): 1280 px scuro, hover su prima/ultima voce di Fondo, Ordina, menu account e Categoria di Nuova spesa; 390 px chiaro, foglio
+  Categoria con la voce scelta a tutta larghezza; nessun errore JS. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
+
+## Fondi: «Speso nel mese» in evidenza — 16 novembre 2026
+
+- Su richiesta (screenshot): la casella «Speso nel mese» («Spese previste» nei mesi futuri) diventa una scheda in evidenza come il «Totale»
+  di Spese: sfondo `primaryContainer`, icona portafoglio su `primary`, etichetta in semigrassetto, importo `headlineMedium` in semigrassetto,
+  nota dei rinnovi previsti sotto. Tolti gli stili `tiles`/`tile`, non più usati.
+- Verifiche: `npm run check` OK (**453/453**, build demo). Chromium headless, Standard, `nummo-utente-medio.json` unito (profilo temporaneo
+  cancellato): 1280 px scuro e 390 px chiaro, «Speso nel mese 1215,45 €» con «Altri 29,99 € di rinnovi previsti»; nessun errore JS.
+  Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
+
 ## Abbonamenti: posizione di «Storico dei pagamenti» — 16 novembre 2026
 
 - Su richiesta (screenshot): su smartphone il pulsante tonale sta a destra, sotto Annulla/Pausa/Modifica (`alignSelf: 'flex-end'`);
@@ -97,7 +117,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - «Chiudi» dei dialoghi Prodotti acquistati e dettagli di Analisi: etichetta 16/600, larghezza minima 96.
 - Verifiche: `npm run check` OK (**449/449**, build demo). Chromium 1280 px con `nummo-utente-medio.json` (profilo temporaneo cancellato): «ottobre» 29 spese,
   «2026» 187, «spesa ottobre» 9, «nov» 11; menu Categoria con icone e «Medio · Ristoranti e bar» intero (170/170 px); dialogo Prodotti con
-  «Chiudi» più grande; nessun errore JS. Nessun commit.
+  «Chiudi» più grande; nessun errore JS. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## Liste: pulsante «Nuova lista» più grande anche su desktop — 16 novembre 2026
 
@@ -314,7 +334,7 @@ cronaca delle singole fasi e possono dire cose superate.
   (acceso resta «In Nuova spesa compare il campo Template.»). Con i template accesi **ma nessuno salvato** (il campo non può comparire),
   Nuova spesa mostra sotto Fondo «Il campo Template compare quando crei un template nella pagina Templates.»; con almeno un template
   c'è il campo stesso (questo reintroduce un avviso tolto il 15 novembre per i template vuoti: lettura della richiesta «se attivo avvisa
-  l'utente sotto Fondo»). `npm run check` OK; Chromium 1280 px osservato, nessun errore JS. Nessun commit.
+  l'utente sotto Fondo»). `npm run check` OK; Chromium 1280 px osservato, nessun errore JS. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 - Poi, su richiesta: il campo Template mostra «Nessun template» con la stessa icona tratteggiata di «Nessun fondo» (`NoFundAvatar`), sia nel
   campo chiuso (valore predefinito) sia nell'elenco. `npm run check` OK; Chromium 1280 px: campo chiuso e aperto con un template di prova
   osservati (profilo temporaneo), nessun errore JS.
@@ -328,7 +348,7 @@ cronaca delle singole fasi e possono dire cose superate.
   «Gli orari delle notifiche seguono il fuso del dispositivo: …»; con «Scegli un fuso» resta il menu «Fuso».
 - Impostazioni su desktop: colonna sinistra **Lingua, Carattere, Formato dell'ora, Fuso orario**; colonna destra **Tema, Colore**
   (su smartphone stesso ordine in una colonna). `npm run check` OK (**451/451**); Chromium 1280 px osservato (controllo a 390 px:
-  nessun overflow), il filtro Fondo c'è ancora in Spese, nessun errore JS. Nessun commit.
+  nessun overflow), il filtro Fondo c'è ancora in Spese, nessun errore JS. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## Fuso orario a scelta per le notifiche — 15 novembre 2026
 
@@ -366,7 +386,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Su richiesta: sotto «Attiva riepilogo spese» la riga di supporto «Un riepilogo delle tue spese del periodo appena concluso.»
   (traduzione EN aggiunta); nella scheda «Orario delle notifiche» spazio di 16 dp (prima 8) tra la domanda, i pulsanti a
   segmenti e la nota «Arrivano alle …» (`hourBlock`). `npm run check` OK (445/445); Chromium 1280 e 390 px osservato, nessun
-  overflow né errore JS. Nessun commit.
+  overflow né errore JS. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 - Poi, su richiesta: nella scheda «Riepilogo spese» tolta la scritta visibile «Frequenza del riepilogo» e i pulsanti a segmenti
   (Ogni settimana / 14 giorni / mese) occupano tutta la larghezza, sotto l'interruttore (`frequency(…, showLabel = false)`;
   il nome resta accessibile). «Frequenza del promemoria» del backup invariata. `npm run check` OK; Chromium 1280 px osservato.
@@ -428,7 +448,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Verifiche: `npm run check` OK (typecheck, **445/445**, build demo). Chromium headless (Standard, backup `nummo-utente-medio.json`
   importato in un profilo temporaneo, server di sviluppo 8081) a 1280, 768 e 390 px: Spese e Analisi osservate, nessun overflow
   orizzontale, nessun errore JS. **Non provati:** touch reale, Avanzata, 320 px e landscape.
-  Nessun commit.
+  Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## Notifiche: immagine grande trasparente (cerchio grigio con «N») — 15 novembre 2026
 
@@ -464,7 +484,7 @@ cronaca delle singole fasi e possono dire cose superate.
   riga, descrizione, categoria, poi Fondo; stessa versione compatta su desktop), senza la ricorrenza; solo l'importo può
   restare vuoto (prop `amountOptional`, cambia solo il nome accessibile). Tolta dalla spiegazione la frase «Poi controlli e
   salvi.»; rimosse le traduzioni non più usate. `npm run check` OK (445/445); Chromium 1280 px osservato, nessun errore JS.
-  Nessun commit.
+  Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## Icona dell'app più stondata, carrello semplificato — 15 novembre 2026
 
@@ -581,7 +601,7 @@ cronaca delle singole fasi e possono dire cose superate.
   budget omesso (nessuna modifica), usato dai test.
 - Verifiche: `npm run check` OK (**430/430**, build demo). Chromium 360 px touch con `showGeneralBudget: false` salvato
   (Standard, profilo temporaneo poi cancellato): «Imposta un budget mensile» presente in Fondi, interruttore «Budget
-  mensile» in Nuovo fondo, in Impostazioni solo andamento, liste e fondi archiviati; nessun errore JS. Nessun commit.
+  mensile» in Nuovo fondo, in Impostazioni solo andamento, liste e fondi archiviati; nessun errore JS. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## Impostazioni: «Mostra fondi archiviati»; tolta la nota del saldo iniziale — 15 novembre 2026
 
@@ -593,7 +613,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - Verifiche: `npm run check` OK (**430/430**, nuovo test in `preferences.test.ts`, caso in `i18n.test.ts`, build demo).
   Chromium 360 px touch (Standard, profilo temporaneo poi cancellato): nota assente in Modifica fondo; fondo archiviato →
   «Fondi archiviati (1)»; interruttore spento → voce assente e `showArchivedFunds: false` salvato; riacceso → voce di nuovo
-  presente; nessun errore JS. Nessun commit.
+  presente; nessun errore JS. Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## Modulo del fondo: niente «Tieni traccia del saldo», saldo iniziale facoltativo — 15 novembre 2026
 
@@ -700,7 +720,7 @@ cronaca delle singole fasi e possono dire cose superate.
   (tastiera). Riprodotto in Chromium (tocco, ritocco, blur/focus) con il codice precedente; dopo la correzione il pannello
   resta sull'invito, mentre Tab mostra ancora l'anteprima. Nessun errore JS.
 - Verifiche: `npm run check` OK (typecheck, **423/423**, build demo); `git diff --check` OK. Telefono reale non provato.
-  Nessun commit.
+  Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 - Poi, su richiesta: Notifiche → «Frequenza del promemoria/riepilogo» su pagina stretta, spazio tra etichetta e pulsanti
   a segmenti da 8 a 12 px (`rowGap` di `styles.frequency`); desktop invariato. `npm run check` OK; non osservato nel browser.
 
@@ -798,7 +818,7 @@ cronaca delle singole fasi e possono dire cose superate.
   (Standard): 1280 px Tema/Carattere/Lingua a x 280, Colore a x 759; 412 px ordine Tema, Carattere, Lingua, Colore;
   «Fatto» 125×52; quattro interruttori in Funzionalità compreso «Mostra liste archiviate»; nessun errore JS. Non provati
   nel browser: Liste con interruttore spento, budget nascosti in Fondi e sotto il campo Fondo, dettagli prodotti.
-  Nessun commit.
+  Committato, inviato e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## Categorie preferite, barre di scorrimento dei dialoghi, Impostazioni e Analisi — 15 novembre 2026
 
