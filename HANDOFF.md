@@ -15,8 +15,8 @@ cronaca delle singole fasi e possono dire cose superate.
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
 - **Rilascio del 17 novembre (notte, ottava parte): `23f8a55`** (fotocamera nella pagina anche su smartphone, rimossi i due tentativi
   sul `theme-color`), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting` («Deploy complete!», sito 200, bundle
-  online identico a `dist/`). Rules e Worker non toccati. `npm run check` OK (**490/490**). Da verificare sul telefono: permesso, fotocamera
-  posteriore, qualità per l'OCR, barra di stato; anche «Carica foto» (galleria).
+  online identico a `dist/`). Rules e Worker non toccati. `npm run check` OK (**490/490**). **Verificato dall'utente sul telefono
+  (17 novembre):** con la fotocamera nella pagina la barra di stato non diventa più nera. Non riferiti: «Carica foto» (galleria), qualità per l'OCR.
 - **Rilascio del 17 novembre (notte, settima parte): `f3a72f5`** (precedente; non bastava) (seconda correzione della barra di stato dopo la fotocamera: il valore
   del `theme-color` lasciato all'uscita non si riusa più), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting`
   («Deploy complete!», sito 200, nuovo codice nel bundle online). Rules e Worker non toccati. `npm run check` OK (**492/492**). Da verificare
