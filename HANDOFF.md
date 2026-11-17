@@ -103,6 +103,22 @@ Su richiesta (screenshot), sei punti:
 11. **«OK» del calendario più facile da toccare** (su richiesta): l'unico pulsante «OK» dell'app è in `DatePickerDialog` (`DateField.tsx`),
     usato da ogni campo data; era largo 37 dp (sotto i 48 di un bersaglio touch), ora `minWidth: 64` (minimo Material 3 dei pulsanti di
     testo). Chromium 390 e 1280 px: OK 64×48, Annulla 65×48; nessun errore JS.
+12. **Categoria e Fondo sulla stessa riga anche su smartphone** (su richiesta, dopo `d66d3db`; NON committato, NON pubblicato).
+    A metà riga restavano circa 75 px per il valore e «Nessuna categoria» / «Nessun fondo» venivano tagliati di netto: su smartphone i
+    due campi sono `SelectField` `narrow` (senza freccia, scelta vuota «Nessuna» / «Nessuno» tramite `shortLabel`; elenco e lettori di
+    schermo con il nome completo) e ogni `SelectField` termina con «…» un valore troppo lungo (`textOverflow`). Chromium 440/390/360 px
+    con `nummo-utente-medio.json`: campi affiancati, vuoti senza taglio; a 360 px nomi lunghi come «Medio · Ristoranti e bar» →
+    «Medio · Ris…» (limite accettato del layout a metà riga); 1280 px invariato. `npm test` **489/489**.
+    Poi, su richiesta: nei campi `narrow` una **freccia piccola** (16 dp, `onSurfaceVariant`, sovrapposta a 8 dp dal bordo e centrata sul
+    riquadro) indica che il menu si apre; l'input ha `marginRight: 12` perché Paper riscrive il padding in un'unica proprietà inline e un
+    `paddingRight`/`paddingEnd` nostro veniva ignorato. Chromium 390/360 px: freccia centrata, «…» prima della freccia.
+13. **Icone ridisegnate** (su richiesta, screenshot): «piatto di pasta» solo nel set **colorato** (ciotola con piede e bordo, pasta con
+    un'onda scura, due fili di vapore sottili al posto dei tre tratti spessi che si fondevano); «internet» solo nel set **pixel** (un colore,
+    due archi pieni e il punto separati da righe vuote, punte che scendono ai lati; prima base e tinta mescolate). Minimale e altri set
+    invariati, nessun cambio di ID, dati o Rules. Anteprima con la tavolozza vera (chiaro/scuro, 24/48/96 px) osservata; test delle icone
+    (contrasti, corrispondenze) **489/489**.
+14. **Tolto «Budget residuo del mese: …»** sotto il Fondo (su richiesta): in `FundField` resta solo «Budget del mese superato di …» in
+    rosso quando il budget è già superato. Vale ovunque si usa `FundField` (Nuova spesa e conferma di registrazione di una lista).
 4. **Chiave API salvata:** prima era solo in memoria per scelta (AGENTS). Ora `nummo.receiptAi.keys.v1`, una per destinazione,
    validata alla lettura (`parseAiKeys`/`withAiKey` in `domain/receiptAi.ts`), cancellata da «Dimentica la chiave». Mai in Firestore,
    backup, log o URL. Decisione e rischio in `docs/architecture.md` («Chiave API salvata e modello a sola scelta»).

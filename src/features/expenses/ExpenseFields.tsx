@@ -45,7 +45,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
   // «Nessuna categoria» (the dashed icon of «Nessun fondo») is what an empty choice shows: no preferred
   // category means no category picked yet, never the first one of the list. Saving still asks for a category.
   const options = useMemo(() => [
-    { value: '', label: t("Nessuna categoria"), icon: <NoFundAvatar size={24} /> },
+    { value: '', label: t("Nessuna categoria"), shortLabel: t("Nessuna"), icon: <NoFundAvatar size={24} /> },
     ...categories.map((category) => ({
       value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined,
     })),
@@ -95,7 +95,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
           </View>
         ) : (
           <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
-            disabled={disabled} error={errors.categoryId} />
+            disabled={disabled} error={errors.categoryId} narrow={compact && Boolean(besideCategory)} />
         )}
         </View>
         {besideCategory ? <View style={styles.half}>{besideCategory}</View> : null}

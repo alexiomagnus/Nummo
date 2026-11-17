@@ -218,18 +218,18 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '....ibbi....',
     '.....ii.....',
   ] },
-  // Two thick arcs and the dot: three thin arcs merge at 24 px.
+  // Redrawn on request (17 November, «troppo confusionaria»): one colour, two solid arcs and the dot, each separated by an
+  // empty row, so the Wi-Fi fan reads at a glance even at 24 px; the old mix of base and tint cells blurred together.
   wifi: { hue: 'blue', rows: [
+    '...bbbbbb...',
+    '.bbbbbbbbbb.',
+    'bbbb....bbbb',
+    'bb........bb',
+    '....bbbb....',
     '..bbbbbbbb..',
-    '.bbttttttbb.',
-    'bbt......tbb',
-    'bt..bbbb..tb',
-    '...bbttbb...',
-    '..bbt..tbb..',
-    '..bt....tb..',
+    '.bbb....bbb.',
+    '............',
     '.....bb.....',
-    '....bttb....',
-    '....bttb....',
     '.....bb.....',
   ] },
   // Transport

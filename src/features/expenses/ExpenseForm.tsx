@@ -109,10 +109,10 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // spaced like the fund field and the recurrence switch (this gap plus the switch row's own inset).
   const blockGap = desktop ? spacing.lg : spacing.xl;
   const formGap = desktop ? spacing.md : spacing.lg;
-  // From medium up the fund field sits to the right of Categoria (user's request, 17 November); on phones it stays below.
+  // The fund field sits to the right of Categoria, in halves, on every size (user's requests, 17 November).
   const fundField = fundChoices.length > 0 ? <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
-    onChange={(fundId) => update({ fundId })} /> : null;
-  const fundBeside = size !== 'compact';
+    narrow={size === 'compact'} onChange={(fundId) => update({ fundId })} /> : null;
+  const fundBeside = true;
   const repeat = (
     <View style={{ gap: blockGap }}>
       {!fundBeside && fundField}
