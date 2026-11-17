@@ -1098,8 +1098,8 @@ Su richiesta. In Nuova spesa «Scansiona scontrino» apre un dialogo: foto o fil
 campi base del modulo vengono compilati. Decisioni:
 
 - **Solo proposta.** Nessuna scrittura parte dalla scansione: il salvataggio resta su «Salva» con `validateDraft`. Nessun campo
-  nuovo nel modello dati, nessun metodo `DataStore`, Rules e backup invariati. Prodotti e sconti letti si mostrano nella revisione
-  e non si salvano.
+  nuovo nel modello dati, nessun metodo `DataStore`, Rules e backup invariati. Prodotti e sconti letti si mostravano nella revisione
+  senza salvarli (superato il 17 novembre: non si mostrano più, su richiesta; il dominio li legge ancora).
 - **OCR standard locale.** Tesseract.js 7 (motore LSTM, dati `ita` + `eng` `best_int`) gira in un worker del browser. Libreria,
   core WebAssembly e dati sono serviti dall'app da `/ocr/` (copiati da `node_modules` con `scripts/sync-ocr.ts`, non versionati,
   circa 16 MB su disco; il browser ne scarica circa 8 MB alla prima scansione) e non da un CDN: nessun codice di terze parti

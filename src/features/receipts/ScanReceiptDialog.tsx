@@ -221,14 +221,10 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {aiReady && <View style={styles.block}>
         <ChoiceChips label={t("Tipo di scansione")} value={method} onChange={(value) => { if (value) setMethod(value); }}
           options={[{ value: 'ocr', label: t("Standard") }, { value: 'ai', label: t("Avanzata con AI") }]} />
-        {/* No note for the AI scan (removed on request, 17 November): consent was already asked for this destination. */}
-        {method === 'ocr' && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-          {t("Lo scontrino viene letto su questo dispositivo: la foto non viene inviata a nessuno.")}</Text>}
+        {/* No note under the scan type (both removed on request, 17 November). */}
         {method === 'ai' && <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Chiave API")} value={ai.apiKey} onChangeText={ai.setApiKey}
           secureTextEntry autoComplete="off" autoCapitalize="none" autoCorrect={false} spellCheck={false} />}
       </View>}
-      {!aiReady && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-        {t("Lo scontrino viene letto su questo dispositivo: la foto non viene inviata a nessuno.")}</Text>}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {failed === 'ai' && <View style={styles.row}><Button mode="contained-tonal" onPress={() => void run('ocr')}>{t("Usa la scansione standard")}</Button></View>}
       {sourceButtons('outlined')}
@@ -275,13 +271,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       <ExpenseFields dense values={values} errors={{}} categories={categories}
         merchant={{ value: values.merchant, merchants, onChange: (merchant) => setValues((current) => ({ ...current, merchant })) }}
         onChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))} onBlur={() => {}} />
-      {(proposal!.items.length > 0 || proposal!.discountMinor !== null) && <View style={styles.items}>
-        {proposal!.items.length > 0 && <Text variant="labelLarge">{proposal!.items.length === 1 ? t("1 prodotto letto") : t("{p0} prodotti letti", { p0: proposal!.items.length })}</Text>}
-        {proposal!.items.length > 0 && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{proposal!.items.join(' · ')}</Text>}
-        {proposal!.discountMinor !== null && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-          {t("Sconti sullo scontrino: {p0}", { p0: amountText(proposal!.discountMinor, locale === 'it-IT' ? ',' : '.') + ' €' })}</Text>}
-        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{t("Prodotti e sconti servono solo per il controllo: non vengono salvati.")}</Text>
-      </View>}
+      {/* Products and discounts read are not shown (removed on request, 17 November): only the expense fields are reviewed. */}
       {conflicts.length > 0 && <SwitchRow label={t("Sostituisci i dati già inseriti")} value={replace} onChange={setReplace}
         supporting={t("Hai già compilato: {p0}. Senza questa scelta restano come sono.", { p0: conflicts.map((field) => t(fieldLabels[field])).join(', ') })} />}
     </View>;
@@ -323,5 +313,4 @@ const styles = StyleSheet.create({
   main: { flex: 3, minWidth: 0 },
   notice: { flexDirection: 'row', gap: spacing.md, padding: spacing.md, borderRadius: radius.card },
   noticeText: { flex: 1, minWidth: 0, gap: spacing.xs },
-  items: { gap: spacing.xs },
 });

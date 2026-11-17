@@ -79,6 +79,17 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `c837817`, Rules a `f5411fb`.
 
+## Scansione: tolte la nota sulla lettura locale e la sezione dei prodotti letti — 17 novembre 2026 (notte)
+
+- Su richiesta (screenshot di «Controlla i dati letti»): in `ScanReceiptDialog` tolta la nota «Lo scontrino viene letto su questo
+  dispositivo: la foto non viene inviata a nessuno.» (sia senza AI sia con «Standard» scelto) e l'intera sezione della revisione con
+  «n prodotti letti», l'elenco dei prodotti, «Sconti sullo scontrino» e «Prodotti e sconti servono solo per il controllo…». Il dominio
+  (`items`, `discountMinor`) li legge ancora, senza mostrarli né salvarli; traduzioni rimosse da `en.ts`. Guida invariata (la lettura
+  sul dispositivo resta vera). **Non committato.**
+- **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo). Chromium headless su `dist-demo`, Standard, 1280 px scuro,
+  scontrino sintetico disegnato su canvas (profilo temporaneo cancellato): nessuna nota prima della scansione; revisione con 5,00 €,
+  12 nov 2026, «Supermercato Prova Srl», Alimentari e nessuna sezione dei prodotti; nessun errore JS. Non provati: smartphone, AI.
+
 ## Modulo del fondo leggibile, Fondo sotto la Categoria su smartphone — 17 novembre 2026 (notte)
 
 Su richiesta (screenshot di «Modifica fondo» su desktop e smartphone e di Nuova spesa a 412 px). Committato in `c837817`, inviato e pubblicato su Hosting.
