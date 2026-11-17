@@ -219,23 +219,25 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '.....ii.....',
   ] },
   // High definition (redrawn several times on request, 17 November): the classic Wi-Fi sign on 24 cells, three parts
-  // only: two concentric arcs of a fan, two cells thick with clean steps, and a square dot. A third arc made it read as
-  // stripes, and without the dot it was no longer Wi-Fi. One colour, symmetric.
+  // only: two concentric arcs of a fan, three cells thick, whose ends bend towards the dot, and a round dot just below
+  // them. Flatter, wider arcs with a far square dot read as stripes; a third arc too. One colour, symmetric.
   wifi: { hue: 'blue', grid: detailGrid, rows: [
-    '.......bbbbbbbbbb.......',
-    '....bbbbbbbbbbbbbbbb....',
+    '........bbbbbbbb........',
+    '.....bbbbbbbbbbbbbb.....',
+    '...bbbbbbbbbbbbbbbbbb...',
     '..bbbbbb........bbbbbb..',
-    '.bbbb..............bbbb.',
-    'bbb..................bbb',
-    'bb......bbbbbbbb......bb',
+    '.bbbbb............bbbbb.',
+    'bbbb................bbbb',
+    '.bb..................bb.',
+    '........bbbbbbbb........',
+    '......bbbbbbbbbbbb......',
     '.....bbbbbbbbbbbbbb.....',
     '....bbbb........bbbb....',
-    '...bbb............bbb...',
-    '...bb..............bb...',
+    '.....bb..........bb.....',
     '........................',
     '..........bbbb..........',
-    '..........bbbb..........',
-    '..........bbbb..........',
+    '.........bbbbbb.........',
+    '.........bbbbbb.........',
     '..........bbbb..........',
   ] },
   // Transport

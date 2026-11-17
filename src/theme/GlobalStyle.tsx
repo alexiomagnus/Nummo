@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { useTheme } from 'react-native-paper';
-import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
+import { applyDocumentTheme, bootThemeKey, makeBootTheme, nudgedColor, observePageReturn, refreshThemeColor, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
 import { observeScrolling, observeViewportHeight, scrollingAttribute, stickyBottomProperty } from './viewport';
 
@@ -96,5 +96,28 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
   useLayoutEffect(() => {
     applyDocumentTheme(document, colors.background, dark);
   }, [colors.background, dark]);
+  // Back from the system camera (or any other app) the status bar can stay black: repaint it with the page colour,
+  // at once and once more after the activity has finished resuming.
+  useEffect(() => {
+    // focus, visibilitychange and pageshow often arrive together: one repaint per return.
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const restore: ReturnType<typeof setTimeout>[] = [];
+    const refresh = () => { refreshThemeColor(document, colors.background, (run) => { restore.push(setTimeout(run, 50)); }); };
+    const stop = observePageReturn(window, () => {
+      clearTimeout(pending);
+      clearTimeout(retry);
+      pending = setTimeout(refresh, 0);
+      retry = setTimeout(refresh, 400);
+    });
+    return () => {
+      stop();
+      clearTimeout(pending);
+      clearTimeout(retry);
+      restore.forEach(clearTimeout);
+      const meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+      if (meta?.content === nudgedColor(colors.background)) meta.content = colors.background;
+    };
+  }, [colors.background]);
   return null;
 }

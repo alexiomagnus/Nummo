@@ -20,6 +20,38 @@ export function applyDocumentTheme(doc: Document, background: string, dark: bool
   meta.content = background;
 }
 
+// The same colour one step away in its blue channel: invisible, but a different value for the browser.
+export function nudgedColor(hex: string): string {
+  const blue = Number.parseInt(hex.slice(5, 7), 16);
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex) || Number.isNaN(blue)) return hex;
+  return `${hex.slice(0, 5)}${(blue === 0 ? 1 : blue - 1).toString(16).padStart(2, '0').toUpperCase()}`;
+}
+
+// Chrome on Android can lose the status bar colour when the installed app comes back from another activity (the
+// system camera opened by «Scansiona scontrino»): the bar turns black while the page still holds the same
+// theme-color, so writing that value again sends nothing. A one-step different value, then the real one in a later
+// task, are two real changes: the bar takes the page colour again. Without the bug the bar never visibly changes.
+export function refreshThemeColor(doc: Document, background: string, later: (run: () => void) => void): void {
+  const meta = doc.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!meta || meta.content !== background) return;
+  meta.content = nudgedColor(background);
+  later(() => { if (meta.content === nudgedColor(background)) meta.content = background; });
+}
+
+// Calls `run` when the page is shown again: back from another app or activity (visibility, focus) or from the cache.
+export function observePageReturn(target: Window, run: () => void): () => void {
+  const doc = target.document;
+  const visible = () => { if (doc.visibilityState === 'visible') run(); };
+  doc.addEventListener('visibilitychange', visible);
+  target.addEventListener('focus', run);
+  target.addEventListener('pageshow', run);
+  return () => {
+    doc.removeEventListener('visibilitychange', visible);
+    target.removeEventListener('focus', run);
+    target.removeEventListener('pageshow', run);
+  };
+}
+
 export function makeBootTheme(preferences: { theme: BootTheme['mode']; accent: Accent; colorMode: ColorMode }): BootTheme {
   return {
     v: 1, mode: preferences.theme,

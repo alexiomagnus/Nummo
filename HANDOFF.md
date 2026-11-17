@@ -93,6 +93,26 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `6aa7683`, Rules a `f5411fb`.
 
+## Icona «internet» pixel, quarto disegno — 17 novembre 2026 (notte)
+
+- Su richiesta (screenshot: l'icona sembrava tre strisce): solo nel set **pixel**, sempre `grid: 24`, un colore, simmetrica. Archi a
+  ventaglio di circa 90°, spessi **3** celle, con le estremità che piegano verso il punto; punto **arrotondato** 6×4 più vicino agli archi
+  (prima archi da 2 quasi orizzontali e punto quadrato lontano). Scelto tra varianti generate e disegnate a mano, anteprima a 24/48/96 px
+  su fondo scuro e chiaro (colore d'esempio, non la tavolozza vera). Minimale, colorato, ID, dati e Rules invariati.
+- **Verifiche:** `npm run check` OK (**492/492**, build demo). Non osservata dentro l'app né sul telefono. Non committato.
+
+## Barra di stato nera dopo la fotocamera — 17 novembre 2026 (notte)
+
+- Su richiesta (screenshot dal telefono, app installata, tema scuro): dopo aver aperto e chiuso la fotocamera di sistema da
+  «Scansiona scontrino» la barra di stato in alto restava **nera** invece del colore della pagina. Causa probabile (non riprodotta su
+  dispositivo): al ritorno dall'attività della fotocamera Chrome Android perde il colore della barra, mentre il meta `theme-color` della
+  pagina resta uguale, quindi nessun nuovo valore arriva al browser. Correzione: `refreshThemeColor` in `theme/bootTheme.ts` scrive un
+  colore a un passo di distanza (`nudgedColor`, canale blu −1, invisibile) e dopo 50 ms quello vero: due cambi reali che ridipingono la
+  barra. `GlobalStyle` lo esegue al ritorno della pagina (`observePageReturn`: `visibilitychange` visibile, `focus`, `pageshow`), subito e
+  di nuovo dopo 400 ms; un tema cambiato nel frattempo non viene sovrascritto. Vale per ogni ritorno da un'altra app, non solo la fotocamera.
+- **Verifiche:** `npm run check` OK (typecheck, **492/492**, build demo; due test nuovi in `tests/startup.test.ts`). **Da verificare sul
+  telefono** dopo la pubblicazione (il difetto non si riproduce in Chromium desktop). Non committato.
+
 ## Scansione: nessun messaggio dopo «Usa questi dati» — 17 novembre 2026 (notte)
 
 - Su richiesta: quando la revisione dello scontrino compila i campi di Nuova spesa non compare più lo snackbar «Dati dello scontrino
