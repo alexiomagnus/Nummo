@@ -483,7 +483,6 @@ export const english: Readonly<Record<string, string>> = {
   "{p0} (archiviato)": "{p0} (archived)",
   "Nessun fondo": "No fund",
   "Fondo": "Fund",
-  "Budget del mese superato di {p0}": "Monthly budget exceeded by {p0}",
   "La spesa non inciderà sul saldo di nessun fondo.": "The expense will not affect the balance of any fund.",
   "Spese previste": "Expected spending",
   "Speso nel mese": "Spent this month",

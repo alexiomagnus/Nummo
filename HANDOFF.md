@@ -123,6 +123,10 @@ Su richiesta (screenshot), sei punti:
     (contrasti, corrispondenze) **489/489**.
 14. **Tolto «Budget residuo del mese: …»** sotto il Fondo (su richiesta): in `FundField` resta solo «Budget del mese superato di …» in
     rosso quando il budget è già superato. Vale ovunque si usa `FundField` (Nuova spesa e conferma di registrazione di una lista).
+    Poi, su richiesta, tolto anche «Budget del mese superato di …»: sotto il Fondo non c'è più nessuna riga (traduzioni rimosse).
+15. **Icona «internet» pixel, secondo rifacimento** (su richiesta): sulla griglia 12 sembrava ancora a gradini; ora è ad **alta
+    definizione** (`grid: 24`, come la moneta): due archi concentrici di un ventaglio di 90°, spessi 3 celle, e il punto, un solo colore,
+    simmetrica. Test aggiornato (alta definizione per `coin` e `wifi`, simmetria, un colore). Anteprima chiaro/scuro 24/48/96 px osservata.
 4. **Chiave API salvata:** prima era solo in memoria per scelta (AGENTS). Ora `nummo.receiptAi.keys.v1`, una per destinazione,
    validata alla lettura (`parseAiKeys`/`withAiKey` in `domain/receiptAi.ts`), cancellata da «Dimentica la chiave». Mai in Firestore,
    backup, log o URL. Decisione e rischio in `docs/architecture.md` («Chiave API salvata e modello a sola scelta»).

@@ -218,19 +218,26 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '....ibbi....',
     '.....ii.....',
   ] },
-  // Redrawn on request (17 November, «troppo confusionaria»): one colour, two solid arcs and the dot, each separated by an
-  // empty row, so the Wi-Fi fan reads at a glance even at 24 px; the old mix of base and tint cells blurred together.
-  wifi: { hue: 'blue', rows: [
-    '...bbbbbb...',
-    '.bbbbbbbbbb.',
-    'bbbb....bbbb',
-    'bb........bb',
-    '....bbbb....',
-    '..bbbbbbbb..',
-    '.bbb....bbb.',
-    '............',
-    '.....bb.....',
-    '.....bb.....',
+  // High definition (redrawn twice on request, 17 November: the 12-cell versions read as blocky steps, not as Wi-Fi):
+  // on 24 cells the two arcs are true concentric curves of a 90° fan, three cells thick, with the dot below; one colour
+  // and empty space between the parts, so it stays clean and recognisable from afar.
+  wifi: { hue: 'blue', grid: detailGrid, rows: [
+    '........bbbbbbbb........',
+    '.....bbbbbbbbbbbbbb.....',
+    '...bbbbbbbbbbbbbbbbbb...',
+    '..bbbbbb........bbbbbb..',
+    '.bbbbb............bbbbb.',
+    '.bbb................bbb.',
+    '........bbbbbbbb........',
+    '......bbbbbbbbbbbb......',
+    '.....bbbbbbbbbbbbbb.....',
+    '.....bbbb......bbbb.....',
+    '........................',
+    '........................',
+    '..........bbbb..........',
+    '.........bbbbbb.........',
+    '.........bbbbbb.........',
+    '..........bbbb..........',
   ] },
   // Transport
   train: { hue: 'teal', rows: [

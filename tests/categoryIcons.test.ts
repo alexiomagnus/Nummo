@@ -168,8 +168,12 @@ test('divano ritirato: non più selezionabile, ma ancora valido e disegnato per 
   assert.equal(selectableCategoryIcons.length, categoryIcons.length - retiredCategoryIcons.length);
 });
 
-test('stile pixel: alta definizione solo dove serve (moneta), a celle intere sul 24×24 e con il € bianco al centro', () => {
-  assert.deepEqual(Object.entries(pixelSprites).filter(([, sprite]) => sprite.grid).map(([name]) => name), ['coin']);
+test('stile pixel: alta definizione solo dove serve (moneta, internet), a celle intere sul 24×24 e con il € bianco al centro', () => {
+  // internet dal 17 novembre: su 12 celle gli archi del Wi-Fi sembravano gradini (due rifacimenti richiesti).
+  assert.deepEqual(Object.entries(pixelSprites).filter(([, sprite]) => sprite.grid).map(([name]) => name).sort(), ['coin', 'wifi']);
+  const wifi = pixelSprites.wifi.rows;
+  assert.ok(wifi.every((row) => row.length === detailGrid && row === [...row].reverse().join('')), 'internet: simmetrico sul 24');
+  assert.ok(wifi.join('').replace(/[.b]/g, '') === '', 'internet: un solo colore');
   assert.equal(spriteMarkup(['b'], detailGrid), '<g transform="scale(1)" stroke="none" shape-rendering="crispEdges"><path fill="{b}" d="M11 11h1v1h-1z"/></g>');
   const rows = pixelSprites.coin.rows;
   assert.equal(rows.length, detailGrid);
