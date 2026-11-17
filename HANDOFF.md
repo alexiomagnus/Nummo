@@ -13,7 +13,12 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
   inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
-- **Rilascio del 17 novembre (notte, terza parte): `dda68cb`** (divisori in tutti i dialoghi scorrevoli, niente zoom con due dita,
+- **Rilascio del 17 novembre (notte, quarta parte): `416f0db`** (cache Firestore su disco attiva e cancellata a «Esci», messaggi da 3 s,
+  barra di scorrimento dentro il pannello desktop, Wi-Fi pixel con due archi e punto), inviato a `origin/main` e pubblicato su richiesta
+  con `npm run deploy:hosting` («Deploy complete!», sito 200; bundle online identico a `dist/`, con `persistentCache` vero). Rules e Worker
+  non toccati. `npm run check` OK (**490/490**), `test:emulator` **22/22**. Da provare in produzione: accesso, ricarica, «Esci» (la pagina
+  si ricarica sulla schermata di accesso) e nuovo accesso.
+- **Rilascio del 17 novembre (notte, terza parte): `dda68cb`** (precedente) (divisori in tutti i dialoghi scorrevoli, niente zoom con due dita,
   Esercente più vicino alla Descrizione), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting` («Deploy
   complete!», sito 200, `user-scalable=no` nella pagina pubblicata). Rules e Worker non toccati. `npm run check` OK (**490/490**).
 - **Rilascio del 17 novembre (notte, seconda parte): `bd61713`** (precedente) (scansione senza la nota sulla lettura locale e senza la sezione dei
@@ -34,14 +39,14 @@ cronaca delle singole fasi e possono dire cose superate.
   Categoria e Fondo su una riga da medium, pulsanti di scansione su una riga, chiave API salvata, modello a sola scelta con elenco ridotto,
   testi tolti, «OK» del calendario più largo), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting`
   («Deploy complete!», sito 200). Rules e Worker non toccati. `npm run check` OK (**489/489**). Non provato su iPhone reale né con Gemini reale.
-- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `dda68cb`
-  (divisori nei dialoghi, niente pinch zoom, Esercente), prima `bd61713` (scansione senza nota e prodotti letti), prima `c837817` (modulo del fondo, Fondo sotto la Categoria su smartphone, cache «Non attiva»), prima `e4fb9f8` (Wi-Fi pixel HD, niente budget sotto il Fondo), prima `1d21658` (Categoria/Fondo su smartphone, icone), prima `d66d3db` (ritocchi del 17 novembre), prima `24ae16f` (solo HANDOFF); prima `f5411fb`
+- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `416f0db`
+  (cache su disco cancellata all'uscita, messaggi da 3 s, barra del pannello, Wi-Fi pixel), prima `dda68cb` (divisori nei dialoghi, niente pinch zoom, Esercente), prima `bd61713` (scansione senza nota e prodotti letti), prima `c837817` (modulo del fondo, Fondo sotto la Categoria su smartphone, cache «Non attiva»), prima `e4fb9f8` (Wi-Fi pixel HD, niente budget sotto il Fondo), prima `1d21658` (Categoria/Fondo su smartphone, icone), prima `d66d3db` (ritocchi del 17 novembre), prima `24ae16f` (solo HANDOFF); prima `f5411fb`
   (esercenti, modelli AI, esercente nella scansione), poi `664c330` (solo HANDOFF); prima `26b95e9` (scansione dello scontrino),
   poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
   (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`dda68cb`** (vedi il punto in apertura).
-  Prima: **`bd61713`**. Prima: **`c837817`**. Prima: **`e4fb9f8`**. Prima: **`1d21658`**. Prima: **`d66d3db`**. Prima: **`f5411fb`** (Hosting e Rules). Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`416f0db`** (vedi il punto in apertura).
+  Prima: **`dda68cb`**. Prima: **`bd61713`**. Prima: **`c837817`**. Prima: **`e4fb9f8`**. Prima: **`1d21658`**. Prima: **`d66d3db`**. Prima: **`f5411fb`** (Hosting e Rules). Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
   larghezza), pubblicato su richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`8a99fa6`** (posizione di «Storico dei pagamenti»), pubblicato su
   richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
@@ -83,7 +88,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
-  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `dda68cb`, Rules a `f5411fb`.
+  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `416f0db`, Rules a `f5411fb`.
 
 ## Icona «internet» pixel, terzo disegno — 17 novembre 2026 (notte)
 
