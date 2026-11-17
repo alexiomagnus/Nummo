@@ -13,7 +13,10 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
   inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
-- **Rilascio del 17 novembre (notte): `c837817`** (divisori e campi rivelati nel modulo del fondo, Fondo sotto la Categoria su
+- **Rilascio del 17 novembre (notte, seconda parte): `bd61713`** (scansione senza la nota sulla lettura locale e senza la sezione dei
+  prodotti letti), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting` («Deploy complete!», sito 200). Rules e
+  Worker non toccati. `npm run check` OK (**490/490**).
+- **Rilascio del 17 novembre (notte): `c837817`** (precedente) (divisori e campi rivelati nel modulo del fondo, Fondo sotto la Categoria su
   smartphone con Descrizione più bassa, «Cache offline: Non attiva»; sezione «Modulo del fondo leggibile…» qui sotto), inviato a
   `origin/main` e pubblicato su richiesta con `npm run deploy:hosting` («Deploy complete!», sito 200). Rules e Worker non toccati.
   `npm run check` OK (**490/490**).
@@ -28,14 +31,14 @@ cronaca delle singole fasi e possono dire cose superate.
   Categoria e Fondo su una riga da medium, pulsanti di scansione su una riga, chiave API salvata, modello a sola scelta con elenco ridotto,
   testi tolti, «OK» del calendario più largo), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting`
   («Deploy complete!», sito 200). Rules e Worker non toccati. `npm run check` OK (**489/489**). Non provato su iPhone reale né con Gemini reale.
-- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `c837817`
-  (modulo del fondo, Fondo sotto la Categoria su smartphone, cache «Non attiva»), prima `e4fb9f8` (Wi-Fi pixel HD, niente budget sotto il Fondo), prima `1d21658` (Categoria/Fondo su smartphone, icone), prima `d66d3db` (ritocchi del 17 novembre), prima `24ae16f` (solo HANDOFF); prima `f5411fb`
+- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `bd61713`
+  (scansione senza nota e prodotti letti), prima `c837817` (modulo del fondo, Fondo sotto la Categoria su smartphone, cache «Non attiva»), prima `e4fb9f8` (Wi-Fi pixel HD, niente budget sotto il Fondo), prima `1d21658` (Categoria/Fondo su smartphone, icone), prima `d66d3db` (ritocchi del 17 novembre), prima `24ae16f` (solo HANDOFF); prima `f5411fb`
   (esercenti, modelli AI, esercente nella scansione), poi `664c330` (solo HANDOFF); prima `26b95e9` (scansione dello scontrino),
   poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
   (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`c837817`** (vedi il punto in apertura).
-  Prima: **`e4fb9f8`**. Prima: **`1d21658`**. Prima: **`d66d3db`**. Prima: **`f5411fb`** (Hosting e Rules). Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`bd61713`** (vedi il punto in apertura).
+  Prima: **`c837817`**. Prima: **`e4fb9f8`**. Prima: **`1d21658`**. Prima: **`d66d3db`**. Prima: **`f5411fb`** (Hosting e Rules). Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
   larghezza), pubblicato su richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`8a99fa6`** (posizione di «Storico dei pagamenti»), pubblicato su
   richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
@@ -77,7 +80,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
-  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `c837817`, Rules a `f5411fb`.
+  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `bd61713`, Rules a `f5411fb`.
 
 ## Scansione: tolte la nota sulla lettura locale e la sezione dei prodotti letti — 17 novembre 2026 (notte)
 
@@ -85,7 +88,7 @@ cronaca delle singole fasi e possono dire cose superate.
   dispositivo: la foto non viene inviata a nessuno.» (sia senza AI sia con «Standard» scelto) e l'intera sezione della revisione con
   «n prodotti letti», l'elenco dei prodotti, «Sconti sullo scontrino» e «Prodotti e sconti servono solo per il controllo…». Il dominio
   (`items`, `discountMinor`) li legge ancora, senza mostrarli né salvarli; traduzioni rimosse da `en.ts`. Guida invariata (la lettura
-  sul dispositivo resta vera). **Non committato.**
+  sul dispositivo resta vera). Committato in `bd61713`, inviato e pubblicato su Hosting.
 - **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo). Chromium headless su `dist-demo`, Standard, 1280 px scuro,
   scontrino sintetico disegnato su canvas (profilo temporaneo cancellato): nessuna nota prima della scansione; revisione con 5,00 €,
   12 nov 2026, «Supermercato Prova Srl», Alimentari e nessuna sezione dei prodotti; nessun errore JS. Non provati: smartphone, AI.
