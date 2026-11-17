@@ -13,6 +13,9 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
   inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
+- **Ritocchi del 17 novembre: NON committati, NON pubblicati** (sezione qui sotto): barra mobile su iPhone, pulsanti del dialogo di
+  scansione su una riga, Data accanto all'Importo su smartphone, chiave API salvata nel browser, testi tolti e modello a sola scelta
+  nella scheda AI. Nessuna modifica a `DataStore`, Rules o backup: si pubblica con il solo Hosting.
 - **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `f5411fb`
   (esercenti, modelli AI, esercente nella scansione), poi `664c330` (solo HANDOFF); prima `26b95e9` (scansione dello scontrino),
   poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
@@ -46,7 +49,7 @@ cronaca delle singole fasi e possono dire cose superate.
   Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Da verificare su dispositivo:** icona dell'app (cache del launcher), filtri di Spese/Analisi, dissolvenza
   sul Pixel 8.
-- **Verifiche.** `npm run check` rieseguito il 17 novembre su `664c330` OK (typecheck, **488/488**, build demo). `test:emulator` **22/22** con gli esercenti
+- **Verifiche.** `npm run check` del 17 novembre con i ritocchi mobile/AI OK (typecheck, **489/489**, build demo). `test:emulator` **22/22** con gli esercenti
   (porte dedicate 19099/18180, config temporanea rimossa), caso peggiore del budget Rules con `merchant_id` incluso.
 - **Ambiente (17 novembre).** Il runner hybrid avviato il 16 alle 17:26 (PID 40726) si è fermato senza export (riavvio del sistema
   il 17 alle 20:03): `npm run dev` rifiutava l'avvio per il lock rimasto. Ispezione: processo inesistente, porte 8180/9099/4000/4400/8081
@@ -62,6 +65,59 @@ cronaca delle singole fasi e possono dire cose superate.
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting e Rules sono a `f5411fb`.
+
+## Ritocchi mobile e scheda AI — 17 novembre 2026
+
+Su richiesta (screenshot), sei punti:
+
+1. **Barra inferiore su iPhone** (16 Pro Max): misurata in Chromium a 440×956 con UA iPhone e safe area emulata, la barra stava dentro la
+   pagina, ma la pillola era a 4 px dai lati e a 12–22 px dal fondo: le sue estremità arrotondate superavano la curva degli angoli
+   dello schermo (≈ 55–62 pt) e sembravano tagliate. Su iPhone ora sta a 12 px dai lati (`floatingBarSideSpace`, geometria in
+   `pillInsideCorner`, test in `navIndicator.test.ts`); Android invariato. **Non verificato su un iPhone reale.**
+2. **Scansiona scontrino:** «Scatta una foto» e «Scegli un’immagine» sempre sulla stessa riga; su smartphone metà riga ciascuno, compatti,
+   con etichette brevi «Scatta foto» / «Carica foto» («Cambia foto» dopo la scelta), nome completo nell'etichetta accessibile; da medium
+   invariati. A 390 px le etichette complete venivano troncate.
+3. **Nuova spesa e Modifica spesa su smartphone:** Data a destra dell'Importo, metà riga ciascuno (prima in colonna).
+   Poi, su richiesta (screenshot): su smartphone «Scansiona scontrino» è largo esattamente come l'Importo (stesse metà e stesso spazio
+   della riga Importo/Data), padding compatto; sotto i 380 px di finestra l'etichetta è «Scansiona» (completa nell'etichetta accessibile).
+   Misurato: bordi coincidenti a 440, 390 e 360 px, nessun troncamento; da medium invariato.
+7. **Poi, su richiesta (screenshot):** tolto «Indica il modello da usare.» dalla scheda AI (l'avviso sull'indirizzo dell'API compatibile
+   resta); titolo «Scansione predefinita» (`titleSmall` in grassetto, intestazione di livello 3) sopra la sua scelta; da medium
+   **Categoria e Fondo sulla stessa riga**, a metà (`besideCategory` di `ExpenseFields`, solo in Nuova spesa; senza fondi la Categoria
+   resta a tutta larghezza; su smartphone il Fondo resta sotto). Chromium 1280 px con `nummo-utente-medio.json` unito (profilo
+   temporaneo cancellato): Categoria 280–742, Fondo 754–1216 alla stessa altezza; 390 px: titolo visibile, avviso assente; nessun errore JS.
+8. **Poi, su richiesta:** «Dimentica la chiave» (e «Revoca il consenso») spostati sopra il titolo «Scansione predefinita», subito dopo
+   il Modello; nel dialogo di scansione tolta la nota «La foto viene inviata a {servizio} con la tua chiave API.» (resta quella della
+   scansione standard). Chromium 390 px: ordine Chiave, Modello, Dimentica la chiave, Scansione predefinita; nessun errore JS.
+   Poi, su richiesta: 8 dp in più tra Modello e la riga «Dimentica la chiave» / «Revoca il consenso» (20 dp in tutto, prima 12).
+9. **Elenco dei modelli ridotto** (screenshot del piano gratuito di Gemini): `curateGeminiModels` in `domain/receiptAi.ts` tiene solo
+   `gemini-<versione>-flash-lite|flash|pro` stabili, le versioni più recenti (2 flash-lite, 2 flash, 1 pro) più i consigliati; senza famiglie
+   note l'elenco resta intero. OpenAI: via snapshot datati, anteprime e `latest`. Test con l'elenco degli screenshot (38 nomi → 6:
+   2.5-flash, 2.5-pro, 3.1-flash-lite, 3.5-flash-lite, 3.7-flash, 3.8-flash). `npm test` **489/489**. Non provato con l'API reale né nel browser.
+10. **Annullato su richiesta:** «Speso nel mese» è tornato alle misure di prima (96 dp, riquadro 48, `headlineMedium`; `FundsPage.tsx` come in
+    `f5411fb`). Prova scartata: **Fondi: «Speso nel mese» alle misure del «Totale» di Spese** (screenshot): altezza minima 80 (prima 96), riquadro
+    dell'icona 44 (prima 48), raggio 20, margini 4/12, importo `headlineSmall` (prima `headlineMedium`). Chromium 390 px con
+    `nummo-utente-medio.json`: entrambe 80 px, riquadro 44, importo 24 px; nota dei rinnovi previsti ancora dentro la scheda; nessun errore JS.
+11. **«OK» del calendario più facile da toccare** (su richiesta): l'unico pulsante «OK» dell'app è in `DatePickerDialog` (`DateField.tsx`),
+    usato da ogni campo data; era largo 37 dp (sotto i 48 di un bersaglio touch), ora `minWidth: 64` (minimo Material 3 dei pulsanti di
+    testo). Chromium 390 e 1280 px: OK 64×48, Annulla 65×48; nessun errore JS.
+4. **Chiave API salvata:** prima era solo in memoria per scelta (AGENTS). Ora `nummo.receiptAi.keys.v1`, una per destinazione,
+   validata alla lettura (`parseAiKeys`/`withAiKey` in `domain/receiptAi.ts`), cancellata da «Dimentica la chiave». Mai in Firestore,
+   backup, log o URL. Decisione e rischio in `docs/architecture.md` («Chiave API salvata e modello a sola scelta»).
+5. **Testi tolti dalla scheda «Analisi scontrini con AI»:** introduzione, nota sulla chiave, suggerimento del modello, nota della
+   scansione predefinita, testo del consenso (entrambe le varianti di ciascuno), più «… scegline uno dall’elenco o scrivine il nome» e
+   «Puoi comunque scrivere a mano…», diventati falsi. Traduzioni rimosse da `en.ts`.
+6. **Modello a sola scelta:** `SelectField` con l'elenco del servizio (rimossi `ModelField.tsx` e `matchModels`); senza elenco il campo è
+   disabilitato. Consigliato Gemini: `gemini-3.1-flash-lite` (poi `gemini-2.5-flash`), mostrato «(consigliato)» e preselezionato a campo vuoto.
+
+- **Verifiche:** `npm run check` OK (typecheck, **489/489**, build demo); test nuovi per chiavi salvate e consigliato Gemini, test della
+  geometria della barra. Chromium headless su `dist-demo`, Standard, UA iPhone, safe area 62/34 emulata, **Gemini finto** (fetch
+  sostituito, nessuna chiave vera), profili temporanei cancellati: a 440, 390 e 360 px pillola a 12 px dai lati; Importo e Data sulla
+  stessa riga; i due pulsanti del dialogo sulla stessa riga, senza troncamenti; chiave scritta → salvata in `nummo.receiptAi.keys.v1`,
+  ritrovata dopo il ricaricamento; modello preselezionato `gemini-3.1-flash-lite`, foglio con «(consigliato)», nessun campo scrivibile
+  nella scheda oltre alla chiave; nessun errore JS.
+- **Non provati:** iPhone reale (angoli, Safari e app installata), importi lunghi a 360 px (campo Importo largo circa 106 px per il
+  testo), tema scuro, inglese nel browser, Gemini reale. `test:emulator` non necessario (Rules e `DataStore` invariati).
 
 ## Scansione: esercente e scansione predefinita — 16 novembre 2026 (sera)
 

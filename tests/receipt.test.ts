@@ -6,7 +6,7 @@ import {
   aiResponseError, amountsIn, amountText, datesIn, emptyProposal, parseAiReceipt, parseReceiptText, receiptDescriptions, receiptNotes, scanConflicts, scanPatch, suggestCategory, suggestDescription,
 } from '../src/domain/receipt.ts';
 import {
-  aiDestination, aiErrors, aiModelsEmpty, aiSetupProblem, buildAiRequest, buildModelsRequest, compatibleBase, matchModels, readAiModels, recommendedModel, defaultAiSettings, parseAiSettings, readAiAnswer, receiptPrompt, type AiSettings,
+  aiDestination, aiErrors, aiModelsEmpty, aiSetupProblem, buildAiRequest, buildModelsRequest, compatibleBase, curateGeminiModels, parseAiKeys, readAiModels, recommendedModel, withAiKey, defaultAiSettings, parseAiSettings, readAiAnswer, receiptPrompt, type AiSettings,
 } from '../src/domain/receiptAi.ts';
 import { analyzeReceipt, listAiModels } from '../src/services/receiptAi.ts';
 import { english } from '../src/i18n/en.ts';
@@ -357,6 +357,24 @@ test('AI: lettura dell’elenco dei modelli, filtri ed errori', () => {
     { name: 'models/gemini-embedding-001', supportedGenerationMethods: ['embedContent'] },
     { name: 'models/gemini-2.5-pro', supportedGenerationMethods: ['generateContent'] }, { name: 'models/senza-metodi' }] };
   assert.deepEqual(readAiModels('gemini', 200, gemini), ['gemini-2.5-flash', 'gemini-2.5-pro']);
+  // Elenco del piano gratuito (screenshot del 17 novembre): solo flash-lite, flash e pro stabili, le versioni più recenti più i consigliati.
+  const free = ['gemini-4-carbon', 'gemini-4-hydrogen', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-nano-banana-2.1', 'gemini-omni-1.1-flash',
+    'gemini-omni-1.2-flash', 'gemini-omni-flash-preview', 'gemini-pro-latest', 'gemini-robotics-er-2-preview', 'gemma-4-26b-a4b-it', 'gemma-4-31b-it',
+    'lyria-3-clip-preview', 'lyria-3-pro-preview', 'lyria-3.5', 'nano-banana-pro-preview', 'gemini-3-pro-image-preview', 'gemini-3.1-flash-image',
+    'gemini-3.1-flash-image-preview', 'gemini-3.1-flash-lite', 'gemini-3.1-flash-lite-image', 'gemini-3.1-flash-lite-preview', 'gemini-3.1-flash-tts-preview',
+    'gemini-3.1-pro-preview', 'gemini-3.1-pro-preview-customtools', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.5-transcribe', 'gemini-3.6-flash',
+    'gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-3.8-flash-lite-tts', 'gemini-3.8-flash-tts', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro',
+    'gemini-2.0-flash', 'gemini-2.0-flash-001'];
+  const freeBody = { models: free.map((name) => ({ name: `models/${name}`, supportedGenerationMethods: ['generateContent'] })) };
+  assert.deepEqual(readAiModels('gemini', 200, freeBody),
+    ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.7-flash', 'gemini-3.8-flash']);
+  assert.equal(recommendedModel('gemini', readAiModels('gemini', 200, freeBody)), 'gemini-3.1-flash-lite');
+  // Un'edizione «-001» vale la sua versione; nomi mai visti (nessuna famiglia nota) restano tutti visibili invece di un elenco vuoto.
+  assert.deepEqual(curateGeminiModels(['gemini-2.0-flash-001']), ['gemini-2.0-flash-001']);
+  assert.deepEqual(readAiModels('gemini', 200, { models: [{ name: 'models/gemini-ultra-x', supportedGenerationMethods: ['generateContent'] }] }), ['gemini-ultra-x']);
+  // OpenAI: snapshot datati e anteprime fuori, se resta il nome del modello.
+  assert.deepEqual(readAiModels('openai', 200, { data: [{ id: 'gpt-4o-mini' }, { id: 'gpt-4o-mini-2024-07-18' }, { id: 'gpt-5-mini' }, { id: 'gpt-4.5-preview' }, { id: 'chatgpt-4o-latest' }] }),
+    ['gpt-4o-mini', 'gpt-5-mini']);
   assert.deepEqual(readAiModels('claude', 200, { data: [{ type: 'model', id: 'claude-sonnet-4-6' }, { type: 'model', id: 'claude-haiku-4-5-20251001' }] }),
     ['claude-haiku-4-5-20251001', 'claude-sonnet-4-6']);
   // Compatible servers: nothing filtered, `data`, `models` or a bare array.
@@ -372,7 +390,7 @@ test('AI: lettura dell’elenco dei modelli, filtri ed errori', () => {
   for (const message of [aiModelsEmpty, aiErrors.models]) assert.ok(english[message as keyof typeof english]);
 });
 
-test('AI: modello consigliato e ricerca nell’elenco', () => {
+test('AI: modello consigliato', () => {
   assert.equal(recommendedModel('openai', ['gpt-4o-mini', 'gpt-5', 'gpt-5-mini']), 'gpt-5-mini');
   assert.equal(recommendedModel('openai', ['gpt-4o', 'gpt-4o-mini']), 'gpt-4o-mini');
   assert.equal(recommendedModel('gemini', ['gemini-2.5-flash-lite', 'gemini-2.5-pro']), null);
@@ -380,12 +398,22 @@ test('AI: modello consigliato e ricerca nell’elenco', () => {
   assert.equal(recommendedModel('claude', ['claude-haiku-4-5-20251001', 'claude-sonnet-4-6']), 'claude-haiku-4-5-20251001');
   assert.equal(recommendedModel('claude', ['claude-opus-5-5', 'claude-sonnet-4-6']), 'claude-sonnet-4-6');
   assert.equal(recommendedModel('compatible', ['llava']), null);
-  const models = ['gpt-4o', 'gpt-4o-mini', 'gpt-5-mini', 'o3'];
-  assert.deepEqual(matchModels(models, ''), models);
-  assert.deepEqual(matchModels(models, 'gpt-4o'), models);
-  assert.deepEqual(matchModels(models, 'MINI'), ['gpt-4o-mini', 'gpt-5-mini']);
-  assert.deepEqual(matchModels(models, '5 mini'), ['gpt-5-mini']);
-  assert.deepEqual(matchModels(models, 'llava'), []);
+  // Scelta dell'utente del 17 novembre: con Gemini si propone prima gemini-3.1-flash-lite.
+  assert.equal(recommendedModel('gemini', ['gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-pro']), 'gemini-3.1-flash-lite');
+});
+
+test('AI: chiavi salvate per destinazione, dati non fidati scartati', () => {
+  assert.deepEqual(parseAiKeys(null), {});
+  assert.deepEqual(parseAiKeys('non json'), {});
+  assert.deepEqual(parseAiKeys('["k"]'), {});
+  assert.deepEqual(parseAiKeys(JSON.stringify({ 'api.openai.com': 'sk-1', '': 'x', 'api.anthropic.com': 5, 'generativelanguage.googleapis.com': 'con spazio', 'x.it': 'a'.repeat(600) })),
+    { 'api.openai.com': 'sk-1' });
+  const keys = withAiKey({ 'api.openai.com': 'sk-1' }, 'generativelanguage.googleapis.com', '  AIza-2  ');
+  assert.deepEqual(keys, { 'api.openai.com': 'sk-1', 'generativelanguage.googleapis.com': 'AIza-2' });
+  assert.deepEqual(withAiKey(keys, 'api.openai.com', ''), { 'generativelanguage.googleapis.com': 'AIza-2' });
+  assert.deepEqual(withAiKey(keys, 'api.openai.com', 'due parole'), { 'generativelanguage.googleapis.com': 'AIza-2' });
+  // Le impostazioni non contengono mai la chiave: resta in un elemento separato.
+  assert.equal(JSON.stringify(parseAiSettings(JSON.stringify({ provider: 'gemini', apiKey: 'k' }))).includes('k"'), false);
 });
 
 test('AI: elenco dei modelli con rete assente (o CORS), timeout e annullamento', async () => {

@@ -41,6 +41,12 @@ test('barra mobile: su iPhone entra nella safe area senza toccare l’indicatore
   assert.equal(floatingBarBottomSpace(34, 12, false), 46); // Android/desktop invariati
   assert.equal(floatingBarBottomSpace(0, 12, true), 12); // iPhone SE / Safari con barra: nessuna safe area
   assert.equal(floatingBarBottomSpace(20, 12, true), 12); // mai sotto il margine minimo
+  const { floatingBarSideSpace, pillInsideCorner } = await import('../src/components/navIndicator.ts');
+  assert.equal(floatingBarSideSpace(true, 12, 4), 12);
+  assert.equal(floatingBarSideSpace(false, 12, 4), 4); // Android invariato
+  // iPhone 16 Pro Max (angolo ≈ 62 pt): a 4 pt dai lati la pillola alta 64 usciva dalla curva, a 12 pt resta dentro.
+  assert.equal(pillInsideCorner(4, 12, 64, 62), false);
+  for (const bottom of [12, 22]) for (const corner of [55, 62]) assert.equal(pillInsideCorner(12, bottom, 64, corner), true);
   assert.equal(isIPhone('Mozilla/5.0 (iPhone; CPU iPhone OS 26_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Mobile/15E148 Safari/604.1'), true);
   assert.equal(isIPhone('Mozilla/5.0 (iPad; CPU OS 26_1 like Mac OS X) AppleWebKit/605.1.15'), false);
   assert.equal(isIPhone('Mozilla/5.0 (Linux; Android 16; Pixel 8) AppleWebKit/537.36 Chrome/142.0 Mobile Safari/537.36'), false);

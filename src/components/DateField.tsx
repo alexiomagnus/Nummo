@@ -77,7 +77,8 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
         </Dialog.ScrollArea>
         <Dialog.Actions>
           <Button onPress={onDismiss}>{t("Annulla")}</Button>
-          <Button disabled={picked < minDate || picked > maxDate} onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
+          {/* «OK» is two letters: without a minimum the target was 37 dp wide, below the 48 dp touch size (17 November). */}
+          <Button disabled={picked < minDate || picked > maxDate} style={styles.ok} onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
@@ -132,6 +133,8 @@ function Calendar({ selected, month, minDate, maxDate, onMonth, onPick }: { sele
 }
 
 const styles = StyleSheet.create({
+  // Material 3 minimum width of a text button.
+  ok: { minWidth: 64 },
   field: { borderRadius: radius.input },
   dialog: { maxWidth: 360 },
   scrollArea: { minHeight: 0, paddingHorizontal: 0, marginTop: 0, marginBottom: 0, borderTopWidth: 0, borderBottomWidth: 0 },

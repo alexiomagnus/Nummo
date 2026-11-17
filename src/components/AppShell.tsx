@@ -6,7 +6,7 @@ import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layerTransition } from '../theme/motion';
 import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
-import { floatingBarBottomSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt } from './navIndicator';
+import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt } from './navIndicator';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { observeVirtualKeyboard } from '../theme/viewport';
@@ -34,6 +34,7 @@ type Props<T extends string> = {
 const KeyboardContext = createContext(false);
 // Fixed for the session: only the iPhone lowers the floating bar into its home-indicator area.
 const iPhone = typeof navigator !== 'undefined' && isIPhone(navigator.userAgent);
+const barSide = floatingBarSideSpace(iPhone, spacing.md, spacing.xs);
 export const useKeyboardOpen = () => useContext(KeyboardContext);
 
 function useVirtualKeyboard() {
@@ -173,7 +174,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const [barWidth, setBarWidth] = useState(0);
   // Size for the narrowest pill (with the primary action), even on New expense. This keeps typography stable throughout
   // the action's width animation. onLayout includes the shell's safe-area constraints, unlike window dimensions.
-  const labelSlot = pillGeometry(barWidth - spacing.xs * 2 - (reserveFab ? layout.floatingBar + spacing.xs : 0), destinations.length, pillPadding, pillGap)?.slot ?? 0;
+  const labelSlot = pillGeometry(barWidth - barSide * 2 - (reserveFab ? layout.floatingBar + spacing.xs : 0), destinations.length, pillPadding, pillGap)?.slot ?? 0;
   const [labelWidth, setLabelWidth] = useState<number | null>(null);
   const labels = JSON.stringify(destinations.map(({ label }) => label));
   const { fontFamily, fontSize, letterSpacing } = fonts.labelMedium;
@@ -203,7 +204,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   return (
     <View aria-hidden={hidden} {...{ inert: hidden ? true : undefined }} pointerEvents={hidden ? 'none' : 'auto'}
       onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
-      style={[styles.floating, { paddingBottom: bottomSpace }, hidden && (reserveSpace ? { opacity: 0 } : styles.hidden)]}>
+      style={[styles.floating, { paddingBottom: bottomSpace, paddingHorizontal: barSide }, hidden && (reserveSpace ? { opacity: 0 } : styles.hidden)]}>
       <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
             the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { Button, compactIconPadding } from '../../components/Button';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { SwitchRow } from '../../components/SwitchRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -180,11 +180,16 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     <input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={(event) => { void choose(event.target.files?.[0]); event.target.value = ''; }} />
     <input ref={gallery} type="file" accept="image/*" hidden onChange={(event) => { void choose(event.target.files?.[0]); event.target.value = ''; }} />
   </>;
-  const sourceButtons = (mode: 'contained-tonal' | 'outlined') => <View style={styles.sources}>
+  // Always one row: on phones the two buttons share it in equal halves, compact, with short labels (the full ones
+  // did not fit half of a 390 px screen) and the full name for screen readers.
+  const sourceButtons = (mode: 'contained-tonal' | 'outlined') => <View style={[styles.sources, !wide && styles.sourcesPhone]}>
     <Button mode={mode} disabled={preparing} icon={({ size, color }) => <SvgIcon shape={iconShapes.camera} size={size} color={color} />}
-      onPress={() => void openCamera()}>{t("Scatta una foto")}</Button>
+      compact={!wide} style={!wide && styles.source} contentStyle={!wide && compactIconPadding.snug.content} labelStyle={!wide && compactIconPadding.snug.label}
+      accessibilityLabel={t("Scatta una foto")} onPress={() => void openCamera()}>{wide ? t("Scatta una foto") : t("Scatta foto")}</Button>
     <Button mode={mode} disabled={preparing} loading={preparing} icon={({ size, color }) => <SvgIcon shape={iconShapes.image} size={size} color={color} />}
-      onPress={() => gallery.current?.click()}>{image ? t("Cambia immagine") : t("Scegli un’immagine")}</Button>
+      compact={!wide} style={!wide && styles.source} contentStyle={!wide && compactIconPadding.snug.content} labelStyle={!wide && compactIconPadding.snug.label}
+      accessibilityLabel={image ? t("Cambia immagine") : t("Scegli un’immagine")}
+      onPress={() => gallery.current?.click()}>{wide ? (image ? t("Cambia immagine") : t("Scegli un’immagine")) : (image ? t("Cambia foto") : t("Carica foto"))}</Button>
   </View>;
 
   let body;
@@ -216,9 +221,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {aiReady && <View style={styles.block}>
         <ChoiceChips label={t("Tipo di scansione")} value={method} onChange={(value) => { if (value) setMethod(value); }}
           options={[{ value: 'ocr', label: t("Standard") }, { value: 'ai', label: t("Avanzata con AI") }]} />
-        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-          {method === 'ai' ? t("La foto viene inviata a {p0} con la tua chiave API.", { p0: provider })
-            : t("Lo scontrino viene letto su questo dispositivo: la foto non viene inviata a nessuno.")}</Text>
+        {/* No note for the AI scan (removed on request, 17 November): consent was already asked for this destination. */}
+        {method === 'ocr' && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+          {t("Lo scontrino viene letto su questo dispositivo: la foto non viene inviata a nessuno.")}</Text>}
         {method === 'ai' && <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Chiave API")} value={ai.apiKey} onChangeText={ai.setApiKey}
           secureTextEntry autoComplete="off" autoCapitalize="none" autoCorrect={false} spellCheck={false} />}
       </View>}
@@ -308,6 +313,8 @@ const styles = StyleSheet.create({
   block: { gap: spacing.md },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: -spacing.sm },
   sources: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  sourcesPhone: { flexWrap: 'nowrap' },
+  source: { flex: 1, minWidth: 0 },
   picture: { width: '100%', borderRadius: radius.card, overflow: 'hidden' },
   camera: { height: 360 },
   progress: { height: 6, borderRadius: radius.pill },

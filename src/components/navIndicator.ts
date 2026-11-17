@@ -32,6 +32,24 @@ export function floatingBarBottomSpace(inset: number, gap: number, iPhone: boole
   return iPhone && inset > 0 ? Math.max(gap, inset - gap) : gap + inset;
 }
 
+// Space at the sides of the floating bar. Elsewhere a few points from the edge. iPhone displays have strongly rounded
+// corners (≈ 55–62 pt on Face ID models): with 4 pt the round ends of the pill went past the corner curve and looked cut
+// by the edge of the screen (iPhone 16 Pro Max, 17 November). 12 pt keeps them inside a 62 pt corner at either bottom space.
+export function floatingBarSideSpace(iPhone: boolean, gap: number, tight: number): number {
+  return iPhone ? gap : tight;
+}
+
+// Whether a pill of `height` placed `side` from the side and `bottom` from the bottom edge stays inside a display corner
+// of radius `corner`: its round end (a circle of radius height / 2) must lie within the corner's circle.
+export function pillInsideCorner(side: number, bottom: number, height: number, corner: number): boolean {
+  const r = height / 2;
+  const dx = corner - (side + r);
+  const dy = corner - (bottom + r);
+  // Ends already beyond the corner's centre on an axis meet only the straight edge there.
+  if (dx <= 0 || dy <= 0) return side >= 0 && bottom >= 0;
+  return Math.hypot(dx, dy) + r <= corner;
+}
+
 // iPhone (and iPod touch) Safari and home-screen apps; iPad and other platforms keep the default spacing.
 export function isIPhone(userAgent: string): boolean {
   return /\b(iPhone|iPod)\b/.test(userAgent);

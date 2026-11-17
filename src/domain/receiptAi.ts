@@ -1,6 +1,7 @@
 // Optional AI analysis of a receipt with the user's own API key (BYOK), pure part: saved settings, the HTTP request for
-// each provider and the reading of its answer. The key is never part of the settings: it lives in memory only
-// (features/receipts/aiSettings.ts) and reaches this module just to build one request.
+// each provider and the reading of its answer. The key is never part of the settings: it is kept apart, one per
+// destination, in `nummo.receiptAi.keys.v1` of this browser (user's choice of 17 November; features/receipts/aiSettings.ts),
+// and reaches this module just to build one request. Never in Firestore, backups, logs or URLs.
 import type { Category } from './category.ts';
 
 export const aiProviders = ['openai', 'gemini', 'claude', 'compatible'] as const;
@@ -23,6 +24,33 @@ export function parseAiSettings(raw: string | null): AiSettings {
   const o = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
   const provider = (aiProviders as readonly string[]).includes(o.provider as string) ? (o.provider as AiProvider) : 'none';
   return { provider, model: text(o.model, 100), endpoint: text(o.endpoint, 300), consent: text(o.consent, 400), scan: o.scan === 'ai' ? 'ai' : 'ocr' };
+}
+
+// Saved API keys, by destination (see `aiDestination`): a key belongs to one service and is never sent elsewhere.
+export const aiKeysStorageKey = 'nummo.receiptAi.keys.v1';
+export type AiKeys = Readonly<Record<string, string>>;
+const maxKeyLength = 512;
+const usableKey = (value: unknown): value is string =>
+  typeof value === 'string' && value.length > 0 && value.length <= maxKeyLength && !/[\s\u0000-\u001f\u007f]/.test(value);
+
+// Untrusted input (localStorage can be edited): entries that are not a destination with a plain key are dropped.
+export function parseAiKeys(raw: string | null): AiKeys {
+  let data: unknown;
+  try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) return {};
+  const keys: Record<string, string> = {};
+  for (const [destination, key] of Object.entries(data as Record<string, unknown>)) {
+    if (destination !== '' && destination.length <= 300 && usableKey(key)) keys[destination] = key;
+  }
+  return keys;
+}
+
+// The key written for a destination (spaces around it removed); an empty one forgets it.
+export function withAiKey(keys: AiKeys, destination: string, key: string): AiKeys {
+  const next: Record<string, string> = { ...keys };
+  const value = key.trim();
+  if (usableKey(value)) next[destination] = value; else delete next[destination];
+  return next;
 }
 
 const openAiBase = 'https://api.openai.com/v1';
@@ -175,6 +203,36 @@ export function buildModelsRequest(settings: AiSettings, apiKey: string): AiMode
 const openAiChat = /^(gpt-[4-9]|chatgpt-|o\d)/;
 const openAiOther = /embedding|whisper|tts|dall-e|moderation|audio|realtime|transcribe|image|instruct|search|codex/;
 
+// Gemini lists every model the key can call with generateContent: image, speech and music generators, robotics, open
+// Gemma models, previews, aliases and codenames (dozens on the free tier). For reading a receipt only the stable
+// multimodal families are useful: «gemini-<version>-flash-lite | flash | pro», optionally with a «-001» edition. Of each
+// family only the newest versions are kept (2 flash-lite, 2 flash, 1 pro), plus the recommended models when listed.
+const geminiStable = /^gemini-(\d+(?:\.\d+)?)-(flash-lite|flash|pro)(?:-\d{3})?$/;
+const geminiKept: Readonly<Record<string, number>> = { 'flash-lite': 2, flash: 2, pro: 1 };
+export function curateGeminiModels(names: readonly string[]): string[] {
+  const recommended = new Set(recommendedModels.gemini);
+  const families = new Map<string, Map<string, string>>();
+  for (const name of names) {
+    const match = geminiStable.exec(name);
+    if (!match) continue;
+    const [, version, family] = match as unknown as [string, string, string];
+    const versions = families.get(family) ?? new Map<string, string>();
+    // One name per version: the plain one («gemini-2.0-flash») over an edition («gemini-2.0-flash-001»).
+    const known = versions.get(version);
+    if (!known || name.length < known.length) versions.set(version, name);
+    families.set(family, versions);
+  }
+  const kept: string[] = [];
+  for (const [family, versions] of families) {
+    const newest = [...versions.keys()].sort((a, b) => Number(b) - Number(a)).slice(0, geminiKept[family] ?? 0);
+    for (const [version, name] of versions) if (newest.includes(version) || recommended.has(name)) kept.push(name);
+  }
+  return kept;
+}
+
+// OpenAI snapshots («gpt-4o-2024-08-06») and previews repeat a model already listed under its own name.
+const openAiSnapshot = /-\d{4}-\d{2}-\d{2}$|preview|latest/;
+
 // The model names of a provider answer, cleaned, without duplicates, sorted; throws a source-language error.
 export function readAiModels(provider: AiProvider, status: number, body: unknown): string[] {
   const o = (value: unknown) => (typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {});
@@ -191,11 +249,18 @@ export function readAiModels(provider: AiProvider, status: number, body: unknown
   if (provider === 'gemini') {
     names = list(o(body).models).filter((model) => list(o(model).supportedGenerationMethods).includes('generateContent'))
       .map((model) => (typeof o(model).name === 'string' ? (o(model).name as string).replace(/^models\//, '') : null));
+    // A list with none of the known families (a new naming, say) is shown whole rather than empty.
+    const curated = curateGeminiModels(names.filter((name): name is string => typeof name === 'string'));
+    if (curated.length > 0) names = curated;
   } else {
     // Compatible servers answer like OpenAI (`data`), a few with `models` or a bare array.
     const rows = Array.isArray(body) ? body : list(o(body).data).length ? list(o(body).data) : list(o(body).models);
     names = rows.map((model) => (typeof model === 'string' ? model : o(model).id ?? o(model).name));
-    if (provider === 'openai') names = names.filter((name) => typeof name === 'string' && openAiChat.test(name) && !openAiOther.test(name));
+    if (provider === 'openai') {
+      names = names.filter((name) => typeof name === 'string' && openAiChat.test(name) && !openAiOther.test(name));
+      const plain = names.filter((name) => !openAiSnapshot.test(name as string));
+      if (plain.length > 0) names = plain;
+    }
   }
   const clean = names.filter((name): name is string => typeof name === 'string').map((name) => name.trim()).filter((name) => name !== '' && name.length <= 100);
   const unique = [...new Set(clean)].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
@@ -206,7 +271,7 @@ export function readAiModels(provider: AiProvider, status: number, body: unknown
 // Small, cheap models that read pictures well, best first: proposed when the user has not chosen one yet.
 const recommendedModels: Readonly<Record<AiProvider, readonly string[]>> = {
   openai: ['gpt-5-mini', 'gpt-4o-mini'],
-  gemini: ['gemini-2.5-flash', 'gemini-3.5-flash-lite'],
+  gemini: ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.5-flash-lite'],
   claude: ['claude-haiku-4-5', 'claude-sonnet-4-6'],
   compatible: [],
 };
@@ -219,12 +284,4 @@ export function recommendedModel(provider: AiProvider, models: readonly string[]
     if (dated.length > 0) return dated[dated.length - 1]!;
   }
   return null;
-}
-
-// Models to propose for what is written in the field: all of them while it is empty or already holds one of them
-// (the field then works as a plain list), otherwise those containing every typed word.
-export function matchModels(models: readonly string[], typed: string): readonly string[] {
-  const words = typed.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (words.length === 0 || models.includes(typed.trim())) return models;
-  return models.filter((model) => words.every((word) => model.toLowerCase().includes(word)));
 }

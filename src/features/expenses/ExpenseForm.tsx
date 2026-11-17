@@ -1,9 +1,9 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { existingCategory } from '../categories/preferredCategories';
 import { memo, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Text } from 'react-native-paper';
-import { Button } from '../../components/Button';
+import { Button, compactIconPadding } from '../../components/Button';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
@@ -40,7 +40,10 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   const { t } = useI18n();
   const notify = useSnackbar();
   const size = useSizeClass();
+  const { width: windowWidth } = useWindowDimensions();
   const desktop = size === 'expanded';
+  // Half of a phone narrower than 380 px cannot hold «Scansiona scontrino» (measured: truncated at 360 px).
+  const narrow = size === 'compact' && windowWidth < 380;
   const { submission } = store;
   const [draft, setDraft] = useState<ExpenseDraft>(() => newDraft());
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -106,10 +109,13 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // spaced like the fund field and the recurrence switch (this gap plus the switch row's own inset).
   const blockGap = desktop ? spacing.lg : spacing.xl;
   const formGap = desktop ? spacing.md : spacing.lg;
+  // From medium up the fund field sits to the right of Categoria (user's request, 17 November); on phones it stays below.
+  const fundField = fundChoices.length > 0 ? <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
+    onChange={(fundId) => update({ fundId })} /> : null;
+  const fundBeside = size !== 'compact';
   const repeat = (
     <View style={{ gap: blockGap }}>
-      {fundChoices.length > 0 && <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
-        onChange={(fundId) => update({ fundId })} />}
+      {!fundBeside && fundField}
       <RepeatField gap={blockGap} repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })}>
@@ -126,15 +132,19 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     <View style={styles.page}>
     <View style={[styles.form, desktop && styles.formDesktop]}>
       {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. */}
-      <View style={styles.scan}>
-        <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{t("Scansiona scontrino")}</Button>
+      {/* Phones: as wide as «Importo» below (same halves and gap as the amount/date row), so both edges line up. */}
+      <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
+        <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={size === 'compact' && styles.scanHalf}
+          compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
+          accessibilityLabel={t("Scansiona scontrino")}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{narrow ? t("Scansiona") : t("Scansiona scontrino")}</Button>
+        {size === 'compact' && <View style={styles.scanHalf} />}
       </View>
       {scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={(patch) => { update(patch); notify("Dati dello scontrino inseriti: controlla e premi Salva."); }} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
-        extra={repeat}
+        extra={repeat} besideCategory={fundBeside ? fundField : undefined}
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
@@ -170,6 +180,8 @@ const styles = StyleSheet.create({
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row' },
   scan: { flexDirection: 'row' },
+  scanCompact: { gap: spacing.md },
+  scanHalf: { flex: 1, minWidth: 0 },
   submit: { flexGrow: 1 },
   label: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   button: { minHeight: layout.controlHeight },

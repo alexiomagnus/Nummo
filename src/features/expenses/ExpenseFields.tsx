@@ -26,6 +26,8 @@ type Props = {
   dense?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
+  // Rendered to the right of the category picker, in halves (from medium up: the fund field of Nuova spesa).
+  besideCategory?: ReactNode;
   // «Esercente», after the description: only the new-expense form and the expense editor show it.
   merchant?: { value: string; merchants: readonly RankedMerchant[]; error?: string; onChange: (value: string) => void };
   onChange: (field: BaseField, value: string) => void;
@@ -33,9 +35,9 @@ type Props = {
 };
 
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
-// amount (the prominent field) + date on the first row, then description, merchant (optional), category and `extra` (repeat).
+// amount (the prominent field) + date on the first row (also on phones, where they share it in halves), then description, merchant (optional), category and `extra` (repeat).
 // Every other field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, merchant, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, besideCategory, merchant, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -51,8 +53,8 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
   return (
     <View style={[styles.layout, dense && styles.denseLayout]} aria-busy={dataState === 'loading'}>
       <View>
-        <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
-          <View style={[styles.amount, compact && styles.amountCompact]}>
+        <View style={styles.firstRow}>
+          <View style={styles.amount}>
             <TextInput outlineStyle={inputOutline} label={t("Importo")} value={values.amount} onChangeText={(value) => onChange('amount', value)}
               mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'} error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
               onBlur={() => onBlur('amount')} accessibilityLabel={t("Importo in euro, obbligatorio")}
@@ -76,23 +78,28 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
         </View>}
       </View>
       {merchant && <MerchantField value={merchant.value} merchants={merchant.merchants} error={merchant.error} disabled={disabled} onChange={merchant.onChange} />}
-      {dataState !== 'ready' ? (
-        // Keep the category field's footprint while reading: [] is not an empty archive yet.
-        <TextInput outlineStyle={inputOutline} label={t("Categoria")} mode="outlined" readOnly aria-disabled
-          value={dataState === 'loading' ? t("Caricamento…") : t("Dati non disponibili")}
-          accessibilityLabel={dataState === 'loading' ? t("Categoria: caricamento in corso") : t("Categoria: dati non disponibili")} />
-      ) : categories.length === 0 ? (
-        <View style={[styles.empty, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label={t("Categoria")}>
-          <View style={styles.emptyText}>
-            <Text variant="titleSmall">{t("Nessuna categoria")}</Text>
-            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Serve almeno una categoria per salvare la spesa: creala nella pagina Categorie.")}</Text>
+      <View style={besideCategory ? styles.categoryRow : undefined}>
+        <View style={besideCategory ? styles.half : undefined}>
+        {dataState !== 'ready' ? (
+          // Keep the category field's footprint while reading: [] is not an empty archive yet.
+          <TextInput outlineStyle={inputOutline} label={t("Categoria")} mode="outlined" readOnly aria-disabled
+            value={dataState === 'loading' ? t("Caricamento…") : t("Dati non disponibili")}
+            accessibilityLabel={dataState === 'loading' ? t("Categoria: caricamento in corso") : t("Categoria: dati non disponibili")} />
+        ) : categories.length === 0 ? (
+          <View style={[styles.empty, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label={t("Categoria")}>
+            <View style={styles.emptyText}>
+              <Text variant="titleSmall">{t("Nessuna categoria")}</Text>
+              <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Serve almeno una categoria per salvare la spesa: creala nella pagina Categorie.")}</Text>
+            </View>
+            {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.categoryId)}</HelperText>}
           </View>
-          {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.categoryId)}</HelperText>}
+        ) : (
+          <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
+            disabled={disabled} error={errors.categoryId} />
+        )}
         </View>
-      ) : (
-        <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
-          disabled={disabled} error={errors.categoryId} />
-      )}
+        {besideCategory ? <View style={styles.half}>{besideCategory}</View> : null}
+      </View>
       {extra ? <View style={[styles.extra, dense && styles.denseExtra]}>{extra}</View> : null}
     </View>
   );
@@ -106,11 +113,12 @@ const styles = StyleSheet.create({
   // Layout gap (16) + 8 = the 24 dp used between repeat and promo price.
   extra: { marginTop: spacing.sm },
   firstRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
-  firstRowCompact: { flexDirection: 'column', alignItems: 'stretch' },
-  dateCompact: { width: '100%', marginTop: 0 },
+  categoryRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  half: { flex: 1, minWidth: 0 },
   amount: { flex: 1, minWidth: 0 },
-  amountCompact: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
   date: { width: 200, flexShrink: 0 },
+  // Phones: date to the right of the amount, the row split in two equal halves.
+  dateCompact: { flex: 1, width: 'auto', minWidth: 0, flexShrink: 1 },
   text: { fontSize: 18 },
   description: { minHeight: 128 },
   amountText: { fontSize: 28, fontWeight: '600', fontVariant: ['tabular-nums'] },

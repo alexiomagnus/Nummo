@@ -1112,7 +1112,7 @@ campi base del modulo vengono compilati. Decisioni:
   (persa a ogni ricarica): niente localStorage, Firestore o bundle. Consenso esplicito per destinazione prima del primo invio.
   La risposta deve essere un oggetto JSON e ogni campo è validato (`parseAiReceipt`): importi e date possibili per una spesa,
   categoria solo tra quelle esistenti. Se l'AI fallisce si può usare la scansione standard.
-- **Limiti noti.** La chiave va reinserita a ogni apertura (scelta di sicurezza: una chiave salvata nel browser sarebbe leggibile
+- **Limiti noti.** La chiave va reinserita a ogni apertura (superato il 17 novembre: ora è salvata, vedi «Chiave API salvata»; scelta di sicurezza iniziale: una chiave salvata nel browser sarebbe leggibile
   da qualunque script della pagina). Una chiave usata dal browser è comunque visibile a chi controlla il dispositivo. Un servizio
   compatibile che non consente CORS non è utilizzabile: non si aggiunge un proxy. HEIC e altri formati dipendono dal browser.
   L'accuratezza dell'OCR su scontrini reali (carta termica sbiadita, foto storte) non è stata misurata.
@@ -1153,11 +1153,31 @@ con suggerimenti dagli esercenti già usati. Decisioni:
 - Fuori ambito: liste della spesa (la registrazione non chiede l'esercente) e scansione dello scontrino (non compila l'esercente), ricerca
   per esercente in Spese, filtri o grafici per esercente.
 
+## Chiave API salvata e modello a sola scelta — 17 novembre 2026
+
+Su richiesta, supera due decisioni qui sotto:
+
+- **Chiave salvata nel browser.** «La chiave non si salva, ogni volta devo aggiungerla»: la chiave ora resta in `nummo.receiptAi.keys.v1`,
+  una per destinazione (`aiDestination`), separata dalle impostazioni; cambiando servizio si usa la chiave di quel servizio, tornando
+  indietro ricompare la precedente. Valori validati alla lettura (`parseAiKeys`), salvata solo una chiave senza spazi né caratteri di
+  controllo, «Dimentica la chiave» la cancella. Rischio accettato dall'utente: una chiave nel `localStorage` è leggibile da qualunque
+  script della pagina (Nummo non carica script di terzi) e da chi usa il dispositivo. Resta fuori da Firestore, backup, bundle, log e URL.
+- **Modello a sola scelta.** Il campo «Modello» è un `SelectField` con l'elenco del servizio: nessun nome scritto a mano. Senza elenco
+  (chiave assente, rete, CORS) il campo resta disabilitato, con l'errore e «Riprova»; un modello già salvato resta tra le voci. Il
+  consigliato (con Gemini prima `gemini-3.1-flash-lite`) è segnato «(consigliato)» e preselezionato solo a campo vuoto.
+- **Elenco dei modelli ridotto** (screenshot del piano gratuito di Gemini, decine di voci): per Gemini restano solo le famiglie stabili
+  `gemini-<versione>-flash-lite`, `-flash`, `-pro` (con o senza edizione `-001`, una voce per versione), le due versioni più recenti di
+  flash-lite e flash e la più recente di pro, più i consigliati se elencati (`curateGeminiModels`). Fuori generatori di immagini, voce e
+  musica, Gemma, robotica, anteprime, alias `-latest` e nomi in codice. Se una nuova denominazione non corrisponde a nessuna famiglia,
+  l'elenco resta intero invece di vuoto. Per OpenAI si tolgono snapshot datati, anteprime e `latest` quando resta il nome del modello.
+- Tolti dalla scheda i testi d'aiuto (introduzione, chiave non salvata, suggerimento del modello, nota della scansione predefinita, testo
+  del consenso); restano «Dimentica la chiave» e «Revoca il consenso».
+
 ## Elenco dei modelli AI nelle Impostazioni — 16 novembre 2026
 
 Su richiesta. Il campo «Modello» di «Analisi scontrini con AI» propone i modelli del servizio scelto. Decisioni:
 
-- **Combobox, non selettore chiuso.** Il campo resta un testo libero con l'elenco sotto (stesso schema dell'Esercente): l'elenco può
+- **Combobox, non selettore chiuso** (superato il 17 novembre: sola scelta, vedi sopra). Il campo resta un testo libero con l'elenco sotto (stesso schema dell'Esercente): l'elenco può
   mancare (chiave non ancora scritta, CORS, rete), essere filtrato troppo o non aggiornato, e un nome scritto a mano deve restare valido.
 - **Richiesta automatica con ritardo di 500 ms** dopo l'ultima modifica della chiave o dell'indirizzo, annullata se cambiano ancora; è una
   GET che invia la sola chiave al servizio a cui appartiene (cambiando destinazione la chiave viene già dimenticata), nessuna foto e
