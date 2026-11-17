@@ -7,8 +7,9 @@ import { buildScheme, type Accent, type ColorMode } from './palette.ts';
 export const bootThemeKey = 'nummo.boot-theme.v1';
 export type BootTheme = Readonly<{ v: 1; mode: 'system' | 'light' | 'dark'; light: string; dark: string }>;
 
-// Both the canvas (including safe areas) and browser chrome must stop using the boot scheme together.
-export function applyDocumentTheme(doc: Document, background: string, dark: boolean): void {
+// Both the canvas (including safe areas) and browser chrome must stop using the boot scheme together. `avoid`: the
+// theme-color values Chrome no longer paints (see `themeColorFor`).
+export function applyDocumentTheme(doc: Document, background: string, dark: boolean, avoid: ReadonlySet<string> = new Set()): void {
   const root = doc.documentElement;
   root.style.colorScheme = dark ? 'dark' : 'light';
   root.style.setProperty('--nummo-boot-bg', background);
@@ -17,38 +18,60 @@ export function applyDocumentTheme(doc: Document, background: string, dark: bool
   const meta = tags[0] ?? doc.head.appendChild(Object.assign(doc.createElement('meta'), { name: 'theme-color' }));
   tags.slice(1).forEach((tag) => tag.remove());
   meta.removeAttribute('media');
-  meta.content = background;
+  meta.content = themeColorFor(background, avoid);
 }
 
-// The same colour one step away in its blue channel: invisible, but a different value for the browser.
-export function nudgedColor(hex: string): string {
-  const blue = Number.parseInt(hex.slice(5, 7), 16);
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex) || Number.isNaN(blue)) return hex;
-  return `${hex.slice(0, 5)}${(blue === 0 ? 1 : blue - 1).toString(16).padStart(2, '0').toUpperCase()}`;
+// Chrome on Android (installed app) stops painting the status bar for the exact theme-color value the page had when it
+// left for another activity, such as the system camera of «Scansiona scontrino»: back in the app the bar stays black
+// with that value, until the app is closed and reopened, while any other colour shows (user's test, 17 November: a
+// different theme recolours the bar, going back to the previous one turns it black again). So that value is avoided
+// for the rest of the session: the bar gets the same colour one to four steps away in its blue channel, which no eye
+// can tell apart. Offsets in order 0, −1, +1, −2, +2…; with all of them avoided the plain colour is used.
+const blueOffsets = [0, -1, 1, -2, 2, -3, 3, -4, 4] as const;
+
+export function themeColorVariants(color: string): readonly string[] {
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) return [color];
+  const base = color.toUpperCase();
+  const blue = Number.parseInt(base.slice(5, 7), 16);
+  return blueOffsets.filter((offset) => blue + offset >= 0 && blue + offset <= 255)
+    .map((offset) => `${base.slice(0, 5)}${(blue + offset).toString(16).padStart(2, '0').toUpperCase()}`);
 }
 
-// Chrome on Android can lose the status bar colour when the installed app comes back from another activity (the
-// system camera opened by «Scansiona scontrino»): the bar turns black while the page still holds the same
-// theme-color, so writing that value again sends nothing. A one-step different value, then the real one in a later
-// task, are two real changes: the bar takes the page colour again. Without the bug the bar never visibly changes.
-export function refreshThemeColor(doc: Document, background: string, later: (run: () => void) => void): void {
-  const meta = doc.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (!meta || meta.content !== background) return;
-  meta.content = nudgedColor(background);
-  later(() => { if (meta.content === nudgedColor(background)) meta.content = background; });
+export function themeColorFor(color: string, avoid: ReadonlySet<string>): string {
+  return themeColorVariants(color).find((variant) => !avoid.has(variant)) ?? color;
 }
 
-// Calls `run` when the page is shown again: back from another app or activity (visibility, focus) or from the cache.
-export function observePageReturn(target: Window, run: () => void): () => void {
+// Watches the page leaving (hidden, or the window losing focus to another activity) and coming back (visible, focus,
+// cached page shown). On each return after a departure the theme-color value held when leaving joins `avoid` and
+// `repaint` writes the colour again; a return without a departure (the page load) changes nothing. Only the latest
+// `avoidedLimit` values are kept: an ordinary app switch also counts as a departure (harmless: Chrome repaints then).
+export const avoidedLimit = 4;
+
+export function observeThemeColorReturn(target: Window, avoid: Set<string>, repaint: () => void): () => void {
   const doc = target.document;
-  const visible = () => { if (doc.visibilityState === 'visible') run(); };
-  doc.addEventListener('visibilitychange', visible);
-  target.addEventListener('focus', run);
-  target.addEventListener('pageshow', run);
+  let left: string | null = null;
+  const leave = () => {
+    if (left !== null) return;
+    left = doc.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content.toUpperCase() ?? null;
+  };
+  const back = () => {
+    if (left === null) return;
+    avoid.delete(left);
+    avoid.add(left);
+    for (const oldest of avoid) { if (avoid.size <= avoidedLimit) break; avoid.delete(oldest); }
+    left = null;
+    repaint();
+  };
+  const visibility = () => { if (doc.visibilityState === 'hidden') leave(); else back(); };
+  doc.addEventListener('visibilitychange', visibility);
+  target.addEventListener('blur', leave);
+  target.addEventListener('focus', back);
+  target.addEventListener('pageshow', back);
   return () => {
-    doc.removeEventListener('visibilitychange', visible);
-    target.removeEventListener('focus', run);
-    target.removeEventListener('pageshow', run);
+    doc.removeEventListener('visibilitychange', visibility);
+    target.removeEventListener('blur', leave);
+    target.removeEventListener('focus', back);
+    target.removeEventListener('pageshow', back);
   };
 }
 

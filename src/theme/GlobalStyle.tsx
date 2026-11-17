@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTheme } from 'react-native-paper';
-import { applyDocumentTheme, bootThemeKey, makeBootTheme, nudgedColor, observePageReturn, refreshThemeColor, type BootTheme } from './bootTheme';
+import { applyDocumentTheme, bootThemeKey, makeBootTheme, observeThemeColorReturn, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
 import { observeScrolling, observeViewportHeight, scrollingAttribute, stickyBottomProperty } from './viewport';
 
@@ -13,6 +13,8 @@ type Props = { mode: BootTheme['mode']; accent: Accent; colorMode: ColorMode };
 export function GlobalStyle({ mode, accent, colorMode }: Props) {
   const { colors, dark, fonts } = useTheme();
   const family = fonts.bodyMedium.fontFamily;
+  // theme-color values Chrome stopped painting after a return from another activity (bootTheme.ts).
+  const avoidedThemeColors = useRef(new Set<string>()).current;
   useLayoutEffect(() => {
     const style = document.createElement('style');
     style.id = 'nummo-global';
@@ -94,30 +96,12 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
     return () => { window.removeEventListener('keydown', onKey, true); window.removeEventListener('pointerdown', onPointer, true); };
   }, []);
   useLayoutEffect(() => {
-    applyDocumentTheme(document, colors.background, dark);
-  }, [colors.background, dark]);
-  // Back from the system camera (or any other app) the status bar can stay black: repaint it with the page colour,
-  // at once and once more after the activity has finished resuming.
-  useEffect(() => {
-    // focus, visibilitychange and pageshow often arrive together: one repaint per return.
-    let pending: ReturnType<typeof setTimeout> | undefined;
-    let retry: ReturnType<typeof setTimeout> | undefined;
-    const restore: ReturnType<typeof setTimeout>[] = [];
-    const refresh = () => { refreshThemeColor(document, colors.background, (run) => { restore.push(setTimeout(run, 50)); }); };
-    const stop = observePageReturn(window, () => {
-      clearTimeout(pending);
-      clearTimeout(retry);
-      pending = setTimeout(refresh, 0);
-      retry = setTimeout(refresh, 400);
-    });
-    return () => {
-      stop();
-      clearTimeout(pending);
-      clearTimeout(retry);
-      restore.forEach(clearTimeout);
-      const meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-      if (meta?.content === nudgedColor(colors.background)) meta.content = colors.background;
-    };
-  }, [colors.background]);
+    applyDocumentTheme(document, colors.background, dark, avoidedThemeColors);
+  }, [avoidedThemeColors, colors.background, dark]);
+  // Back from the system camera (or any other app) Chrome may stop painting the status bar for the theme-color the
+  // page had when leaving: that value is avoided from then on and the colour written again (bootTheme.ts).
+  useEffect(() => observeThemeColorReturn(window, avoidedThemeColors, () => {
+    applyDocumentTheme(document, colors.background, dark, avoidedThemeColors);
+  }), [avoidedThemeColors, colors.background, dark]);
   return null;
 }

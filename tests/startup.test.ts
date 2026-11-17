@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { test } from 'node:test';
 import { accents, buildScheme } from '../src/theme/palette.ts';
-import { applyDocumentTheme, bootThemeKey, makeBootTheme, nudgedColor, observePageReturn, refreshThemeColor } from '../src/theme/bootTheme.ts';
+import { applyDocumentTheme, bootThemeKey, avoidedLimit, makeBootTheme, observeThemeColorReturn, themeColorFor, themeColorVariants } from '../src/theme/bootTheme.ts';
 import { parseSessionHint, readSessionHint, sessionHintKey, writeSessionHint } from '../src/services/sessionHint.ts';
 import { initialSafeAreaMetrics } from '../src/theme/initialMetrics.ts';
 
@@ -52,41 +52,43 @@ test('tema runtime: cambia anche canvas e schema inline del boot, con un unico m
   assert.equal(tags.length, 1, 'crea il meta anche se assente');
 });
 
-test('ritorno dalla fotocamera: la barra di stato riceve due cambi veri e torna al colore della pagina', () => {
-  assert.equal(nudgedColor('#1A1614'), '#1A1613');
-  assert.equal(nudgedColor('#FFFF00'), '#FFFF01');
-  assert.equal(nudgedColor('rosso'), 'rosso');
-  const writes: string[] = [];
-  let content = '#1A1614';
-  const meta = { get content() { return content; }, set content(value: string) { content = value; writes.push(value); } };
-  const doc = { head: { querySelector: () => meta } } as unknown as Document;
-  const queued: (() => void)[] = [];
-  refreshThemeColor(doc, '#1A1614', (run) => { queued.push(run); });
-  assert.deepEqual(writes, ['#1A1613']);
-  queued.splice(0).forEach((run) => run());
-  assert.deepEqual(writes, ['#1A1613', '#1A1614']);
-  // A theme changed in the meantime is never overwritten; without a meta nothing happens.
-  writes.length = 0;
-  refreshThemeColor(doc, '#000000', (run) => { queued.push(run); });
-  assert.deepEqual(writes, []);
-  refreshThemeColor({ head: { querySelector: () => null } } as unknown as Document, '#1A1614', () => assert.fail());
+test('ritorno dalla fotocamera: il valore lasciato si evita con una variante invisibile del blu', () => {
+  assert.deepEqual(themeColorVariants('#1a1614'), ['#1A1614', '#1A1613', '#1A1615', '#1A1612', '#1A1616', '#1A1611', '#1A1617', '#1A1610', '#1A1618']);
+  assert.deepEqual(themeColorVariants('#FFFF01').slice(0, 4), ['#FFFF01', '#FFFF00', '#FFFF02', '#FFFF03'], 'mai fuori da 00–FF');
+  assert.deepEqual(themeColorVariants('rosso'), ['rosso']);
+  assert.equal(themeColorFor('#1A1614', new Set()), '#1A1614', 'senza ritorni: il colore esatto');
+  assert.equal(themeColorFor('#1A1614', new Set(['#1A1614'])), '#1A1613');
+  assert.equal(themeColorFor('#1a1614', new Set(['#1A1614', '#1A1613'])), '#1A1615');
+  assert.equal(themeColorFor('#F8F6F2', new Set(['#1A1614'])), '#F8F6F2', 'un altro tema non è toccato');
 });
 
-test('ritorno alla pagina: visibile, focus e pageshow; nascosta no; listener rimossi', () => {
+test('ritorno alla pagina: solo dopo un’uscita, valore lasciato evitato, al massimo gli ultimi valori, listener rimossi', () => {
   const listeners = new Map<string, () => void>();
   const add = (name: string, fn: () => void) => { listeners.set(name, fn); };
   const remove = (name: string) => { listeners.delete(name); };
-  const doc = { visibilityState: 'hidden', addEventListener: add, removeEventListener: remove };
+  const meta = { content: '#1A1614' };
+  const doc = { visibilityState: 'visible', head: { querySelector: () => meta }, addEventListener: add, removeEventListener: remove };
   const target = { document: doc, addEventListener: add, removeEventListener: remove } as unknown as Window;
-  let calls = 0;
-  const stop = observePageReturn(target, () => { calls += 1; });
+  const avoid = new Set<string>();
+  let repaints = 0;
+  const stop = observeThemeColorReturn(target, avoid, () => { repaints += 1; meta.content = themeColorFor('#1A1614', avoid); });
+  listeners.get('pageshow')!();
+  listeners.get('focus')!();
+  assert.equal(repaints, 0, 'caricamento: nessuna uscita, nulla cambia');
+  // Camera: blur, then hidden; back: visible, focus, pageshow → a single repaint.
+  listeners.get('blur')!();
+  doc.visibilityState = 'hidden';
   listeners.get('visibilitychange')!();
-  assert.equal(calls, 0);
   doc.visibilityState = 'visible';
   listeners.get('visibilitychange')!();
   listeners.get('focus')!();
   listeners.get('pageshow')!();
-  assert.equal(calls, 3);
+  assert.equal(repaints, 1);
+  assert.deepEqual([...avoid], ['#1A1614']);
+  assert.equal(meta.content, '#1A1613');
+  for (let i = 0; i < 10; i += 1) { listeners.get('blur')!(); listeners.get('focus')!(); }
+  assert.equal(avoid.size, avoidedLimit);
+  assert.ok(!avoid.has(meta.content), 'il colore scritto non è mai tra quelli evitati');
   stop();
   assert.equal(listeners.size, 0);
 });

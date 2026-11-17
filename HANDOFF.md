@@ -107,6 +107,20 @@ cronaca delle singole fasi e possono dire cose superate.
 
 ## Barra di stato nera dopo la fotocamera — 17 novembre 2026 (notte)
 
+- **Seconda correzione (dopo la prova dell'utente su `dece43d`, ancora nera):** prova decisiva dell'utente: con la barra nera, cambiando
+  tema la barra prende il nuovo colore; tornando al tema precedente torna **nera**; uscire e rientrare dall'app la ripara. Quindi la pagina
+  comanda ancora la barra, ma Chrome non dipinge più **il valore esatto** del `theme-color` che la pagina aveva quando è passata alla
+  fotocamera (nello screenshot in tema chiaro anche le icone della barra sono scure su nero: Chrome crede di mostrare il colore chiaro).
+  Il primo tentativo falliva perché tornava proprio a quel valore. Ora `observeThemeColorReturn` (in `theme/bootTheme.ts`) ricorda il
+  valore all'uscita (`visibilitychange` nascosta o `blur`) e, al ritorno (visibile, `focus`, `pageshow`), lo mette tra i valori evitati e
+  riscrive il colore; `applyDocumentTheme` usa `themeColorFor`: il colore esatto oppure una variante a ±1…4 sul canale blu (invisibile)
+  non evitata, anche dopo un cambio di tema. Al massimo gli ultimi 4 valori evitati (`avoidedLimit`): anche un normale cambio di app conta
+  come uscita, senza danni. Sfondo della pagina sempre esatto. Rimossi `nudgedColor`, `refreshThemeColor`, `observePageReturn`.
+- **Verifiche (seconda correzione):** `npm run check` OK (**492/492**, test di `startup.test.ts` riscritti). Chromium headless su
+  `dist-demo` 390×844, Standard: caricamento `#F5FBF5` (esatto), dopo blur/focus `#F5FBF4`, poi `#F5FBF6`; sfondo invariato, un solo meta,
+  nessun errore JS. **Da verificare sul telefono** dopo la pubblicazione. Non committato.
+
+
 - Su richiesta (screenshot dal telefono, app installata, tema scuro): dopo aver aperto e chiuso la fotocamera di sistema da
   «Scansiona scontrino» la barra di stato in alto restava **nera** invece del colore della pagina. Causa probabile (non riprodotta su
   dispositivo): al ritorno dall'attività della fotocamera Chrome Android perde il colore della barra, mentre il meta `theme-color` della
