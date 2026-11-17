@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { errorCode, signInWithGoogle, signOutUser, watchSession, type SessionUser } from '../../services/firebase';
+import { writeSessionHint } from '../../services/sessionHint';
 import { signInError } from './signInError';
 
 export type Session =
@@ -37,7 +38,9 @@ export function useSession(enabled: boolean): Session {
     signOut: () => {
       if (busy) return;
       setBusy(true); setError(null);
-      signOutUser().catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Uscita non riuscita. Riprova.')).finally(() => setBusy(false));
+      // With the on-disk cache, Firestore was stopped to delete it: the page restarts, signed out.
+      signOutUser().then((restart) => { if (restart) { writeSessionHint(null); window.location.reload(); } })
+        .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Uscita non riuscita. Riprova.')).finally(() => setBusy(false));
     },
   };
 }

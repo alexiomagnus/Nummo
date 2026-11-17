@@ -7,6 +7,9 @@ type Notify = (message: string) => void;
 const SnackbarContext = createContext<Notify>(() => {});
 export const useSnackbar = (): Notify => useContext(SnackbarContext);
 
+// Short messages: 3 s (5 s felt too long, user's request of 17 November); «Chiudi» dismisses earlier.
+const snackbarDuration = 3000;
+
 // Transient notifications (M3 snackbar). `bottomOffset` keeps it above the navigation bar.
 export function SnackbarProvider({ bottomOffset, onVisibleChange, children }: {
   bottomOffset: number; onVisibleChange?: (visible: boolean) => void; children: ReactNode;
@@ -22,7 +25,7 @@ export function SnackbarProvider({ bottomOffset, onVisibleChange, children }: {
   return (
     <SnackbarContext.Provider value={value}>
       {children}
-      <Snackbar key={state.id} visible={state.visible} onDismiss={dismiss} duration={5000}
+      <Snackbar key={state.id} visible={state.visible} onDismiss={dismiss} duration={snackbarDuration}
         wrapperStyle={{ bottom: bottomOffset + spacing.sm, zIndex: 20 }}
         style={{ borderRadius: radius.control }} action={{ label: t("Chiudi"), onPress: dismiss }}>
         {t(state.message)}

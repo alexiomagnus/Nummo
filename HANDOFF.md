@@ -85,6 +85,44 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `dda68cb`, Rules a `f5411fb`.
 
+## Icona «internet» pixel, terzo disegno — 17 novembre 2026 (notte)
+
+- Su richiesta (riferimento: la versione con due archi e punto, «linee più definite»): solo nel set **pixel**, sempre ad alta
+  definizione (`grid: 24`), **tre elementi**: due archi concentrici spessi 2 celle con gradini puliti (circa 3 celle di spazio) e un punto
+  **quadrato 4×4** (prima due archi spessi 3 e punto arrotondato). Scartate due prove intermedie: tre archi più il punto («voglio solo tre
+  linee») e tre archi senza punto («non mi sembra l'icona del wifi»). Un colore, simmetrica: i test esistenti passano senza modifiche. Minimale,
+  colorato, ID, dati e Rules invariati.
+- **Verifiche:** anteprima prima/dopo a 24/48/96 px su scuro e chiaro; nell'app (Chromium 1280 px, stile pixel, selettore icone di Modifica
+  categoria) in tema scuro e chiaro con la tavolozza vera; `npm run check` OK (typecheck, **490/490**, build demo). Committato e pubblicato (vedi «Stato corrente»).
+
+## Barra di scorrimento dentro il pannello desktop — 17 novembre 2026 (notte)
+
+- Su richiesta (screenshot di Nuova spesa su desktop): il pannello era la `ScrollView` stessa con raggio 28; la barra di scorrimento del
+  browser non segue il raggio e correva dritta per tutta l'altezza, con le frecce sopra gli angoli arrotondati, fuori dalla card. Ora in
+  `AppShell` il pannello è una `View` arrotondata che ritaglia, e la `ScrollView` interna ha 28 di margine sopra e sotto (`scrollInset`,
+  solo con il pannello desktop), tolti dal padding verticale del contenuto (32 → 4): a scorrimento fermo la pagina è identica.
+  Effetto voluto: scorrendo, il contenuto sparisce 28 px prima del bordo superiore/inferiore della card (come nei dialoghi).
+- **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo). Chromium 1280×640, Standard, scuro: card 76–608, scroller 104–580, barra larga 10 interamente
+  sul tratto dritto; titolo a 111 come prima, «Salva» a fine scorrimento a 32 dal fondo della card come prima; nessun errore JS.
+  Smartphone e tablet invariati (nessun pannello). Committato e pubblicato (vedi «Stato corrente»).
+
+## Messaggi più brevi, cache offline su disco cancellata all'uscita — 17 novembre 2026 (notte)
+
+- Su richiesta (screenshot dello snackbar «Dati dello scontrino inseriti…»): i messaggi temporanei durano **3 s** invece di 5
+  (`SnackbarHost`); «Chiudi» resta.
+- Su richiesta («opzione 2»): **cache Firestore su disco attiva** nella build di produzione (`EXPO_PUBLIC_FIRESTORE_CACHE=persistent`
+  aggiunta a `.env.production.local`, file personale ignorato da Git) e **cancellata a ogni «Esci»**: `signOutUser` attende le scritture
+  pendenti, esce, ferma Firestore (`terminate`), cancella la cache (`clearIndexedDbPersistence`) e restituisce `true`; `useSession` toglie
+  l'indizio di sessione e ricarica la pagina (un Firestore fermato non riparte). `switchFirebase` ricarica già da sé. Con un'altra scheda
+  di Nummo aperta la cancellazione fallisce in silenzio e la cache resta fino a un'uscita successiva. README, `firebase-personale.md`,
+  architettura e AGENTS aggiornati (prima dicevano che la cache restava dopo il logout).
+- **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo). `test:emulator` **22/22** su porte dedicate 19099/18180 (config temporanea rimossa; la
+  sessione hybrid dell'utente su 8180 non toccata). Prova nel browser con emulatori dedicati e una build demo con cache persistente
+  (cancellata dopo): accesso del proprietario demo → database IndexedDB `firestore/[DEFAULT]/demo-nummo/main` con 6–7 documenti, ancora
+  presenti dopo il ricaricamento; «Esci» → database cancellato, schermata di accesso, indizio di sessione assente; nuovo accesso → cache
+  ricreata e «Sincronizzato»; nessun errore JS. **Non provati:** due schede aperte, scrittura offline che sopravvive alla chiusura (descritta
+  in architettura come provata in Chromium in passato, non rifatta), Safari/iOS, produzione. Committato e pubblicato (vedi «Stato corrente»).
+
 ## Niente zoom con due dita, Esercente più vicino alla Descrizione — 17 novembre 2026 (notte)
 
 - Su richiesta (zoom con due dita su smartphone): meta viewport con `maximum-scale=1, user-scalable=no` (Chrome Android), su touch

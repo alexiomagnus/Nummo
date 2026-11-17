@@ -218,25 +218,24 @@ export const pixelSprites: Record<CategoryIcon, Sprite> = {
     '....ibbi....',
     '.....ii.....',
   ] },
-  // High definition (redrawn twice on request, 17 November: the 12-cell versions read as blocky steps, not as Wi-Fi):
-  // on 24 cells the two arcs are true concentric curves of a 90° fan, three cells thick, with the dot below; one colour
-  // and empty space between the parts, so it stays clean and recognisable from afar.
+  // High definition (redrawn several times on request, 17 November): the classic Wi-Fi sign on 24 cells, three parts
+  // only: two concentric arcs of a fan, two cells thick with clean steps, and a square dot. A third arc made it read as
+  // stripes, and without the dot it was no longer Wi-Fi. One colour, symmetric.
   wifi: { hue: 'blue', grid: detailGrid, rows: [
-    '........bbbbbbbb........',
-    '.....bbbbbbbbbbbbbb.....',
-    '...bbbbbbbbbbbbbbbbbb...',
+    '.......bbbbbbbbbb.......',
+    '....bbbbbbbbbbbbbbbb....',
     '..bbbbbb........bbbbbb..',
-    '.bbbbb............bbbbb.',
-    '.bbb................bbb.',
-    '........bbbbbbbb........',
-    '......bbbbbbbbbbbb......',
+    '.bbbb..............bbbb.',
+    'bbb..................bbb',
+    'bb......bbbbbbbb......bb',
     '.....bbbbbbbbbbbbbb.....',
-    '.....bbbb......bbbb.....',
-    '........................',
+    '....bbbb........bbbb....',
+    '...bbb............bbb...',
+    '...bb..............bb...',
     '........................',
     '..........bbbb..........',
-    '.........bbbbbb.........',
-    '.........bbbbbb.........',
+    '..........bbbb..........',
+    '..........bbbb..........',
     '..........bbbb..........',
   ] },
   // Transport

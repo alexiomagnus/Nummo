@@ -28,7 +28,7 @@ con icona/etichetta (variante uniforme `labelMedium`/`labelSmall` scelta sullo s
 geometria pura in `navIndicator.ts`, click successivo al trascinamento soppresso); pulsante tondo in `primary`, nascosto nella pagina Nuova.
 Desktop: rail/drawer con FAB; la rail scorre verticalmente nelle finestre basse. Le azioni di Nuova spesa sono sempre nel flusso, dopo tutti i campi, senza barra sticky.
 Il contenuto occupa sempre tutta la larghezza del pannello, anche su monitor grandi: nessun limite
-di larghezza né colonna centrata in `AppShell`. Salva occupa sempre tutta la larghezza del modulo, anche su expanded. In Nuova spesa il Fondo segue la Categoria (`fund` di `ExpenseFields`): da medium sulla stessa riga, a metà; su smartphone (`fundBelow`) in una riga propria sotto la Categoria, con la Descrizione più bassa (96, tre righe) perché «Salva» resti intero sopra la navigazione a 390×844 (`SelectField` `narrow`, freccia piccola da 16 e «Nessuna»/«Nessuno» come `shortLabel`, resta per i campi a metà; valori lunghi con «…»); su smartphone Data a destra dell'Importo e «Scansiona scontrino» largo come l'Importo.
+di larghezza né colonna centrata in `AppShell`. Desktop: il pannello arrotondato ritaglia (`overflow: hidden`) e la `ScrollView` interna ha 28 (`radius.dialog`) di margine sopra e sotto, tolti dal padding del contenuto, perché la barra di scorrimento del browser non segue gli angoli. Salva occupa sempre tutta la larghezza del modulo, anche su expanded. In Nuova spesa il Fondo segue la Categoria (`fund` di `ExpenseFields`): da medium sulla stessa riga, a metà; su smartphone (`fundBelow`) in una riga propria sotto la Categoria, con la Descrizione più bassa (96, tre righe) perché «Salva» resti intero sopra la navigazione a 390×844 (`SelectField` `narrow`, freccia piccola da 16 e «Nessuna»/«Nessuno» come `shortLabel`, resta per i campi a metà; valori lunghi con «…»); su smartphone Data a destra dell'Importo e «Scansiona scontrino» largo come l'Importo.
 La navigazione mobile si nasconde già al tocco su un campo scrivibile (anticipo con scadenza se non segue la tastiera,
 annullato subito se il tocco diventa uno scorrimento: `pointercancel` o scroll senza campo attivo),
 ma conserva il proprio spazio fino alla conferma dal viewport: il bersaglio non deve spostarsi tra pressione e rilascio;
@@ -111,8 +111,8 @@ Modalità scelta **solo dai comandi npm**, `EXPO_PUBLIC_NUMMO_BACKEND=emulator|h
 assente/ignota/`firebase` o configurazioni miste bloccano la sessione. Quattro `EXPO_PUBLIC_FIREBASE_*` da
 `.env.local` in sviluppo, `.env.production.local` o shell/CI in produzione. Mai backend o `*_EMULATOR` nei
 `.env*`: `check:env` li rifiuta perché in `expo start` il file prevale sulla shell.
-Cache Firestore in memoria; `EXPO_PUBLIC_FIRESTORE_CACHE=persistent` opt-in su dispositivi fidati, cache SDK
-IndexedDB e non archivio parallelo. Env Expo con accessi letterali; per aggiornamenti Metro usare `-- --clear`.
+Cache Firestore in memoria; `EXPO_PUBLIC_FIRESTORE_CACHE=persistent` opt-in (attiva nella build pubblicata dal 17 novembre), cache SDK
+IndexedDB e non archivio parallelo, cancellata a ogni «Esci» (`signOutUser`: `terminate` + `clearIndexedDbPersistence`, poi ricaricamento). Env Expo con accessi letterali; per aggiornamenti Metro usare `-- --clear`.
 
 Hybrid: endpoint predefinito `127.0.0.1:8180`, override shell `EXPO_PUBLIC_FIRESTORE_EMULATOR` solo localhost/127.0.0.1.
 Il runner usa il parser dotenv di Expo per entrambi i processi; riusa solo istanze con progetto/PID/endpoint verificati.

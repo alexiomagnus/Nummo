@@ -100,6 +100,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const panelBg = !showPanel ? colors.background : panelColor(colors);
   const panelTheme = useMemo(() => ({ ...theme, colors: { ...colors, background: panelBg } }), [theme, colors, panelBg]);
   const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: padding, marginBottom: padding };
+  // The scrollbar of a rounded scroller runs straight through its corners (browsers do not bend it to the radius): the
+  // rounded panel clips, and the scroller inside keeps a corner-radius margin above and below, so the bar sits only on
+  // the straight part of the edge. The content padding loses the same amount: the page does not move.
+  const scrollInset = showPanel ? Math.min(radius.dialog, padding) : 0;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>
@@ -129,14 +133,16 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
         <View style={styles.body}>
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
-          <ScrollView ref={scroller} style={[styles.scroll, panel, { backgroundColor: panelBg }]} keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
+          <View style={[styles.scroll, panel, styles.panelClip, { backgroundColor: panelBg }]}>
+          <ScrollView ref={scroller} style={[styles.scroll, { marginVertical: scrollInset }]} keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ flexGrow: 1, padding, paddingTop: padding - scrollInset, paddingBottom: padding - scrollInset + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
               <KeyboardContext.Provider value={keyboard}>
               <View ref={page} role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
               </KeyboardContext.Provider>
             </ThemeProvider>
           </ScrollView>
+          </View>
         </View>
         {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomSpace={barBottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} reserveSpace={keyboard && !keyboardConfirmed} />}
       </SnackbarProvider>
@@ -463,6 +469,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   body: { flex: 1, flexDirection: 'row', minHeight: 0 },
   scroll: { flex: 1, minWidth: 0 },
+  panelClip: { overflow: 'hidden' },
   // The page always fills the panel, on any monitor: no width cap or centred column.
   content: { width: '100%', flexGrow: 1, gap: spacing.xl },
   floating: { flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.xs },

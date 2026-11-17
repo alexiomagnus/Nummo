@@ -342,8 +342,11 @@ ed entro un minuto dal cambio giorno.
   browser; per i dati confermati usare backup manuali.
 - Logout: attende le scritture pendenti; dopo 5 secondi senza completamento segnala di
   riconnettersi, mantenendo la sessione. Logout/cambio UID smonta listener e stato UI.
-  La cache SDK non viene cancellata automaticamente: i dati possono restare sul disco
-  del dispositivo fidato, pur non essendo mostrati all'altro account dall'app.
+  Con la cache su disco (dal 17 novembre attiva nella build pubblicata, `.env.production.local`), dopo
+  `signOut` l'app ferma Firestore (`terminate`), cancella la cache (`clearIndexedDbPersistence`) e
+  ricarica la pagina, perché un Firestore fermato non riparte nella stessa pagina. Se un'altra scheda
+  tiene aperta la cache la cancellazione fallisce in silenzio: la cache resta fino a un'uscita successiva
+  con una sola scheda. Con la cache in memoria nulla da cancellare, nessun ricaricamento.
 
 Persistenza predefinita: memoria. `EXPO_PUBLIC_FIRESTORE_CACHE=persistent` abilita
 `persistentLocalCache` con `persistentMultipleTabManager` quando IndexedDB è disponibile;

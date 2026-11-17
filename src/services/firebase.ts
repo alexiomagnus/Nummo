@@ -4,14 +4,14 @@ import {
   onAuthStateChanged, signInWithPopup, signOut, type Auth, type User,
 } from 'firebase/auth';
 import {
-  connectFirestoreEmulator, initializeFirestore, memoryLocalCache, persistentLocalCache,
-  persistentMultipleTabManager, waitForPendingWrites, type Firestore,
+  clearIndexedDbPersistence, connectFirestoreEmulator, initializeFirestore, memoryLocalCache, persistentLocalCache,
+  persistentMultipleTabManager, terminate, waitForPendingWrites, type Firestore,
 } from 'firebase/firestore';
 import { activeFirebaseConfig, authEmulator, firestoreEmulator, persistentCache } from './backendConfig';
 import { readSessionHint } from './sessionHint';
 import { profilePhotoURL } from './sessionProfile';
 
-let services: { auth: Auth; db: Firestore } | undefined;
+let services: { auth: Auth; db: Firestore; persistent: boolean } | undefined;
 function getServices() {
   if (services) return services;
   const app = initializeApp(activeFirebaseConfig);
@@ -21,13 +21,13 @@ function getServices() {
   const auth = initializeAuth(app, readSessionHint() === null
     ? { persistence: browserLocalPersistence, popupRedirectResolver: browserPopupRedirectResolver }
     : { persistence: browserLocalPersistence });
+  const persistent = persistentCache && typeof indexedDB !== 'undefined';
   const db = initializeFirestore(app, {
-    localCache: persistentCache && typeof indexedDB !== 'undefined'
-      ? persistentLocalCache({ tabManager: persistentMultipleTabManager() }) : memoryLocalCache(),
+    localCache: persistent ? persistentLocalCache({ tabManager: persistentMultipleTabManager() }) : memoryLocalCache(),
   });
   if (authEmulator) connectAuthEmulator(auth, `http://${authEmulator.host}:${authEmulator.port}`, { disableWarnings: true });
   if (firestoreEmulator) connectFirestoreEmulator(db, firestoreEmulator.host, firestoreEmulator.port);
-  services = { auth, db };
+  services = { auth, db, persistent };
   return services;
 }
 export const getDatabase = (): Firestore => getServices().db;
@@ -47,16 +47,25 @@ export function watchSession(listener: (user: SessionUser | null) => void): () =
 export async function signInWithGoogle(): Promise<void> {
   await signInWithPopup(getServices().auth, new GoogleAuthProvider(), browserPopupRedirectResolver);
 }
-export async function signOutUser(): Promise<void> {
+// Signs out after the pending writes. With the on-disk cache (EXPO_PUBLIC_FIRESTORE_CACHE=persistent) it then stops
+// Firestore and deletes that cache, so the account's data does not stay in the browser after «Esci». A stopped
+// Firestore cannot start again in this page: `true` = the caller must reload it. Deleting fails while another tab of
+// Nummo keeps the cache open: then the cache stays (signing out still succeeds) until a later sign-out in a single tab.
+export async function signOutUser(): Promise<boolean> {
   // Do not strand acknowledged-in-the-UI operations under a different account.
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const { auth, db, persistent } = getServices();
   try {
     await Promise.race([
-      waitForPendingWrites(getDatabase()),
+      waitForPendingWrites(db),
       new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Scritture in attesa: riconnettiti prima di uscire.')), 5000); }),
     ]);
-    await signOut(getServices().auth);
+    await signOut(auth);
   } finally { clearTimeout(timer); }
+  if (!persistent) return false;
+  await terminate(db);
+  try { await clearIndexedDbPersistence(db); } catch { /* another tab holds the cache: kept until a later sign-out */ }
+  return true;
 }
 export function errorCode(error: unknown): string {
   return error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' ? error.code : 'unknown';

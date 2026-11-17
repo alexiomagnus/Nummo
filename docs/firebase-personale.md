@@ -142,8 +142,9 @@ EXPO_PUBLIC_FIRESTORE_CACHE=persistent
 
 È la cache nativa dell'SDK Firestore, con supporto a più schede. Senza questa opzione
 la cache è in memoria: chiudere la pagina può perdere scritture non confermate.
-La cache su disco può contenere dati personali anche dopo logout; non abilitarla su
-un dispositivo condiviso. Non cancellare dati del sito mentre ci sono scritture
+La cache su disco contiene dati personali finché resti connesso: «Esci» la cancella e ricarica
+la pagina. Con un'altra scheda di Nummo aperta la cancellazione non riesce e la cache resta fino a
+un'uscita successiva con una sola scheda; su un dispositivo condiviso esci sempre. Non cancellare dati del sito mentre ci sono scritture
 pendenti. Browser privati, storage bloccato e browser non supportati richiedono prova
 specifica; la persistenza non è garantita in questi casi.
 
