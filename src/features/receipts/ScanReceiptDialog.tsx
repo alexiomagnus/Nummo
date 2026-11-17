@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
@@ -69,22 +69,22 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const ocrText = useRef('');
   const camera = useRef<HTMLInputElement>(null);
   const gallery = useRef<HTMLInputElement>(null);
-  const touch = useMemo(() => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches, []);
 
   // Closing in any way stops the work in progress and releases the picture.
   useEffect(() => () => running.current?.abort(), []);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
-  // Live camera for devices without a camera app behind the file picker (computers): the stream is shown in the
-  // dialog and stopped as soon as a picture is taken, the step is left or the dialog closes.
+  // Live camera in the dialog on every device, phones included (17 November): the system camera behind the file picker
+  // left the status bar of the installed app black until it was reopened (Chrome on Android, not fixable from the page).
+  // The stream is stopped as soon as a picture is taken, the step is left or the dialog closes.
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const stopCamera = () => { stream.current?.getTracks().forEach((track) => track.stop()); stream.current = null; setCameraReady(false); };
   useEffect(() => stopCamera, []);
   const openCamera = async () => {
-    // Phones and tablets: the system camera, straight from the file input.
-    if (touch || !navigator.mediaDevices?.getUserMedia) { camera.current?.click(); return; }
+    // Only a browser without getUserMedia (or a page outside a secure context) falls back to the system camera.
+    if (!navigator.mediaDevices?.getUserMedia) { camera.current?.click(); return; }
     setError(null); setFailed(null);
     const back = stage === 'camera' ? 'pick' : stage;
     setStage('camera');

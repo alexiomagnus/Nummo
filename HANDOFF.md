@@ -111,6 +111,15 @@ cronaca delle singole fasi e possono dire cose superate.
 
 ## Barra di stato nera dopo la fotocamera — 17 novembre 2026 (notte)
 
+- **Esito (dopo `f3a72f5`, ancora nera fino alla riapertura):** due correzioni dal `theme-color` (`dece43d`, `f3a72f5`) non sono servite;
+  senza il telefono collegato non è stato possibile osservare cosa fa Chrome al ritorno. Su scelta dell'utente: **fotocamera nella pagina
+  anche su smartphone** (`getUserMedia`, anteprima nel dialogo e «Scatta», come già su computer), quindi l'app non passa più all'attività
+  della fotocamera di sistema. Il campo file con `capture` resta solo se il browser non ha `getUserMedia`; «Carica foto» invariato (non
+  provato se anche la galleria lascia la barra nera). Codice dei due tentativi **rimosso**: `GlobalStyle.tsx`, `bootTheme.ts` e
+  `tests/startup.test.ts` tornati come in `6aa7683`. Contro accettati: niente app Fotocamera (HDR, flash), permesso della fotocamera
+  chiesto da Chrome alla prima volta. Le sezioni qui sotto descrivono i tentativi superati.
+
+
 - **Seconda correzione (dopo la prova dell'utente su `dece43d`, ancora nera):** prova decisiva dell'utente: con la barra nera, cambiando
   tema la barra prende il nuovo colore; tornando al tema precedente torna **nera**; uscire e rientrare dall'app la ripara. Quindi la pagina
   comanda ancora la barra, ma Chrome non dipinge più **il valore esatto** del `theme-color` che la pagina aveva quando è passata alla
