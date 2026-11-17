@@ -51,7 +51,7 @@ test('categorie: nessun limite, ordinamenti distinti e parità deterministica', 
   assert.equal(rows[0]!.total, 0);
 });
 test('dashboard: nuovi testi localizzati senza tradurre i dati utente', () => {
-  for (const text of ['Barre', 'Transazioni', 'Andamento nel tempo', 'Confronto non disponibile', 'Mostra transazioni']) {
+  for (const text of ['Barre', 'Transazioni', 'Andamento nel tempo', 'Mostra transazioni']) {
     assert.equal(translate('it', text), text);
     assert.notEqual(translate('en', text), text);
   }

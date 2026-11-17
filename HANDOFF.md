@@ -113,6 +113,18 @@ cronaca delle singole fasi e possono dire cose superate.
   su fondo scuro e chiaro (colore d'esempio, non la tavolozza vera). Minimale, colorato, ID, dati e Rules invariati.
 - **Verifiche:** `npm run check` OK (**492/492**, build demo). Non osservata dentro l'app né sul telefono. Committato in `dece43d` e pubblicato (vedi «Stato corrente»).
 
+## Traduzioni inutilizzate rimosse da `en.ts` — 17 novembre 2026 (notte)
+
+- Su richiesta: rimosse **70** chiavi di `src/i18n/en.ts` non usate in nessun punto del codice (ricerca su `src/`, `App.tsx`, `index.ts`,
+  `public/sw.js` e `public/index.html`, compresi i testi prodotti dai template literal dei messaggi di dominio, tradotti per corrispondenza
+  in `translate.ts`). Erano testi di funzioni tolte o riscritte: Templates, budget generale ed eccezioni del budget, vecchie note dei
+  Fondi (saldo, movimenti, entrate previste), vecchi testi della Guida (con «3, 6 o 12 mesi»), «Nuova categoria» nel selettore, rinomina
+  e icona delle categorie, cache «in memoria», giorni con/senza spese di Analisi, configurazione Firebase da `.env`, ecc. Test aggiornati:
+  tolti «Confronto non disponibile» (`dashboardInsights.test.ts`) e il test «mostra e nascondi giorni» (`i18n.test.ts`), che verificavano
+  solo traduzioni di testi non più mostrati. Nessun testo visibile cambia.
+- **Verifiche:** `npm run check` OK (typecheck, **489/489**, build demo; il test del catalogo conferma che ogni `t("…")` nei `.tsx` ha
+  ancora la sua traduzione). Inglese non osservato nel browser. Committato e inviato, non pubblicato su Hosting.
+
 ## Barra di stato nera dopo la fotocamera — 17 novembre 2026 (notte)
 
 - **Esito (dopo `f3a72f5`, ancora nera fino alla riapertura):** due correzioni dal `theme-color` (`dece43d`, `f3a72f5`) non sono servite;

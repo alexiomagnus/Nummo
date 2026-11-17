@@ -116,13 +116,6 @@ test('abbonamenti: stati e azioni tradotti, nomi delle serie mai tradotti', () =
   assert.equal(translate('en', 'Storico dei pagamenti ({p0})', { p0: 30 }), 'Payment history (30)');
 });
 
-test('dashboard: mostra e nascondi giorni tradotti in entrambe le lingue', () => {
-  for (const [it, en] of [['Mostra giorni con spese', 'Show days with expenses'], ['Nascondi giorni con spese', 'Hide days with expenses']] as const) {
-    assert.equal(translate('it', it), it);
-    assert.equal(translate('en', it), en);
-  }
-});
-
 test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
   assert.equal(translate('it', 'Impossibile unire il backup'), 'Impossibile unire il backup');
   assert.equal(translate('en', 'Impossibile unire il backup'), 'Cannot merge backup');
