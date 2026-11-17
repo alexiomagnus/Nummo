@@ -1,30 +1,25 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 16 novembre 2026
+## Stato corrente — 17 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
 cronaca delle singole fasi e possono dire cose superate.
 
-- **Rilascio del 16 novembre (sera): `f5411fb`** (esercenti, elenco dei modelli AI, esercente nella scansione, scansione predefinita), inviato a
-  `origin/main`. **Rules pubblicate** (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»)
-  e poi **Hosting** (`npm run deploy:hosting`, «Deploy complete!», sito 200). Spesa con esercente in Avanzata sul cloud non ancora provata.
-- **Scansione: esercente separato dalla descrizione e scansione predefinita (16 novembre, sera): NON committato, NON pubblicato.**
-  Sezione qui sotto. Dipende dagli esercenti (stesso ordine di pubblicazione: prima le Rules, poi l'Hosting).
-- **Elenco dei modelli AI nelle Impostazioni (16 novembre, sera): NON committato, NON pubblicato.** Il campo «Modello» di «Analisi
-  scontrini con AI» propone i modelli del servizio scelto appena c'è la chiave (sezione qui sotto). Nessuna modifica a `DataStore`, Rules
-  o backup: si pubblica con il solo Hosting.
-- **Esercenti in Nuova spesa (16 novembre, sera): NON committato, NON pubblicato.** Campo Esercente facoltativo con suggerimenti,
-  entità `merchants`, backup **v10**, IndexedDB passo 3, Rules aggiornate (sezione qui sotto). **Prima di pubblicare l'Hosting vanno
-  pubblicate le Rules** (`firestore.rules` = `public/firestore.rules`): con quelle in produzione una spesa con esercente in Avanzata è
-  rifiutata (senza esercente nulla cambia). Standard funziona subito. Commit, Rules e Hosting solo su richiesta.
+- **Rilascio del 16 novembre (sera): `f5411fb`** (esercenti in Nuova spesa, elenco dei modelli AI nelle Impostazioni, esercente
+  nella scansione, scansione predefinita), inviato a `origin/main`. **Rules pubblicate** (`firebase deploy --only firestore:rules
+  --project nummo-6b6e2`, compilazione OK, «Deploy complete!», con `merchants/{chiave}` e `merchant_id`) e poi **Hosting**
+  (`npm run deploy:hosting`, «Deploy complete!», sito 200). Spesa con esercente in Avanzata sul cloud non ancora provata.
+  Dettagli nelle tre sezioni del 16 novembre (sera) qui sotto.
 - **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
   inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
-- **Git.** `main` = `origin/main` più le modifiche non committate degli esercenti. Ultimo commit di codice `26b95e9` (scansione dello scontrino), poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
+- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `f5411fb`
+  (esercenti, modelli AI, esercente nella scansione), poi `664c330` (solo HANDOFF); prima `26b95e9` (scansione dello scontrino),
+  poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
   (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`26b95e9`** (scansione dello scontrino, vedi il punto in
-  apertura). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`f5411fb`** (vedi il punto in apertura).
+  Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
   larghezza), pubblicato su richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`8a99fa6`** (posizione di «Storico dei pagamenti»), pubblicato su
   richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
@@ -42,20 +37,23 @@ cronaca delle singole fasi e possono dire cose superate.
   icona stondata; con Rules), `e0c2850` (icona trasparente delle notifiche), `f454d12` (Prossimo mese, filtro per fondo,
   pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche; Worker ripubblicato prima), `1889755`
   (dissolvenza del segnaposto d'avvio). Tutti con `npm run deploy:hosting`, «Deploy complete!», sito 200.
-- **Rules.** Pubblicate su richiesta il 16 novembre (sera) con `firebase deploy --only firestore:rules --project nummo-6b6e2`
-  (compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `1dbb396` (con `skipped_payments`). Eliminazione di un
-  pagamento in Avanzata non ancora provata sul cloud.
+- **Rules.** Ultima pubblicazione su richiesta il 16 novembre (sera, prima dell'Hosting di `f5411fb`) con `firebase deploy --only
+  firestore:rules --project nummo-6b6e2` (compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `f5411fb` (esercenti,
+  oltre a `skipped_payments` di `1dbb396`). Spesa con esercente ed eliminazione di un pagamento in Avanzata non ancora provate sul cloud.
 - **Worker `nummo-push`.** Attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/`
   invariato da allora.
 - **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
   Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Da verificare su dispositivo:** icona dell'app (cache del launcher), filtri di Spese/Analisi, dissolvenza
   sul Pixel 8.
-- **Verifiche.** `npm run check` del 16 novembre (elenco dei modelli AI, sopra gli esercenti) OK, **488/488**, build demo. `test:emulator` **22/22** con gli esercenti
+- **Verifiche.** `npm run check` rieseguito il 17 novembre su `664c330` OK (typecheck, **488/488**, build demo). `test:emulator` **22/22** con gli esercenti
   (porte dedicate 19099/18180, config temporanea rimossa), caso peggiore del budget Rules con `merchant_id` incluso.
-- **Ambiente.** Runner hybrid dell'utente attivo (`node scripts/dev-hybrid.ts --clear`, PID 40726, config
-  `.nummo-hybrid-40726.json` in radice, ignorata; Firestore 8180, UI 4000, hub 4400): non toccarlo; per le suite usare porte dedicate.
-  Il suo Firestore emulato usa le Rules lette all'avvio: per provare gli esercenti in hybrid va riavviato dall'utente.
+- **Ambiente (17 novembre).** Il runner hybrid avviato il 16 alle 17:26 (PID 40726) si è fermato senza export (riavvio del sistema
+  il 17 alle 20:03): `npm run dev` rifiutava l'avvio per il lock rimasto. Ispezione: processo inesistente, porte 8180/9099/4000/4400/8081
+  libere, cartelle di sessione `.firebase/hybrid-I8KNPH` e `hybrid-iw5CbO` senza export, `emulator-data/` invariato dall'export del
+  16 alle 03:42 (eventuali dati scritti in hybrid dopo le 17:26 del 16 sono andati persi con l'emulatore). Su richiesta: lock rinominato
+  in `.firebase/hybrid.lock.stale-40726`, config `.nummo-hybrid-40726.json` rimossa dalla radice. Le altre cartelle e i lock
+  `stale-*` in `.firebase/` sono conservati. Il prossimo `npm run dev` legge le Rules attuali (con gli esercenti).
 - **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
   `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
   dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
@@ -125,7 +123,7 @@ cronaca delle singole fasi e possono dire cose superate.
   backup di recupero senza esercenti persi), `ExpenseList.tsx`, `BackupActions.tsx`, icona `store` in `SvgIcon`, Guida IT/EN («Esercenti
   ricordati»), `en.ts`, `firestore.rules` + `public/firestore.rules`, README, AGENTS, `docs/testing/README.md`.
 - **Migrazioni:** IndexedDB passo 3 (crea lo store `merchants`, nessun dato toccato); backup v10 con lettori v1–v9 invariati; Firestore:
-  nessuna migrazione, le spese esistenti restano senza `merchant_id`. Rules modificate, **non pubblicate**.
+  nessuna migrazione, le spese esistenti restano senza `merchant_id`. Rules modificate (pubblicate poi con `f5411fb`, vedi «Stato corrente»).
 - **Verifiche:** `npm run check` OK (typecheck, **484/484**, build demo); nuovi `tests/merchant.test.ts` (11: normalizzazione, Amazon/amazon/
   AMAZON, spazi, nome mostrato, risoluzione, contratto, frequenza + recenza, suggerimenti, backup v10, piano d'importazione, CSV) e 3 test in
   `localStore.test.ts` (creazione con la spesa, nessun duplicato né rinomina, modifica/rimozione, esercente inesistente rifiutato, backup e
@@ -2783,8 +2781,9 @@ screen reader, concorrenza tra due dispositivi.
    collaudo sui dati reali e sul Pixel 8 (elenco storico in `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`).
    Già fatti: Escape in `AppDialog` e riallineamento README/architettura (12 novembre).
 
-1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate l'ultima volta il 16 novembre (allineate a `f9c4d8f`,
-   senza `templates`), poi la sera con `skipped_payments` (`1dbb396`). Da verificare ricaricando l'app: caricamento e sincronizzazione. Per prove CRUD cloud
+1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
+   poi la sera con `skipped_payments` (`1dbb396`) e infine con gli esercenti (`f5411fb`). Da verificare ricaricando l'app: caricamento,
+   sincronizzazione, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
    serve autorizzazione. Decidere conservazione o migrazione esplicita degli ID icona rimossi, con regressioni
    decoder/import; nessuna migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
