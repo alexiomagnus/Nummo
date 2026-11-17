@@ -203,7 +203,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const openBackup = () => setBackupRequest((n) => n + 1);
   // The storage section of the backup page: the connected project and the offline cache.
   const storage = () => <AdvancedStorage style={styles.wide} onChangeMode={onChangeMode}
-    project={configMissing ? '' : activeFirebaseConfig.projectId} cache={persistentCache ? 'Locale' : 'Solo in memoria'}
+    project={configMissing ? '' : activeFirebaseConfig.projectId} cache={persistentCache ? 'Locale' : 'Non attiva'}
     connected={customFirebaseConfig !== null} onDisconnect={() => switchFirebase(null, true)} />;
   const account = session.status === 'signed-in'
     ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}

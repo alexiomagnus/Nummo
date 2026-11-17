@@ -28,7 +28,7 @@ con icona/etichetta (variante uniforme `labelMedium`/`labelSmall` scelta sullo s
 geometria pura in `navIndicator.ts`, click successivo al trascinamento soppresso); pulsante tondo in `primary`, nascosto nella pagina Nuova.
 Desktop: rail/drawer con FAB; la rail scorre verticalmente nelle finestre basse. Le azioni di Nuova spesa sono sempre nel flusso, dopo tutti i campi, senza barra sticky.
 Il contenuto occupa sempre tutta la larghezza del pannello, anche su monitor grandi: nessun limite
-di larghezza né colonna centrata in `AppShell`. Salva occupa sempre tutta la larghezza del modulo, anche su expanded. Categoria e Fondo stanno sempre sulla stessa riga, a metà (`besideCategory` di `ExpenseFields`; su smartphone `SelectField` `narrow`: freccia piccola da 16 sovrapposta invece dello spazio di Paper, «Nessuna»/«Nessuno» come `shortLabel`, valori lunghi con «…»); su smartphone Data a destra dell'Importo e «Scansiona scontrino» largo come l'Importo.
+di larghezza né colonna centrata in `AppShell`. Salva occupa sempre tutta la larghezza del modulo, anche su expanded. In Nuova spesa il Fondo segue la Categoria (`fund` di `ExpenseFields`): da medium sulla stessa riga, a metà; su smartphone (`fundBelow`) in una riga propria sotto la Categoria, con la Descrizione più bassa (96, tre righe) perché «Salva» resti intero sopra la navigazione a 390×844 (`SelectField` `narrow`, freccia piccola da 16 e «Nessuna»/«Nessuno» come `shortLabel`, resta per i campi a metà; valori lunghi con «…»); su smartphone Data a destra dell'Importo e «Scansiona scontrino» largo come l'Importo.
 La navigazione mobile si nasconde già al tocco su un campo scrivibile (anticipo con scadenza se non segue la tastiera,
 annullato subito se il tocco diventa uno scorrimento: `pointercancel` o scroll senza campo attivo),
 ma conserva il proprio spazio fino alla conferma dal viewport: il bersaglio non deve spostarsi tra pressione e rilascio;
@@ -247,7 +247,7 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   16 novembre); fuori dalle liste senza richiesta.
 - `DeleteAction` per ogni eliminazione; conserva l'azione/versione vista nella conferma.
   `AppDialog` per tutti i dialoghi: superficie dedicata, contorno, limiti viewport/safe area;
-  contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole.
+  contenuti lunghi in `ScrollArea` + `ScrollView`, azioni esterne all'area scorrevole. Nel modulo del fondo (`FundEditor`) l'area ha bordi da 1 sempre presenti, colorati (`outlineVariant`) solo sul lato che nasconde contenuto (`components/scrollEdges.ts`), e un interruttore attivato porta in vista i campi che rivela (ref a callback: il `Portal` monta dopo l'effetto).
   `Button` (unico pulsante), `ListRow`/`IconTile` (riga di Spese e Categorie), `ChoiceChips`,
   `SegmentedButtons` (sempre una riga alta 40: etichette brevi su ogni dimensione, nome completo in `accessibilityLabel`,
   padding orizzontale 12 → 8 → 4 per tutto il gruppo, spunta solo se entra con il padding scelto), `SwitchRow`/`M3Switch`, `SelectField` (foglio dal basso su smartphone, menu da medium), `DateField` (picker modale), `Card`,

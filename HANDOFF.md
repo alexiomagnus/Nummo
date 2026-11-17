@@ -13,6 +13,8 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
   inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
+- **Lavoro non committato (17 novembre, notte):** divisori e campi rivelati nel modulo del fondo, Fondo sotto la Categoria su
+  smartphone con Descrizione più bassa (sezione «Modulo del fondo leggibile…» qui sotto). `npm run check` OK (**490/490**).
 - **Rilascio del 17 novembre (tarda sera): `e4fb9f8`** (icona «internet» pixel ad alta definizione, tolto anche «Budget del mese
   superato»; punti 14–15 della sezione «Ritocchi mobile e scheda AI»), inviato a `origin/main` e pubblicato su richiesta con
   `npm run deploy:hosting` («Deploy complete!», sito 200). Rules e Worker non toccati. `npm run check` OK (**489/489**).
@@ -74,6 +76,34 @@ cronaca delle singole fasi e possono dire cose superate.
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `e4fb9f8`, Rules a `f5411fb`.
+
+## Modulo del fondo leggibile, Fondo sotto la Categoria su smartphone — 17 novembre 2026 (notte)
+
+Su richiesta (screenshot di «Modifica fondo» su desktop e smartphone e di Nuova spesa a 412 px). **Non committato.**
+
+1. **Modulo del fondo (`FundEditor`).** Con Ricarica e Budget attivi il modulo è più alto della finestra: l'area scorrevole tagliava a metà
+   «Importo del budget» senza alcun segnale (la barra di scorrimento dei dialoghi compare solo mentre si scorre), e sembrava un errore di
+   impaginazione. Ora, come nei dialoghi scorrevoli Material 3, l'area ha un **divisorio** (`outlineVariant`) in cima e/o in fondo **solo**
+   dove il contenuto continua (`scrollEdges` puro in `src/components/scrollEdges.ts`, bordi da 1 sempre presenti e trasparenti, quindi nessuno
+   spostamento); attivando Ricarica o Budget i campi rivelati scorrono **per intero** in vista (`useRevealOnEnable`, `scrollIntoView` «nearest»,
+   istantaneo con movimento ridotto). Primo tentativo con un ref oggetto: nullo all'effetto perché il `Portal` di Paper monta dopo, quindi
+   ref a callback. Solo questo dialogo: gli altri con `ScrollArea` restano senza divisori.
+2. **Nuova spesa su smartphone:** Categoria e Fondo di nuovo su **due righe** (il Fondo a tutta larghezza sotto la Categoria, senza
+   `narrow`); da medium restano affiancati. Prop `besideCategory` → `fund` + `fundBelow`, tolta la costante `fundBeside`. Per non spingere
+   «Salva» sotto la navigazione, su smartphone la **Descrizione** passa da 128 a 96 (tre righe). Modifica spesa e registrazione di una lista
+   invariate.
+
+- **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo; nuovo `tests/scrollEdges.test.ts`). Chromium headless su
+  `dist-demo`, Standard, tema scuro, profili temporanei cancellati, nessun errore JS. Nuova spesa con un fondo, alla prima apertura senza
+  scorrere: 412×893 (Pixel 8, app installata) «Salva» 677–733, navigazione da 802; 390×844 «Salva» 677–733, navigazione da 753 (20 px
+  liberi; prima della modifica, con il Fondo sotto e la Descrizione a 128, sarebbe finito 12 px sotto la barra); 390×740 e 360×640 «Salva»
+  intero solo scorrendo (a fine pagina sopra la barra); 1280 px Categoria e Fondo affiancati come prima. Nuovo fondo a 1280×800 e 390×844:
+  all'apertura nessun divisorio (tutto entra); con Ricarica divisorio solo in fondo; con Budget il campo scorre a 630–686 / 674–730, dentro
+  l'area (fino a 686 / 730), divisori in cima e in fondo.
+3. **Archiviazione e backup (Avanzata):** la riga «Cache offline» mostra **«Non attiva»** (EN «Off», traduzione già esistente) invece
+   di «Solo in memoria» quando la cache persistente non è abilitata; «Locale» invariato. Chiave «Solo in memoria» rimossa da `en.ts`.
+- **Non provati:** telefono reale, tema chiaro, «Modifica fondo» su un fondo esistente con entrambi gli interruttori già attivi (stesso
+  componente: divisorio in fondo all'apertura), lettori di schermo. `test:emulator` non necessario (Rules e `DataStore` invariati).
 
 ## Ritocchi mobile e scheda AI — 17 novembre 2026
 

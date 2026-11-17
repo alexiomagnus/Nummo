@@ -736,7 +736,6 @@ export const english: Readonly<Record<string, string>> = {
   "Nome progetto": "Project name",
   "Cache offline": "Offline cache",
   "Locale": "Local",
-  "Solo in memoria": "In memory only",
   "Su questo dispositivo": "On this device",
   "Ultimo backup": "Last backup",
   "Mai": "Never",

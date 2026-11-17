@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
@@ -7,6 +7,7 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { SwitchRow } from '../../components/SwitchRow';
+import { noScrollEdges, scrollEdges } from '../../components/scrollEdges';
 import type { CategoryIcon } from '../../domain/category';
 import { parseAmountMinor } from '../../domain/expense';
 import type { SyncedFund } from '../../domain/firestore';
@@ -15,6 +16,7 @@ import { todayInRome } from '../../domain/policy';
 import { useI18n } from '../../i18n/I18nProvider';
 import { paletteColor } from '../../theme/chartPalette';
 import { inputOutline, radius, spacing } from '../../theme/tokens';
+import { useReducedMotion } from '../../theme/useSizeClass';
 import { IconPicker } from '../categories/IconPicker';
 
 type Props = {
@@ -52,6 +54,19 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
   const [busy, setBusy] = useState(false);
   const blocked = busy || !ready;
   const keptExceptions = (record?.budget_exceptions ?? []).filter((c) => c.month >= monthOf(today)).length;
+  // The form is taller than most windows once recharge and budget are on: dividers mark the edges that hide content, so the
+  // field cut by the bottom edge reads as «more below» (the scrollbar only shows while scrolling).
+  const [edges, setEdges] = useState(noScrollEdges);
+  const metrics = useRef({ offset: 0, viewport: 0, content: 0 });
+  const measure = (next: Partial<typeof metrics.current>) => {
+    const m = Object.assign(metrics.current, next);
+    const found = scrollEdges(m.offset, m.viewport, m.content);
+    setEdges((now) => now.above === found.above && now.below === found.below ? now : found);
+  };
+  // A switch turned on reveals its amount: bring it wholly into view instead of leaving it under the bottom edge.
+  const reduced = useReducedMotion();
+  const rechargeFields = useRevealOnEnable(rechargeOn, reduced);
+  const budgetFields = useRevealOnEnable(budgetOn, reduced);
 
   const save = async () => {
     if (blocked) return;
@@ -80,8 +95,11 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
   return <Portal>
     <Dialog visible onDismiss={() => { if (!busy) close(); }} focusTextEntry={!record}>
       <Dialog.Title>{record ? t("Modifica fondo") : t("Nuovo fondo")}</Dialog.Title>
-      <Dialog.ScrollArea style={styles.area}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+      <Dialog.ScrollArea style={[styles.area, {
+        borderTopColor: edges.above ? colors.outlineVariant : 'transparent', borderBottomColor: edges.below ? colors.outlineVariant : 'transparent' }]}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} scrollEventThrottle={16}
+          onLayout={(e) => measure({ viewport: e.nativeEvent.layout.height })} onContentSizeChange={(_, content) => measure({ content })}
+          onScroll={(e) => measure({ offset: e.nativeEvent.contentOffset.y, viewport: e.nativeEvent.layoutMeasurement.height, content: e.nativeEvent.contentSize.height })}>
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome del fondo")} value={name} readOnly={blocked} aria-disabled={blocked}
               accessibilityLabel={t("Nome del fondo, obbligatorio")} error={Boolean(errors.name)}
@@ -117,7 +135,7 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
           <View style={styles.section}>
             <SwitchRow label={t("Ricarica mensile")} supporting={t("Denaro aggiunto al fondo ogni mese, ad esempio una paghetta o uno stipendio.")}
               value={rechargeOn} disabled={blocked} onChange={setRechargeOn} />
-            {rechargeOn && <View style={styles.row}>
+            {rechargeOn && <View ref={rechargeFields} style={styles.row}>
               <View style={styles.grow}>
                 <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo della ricarica")} value={rechargeAmount} inputMode="decimal" placeholder="0,00"
                   readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.rechargeAmount)} left={leadingIcon(iconShapes.euro)}
@@ -135,7 +153,7 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
           <View style={styles.section}>
             <SwitchRow label={t("Budget mensile")} supporting={t("Facoltativo: un limite di spesa indicativo per il mese, non blocca le spese.")}
               value={budgetOn} disabled={blocked} onChange={setBudgetOn} />
-            {budgetOn && <View>
+            {budgetOn && <View ref={budgetFields}>
               <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo del budget")} value={budgetAmount} inputMode="decimal" placeholder="0,00"
                 readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.budgetAmount)} left={leadingIcon(iconShapes.euro)}
                 onChangeText={(value) => { setBudgetAmount(value); setErrors({ ...errors, budgetAmount: undefined }); }} />
@@ -156,8 +174,30 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
   </Portal>;
 }
 
+// Ref for the fields a switch reveals: when the switch goes from off to on (not at opening), they scroll wholly into view
+// within the dialog, the nearest edge only. A callback ref, because Paper's Portal attaches the new node after the effect
+// has run. Web target: a View's node is its DOM element.
+function useRevealOnEnable(on: boolean, reduced: boolean) {
+  const node = useRef<HTMLElement | null>(null);
+  const was = useRef(on);
+  const pending = useRef(false);
+  const reveal = useCallback(() => {
+    const element = node.current;
+    if (!pending.current || !element) return;
+    pending.current = false;
+    // After layout, so the scroll area already includes the new fields.
+    requestAnimationFrame(() => element.scrollIntoView?.({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }));
+  }, [reduced]);
+  useEffect(() => {
+    if (on && !was.current) { pending.current = true; reveal(); }
+    was.current = on;
+  }, [on, reveal]);
+  return useCallback((view: ComponentRef<typeof View> | null) => { node.current = view as unknown as HTMLElement | null; reveal(); }, [reveal]);
+}
+
 const styles = StyleSheet.create({
-  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
+  // Always 1 dp borders, transparent unless content hides past that edge: showing a divider never shifts the layout.
+  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 1, borderBottomWidth: 1 },
   content: { paddingVertical: spacing.sm, gap: spacing.xl },
   section: { gap: spacing.sm },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },

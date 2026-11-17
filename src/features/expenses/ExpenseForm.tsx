@@ -109,13 +109,12 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // spaced like the fund field and the recurrence switch (this gap plus the switch row's own inset).
   const blockGap = desktop ? spacing.lg : spacing.xl;
   const formGap = desktop ? spacing.md : spacing.lg;
-  // The fund field sits to the right of Categoria, in halves, on every size (user's requests, 17 November).
+  // Fondo follows Categoria: beside it, in halves, from medium; on its own row below it on phones (user's requests,
+  // 17 November), where the shorter description keeps «Salva» whole above the navigation.
   const fundField = fundChoices.length > 0 ? <FundField choices={fundChoices} value={fundValue} error={errors.fundId} disabled={!enabled}
-    narrow={size === 'compact'} onChange={(fundId) => update({ fundId })} /> : null;
-  const fundBeside = true;
+    onChange={(fundId) => update({ fundId })} /> : null;
   const repeat = (
     <View style={{ gap: blockGap }}>
-      {!fundBeside && fundField}
       <RepeatField gap={blockGap} repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })}>
@@ -144,7 +143,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={(patch) => { update(patch); notify("Dati dello scontrino inseriti: controlla e premi Salva."); }} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
-        extra={repeat} besideCategory={fundBeside ? fundField : undefined}
+        extra={repeat} fund={fundField ?? undefined} fundBelow={size === 'compact'}
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}

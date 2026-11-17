@@ -27,7 +27,9 @@ type Props = {
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
   // Rendered to the right of the category picker, in halves (from medium up: the fund field of Nuova spesa).
-  besideCategory?: ReactNode;
+  // Fondo of Nuova spesa: beside Categoria, in halves, or (`fundBelow`, phones) on its own row below it.
+  fund?: ReactNode;
+  fundBelow?: boolean;
   // «Esercente», after the description: only the new-expense form and the expense editor show it.
   merchant?: { value: string; merchants: readonly RankedMerchant[]; error?: string; onChange: (value: string) => void };
   onChange: (field: BaseField, value: string) => void;
@@ -37,7 +39,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row (also on phones, where they share it in halves), then description, merchant (optional), category and `extra` (repeat).
 // Every other field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, besideCategory, merchant, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, fund, fundBelow = false, merchant, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -69,7 +71,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       </View>
       <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
-          multiline numberOfLines={dense ? 2 : 4} style={[styles.description, dense && styles.denseDescription]}
+          multiline numberOfLines={dense ? 2 : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription]}
           onChangeText={(value) => onChange('description', clipToLength(value, expensePolicy.maxDescriptionLength))} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {(errors.description || length > 0) && <View style={styles.helperRow}>
@@ -78,8 +80,8 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
         </View>}
       </View>
       {merchant && <MerchantField value={merchant.value} merchants={merchant.merchants} error={merchant.error} disabled={disabled} onChange={merchant.onChange} />}
-      <View style={besideCategory ? styles.categoryRow : undefined}>
-        <View style={besideCategory ? styles.half : undefined}>
+      <View style={fund ? (fundBelow ? styles.categoryColumn : styles.categoryRow) : undefined}>
+        <View style={fund && !fundBelow ? styles.half : undefined}>
         {dataState !== 'ready' ? (
           // Keep the category field's footprint while reading: [] is not an empty archive yet.
           <TextInput outlineStyle={inputOutline} label={t("Categoria")} mode="outlined" readOnly aria-disabled
@@ -95,10 +97,10 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
           </View>
         ) : (
           <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
-            disabled={disabled} error={errors.categoryId} narrow={compact && Boolean(besideCategory)} />
+            disabled={disabled} error={errors.categoryId} narrow={compact && Boolean(fund) && !fundBelow} />
         )}
         </View>
-        {besideCategory ? <View style={styles.half}>{besideCategory}</View> : null}
+        {fund ? <View style={fundBelow ? undefined : styles.half}>{fund}</View> : null}
       </View>
       {extra ? <View style={[styles.extra, dense && styles.denseExtra]}>{extra}</View> : null}
     </View>
@@ -109,11 +111,14 @@ const styles = StyleSheet.create({
   layout: { gap: spacing.lg },
   denseLayout: { gap: spacing.md },
   denseDescription: { minHeight: 80 },
+  // Phones with Fondo on its own row: the room it takes comes from here, so «Salva» stays whole above the navigation.
+  shortDescription: { minHeight: 96 },
   denseExtra: { marginTop: 0 },
   // Layout gap (16) + 8 = the 24 dp used between repeat and promo price.
   extra: { marginTop: spacing.sm },
   firstRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   categoryRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  categoryColumn: { gap: spacing.lg },
   half: { flex: 1, minWidth: 0 },
   amount: { flex: 1, minWidth: 0 },
   date: { width: 200, flexShrink: 0 },
