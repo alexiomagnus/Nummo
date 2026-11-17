@@ -297,7 +297,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
 
 const styles = StyleSheet.create({
   wideDialog: { maxWidth: 920 },
-  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
+  area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
   actions: { flexWrap: 'wrap', gap: spacing.xs },
   block: { gap: spacing.md },

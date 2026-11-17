@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   container: { flexShrink: 1, minHeight: 0 },
-  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0, borderTopWidth: 0, borderBottomWidth: 0 },
+  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0 },
   dialogBody: { paddingHorizontal: spacing.xl, gap: spacing.md },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },

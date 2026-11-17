@@ -100,7 +100,7 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
 }
 
 const styles = StyleSheet.create({
-  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
+  area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
   field: { gap: spacing.xs },
   action: { minWidth: 96, flexShrink: 1 },

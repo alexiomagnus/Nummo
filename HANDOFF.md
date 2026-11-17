@@ -82,6 +82,34 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `bd61713`, Rules a `f5411fb`.
 
+## Niente zoom con due dita, Esercente più vicino alla Descrizione — 17 novembre 2026 (notte)
+
+- Su richiesta (zoom con due dita su smartphone): meta viewport con `maximum-scale=1, user-scalable=no` (Chrome Android), su touch
+  `* { touch-action: pan-x pan-y }` in `GlobalStyle` (pillola e maniglie dei fogli restano `touch-action: none` in linea, che prevale) e
+  `gesturestart`/`gesturechange` annullati (Safari iOS ignora `user-scalable=no`). Test in `tests/manifest.test.ts`. Chi ha attivato in
+  Chrome «Forza attivazione zoom» (Accessibilità) può comunque ingrandire: è un'impostazione del browser. Compromesso di accessibilità
+  (WCAG 1.4.4) accettato dall'utente; lo zoom da tastiera/rotella su desktop resta.
+- Su richiesta (screenshot di «Controlla i dati letti»): la riga del contatore «n/100» sotto la Descrizione aggiungeva tutta la sua altezza
+  allo spazio prima dell'Esercente; ora ne sovrappone 8 dp (`helperRow` `marginBottom: -8`). Vale per ogni `ExpenseFields` con testo nella
+  Descrizione (Nuova spesa, Modifica spesa, revisione della scansione, registrazione della lista).
+- **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo). Chromium 390×844 touch, Standard, «Spesa» nella Descrizione: Esercente da 422 a 414 (bordo
+  della Descrizione a 372), Categoria di conseguenza da 488 a 480; meta viewport e `touch-action: pan-x pan-y` presenti nella build.
+  Il blocco del pinch non è provabile in headless: **da verificare sul telefono** (Android e, se possibile, iPhone). Committato e pubblicato (vedi «Stato corrente»).
+
+## Divisori in tutti i dialoghi scorrevoli — 17 novembre 2026 (notte)
+
+- Su richiesta: i divisori del modulo del fondo valgono ora per **ogni** dialogo con area scorrevole. `AppDialog.ScrollArea` è un
+  componente nostro (stesso layout dello `ScrollArea` di Paper: 24 ai lati, 24 sotto, cresce e si restringe) che trova nel DOM lo scroller
+  interno (la `ScrollView`), lo osserva con `scroll` e `ResizeObserver` (scroller e contenuto) e colora il bordo superiore/inferiore
+  (`outlineVariant`) solo dove il contenuto continua (`scrollEdges`); bordi sempre da 1, trasparenti altrimenti. Tolti gli
+  `borderTopWidth/BottomWidth: 0` dei 12 dialoghi e il calcolo proprio di `FundEditor` (resta lo scorrimento ai campi rivelati).
+  Dialoghi interessati: fondo, movimento, spesa (Modifica), categoria, stato e storico pagamenti degli abbonamenti, prodotti, dettagli
+  del giorno in Analisi, registrazione della lista, scansione, calendario, conferme di eliminazione e cambio di modalità.
+- **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo). Chromium headless su `dist-demo`, Standard, scuro, profili temporanei cancellati, nessun
+  errore JS: Nuovo fondo 1280×800 e 390×844 come prima (nessun divisorio all'apertura, solo in fondo con Ricarica, entrambi a metà);
+  calendario 390×844 nessun divisorio, 360×560 solo in fondo; Modifica categoria 390×844 nessuno, 360×560 in fondo e, scorrendo fino
+  in fondo, solo in cima. Non provati: gli altri dialoghi uno per uno, tema chiaro, telefono reale. Committato e pubblicato (vedi «Stato corrente»).
+
 ## Scansione: tolte la nota sulla lettura locale e la sezione dei prodotti letti — 17 novembre 2026 (notte)
 
 - Su richiesta (screenshot di «Controlla i dati letti»): in `ScanReceiptDialog` tolta la nota «Lo scontrino viene letto su questo

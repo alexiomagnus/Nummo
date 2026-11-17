@@ -86,7 +86,7 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
   };
   return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }}>
     <Dialog.Title>{record.recurrence ? t("Modifica serie") : t("Modifica spesa")}</Dialog.Title>
-    <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
+    <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
       <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}
         extra={fundChoices.length > 0 ? <View style={{ gap: spacing.xs }}>
           <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}

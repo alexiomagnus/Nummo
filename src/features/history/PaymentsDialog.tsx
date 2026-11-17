@@ -47,8 +47,8 @@ export function PaymentsDialog({ description, payments, total, canRemove, onRemo
 
 const styles = StyleSheet.create({
   intro: { gap: spacing.xs },
-  // Only the rows draw separators; Paper's ScrollArea borders would double the first and last line.
-  area: { minHeight: 0, borderTopWidth: 0, borderBottomWidth: 0 },
+  // Only the rows draw separators; the area's dividers appear only on an edge that hides rows (AppDialog.ScrollArea).
+  area: { minHeight: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52 },
   date: { flex: 1, minWidth: 0 },
   // The only action: a little larger than a standard text button (16/600 label), as in the other read-only dialogs.

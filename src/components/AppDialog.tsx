@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { Children, cloneElement, isValidElement, useMemo, useRef, type ComponentProps, type ComponentRef, type ReactElement, type ReactNode } from 'react';
+import { Children, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ComponentRef, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import { Dialog, Surface, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { transitions } from '../theme/motion';
 import { dialogColor } from '../theme/theme';
 import { layout, motion, radius, spacing } from '../theme/tokens';
 import { Scrim, useEscape, useFocusHandoff, useOverlayMotion, usePresence } from './Overlay';
+import { noScrollEdges, scrollEdges, type ScrollEdges } from './scrollEdges';
 
 type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dismissable' | 'testID'> & {
   style?: StyleProp<ViewStyle>;
@@ -61,11 +62,47 @@ function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID,
   </ThemeProvider>;
 }
 
+// Scroll area of every dialog (replaces Paper's Dialog.ScrollArea, same layout: 24 dp sides, grows and shrinks, 24 dp
+// below). As in Material 3 scrollable dialogs, a divider marks only the edges that hide content, so a field cut by the
+// edge reads as «more below» (the scrollbar only shows while scrolling). Borders are always 1 dp, transparent when
+// nothing is hidden: a divider never shifts the layout. Web target: the scroller is the first descendant of the area
+// that scrolls (the ScrollView inside), watched for scrolling and for size changes of itself and of its content.
+function ScrollArea({ style, children, ...rest }: ComponentProps<typeof View>) {
+  const { colors } = useTheme();
+  const [edges, setEdges] = useState<ScrollEdges>(noScrollEdges);
+  // A callback ref: Paper's Portal attaches the dialog's nodes after the first effects have run.
+  const [area, setArea] = useState<HTMLElement | null>(null);
+  const attach = useCallback((view: ComponentRef<typeof View> | null) => setArea(view as unknown as HTMLElement | null), []);
+  useEffect(() => {
+    if (!area) return;
+    const scroller = [...area.querySelectorAll<HTMLElement>('*')].find((node) => /^(auto|scroll)$/.test(getComputedStyle(node).overflowY));
+    if (!scroller) return;
+    const update = () => {
+      const found = scrollEdges(scroller.scrollTop, scroller.clientHeight, scroller.scrollHeight);
+      setEdges((now) => now.above === found.above && now.below === found.below ? now : found);
+    };
+    update();
+    scroller.addEventListener('scroll', update, { passive: true });
+    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    resize?.observe(scroller);
+    if (scroller.firstElementChild) resize?.observe(scroller.firstElementChild);
+    return () => { scroller.removeEventListener('scroll', update); resize?.disconnect(); };
+  }, [area]);
+  return <View {...rest} ref={attach} style={[scrollAreaStyles.container, style, {
+    borderTopWidth: 1, borderBottomWidth: 1,
+    borderTopColor: edges.above ? colors.outlineVariant : 'transparent', borderBottomColor: edges.below ? colors.outlineVariant : 'transparent',
+  }]}>{children}</View>;
+}
+
+const scrollAreaStyles = StyleSheet.create({
+  container: { paddingHorizontal: 24, flexGrow: 1, flexShrink: 1, marginBottom: 24 },
+});
+
 const styles = StyleSheet.create({
   wrapper: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, justifyContent: 'center' },
 });
 
 export const AppDialog = Object.assign(AppDialogRoot, {
-  Title: Dialog.Title, Content: Dialog.Content, ScrollArea: Dialog.ScrollArea,
+  Title: Dialog.Title, Content: Dialog.Content, ScrollArea,
   Actions: Dialog.Actions, Icon: Dialog.Icon,
 });

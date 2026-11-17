@@ -57,6 +57,9 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       @media (hover: none) and (pointer: coarse) {
         body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+        /* No pinch zoom on the page (user's request, 17 November): only panning. Element rules (touch-action: none
+           of drag handles) are more specific and win; the viewport meta and the gesture guard below do the rest. */
+        * { touch-action: pan-x pan-y; }
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
@@ -74,6 +77,14 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
     return () => { stop(); root.style.removeProperty('--nummo-viewport-height'); };
   }, []);
   useEffect(() => observeScrolling(document), []);
+  // Safari on iOS ignores user-scalable=no in the viewport meta: its own gesture events are the only way to stop a
+  // pinch zoom there (other browsers never fire them).
+  useEffect(() => {
+    const stop = (event: Event) => event.preventDefault();
+    const names = ['gesturestart', 'gesturechange'] as const;
+    for (const name of names) document.addEventListener(name, stop, { passive: false });
+    return () => { for (const name of names) document.removeEventListener(name, stop); };
+  }, []);
   useEffect(() => {
     const root = document.documentElement;
     const onKey = (event: KeyboardEvent) => { if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key !== 'Shift') root.dataset.input = 'key'; };

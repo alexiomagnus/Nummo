@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   ok: { minWidth: 64 },
   field: { borderRadius: radius.input },
   dialog: { maxWidth: 360 },
-  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginTop: 0, marginBottom: 0, borderTopWidth: 0, borderBottomWidth: 0 },
+  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginTop: 0, marginBottom: 0 },
   headline: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing.lg, gap: spacing.lg },
   headlineText: { textTransform: 'capitalize' },
   divider: { height: 1 },

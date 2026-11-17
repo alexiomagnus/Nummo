@@ -127,7 +127,9 @@ const styles = StyleSheet.create({
   text: { fontSize: 18 },
   description: { minHeight: 128 },
   amountText: { fontSize: 28, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs },
+  // The counter row under the description would add its whole height to the gap before the next field (Esercente):
+  // 8 dp of it overlap that gap (user's request, 17 November).
+  helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs, marginBottom: -spacing.sm },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },
   empty: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderRadius: radius.card, padding: spacing.lg },
   emptyText: { flex: 1, minWidth: 180, gap: spacing.xs },

@@ -89,7 +89,7 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
 }
 
 const styles = StyleSheet.create({
-  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
+  area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
   actions: { flexWrap: 'wrap', gap: spacing.xs },
 });

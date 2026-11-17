@@ -33,8 +33,8 @@ export function TransactionDetails({ title, items, categories, onClose }: {
 }
 
 const styles = StyleSheet.create({
-  // Only ListRow draws separators; Paper's ScrollArea borders would double the final line.
-  area: { minHeight: 0, borderTopWidth: 0, borderBottomWidth: 0 },
+  // Only ListRow draws separators; the area's dividers appear only on an edge that hides rows (AppDialog.ScrollArea).
+  area: { minHeight: 0 },
   // The only action: a little larger than a standard text button (16/600 label, like «Salva»).
   close: { minWidth: 96 },
   closeLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },

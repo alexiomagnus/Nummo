@@ -7,7 +7,6 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { SwitchRow } from '../../components/SwitchRow';
-import { noScrollEdges, scrollEdges } from '../../components/scrollEdges';
 import type { CategoryIcon } from '../../domain/category';
 import { parseAmountMinor } from '../../domain/expense';
 import type { SyncedFund } from '../../domain/firestore';
@@ -54,15 +53,6 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
   const [busy, setBusy] = useState(false);
   const blocked = busy || !ready;
   const keptExceptions = (record?.budget_exceptions ?? []).filter((c) => c.month >= monthOf(today)).length;
-  // The form is taller than most windows once recharge and budget are on: dividers mark the edges that hide content, so the
-  // field cut by the bottom edge reads as «more below» (the scrollbar only shows while scrolling).
-  const [edges, setEdges] = useState(noScrollEdges);
-  const metrics = useRef({ offset: 0, viewport: 0, content: 0 });
-  const measure = (next: Partial<typeof metrics.current>) => {
-    const m = Object.assign(metrics.current, next);
-    const found = scrollEdges(m.offset, m.viewport, m.content);
-    setEdges((now) => now.above === found.above && now.below === found.below ? now : found);
-  };
   // A switch turned on reveals its amount: bring it wholly into view instead of leaving it under the bottom edge.
   const reduced = useReducedMotion();
   const rechargeFields = useRevealOnEnable(rechargeOn, reduced);
@@ -95,11 +85,9 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
   return <Portal>
     <Dialog visible onDismiss={() => { if (!busy) close(); }} focusTextEntry={!record}>
       <Dialog.Title>{record ? t("Modifica fondo") : t("Nuovo fondo")}</Dialog.Title>
-      <Dialog.ScrollArea style={[styles.area, {
-        borderTopColor: edges.above ? colors.outlineVariant : 'transparent', borderBottomColor: edges.below ? colors.outlineVariant : 'transparent' }]}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} scrollEventThrottle={16}
-          onLayout={(e) => measure({ viewport: e.nativeEvent.layout.height })} onContentSizeChange={(_, content) => measure({ content })}
-          onScroll={(e) => measure({ offset: e.nativeEvent.contentOffset.y, viewport: e.nativeEvent.layoutMeasurement.height, content: e.nativeEvent.contentSize.height })}>
+      {/* Dividers on the edges that hide content come from AppDialog.ScrollArea, as in every dialog. */}
+      <Dialog.ScrollArea style={styles.area}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome del fondo")} value={name} readOnly={blocked} aria-disabled={blocked}
               accessibilityLabel={t("Nome del fondo, obbligatorio")} error={Boolean(errors.name)}
@@ -196,8 +184,7 @@ function useRevealOnEnable(on: boolean, reduced: boolean) {
 }
 
 const styles = StyleSheet.create({
-  // Always 1 dp borders, transparent unless content hides past that edge: showing a divider never shifts the layout.
-  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 1, borderBottomWidth: 1 },
+  area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.xl },
   section: { gap: spacing.sm },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },

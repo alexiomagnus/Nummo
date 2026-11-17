@@ -61,7 +61,7 @@ export function CategoryEditor({ record, categories, ready, error, onSave, close
 }
 
 const styles = StyleSheet.create({
-  area: { minHeight: 0, paddingHorizontal: spacing.xl, borderTopWidth: 0, borderBottomWidth: 0 },
+  area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.md },
   action: { width: 96, flexShrink: 1 },
 });

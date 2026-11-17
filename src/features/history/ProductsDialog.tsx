@@ -36,8 +36,8 @@ export function ProductsDialog({ description, products, onClose }: {
 }
 
 const styles = StyleSheet.create({
-  // Only the rows draw separators; Paper's ScrollArea borders would double the first and last line.
-  area: { minHeight: 0, borderTopWidth: 0, borderBottomWidth: 0 },
+  // Only the rows draw separators; the area's dividers appear only on an edge that hides rows (AppDialog.ScrollArea).
+  area: { minHeight: 0 },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingVertical: spacing.sm },
   mark: { width: 32, height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   name: { flex: 1, minWidth: 0 },

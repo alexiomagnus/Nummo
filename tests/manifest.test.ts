@@ -28,4 +28,6 @@ test('pagina: theme-color iniziale per schema, poi aggiornato dal tema scelto (b
   assert.match(html, /<meta name="theme-color" content="#[0-9A-F]{6}" media="\(prefers-color-scheme: light\)" \/>/i);
   assert.match(html, /<meta name="theme-color" content="#[0-9A-F]{6}" media="\(prefers-color-scheme: dark\)" \/>/i);
   assert.match(html, /viewport-fit=cover/);
+  // Niente zoom con due dita (richiesta del 17 novembre).
+  assert.match(html, /maximum-scale=1, user-scalable=no/);
 });

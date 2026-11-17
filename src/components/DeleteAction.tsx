@@ -55,7 +55,7 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
 
 const styles = StyleSheet.create({
   container: { flexShrink: 1, minHeight: 0 },
-  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0, borderTopWidth: 0, borderBottomWidth: 0 },
+  scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0 },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl },
   title: { flex: 1 },
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
