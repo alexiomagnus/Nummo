@@ -13,16 +13,18 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
   inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
   toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
-- **Ritocchi del 17 novembre: NON committati, NON pubblicati** (sezione qui sotto): barra mobile su iPhone, pulsanti del dialogo di
-  scansione su una riga, Data accanto all'Importo su smartphone, chiave API salvata nel browser, testi tolti e modello a sola scelta
-  nella scheda AI. Nessuna modifica a `DataStore`, Rules o backup: si pubblica con il solo Hosting.
-- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `f5411fb`
+- **Rilascio del 17 novembre: `d66d3db`** (sezione «Ritocchi mobile e scheda AI» qui sotto: barra su iPhone, Data accanto all'Importo,
+  Categoria e Fondo su una riga da medium, pulsanti di scansione su una riga, chiave API salvata, modello a sola scelta con elenco ridotto,
+  testi tolti, «OK» del calendario più largo), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting`
+  («Deploy complete!», sito 200). Rules e Worker non toccati. `npm run check` OK (**489/489**). Non provato su iPhone reale né con Gemini reale.
+- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `d66d3db`
+  (ritocchi del 17 novembre), prima `24ae16f` (solo HANDOFF); prima `f5411fb`
   (esercenti, modelli AI, esercente nella scansione), poi `664c330` (solo HANDOFF); prima `26b95e9` (scansione dello scontrino),
   poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
   (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
   nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`f5411fb`** (vedi il punto in apertura).
-  Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
+- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`d66d3db`** (vedi il punto in apertura).
+  Prima: **`f5411fb`** (Hosting e Rules). Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
   larghezza), pubblicato su richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`8a99fa6`** (posizione di «Storico dei pagamenti»), pubblicato su
   richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
@@ -64,7 +66,7 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
-  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting e Rules sono a `f5411fb`.
+  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `d66d3db`, Rules a `f5411fb`.
 
 ## Ritocchi mobile e scheda AI — 17 novembre 2026
 
