@@ -113,6 +113,16 @@ cronaca delle singole fasi e possono dire cose superate.
   su fondo scuro e chiaro (colore d'esempio, non la tavolozza vera). Minimale, colorato, ID, dati e Rules invariati.
 - **Verifiche:** `npm run check` OK (**492/492**, build demo). Non osservata dentro l'app né sul telefono. Committato in `dece43d` e pubblicato (vedi «Stato corrente»).
 
+## `SelectField`: rimossa la variante `narrow` — 17 novembre 2026 (notte)
+
+- Su richiesta: `narrow` non si attivava mai (in `ExpenseFields` valeva `compact && fund && !fundBelow`, ma `ExpenseForm` passa `fundBelow`
+  proprio su compact; `FundField` non lo riceveva da nessuno). Tolti da `SelectField` la prop `narrow`, `shortLabel` di `SelectOption`, la
+  freccia piccola sovrapposta, `narrowValue`/`narrowArrow` e il `position: relative` del contenitore `inert` che serviva solo alla freccia;
+  da `ExpenseFields` e `FundField` la prop e gli `shortLabel` «Nessuna»/«Nessuno» (le traduzioni restano: le usano le Categorie preferite,
+  il Fondo preferito e gli abbonamenti). Resta il «…» per i valori lunghi, valido per ogni `SelectField`. AGENTS aggiornato.
+- **Verifiche:** `npm run check` OK (typecheck, **489/489**, build demo). Chromium headless su `dist-demo`, Standard, archivio vuoto: Nuova
+  spesa a 390 e 1280 px, Categoria a tutta larghezza con la freccia normale, nessun errore JS (Fondo non provato: nessun fondo). Committato e inviato, non pubblicato su Hosting.
+
 ## Traduzioni inutilizzate rimosse da `en.ts` — 17 novembre 2026 (notte)
 
 - Su richiesta: rimosse **70** chiavi di `src/i18n/en.ts` non usate in nessun punto del codice (ricerca su `src/`, `App.tsx`, `index.ts`,
