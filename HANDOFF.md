@@ -90,6 +90,13 @@ cronaca delle singole fasi e possono dire cose superate.
   demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
   lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `416f0db`, Rules a `f5411fb`.
 
+## Scansione: nessun messaggio dopo «Usa questi dati» — 17 novembre 2026 (notte)
+
+- Su richiesta: quando la revisione dello scontrino compila i campi di Nuova spesa non compare più lo snackbar «Dati dello scontrino
+  inseriti: controlla e premi Salva.» (`ExpenseForm`: `onApply={update}`); traduzione rimossa da `en.ts`. Gli altri messaggi (spesa salvata,
+  ecc.) restano. **Verifiche:** `npm run check` OK (typecheck, **490/490**, build demo); Chromium 1280 px, Standard, scontrino sintetico:
+  «Usa questi dati» chiude il dialogo, Importo «5,00» nel modulo, nessun messaggio, nessun errore JS. Committato e pubblicato (vedi «Stato corrente»).
+
 ## Icona «internet» pixel, terzo disegno — 17 novembre 2026 (notte)
 
 - Su richiesta (riferimento: la versione con due archi e punto, «linee più definite»): solo nel set **pixel**, sempre ad alta

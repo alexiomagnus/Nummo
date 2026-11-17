@@ -909,7 +909,6 @@ export const english: Readonly<Record<string, string>> = {
   "Template per le spese": "Templates for expenses",
   "Se attivi i Template dal menu, puoi salvare spese già pronte (descrizione, categoria, fondo, data e, se vuoi, importo) e sceglierle in Nuova spesa per compilare tutto in un attimo.": "If you turn on Templates from the menu, you can save ready-made expenses (description, category, fund, date and, if you like, amount) and pick them in New expense to fill everything in at once.",
   "Scansiona scontrino": "Scan receipt",
-  "Dati dello scontrino inseriti: controlla e premi Salva.": "Receipt data filled in: check it and press Save.",
   "Controlla i dati letti": "Check the data read",
   "Foto dello scontrino": "Receipt photo",
   "Riduci la foto": "Shrink photo",

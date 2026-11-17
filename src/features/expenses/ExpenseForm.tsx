@@ -130,7 +130,8 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   return (
     <View style={styles.page}>
     <View style={[styles.form, desktop && styles.formDesktop]}>
-      {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. */}
+      {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. No message
+          when the fields are filled (removed on request, 17 November): the filled fields speak for themselves. */}
       {/* Phones: as wide as «Importo» below (same halves and gap as the amount/date row), so both edges line up. */}
       <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
         <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={size === 'compact' && styles.scanHalf}
@@ -141,7 +142,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       </View>
       {scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
-        onApply={(patch) => { update(patch); notify("Dati dello scontrino inseriti: controlla e premi Salva."); }} />}
+        onApply={update} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
         extra={repeat} fund={fundField ?? undefined} fundBelow={size === 'compact'}
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
