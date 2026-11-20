@@ -16,13 +16,16 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimo commit di codice: `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
+  `origin`. Ultimo commit di codice: `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
+  `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
   collaudo); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `f614f65` (codice di `78b424d`) pubblicato su richiesta il 21 novembre
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `e3fb997` pubblicato su richiesta il 21 novembre (sera) con
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare: pannello desktop in Brave
+  (righe tagliate dal bordo arrotondato, barra lontana dagli angoli), Firefox, esercente accanto alla data su telefono. Prima, **Hosting** da `f614f65` (codice di `78b424d`) pubblicato su richiesta il 21 novembre
   con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare sul telefono: dettagli
   di una spesa con esercente lungo, anteprima del ripristino, fogli e dialoghi senza striscia in basso. Prima, **Hosting** da
   `0765e5c` (codice di `aebd0ec`) pubblicato su richiesta il 20 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare in produzione:
@@ -72,7 +75,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   Solo spese singole; abbonamenti, Analisi e Categorie invariati.
 - **Verifica:** `npm run check` OK. Chromium headless, `dist-demo/`, Standard con `nummo-utente-medio.json` e
   `nummo-esercenti-v10.json` uniti: 1600×900 scuro (esercente accanto alla data, righe tagliate dal bordo del pannello) e 500×844
-  (esercente di 60 caratteri troncato con «…» prima dell'importo). Non pubblicato.
+  (esercente di 60 caratteri troncato con «…» prima dell'importo). Pubblicato il 21 novembre (sera).
 
 ## Ultima scheda tagliata nel pannello desktop — 21 novembre 2026
 
@@ -88,7 +91,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` **499/499**. Chromium headless 1600×900, `dist-demo/`, Standard con `nummo-utente-medio.json` unito
   (profilo temporaneo nello scratchpad): scroller = pannello (76–781), in cima la scheda è tagliata dal bordo arrotondato, in fondo
   l'ultima scheda resta a 32 px dal bordo; barra lontana dagli angoli, chiaro e scuro; a 800 px nessun `data-panel-scroll`.
-  Non provati: Firefox, Safari, Brave dell'utente (stesso motore di Chromium). Non pubblicato.
+  Non provati: Firefox, Safari, Brave dell'utente (stesso motore di Chromium). Pubblicato il 21 novembre (sera).
 
 ## Collaudo v9/v10 su smartphone emulato — 21 novembre 2026
 
@@ -220,6 +223,10 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (sera): Hosting da `e3fb997`** (scroller del pannello desktop che riempie il pannello, barra lontana
+  dagli angoli, `231d22c`; esercente accanto alla data nelle righe di Spese). `npm run deploy:hosting`: «Deploy complete!», sito 200,
+  bundle online identico a `dist/`. Rules e Worker non toccati. `npm run check` **499/499**.
 
 - **Rilascio del 21 novembre: Hosting da `f614f65`** (codice di `78b424d`: valori lunghi dei dettagli a capo su smartphone, pagina
   alta quanto la finestra senza striscia sotto fogli e dialoghi, anteprima del ripristino portata in vista).
