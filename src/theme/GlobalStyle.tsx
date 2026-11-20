@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react';
 import { useTheme } from 'react-native-paper';
 import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
+import { radius } from './tokens';
 import { observeScrolling, observeViewportHeight, scrollingAttribute, stickyBottomProperty } from './viewport';
 
 // Web-only rules RN Web cannot express: the font family (the @font-face rules live in public/index.html, so the font
@@ -24,6 +25,15 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
          No transition here: a rule on every element would override RN Web's own transitions. */
       [role='dialog'] * { scrollbar-color: transparent transparent; }
       [role='dialog'] [${scrollingAttribute}] { scrollbar-color: ${colors.outline} transparent; }
+      /* Desktop panel (AppShell): the track stops a corner radius short of both ends, so the bar runs only along the
+         straight edge of the rounded panel. Track margins exist only for WebKit scrollbars, which Chromium ignores while
+         scrollbar-width/color are set: reset them here. Firefox keeps the thin standard bar, clipped by the corners. */
+      @supports selector(::-webkit-scrollbar) {
+        [data-panel-scroll] { scrollbar-width: auto; scrollbar-color: auto; }
+        [data-panel-scroll]::-webkit-scrollbar { width: 10px; }
+        [data-panel-scroll]::-webkit-scrollbar-track { background: transparent; margin-block: ${radius.dialog}px; }
+        [data-panel-scroll]::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; border: 2px solid transparent; border-radius: 5px; }
+      }
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }
       /* Keep focus within the actual control: outer rings are clipped by pills, menus and scroll containers. */
