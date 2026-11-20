@@ -92,6 +92,18 @@ Su richiesta, sostituisce il punto «Google Drive» della decisione del 12 novem
   superata dalla sezione Web Push del 14 novembre),
   conferma implicita del backup al download (il browser non dice se il file è stato salvato).
 
+## ID icona eliminate: di nuovo valide e ritirate — 20 novembre 2026
+
+Su richiesta, completa la decisione del 14 novembre (sotto). Le 24 ID eliminate dall'8 al 12 novembre (`baby bed beer book briefcase bus
+car droplet ellipsis flame graduation leaf phone pill plane receipt scissors shield star ticket tree umbrella wine wrench`, ricavate
+dalla storia delle liste `icon in [...]` delle Rules) erano rifiutate da decoder, import e Rules: una sola categoria o un fondo con una di
+esse rendeva l'archivio «non valido» (esportazione e modifiche bloccate) e un backup che la conteneva non si importava. Ora sono
+valide e ritirate (`legacyCategoryIconLabels`, mai nel selettore, etichetta accessibile tradotta), con l'ultimo glifo minimale che
+avevano; negli stili colorato e pixel si usa il ripiego già previsto sul contorno (i 6 disegni colorati/pixel storici non sono
+reintrodotti: precedono la palette e i controlli di contrasto attuali). Nessuna migrazione o riscrittura dei dati. Il test che voleva
+stella, istruzione e birra non disegnate è sostituito: il ritiro vale anche per loro. Le Rules vanno pubblicate a parte, con
+autorizzazione; finché non lo sono, in Avanzata si leggono ma non si salvano modifiche che conservano una di queste icone.
+
 ## Icone ritirate e chiave — 14 novembre 2026
 
 Un'icona tolta dal selettore non viene più rimossa dall'elenco degli ID validi: le precedenti rimozioni rendevano

@@ -290,7 +290,10 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   `PaperProvider`, come la lingua) o dalla prop `style`. Nuova icona: aggiornare insieme `categoryIconLabels`, glifo minimale,
   disegno colorato con tinta per significato, sprite pixel (dettagli sottili in b/t, mai solo in `i`) e Rules (`tests/categoryIcons.test.ts` impone la corrispondenza e i contrasti);
   prima di rimuovere un identificativo valutare compatibilità di record e backup esistenti: per toglierla dal selettore
-  senza rompere i dati aggiungerla a `retiredCategoryIcons` (`domain/category.ts`, oggi `sofa`), che resta valida e disegnata.
+  senza rompere i dati aggiungerla a `retiredCategoryIcons` (`domain/category.ts`, oggi `sofa` più le 24 storiche), che resta valida e disegnata.
+  Le 24 ID eliminate dall'8 al 12 novembre (`legacyCategoryIconLabels`: `bus`, `car`, `tree`, `star`, `beer`, `pill`…) sono di nuovo valide dal
+  20 novembre, ritirate e disegnate solo col contorno storico (`ActiveCategoryIcon` = le icone con i tre disegni); le due liste `icon in [...]`
+  delle Rules devono coincidere con `categoryIcons` (test in `tests/categoryIcons.test.ts`).
 - Grafici: palette categoriale stabile, legenda e tabella, colore legato alla categoria;
   proiezione visuale separata dall’aggregazione completa (`categoryPresentation.ts`), gruppi virtuali mai salvati.
   Colori deterministici sulla palette finita (`categoryColorSlots`: slot distinti fino a 12 categorie con spese, oltre per le 12 con più spesa; stabili tra periodi), dettaglio completo anche se oltre 12 si ripetono;

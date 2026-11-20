@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { categoryIconLabels, selectableCategoryIcons, type CategoryIcon } from '../../domain/category';
+import { allCategoryIconLabels, selectableCategoryIcons, type CategoryIcon } from '../../domain/category';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { radius, spacing } from '../../theme/tokens';
@@ -19,7 +19,7 @@ export function IconPicker({ value, onChange, disabled }: Props) {
         return (
           <StateLayerPressable key={icon} bleed={4} layerColor={colors.onSurface} radius={radius.control} disabled={disabled} aria-disabled={disabled} onPress={() => onChange(selected ? null : icon)}
             accessibilityRole="button" aria-pressed={selected}
-            accessibilityLabel={t("Icona {p0}{p1}", { p0: t(categoryIconLabels[icon]), p1: selected ? t(", selezionata") : '' })}
+            accessibilityLabel={t("Icona {p0}{p1}", { p0: t(allCategoryIconLabels[icon]), p1: selected ? t(", selezionata") : '' })}
             style={[styles.cell, {
               backgroundColor: selected ? colors.primaryContainer : 'transparent',
             }]}>

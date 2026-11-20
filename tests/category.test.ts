@@ -24,3 +24,9 @@ test('nessun limite al numero: nuovi nomi validi anche con cento categorie, dupl
   assert.equal(categoryNameError('Nuova categoria', categories), null);
   assert.match(categoryNameError('Categoria 99', categories) ?? '', /già/);
 });
+test('archivio Firestore: una categoria con un’icona eliminata prima del 14 novembre si legge (prima bloccava tutto l’archivio)', async () => {
+  const { parseSyncedCategory, categoryNameKey } = await import('../src/domain/firestore.ts');
+  const base = { id: '7f3c2a10-1b2c-4d5e-8f90-123456789abc', label: 'Trasporti', name_key: categoryNameKey('Trasporti'), updated_at: '2026-11-08T10:00:00.000Z', revision: 1 };
+  for (const icon of ['bus', 'car', 'tree', 'star', 'pill']) assert.equal(parseSyncedCategory({ ...base, icon })?.icon, icon);
+  assert.equal(parseSyncedCategory({ ...base, icon: 'rocket' }), null);
+});

@@ -132,7 +132,7 @@ service cloud.firestore {
         && d.keys().hasOnly(['label', 'icon', 'name_key', 'revision', 'updated_at'])
         && d.label is string && d.label.size() > 0 && d.label.size() <= 40 && d.label == d.label.trim()
         && !d.label.matches('.*[\\t\\r\\n].*')
-        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'gamepad', 'bag', 'box', 'house', 'key', 'bulb', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'wallet', 'bank', 'cash', 'safe', 'growth', 'train', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'sofa', 'cake', 'laptop', 'piggy', 'cross', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
+        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'gamepad', 'bag', 'box', 'house', 'key', 'bulb', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'wallet', 'bank', 'cash', 'safe', 'growth', 'train', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'sofa', 'cake', 'laptop', 'piggy', 'cross', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud', 'baby', 'bed', 'beer', 'book', 'briefcase', 'bus', 'car', 'droplet', 'ellipsis', 'flame', 'graduation', 'leaf', 'phone', 'pill', 'plane', 'receipt', 'scissors', 'shield', 'star', 'ticket', 'tree', 'umbrella', 'wine', 'wrench']
         && d.name_key == nameKey(d.label) && d.revision is int && d.updated_at == request.time
         && getAfter(/databases/$(database)/documents/users/$(uid)/categoryNames/$(d.name_key)).data.category_id == id;
     }
@@ -150,7 +150,7 @@ service cloud.firestore {
       return d.keys().hasAll(['name', 'icon', 'color', 'initial_minor', 'start_date', 'recharges', 'budgets', 'budget_exceptions', 'archived', 'created_at', 'updated_at', 'revision'])
         && d.keys().hasOnly(['name', 'icon', 'color', 'initial_minor', 'start_date', 'recharges', 'budgets', 'budget_exceptions', 'archived', 'created_at', 'updated_at', 'revision'])
         && d.name is string && d.name.size() > 0 && d.name.size() <= 40 && d.name == d.name.trim() && !d.name.matches('.*[\\t\\r\\n].*')
-        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'gamepad', 'bag', 'box', 'house', 'key', 'bulb', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'wallet', 'bank', 'cash', 'safe', 'growth', 'train', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'sofa', 'cake', 'laptop', 'piggy', 'cross', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud']
+        && d.icon in [null, 'cart', 'burger', 'pizza', 'pasta', 'popcorn', 'coffee', 'heart', 'gamepad', 'bag', 'box', 'house', 'key', 'bulb', 'gift', 'shirt', 'paw', 'dumbbell', 'coin', 'wallet', 'bank', 'cash', 'safe', 'growth', 'train', 'bike', 'fuel', 'wifi', 'music', 'film', 'camera', 'sofa', 'cake', 'laptop', 'piggy', 'cross', 'sparkles', 'tv', 'utensils', 'heartpulse', 'cloud', 'baby', 'bed', 'beer', 'book', 'briefcase', 'bus', 'car', 'droplet', 'ellipsis', 'flame', 'graduation', 'leaf', 'phone', 'pill', 'plane', 'receipt', 'scissors', 'shield', 'star', 'ticket', 'tree', 'umbrella', 'wine', 'wrench']
         && d.color is int && d.color >= 0 && d.color <= 11
         && d.initial_minor is int && d.initial_minor >= 0 && d.initial_minor <= 999999999
         && d.start_date is string && validDate(d.start_date)

@@ -26,11 +26,46 @@ export const categoryIconLabels = {
   heartpulse: 'salute e battito',
   cloud: 'nuvola',
 } as const;
-export type CategoryIcon = keyof typeof categoryIconLabels;
-export const categoryIcons = Object.keys(categoryIconLabels) as CategoryIcon[];
+// IDs deleted outright before icons were retired (8–12 November 2026, a mistake: categories, funds and backups that used
+// one became unreadable). Valid again (20 November), never offered by the picker; drawn only as outlines (the colourful
+// and pixel styles fall back to them). Same strings in both icon lists of firestore.rules.
+export const legacyCategoryIconLabels = {
+  baby: 'bambino',
+  bed: 'viaggi e hotel',
+  beer: 'birra',
+  book: 'libro',
+  briefcase: 'lavoro',
+  bus: 'autobus',
+  car: 'auto',
+  droplet: 'acqua',
+  ellipsis: 'altro',
+  flame: 'gas',
+  graduation: 'istruzione',
+  leaf: 'pianta',
+  phone: 'telefono',
+  pill: 'medicina',
+  plane: 'aereo',
+  receipt: 'ricevuta',
+  scissors: 'forbici',
+  shield: 'assicurazione',
+  star: 'stella',
+  ticket: 'biglietto',
+  tree: 'natura',
+  umbrella: 'ombrello',
+  wine: 'vino',
+  wrench: 'chiave inglese',
+} as const;
+// IDs with a drawing in all three styles (the colourful and pixel tables are keyed by these).
+export type ActiveCategoryIcon = keyof typeof categoryIconLabels;
+export type CategoryIcon = ActiveCategoryIcon | keyof typeof legacyCategoryIconLabels;
+export const activeCategoryIcons = Object.keys(categoryIconLabels) as ActiveCategoryIcon[];
+export const legacyCategoryIcons = Object.keys(legacyCategoryIconLabels) as CategoryIcon[];
+export const categoryIcons: readonly CategoryIcon[] = [...activeCategoryIcons, ...legacyCategoryIcons];
+// Every valid ID with its accessible name (Italian source text, translated at the UI boundary).
+export const allCategoryIconLabels: Readonly<Record<CategoryIcon, string>> = { ...categoryIconLabels, ...legacyCategoryIconLabels };
 // Retired icons: still valid in records, backups and Rules (existing categories keep them and keep their drawing), but
 // no longer offered by the picker. Removing an ID outright would make archives that use it unreadable.
-export const retiredCategoryIcons: readonly CategoryIcon[] = ['sofa'];
+export const retiredCategoryIcons: readonly CategoryIcon[] = ['sofa', ...legacyCategoryIcons];
 export const selectableCategoryIcons = categoryIcons.filter((icon) => !retiredCategoryIcons.includes(icon));
 
 export function isCategoryIcon(value: unknown): value is CategoryIcon {

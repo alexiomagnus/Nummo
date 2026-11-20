@@ -5,7 +5,7 @@
 //   {b} base  {t} tint  {i} ink  {o} on-base  {l} line. Shapes default to no fill and the ink as stroke (set on the root).
 // Rules: details on a base fill use stroke="{o}", details on a tint fill use the ink, free strokes use {l} (L below). To add an icon: add its ID to
 // categoryIconLabels and categoryGlyphs.ts, then a hue and markup here (TypeScript and tests enforce the pairing).
-import type { CategoryIcon } from '../domain/category.ts';
+import type { ActiveCategoryIcon } from '../domain/category.ts';
 import type { IconHue } from '../theme/iconPalette.ts';
 
 export type ColorGlyph = Readonly<{ hue: IconHue; shape: string }>;
@@ -15,7 +15,8 @@ const T = 'fill="{t}"';
 const L = 'stroke="{l}"';
 const dot = (x: number, y: number, width = 2.2) => `<path stroke="{o}" stroke-width="${width}" d="M${x} ${y}h.01"/>`;
 
-export const categoryColorGlyphs: Record<CategoryIcon, ColorGlyph> = {
+// Legacy IDs have no colourful drawing: they fall back to their outline (categoryIconSets.ts).
+export const categoryColorGlyphs: Record<ActiveCategoryIcon, ColorGlyph> = {
   // Groceries and food
   cart: { hue: 'green', shape: `<path stroke="{i}" stroke-width="3.2" d="M3.6 4h1.6l2.4 10.3a1.6 1.6 0 0 0 1.6 1.2h8.4"/><path stroke="{b}" stroke-width="1.6" d="M3.6 4h1.6l2.4 10.3a1.6 1.6 0 0 0 1.6 1.2h8.4"/><path ${B} stroke="{i}" stroke-width="1.2" d="M5.7 7.5h15.3l-1.8 6.9a1.6 1.6 0 0 1-1.5 1.1H8.7a1.6 1.6 0 0 1-1.5-1.2L5.7 7.5Z"/><circle ${T} stroke="{i}" stroke-width="1.2" cx="9.5" cy="19.6" r="1.8"/><circle ${T} stroke="{i}" stroke-width="1.2" cx="17" cy="19.6" r="1.8"/>` },
   burger: { hue: 'orange', shape: `<path ${T} d="M4 10a8 6.2 0 0 1 16 0Z"/><rect ${B} x="3.5" y="11.4" width="17" height="3.2" rx="1.6"/><path ${T} d="M4.5 15.8h15v1a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-1Z"/>${dot(9, 7, 1.6).replace('{o}', '{i}')}${dot(12.6, 5.8, 1.6).replace('{o}', '{i}')}${dot(15.6, 7.4, 1.6).replace('{o}', '{i}')}` },

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { categoryIcons, isCategoryIcon, retiredCategoryIcons, selectableCategoryIcons } from '../src/domain/category.ts';
+import { readFileSync } from 'node:fs';
+import { activeCategoryIcons, allCategoryIconLabels, categoryIcons, isCategoryIcon, legacyCategoryIcons, retiredCategoryIcons, selectableCategoryIcons } from '../src/domain/category.ts';
 import { categoryGlyphs } from '../src/components/categoryGlyphs.ts';
 import { categoryColorGlyphs } from '../src/components/categoryColorGlyphs.ts';
 import { categoryPixelGlyphs, detailGrid, pixelGrid, pixelSprites, snapPixelSize, spriteMarkup } from '../src/components/categoryPixelGlyphs.ts';
@@ -17,8 +18,8 @@ const contrast = (a: string, b: string) => {
   return (hi! + 0.05) / (lo! + 0.05);
 };
 
-test('icone: ogni categoria ha un disegno colorato e viceversa, con una tinta della palette', () => {
-  assert.deepEqual(Object.keys(categoryColorGlyphs).sort(), [...categoryIcons].sort());
+test('icone: ogni icona attiva ha un disegno colorato e viceversa, con una tinta della palette', () => {
+  assert.deepEqual(Object.keys(categoryColorGlyphs).sort(), [...activeCategoryIcons].sort());
   for (const [name, glyph] of Object.entries(categoryColorGlyphs)) assert.ok((iconHues as readonly string[]).includes(glyph.hue), name);
 });
 
@@ -40,7 +41,7 @@ test('stile minimale: identico al set originale, il colore resta a chi disegna',
 });
 
 test('stile colorato: ruoli sostituiti per tema, stesso soggetto, nessun segnaposto rimasto', () => {
-  for (const icon of categoryIcons) {
+  for (const icon of activeCategoryIcons) {
     const light = resolveCategoryGlyph('colorful', icon, false)!;
     const dark = resolveCategoryGlyph('colorful', icon, true)!;
     const hue = categoryColorGlyphs[icon].hue;
@@ -53,7 +54,7 @@ test('stile colorato: ruoli sostituiti per tema, stesso soggetto, nessun segnapo
 });
 
 test('stile pixel: ogni categoria ha uno sprite valido, centrato su una griglia 12×12 e con la stessa tinta del colorato', () => {
-  assert.deepEqual(Object.keys(pixelSprites).sort(), [...categoryIcons].sort());
+  assert.deepEqual(Object.keys(pixelSprites).sort(), [...activeCategoryIcons].sort());
   for (const [name, sprite] of Object.entries(pixelSprites)) {
     const width = sprite.rows[0]!.length;
     const grid = sprite.grid ?? pixelGrid;
@@ -74,7 +75,7 @@ test('stile pixel: markup a celle intere, senza colori letterali, ruoli sostitui
     assert.match(glyph.shape, /^<g transform="scale\([12]\)" stroke="none" shape-rendering="crispEdges">(<path fill="\{[btio]\}" d="[Mhvz\d -]+"\/>)+<\/g>$/, name);
     assert.doesNotMatch(glyph.shape, /#[0-9a-f]{3,6}|rgb/i, name);
   }
-  for (const icon of categoryIcons) {
+  for (const icon of activeCategoryIcons) {
     const light = resolveCategoryGlyph('pixel', icon, false)!;
     const dark = resolveCategoryGlyph('pixel', icon, true)!;
     assert.doesNotMatch(light.shape + dark.shape, /[{}]/, icon);
@@ -128,13 +129,23 @@ test('stile pixel: nessuno sprite coincide con un altro, nemmeno a meno della ti
 });
 
 
-test('icone rimosse: stella, istruzione e birra non sono selezionabili né disegnate in alcuno stile', () => {
-  for (const icon of ['star', 'graduation', 'beer']) {
-    assert.equal(isCategoryIcon(icon), false);
-    for (const style of iconStyles) for (const dark of [false, true]) {
-      assert.equal(resolveCategoryGlyph(style, icon, dark), null, `${style}:${icon}`);
-    }
+test('icone eliminate prima del 14 novembre: di nuovo valide e ritirate, mai nel selettore, disegnate col contorno storico', () => {
+  assert.equal(legacyCategoryIcons.length, 24);
+  for (const icon of ['star', 'graduation', 'beer', 'bus', 'car', 'tree', ...legacyCategoryIcons]) {
+    assert.ok(isCategoryIcon(icon), icon);
+    assert.equal((selectableCategoryIcons as readonly string[]).includes(icon), false, icon);
+    assert.ok(allCategoryIconLabels[icon as keyof typeof allCategoryIconLabels], `${icon}: etichetta`);
+    // No colourful or pixel drawing: every style shows the same outline, never the empty placeholder.
+    const outline = { shape: zoomed(categoryGlyphs[icon as keyof typeof categoryGlyphs]), color: null };
+    for (const style of iconStyles) for (const dark of [false, true]) assert.deepEqual(resolveCategoryGlyph(style, icon, dark), outline, `${style}:${icon}`);
   }
+  assert.equal(new Set(categoryIcons).size, categoryIcons.length, 'nessun ID ripetuto tra attive e storiche');
+});
+
+test('Rules: le due liste di icone (categorie e fondi) accettano esattamente gli ID validi del dominio', () => {
+  const lists = [...readFileSync('firestore.rules', 'utf8').matchAll(/icon in \[null, ([^\]]*)\]/g)].map((match) => match[1]!.split(', ').map((id) => id.slice(1, -1)).sort());
+  assert.equal(lists.length, 2);
+  for (const list of lists) assert.deepEqual(list, [...categoryIcons].sort());
 });
 
 test('popcorn: cartone rosso, strisce bianche e chicchi gialli nei due stili e temi', () => {
@@ -161,7 +172,7 @@ test('chiave: disponibile e selezionabile in tutti e tre gli stili e temi', () =
 });
 
 test('divano ritirato: non più selezionabile, ma ancora valido e disegnato per le categorie e i backup esistenti', () => {
-  assert.deepEqual([...retiredCategoryIcons], ['sofa']);
+  assert.deepEqual([...retiredCategoryIcons], ['sofa', ...legacyCategoryIcons]);
   assert.equal(selectableCategoryIcons.includes('sofa'), false);
   assert.ok(isCategoryIcon('sofa'));
   for (const style of iconStyles) for (const dark of [false, true]) assert.ok(resolveCategoryGlyph(style, 'sofa', dark), `${style}:${dark}`);
@@ -192,7 +203,7 @@ test('regalo: viola e bianco in entrambi gli stili e temi (dettagli bianchi anch
 
 test('stili minimale e colorato: ingranditi attorno al centro alla stessa misura, il pixel mai (servono celle intere)', () => {
   assert.ok(glyphZoom > 1 && glyphZoom <= 1.15);
-  for (const icon of categoryIcons) {
+  for (const icon of activeCategoryIcons) {
     for (const style of ['minimal', 'colorful'] as const) assert.match(resolveCategoryGlyph(style, icon, false)!.shape, new RegExp(`^<g transform="translate\\(12 12\\) scale\\(${glyphZoom}\\) translate\\(-12 -12\\)">`), `${style}:${icon}`);
     assert.doesNotMatch(resolveCategoryGlyph('pixel', icon, false)!.shape, /translate\(12 12\)/, icon);
   }

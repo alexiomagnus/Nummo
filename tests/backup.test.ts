@@ -128,7 +128,7 @@ test('JSON: validazione rigorosa — duplicati, importi, date, UUID, formato dat
   const value = { format: 'nummo-backup', version: 1, expenses: [record], categories };
   for (const invalid of [{ ...value, expenses: [record, record] }, { ...value, categories: [categories[0], categories[0]] },
     { ...value, categories: [categories[0], { ...categories[0], id: uuid(5) }] },
-    { ...value, categories: [{ ...categories[0], icon: 'pill' }] }, { ...value, categories: [{ ...categories[0], id: 'x' }] },
+    { ...value, categories: [{ ...categories[0], icon: 'rocket' }] }, { ...value, categories: [{ ...categories[0], id: 'x' }] },
     { ...value, categories: [{ ...categories[0], label: ' Caffè ' }] },
     { ...value, expenses: [{ ...record, amount_minor: 1.2 }] }, { ...value, expenses: [{ ...record, amount_minor: 0 }] },
     { ...value, expenses: [{ ...record, currency: 'USD' }] }, { ...value, expenses: [{ ...record, price_changes: [{ index: 1, amount_minor: 1, once: false, x: 1 }] }] },
@@ -140,6 +140,11 @@ test('JSON: validazione rigorosa — duplicati, importi, date, UUID, formato dat
   assert.equal(parseBackup({ ...value, expenses: [], categories: many(10) }).categories.length, 10);
   for (const count of [3, 10, 15, 20, 30, 101]) {
     assert.equal(parseBackup({ ...value, expenses: [], categories: many(count) }).categories.length, count);
+  }
+  // Icons deleted before 14 November (here the old default of Trasporti and «medicina») are valid again: a backup that uses
+  // them is read, not refused. An ID that never existed still is (`rocket` above).
+  for (const icon of ['bus', 'pill', 'star']) {
+    assert.equal(parseBackup({ ...value, categories: [{ ...categories[0], icon }] }).categories[0]!.icon, icon);
   }
   // The store validates with the same function: one source of truth.
   assert.throws(() => validateBackupData([{ ...record, amount_minor: -1 }], []));

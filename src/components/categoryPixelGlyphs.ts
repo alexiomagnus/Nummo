@@ -7,7 +7,7 @@
 // They map to the same colour roles as the colourful set ({i} {b} {t} {o}), resolved per theme by categoryIconSets.ts, so
 // there are no hex values here. Thin details that touch no fill use b/t, never i: in the dark theme the ink is dark.
 // To add an icon: add its ID to categoryIconLabels and categoryGlyphs.ts, then a hue and a sprite here (tests enforce it).
-import type { CategoryIcon } from '../domain/category.ts';
+import type { ActiveCategoryIcon } from '../domain/category.ts';
 import type { ColorGlyph } from './categoryColorGlyphs.ts';
 import type { IconHue } from '../theme/iconPalette.ts';
 
@@ -20,7 +20,7 @@ export const snapPixelSize = (size: number): number => Math.max(pixelGrid, Math.
 export const detailGrid = 24;
 type Sprite = Readonly<{ hue: IconHue; rows: readonly string[]; grid?: typeof detailGrid }>;
 
-export const pixelSprites: Record<CategoryIcon, Sprite> = {
+export const pixelSprites: Record<ActiveCategoryIcon, Sprite> = {
   // Groceries and food
   cart: { hue: 'green', rows: [
     'bbb.........',
@@ -560,4 +560,4 @@ export function spriteMarkup(rows: readonly string[], grid: number = pixelGrid):
 
 export const categoryPixelGlyphs = Object.fromEntries(
   Object.entries(pixelSprites).map(([icon, sprite]) => [icon, { hue: sprite.hue, shape: spriteMarkup(sprite.rows, sprite.grid) }]),
-) as Record<CategoryIcon, ColorGlyph>;
+) as Record<ActiveCategoryIcon, ColorGlyph>;
