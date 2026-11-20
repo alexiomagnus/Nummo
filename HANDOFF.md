@@ -5,8 +5,9 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
 recente, sono cronaca delle singole fasi e possono dire cose superate.
 
-- **Git (20 novembre, sera).** `main` = `origin/main` = `cad616b`, tutto inviato su richiesta: `e4976be` (audit React), `ad5aa73` (ID
-  icona storiche di nuovo valide), più i soli aggiornamenti di questo file. Ultimo commit di codice: `ad5aa73`.
+- **Git (20 novembre, sera).** `main` allineato a `origin/main`, tutto inviato su richiesta. Ultimo commit di codice: `ad5aa73` (ID icona
+  storiche di nuovo valide), prima `e4976be` (audit React); i commit successivi toccano solo questo file (l'hash di testa non si
+  scrive qui: ogni commit che lo registrasse lo renderebbe superato).
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
