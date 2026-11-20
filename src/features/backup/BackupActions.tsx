@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -8,7 +8,7 @@ import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { radius, spacing } from '../../theme/tokens';
-import { useSizeClass } from '../../theme/useSizeClass';
+import { useReducedMotion, useSizeClass } from '../../theme/useSizeClass';
 import { conflictPreview, exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
 import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
@@ -37,6 +37,15 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const [status, setStatus] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
+  // The preview appears below the buttons, often out of sight on phones: bring it into view when a file has been read
+  // (only as far as needed; no animation with reduced motion).
+  const reduceMotion = useReducedMotion();
+  const previewRef = useRef<ComponentRef<typeof View>>(null);
+  useEffect(() => {
+    const node = previewRef.current as unknown;
+    if (preview && typeof HTMLElement !== 'undefined' && node instanceof HTMLElement)
+      node.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+  }, [preview, reduceMotion]);
   const run = async (work: () => Promise<void>) => {
     if (busy) return;
     setBusy(true); setStatus('');
@@ -102,7 +111,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
       </View>
     </View>
-    {preview && merge && replace && <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
+    {preview && merge && replace && <View ref={previewRef} style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
       <View style={styles.lines}>
         <Text variant="titleSmall">{mergeBlocked ? t("Impossibile unire il backup") : t("Riepilogo del ripristino")}</Text>
         <Text variant="bodySmall" numberOfLines={1} style={hint}>{preview.file}</Text>

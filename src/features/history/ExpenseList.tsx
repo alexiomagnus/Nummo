@@ -281,7 +281,9 @@ const styles = StyleSheet.create({
   // Fields only as wide as their text, side by side: no half-row columns with empty space between them.
   details: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.xxl, rowGap: spacing.md, borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: spacing.md, paddingBottom: spacing.md, paddingHorizontal: spacing.md },
-  detailField: { minWidth: 0, gap: spacing.xs },
+  // Never wider than the line: a long value (a 60-character merchant, a long category) wraps instead of running under
+  // «Modifica» and out of the card.
+  detailField: { minWidth: 0, maxWidth: '100%', flexShrink: 1, gap: spacing.xs },
   compactDetails: { gap: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md,
     paddingHorizontal: spacing.md },
   compactLine: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.lg },

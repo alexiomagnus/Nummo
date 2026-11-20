@@ -187,7 +187,9 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   useLayoutEffect(() => {
     // Measure with the browser's font metrics, including the selected system fallback and the active (bold) weight.
     const probe = document.createElement('span');
-    Object.assign(probe.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'nowrap', fontFamily,
+    // Pinned to the top left corner: left at the end of <body> it would make the page 15 px taller than the window, so the
+    // document could scroll and sheets and dialogs would leave a strip uncovered at the bottom.
+    Object.assign(probe.style, { position: 'absolute', top: '0', left: '0', pointerEvents: 'none', visibility: 'hidden', whiteSpace: 'nowrap', fontFamily,
       fontSize: `${fontSize}px`, fontWeight: '700', letterSpacing: `${letterSpacing}px` });
     probe.setAttribute('aria-hidden', 'true');
     document.body.appendChild(probe);
