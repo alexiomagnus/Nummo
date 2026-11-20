@@ -9,7 +9,7 @@ import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
-import { exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
+import { conflictPreview, exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
 import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
 const maxFileBytes = 5_000_000;
@@ -74,9 +74,18 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const added = merge ? [
     [merge.addExpenses.length, "1 spesa", "{p0} spese"], [merge.addCategories.length, "1 categoria", "{p0} categorie"],
     [merge.addFunds.length, "1 fondo", "{p0} fondi"], [merge.addMovements.length, "1 movimento", "{p0} movimenti"],
-    [merge.addLists.length, "1 lista", "{p0} liste"],
+    [merge.addLists.length, "1 lista", "{p0} liste"], [merge.addMerchants.length, "1 esercente", "{p0} esercenti"],
   ].filter(([n]) => (n as number) > 0).map(([n, one, many]) => (n === 1 ? t(one as string) : t(many as string, { p0: n as number }))) : [];
   const mergeEmpty = !!merge && added.length === 0;
+  // A blocked merge names what differs (the file's own names), at most three, then how many more.
+  const conflicts = merge ? conflictPreview(merge.conflicts) : { shown: [], more: 0 };
+  const conflictNames = [...conflicts.shown.map((c) => c.kind === 'budget' ? t("Budget mensile") : c.label || t("Movimento senza nota")),
+    ...(conflicts.more > 0 ? [t("altri {p0}", { p0: conflicts.more })] : [])].join(' · ');
+  // Replace: what goes and what is written (new or different items, merchants included).
+  const removed = replace ? replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length
+    + replace.removeMovementIds.length + replace.removeListIds.length + replace.removeMerchantIds.length : 0;
+  const written = replace ? replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length
+    + replace.addMovements.length + replace.addLists.length + replace.addMerchants.length : 0;
   const missing = merge ? merge.missingFundReferences + merge.missingCategoryReferences : 0;
   const finish = () => { setPreview(null); notify("Importazione completata."); };
   return <Card style={styles.card}>
@@ -99,9 +108,11 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         <Text variant="bodySmall" numberOfLines={1} style={hint}>{preview.file}</Text>
       </View>
       <Text variant="bodyLarge">
-        {mergeBlocked ? t("{p0} elementi sono diversi dai dati salvati.", { p0: merge.conflicts.length })
+        {mergeBlocked ? (merge.conflicts.length === 1 ? t("1 elemento è diverso dai dati salvati.")
+          : t("{p0} elementi sono diversi dai dati salvati.", { p0: merge.conflicts.length }))
           : mergeEmpty ? t("Niente da aggiungere: dati già presenti.")
           : t("Da aggiungere: {p0}", { p0: added.join(' · ') })}</Text>
+      {mergeBlocked && <Text variant="bodyMedium" numberOfLines={3}>{conflictNames}</Text>}
       {!mergeBlocked && missing > 0 && <Text variant="bodySmall" style={hint}>
         {missing === 1 ? t("1 riferimento a fondi o categorie mancanti.") : t("{p0} riferimenti a fondi o categorie mancanti.", { p0: missing })}</Text>}
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
@@ -113,9 +124,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
       </View>
     </View>}
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
-      description={replace && t("Verranno eliminati {p0} elementi e aggiunti {p1}. Prima viene scaricata una copia dei dati attuali.", {
-        p0: replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length + replace.removeMovementIds.length + replace.removeListIds.length,
-        p1: replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length + replace.addMovements.length + replace.addLists.length })}
+      description={replace && t("Elementi da eliminare: {p0}. Da scrivere: {p1}. Prima viene scaricata una copia dei dati attuali.", { p0: removed, p1: written })}
       onDismiss={() => setConfirmReplace(false)}
       onConfirm={async () => {
         if (!preview || busy) return false;

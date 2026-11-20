@@ -11,6 +11,7 @@ import type { Category } from '../../domain/category';
 import type { ExpenseRecord } from '../../domain/contract';
 import { applyFrequencyChange, applyPriceEdit, currentPrice, newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import { todayInRome } from '../../domain/policy';
+import { amountText } from '../../domain/receipt';
 import { nextRenewal, type PriceChange, type PriceScope } from '../../domain/pricing';
 import { isRecurrence, recurrenceAt, type Recurrence } from '../../domain/recurrence';
 import { spacing } from '../../theme/tokens';
@@ -21,19 +22,17 @@ import type { ExpenseStore } from './expenseStore';
 import { FundField, noFund, type FundChoice } from '../funds/FundField';
 import type { RankedMerchant } from '../../domain/merchant';
 
-const amountText = (minor: number) => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`;
-
 // `fundChoices` includes the record's own fund even when archived, so editing never drops it silently.
 // `listNote`: the expense registered a shopping list; 'linked' when that list still points at it (deleting it reopens the list).
 // `merchants`: saved merchants ranked by use; the record's own merchant is shown with its saved name and can be changed or
 // cleared (an empty field removes it from the expense; the merchant itself stays for the suggestions).
 export function ExpenseEditor({ record, categories, store, close, fundChoices = [], listNote, merchants = [] }: { record: ExpenseRecord; categories: readonly Category[]; store: ExpenseStore; close: () => void; fundChoices?: readonly FundChoice[]; listNote?: 'linked' | 'unlinked'; merchants?: readonly RankedMerchant[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { colors } = useTheme();
   const today = todayInRome();
   // For a series the amount field is the price of the next renewal; the first payment's price stays untouched.
   const shownAmount = useMemo(() => currentPrice(record, today), [record, today]);
-  const [draft, setDraft] = useState<ExpenseDraft>({ ...newDraft(), amount: amountText(shownAmount),
+  const [draft, setDraft] = useState<ExpenseDraft>({ ...newDraft(), amount: amountText(shownAmount, locale === 'it-IT' ? ',' : '.'),
     description: record.description, categoryId: record.category_id ?? '', date: record.expense_date === todayInRome() ? '' : record.expense_date, repeat: record.recurrence !== null, recurrence: record.recurrence ?? '',
     trial: Boolean(record.first_payment_date), firstPaymentDate: record.first_payment_date ?? '',
     fundId: record.fund_id && fundChoices.some((c) => c.fund.id === record.fund_id) ? record.fund_id : fundChoices.length ? noFund : '',

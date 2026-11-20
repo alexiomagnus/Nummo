@@ -306,6 +306,14 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
   };
 }
 
+// The items named when a merge is blocked: the first `max` conflicts as in the plan (expenses first), and how many more.
+// Labels are the file's own names (descriptions, category/fund/list names, movement notes: never translated); the general
+// budget's label and an empty movement note are left to the presentation layer (`kind` tells which).
+export function conflictPreview(conflicts: readonly ImportConflict[], max = 3): { shown: ImportConflict[]; more: number } {
+  const shown = conflicts.slice(0, Math.max(0, max));
+  return { shown, more: conflicts.length - shown.length };
+}
+
 // --- CSV export (consultation only) ------------------------------------------------------------
 
 // Italian spreadsheets expect ';' as the list separator and ',' as the decimal mark; ISO dates open correctly everywhere.

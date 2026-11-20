@@ -281,7 +281,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     const record = store.expenses.find((r) => r.id === id);
     if (!record || !store.update || !record.recurrence) return false;
     const skipped = skipPayment(record.skipped_payments ?? [], index);
-    if (!skipped) { notify("Troppi pagamenti eliminati per questo abbonamento: per continuare creane uno nuovo."); return false; }
+    // The limit is not a transient failure: retrying cannot succeed, so the confirmation closes (true) and the message explains.
+    if (!skipped) { notify("Troppi pagamenti eliminati per questo abbonamento: per continuare creane uno nuovo."); return true; }
     const saved = await store.update(record, { ...dataOf(record), skipped_payments: skipped });
     if (saved) notify("Pagamento eliminato.");
     return saved;

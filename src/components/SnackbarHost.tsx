@@ -1,6 +1,6 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { Snackbar } from 'react-native-paper';
+import { Portal, Snackbar } from 'react-native-paper';
 import { radius, spacing } from '../theme/tokens';
 
 type Notify = (message: string) => void;
@@ -25,11 +25,15 @@ export function SnackbarProvider({ bottomOffset, onVisibleChange, children }: {
   return (
     <SnackbarContext.Provider value={value}>
       {children}
-      <Snackbar key={state.id} visible={state.visible} onDismiss={dismiss} duration={snackbarDuration}
-        wrapperStyle={{ bottom: bottomOffset + spacing.sm, zIndex: 20 }}
-        style={{ borderRadius: radius.control }} action={{ label: t("Chiudi"), onPress: dismiss }}>
-        {t(state.message)}
-      </Snackbar>
+      {/* In a portal remounted with each message: Paper stacks portals in mounting order, so a message sent while a dialog
+          or sheet is open appears above its scrim instead of under it. Texts are translated here (portals lose contexts). */}
+      <Portal key={state.id}>
+        <Snackbar visible={state.visible} onDismiss={dismiss} duration={snackbarDuration}
+          wrapperStyle={{ bottom: bottomOffset + spacing.sm, zIndex: 20 }}
+          style={{ borderRadius: radius.control }} action={{ label: t("Chiudi"), onPress: dismiss }}>
+          {t(state.message)}
+        </Snackbar>
+      </Portal>
     </SnackbarContext.Provider>
   );
 }

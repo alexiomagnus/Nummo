@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { backupVersion, exportCsv, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
+import { backupVersion, conflictPreview, exportCsv, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
 import { expandOccurrences } from '../src/domain/history.ts';
 import { categoryNameKey, parseSyncedExpense } from '../src/domain/firestore.ts';
 import type { ExpenseRecord } from '../src/domain/contract.ts';
@@ -210,4 +210,18 @@ test('dati Firestore: chiave nome categoria, timestamp e revisioni invalidi rifi
   assert.ok(parseSyncedExpense({ ...record, revision: 1, updated_at: record.created_at }));
   assert.equal(parseSyncedExpense(record), null);
   assert.equal(parseSyncedExpense({ ...record, revision: 0, updated_at: record.created_at }), null);
+});
+
+test('ripristino bloccato: al massimo tre elementi in conflitto nominati, poi quanti altri', () => {
+  const conflict = (n: number) => ({ kind: 'expense' as const, id: `id-${n}`, label: `Spesa ${n}` });
+  assert.deepEqual(conflictPreview([conflict(1)]), { shown: [conflict(1)], more: 0 });
+  const five = [1, 2, 3, 4, 5].map(conflict);
+  assert.deepEqual(conflictPreview(five), { shown: five.slice(0, 3), more: 2 });
+  assert.deepEqual(conflictPreview([]), { shown: [], more: 0 });
+  // The plan names a changed series by its description, in file order.
+  const series = { id: '11111111-1111-4111-8111-111111111111', amount_minor: 1299, currency: 'EUR' as const, description: 'Streaming', category_id: null,
+    expense_date: '2026-01-15', recurrence: 'monthly' as const, price_changes: [], status_changes: [], fund_id: null, list_id: null, list_items: [],
+    source: 'web_app' as const, schema_version: 1 as const, created_at: '2026-01-15T09:00:00.000Z' };
+  const plan = planImport({ expenses: [series], categories: [] }, { expenses: [{ ...series, skipped_payments: [10] }], categories: [] }, 'merge');
+  assert.deepEqual(conflictPreview(plan.conflicts).shown.map((c) => c.label), ['Streaming']);
 });

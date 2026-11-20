@@ -121,6 +121,13 @@ test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
   assert.equal(translate('en', 'Impossibile unire il backup'), 'Cannot merge backup');
   assert.equal(translate('it', '{p0} elementi sono diversi dai dati salvati.', { p0: 2 }), '2 elementi sono diversi dai dati salvati.');
   assert.equal(translate('en', '{p0} elementi sono diversi dai dati salvati.', { p0: 2 }), '2 items differ from your saved data.');
+  // One conflict: singular, never «1 elementi».
+  assert.equal(translate('it', '1 elemento è diverso dai dati salvati.'), '1 elemento è diverso dai dati salvati.');
+  assert.equal(translate('en', '1 elemento è diverso dai dati salvati.'), '1 item differs from your saved data.');
+  assert.equal(translate('en', 'altri {p0}', { p0: 4 }), '4 more');
+  assert.equal(translate('en', '{p0} esercenti', { p0: 11 }), '11 merchants');
+  assert.equal(translate('en', 'Elementi da eliminare: {p0}. Da scrivere: {p1}. Prima viene scaricata una copia dei dati attuali.', { p0: 1, p1: 0 }),
+    'Items to delete: 1. To write: 0. A copy of your current data is downloaded first.');
 });
 
 test('impostazioni: interruttore del budget mensile tradotto in entrambe le lingue', () => {
