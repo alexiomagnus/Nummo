@@ -214,10 +214,10 @@ elementi eliminati), suggerimenti dell'Esercente, «ESSELUNGA» che riusa l'eser
 modifica, export finale identico al file v10 a parte `exported_at`, totali di Analisi (novembre 224,98 €, 12 mesi 1189,09 €).
 Con la spesa di prova «ebay» del giorno l'ordine per «e» diventa Esselunga, Ebay, Ferramenta…: atteso, l'uso di oggi pesa di più.
 Non provati: modalità Avanzata dall'interfaccia (accesso Google dall'emulatore), smartphone, CSV in un foglio di calcolo vero.
-Osservazioni, non corrette: il conteggio dei conflitti dice «1 elementi sono diversi…» e non nomina la spesa; riepilogo e
-conferma del ripristino non contano gli esercenti («aggiunti 0» anche quando «Sostituisci» rinomina «Ebay» in «eBay»); dopo il
-rifiuto del 61° pagamento il dialogo di conferma resta aperto e il messaggio compare sotto lo scrim; nel modulo di modifica
-l'importo appare con il punto («23.50»), in Nuova spesa con la virgola.
+Osservazioni del collaudo, **corrette lo stesso giorno** e riverificate nella demo (italiano e inglese): l'unione bloccata dice
+«1 elemento è diverso dai dati salvati.» (plurale da 2) e nomina fino a tre elementi, poi «altri N»; riepilogo e conferma del
+ripristino contano gli esercenti («12 esercenti»; conferma «Elementi da eliminare: N. Da scrivere: M.»); al 61° pagamento eliminato
+la conferma si chiude e il messaggio compare sopra il dialogo; nel modulo di modifica l'importo usa il separatore della lingua.
 
 I due file v9 e v10 di questa cartella sono verificati da `tests/testingBackups.test.ts`: lettura, export identico (a parte il numero
 di versione per il v9), i valori delle tabelle qui sopra al 20 novembre 2026, piano di unione e CSV. Se si cambiano i file o le

@@ -50,6 +50,31 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Osservazioni del collaudo corrette — 20 novembre 2026 (notte)
+
+Su richiesta, le quattro osservazioni del collaudo dei file v9/v10. Rules, `DataStore`, formato del backup e dati invariati.
+
+- **Unione bloccata:** «1 elemento è diverso dai dati salvati.» al singolare (plurale da 2) e, sotto, i nomi dei primi tre elementi
+  in conflitto (nomi del file, mai tradotti; «Budget mensile» e «Movimento senza nota» come etichette sintetiche), poi «altri N».
+  Funzione pura `conflictPreview` in `domain/backup.ts`.
+- **Esercenti nel ripristino:** il riepilogo conta gli esercenti nuovi («12 esercenti»), la conferma di «Sostituisci» conta anche
+  quelli rimossi e quelli scritti. Il testo della conferma è ora «Elementi da eliminare: {p0}. Da scrivere: {p1}. …» (niente più
+  «1 elementi»); «Da scrivere» comprende gli elementi diversi riscritti dal file (es. «Ebay» → «eBay»).
+- **Messaggi sopra i dialoghi:** `SnackbarProvider` rende lo snackbar in un `Portal` Paper rimontato a ogni messaggio (i portali si
+  impilano in ordine di montaggio): un messaggio inviato con un dialogo o un foglio aperto compare sopra lo scrim ed è cliccabile.
+  Vale per tutti i messaggi dell'app. Al limite dei 60 pagamenti eliminati `removePayment` restituisce `true` (non è un errore
+  temporaneo): la conferma si chiude e resta il messaggio.
+- **Importo nel modulo di modifica:** `ExpenseEditor` usa `amountText` di `domain/receipt.ts` con il separatore della lingua
+  («23,50» in italiano, «23.50» in inglese, come la scansione); il parser accetta entrambi. `FundEditor` usa sempre la virgola
+  (non toccato).
+- **Test:** `conflictPreview` (con un piano reale) in `tests/backup.test.ts`, nuove chiavi in `tests/i18n.test.ts`; traduzioni
+  aggiunte e la vecchia frase della conferma rimossa da `en.ts`. `npm run check` **499/499**.
+- **Riverificato nella demo** (Standard, `dist-demo/` ricostruito, Chromium headless 1280×900): anteprima v10 «27 spese · 5 categorie
+  · 12 esercenti»; conferma «Elementi da eliminare: 18. Da scrivere: 44.»; 61° pagamento: conferma chiusa, messaggio sopra lo
+  storico e «Chiudi» cliccabile; conflitto «1 elemento è diverso…» con «V9 Streaming»; importo «23,50» e salvataggio di «24,75»;
+  in inglese «24.75», «1 item differs…» e «Items to delete: 50. To write: 1.». Non provati: smartphone (foglio dal basso con
+  messaggio), «altri N» dall'interfaccia (solo test), Avanzata.
+
 ## File di collaudo v9 e v10 — 20 novembre 2026
 
 - Su richiesta (punto 2 di «Prossime attività»). In `docs/testing/`: `nummo-pagamenti-eliminati-v9.json` (8 abbonamenti con
@@ -68,9 +93,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   seconda unione senza aggiunte. Esito nel README della cartella.
 - **Collaudo dall'interfaccia (20 novembre, sera), modalità Standard:** `dist-demo/` servito in locale, Chromium headless pilotato via
   CDP a 1280×900, emulatori demo avviati e fermati alla fine. Tutti i passi dei due README danno il risultato atteso (dettaglio nel
-  README della cartella). **Osservazioni non corrette** (decidere se intervenire): «1 elementi sono diversi…» senza nome della spesa;
-  riepilogo e conferma del ripristino non contano gli esercenti; dopo il rifiuto del 61° pagamento il dialogo di conferma resta aperto
-  e il messaggio è sotto lo scrim; importo con il punto nel modulo di modifica (`ExpenseEditor.amountText`).
+  README della cartella). Le quattro osservazioni sono state corrette subito dopo (sezione seguente).
 - **Non eseguiti:** Avanzata dall'interfaccia, smartphone, CSV in un foglio di calcolo reale. Nessun codice dell'app, Rules o backup modificati.
 
 ## ID icona storiche di nuovo valide — 20 novembre 2026
