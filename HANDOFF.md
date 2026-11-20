@@ -66,7 +66,12 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   ed export identico (versione a parte), Lavanderia `0,…,59` accettata, seconda unione senza aggiunte; esercente «Ebay» già salvato,
   v10 unito («Ebay» conservato, ID `%2F`/`%25` accettati), poi Sostituisci (v9 rimosso, «eBay», export identico byte per byte) e
   seconda unione senza aggiunte. Esito nel README della cartella.
-- **Non eseguiti:** importazione dall'interfaccia, CSV in un foglio di calcolo reale. Nessun codice dell'app, Rules o backup modificati.
+- **Collaudo dall'interfaccia (20 novembre, sera), modalità Standard:** `dist-demo/` servito in locale, Chromium headless pilotato via
+  CDP a 1280×900, emulatori demo avviati e fermati alla fine. Tutti i passi dei due README danno il risultato atteso (dettaglio nel
+  README della cartella). **Osservazioni non corrette** (decidere se intervenire): «1 elementi sono diversi…» senza nome della spesa;
+  riepilogo e conferma del ripristino non contano gli esercenti; dopo il rifiuto del 61° pagamento il dialogo di conferma resta aperto
+  e il messaggio è sotto lo scrim; importo con il punto nel modulo di modifica (`ExpenseEditor.amountText`).
+- **Non eseguiti:** Avanzata dall'interfaccia, smartphone, CSV in un foglio di calcolo reale. Nessun codice dell'app, Rules o backup modificati.
 
 ## ID icona storiche di nuovo valide — 20 novembre 2026
 

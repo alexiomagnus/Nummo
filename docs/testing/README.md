@@ -129,7 +129,7 @@ Valori calcolati con il dominio al **20 novembre 2026**, su archivio contenente 
   limite), agosto **39,00** (senza Streaming e Telefono eliminati), settembre 24,98 (senza Palestra e Musica eliminate), ottobre **74,97**
   superato, novembre **60,97** superato (Abbonamenti 35,97 + Spese 25,00).
 
-**Collaudo dall'interfaccia (non ancora eseguito):**
+**Collaudo dall'interfaccia (eseguito il 20 novembre 2026 in Standard, vedi sotto):**
 
 1. **Unisci ai dati esistenti**: 9 spese, 3 categorie e 1 fondo aggiunti, nessun conflitto né riferimento mancante. Una seconda
    unione dello stesso file non aggiunge nulla.
@@ -179,7 +179,7 @@ Ordine dei suggerimenti al 20 novembre (frequenza con emivita di 90 giorni, poi 
 - **CSV:** colonna «Esercente» in fondo; la riga della pizza è
   `2026-11-15;"V10 Pizza d'asporto";"V10 · Ristoranti e bar";23,50;EUR;"";"";"Pizzeria ""Da Gino""; Centro"`.
 
-**Collaudo dall'interfaccia (non ancora eseguito):**
+**Collaudo dall'interfaccia (eseguito il 20 novembre 2026 in Standard, vedi sotto):**
 
 1. **Unisci ai dati esistenti** su un archivio di prova: 27 spese, 5 categorie, 12 esercenti aggiunti, nessun conflitto.
    Seconda unione: nulla di nuovo.
@@ -202,7 +202,22 @@ emulatori dedicati e archivio demo vuoto: v9 unito (export identico al file salv
 Lavanderia salvato come stringa `0,1,…,59` e accettato), reimportato senza aggiunte né conflitti; poi, con un esercente «Ebay» già
 salvato, v10 unito (27 spese, 5 categorie, 11 esercenti nuovi, «Ebay» conservato, ID con `%2F` e `%25` accettati); infine v10 con
 **Sostituisci** (rimossi i 9 + 3 + 1 elementi v9, nome «eBay» dal file, export identico al file byte per byte) e reimportato senza
-aggiunte né conflitti. Collaudo dall'interfaccia e CSV in un foglio di calcolo ancora da fare.
+aggiunte né conflitti. Collaudo dall'interfaccia: vedi il paragrafo seguente.
+
+**Collaudo dall'interfaccia (20 novembre 2026, eseguito):** export demo (`dist-demo/`) in Chromium headless a 1280×900,
+modalità **Standard** (archivio IndexedDB nuovo, con le cinque categorie predefinite). Tutti i passi delle due sezioni sopra
+danno il risultato atteso: anteprime (9 spese · 3 categorie · 1 fondo; 27 spese · 5 categorie), seconda unione «Niente da
+aggiungere», storico e prossimo rinnovo di ogni abbonamento v9, Fondi da luglio a novembre, 61° pagamento della Lavanderia
+rifiutato con il messaggio previsto, conflitto dopo l'eliminazione del pagamento del 15 novembre di Streaming, export JSON v10 e
+CSV (BOM, date eliminate assenti), «Ebay» conservato dall'unione e «eBay» dopo Sostituisci (copia automatica scaricata, 20
+elementi eliminati), suggerimenti dell'Esercente, «ESSELUNGA» che riusa l'esercente esistente, esercente nei dettagli e nella
+modifica, export finale identico al file v10 a parte `exported_at`, totali di Analisi (novembre 224,98 €, 12 mesi 1189,09 €).
+Con la spesa di prova «ebay» del giorno l'ordine per «e» diventa Esselunga, Ebay, Ferramenta…: atteso, l'uso di oggi pesa di più.
+Non provati: modalità Avanzata dall'interfaccia (accesso Google dall'emulatore), smartphone, CSV in un foglio di calcolo vero.
+Osservazioni, non corrette: il conteggio dei conflitti dice «1 elementi sono diversi…» e non nomina la spesa; riepilogo e
+conferma del ripristino non contano gli esercenti («aggiunti 0» anche quando «Sostituisci» rinomina «Ebay» in «eBay»); dopo il
+rifiuto del 61° pagamento il dialogo di conferma resta aperto e il messaggio compare sotto lo scrim; nel modulo di modifica
+l'importo appare con il punto («23.50»), in Nuova spesa con la virgola.
 
 I due file v9 e v10 di questa cartella sono verificati da `tests/testingBackups.test.ts`: lettura, export identico (a parte il numero
 di versione per il v9), i valori delle tabelle qui sopra al 20 novembre 2026, piano di unione e CSV. Se si cambiano i file o le
