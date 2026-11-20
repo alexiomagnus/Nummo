@@ -16,14 +16,16 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimo commit di codice: `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
+  `origin`. Ultimo commit di codice: `41a54ab` (righe intere nel pannello, esercente tolto dai dettagli), prima `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
   `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
   collaudo); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `e3fb997` pubblicato su richiesta il 21 novembre (sera) con
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `41a54ab` pubblicato su richiesta il 21 novembre (notte): righe intere sul
+  bordo del pannello desktop, esercente tolto dai dettagli; sito 200, bundle identico a `dist/`. Da provare in Brave: nessuna riga a
+  metà in fondo al pannello, apertura dell'ultima riga visibile. Prima, **Hosting** da `e3fb997` pubblicato su richiesta il 21 novembre (sera) con
   `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare: pannello desktop in Brave
   (righe tagliate dal bordo arrotondato, barra lontana dagli angoli), Firefox, esercente accanto alla data su telefono. Prima, **Hosting** da `f614f65` (codice di `78b424d`) pubblicato su richiesta il 21 novembre
   con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare sul telefono: dettagli
@@ -233,6 +235,10 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (notte): Hosting da `41a54ab`** (righe intere sul bordo del pannello desktop, esercente tolto dai
+  dettagli della spesa). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules e Worker non
+  toccati. `npm run check` **501/501**.
 
 - **Rilascio del 21 novembre (sera): Hosting da `e3fb997`** (scroller del pannello desktop che riempie il pannello, barra lontana
   dagli angoli, `231d22c`; esercente accanto alla data nelle righe di Spese). `npm run deploy:hosting`: «Deploy complete!», sito 200,
