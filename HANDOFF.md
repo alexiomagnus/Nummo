@@ -6,15 +6,14 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei 
 recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 - **Git (20 novembre, sera).** `main` = `origin/main` = `63dd40a` (audit React `e4976be`, unito in avanti e inviato su richiesta;
-  ramo `fix/react-audit` cancellato). Poi, inviati su richiesta: ID icona storiche di nuovo valide (sezione qui sotto) e questo file.
-  In produzione Hosting resta a `561968c` e le Rules a `f5411fb`: le ID storiche non sono ancora pubblicate.
+  ramo `fix/react-audit` cancellato). Poi `ad5aa73` (ID icona storiche di nuovo valide) e `f3bd4df` (questo file), inviati su richiesta.
 - **File da ispezionare (non miei):** `.nummo-hybrid-25494.json` nella radice, del 17 novembre 20:30, nessun processo 25494 attivo:
   config di un runner hybrid fermato senza pulizia (ignorata da Git). Non toccata; rimuoverla solo su richiesta dopo un controllo.
-- **Produzione (progetto `nummo-6b6e2`).** Hosting a **`561968c`** (pubblicato su richiesta il 17 novembre con
-  `npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online identico a `dist/`). Rules a **`f5411fb`** (16 novembre,
-  sera, `firebase deploy --only firestore:rules --project nummo-6b6e2`: esercenti, oltre a `skipped_payments` di `1dbb396`).
-  Worker `nummo-push` attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/` invariato da
-  allora. Cronologia nel «Registro dei rilasci» qui sotto.
+- **Produzione (progetto `nummo-6b6e2`).** Pubblicati su richiesta il 20 novembre (sera), nell'ordine: **Rules** da `ad5aa73`
+  (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»: le 24 ID icona storiche
+  ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
+  identico a `dist/`): audit React e ID icona storiche. Worker `nummo-push` invariato (ripubblicato dall'utente per `f454d12`).
+  Da provare in produzione: un archivio o un backup con un'icona storica, se ne esistono. Cronologia nel «Registro dei rilasci» qui sotto.
 - **Verifiche (20 novembre, sera, albero con le ID icona).** `npm run check` OK (typecheck, **496/496**, build demo). `test:emulator`
   **22/22** con le Rules nuove (porte dedicate 29099/28180, config temporanea rimossa).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
@@ -39,8 +38,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
-  con `docs/testing/`, pubblicazione (autorizzata) di Hosting e Rules con le ID icona storiche, tastiera automatica di Nuova
-  lista/Nuovo fondo su telefono reale.
+  con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
 ## ID icona storiche di nuovo valide — 20 novembre 2026
 
@@ -59,8 +57,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `npm run check` **496/496**; `test:emulator` **22/22**.
 - **Controllo dati, solo locale:** `emulator-data/` (archivio hybrid personale) contiene solo icone attuali. Produzione, archivi Standard
   nei browser e backup personali **non controllati** (servono autorizzazione o i file).
-- **Da pubblicare, con autorizzazione:** Hosting (il client torna a leggere questi archivi e backup) e **Rules** (finché non sono
-  pubblicate, in Avanzata non si salva una modifica che conserva una di queste icone, per esempio rinominare la categoria).
+- **Pubblicato su richiesta il 20 novembre (sera):** prima le Rules, poi Hosting (vedi «Registro dei rilasci»).
 
 ## Audit React, rendering e prestazioni — 20 novembre 2026
 
@@ -99,6 +96,10 @@ sul ramo `fix/react-audit`, non pubblicato. Rules, Auth, configurazione Firebase
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 20 novembre (sera): Rules da `ad5aa73`, poi Hosting da `f3bd4df`** (ID icona storiche di nuovo valide; audit React:
+  errori di listener visibili, icona del FAB stabile, richieste del menu non ripetute). Rules: compilazione OK, «Deploy complete!».
+  Hosting: «Deploy complete!», sito 200, bundle online identico a `dist/`. `npm run check` **496/496**, `test:emulator` **22/22**.
 
 - **Rilascio del 17 novembre (notte, nona parte): `561968c`** (70 traduzioni inutilizzate rimosse da `en.ts`, variante `narrow` di
   `SelectField` rimossa; nessun cambiamento visibile), pubblicato su richiesta con `npm run deploy:hosting` («Deploy complete!», sito 200,
@@ -3147,8 +3148,8 @@ screen reader, concorrenza tra due dispositivi.
    poi la sera con `skipped_payments` (`1dbb396`) e infine con gli esercenti (`f5411fb`). Da verificare ricaricando l'app: caricamento,
    sincronizzazione, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
    serve autorizzazione. **ID icona eliminati: risolto nel codice il 20 novembre** (sezione «ID icona storiche di nuovo valide»):
-   le 24 ID sono valide e ritirate. Restano la pubblicazione autorizzata di Hosting e Rules e, se si vuole, la verifica sui dati
-   reali (archivio Avanzata, archivi Standard nei browser, backup personali); nessuna migrazione dei dati.
+   le 24 ID sono valide e ritirate, Rules e Hosting pubblicati la sera stessa. Resta, se si vuole, la verifica sui dati reali
+   (archivio Avanzata, archivi Standard nei browser, backup personali); nessuna migrazione dei dati.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino,
    sospensione della ricarica (interruttore «Ricarica mensile» del modulo del fondo), dialoghi Fondi/Liste a 320 px e in landscape,
