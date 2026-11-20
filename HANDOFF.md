@@ -1,18 +1,86 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 17 novembre 2026
+## Stato corrente — 20 novembre 2026
 
-Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, in ordine dal più recente, sono
-cronaca delle singole fasi e possono dire cose superate.
+Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
+recente, sono cronaca delle singole fasi e possono dire cose superate.
 
-- **Rilascio del 16 novembre (sera): `f5411fb`** (esercenti in Nuova spesa, elenco dei modelli AI nelle Impostazioni, esercente
-  nella scansione, scansione predefinita), inviato a `origin/main`. **Rules pubblicate** (`firebase deploy --only firestore:rules
-  --project nummo-6b6e2`, compilazione OK, «Deploy complete!», con `merchants/{chiave}` e `merchant_id`) e poi **Hosting**
-  (`npm run deploy:hosting`, «Deploy complete!», sito 200). Spesa con esercente in Avanzata sul cloud non ancora provata.
-  Dettagli nelle tre sezioni del 16 novembre (sera) qui sotto.
-- **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
-  inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
-  toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
+- **Git (20 novembre, sera).** `main` = `origin/main` = `850eaea`. Sul ramo locale **`fix/react-audit`** (non inviato, non unito):
+  `e4976be` (correzioni dell'audit React, sezione «Audit React, rendering e prestazioni» qui sotto) e un commit di questo file.
+  Ultimo commit di codice in produzione `561968c`.
+- **File da ispezionare (non miei):** `.nummo-hybrid-25494.json` nella radice, del 17 novembre 20:30, nessun processo 25494 attivo:
+  config di un runner hybrid fermato senza pulizia (ignorata da Git). Non toccata; rimuoverla solo su richiesta dopo un controllo.
+- **Produzione (progetto `nummo-6b6e2`).** Hosting a **`561968c`** (pubblicato su richiesta il 17 novembre con
+  `npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online identico a `dist/`). Rules a **`f5411fb`** (16 novembre,
+  sera, `firebase deploy --only firestore:rules --project nummo-6b6e2`: esercenti, oltre a `skipped_payments` di `1dbb396`).
+  Worker `nummo-push` attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/` invariato da
+  allora. Cronologia nel «Registro dei rilasci» qui sotto.
+- **Verifiche (20 novembre, sera, albero con l'audit).** `npm run check` OK (typecheck, **494/494**, build demo). Ultimo `test:emulator`:
+  **22/22** il 17 novembre (`416f0db`, porte dedicate 19099/18180), caso peggiore del budget Rules con `merchant_id` incluso; da
+  allora Rules e accesso ai dati non sono cambiati.
+- **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
+  più nera.
+- **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
+  pagina si ricarica sulla schermata di accesso e la cache su disco si cancella) → nuovo accesso.
+- **Da verificare su dispositivo:** «Carica foto» (galleria) e qualità della foto per l'OCR; blocco dello zoom con due dita (Android
+  e iPhone); ritocchi mobile del 17 novembre su iPhone reale e scheda AI con Gemini reale; icona dell'app (cache del launcher), filtri
+  di Spese/Analisi e dissolvenza del segnaposto d'avvio sul Pixel 8; tastiera automatica di Nuova lista/Nuovo fondo (su iOS
+  probabilmente non si apre).
+- **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
+  Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
+- **Ambiente (17 novembre).** Il runner hybrid avviato il 16 alle 17:26 (PID 40726) si è fermato senza export (riavvio del sistema
+  il 17 alle 20:03): `npm run dev` rifiutava l'avvio per il lock rimasto. Ispezione: processo inesistente, porte 8180/9099/4000/4400/8081
+  libere, cartelle di sessione `.firebase/hybrid-I8KNPH` e `hybrid-iw5CbO` senza export, `emulator-data/` invariato dall'export del
+  16 alle 03:42 (eventuali dati scritti in hybrid dopo le 17:26 del 16 sono andati persi con l'emulatore). Su richiesta: lock rinominato
+  in `.firebase/hybrid.lock.stale-40726`, config `.nummo-hybrid-40726.json` rimossa dalla radice. Le altre cartelle e i lock
+  `stale-*` in `.firebase/` sono conservati. Il prossimo `npm run dev` legge le Rules attuali (con gli esercenti).
+- **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
+  `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
+  dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
+- **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
+- **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
+  browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
+  con `docs/testing/`, controllo nei dati reali degli ID icona eliminati prima del 14 novembre (punto 1 di «Prossime attività»),
+  tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Audit React, rendering e prestazioni — 20 novembre 2026
+
+Su richiesta: audit di rendering, stato, listener, animazioni e prestazioni con correzioni piccole e verificate. Commit `e4976be`
+sul ramo `fix/react-audit`, non pubblicato. Rules, Auth, configurazione Firebase e `DataStore` invariati.
+
+- **Corretto — errore di listener nascosto (media).** In `useRemoteFunds`/`useRemoteLists` i due listener condividevano un solo
+  `error`, azzerato dallo snapshot dell'altro listener, da un'operazione riuscita o da `clearError` alla chiusura di un dialogo (spese e
+  categorie: da un'operazione riuscita). Il listener Firestore fallito non riparte, quindi `ready` restava falso senza messaggio:
+  Nuova spesa invisibile con lo spinner per sempre (Liste: spinner perpetuo). Ora `features/workspace/dataErrors.ts` (puro) tiene
+  separati gli errori per listener e quello dell'operazione; lo snapshot continua ad azzerare l'errore dell'operazione dove lo faceva
+  (non nelle liste, dove l'errore di una scrittura in coda arriva con lo snapshot che la annulla). Test `tests/dataErrors.test.ts` (5).
+  **Riprodotto** in Chromium su emulatori dedicati (Auth 29099, Firestore 28180, config temporanea rimossa) con Rules che negano
+  `movements` e un fondo scritto via REST: prima «Accesso negato…» spariva e compariva lo spinner; dopo il messaggio resta.
+- **Corretto — richiesta Categorie ripetuta (bassa).** `categoriesRequest > 0` riapriva Categorie a ogni rimontaggio del workspace
+  (Avanzata con cache in memoria: «Esci» e nuovo accesso senza ricarica); le altre tre richieste usavano già un `ref`. Ora le quattro
+  passano da `useRequest` in `Workspace.tsx`. **Riprodotto** (secondo accesso da un'altra scheda, sincronizzazione Auth senza ricarica):
+  prima «Categorie», dopo «Nuova spesa»; le quattro voci del menu aprono ancora la propria pagina.
+- **Corretto — icona del FAB rianimata a ogni render (media, visiva).** In `Rail`/`Drawer` l'icona era una funzione inline: Paper
+  `CrossFadeIcon` rifaceva rotazione −90°→0° e dissolvenza (200 ms, `Animated` JS che il CSS del movimento ridotto non ferma) a ogni
+  cambio pagina e snapshot. Ora `useIconSource` (`useCallback` per forma). **Misurato** (hook DevTools in build di produzione, 1280×900):
+  commit per navigazione 17–18 → 4–6 su Analisi/Fondi/Liste; tempo totale invariato entro il rumore (correzione visiva, non di velocità).
+- **Misurato, nessun intervento:** con CPU 4× una navigazione verso una pagina già visitata costa 130–280 ms di task (desktop) e 280–460 ms
+  (390×844), archivio vuoto. Le pagine sono già `memo` con props stabili; il costo è `Sections` più i suoi figli inline e la ricreazione
+  degli effetti di `Activity` (scelta di progetto). Memoizzare l'oggetto di `useRemoteExpenses` è stato provato e **annullato**:
+  nessuna differenza misurata (la navigazione non ri-renderizza `DataWorkspace`).
+- **Limiti noti, non corretti:** etichetta del `TextInput` «Cerca» di Spese rianimata da Paper per ~200 ms quando la pagina torna visibile
+  (nessuno spostamento visibile); indicatore della pillola su smartphone animato da `Animated` di RN Web con un commit da 2 componenti per
+  fotogramma (voluto: molla che segue il dito). Nessun linter nel progetto. Chiavi per indice solo in liste statiche o di sola lettura
+  (giorni del calendario, prodotti, segmenti dell'anello con selezione per chiave di categoria).
+- **Controllato senza problemi:** cleanup di listener, timer e sottoscrizioni; risposte asincrone superate scartate (`useAiModels`,
+  `useStorageProtection`, accesso del proprietario, apertura IndexedDB); valori dei Context stabili; liste lunghe di Spese paginate a 50
+  con righe `memo`; transizioni solo su `transform`/`opacity`/colori, regola globale del movimento ridotto presente.
+- **Non provati:** archivi grandi, telefono reale, `test:emulator` (nessun cambiamento a `DataStore`, servizi o Rules).
+
+## Registro dei rilasci — dal 15 novembre 2026
+
+Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
 - **Rilascio del 17 novembre (notte, nona parte): `561968c`** (70 traduzioni inutilizzate rimosse da `en.ts`, variante `narrow` di
   `SelectField` rimossa; nessun cambiamento visibile), pubblicato su richiesta con `npm run deploy:hosting` («Deploy complete!», sito 200,
   bundle online identico a `dist/`). Rules e Worker non toccati. `npm run check` OK (**489/489**).
@@ -57,14 +125,16 @@ cronaca delle singole fasi e possono dire cose superate.
   Categoria e Fondo su una riga da medium, pulsanti di scansione su una riga, chiave API salvata, modello a sola scelta con elenco ridotto,
   testi tolti, «OK» del calendario più largo), inviato a `origin/main` e pubblicato su richiesta con `npm run deploy:hosting`
   («Deploy complete!», sito 200). Rules e Worker non toccati. `npm run check` OK (**489/489**). Non provato su iPhone reale né con Gemini reale.
-- **Git.** `main` = `origin/main`, albero di lavoro pulito (verificato il 17 novembre). Ultimo commit di codice `561968c`
-  (variante `narrow` di `SelectField` rimossa), prima `90f1611` (traduzioni inutilizzate rimosse), prima `23f8a55` (fotocamera nella pagina anche su smartphone), prima `f3a72f5` (seconda correzione della barra, poi rimossa), prima `dece43d` (primo tentativo sulla barra, Wi-Fi pixel), prima `6aa7683` (nessun messaggio dopo la scansione), prima `416f0db` (cache su disco cancellata all'uscita, messaggi da 3 s, barra del pannello, Wi-Fi pixel), prima `dda68cb` (divisori nei dialoghi, niente pinch zoom, Esercente), prima `bd61713` (scansione senza nota e prodotti letti), prima `c837817` (modulo del fondo, Fondo sotto la Categoria su smartphone, cache «Non attiva»), prima `e4fb9f8` (Wi-Fi pixel HD, niente budget sotto il Fondo), prima `1d21658` (Categoria/Fondo su smartphone, icone), prima `d66d3db` (ritocchi del 17 novembre), prima `24ae16f` (solo HANDOFF); prima `f5411fb`
-  (esercenti, modelli AI, esercente nella scansione), poi `664c330` (solo HANDOFF); prima `26b95e9` (scansione dello scontrino),
-  poi `b196eac` (solo HANDOFF); prima `4ffe1da` («Speso nel mese» in evidenza, voci dei menu a tutta larghezza); prima `8a99fa6`
-  (posizione di «Storico dei pagamenti»); prima `1dbb396` (pagamenti eliminabili, backup v9, ricerca per mese/anno, icone
-  nel menu Categoria, documenti riallineati), seguito dal solo aggiornamento di HANDOFF.
-- **Produzione (Hosting, progetto `nummo-6b6e2`).** Ultimo rilascio: **`561968c`** (vedi il punto in apertura).
-  Prima: **`23f8a55`**. Prima: **`f3a72f5`**. Prima: **`dece43d`**. Prima: **`6aa7683`**. Prima: **`416f0db`**. Prima: **`dda68cb`**. Prima: **`bd61713`**. Prima: **`c837817`**. Prima: **`e4fb9f8`**. Prima: **`1d21658`**. Prima: **`d66d3db`**. Prima: **`f5411fb`** (Hosting e Rules). Prima: **`26b95e9`** (scansione dello scontrino). Prima: **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
+- **Rilascio del 16 novembre (sera): `f5411fb`** (esercenti in Nuova spesa, elenco dei modelli AI nelle Impostazioni, esercente
+  nella scansione, scansione predefinita), inviato a `origin/main`. **Rules pubblicate** (`firebase deploy --only firestore:rules
+  --project nummo-6b6e2`, compilazione OK, «Deploy complete!», con `merchants/{chiave}` e `merchant_id`) e poi **Hosting**
+  (`npm run deploy:hosting`, «Deploy complete!», sito 200). Spesa con esercente in Avanzata sul cloud non ancora provata.
+  Dettagli nelle tre sezioni del 16 novembre (sera) qui sotto.
+- **Scansione dello scontrino (16 novembre, pomeriggio):** OCR locale e AI facoltativa (sezione qui sotto), commit `26b95e9`,
+  inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; `/ocr/` servita, sito 200). Rules e Worker non
+  toccati. Nuove devDependency (`tesseract.js`, `@tesseract.js-data/ita|eng`). `npm run check` OK, **470/470**.
+- **Rilasci precedenti (Hosting):** prima di `26b95e9`, dal più recente:
+  **`4ffe1da`** («Speso nel mese» in evidenza, voci dei menu a tutta
   larghezza), pubblicato su richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`8a99fa6`** (posizione di «Storico dei pagamenti»), pubblicato su
   richiesta il 16 novembre con `npm run deploy:hosting` («Deploy complete!», sito 200); Rules invariate. Prima: **`1dbb396`**, pubblicato su richiesta il 16 novembre (sera) con
   `npm run deploy:hosting` («Deploy complete!», sito 200); Rules pubblicate subito dopo (vedi sotto). Prima: **`fd705f3`**, pubblicato su richiesta il 16 novembre con
@@ -85,28 +155,6 @@ cronaca delle singole fasi e possono dire cose superate.
 - **Rules.** Ultima pubblicazione su richiesta il 16 novembre (sera, prima dell'Hosting di `f5411fb`) con `firebase deploy --only
   firestore:rules --project nummo-6b6e2` (compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `f5411fb` (esercenti,
   oltre a `skipped_payments` di `1dbb396`). Spesa con esercente ed eliminazione di un pagamento in Avanzata non ancora provate sul cloud.
-- **Worker `nummo-push`.** Attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/`
-  invariato da allora.
-- **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
-  Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
-- **Da verificare su dispositivo:** icona dell'app (cache del launcher), filtri di Spese/Analisi, dissolvenza
-  sul Pixel 8.
-- **Verifiche.** `npm run check` del 17 novembre con i ritocchi mobile/AI OK (typecheck, **489/489**, build demo). `test:emulator` **22/22** con gli esercenti
-  (porte dedicate 19099/18180, config temporanea rimossa), caso peggiore del budget Rules con `merchant_id` incluso.
-- **Ambiente (17 novembre).** Il runner hybrid avviato il 16 alle 17:26 (PID 40726) si è fermato senza export (riavvio del sistema
-  il 17 alle 20:03): `npm run dev` rifiutava l'avvio per il lock rimasto. Ispezione: processo inesistente, porte 8180/9099/4000/4400/8081
-  libere, cartelle di sessione `.firebase/hybrid-I8KNPH` e `hybrid-iw5CbO` senza export, `emulator-data/` invariato dall'export del
-  16 alle 03:42 (eventuali dati scritti in hybrid dopo le 17:26 del 16 sono andati persi con l'emulatore). Su richiesta: lock rinominato
-  in `.firebase/hybrid.lock.stale-40726`, config `.nummo-hybrid-40726.json` rimossa dalla radice. Le altre cartelle e i lock
-  `stale-*` in `.firebase/` sono conservati. Il prossimo `npm run dev` legge le Rules attuali (con gli esercenti).
-- **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
-  `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
-  dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
-- **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
-- **Cosa resta aperto** (dettagli in «Prossime attività»): Avanzata con notifiche e riepilogo mai provata nel browser
-  (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in
-  demo con `docs/testing/`, ID icona rimossi che possono bloccare categorie e backup, tastiera automatica di Nuova
-  lista/Nuovo fondo su telefono reale (su iOS probabilmente non si apre). In produzione Hosting a `561968c`, Rules a `f5411fb`.
 
 ## Icona «internet» pixel, quarto disegno — 17 novembre 2026 (notte)
 
@@ -3079,11 +3127,18 @@ screen reader, concorrenza tra due dispositivi.
 1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
    poi la sera con `skipped_payments` (`1dbb396`) e infine con gli esercenti (`f5411fb`). Da verificare ricaricando l'app: caricamento,
    sincronizzazione, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
-   serve autorizzazione. Decidere conservazione o migrazione esplicita degli ID icona rimossi, con regressioni
-   decoder/import; nessuna migrazione automatica dei dati personali.
+   serve autorizzazione. **ID icona eliminati (ancora aperto, ricontrollato il 20 novembre):** dal 14 novembre un'icona tolta
+   dal selettore si ritira (`retiredCategoryIcons` in `domain/category.ts`, oggi solo `sofa`) e resta leggibile; gli ID eliminati
+   prima di allora (i 18 storici e `car`/`bus`/`tree` del 9 novembre, `bus` era la predefinita di Trasporti) restano invece
+   rifiutati da decoder, import e Rules: una categoria o un backup che li usa è bloccato. Il controllo autorizzato sui dati
+   reali (Avanzata e backup personali) non risulta mai fatto. Se servono: reintrodurli come ritirati (dominio, tre disegni,
+   Rules, test), mai una migrazione automatica dei dati personali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
-   unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino, eccezioni di budget e
-   sospensione ricarica, dialoghi Fondi/Liste a 320 px e in landscape, CSV in foglio di calcolo reale.
+   unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino,
+   sospensione della ricarica (interruttore «Ricarica mensile» del modulo del fondo), dialoghi Fondi/Liste a 320 px e in landscape,
+   CSV in foglio di calcolo reale. Le eccezioni di budget non si creano più dall'interfaccia: arrivano solo da un backup e
+   `FundEditor` le conserva con l'avviso «Eccezioni programmate per singoli mesi…»; collaudarne lettura e conservazione, non la
+   creazione. Le fixture sono v5/v6: esercenti (v10) e pagamenti eliminati (v9) non hanno ancora un file di collaudo.
 3. **Collaudo dispositivi:** telefono reale (touch, tastiera virtuale, safe area, rotazione), screen reader, Tab/Invio
    su Blocchi e Ciambella, riduzione movimento; riprodurre i problemi UI mobile elencati sopra.
 4. **Igiene Git:** `.nummo-hybrid-*.json` già ignorato e non tracciato (fatto il 10 novembre). Non ripulire `.firebase/`, lock, staging o `emulator-data/`
