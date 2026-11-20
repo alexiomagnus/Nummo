@@ -13,8 +13,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Prossima sessione, priorità consigliate:** (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
-  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo dei file v9/v10 su smartphone (Standard e
-  Avanzata dalla demo su desktop: fatti).
+  React (nuova dipendenza), misura delle prestazioni con un archivio grande; pubblicare su Hosting le correzioni del collaudo su
+  smartphone emulato (sezione del 21 novembre); collaudo su telefono reale.
 - **Git (20 novembre, notte).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
   `origin`. Ultimo commit di codice: `aebd0ec` (osservazioni del collaudo), prima `ad5aa73` (ID icona storiche); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
@@ -53,6 +53,25 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Collaudo v9/v10 su smartphone emulato — 21 novembre 2026
+
+- Su richiesta. **Emulazione**, non dispositivo: Chromium headless 390×844, densità 2, touch, user agent Android, driver CDP
+  persistente; `dist-demo/` di `aebd0ec`, modalità Standard. Tutti i passi del README di `docs/testing/` danno il risultato atteso
+  (dettaglio lì).
+- **Problemi trovati, corretti subito dopo su richiesta:**
+  1. `ExpenseList.tsx`, dettagli su smartphone: `detailField` senza limite di larghezza nella riga `compactFields`; un esercente di
+     60 caratteri resta su una riga, passa sotto «Modifica» ed esce dalla scheda (vale anche per categorie lunghe).
+  2. `AppShell.tsx`: lo `<span>` di misura delle etichette della navigazione è `position: absolute` senza `top`/`left`, in fondo a
+     `body`: il documento è alto 859 px su 844 e può scorrere di 15 px; allora fogli e dialoghi lasciano una striscia scoperta in
+     basso. Presente anche prima delle modifiche di questa sessione.
+  3. Archiviazione e backup su smartphone: l'anteprima del ripristino compare fuori schermo (solo il titolo sopra la navigazione).
+- **Correzioni:** (1) `detailField` con `maxWidth: '100%'` e `flexShrink: 1`: il valore lungo va a capo; (2) lo `<span>` di
+  misura fissato con `top`/`left` a 0 e `pointerEvents: 'none'`: documento alto quanto la finestra; (3) `BackupActions` porta
+  l'anteprima in vista (`scrollIntoView` `nearest`, senza animazione con movimento ridotto). `npm run check` **499/499**.
+  Riverificato in emulazione 390×844 (844/844, anteprima intera sopra la navigazione, esercente su due righe accanto a «Modifica»)
+  e a 1280 px (dettagli su una riga). Non pubblicato su Hosting.
+- Non verificabili in emulazione: tastiera virtuale, safe area, gesti reali, prestazioni. Driver, server e browser chiusi.
 
 ## Collaudo v9/v10 in Avanzata — 20 novembre 2026 (notte)
 

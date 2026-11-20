@@ -223,6 +223,21 @@ finale identico al file a parte `exported_at`, CSV, Analisi. Controllati anche i
 `skipped_payments` di Streaming «7,10» con revisione 2; esercenti `m-a%2Fb ottica` e `m-outlet 30%25`; «Ebay» dopo l'unione e
 «eBay» dopo Sostituisci; le spese «ESSELUNGA» ed «ebay» con `merchant_id` dell'esercente esistente; stato «Sincronizzato».
 
+**Su smartphone emulato (21 novembre 2026, eseguito; non è una prova su dispositivo):** Chromium headless con emulazione di
+telefono (390×844, densità 2, touch, user agent Android), tocchi come eventi touch, modalità Standard. Stessi risultati attesi:
+anteprime, unione e seconda unione, storico in dialogo stretto (Telefono, Lavanderia con 45 righe scorrevoli), 61° pagamento
+rifiutato con il messaggio sopra il dialogo, conflitto «1 elemento è diverso…» con «V9 Streaming», Fondi, Nuova spesa con la
+categoria dal foglio dal basso, esercente «Ebay», suggerimenti nel flusso del modulo (nome lungo con «…») e scelta di un
+suggerimento, conferma «Elementi da eliminare: 19. Da scrivere: 1.» e sostituzione («eBay», 27 spese, 12 esercenti). Problemi
+trovati, **corretti lo stesso giorno** e riverificati in emulazione (sotto): (1) nei dettagli di una spesa su smartphone un esercente lungo (60 caratteri) non va a capo, passa
+sotto «Modifica» ed esce dalla scheda; (2) lo `<span>` nascosto che misura le etichette della navigazione resta in fondo a `body`
+senza `top`/`left`, così la pagina è più alta della finestra di 15 px e, quando il documento scorre (per esempio verso un campo),
+fogli e dialoghi lasciano scoperta una striscia in basso; (3) dopo la scelta del file l'anteprima del ripristino compare in fondo
+alla pagina, quasi tutta fuori schermo, senza scorrimento automatico. Non verificabili in emulazione: tastiera virtuale (la
+navigazione non si nasconde senza tastiera), safe area, gesti reali, prestazioni.
+Dopo la correzione: la pagina è alta quanto la finestra (844 su 844), l'anteprima del ripristino scorre in vista sopra la
+navigazione, l'esercente lungo va a capo accanto a «Modifica» senza uscire dalla scheda (su desktop resta su una riga).
+
 Osservazioni del collaudo, **corrette lo stesso giorno** e riverificate nella demo (italiano e inglese): l'unione bloccata dice
 «1 elemento è diverso dai dati salvati.» (plurale da 2) e nomina fino a tre elementi, poi «altri N»; riepilogo e conferma del
 ripristino contano gli esercenti («12 esercenti»; conferma «Elementi da eliminare: N. Da scrivere: M.»); al 61° pagamento eliminato
