@@ -5,10 +5,11 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
 recente, sono cronaca delle singole fasi e possono dire cose superate.
 
-- **Git (20 novembre, sera).** `main` = `origin/main` = `63dd40a` (audit React `e4976be`, unito in avanti e inviato su richiesta;
-  ramo `fix/react-audit` cancellato). Poi `ad5aa73` (ID icona storiche di nuovo valide) e `f3bd4df` (questo file), inviati su richiesta.
-- **File da ispezionare (non miei):** `.nummo-hybrid-25494.json` nella radice, del 17 novembre 20:30, nessun processo 25494 attivo:
-  config di un runner hybrid fermato senza pulizia (ignorata da Git). Non toccata; rimuoverla solo su richiesta dopo un controllo.
+- **Git (20 novembre, sera).** `main` = `origin/main` = `cad616b`, tutto inviato su richiesta: `e4976be` (audit React), `ad5aa73` (ID
+  icona storiche di nuovo valide), più i soli aggiornamenti di questo file. Ultimo commit di codice: `ad5aa73`.
+- **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
+  dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
+  radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
 - **Produzione (progetto `nummo-6b6e2`).** Pubblicati su richiesta il 20 novembre (sera), nell'ordine: **Rules** da `ad5aa73`
   (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»: le 24 ID icona storiche
   ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
