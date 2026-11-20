@@ -1,0 +1,309 @@
+{
+  "format": "nummo-backup",
+  "version": 9,
+  "exported_at": "2026-11-20T08:00:00.000Z",
+  "categories": [
+    {
+      "id": "c0000001-0000-4000-8000-000000000001",
+      "label": "V9 · Abbonamenti",
+      "icon": "tv"
+    },
+    {
+      "id": "c0000001-0000-4000-8000-000000000002",
+      "label": "V9 · Casa",
+      "icon": "house"
+    },
+    {
+      "id": "c0000001-0000-4000-8000-000000000003",
+      "label": "V9 · Sport",
+      "icon": "heartpulse"
+    }
+  ],
+  "funds": [
+    {
+      "id": "c0000002-0000-4000-8000-000000000001",
+      "name": "V9 · Abbonamenti",
+      "icon": "wallet",
+      "color": 2,
+      "initial_minor": 0,
+      "start_date": "2026-01-01",
+      "recharges": [],
+      "budgets": [
+        {
+          "month": "2026-01",
+          "amount_minor": 6000
+        }
+      ],
+      "budget_exceptions": [],
+      "archived": false,
+      "created_at": "2026-01-01T08:00:00.000Z"
+    }
+  ],
+  "movements": [],
+  "lists": [],
+  "expenses": [
+    {
+      "id": "c0000003-0000-4000-8000-000000000006",
+      "amount_minor": 18000,
+      "currency": "EUR",
+      "description": "V9 Assicurazione casa",
+      "category_id": "c0000001-0000-4000-8000-000000000002",
+      "expense_date": "2024-03-01",
+      "recurrence": "yearly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "skipped_payments": [
+        1
+      ],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2024-03-01T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000005",
+      "amount_minor": 500,
+      "currency": "EUR",
+      "description": "V9 Lavanderia",
+      "category_id": "c0000001-0000-4000-8000-000000000002",
+      "expense_date": "2024-11-22",
+      "recurrence": "weekly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "skipped_payments": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59
+      ],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2024-11-22T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000001",
+      "amount_minor": 1299,
+      "currency": "EUR",
+      "description": "V9 Streaming",
+      "category_id": "c0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-01-15",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "c0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "skipped_payments": [
+        7
+      ],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-01-15T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000004",
+      "amount_minor": 299,
+      "currency": "EUR",
+      "description": "V9 Spazio cloud",
+      "category_id": "c0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-02-10",
+      "recurrence": "monthly",
+      "price_changes": [
+        {
+          "index": 8,
+          "amount_minor": 2999,
+          "once": false
+        }
+      ],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "calendar_changes": [
+        {
+          "index": 8,
+          "start": "2026-10-10",
+          "recurrence": "yearly"
+        }
+      ],
+      "skipped_payments": [
+        8
+      ],
+      "source": "web_app",
+      "schema_version": 3,
+      "created_at": "2026-02-10T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000002",
+      "amount_minor": 3900,
+      "currency": "EUR",
+      "description": "V9 Palestra",
+      "category_id": "c0000001-0000-4000-8000-000000000003",
+      "expense_date": "2026-03-01",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [
+        {
+          "date": "2026-10-10",
+          "status": "paused"
+        }
+      ],
+      "fund_id": "c0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "skipped_payments": [
+        6
+      ],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-03-01T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000003",
+      "amount_minor": 999,
+      "currency": "EUR",
+      "description": "V9 Telefono",
+      "category_id": "c0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-04-05",
+      "recurrence": "monthly",
+      "price_changes": [
+        {
+          "index": 4,
+          "amount_minor": 1199,
+          "once": false
+        }
+      ],
+      "status_changes": [],
+      "fund_id": "c0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "skipped_payments": [
+        3,
+        4
+      ],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-04-05T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000008",
+      "amount_minor": 1099,
+      "currency": "EUR",
+      "description": "V9 Musica",
+      "category_id": "c0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-08-01",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "c0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "first_payment_date": "2026-09-01",
+      "skipped_payments": [
+        0
+      ],
+      "source": "web_app",
+      "schema_version": 2,
+      "created_at": "2026-08-01T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000007",
+      "amount_minor": 499,
+      "currency": "EUR",
+      "description": "V9 Rivista",
+      "category_id": "c0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-10-05",
+      "recurrence": "monthly",
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "skipped_payments": [
+        0,
+        1
+      ],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-05T09:00:00.000Z"
+    },
+    {
+      "id": "c0000003-0000-4000-8000-000000000009",
+      "amount_minor": 2500,
+      "currency": "EUR",
+      "description": "V9 Detersivi",
+      "category_id": "c0000001-0000-4000-8000-000000000002",
+      "expense_date": "2026-11-02",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "c0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-02T09:00:00.000Z"
+    }
+  ]
+}

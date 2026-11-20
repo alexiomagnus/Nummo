@@ -11,7 +11,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Prossima sessione, priorità consigliate:** (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
-  React (nuova dipendenza), misura delle prestazioni con un archivio grande, file di collaudo v9/v10 in `docs/testing/`.
+  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo in demo dei nuovi file v9/v10 di
+  `docs/testing/` (sezione «File di collaudo v9 e v10» qui sotto).
 - **Git (20 novembre, sera).** `main` allineato a `origin/main`, tutto inviato su richiesta. Ultimo commit di codice: `ad5aa73` (ID icona
   storiche di nuovo valide), prima `e4976be` (audit React); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
@@ -48,6 +49,20 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## File di collaudo v9 e v10 — 20 novembre 2026
+
+- Su richiesta (punto 2 di «Prossime attività»). In `docs/testing/`: `nummo-pagamenti-eliminati-v9.json` (8 abbonamenti con
+  `skipped_payments`: uno solo, in pausa, sul cambio di prezzo, primo pagamento annuale dopo un cambio di frequenza, limite di 60,
+  rinnovo annuale, tutti quelli maturati, primo addebito dopo una prova; un fondo con budget) e `nummo-esercenti-v10.json`
+  (12 esercenti: grafie, accento, apostrofo, `/` e `%` negli ID, nome di 60 caratteri, virgolette e `;` per il CSV, uno mai usato;
+  27 spese, una serie con un pagamento eliminato). Prefissi `V9`/`V10`; gli esercenti senza prefisso (usare la demo).
+- Generati con `makeBackup` (il v9 con il solo numero di versione cambiato) e letti con `parseBackup`; valori attesi al 20 novembre
+  calcolati con il dominio e scritti in `docs/testing/README.md` (titolo ora «Backup di collaudo»), con i passi dall'interfaccia.
+- Nuovo `tests/testingBackups.test.ts` (2 test): export identico al file, valori delle tabelle, ordine dei suggerimenti, piano di
+  unione/sostituzione con una grafia diversa già salvata, riga CSV. `npm run check` **498/498**.
+- **Non eseguiti:** importazione dall'interfaccia, importazione nell'emulatore con le Rules (ID con `%2F`/`%25`, 60 numeri), CSV in un
+  foglio di calcolo reale. Nessun codice dell'app, Rules o backup modificati.
 
 ## ID icona storiche di nuovo valide — 20 novembre 2026
 
@@ -3165,7 +3180,8 @@ screen reader, concorrenza tra due dispositivi.
    sospensione della ricarica (interruttore «Ricarica mensile» del modulo del fondo), dialoghi Fondi/Liste a 320 px e in landscape,
    CSV in foglio di calcolo reale. Le eccezioni di budget non si creano più dall'interfaccia: arrivano solo da un backup e
    `FundEditor` le conserva con l'avviso «Eccezioni programmate per singoli mesi…»; collaudarne lettura e conservazione, non la
-   creazione. Le fixture sono v5/v6: esercenti (v10) e pagamenti eliminati (v9) non hanno ancora un file di collaudo.
+   creazione. Dal 20 novembre ci sono anche i file v9 (pagamenti eliminati) e v10 (esercenti), con i passi di collaudo nel
+   README della cartella; nessuno dei quattro è ancora stato importato dall'interfaccia.
 3. **Collaudo dispositivi:** telefono reale (touch, tastiera virtuale, safe area, rotazione), screen reader, Tab/Invio
    su Blocchi e Ciambella, riduzione movimento; riprodurre i problemi UI mobile elencati sopra.
 4. **Igiene Git:** `.nummo-hybrid-*.json` già ignorato e non tracciato (fatto il 10 novembre). Non ripulire `.firebase/`, lock, staging o `emulator-data/`
