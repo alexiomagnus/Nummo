@@ -1,6 +1,6 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 20 novembre 2026
+## Stato corrente — 21 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
 recente, sono cronaca delle singole fasi e possono dire cose superate.
@@ -31,6 +31,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
   identico a `dist/`): audit React e ID icona storiche. Worker `nummo-push` invariato (ripubblicato dall'utente per `f454d12`).
   Da provare in produzione: un archivio o un backup con un'icona storica, se ne esistono. Cronologia nel «Registro dei rilasci» qui sotto.
+- **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
+  pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
+  «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
 - **Verifiche (20 novembre, notte, albero pubblicato).** `npm run check` OK (typecheck, **499/499**, build demo). `test:emulator`
   **22/22** l'ultima volta sulle Rules di `ad5aa73` (sera; Rules, `DataStore` e servizi non più toccati da allora).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
@@ -3140,37 +3143,37 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   icone, predefiniti, avvio. I titoli dei commit non descrivono interamente il contenuto.
 - `.nummo-hybrid-*.json` è ora coperto da `.gitignore` e nessun file del genere è tracciato (verificato il 14 novembre).
 
-## Funzionalità implementate (riscontro nel codice)
+## Funzionalità implementate (riscontro nel codice, riallineato il 21 novembre)
 
-- **Sessione:** login Google popup, logout dopo scritture pendenti, isolamento per UID, avatar con fallback, errori
-  `auth/...` validati IT/EN; guida pubblica `#guida`.
-- **Spese:** CRUD con UUID stabile, conferma server, revisioni e conflitti espliciti, verifica degli esiti incerti,
-  copie di recupero in memoria, bozza conservata tra sezioni. Pagina Spese a due viste: «Spese» (singole, ricerca,
-  filtro categoria, ordinamento, raggruppamento mensile) e «Pagamenti ricorrenti» (serie, ricerca normalizzata,
-  stati Attivo/In pausa/Annullato, storico pagamenti, prossimi rinnovi). Ricorrenze settimanali/mensili/annuali con
-  fino a otto variazioni di prezzo per numero di rinnovo; i pagamenti maturati non vengono mai riscritti.
-- **Categorie:** pagina dal menu account (sotto Impostazioni) o dal modulo; nomi unici, 40 icone (`categoryIcons`; 39 selezionabili, `sofa` ritirata) in tre stili
-  (minimale, colorato, pixel); cinque predefinite su archivio vuoto confermato dal server.
-- **Fondi e budget** (destinazione «Fondi»): dalla #7 facoltativi e semplici (nome, icona, colore, budget) con budget
-  mensile generale (`settings/budget`); per i fondi che li avevano restano saldo iniziale, ricarica mensile calcolata, budget mensile con eccezioni,
-  entrate e trasferimenti immutabili, archiviazione, fondo predefinito per browser, mesi navigabili
-  effettivo/previsione, selettore fondo nel modulo, assegnazione esplicita delle spese «Senza fondo».
-- **Liste della spesa** (destinazione «Liste»): crea/rinomina/duplica/elimina, checklist con salvataggio automatico,
-  «Registra spesa» in transazione (una spesa con `list_id`/`list_items`, lista archiviata, non acquistati spostabili
-  in nuova lista); eliminare la spesa riattiva la lista. Limite 100 prodotti per lista solo lato client.
-- **Analisi** (già Dashboard): periodi mese corrente/precedente, 3/6/12 mesi; riepilogo con date del periodo (confronto globale col
-  periodo precedente rimosso; resta la variazione per categoria nelle righe Barre); Ciambella (centro vuoto, dettagli al passaggio/
-  selezione), Blocchi treemap senza testo nelle tessere con pannello dettagli, Barre complete ordinate per spesa;
-  dettaglio transazioni per categoria con conteggio; andamento giornaliero SVG con selezione del giorno (nessuna
-  apertura delle transazioni del giorno). Preferenza `ranking` legacy migrata a `bars`.
-- **Importa ed esporta** (menu account, sotto Categorie): CSV di sola consultazione; JSON `nummo-backup` **v6** unico
-  ripristino (lettori storici per le versioni precedenti), anteprima su una riga, unione senza sovrascritture,
-  sostituzione confermata con copia automatica, esiti in snackbar.
-- **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa» (modulo desktop compatto ≥1024 dp),
-  temi/tinte, IT/EN senza rimontare sessione o bozze, tastiera virtuale gestita, transizioni con riduzione movimento.
-- **Abbonamenti:** prove gratuite (schema 2) e cambio di frequenza (schema 3, `calendar_changes`).
-- **Collaudo:** `docs/testing/` con cinque backup fittizi (casi limite e spese standard dell'8 novembre, prove gratuite,
-  cambio di frequenza e utente medio) e guida ai risultati attesi. Da importare preferibilmente nella demo.
+Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
+
+- **Modalità:** Standard (IndexedDB sul dispositivo, protezione locale, backup manuale) e Avanzata (Firebase personale BYOF,
+  collegabile dall'app); una sola fonte di verità per modalità.
+- **Sessione (Avanzata):** login Google popup, logout dopo le scritture pendenti con cancellazione della cache su disco, isolamento
+  per UID, «Questo Nummo è privato» per chi non è il proprietario, errori `auth/...` validati IT/EN; guida pubblica `#guida`.
+- **Spese:** CRUD con UUID stabile, conferma server, revisioni e conflitti espliciti, bozza conservata tra sezioni; Esercente
+  facoltativo con suggerimenti; scansione dello scontrino (OCR sul dispositivo o AI BYOK) che propone soltanto. Pagina Spese a due
+  viste: spese singole (ricerca, filtri, card «Totale», «Prodotti (n)») e abbonamenti (stati, prove gratuite, cambio di frequenza,
+  fino a otto prezzi per numero di rinnovo, «Storico dei pagamenti» con eliminazione di un singolo pagamento).
+- **Categorie:** pagina dal menu account; nomi unici; 64 ID icona validi (40 attive, 39 selezionabili; ritirate `sofa` e le 24
+  storiche, queste ultime solo col contorno), tre stili (minimale, colorato, pixel); cinque predefinite su archivio vuoto.
+- **Fondi** (destinazione «Fondi»): facoltativi; nome, icona, colore, saldo iniziale, ricarica e budget mensili facoltativi; riepilogo
+  del mese con sette totali, mai elenchi né saldi; Aggiungi/Trasferisci solo con dati di saldo; archiviazione; fondo preferito scelto in
+  Impostazioni (per browser). Budget mensile generale **non più nell'interfaccia** dal 16 novembre (dati e backup compatibili).
+- **Liste della spesa** (destinazione «Liste»): crea/rinomina/duplica/elimina, checklist con salvataggio automatico, «Registra spesa»
+  in transazione (una spesa con `list_id`/`list_items`, lista archiviata); eliminare la spesa riattiva la lista. Limite 100 prodotti.
+- **Analisi:** periodi mese, mese scorso, 3 e 12 mesi; Ciambella, Blocchi e Barre (variazione per categoria), andamento giornaliero;
+  filtro «Fondo».
+- **Archiviazione e backup** (menu account, sotto Categorie): stato e cambio della modalità, CSV di sola consultazione, JSON
+  `nummo-backup` **v10** unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
+  con copia automatica.
+- **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
+  orario e fuso scelti dall'utente.
+- **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
+  tastiera virtuale gestita, transizioni con riduzione movimento.
+- **Collaudo:** `docs/testing/` con quattro backup fittizi (casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
+  esercenti v10) e guida ai risultati attesi; spese standard, prove gratuite e cambio di frequenza sono stati spostati in
+  `tests/fixtures/` (solo test automatici, commit `302b24e`).
 
 ## Decisioni tecniche recenti (dettagli in `docs/architecture.md`)
 
@@ -3184,11 +3187,9 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 
 ## Problemi aperti e limitazioni
 
-- **Compatibilità icone:** decoder/import rifiutano ID rimossi (`receipt`, `phone`, `bed`, `ticket`, `briefcase`,
-  `droplet`, `wrench`, `pill`, `book`, `plane`, `scissors`, `baby`, `flame`, `wine`, `umbrella`, `leaf`, `shield`,
-  `ellipsis`; prova locale: tutti i 18 ID sono rifiutati da decoder categorie e lettore backup), più `car`, `bus`,
-  `tree` rimossi il 9 novembre (`bus` era la predefinita di Trasporti). Vecchi record possono bloccare categorie e backup;
-  presenza nei dati personali non verificata, nessun adapter.
+- **Compatibilità icone (risolta il 20 novembre, `ad5aa73`):** le 24 ID eliminate prima del 14 novembre sono di nuovo valide e
+  ritirate in dominio, decoder, backup e Rules. Resta solo, se si vuole, il controllo sui dati reali (produzione, archivi Standard nei
+  browser, backup personali), mai eseguito.
 - **Rules:** budget di 1000 espressioni stretto (rimisurare a ogni nuovo controllo sulle spese); non verificano
   esistenza di fondo/lista referenziati, unicità dei nomi di fondo (solo client), ordine/date degli stati.
 - **Fondi:** eliminazione basata sui dati caricati (concorrenza → spese orfane, non perse); cambiare fondo a una serie
@@ -3200,8 +3201,8 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   assenza di traffico Firebase sulla guida non garantita.
 - **UI mobile (diagnosi storiche non riverificate):** menu Categoria che allarga il viewport o copre la pillola, scroll
   annidato nei menu bassi, etichetta «Dashboard» (oggi «Analisi») troncata a 320 px, Nuova spesa in landscape aperta scorsa.
-- Nessun service worker né avvio offline a freddo; cache persistente non cancellata al logout; collezioni caricate
-  integralmente. Licenza assente; audit dipendenze non aggiornato. Nessun lint configurato.
+- Nessun avvio offline a freddo: `public/sw.js` serve solo alle notifiche di sistema, senza gestore `fetch` né cache. Cache Firestore
+  su disco attiva nella build pubblicata e cancellata a «Esci» (dal 17 novembre); collezioni caricate integralmente. Licenza assente; audit dipendenze non aggiornato. Nessun lint configurato.
 - Richieste pregresse senza contesto sufficiente (scritta «minimale» senza testo, colori attivi mobile/rail): chiarire
   con l'utente prima di intervenire.
 - **Documentazione storica:** riallineati README e riepiloghi dell'architettura il 12 novembre; le vecchie fasi restano
@@ -3249,16 +3250,16 @@ screen reader, concorrenza tra due dispositivi.
 1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
    poi la sera con `skipped_payments` (`1dbb396`) e infine con gli esercenti (`f5411fb`). Da verificare ricaricando l'app: caricamento,
    sincronizzazione, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
-   serve autorizzazione. **ID icona eliminati: risolto nel codice il 20 novembre** (sezione «ID icona storiche di nuovo valide»):
-   le 24 ID sono valide e ritirate, Rules e Hosting pubblicati la sera stessa. Resta, se si vuole, la verifica sui dati reali
-   (archivio Avanzata, archivi Standard nei browser, backup personali); nessuna migrazione dei dati.
+   serve autorizzazione. ID icona eliminati: chiuso (vedi «Problemi aperti»); resta facoltativa la verifica sui dati reali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino,
    sospensione della ricarica (interruttore «Ricarica mensile» del modulo del fondo), dialoghi Fondi/Liste a 320 px e in landscape,
    CSV in foglio di calcolo reale. Le eccezioni di budget non si creano più dall'interfaccia: arrivano solo da un backup e
    `FundEditor` le conserva con l'avviso «Eccezioni programmate per singoli mesi…»; collaudarne lettura e conservazione, non la
-   creazione. Dal 20 novembre ci sono anche i file v9 (pagamenti eliminati) e v10 (esercenti), con i passi di collaudo nel
-   README della cartella; nessuno dei quattro è ancora stato importato dall'interfaccia.
+   creazione. I file v9 (pagamenti eliminati) e v10 (esercenti) sono **già collaudati** dall'interfaccia (20–21 novembre: Standard
+   e Avanzata nella demo a 1280×900, smartphone emulato 390×844). Il v6 utente medio è stato importato più volte dall'interfaccia
+   per prove visive (unione e «Sostituisci»), ma per v5 casi limite e v6 non risulta registrato il collaudo completo dei passi del
+   README; resta da provare anche il CSV in un foglio di calcolo reale.
 3. **Collaudo dispositivi:** telefono reale (touch, tastiera virtuale, safe area, rotazione), screen reader, Tab/Invio
    su Blocchi e Ciambella, riduzione movimento; riprodurre i problemi UI mobile elencati sopra.
 4. **Igiene Git:** `.nummo-hybrid-*.json` già ignorato e non tracciato (fatto il 10 novembre). Non ripulire `.firebase/`, lock, staging o `emulator-data/`
