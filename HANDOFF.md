@@ -5,9 +5,9 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
 recente, sono cronaca delle singole fasi e possono dire cose superate.
 
-- **Git (20 novembre, sera).** `main` = `origin/main` = `850eaea`. Sul ramo locale **`fix/react-audit`** (non inviato, non unito):
-  `e4976be` (correzioni dell'audit React, sezione «Audit React, rendering e prestazioni» qui sotto) e un commit di questo file.
-  Ultimo commit di codice in produzione `561968c`.
+- **Git (20 novembre, sera).** `main` = `origin/main` = `63dd40a` (audit React `e4976be`, unito in avanti e inviato su richiesta;
+  ramo `fix/react-audit` cancellato). Poi, inviati su richiesta: ID icona storiche di nuovo valide (sezione qui sotto) e questo file.
+  In produzione Hosting resta a `561968c` e le Rules a `f5411fb`: le ID storiche non sono ancora pubblicate.
 - **File da ispezionare (non miei):** `.nummo-hybrid-25494.json` nella radice, del 17 novembre 20:30, nessun processo 25494 attivo:
   config di un runner hybrid fermato senza pulizia (ignorata da Git). Non toccata; rimuoverla solo su richiesta dopo un controllo.
 - **Produzione (progetto `nummo-6b6e2`).** Hosting a **`561968c`** (pubblicato su richiesta il 17 novembre con
@@ -15,9 +15,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   sera, `firebase deploy --only firestore:rules --project nummo-6b6e2`: esercenti, oltre a `skipped_payments` di `1dbb396`).
   Worker `nummo-push` attivo su Cloudflare, ripubblicato dall'utente per `f454d12` (tipo `renewal`); `push-service/` invariato da
   allora. Cronologia nel «Registro dei rilasci» qui sotto.
-- **Verifiche (20 novembre, sera, albero con l'audit).** `npm run check` OK (typecheck, **494/494**, build demo). Ultimo `test:emulator`:
-  **22/22** il 17 novembre (`416f0db`, porte dedicate 19099/18180), caso peggiore del budget Rules con `merchant_id` incluso; da
-  allora Rules e accesso ai dati non sono cambiati.
+- **Verifiche (20 novembre, sera, albero con le ID icona).** `npm run check` OK (typecheck, **496/496**, build demo). `test:emulator`
+  **22/22** con le Rules nuove (porte dedicate 29099/28180, config temporanea rimossa).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
   più nera.
 - **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
@@ -40,8 +39,28 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
-  con `docs/testing/`, controllo nei dati reali degli ID icona eliminati prima del 14 novembre (punto 1 di «Prossime attività»),
-  tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+  con `docs/testing/`, pubblicazione (autorizzata) di Hosting e Rules con le ID icona storiche, tastiera automatica di Nuova
+  lista/Nuovo fondo su telefono reale.
+
+## ID icona storiche di nuovo valide — 20 novembre 2026
+
+- Su richiesta (punto 1 di «Prossime attività»). Le ID eliminate erano **24**, non 21: ricavate dall'unione delle liste `icon in [...]`
+  delle Rules in tutta la storia meno quelle attuali (`baby bed beer book briefcase bus car droplet ellipsis flame graduation leaf phone
+  pill plane receipt scissors shield star ticket tree umbrella wine wrench`). Effetto prima della correzione: una sola categoria o un
+  fondo con una di esse rendeva l'archivio non valido (export e modifiche bloccati); un backup che la conteneva non si importava.
+- `domain/category.ts`: `legacyCategoryIconLabels` (etichette storiche), `ActiveCategoryIcon` (le 40 con tre disegni),
+  `CategoryIcon` = attive + storiche, `allCategoryIconLabels` (usata da `IconPicker`), `retiredCategoryIcons` = `sofa` + storiche.
+  `categoryGlyphs.ts`: l'ultimo contorno di ciascuna, ripreso dalla storia; colorato e pixel tipizzati sulle sole attive (le storiche
+  ricadono sul contorno). Traduzioni inglesi: 13 dalla storia di `en.ts`, 11 scritte ora (mai esistite). Rules e copia in `public/`:
+  le 24 ID aggiunte alle due liste (categorie e fondi). Nessun dato riscritto, nessuna migrazione.
+- **Test:** nuovo «Rules: le due liste … accettano esattamente gli ID validi del dominio»; «icone eliminate prima del 14 novembre»
+  sostituisce «stella, istruzione e birra non disegnate» (la regola del ritiro vale anche per loro); backup con `bus`/`pill`/`star`
+  letto e `rocket` ancora rifiutato (l'esempio di icona non valida era `pill`); decoder Firestore con una categoria `bus`.
+  `npm run check` **496/496**; `test:emulator` **22/22**.
+- **Controllo dati, solo locale:** `emulator-data/` (archivio hybrid personale) contiene solo icone attuali. Produzione, archivi Standard
+  nei browser e backup personali **non controllati** (servono autorizzazione o i file).
+- **Da pubblicare, con autorizzazione:** Hosting (il client torna a leggere questi archivi e backup) e **Rules** (finché non sono
+  pubblicate, in Avanzata non si salva una modifica che conserva una di queste icone, per esempio rinominare la categoria).
 
 ## Audit React, rendering e prestazioni — 20 novembre 2026
 
@@ -3127,12 +3146,9 @@ screen reader, concorrenza tra due dispositivi.
 1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
    poi la sera con `skipped_payments` (`1dbb396`) e infine con gli esercenti (`f5411fb`). Da verificare ricaricando l'app: caricamento,
    sincronizzazione, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
-   serve autorizzazione. **ID icona eliminati (ancora aperto, ricontrollato il 20 novembre):** dal 14 novembre un'icona tolta
-   dal selettore si ritira (`retiredCategoryIcons` in `domain/category.ts`, oggi solo `sofa`) e resta leggibile; gli ID eliminati
-   prima di allora (i 18 storici e `car`/`bus`/`tree` del 9 novembre, `bus` era la predefinita di Trasporti) restano invece
-   rifiutati da decoder, import e Rules: una categoria o un backup che li usa è bloccato. Il controllo autorizzato sui dati
-   reali (Avanzata e backup personali) non risulta mai fatto. Se servono: reintrodurli come ritirati (dominio, tre disegni,
-   Rules, test), mai una migrazione automatica dei dati personali.
+   serve autorizzazione. **ID icona eliminati: risolto nel codice il 20 novembre** (sezione «ID icona storiche di nuovo valide»):
+   le 24 ID sono valide e ritirate. Restano la pubblicazione autorizzata di Hosting e Rules e, se si vuole, la verifica sui dati
+   reali (archivio Avanzata, archivi Standard nei browser, backup personali); nessuna migrazione dei dati.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino,
    sospensione della ricarica (interruttore «Ricarica mensile» del modulo del fondo), dialoghi Fondi/Liste a 320 px e in landscape,
