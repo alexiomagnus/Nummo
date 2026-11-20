@@ -164,31 +164,27 @@ function WorkspaceNavigation({ categoriesRequest = 0, backupRequest = 0, setting
     startTransition(() => setNavigation((previous) => previous.section === next ? previous : { section: next,
       returnTo: accountPages.has(next) && !accountPages.has(previous.section) ? previous.section : previous.returnTo }));
   }, []);
-  useEffect(() => { if (categoriesRequest > 0) navigate('categories'); }, [categoriesRequest]);
-  // Requests are events: an old request must not reopen the page when the UID workspace remounts.
-  const lastBackupRequest = useRef(backupRequest);
-  useEffect(() => {
-    if (backupRequest === lastBackupRequest.current) return;
-    lastBackupRequest.current = backupRequest;
-    navigate('backup');
-  }, [backupRequest]);
-  const lastSettingsRequest = useRef(settingsRequest);
-  useEffect(() => {
-    if (settingsRequest === lastSettingsRequest.current) return;
-    lastSettingsRequest.current = settingsRequest;
-    navigate('settings');
-  }, [settingsRequest]);
-  const lastNotificationsRequest = useRef(notificationsRequest);
-  useEffect(() => {
-    if (notificationsRequest === lastNotificationsRequest.current) return;
-    lastNotificationsRequest.current = notificationsRequest;
-    navigate('notifications');
-  }, [notificationsRequest]);
+  useRequest(categoriesRequest, () => navigate('categories'));
+  useRequest(backupRequest, () => navigate('backup'));
+  useRequest(settingsRequest, () => navigate('settings'));
+  useRequest(notificationsRequest, () => navigate('notifications'));
   return <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
     fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
     actions={<><SyncChip status={status} />{topActions}</>}>
     <Sections {...props} section={section} onNavigate={navigate} returnTo={returnTo} />
   </AppShell>;
+}
+
+// A request from the account menu (a counter kept in App) is an event: only a change opens the page. The counter survives
+// a remount of the UID-keyed workspace (sign-out and sign-in again without a reload), and an old request must not reopen
+// its page then (it used to happen with Categories, which checked `> 0`).
+function useRequest(request: number, open: () => void) {
+  const last = useRef(request);
+  useEffect(() => {
+    if (request === last.current) return;
+    last.current = request;
+    open();
+  }, [request]);
 }
 
 // The shell is available during Auth restoration; do not draw a second form with fake empty data.

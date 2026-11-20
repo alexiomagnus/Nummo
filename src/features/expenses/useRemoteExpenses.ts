@@ -7,12 +7,14 @@ import { submissionReducer } from '../../domain/submission';
 import { errorCode } from '../../services/firebase';
 import type { DataStore } from '../../services/dataStore';
 import type { ExpenseStore } from './expenseStore';
+import { actionCleared, actionFailed, listenerFailed, noDataErrors, snapshotReceived, visibleError } from '../workspace/dataErrors';
 
 export function useRemoteExpenses(backend: DataStore, storageNote: string): ExpenseStore {
   const pendingRecords = useRef(new Map<string, SyncedExpense>());
   const [recovery, setRecovery] = useState<SyncedExpense[]>([]);
   const [expenses, setExpenses] = useState<SyncedExpense[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  // The listener's failure stays until it delivers again; a later successful operation must not hide it (dataErrors.ts).
+  const [errors, setErrors] = useState(noDataErrors);
   const [ready, setReady] = useState(false);
   const [sync, setSync] = useState({ fromCache: true, pending: false });
   const [submission, dispatch] = useReducer(submissionReducer, { status: 'draft' });
@@ -33,7 +35,7 @@ export function useRemoteExpenses(backend: DataStore, storageNote: string): Expe
         }
         if (missing.length) setRecovery((old) => [...old, ...missing]);
       }
-      setExpenses(s.records); setReady(true); setError(null);
+      setExpenses(s.records); setReady(true); setErrors((old) => snapshotReceived(old, 'expenses'));
       setSync({ fromCache: s.fromCache, pending: s.pending });
       const current = latest.current;
       if (current.status === 'sending' || current.status === 'uncertain') {
@@ -42,7 +44,7 @@ export function useRemoteExpenses(backend: DataStore, storageNote: string): Expe
       }
     }, (reason) => {
       setRecovery((old) => [...new Map([...old, ...pendingRecords.current.values()].map((r) => [r.id, r])).values()]);
-      setExpenses([]); setReady(false); setError(message(reason));
+      setExpenses([]); setReady(false); setErrors((old) => listenerFailed(old, 'expenses', message(reason)));
     });
     return () => { active.current = false; stop(); };
   }, [backend]);
@@ -63,17 +65,17 @@ export function useRemoteExpenses(backend: DataStore, storageNote: string): Expe
     }).finally(() => { inFlight.current = false; });
   };
   const mutate = async (action: () => Promise<void>) => {
-    try { await action(); if (active.current) setError(null); return true; }
-    catch (reason) { if (active.current) setError(message(reason)); return false; }
+    try { await action(); if (active.current) setErrors(actionCleared); return true; }
+    catch (reason) { if (active.current) setErrors((old) => actionFailed(old, message(reason))); return false; }
   };
   return {
-    expenses, error, ready, submission, submit, sync, recovery,
+    expenses, error: visibleError(errors), ready, submission, submit, sync, recovery,
     retry: () => {
       const current = latest.current;
       if (current.status !== 'uncertain') return;
       void backend.confirmExpense(current.request).then((receipt) => {
         if (active.current) dispatch({ type: 'confirmed', receipt });
-      }).catch((e) => { if (active.current) setError(message(e)); });
+      }).catch((e) => { if (active.current) setErrors((old) => actionFailed(old, message(e))); });
     }, // Read-only verification: Firestore owns reconnection and retries.
     startNew: () => dispatch({ type: 'new-draft' }),
     remove: (record) => mutate(async () => {

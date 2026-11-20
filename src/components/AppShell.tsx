@@ -401,14 +401,21 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
   };
 }
 
+// Icon of Paper's FAB. Paper cross-fades and rotates the icon (200 ms, a JS animation that ignores reduced motion) whenever
+// the `icon` prop changes identity: an inline function restarted it on every render of the shell (each page change).
+function useIconSource(shape: string | undefined) {
+  return useCallback(({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape ?? ''} size={size} color={color} />, [shape]);
+}
+
 function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavProps<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const fabIcon = useIconSource(fab?.icon);
   return (
     <ScrollView role="navigation" aria-label={t("Sezioni")} style={[styles.rail, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.railContent} keyboardShouldPersistTaps="handled">
       {fab && (
-        <FAB mode="flat" icon={({ size, color }) => <SvgIcon shape={fab.icon} size={size} color={color} />} accessibilityLabel={fab.label}
+        <FAB mode="flat" icon={fabIcon} accessibilityLabel={fab.label}
           onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
           style={[styles.railFab, { backgroundColor: colors.primaryContainer }]} />
       )}
@@ -434,10 +441,11 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
 function Drawer<T extends string>({ destinations, selected, onSelect, fab }: NavProps<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const fabIcon = useIconSource(fab?.icon);
   return (
     <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, { backgroundColor: colors.background }]}>
       {fab && (
-        <FAB mode="flat" customSize={60} label={fab.label} icon={({ size, color }) => <SvgIcon shape={fab.icon} size={size} color={color} />}
+        <FAB mode="flat" customSize={60} label={fab.label} icon={fabIcon}
           accessibilityLabel={fab.label} onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
           style={[styles.drawerFab, { backgroundColor: colors.primaryContainer }]} />
       )}

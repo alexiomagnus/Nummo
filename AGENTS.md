@@ -221,6 +221,11 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   mai nascondere righe invalide o sovrascriverle silenziosamente.
 - Nessun invio di spese in render/effect (unica scrittura automatica: le categorie predefinite, vedi `seedDefaults.ts`). SDK gestisce coda/retry. Confermare solo dopo server;
   `hasPendingWrites` non è successo; `fromCache` non equivale a offline.
+- Hook dei dati (`useRemote*`): errori dei listener separati da quelli delle operazioni (`features/workspace/dataErrors.ts`). Un listener
+  fallito resta segnalato finché quello stesso listener non consegna di nuovo: mai cancellarlo da snapshot di altri listener, da
+  operazioni riuscite o da `clearError` (altrimenti `ready` resta falso senza messaggio e Nuova spesa aspetta per sempre).
+- Icone passate a `FAB` (o `IconButton animated`) di Paper: renderer stabile (`useCallback` per forma, `useIconSource` in `AppShell`),
+  mai una funzione inline: Paper rianima l'icona (rotazione e dissolvenza JS, ignora il movimento ridotto) a ogni cambio d'identità.
 - Un UUID per creazione. Non reimplementare sincronizzazione/idempotenza con un
   secondo archivio. Modifiche/eliminazioni/categorie online in transazione con la
   revisione vista all'apertura; conflitti espliciti. Salvataggi incerti: verifica in
