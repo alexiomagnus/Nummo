@@ -71,7 +71,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 ## Audit React, rendering e prestazioni — 20 novembre 2026
 
 Su richiesta: audit di rendering, stato, listener, animazioni e prestazioni con correzioni piccole e verificate. Commit `e4976be`
-sul ramo `fix/react-audit`, non pubblicato. Rules, Auth, configurazione Firebase e `DataStore` invariati.
+su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su Hosting il 20 novembre (sera) con `f3bd4df`. Rules, Auth, configurazione Firebase e `DataStore` invariati.
 
 - **Corretto — errore di listener nascosto (media).** In `useRemoteFunds`/`useRemoteLists` i due listener condividevano un solo
   `error`, azzerato dallo snapshot dell'altro listener, da un'operazione riuscita o da `clearError` alla chiusura di un dialogo (spese e
@@ -181,9 +181,10 @@ Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezi
   icona stondata; con Rules), `e0c2850` (icona trasparente delle notifiche), `f454d12` (Prossimo mese, filtro per fondo,
   pausa/annullamento datati, promemoria dei rinnovi, orario delle notifiche; Worker ripubblicato prima), `1889755`
   (dissolvenza del segnaposto d'avvio). Tutti con `npm run deploy:hosting`, «Deploy complete!», sito 200.
-- **Rules.** Ultima pubblicazione su richiesta il 16 novembre (sera, prima dell'Hosting di `f5411fb`) con `firebase deploy --only
-  firestore:rules --project nummo-6b6e2` (compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `f5411fb` (esercenti,
-  oltre a `skipped_payments` di `1dbb396`). Spesa con esercente ed eliminazione di un pagamento in Avanzata non ancora provate sul cloud.
+- **Rules.** Ultima pubblicazione su richiesta il 20 novembre (sera, prima dell'Hosting di `f3bd4df`) con `firebase deploy --only
+  firestore:rules --project nummo-6b6e2` (compilazione OK, «Deploy complete!»), allineate a `firestore.rules` di `ad5aa73` (le 24 ID
+  icona storiche per categorie e fondi). La precedente, il 16 novembre (sera, prima dell'Hosting di `f5411fb`), aveva introdotto gli
+  esercenti, oltre a `skipped_payments` di `1dbb396`. Spesa con esercente ed eliminazione di un pagamento in Avanzata non ancora provate sul cloud.
 
 ## Icona «internet» pixel, quarto disegno — 17 novembre 2026 (notte)
 
