@@ -7,25 +7,29 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 - **Sessione del 20 novembre (chiusa).** Fatto, su richiesta: riallineamento di questo file allo stato reale; audit React di rendering,
   stato e prestazioni con tre correzioni verificate in Chromium (`e4976be`); le 24 ID icona eliminate prima del 14 novembre di nuovo
-  valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. Dettagli nelle sezioni del 20 novembre.
+  valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. In serata/notte: rami uniti eliminati
+  (14 locali, 3 remoti); file di collaudo v9/v10 con test, importati nell'emulatore e collaudati dall'interfaccia della demo; le quattro
+  osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
 - **Prossima sessione, priorità consigliate:** (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
-  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo in demo dei nuovi file v9/v10 di
-  `docs/testing/` (sezione «File di collaudo v9 e v10» qui sotto).
-- **Git (20 novembre, sera).** `main` allineato a `origin/main`, tutto inviato su richiesta. Ultimo commit di codice: `ad5aa73` (ID icona
-  storiche di nuovo valide), prima `e4976be` (audit React); i commit successivi toccano solo questo file (l'hash di testa non si
+  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo dei file v9/v10 in Avanzata dall'interfaccia
+  e su smartphone (in Standard è fatto).
+- **Git (20 novembre, notte).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
+  `origin`. Ultimo commit di codice: `aebd0ec` (osservazioni del collaudo), prima `ad5aa73` (ID icona storiche); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** Pubblicati su richiesta il 20 novembre (sera), nell'ordine: **Rules** da `ad5aa73`
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `0765e5c` (codice di `aebd0ec`) pubblicato su richiesta il 20 novembre
+  (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare in produzione:
+  il ripristino da backup (riepilogo con gli esercenti, conflitto con i nomi) e un messaggio con un dialogo aperto. Prima, il 20 novembre (sera), nell'ordine: **Rules** da `ad5aa73`
   (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»: le 24 ID icona storiche
   ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
   identico a `dist/`): audit React e ID icona storiche. Worker `nummo-push` invariato (ripubblicato dall'utente per `f454d12`).
   Da provare in produzione: un archivio o un backup con un'icona storica, se ne esistono. Cronologia nel «Registro dei rilasci» qui sotto.
-- **Verifiche (20 novembre, sera, albero con le ID icona).** `npm run check` OK (typecheck, **496/496**, build demo). `test:emulator`
-  **22/22** con le Rules nuove (porte dedicate 29099/28180, config temporanea rimossa).
+- **Verifiche (20 novembre, notte, albero pubblicato).** `npm run check` OK (typecheck, **499/499**, build demo). `test:emulator`
+  **22/22** l'ultima volta sulle Rules di `ad5aa73` (sera; Rules, `DataStore` e servizi non più toccati da allora).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
   più nera.
 - **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
@@ -152,6 +156,11 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 20 novembre (notte): Hosting da `0765e5c`** (codice di `aebd0ec`: unione bloccata con singolare/plurale e nomi degli
+  elementi, esercenti contati nel ripristino, messaggi sopra i dialoghi, importo nel modulo di modifica con il separatore della
+  lingua). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules e Worker non toccati.
+  `npm run check` **499/499**.
 
 - **Rilascio del 20 novembre (sera): Rules da `ad5aa73`, poi Hosting da `f3bd4df`** (ID icona storiche di nuovo valide; audit React:
   errori di listener visibili, icona del FAB stabile, richieste del menu non ripetute). Rules: compilazione OK, «Deploy complete!».
