@@ -214,6 +214,15 @@ elementi eliminati), suggerimenti dell'Esercente, «ESSELUNGA» che riusa l'eser
 modifica, export finale identico al file v10 a parte `exported_at`, totali di Analisi (novembre 224,98 €, 12 mesi 1189,09 €).
 Con la spesa di prova «ebay» del giorno l'ordine per «e» diventa Esselunga, Ebay, Ferramenta…: atteso, l'uso di oggi pesa di più.
 Non provati: modalità Avanzata dall'interfaccia (accesso Google dall'emulatore), smartphone, CSV in un foglio di calcolo vero.
+**Stesso collaudo in Avanzata (20 novembre 2026, notte, eseguito):** demo con emulatori (`npm run emulators`, `emulators:seed`),
+`dist-demo/` con le correzioni, accesso Google dal popup dell'emulatore come proprietario demo, archivio Firestore vuoto. Stessi
+risultati della Standard, con i messaggi e i conteggi corretti: anteprime, seconda unione senza aggiunte, storici e rinnovi, Fondi
+da luglio a novembre, 61° pagamento rifiutato (conferma chiusa, messaggio sopra lo storico), conflitto «1 elemento è diverso…» con
+«V9 Streaming», riepilogo v10 con «11 esercenti», conferma «Elementi da eliminare: 20. Da scrivere: 1.», copia automatica, export
+finale identico al file a parte `exported_at`, CSV, Analisi. Controllati anche i documenti sul server (lettura REST dell'emulatore):
+`skipped_payments` di Streaming «7,10» con revisione 2; esercenti `m-a%2Fb ottica` e `m-outlet 30%25`; «Ebay» dopo l'unione e
+«eBay» dopo Sostituisci; le spese «ESSELUNGA» ed «ebay» con `merchant_id` dell'esercente esistente; stato «Sincronizzato».
+
 Osservazioni del collaudo, **corrette lo stesso giorno** e riverificate nella demo (italiano e inglese): l'unione bloccata dice
 «1 elemento è diverso dai dati salvati.» (plurale da 2) e nomina fino a tre elementi, poi «altri N»; riepilogo e conferma del
 ripristino contano gli esercenti («12 esercenti»; conferma «Elementi da eliminare: N. Da scrivere: M.»); al 61° pagamento eliminato

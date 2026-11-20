@@ -13,8 +13,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Prossima sessione, priorità consigliate:** (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
-  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo dei file v9/v10 in Avanzata dall'interfaccia
-  e su smartphone (in Standard è fatto).
+  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo dei file v9/v10 su smartphone (Standard e
+  Avanzata dalla demo su desktop: fatti).
 - **Git (20 novembre, notte).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
   `origin`. Ultimo commit di codice: `aebd0ec` (osservazioni del collaudo), prima `ad5aa73` (ID icona storiche); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
@@ -53,6 +53,15 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Collaudo v9/v10 in Avanzata — 20 novembre 2026 (notte)
+
+- Su richiesta. Demo con `npm run emulators` + `emulators:seed` (porte standard, libere), `dist-demo/` con le correzioni di `aebd0ec`
+  servito in locale, Chromium headless via CDP a 1280×900; accesso Google dal popup dell'emulatore Auth come proprietario demo
+  (`demo-owner`), archivio Firestore vuoto con le categorie predefinite. Tutti i passi del README di `docs/testing/` danno il
+  risultato atteso, con i testi corretti; in più, documenti letti dall'emulatore via REST: `skipped_payments` «7,10» (revisione 2),
+  ID `m-a%2Fb ottica` e `m-outlet 30%25`, «Ebay» → «eBay» solo dopo Sostituisci, `merchant_id` delle spese di prova.
+- Emulatori, server e browser fermati a fine prova; porte libere. Non provati: smartphone, cloud reale.
 
 ## Osservazioni del collaudo corrette — 20 novembre 2026 (notte)
 
