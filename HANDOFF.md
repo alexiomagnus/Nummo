@@ -5,6 +5,13 @@
 Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
 recente, sono cronaca delle singole fasi e possono dire cose superate.
 
+- **Sessione del 20 novembre (chiusa).** Fatto, su richiesta: riallineamento di questo file allo stato reale; audit React di rendering,
+  stato e prestazioni con tre correzioni verificate in Chromium (`e4976be`); le 24 ID icona eliminate prima del 14 novembre di nuovo
+  valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. Dettagli nelle sezioni del 20 novembre.
+- **Prossima sessione, priorità consigliate:** (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
+  storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
+  reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
+  React (nuova dipendenza), misura delle prestazioni con un archivio grande, file di collaudo v9/v10 in `docs/testing/`.
 - **Git (20 novembre, sera).** `main` allineato a `origin/main`, tutto inviato su richiesta. Ultimo commit di codice: `ad5aa73` (ID icona
   storiche di nuovo valide), prima `e4976be` (audit React); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
