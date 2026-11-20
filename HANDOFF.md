@@ -63,6 +63,16 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Righe intere nel pannello desktop, esercente tolto dai dettagli — 21 novembre 2026
+
+- Su richiesta: (1) tolto «Esercente» dai dettagli della spesa (resta accanto alla data e nell'etichetta accessibile della riga).
+  (2) Desktop: nessuna riga visibile a metà sul bordo inferiore del pannello.
+- `src/theme/wholeRows.ts`: `clippedRows` (puro, `tests/wholeRows.test.ts`) e `observeWholeRows` su `[data-panel-scroll]`, avviato da
+  `AppShell` solo con il pannello. Righe marcate con `dataSet.wholeRow` (`ListRow`, mesi di Spese, schede dei fondi); la riga tagliata
+  riceve `data-clipped` (`opacity: 0`, `pointer-events: none`); mai nascoste righe più alte della vista, iniziate sopra o con il focus.
+  Una riga intera che cresce (dettagli aperti) fa scorrere il pannello invece di sparire.
+- **Verifica:** Chromium headless 1600×900 (demo, Standard). `npm run check` **501/501**. Pubblicato il 21 novembre (sera).
+
 ## Esercente accanto alla data in Spese — 21 novembre 2026
 
 - Su richiesta, da uno screenshot di Spese su desktop: (1) sotto l'ultima riga visibile non deve comparire l'inizio di una nuova

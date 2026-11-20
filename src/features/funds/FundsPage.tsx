@@ -159,7 +159,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           {t("Fondi archiviati ({p0})", { p0: archived.length })}</Button>
         {showArchived && <Reveal role="list" accessibilityLabel={t("Fondi archiviati")} style={styles.list}>
           {archived.map((item) => (
-            <View key={item.fund.id} role="listitem" style={[styles.card, { borderColor: colors.outlineVariant }]}>
+            <View key={item.fund.id} role="listitem" {...{ dataSet: { wholeRow: 'true' } }} style={[styles.card, { borderColor: colors.outlineVariant }]}>
               <View style={styles.cardHeader}>
                 <FundAvatar fund={item.fund} />
                 <View style={styles.grow}>
@@ -229,7 +229,7 @@ function FundCard({ tracksBalance, item, open, isDefault, canWrite, inUse, onTog
     );
   };
   return (
-    <View role="listitem" style={[styles.card, { borderColor: colors.outlineVariant }]}>
+    <View role="listitem" {...{ dataSet: { wholeRow: 'true' } }} style={[styles.card, { borderColor: colors.outlineVariant }]}>
       <View style={styles.cardHeader}>
         <FundAvatar fund={fund} />
         <View style={styles.grow}>

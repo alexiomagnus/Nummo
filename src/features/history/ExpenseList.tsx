@@ -177,7 +177,7 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
             <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>{t("Lista spesa")}</Text>
           </View>;
           // Merchant beside the date, in the accent colour with the shop icon, so it reads apart from the date; one line,
-          // a long name ends with «…» (the full name is in the details).
+          // a long name ends with «…» (full name in the editor; not repeated in the details, user's request of 21 November).
           const merchantMark = merchant && <View style={styles.merchantMark}>
             <SvgIcon shape={iconShapes.store} size={14} color={theme.colors.primary} />
             <Text variant="labelMedium" numberOfLines={1} style={[styles.merchantName, { color: theme.colors.primary }]}>{merchant}</Text>
@@ -196,10 +196,6 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
               <Text variant="bodyMedium">{category?.label ?? t("Senza categoria")}</Text>
             </View>
-            {merchant && <View style={styles.detailField}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Esercente")}</Text>
-              <Text variant="bodyMedium">{merchant}</Text>
-            </View>}
             {item.recurrence && <View style={styles.detailField}>
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
               <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
@@ -221,7 +217,7 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
           return (
             <Fragment key={item.key}>
               {heading && (
-                <View style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
+                <View {...{ dataSet: { wholeRow: 'true' } }} style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
                   <View style={styles.monthLabel}>
                     <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{monthLabel(month, months, locale)}</Text>
                     <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>{monthCount}</Text>
@@ -234,7 +230,7 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
                 subtitle={shortDates.format(new Date(`${item.date}T00:00:00Z`))}
                 meta={listMark} subtitleExtra={merchantMark}
                 expanded={open} controls={open ? detailsId : undefined}
-                pressLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: formatDate(item.date) })}
+                pressLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: merchant ? `${formatDate(item.date)}, ${merchant}` : formatDate(item.date) })}
                 onPress={() => setExpanded((previous) => {
                   const next = new Set(previous);
                   if (next.has(item.key)) next.delete(item.key); else next.add(item.key);

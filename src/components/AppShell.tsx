@@ -10,6 +10,7 @@ import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhon
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { observeVirtualKeyboard } from '../theme/viewport';
+import { observeWholeRows } from '../theme/wholeRows';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon } from './SvgIcon';
@@ -104,6 +105,12 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // a line inside it. The scrollbar would run straight through the corners (browsers do not bend it to the radius):
   // `data-panel-scroll` lets GlobalStyle stop its track a corner radius short of both ends.
   const panelScroll = showPanel ? { dataSet: { panelScroll: 'true' } } : null;
+  // Desktop panel only: the bottom edge never cuts a marked row in half (wholeRows.ts).
+  useEffect(() => {
+    if (!showPanel || typeof document === 'undefined') return undefined;
+    const node = (scroller.current as { getScrollableNode?: () => unknown } | null)?.getScrollableNode?.();
+    return node instanceof HTMLElement ? observeWholeRows(node) : undefined;
+  }, [showPanel]);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>

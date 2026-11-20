@@ -28,6 +28,8 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       /* Desktop panel (AppShell): the track stops a corner radius short of both ends, so the bar runs only along the
          straight edge of the rounded panel. Track margins exist only for WebKit scrollbars, which Chromium ignores while
          scrollbar-width/color are set: reset them here. Firefox keeps the thin standard bar, clipped by the corners. */
+      /* Desktop panel: a row cut by the bottom edge is not shown until it fits whole (wholeRows.ts). */
+      [data-panel-scroll] [data-clipped] { opacity: 0; pointer-events: none; }
       @supports selector(::-webkit-scrollbar) {
         [data-panel-scroll] { scrollbar-width: auto; scrollbar-color: auto; }
         [data-panel-scroll]::-webkit-scrollbar { width: 10px; }
