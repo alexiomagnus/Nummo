@@ -61,8 +61,12 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   calcolati con il dominio e scritti in `docs/testing/README.md` (titolo ora «Backup di collaudo»), con i passi dall'interfaccia.
 - Nuovo `tests/testingBackups.test.ts` (2 test): export identico al file, valori delle tabelle, ordine dei suggerimenti, piano di
   unione/sostituzione con una grafia diversa già salvata, riga CSV. `npm run check` **498/498**.
-- **Non eseguiti:** importazione dall'interfaccia, importazione nell'emulatore con le Rules (ID con `%2F`/`%25`, 60 numeri), CSV in un
-  foglio di calcolo reale. Nessun codice dell'app, Rules o backup modificati.
+- **Importati nell'emulatore demo** (commit `6a8f890`): script temporaneo con `createFirestoreStore` e le Rules del checkout, emulatori
+  dedicati (Auth 29099, Firestore 28180, config temporanea nella radice, entrambi rimossi a fine prova), archivio vuoto. v9 unito
+  ed export identico (versione a parte), Lavanderia `0,…,59` accettata, seconda unione senza aggiunte; esercente «Ebay» già salvato,
+  v10 unito («Ebay» conservato, ID `%2F`/`%25` accettati), poi Sostituisci (v9 rimosso, «eBay», export identico byte per byte) e
+  seconda unione senza aggiunte. Esito nel README della cartella.
+- **Non eseguiti:** importazione dall'interfaccia, CSV in un foglio di calcolo reale. Nessun codice dell'app, Rules o backup modificati.
 
 ## ID icona storiche di nuovo valide — 20 novembre 2026
 

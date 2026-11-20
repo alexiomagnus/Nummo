@@ -197,6 +197,13 @@ Ordine dei suggerimenti al 20 novembre (frequenza con emivita di 90 giorni, poi 
 
 I backup usati solo dai test di regressione sono in `tests/fixtures/`, non qui: spese standard (v5, lettore storico),
 prove gratuite (v5) e cambio di frequenza (v6), verificati da `tests/trial.test.ts` e `tests/frequency.test.ts`.
+**Importazione nell'emulatore demo (20 novembre 2026, eseguita):** con lo store Firestore reale e le Rules del checkout, su
+emulatori dedicati e archivio demo vuoto: v9 unito (export identico al file salvo il numero di versione; `skipped_payments` della
+Lavanderia salvato come stringa `0,1,…,59` e accettato), reimportato senza aggiunte né conflitti; poi, con un esercente «Ebay» già
+salvato, v10 unito (27 spese, 5 categorie, 11 esercenti nuovi, «Ebay» conservato, ID con `%2F` e `%25` accettati); infine v10 con
+**Sostituisci** (rimossi i 9 + 3 + 1 elementi v9, nome «eBay» dal file, export identico al file byte per byte) e reimportato senza
+aggiunte né conflitti. Collaudo dall'interfaccia e CSV in un foglio di calcolo ancora da fare.
+
 I due file v9 e v10 di questa cartella sono verificati da `tests/testingBackups.test.ts`: lettura, export identico (a parte il numero
 di versione per il v9), i valori delle tabelle qui sopra al 20 novembre 2026, piano di unione e CSV. Se si cambiano i file o le
 regole di calcolo, aggiornare insieme file, test e tabelle.
