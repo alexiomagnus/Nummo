@@ -60,6 +60,36 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Esercente accanto alla data in Spese — 21 novembre 2026
+
+- Su richiesta, da uno screenshot di Spese su desktop: (1) sotto l'ultima riga visibile non deve comparire l'inizio di una nuova
+  spesa; (2) l'esercente accanto alla data, con una scritta diversa per riconoscerlo.
+- (1) È lo stesso difetto della sezione seguente: il taglio sulla linea 28 px dentro il pannello lasciava una striscia della
+  spesa successiva. Con lo scroller che riempie il pannello le righe scompaiono sotto il bordo arrotondato; una riga parzialmente
+  visibile durante lo scorrimento resta (comportamento normale di una lista che scorre).
+- (2) `ListRow` ha `subtitleExtra` (sulla riga del sottotitolo, dopo di esso, si restringe per primo); `ExpenseList` vi mette
+  l'esercente: icona `store` 14 px e testo `labelMedium` in `primary`, una riga con «…» (il nome completo resta nei dettagli).
+  Solo spese singole; abbonamenti, Analisi e Categorie invariati.
+- **Verifica:** `npm run check` OK. Chromium headless, `dist-demo/`, Standard con `nummo-utente-medio.json` e
+  `nummo-esercenti-v10.json` uniti: 1600×900 scuro (esercente accanto alla data, righe tagliate dal bordo del pannello) e 500×844
+  (esercente di 60 caratteri troncato con «…» prima dell'importo). Non pubblicato.
+
+## Ultima scheda tagliata nel pannello desktop — 21 novembre 2026
+
+- Su richiesta, da uno screenshot (Fondi, desktop, tema scuro): l'ultima scheda («Risparmi») sembrava non entrare nel pannello.
+- **Causa:** dal 17 novembre (`416f0db`) la `ScrollView` del pannello aveva 28 px di margine sopra e sotto, per tenere la barra di
+  scorrimento lontana dagli angoli arrotondati. Quando il contenuto supera di poco l'altezza, lo scroller lo taglia su una linea
+  28 px **dentro** il pannello: la scheda appare troncata a metà della superficie, non sul bordo.
+- **Correzione:** `AppShell.tsx`, lo scroller riempie tutto il pannello (padding del contenuto di nuovo pieno) e porta
+  `data-panel-scroll` solo con il pannello (expanded); `GlobalStyle.tsx`, per quel solo elemento e dove esiste `::-webkit-scrollbar`
+  (`@supports selector(...)`): `scrollbar-width`/`scrollbar-color` riportati ad `auto` (altrimenti Chromium ignora gli stili WebKit),
+  barra di 10 px con cursore `outline` arrotondato e traccia con `margin-block: 28px` (`radius.dialog`). Firefox: barra sottile
+  standard per tutta l'altezza, ritagliata dagli angoli (non provato).
+- **Verifica:** `npm run check` **499/499**. Chromium headless 1600×900, `dist-demo/`, Standard con `nummo-utente-medio.json` unito
+  (profilo temporaneo nello scratchpad): scroller = pannello (76–781), in cima la scheda è tagliata dal bordo arrotondato, in fondo
+  l'ultima scheda resta a 32 px dal bordo; barra lontana dagli angoli, chiaro e scuro; a 800 px nessun `data-panel-scroll`.
+  Non provati: Firefox, Safari, Brave dell'utente (stesso motore di Chromium). Non pubblicato.
+
 ## Collaudo v9/v10 su smartphone emulato — 21 novembre 2026
 
 - Su richiesta. **Emulazione**, non dispositivo: Chromium headless 390×844, densità 2, touch, user agent Android, driver CDP

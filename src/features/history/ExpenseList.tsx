@@ -176,6 +176,12 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
             <SvgIcon shape={iconShapes.checklist} size={14} color={theme.colors.onSecondaryContainer} />
             <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>{t("Lista spesa")}</Text>
           </View>;
+          // Merchant beside the date, in the accent colour with the shop icon, so it reads apart from the date; one line,
+          // a long name ends with «…» (the full name is in the details).
+          const merchantMark = merchant && <View style={styles.merchantMark}>
+            <SvgIcon shape={iconShapes.store} size={14} color={theme.colors.primary} />
+            <Text variant="labelMedium" numberOfLines={1} style={[styles.merchantName, { color: theme.colors.primary }]}>{merchant}</Text>
+          </View>;
           const editButton = onEdit && <View style={styles.editRow}>
             <Button mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: item.description })}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
@@ -226,7 +232,7 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
               <View>
               <ListRow outlined dense icon={category?.icon ?? null} title={item.description}
                 subtitle={shortDates.format(new Date(`${item.date}T00:00:00Z`))}
-                meta={listMark}
+                meta={listMark} subtitleExtra={merchantMark}
                 expanded={open} controls={open ? detailsId : undefined}
                 pressLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: formatDate(item.date) })}
                 onPress={() => setExpanded((previous) => {
@@ -289,6 +295,8 @@ const styles = StyleSheet.create({
   compactLine: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.lg },
   compactFields: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: spacing.md },
   empty: { gap: spacing.sm },
+  merchantMark: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
+  merchantName: { flexShrink: 1, minWidth: 0 },
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
   start: { alignSelf: 'flex-start' },
   // Total of the filtered results, same footprint and tone as the «Prossimo mese» card of the subscriptions view.

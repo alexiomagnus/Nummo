@@ -23,6 +23,8 @@ type Props = {
   icon: CategoryIcon | null;
   title: string;
   subtitle?: string;
+  // On the subtitle line, after it (Spese: the merchant beside the date); shrinks before the subtitle does.
+  subtitleExtra?: ReactNode;
   // Between title and subtitle (phones put the amount here).
   meta?: ReactNode;
   // Right side, vertically centred (amount, actions).
@@ -45,7 +47,7 @@ type Props = {
 
 // The one list row of the app (Spese, Categorie): icon tile, title + subtitle, trailing slot, hairline divider.
 // Every row has the same minimum height and centres its content vertically.
-export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense }: Props) {
+export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense, subtitleExtra }: Props) {
   const { colors } = useTheme();
   const expandable = onPress !== undefined && expanded !== undefined;
   const content = <>
@@ -53,7 +55,10 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
     <View style={styles.text}>
       <Text variant="bodyLarge" numberOfLines={dense ? 2 : 3}>{title}</Text>
       {meta}
-      {subtitle ? <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{subtitle}</Text> : null}
+      {subtitle && subtitleExtra ? <View style={styles.subtitleLine}>
+        <Text variant="bodySmall" style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{subtitle}</Text>
+        {subtitleExtra}
+      </View> : subtitle ? <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{subtitle}</Text> : null}
     </View>
     {(trailing || expandable) && <View style={styles.trailing}>
       {trailing}
@@ -101,6 +106,8 @@ const styles = StyleSheet.create({
   dense: { minHeight: denseHeight },
   main: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: rowHeight },
   text: { flex: 1, minWidth: 0 },
+  subtitleLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minWidth: 0 },
+  subtitle: { flexShrink: 0 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 0 },
   tile: { alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   // 24 dp like the other icons, so it reads as an affordance; spacing.md from the amount (xs gap + sm margin).
