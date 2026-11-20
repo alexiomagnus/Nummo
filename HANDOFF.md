@@ -13,16 +13,19 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Prossima sessione, priorità consigliate:** (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
-  React (nuova dipendenza), misura delle prestazioni con un archivio grande; pubblicare su Hosting le correzioni del collaudo su
-  smartphone emulato (sezione del 21 novembre); collaudo su telefono reale.
-- **Git (20 novembre, notte).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimo commit di codice: `aebd0ec` (osservazioni del collaudo), prima `ad5aa73` (ID icona storiche); i commit successivi toccano solo questo file (l'hash di testa non si
+  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
+  gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
+- **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
+  `origin`. Ultimo commit di codice: `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
+  collaudo); i commit successivi toccano solo questo file (l'hash di testa non si
   scrive qui: ogni commit che lo registrasse lo renderebbe superato).
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `0765e5c` (codice di `aebd0ec`) pubblicato su richiesta il 20 novembre
-  (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare in produzione:
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `f614f65` (codice di `78b424d`) pubblicato su richiesta il 21 novembre
+  con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare sul telefono: dettagli
+  di una spesa con esercente lungo, anteprima del ripristino, fogli e dialoghi senza striscia in basso. Prima, **Hosting** da
+  `0765e5c` (codice di `aebd0ec`) pubblicato su richiesta il 20 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare in produzione:
   il ripristino da backup (riepilogo con gli esercenti, conflitto con i nomi) e un messaggio con un dialogo aperto. Prima, il 20 novembre (sera), nell'ordine: **Rules** da `ad5aa73`
   (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»: le 24 ID icona storiche
   ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
@@ -70,7 +73,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   misura fissato con `top`/`left` a 0 e `pointerEvents: 'none'`: documento alto quanto la finestra; (3) `BackupActions` porta
   l'anteprima in vista (`scrollIntoView` `nearest`, senza animazione con movimento ridotto). `npm run check` **499/499**.
   Riverificato in emulazione 390×844 (844/844, anteprima intera sopra la navigazione, esercente su due righe accanto a «Modifica»)
-  e a 1280 px (dettagli su una riga). Non pubblicato su Hosting.
+  e a 1280 px (dettagli su una riga). Pubblicato su Hosting il 21 novembre (vedi «Registro dei rilasci»).
 - Non verificabili in emulazione: tastiera virtuale, safe area, gesti reali, prestazioni. Driver, server e browser chiusi.
 
 ## Collaudo v9/v10 in Avanzata — 20 novembre 2026 (notte)
@@ -184,6 +187,11 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre: Hosting da `f614f65`** (codice di `78b424d`: valori lunghi dei dettagli a capo su smartphone, pagina
+  alta quanto la finestra senza striscia sotto fogli e dialoghi, anteprima del ripristino portata in vista).
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules e Worker non toccati.
+  `npm run check` **499/499**.
 
 - **Rilascio del 20 novembre (notte): Hosting da `0765e5c`** (codice di `aebd0ec`: unione bloccata con singolare/plurale e nomi degli
   elementi, esercenti contati nel ripristino, messaggi sopra i dialoghi, importo nel modulo di modifica con il separatore della
