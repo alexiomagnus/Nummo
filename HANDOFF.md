@@ -148,6 +148,13 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   alto); su smartphone «Scansiona di nuovo» occupa da sola tutta la riga e «Annulla»/«Usa questi dati» si dividono la successiva
   (`fullRow`, `flexGrow`), così i tre pulsanti sono allineati ai campi invece di essere a destra a gradini. **Non provato nel browser**
   (né a 390 px né a 1400 px): da controllare che i margini laterali dei pulsanti coincidano con quelli degli input. Committato in `2b9e763` e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200.
+- Poi, su richiesta (tre screenshot): su smartphone «Annulla» e «Usa questi dati» sono larghi uguali (`flex: 1`); su desktop il fondo della foto
+  coincideva con la riga dei pulsanti (linea immaginaria): i pulsanti sono ora una riga a sé sotto le due colonne (distanza dalla Categoria
+  sempre 72, allineati alla colonna dei campi), così la foto finisce con il modulo e «Ingrandisci la foto» sta più in alto. Poi, su richiesta: la foto arriva
+  fino al fondo del campo Categoria e «Ingrandisci la foto» sta a sinistra, sulla riga dei pulsanti. Poi, su richiesta (screenshot di una
+  finestra stretta, colonna dei campi ≈308: «Scansiona di nuovo» e «Annulla» sulla stessa riga di larghezze diverse): sotto 500 di colonna (`inlineRowMinimum`,
+  misurata con `onLayout`) i pulsanti si impilano come su smartphone, «Scansiona di nuovo» a tutta larghezza e «Annulla»/«Usa questi dati» metà e metà.
+  **Non provato nel browser** (né a 570 né a 1400 px); non committato né pubblicato.
 - **Verifica:** typecheck e `npm test` OK (509/509). **Non provato nel browser**: da controllare a 1400×900 e a ~900 px (foto non
   collassata al minimo di 240, nessuna barra di scorrimento nuova). Committato in `830ac24` e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200; layout mai visto nel browser da me.
 

@@ -32,6 +32,8 @@ type Props = {
   onClose: () => void;
 };
 
+// Width of the column of the fields under which the three review buttons no longer fit one row (natural widths ≈ 466 + gaps).
+const inlineRowMinimum = 500;
 type Stage = 'pick' | 'camera' | 'ready' | 'consent' | 'working' | 'review';
 
 const fieldLabels: Readonly<Record<ReceiptField, string>> = { amount: 'Importo', date: 'Data', description: 'Descrizione', merchant: 'Esercente', categoryId: 'Categoria' };
@@ -52,6 +54,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const [stage, setStage] = useState<Stage>('pick');
   const [image, setImage] = useState<Blob | null>(null);
   const [preview, setPreview] = useState('');
+  const [actionsWidth, setActionsWidth] = useState(0);
   const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -261,14 +264,20 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     </View>;
     // Phone: «Scansiona di nuovo» on its own full-width row, then «Annulla» and «Usa questi dati» sharing the next one, so all three
     // line up with the fields (user's request, 21 November).
-    const grow = inline || !wide ? styles.inlineAction : undefined;
-    const again = <CancelButton key="again" onPress={() => setStage('ready')} style={[grow, !wide && styles.fullRow]}>{t("Scansiona di nuovo")}</CancelButton>;
+    // Wide window with a narrow column of fields (the three do not fit one row, ≈500): stacked like on a phone, never two rows of
+    // unequal buttons.
+    const stacked = inline && actionsWidth > 0 && actionsWidth < inlineRowMinimum;
+    const grow = stacked || !wide ? styles.equal : inline ? styles.inlineAction : undefined;
+    const again = <CancelButton key="again" onPress={() => setStage('ready')} style={[grow, (stacked || !wide) && styles.fullRow]}>{t("Scansiona di nuovo")}</CancelButton>;
     const cancel = <CancelButton onPress={onClose} style={grow}>{t("Annulla")}</CancelButton>;
     const use = <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply} style={grow}>{t("Usa questi dati")}</ConfirmButton>;
     body = inline
-      ? <View style={styles.columns}><View style={styles.side}>{picture}<View style={styles.row}>{zoom}</View></View>
-        {/* The three buttons sit in the column of the fields, as wide as the inputs and a little below the last one (user's request, 21 November). */}
-        <View style={styles.main}>{review}<View style={styles.inlineActions}>{again}{cancel}{use}</View></View></View>
+      ? <>
+        <View style={styles.columns}><View style={styles.side}>{picture}</View><View style={styles.main}>{review}</View></View>
+        {/* The three buttons sit under the column of the fields, as wide as the inputs, well below the last one. They are a row of their own, so the
+            photo (as tall as the fields) never ends on the same line as the buttons (user's request, 21 November). */}
+        <View style={styles.actionsRow}><View style={styles.sideActions}>{zoom}</View><View style={styles.main}><View style={styles.inlineActions} onLayout={(event) => setActionsWidth(event.nativeEvent.layout.width)}>{again}{cancel}{use}</View></View></View>
+      </>
       : <>{picture}<View style={styles.row}>{zoom}</View>{review}</>;
     // «Scansiona di nuovo» outlined like «Annulla» (a way back, to the photo), never a bare text action among the buttons.
     // «Annulla» and «Usa questi dati» stay together: on a phone the row wraps with «Scansiona di nuovo» above the pair,
@@ -308,9 +317,14 @@ const styles = StyleSheet.create({
   columns: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xl },
   side: { flex: 2, minWidth: 0, gap: spacing.lg },
   main: { flex: 3, minWidth: 0 },
-  inlineActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.xxxl + spacing.xl, marginBottom: spacing.lg },
+  actionsRow: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xl, marginTop: spacing.xxxl + spacing.xl - spacing.lg, marginBottom: spacing.lg },
+  // «Ingrandisci la foto» on the line of the buttons, so the photo itself ends where the fields end.
+  sideActions: { flex: 2, minWidth: 0, justifyContent: 'center', alignItems: 'flex-start' },
+  inlineActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   inlineAction: { flexGrow: 1 },
   fullRow: { flexBasis: '100%', flexGrow: 1 },
+  // Phone: «Annulla» and «Usa questi dati» exactly as wide as each other.
+  equal: { flex: 1 },
   notice: { flexDirection: 'row', gap: spacing.md, padding: spacing.md, borderRadius: radius.card },
   noticeText: { flex: 1, minWidth: 0, gap: spacing.xs },
 });
