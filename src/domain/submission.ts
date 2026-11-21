@@ -6,12 +6,16 @@ export type Submission =
   | { status: 'draft' }
   | { status: 'sending'; request: ExpenseRequest }
   | { status: 'uncertain'; request: ExpenseRequest }
+  // Written to the device's copy of the archive and queued for the server (no connection): not a confirmation, but the
+  // form is free for the next expense. The server's verdict arrives later through the listener (Advanced mode only).
+  | { status: 'queued'; request: ExpenseRequest }
   | { status: 'confirmed'; request: ExpenseRequest; receipt: Receipt }
   | { status: 'rejected'; request: ExpenseRequest; message: string };
 
 export type SubmissionEvent =
   | { type: 'send'; request: ExpenseRequest }
   | { type: 'uncertain' }
+  | { type: 'queued' }
   | { type: 'retry' }
   | { type: 'confirmed'; receipt: Receipt }
   // Only an authoritative rejection that guarantees no write may unlock editing.
@@ -26,6 +30,8 @@ export function submissionReducer(state: Submission, event: SubmissionEvent): Su
       return { status: 'sending', request: Object.freeze({ ...event.request }) };
     case 'uncertain':
       return state.status === 'sending' ? { status: 'uncertain', request: state.request } : state;
+    case 'queued':
+      return state.status === 'sending' ? { status: 'queued', request: state.request } : state;
     case 'retry':
       return state.status === 'uncertain' ? { status: 'sending', request: state.request } : state;
     case 'confirmed':
@@ -38,6 +44,6 @@ export function submissionReducer(state: Submission, event: SubmissionEvent): Su
       return state.status === 'sending'
         ? { status: 'rejected', request: state.request, message: event.message } : state;
     case 'new-draft':
-      return state.status === 'confirmed' || state.status === 'rejected' ? { status: 'draft' } : state;
+      return state.status === 'confirmed' || state.status === 'rejected' || state.status === 'queued' ? { status: 'draft' } : state;
   }
 }

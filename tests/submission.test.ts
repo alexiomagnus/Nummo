@@ -55,3 +55,15 @@ test('dopo rifiuto definitivo la correzione richiede un nuovo ID', () => {
 test('un evento tardivo non altera una bozza', () => {
   assert.deepEqual(reduce({ status: 'draft' }, { type: 'rejected', message: 'late' }), { status: 'draft' });
 });
+test('una spesa in coda sul dispositivo libera il modulo senza contare come conferma', () => {
+  const queued = reduce(sending(), { type: 'queued' });
+  assert.equal(queued.status, 'queued');
+  // Not a confirmation: a late receipt does not turn it into «confirmed», and nothing else can be sent until a new draft.
+  assert.equal(reduce(queued, { type: 'confirmed', receipt: { expense_id: request.expense_id, created_at: '2026-11-02T12:00:00Z' } }), queued);
+  assert.equal(reduce(queued, { type: 'send', request: { ...request, expense_id: 'next' } }), queued);
+  assert.deepEqual(reduce(queued, { type: 'new-draft' }), { status: 'draft' });
+  // Only a sending expense can be queued.
+  assert.deepEqual(reduce({ status: 'draft' }, { type: 'queued' }), { status: 'draft' });
+  const uncertain = reduce(sending(), { type: 'uncertain' });
+  assert.equal(reduce(uncertain, { type: 'queued' }), uncertain);
+});

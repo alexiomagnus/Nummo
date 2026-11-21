@@ -331,6 +331,40 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
   };
 }
 
+// The other archive as a backup would carry it (the move between modes): the same file format read back by the same
+// reader, so the move follows exactly the rules of a restore (validation, merge without overwriting, identical items skipped).
+export function archiveAsImport(snapshot: Parameters<typeof makeBackup>[0]): ImportData {
+  return parseBackup(JSON.parse(makeBackup(snapshot)));
+}
+
+// Moving data between the two modes (21 November): both archives usually hold the same default categories under different
+// IDs, which a plain merge reports as conflicts. Here a category of the other archive whose name (same key as the unique
+// name index) is already used by a saved category becomes that saved one: its record is dropped and the expenses, lists
+// and templates moved over point to the saved ID. A category with the same ID is left to the plan (identical or a
+// conflict). Only for the move between modes: a backup file keeps the plain merge rules.
+export function alignCategoriesByName(data: ImportData, saved: readonly Category[]): { data: ImportData; aligned: number } {
+  const savedIds = new Set(saved.map((c) => c.id));
+  const byName = new Map(saved.map((c) => [categoryNameKey(c.label), c.id]));
+  const moved = new Map<string, string>();
+  for (const c of data.categories) {
+    const target = byName.get(categoryNameKey(c.label));
+    if (!savedIds.has(c.id) && target !== undefined) moved.set(c.id, target);
+  }
+  if (moved.size === 0) return { data, aligned: 0 };
+  const point = <T extends { category_id: string | null }>(record: T): T =>
+    record.category_id !== null && moved.has(record.category_id) ? { ...record, category_id: moved.get(record.category_id)! } : record;
+  return {
+    aligned: moved.size,
+    data: {
+      ...data,
+      categories: data.categories.filter((c) => !moved.has(c.id)),
+      expenses: data.expenses.map(point),
+      lists: data.lists.map(point),
+      ...(data.templates ? { templates: data.templates.map(point) } : {}),
+    },
+  };
+}
+
 // The items named when a merge is blocked: the first `max` conflicts as in the plan (expenses first), and how many more.
 // Labels are the file's own names (descriptions, category/fund/list names, movement notes: never translated); the general
 // budget's label and an empty movement note are left to the presentation layer (`kind` tells which).

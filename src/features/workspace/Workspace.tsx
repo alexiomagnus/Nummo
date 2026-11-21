@@ -90,8 +90,10 @@ type DashboardSettingsProps = {
 
 // `renderSettings` draws the settings page (preferences live in App); `onDone` returns to the originating section.
 type AccountPageProps = { categoriesRequest?: number; templatesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode;
-  // Storage section of the backup page (where the data is, protection, mode change), drawn by the app for the current mode.
-  storage?: ReactNode };
+  // Storage section of the backup page (where the data is, protection, mode change), drawn by the app for the current mode;
+  // a function receives the open archive (Advanced: the move of data between modes) and whether the page is shown.
+  storage?: StorageSlot };
+export type StorageSlot = ReactNode | ((archive: { backend: DataStore; enabled: boolean; shown: boolean }) => ReactNode);
 
 // `localArchive`: the device archive's change clock, given only in the Standard mode (backup reminder).
 type WorkspaceProps = { storageNote: string; topActions?: ReactNode; onReleased?: () => void; localArchive?: LocalArchive } & AccountPageProps & DashboardSettingsProps;
@@ -229,7 +231,7 @@ type SectionsProps = DashboardSettingsProps & {
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
   subscriptions: ReturnType<typeof subscriptionSummaries>; merchants: readonly RankedMerchant[];
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
-  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode; storage?: ReactNode; localArchive?: LocalArchive;
+  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode; storage?: StorageSlot; localArchive?: LocalArchive;
 };
 
 function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, templateState, backend, store, categoryState, occurrences, subscriptions, merchants, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
@@ -370,7 +372,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
-        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} merchantNames={merchantNames} funds={fundState.funds}
+        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} merchantNames={merchantNames} funds={fundState.funds} pendingIds={store.pendingIds}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
@@ -381,7 +383,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </VisitedSection>
     {/* Preserve import previews and in-flight actions when leaving this page; no reads until an explicit action. */}
     <View style={section === 'backup' && !starting ? styles.backupPage : styles.hidden}>
-      {storage}
+      {typeof storage === 'function' ? storage({ backend, enabled: synchronized, shown: section === 'backup' && !starting }) : storage}
       <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
     </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} merchants={merchants} />}

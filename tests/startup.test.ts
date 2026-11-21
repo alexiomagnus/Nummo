@@ -114,3 +114,63 @@ test('metriche iniziali: legge i margini di sicurezza dal CSS e ripiega su zero 
     assert.deepEqual(initialSafeAreaMetrics().insets, { top: 0, right: 0, bottom: 0, left: 0 });
   } finally { Object.assign(g, saved); }
 });
+
+// public/offline.html (shown by the service worker without a connection): colours of the chosen theme, language, font.
+const offlineScript = /<script id="nummo-offline">([\s\S]*?)<\/script>/.exec(readFileSync('public/offline.html', 'utf8'))?.[1] ?? '';
+function offline(items: Record<string, string>, { systemDark = false } = {}) {
+  const vars: Record<string, string> = {}; const classes: string[] = []; const texts: Record<string, string> = {};
+  const listeners: Record<string, () => void> = {};
+  const tags = [{ attrs: { content: '#F5FBF5', media: 'light' } as Record<string, string>, removed: false }, { attrs: { content: '#0F1511', media: 'dark' } as Record<string, string>, removed: false }]
+    .map((tag) => Object.assign(tag, { removeAttribute: (name: string) => { delete tag.attrs[name]; }, setAttribute: (name: string, value: string) => { tag.attrs[name] = value; }, remove: () => { tag.removed = true; } }));
+  const root = { lang: 'it', style: { setProperty: (name: string, value: string) => { vars[name] = value; }, colorScheme: '' }, classList: { add: (name: string) => { classes.push(name); } } };
+  const element = (id: string) => ({ set textContent(value: string) { texts[id] = value; }, addEventListener: (type: string, listener: () => void) => { listeners[`${id}:${type}`] = listener; } });
+  let reloads = 0;
+  runInNewContext(offlineScript, {
+    document: { documentElement: root, head: { querySelectorAll: () => tags }, getElementById: element },
+    localStorage: { getItem: (key: string) => items[key] ?? null }, matchMedia: () => ({ matches: systemDark }),
+    location: { reload: () => { reloads++; } }, window: { addEventListener: (type: string, listener: () => void) => { listeners[`window:${type}`] = listener; } },
+  });
+  return { vars, classes, texts, tags, root, listeners, reloads: () => reloads };
+}
+
+test('avvio: lo schema salvato porta anche i colori della pagina offline, uguali al tema reale', () => {
+  for (const accent of accents) for (const dark of [false, true]) {
+    const scheme = buildScheme(accent, 'palette', dark);
+    const ink = makeBootTheme({ theme: 'system', accent, colorMode: 'palette' }).ink![dark ? 'dark' : 'light'];
+    assert.deepEqual(ink, { primary: scheme.primary, onPrimary: scheme.onPrimary, onSurface: scheme.onSurface, onSurfaceVariant: scheme.onSurfaceVariant });
+    assert.ok(Object.values(ink).every((color) => /^#[0-9A-Fa-f]{6}$/.test(color)));
+  }
+});
+
+test('pagina offline: tema e lingua scelti, carattere di sistema, riprova e ricarica al ritorno della rete', () => {
+  const amber = makeBootTheme({ theme: 'dark', accent: 'amber', colorMode: 'mono' });
+  const page = offline({ [bootThemeKey]: JSON.stringify(amber), 'nummo.preferences.v1': JSON.stringify({ language: 'en', font: 'system' }) });
+  assert.equal(page.vars['--t-bg'], amber.dark);
+  assert.equal(page.vars['--t-primary'], amber.ink!.dark.primary);
+  assert.equal(page.vars['--t-on-variant'], amber.ink!.dark.onSurfaceVariant);
+  assert.deepEqual(page.classes, ['themed', 'system-font']);
+  assert.equal(page.tags[0]!.attrs.content, amber.dark);
+  assert.equal(page.tags[1]!.removed, true);
+  assert.equal(page.root.lang, 'en');
+  assert.deepEqual(page.texts, { title: "You're offline", text: 'Nummo needs a connection to open. It opens again by itself once you are back online.', retry: 'Try again' });
+  page.listeners['retry:click']!(); page.listeners['window:online']!();
+  assert.equal(page.reloads(), 2);
+  // Light theme picked by the system; Italian stays the page's own text.
+  const light = offline({ [bootThemeKey]: JSON.stringify(makeBootTheme({ theme: 'system', accent: 'amber', colorMode: 'mono' })) }, { systemDark: false });
+  assert.equal(light.vars['--t-bg'], amber.light);
+  assert.deepEqual(light.texts, {});
+});
+
+test('pagina offline: valori assenti, vecchi o non validi lasciano colori statici e italiano', () => {
+  const old = JSON.stringify({ v: 1, mode: 'dark', dark: '#000000', light: '#ffffff' });
+  const bad = JSON.stringify({ ...makeBootTheme({ theme: 'dark', accent: 'mint', colorMode: 'mono' }), ink: { dark: { primary: 'red; x: url(//e)', onPrimary: '#000000', onSurface: '#000000', onSurfaceVariant: '#000000' } } });
+  for (const items of [{} as Record<string, string>, { [bootThemeKey]: old }, { [bootThemeKey]: bad }, { [bootThemeKey]: '{x', 'nummo.preferences.v1': '{x' }]) {
+    const page = offline(items);
+    assert.deepEqual(page.vars, {});
+    assert.deepEqual(page.classes, []);
+    assert.equal(page.tags[0]!.attrs.content, '#F5FBF5');
+    assert.deepEqual(page.texts, {});
+    // The buttons work even when storage is unreadable.
+    assert.ok(page.listeners['retry:click'] && page.listeners['window:online']);
+  }
+});

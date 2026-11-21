@@ -19,6 +19,8 @@ export type ExpenseStore = Readonly<{
   remove?: (record: ExpenseRecord) => boolean | Promise<boolean>;
   update?: (record: ExpenseRecord, data: ExpenseData, merchant?: Merchant | null) => Promise<boolean>;
   recovery?: readonly ExpenseRecord[];
+  // Expenses written on this device and not yet confirmed by the server (Advanced mode, offline): «In attesa di invio».
+  pendingIds?: ReadonlySet<string>;
   sync?: Readonly<{ fromCache: boolean; pending: boolean }>;
   storageNote: string;
   // The archive is on this device: a save is final at once, nothing waits for a server.

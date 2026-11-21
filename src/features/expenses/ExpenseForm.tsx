@@ -5,6 +5,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding } from '../../components/Button';
 import { useHaptics } from '../../components/Haptics';
+import { useSnackbar } from '../../components/SnackbarHost';
 import { layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
@@ -67,9 +68,12 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   const dataState = store.ready ? 'ready' : store.error ? 'error' : 'loading';
   const enabled = dataState === 'ready' && !busy;
 
-  // The draft is cleared only after a verified confirmation (no sending happens here).
+  const notify = useSnackbar();
+  // The draft is cleared only after a verified confirmation (no sending happens here), or once the expense waits on this
+  // device for the server (Advanced mode, offline): the next expense can be written meanwhile, and the message says so.
   useEffect(() => {
-    if (submission.status !== 'confirmed') return;
+    if (submission.status !== 'confirmed' && submission.status !== 'queued') return;
+    if (submission.status === 'queued') notify("Sei offline: la spesa è sul dispositivo e verrà inviata quando torni online.");
     setDraft(newDraft());
     setErrors({});
     setFormKey((key) => key + 1);

@@ -1306,3 +1306,24 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   pulsante tonale della scansione con ogni accento; scartato `tertiaryContainer`, che in modalità mono è il grigio neutro delle
   superfici e sembra disattivato. Scelta con lo stesso foglio (smartphone) e menu (da medium) di `SelectField`, esteso con `trigger`
   e `menuMinWidth` (360) invece di un secondo selettore. Il nome del template resta nell'etichetta accessibile e nell'elenco.
+
+## Offline in Avanzata, pagina offline, passaggio dei dati tra le modalità — 21 novembre 2026
+
+- **Contesto.** Su richiesta dell'utente, dopo un'analisi in tre livelli (inserire offline, modificare offline, aprire senza rete): l'app è
+  di solito già aperta quando la rete cade e basta **inserire**. Unire le due modalità in un archivio locale sincronizzato è stato valutato e
+  scartato (motore di sincronizzazione proprio, conflitti, lapidi, nomi unici, operazioni atomiche spezzate): resta una sola fonte di verità per modalità.
+- **Livello 1, più spese offline.** In Avanzata `createExpense` attende il server, quindi il modulo restava su «In attesa di conferma…» e se ne
+  poteva inserire una sola. Ora, quando la spesa è già nella copia del dispositivo (`pendingIds` del listener, dati identici alla richiesta),
+  lo stato `queued` libera il modulo: subito se `navigator.onLine` è falso, altrimenti dopo 2 s. Non è una conferma: messaggio dedicato,
+  etichetta «In attesa di invio» nella riga di Spese finché il server non risponde; una conferma tardiva non tocca la spesa successiva
+  (ID controllato), un rifiuto del server finisce nelle copie di recupero già esistenti. Il motore resta la coda dell'SDK; modifiche,
+  eliminazioni e transazioni restano solo online (livello 2 non fatto: un'eliminazione offline non può verificare la versione vista).
+- **Pagina offline.** La schermata «Sei offline» vista sul telefono era quella di Chrome per le app installate. `sw.js` ora risponde alle
+  sole navigazioni fallite con `offline.html` (rete sempre per prima, cache solo della pagina e del font latino), con i colori del tema scelto
+  (campo `ink` di `nummo.boot-theme.v1`, facoltativo) e la lingua scelta; il worker si registra per tutti all'avvio, allo stesso indirizzo usato
+  dalle notifiche. Non è un avvio offline: l'app e i dati non sono in cache.
+- **Passaggio dei dati.** In Standard Firebase non si avvia mai, quindi entrambe le direzioni stanno in Avanzata (`ModeTransfer`), come gesti
+  espliciti con anteprima e **solo unione**: l'altro archivio diventa un backup in memoria (`archiveAsImport`, stesso formato e lettore) e le
+  categorie con lo stesso nome si allineano a quella già salvata (`alignCategoriesByName`), perché entrambe le modalità creano le cinque
+  predefinite con ID diversi e l'unione da file le considera conflitti. La regola vale solo per il passaggio, non per i file. Google Drive è
+  nominato solo come consiglio su dove tenere il backup, senza integrazione.

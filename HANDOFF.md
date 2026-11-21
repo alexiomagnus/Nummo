@@ -54,6 +54,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   campo riportato in vista (prima a filo della tastiera a 360×640). Committato in `62e3639` e pubblicato su Hosting; sezione dedicata qui sotto.
 - **Vibrazione 6/5 ms, barra che spariva, scansione spenta (21 novembre, notte):** su richiesta; sezione dedicata qui sotto.
   Committato e inviato a `origin`; non pubblicato su Hosting.
+- **Spese offline, pagina offline, passaggio dei dati tra le modalità (21 novembre, notte; altra sessione, in parallelo alla
+  precedente):** su richiesta; sezione dedicata qui sotto. `npm run check` **520/520**, `test:emulator` **22/22**, provato nel browser con la
+  demo. Committato e inviato a `origin` su richiesta (commit successivo a `1518b0c` della sessione sulla vibrazione); **non pubblicato su Hosting**.
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
   revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
@@ -181,6 +184,37 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Spese offline, pagina offline, passaggio dei dati tra le modalità — 21 novembre 2026 (notte)
+
+- **Prima della fase:** analisi su richiesta della guida a Firebase (bozza del nuovo testo, link diretti, sito senza progetto di base,
+  link «Collega un altro dispositivo»: concordati, **non implementati**) e dell'unione delle due modalità (scartata: decisione in
+  `docs/architecture.md`). Riallineamento documentale, lock hybrid 81456 messo da parte, `3ad9a75` pubblicato su Hosting e inviato.
+- **Spese offline (livello 1).** In Avanzata, senza rete, il modulo restava su «In attesa di conferma…» dopo la prima spesa. Ora lo stato
+  `queued` (`domain/submission.ts`) lo libera quando la spesa è già nella copia del dispositivo: subito offline, dopo 2 s con rete debole.
+  Messaggio «Sei offline: la spesa è sul dispositivo e verrà inviata quando torni online.», etichetta tonale «In attesa di invio» (icona sync)
+  nella riga di Spese e nell'etichetta accessibile. Standard invariata. Solo le spese singole mostrano l'etichetta: una serie creata offline
+  in Abbonamenti non la mostra (non richiesto).
+- **Pagina offline.** La schermata «Sei offline» dello screenshot era la pagina di Chrome. Ora `public/offline.html` con lo stile dell'app
+  (marchio come nell'intestazione, nuvola barrata, titolo, testo, «Riprova» pieno a pillola), colori del tema scelto, IT/EN, carattere scelto;
+  si riapre da sola all'evento `online`. `sw.js` la serve solo alle navigazioni fallite e si registra per tutti all'avvio. Va vista sul
+  telefono **dopo** un'apertura con rete della nuova versione (il worker si installa allora).
+- **Passaggio dei dati.** In Avanzata, «Archiviazione e backup» → scheda «Dati della modalità Standard»: «Porta qui i dati della Standard» e
+  «Copia questi dati sul dispositivo» (poi «Passa alla modalità Standard»), con lo stesso riepilogo del ripristino (`ImportPreview`, estratto
+  da `BackupActions`) e solo unione; categorie con lo stesso nome allineate. Dialogo «Cambia modalità» con le indicazioni e il consiglio del
+  backup su Google Drive; riga «Salva il file su Google Drive o in un altro posto sicuro…» sotto «Backup completo». Guida e README aggiornati.
+- **Verifica.** `npm run check` OK (**520/520**, build demo); `test:emulator` **22/22**. Chromium headless su `dist-demo` con emulatori demo
+  (porte standard, fermati a fine prova): (1) Avanzata 390×844, server irraggiungibile: due spese di fila, modulo libero in ~200 ms, due
+  etichette, al ritorno della rete etichette sparite e due documenti sul server; (2) pagina offline a 390×844 (ambra scuro, IT) e 1280×800
+  (menta chiaro, EN): colori e font corretti, ritorno all'app al ritorno della rete; (3) 2 spese in Standard → Avanzata con 2 spese e le
+  predefinite: «Porta qui» aggiunge 2 spese e nessuna categoria, «Copia sul dispositivo» 2 spese, poi Standard con 4 spese e 5 categorie;
+  Firestore con 4 spese e 5 categorie. Nessun errore JS. **Non provati:** telefono reale (Android/iOS), Firefox/Safari, rete debole reale.
+- **File di questa sessione:** `public/sw.js`, `public/offline.html`, `index.ts`, `App.tsx`, `src/domain/submission.ts`, `src/domain/backup.ts`,
+  `src/features/expenses/{useRemoteExpenses.ts,expenseStore.ts,ExpenseForm.tsx}`, `src/features/history/ExpenseList.tsx`,
+  `src/features/workspace/Workspace.tsx`, `src/features/backup/BackupActions.tsx`, `src/features/storage/{ModeTransfer.tsx,StorageSection.tsx}`,
+  `src/features/session/Guide.tsx`, `src/services/pushNotifications.ts`, `src/theme/bootTheme.ts`, `src/i18n/en.ts`, test (`submission`,
+  `serviceWorker`, `startup`, `backup`, `localStore`, `i18n`), `README.md`, `docs/architecture.md` (sezione in fondo), parti di `AGENTS.md` e
+  di questo file. La sessione sulla vibrazione ha committato a parte i suoi (`1518b0c`).
 
 ## Vibrazione 6/5 ms, barra che spariva, scansione spenta di base — 21 novembre 2026 (notte)
 

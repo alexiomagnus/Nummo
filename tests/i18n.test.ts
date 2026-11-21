@@ -154,8 +154,12 @@ test('notifiche e protezione: testi della pagina, degli avvisi e dello stato tra
     assert.equal(translate('en', it), en);
   }
   assert.equal(translate('en', '{p0} in {p1} spese', { p0: '€12.50', p1: 3 }), '€12.50 in 3 expenses');
-  // Il backup su Google Drive è stato rimosso: nessun testo residuo nel catalogo.
-  assert.equal(Object.keys(english).some((key) => key.includes('Google Drive')), false);
+  // Il backup su Google Drive è stato rimosso (14 novembre): nessun testo residuo nel catalogo. Dal 21 novembre Drive è
+  // nominato solo come consiglio su dove tenere il file scaricato, senza alcuna integrazione: soltanto questi due testi.
+  assert.deepEqual(Object.keys(english).filter((key) => key.includes('Google Drive')).sort(), [
+    'Consiglio: prima scarica un backup (JSON) e salvalo su Google Drive o in un altro posto sicuro.',
+    'Salva il file su Google Drive o in un altro posto sicuro, fuori da questo dispositivo.',
+  ]);
 });
 
 test('formattatori Intl riusati per lingua e opzioni, risultato invariato', () => {

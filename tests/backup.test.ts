@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { backupVersion, conflictPreview, exportCsv, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
+import { alignCategoriesByName, backupVersion, conflictPreview, exportCsv, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
 import { expandOccurrences } from '../src/domain/history.ts';
 import { categoryNameKey, parseSyncedExpense } from '../src/domain/firestore.ts';
 import type { ExpenseRecord } from '../src/domain/contract.ts';
@@ -224,4 +224,37 @@ test('ripristino bloccato: al massimo tre elementi in conflitto nominati, poi qu
     source: 'web_app' as const, schema_version: 1 as const, created_at: '2026-01-15T09:00:00.000Z' };
   const plan = planImport({ expenses: [series], categories: [] }, { expenses: [{ ...series, skipped_payments: [10] }], categories: [] }, 'merge');
   assert.deepEqual(conflictPreview(plan.conflicts).shown.map((c) => c.label), ['Streaming']);
+});
+
+test('passaggio tra modalità: categorie con lo stesso nome diventano quella salvata, riferimenti ricollegati', () => {
+  const savedFood: Category = { id: uuid(100), label: 'Alimentari', icon: 'cart' };
+  const savedOnly: Category = { id: uuid(101), label: 'Casa', icon: 'coffee' };
+  const shared: Category = { id: uuid(102), label: 'Trasporti', icon: 'car' };
+  const otherFood: Category = { id: uuid(200), label: 'alimentari ', icon: 'coffee' };
+  const otherNew: Category = { id: uuid(201), label: 'Viaggi', icon: 'plane' };
+  const template = { id: uuid(300), description: 'Bar', amount_minor: 150, date: '', category_id: otherFood.id, fund_id: null, merchant: null };
+  const list = { id: uuid(400), name: 'Settimana', category_id: otherFood.id, total_minor: null, expense_id: null, archived: false, items: [] };
+  const data = {
+    expenses: [expense(1, { category_id: otherFood.id }), expense(2, { category_id: otherNew.id }), expense(3, { category_id: shared.id }), expense(4, { category_id: null })],
+    categories: [otherFood, otherNew, shared], funds: [], movements: [], lists: [list], templates: [template],
+  } as unknown as Parameters<typeof alignCategoriesByName>[0];
+  const { data: aligned, aligned: count } = alignCategoriesByName(data, [savedFood, savedOnly, shared]);
+  assert.equal(count, 1);
+  assert.deepEqual(aligned.categories.map((c) => c.id), [otherNew.id, shared.id]);
+  assert.deepEqual(aligned.expenses.map((e) => e.category_id), [savedFood.id, otherNew.id, shared.id, null]);
+  assert.equal(aligned.lists[0]!.category_id, savedFood.id);
+  assert.equal(aligned.templates![0]!.category_id, savedFood.id);
+  // Untouched input; and the plain merge would have blocked on the name, the aligned one adds without conflicts.
+  assert.equal(data.expenses[0]!.category_id, otherFood.id);
+  const current = { expenses: [], categories: [savedFood, savedOnly, shared] };
+  assert.deepEqual(planImport(data, current, 'merge').conflicts.map((c) => c.label), ['alimentari ']);
+  const plan = planImport(aligned, current, 'merge');
+  assert.deepEqual(plan.conflicts, []);
+  assert.deepEqual(plan.addCategories.map((c) => c.id), [otherNew.id]);
+  assert.equal(plan.sameCategories, 1);
+  assert.equal(plan.addExpenses.length, 4);
+  assert.equal(plan.missingCategoryReferences, 0);
+  // Nothing to align: the same object back.
+  const none = { ...data, categories: [otherNew] };
+  assert.equal(alignCategoriesByName(none, [savedFood]).data, none);
 });

@@ -51,7 +51,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
         {p(t("Puoi scegliere come gestire il tuo archivio in base alle tue esigenze:"))}
         {item("Modalità Standard (subito pronta, zero account)", "I dati vengono salvati esclusivamente nel browser del tuo dispositivo e non vengono inviati a nessun server. Per non perderli se cambi telefono o pulisci i dati di navigazione, scarica periodicamente un backup in formato JSON (oppure esporta in CSV per Excel e Google Fogli).")}
         {item("Modalità Avanzata (sincronizzazione tra dispositivi)", "Colleghi un progetto Firebase (Google) tuo seguendo i passaggi indicati da Nummo: entra solo il tuo account e i dati si sincronizzano tra i tuoi dispositivi, sotto il tuo controllo.")}
-        <Text variant="bodyMedium" style={muted}>{t("Nota: le due modalità usano archivi separati; passare dall'una all'altra da Archiviazione e backup non sposta né cancella i dati esistenti.")}</Text>
+        <Text variant="bodyMedium" style={muted}>{t("Nota: le due modalità usano archivi separati. Cambiare modalità non sposta né cancella nulla; quando vuoi, da Archiviazione e backup porti i tuoi dati nell'altra modalità, senza perdere quelli che ci sono già.")}</Text>
       </Section>
 
       <Section title={t("Avvisi e promemoria")}>

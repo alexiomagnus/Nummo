@@ -31,6 +31,8 @@ type Props = {
   merchantNames?: ReadonlyMap<string, string>;
   // Funds (archived included): with at least one, the details name the expense's fund, or «Nessun fondo».
   funds?: readonly Fund[];
+  // Expenses written on this device and not yet confirmed by the server (Advanced mode, offline): «In attesa di invio».
+  pendingIds?: ReadonlySet<string>;
   // Shown instead of «Nessuna spesa.» when the list is empty because of the fund filter (source text, translated here).
   emptyLabel?: string;
 };
@@ -49,7 +51,7 @@ const pageSize = 50;
 
 export const ExpenseList = memo(ExpenseListView);
 
-function ExpenseListView({ occurrences, categories, error, onEdit, listItems, merchantNames, funds, emptyLabel }: Props) {
+function ExpenseListView({ occurrences, categories, error, onEdit, listItems, merchantNames, funds, pendingIds, emptyLabel }: Props) {
   const fundById = useMemo(() => new Map((funds ?? []).map((fund) => [fund.id, fund])), [funds]);
   const hasFunds = fundById.size > 0;
   const { t, locale } = useI18n();
@@ -134,7 +136,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, me
           return <ExpenseRow key={item.key} item={item} index={index}
             heading={byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== item.date.slice(0, 7))}
             summary={summaries.get(item.date.slice(0, 7))!} category={categoryById.get(item.category_id ?? '')}
-            products={listItems?.get(item.expenseId)} merchant={merchantNames?.get(item.expenseId)}
+            products={listItems?.get(item.expenseId)} merchant={merchantNames?.get(item.expenseId)} pending={pendingIds?.has(item.expenseId) ?? false}
             fund={hasFunds ? fundById.get(item.fund_id ?? '') ?? null : undefined} open={expanded.has(item.key)} setExpanded={setExpanded}
             dates={dates} shortDates={shortDates} months={months} amounts={amounts} onEdit={onEdit} />;
         })}
@@ -157,10 +159,10 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, me
 }
 
 // Stable props let expanding one detail or appending a page leave existing rows alone.
-const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, merchant, fund, open, setExpanded,
+const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, merchant, pending, fund, open, setExpanded,
   dates, shortDates, months, amounts, onEdit }: {
   item: Occurrence; index: number; heading: boolean; summary: { count: number; total: number };
-  category?: Category; products?: readonly string[]; merchant?: string; open: boolean;
+  category?: Category; products?: readonly string[]; merchant?: string; pending: boolean; open: boolean;
   // undefined: no funds at all (no field); null: the expense has no fund (or a fund no longer listed).
   fund?: Fund | null;
   setExpanded: Dispatch<SetStateAction<ReadonlySet<string>>>;
@@ -185,6 +187,12 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
             <SvgIcon shape={iconShapes.checklist} size={14} color={theme.colors.onSecondaryContainer} />
             <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>{t("Lista spesa")}</Text>
           </View>;
+          // Written on this device, not yet on the server (offline): a discreet tonal chip, gone once the server confirms.
+          const pendingMark = pending && <View style={[styles.listMark, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <SvgIcon shape={iconShapes.sync} size={14} color={theme.colors.onSurfaceVariant} />
+            <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("In attesa di invio")}</Text>
+          </View>;
+          const marks = listMark && pendingMark ? <View style={styles.marks}>{listMark}{pendingMark}</View> : listMark || pendingMark;
           // Merchant beside the date, in the accent colour with the shop icon, so it reads apart from the date; one line,
           // a long name ends with «…» (full name in the editor; not repeated in the details, user's request of 21 November).
           const merchantMark = merchant && <View style={styles.merchantMark}>
@@ -244,9 +252,9 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
               <View>
               <ListRow outlined dense icon={category?.icon ?? null} title={item.description}
                 subtitle={shortDates.format(new Date(`${item.date}T00:00:00Z`))}
-                meta={listMark} subtitleExtra={merchantMark}
+                meta={marks || undefined} subtitleExtra={merchantMark}
                 expanded={open} controls={open ? detailsId : undefined}
-                pressLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: merchant ? `${formatDate(item.date)}, ${merchant}` : formatDate(item.date) })}
+                pressLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: (merchant ? `${formatDate(item.date)}, ${merchant}` : formatDate(item.date)) + (pending ? `, ${t("In attesa di invio")}` : '') })}
                 onPress={() => setExpanded((previous) => {
                   const next = new Set(previous);
                   if (next.has(item.key)) next.delete(item.key); else next.add(item.key);
@@ -311,6 +319,7 @@ const styles = StyleSheet.create({
   fundName: { flexShrink: 1 },
   merchantMark: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
   merchantName: { flexShrink: 1, minWidth: 0 },
+  marks: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
   start: { alignSelf: 'flex-start' },
   // Total of the filtered results, same footprint and tone as the «Prossimo mese» card of the subscriptions view.

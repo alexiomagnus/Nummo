@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { test } from 'node:test';
-import { makeBackup, parseBackup } from '../src/domain/backup.ts';
+import { alignCategoriesByName, archiveAsImport, makeBackup, parseBackup } from '../src/domain/backup.ts';
 import { emptyFund } from '../src/domain/funds.ts';
 import { todayInRome } from '../src/domain/policy.ts';
 import type { DataStore, SnapshotState } from '../src/services/dataStore.ts';
@@ -518,4 +518,38 @@ test('esercenti locali: un record corrotto blocca lettura ed esportazione', asyn
   assert.ok(merchants.state.error);
   await assert.rejects(store.exportSnapshot(), /Archivio non valido/);
   merchants.stop();
+});
+
+test('passaggio tra modalità: le predefinite di entrambi gli archivi si allineano per nome, si aggiunge solo ciò che manca', async () => {
+  const { store: from } = open();
+  const { store: to } = open();
+  // Both archives seeded their own «Alimentari» (different IDs); the source also has a category of its own.
+  const [fromFood, toFood, travel] = [randomUUID(), randomUUID(), randomUUID()];
+  await from.saveCategory(fromFood, 'Alimentari', 'cart');
+  await from.saveCategory(travel, 'Viaggi', null);
+  await to.saveCategory(toFood, 'Alimentari', 'cart');
+  const kept = expense({ description: 'Già nel destinatario', category_id: null });
+  await from.createExpense(expense({ description: 'Pane', category_id: fromFood }));
+  await from.createExpense(expense({ description: 'Treno', category_id: travel }));
+  await from.createExpense(kept);
+  await to.createExpense(kept);
+  const move = async () => {
+    const { data } = alignCategoriesByName(archiveAsImport(await from.exportSnapshot()), (await to.exportSnapshot()).categories);
+    const plan = (await to.previewImport(data)).merge;
+    return { data, plan };
+  };
+  const { data, plan } = await move();
+  assert.deepEqual(plan.conflicts, []);
+  assert.equal(plan.addExpenses.length, 2);
+  assert.equal(plan.sameExpenses, 1);
+  assert.deepEqual(plan.addCategories.map((c) => c.label), ['Viaggi']);
+  await to.importRecords(data.expenses, data.categories, 'merge', data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates);
+  const after = await to.exportSnapshot();
+  assert.deepEqual(after.categories.map((c) => c.label).sort(), ['Alimentari', 'Viaggi']);
+  assert.equal(after.expenses.find((e) => e.description === 'Pane')!.category_id, toFood);
+  assert.equal(after.expenses.length, 3);
+  // Repeating the move adds nothing; the source is never changed.
+  const again = await move();
+  assert.equal(again.plan.addExpenses.length + again.plan.addCategories.length, 0);
+  assert.equal((await from.exportSnapshot()).categories.find((c) => c.label === 'Alimentari')!.id, fromFood);
 });

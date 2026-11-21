@@ -20,9 +20,10 @@ import { switchFirebase } from './src/features/session/firebaseConnection';
 import { SignIn, leaveGuide } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
 import { readSessionHint, writeSessionHint } from './src/services/sessionHint';
-import { DataWorkspace, RemoteWorkspace, StartupWorkspace } from './src/features/workspace/Workspace';
+import { DataWorkspace, RemoteWorkspace, StartupWorkspace, type StorageSlot } from './src/features/workspace/Workspace';
 import { ModeChoice } from './src/features/storage/ModeChoice';
 import { AdvancedStorage, StandardStorage } from './src/features/storage/StorageSection';
+import { ModeTransfer } from './src/features/storage/ModeTransfer';
 import { useStorageProtection } from './src/features/storage/useStorageProtection';
 import { openLocalDatabase } from './src/services/localDatabase';
 import { createLocalStore, type LocalStore } from './src/services/localStore';
@@ -207,9 +208,12 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       : 'Cache in memoria: le scritture offline non sopravvivono alla chiusura.');
   const openBackup = () => setBackupRequest((n) => n + 1);
   // The storage section of the backup page: the connected project and the offline cache.
-  const storage = () => <AdvancedStorage style={styles.wide} onChangeMode={onChangeMode}
-    project={configMissing ? '' : activeFirebaseConfig.projectId} cache={persistentCache ? 'Locale' : 'Non attiva'}
-    connected={customFirebaseConfig !== null} onDisconnect={() => switchFirebase(null, true)} />;
+  const storage = (): StorageSlot => ({ backend, enabled, shown }) => <>
+    <AdvancedStorage style={styles.wide} onChangeMode={onChangeMode}
+      project={configMissing ? '' : activeFirebaseConfig.projectId} cache={persistentCache ? 'Locale' : 'Non attiva'}
+      connected={customFirebaseConfig !== null} onDisconnect={() => switchFirebase(null, true)} />
+    <ModeTransfer style={styles.wide} backend={backend} enabled={enabled} shown={shown} onChangeMode={onChangeMode} />
+  </>;
   const account = session.status === 'signed-in'
     ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)}

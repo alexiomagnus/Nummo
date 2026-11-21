@@ -41,10 +41,14 @@ const sameKey = (a: ArrayBuffer | null, b: Uint8Array): boolean => {
   return view.every((byte, index) => byte === b[index]);
 };
 
+// One script URL for every registration (the offline page at startup, the notifications later): a different URL would
+// replace the worker and drop the push configuration it reads from its own address.
+export const serviceWorkerUrl = (config: { url: string; key: string } | null = pushConfig): string =>
+  config ? `/sw.js?push=${encodeURIComponent(config.url)}&key=${config.key}` : '/sw.js';
+
 let registration: Promise<ServiceWorkerRegistration> | null = null;
 function register(): Promise<ServiceWorkerRegistration> {
-  const config = pushConfig!;
-  registration ??= navigator.serviceWorker.register(`/sw.js?push=${encodeURIComponent(config.url)}&key=${config.key}`, { scope: '/' })
+  registration ??= navigator.serviceWorker.register(serviceWorkerUrl(), { scope: '/' })
     .then(() => navigator.serviceWorker.ready)
     .catch((error) => { registration = null; throw error; });
   return registration;
@@ -171,4 +175,14 @@ export function onNotificationOpened(listener: (opened: OpenedNotification) => v
   listeners.add(listener);
   if (pending) { const opened = pending; pending = null; listener(opened); }
   return () => listeners.delete(listener);
+}
+
+// At startup, for everyone: the worker shows Nummo's own offline page when the app cannot load (instead of the
+// browser's). It never caches the app or any data (public/sw.js). After the page has loaded, so it never delays it.
+export function registerServiceWorker(env: Env = {}): void {
+  const { win, nav } = browser(env);
+  if (!win || !nav || !('serviceWorker' in nav) || !win.isSecureContext) return;
+  const start = () => { void register().catch(() => { /* not available (private mode, blocked): the browser's page stays */ }); };
+  if (win.document.readyState === 'complete') win.setTimeout(start, 0);
+  else win.addEventListener('load', () => win.setTimeout(start, 0), { once: true });
 }

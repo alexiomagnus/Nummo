@@ -143,7 +143,8 @@ function DisconnectDialog({ visible, project, onDismiss, onConfirm }: { visible:
   );
 }
 
-// Changing mode only changes which archive is opened: nothing is copied, moved or deleted.
+// Changing mode only changes which archive is opened: nothing is copied, moved or deleted. Moving the data is a separate,
+// explicit step in the Advanced mode's «Archiviazione e backup» (ModeTransfer); the dialog says where.
 function ChangeModeDialog({ visible, target, onDismiss, onConfirm }: { visible: boolean; target: StorageMode; onDismiss: () => void; onConfirm: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -156,9 +157,9 @@ function ChangeModeDialog({ visible, target, onDismiss, onConfirm }: { visible: 
       <ConfirmButton buttonColor={colors.error} textColor={colors.onError} onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</ConfirmButton>
     </>}>
       <Text variant="bodyMedium" style={muted}>{target === 'advanced'
-        ? t("I dati salvati su questo dispositivo restano qui e non vengono copiati nel progetto Firebase: li ritrovi tornando alla modalità Standard.")
-        : t("I dati del progetto Firebase restano lì e non vengono copiati su questo dispositivo: li ritrovi tornando alla modalità Avanzata.")}</Text>
-      <Text variant="bodyMedium" style={muted}>{t("Le due modalità hanno archivi separati. Per portare i dati dall’una all’altra esporta un backup JSON e importalo dopo il cambio.")}</Text>
+        ? t("I dati di questo dispositivo restano qui. Dopo l’accesso puoi portarli nel tuo Firebase: Archiviazione e backup → «Porta qui i dati della Standard».")
+        : t("I dati del progetto Firebase restano lì. Per averli anche su questo dispositivo, prima di cambiare usa «Copia questi dati sul dispositivo» in questa pagina.")}</Text>
+      <Text variant="bodyMedium" style={muted}>{t("Consiglio: prima scarica un backup (JSON) e salvalo su Google Drive o in un altro posto sicuro.")}</Text>
     </DialogFrame>
   );
 }

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <!-- Pagina offline di Nummo: la mostra il service worker (public/sw.js) quando l'app non si carica per mancanza di
+         rete, al posto della pagina del browser. Nessun dato: legge solo tema e lingua di presentazione, validati. -->
+    <meta name="theme-color" content="#F5FBF5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0F1511" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <title>Nummo</title>
+    <style>
+      @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
+        src: url('/fonts/GoogleSans-latin.woff2') format('woff2'); }
+      /* Colori statici dello schema Menta (tokens.ts), sostituiti da quelli del tema scelto se salvati. */
+      :root { --bg: #F5FBF5; --primary: #2D6A4F; --on-primary: #FFFFFF; --on-surface: #171D19; --on-variant: #404943; color-scheme: light; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #0F1511; --primary: #9BD4B3; --on-primary: #003826; --on-surface: #DEE4DD; --on-variant: #BFC9C1; color-scheme: dark; }
+      }
+      :root.themed { --bg: var(--t-bg); --primary: var(--t-primary); --on-primary: var(--t-on-primary); --on-surface: var(--t-on-surface); --on-variant: var(--t-on-variant); }
+      html, body { height: 100%; margin: 0; }
+      /* Stesse famiglie di typefaces (tokens.ts); «Carattere di sistema» nelle Impostazioni aggiunge la classe system-font. */
+      body { background: var(--bg); color: var(--on-surface); font-family: 'Google Sans', Roboto, 'Helvetica Neue', Arial, system-ui, sans-serif;
+        display: flex; flex-direction: column; -webkit-tap-highlight-color: transparent;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); box-sizing: border-box; }
+      /* Come l'intestazione dell'app: marchio e nome in primary. */
+      .system-font body, .system-font button { font-family: Roboto, 'Helvetica Neue', Arial, system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; min-height: 64px; box-sizing: border-box; }
+      header svg { width: 40px; height: 40px; }
+      header span { font-size: 22px; line-height: 28px; font-weight: 700; color: var(--primary); }
+      main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+        gap: 16px; padding: 24px 24px 48px; max-width: 480px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+      .icon { width: 48px; height: 48px; color: var(--on-variant); }
+      h1 { margin: 8px 0 0; font-size: 28px; line-height: 36px; font-weight: 400; }
+      p { margin: 0; font-size: 16px; line-height: 24px; color: var(--on-variant); }
+      /* Pulsante pieno a pillola, come «Salva» (radius.pill, altezza 48). */
+      button { margin-top: 16px; min-width: 160px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 999px;
+        background: var(--primary); color: var(--on-primary); font: 500 14px/20px 'Google Sans', Roboto, 'Helvetica Neue', Arial, system-ui, sans-serif; letter-spacing: 0.1px; cursor: pointer; }
+      button:focus-visible { outline: 3px solid var(--on-surface); outline-offset: 2px; }
+      @media (hover: hover) { button:hover { filter: brightness(1.08); } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <svg viewBox="0 0 64 64" aria-hidden="true"><g fill="currentColor" style="color: var(--primary)"><rect x="8" y="8" width="14" height="48" rx="7"/><path d="M30 8C45 8 56 19 56 34V49A7 7 0 0 1 42 49V34C42 27 37 22 30 22Z"/></g></svg>
+      <span>Nummo</span>
+    </header>
+    <main>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M7 18a4.5 4.5 0 0 1-1.6-8.7M9.5 5.6A6 6 0 0 1 18 10.5 3.75 3.75 0 0 1 20 15M12 18H7"/></svg>
+      <h1 id="title">Sei offline</h1>
+      <p id="text">Nummo ha bisogno della connessione per aprirsi. Quando torni online si riapre da solo.</p>
+      <button id="retry" type="button">Riprova</button>
+    </main>
+    <script id="nummo-offline">
+      (function () {
+        var texts = {
+          en: { title: "You're offline", text: 'Nummo needs a connection to open. It opens again by itself once you are back online.', retry: 'Try again' },
+        };
+        var hex = /^#[0-9a-fA-F]{6}$/;
+        try {
+          var root = document.documentElement;
+          var theme = JSON.parse(localStorage.getItem('nummo.boot-theme.v1') || 'null');
+          if (theme && theme.v === 1) {
+            var dark = theme.mode === 'dark' || (theme.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+            var bg = dark ? theme.dark : theme.light;
+            var ink = theme.ink && (dark ? theme.ink.dark : theme.ink.light);
+            var keys = ['primary', 'onPrimary', 'onSurface', 'onSurfaceVariant'];
+            var valid = typeof bg === 'string' && hex.test(bg) && ink && keys.every(function (key) { return typeof ink[key] === 'string' && hex.test(ink[key]); });
+            if (valid) {
+              root.style.setProperty('--t-bg', bg);
+              root.style.setProperty('--t-primary', ink.primary);
+              root.style.setProperty('--t-on-primary', ink.onPrimary);
+              root.style.setProperty('--t-on-surface', ink.onSurface);
+              root.style.setProperty('--t-on-variant', ink.onSurfaceVariant);
+              root.style.colorScheme = dark ? 'dark' : 'light';
+              root.classList.add('themed');
+              var tags = document.head.querySelectorAll('meta[name="theme-color"]');
+              for (var i = 0; i < tags.length; i++) {
+                if (i === 0) { tags[i].removeAttribute('media'); tags[i].setAttribute('content', bg); } else tags[i].remove();
+              }
+            }
+          }
+          var preferences = JSON.parse(localStorage.getItem('nummo.preferences.v1') || 'null');
+          if (preferences && preferences.font === 'system') root.classList.add('system-font');
+          var t = preferences && preferences.language === 'en' ? texts.en : null;
+          if (t) {
+            root.lang = 'en';
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('text').textContent = t.text;
+            document.getElementById('retry').textContent = t.retry;
+          }
+        } catch (error) { /* storage negato o valori non validi: restano colori statici e italiano */ }
+        // The page stands at the address that failed: reloading asks for Nummo again.
+        document.getElementById('retry').addEventListener('click', function () { location.reload(); });
+        window.addEventListener('online', function () { location.reload(); });
+      })();
+    </script>
+  </body>
+</html>

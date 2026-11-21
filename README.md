@@ -13,21 +13,25 @@ Alla prima apertura Nummo chiede dove salvare i dati. La scelta resta in questo 
 | Per chi | Chi vuole usare subito l'app | Chi ha, o vuole creare, un proprio progetto Firebase |
 | Account | **Nessuno**: si entra senza accesso | Account Google del proprietario del progetto |
 | Dove sono i dati | Nel browser del dispositivo (IndexedDB) | In Cloud Firestore, nel tuo progetto |
-| Senza rete | Tutto funziona | Lettura dalla cache; modifiche e backup richiedono la rete |
+| Senza rete | Tutto funziona (con l'app già aperta) | Lettura dalla cache e nuove spese «In attesa di invio»; modifiche e backup richiedono la rete |
 | Più dispositivi | **No**: ogni dispositivo ha il suo archivio | Sì, sincronizzazione di Firestore |
 | Copia di sicurezza | File JSON esportato a mano, con promemoria facoltativo | File JSON (Firestore non è un backup) |
 | Configurazione | Nessuna per l'utente | Progetto Firebase, regole e proprietario (sotto) |
 
 Le due modalità hanno **archivi separati**. Cambiare modalità non copia, non sposta e non cancella nulla: i dati
-dell'altra modalità restano dove sono e si ritrovano tornando indietro. Per portarli dall'una all'altra si esporta un
-backup JSON e lo si importa dopo il cambio. Nummo **non è un servizio**: non esiste un server centrale né un database
+dell'altra modalità restano dove sono e si ritrovano tornando indietro. Per portarli dall'una all'altra, in modalità
+Avanzata (l'unica che raggiunge entrambi gli archivi): **menu → Archiviazione e backup → Porta qui i dati della Standard**
+oppure **Copia questi dati sul dispositivo**. Si aggiunge solo ciò che manca, con un riepilogo prima di scrivere; le
+categorie con lo stesso nome (per esempio le cinque predefinite) diventano una sola. Resta possibile anche esportare un
+backup JSON e importarlo dopo il cambio. Nummo **non è un servizio**: non esiste un server centrale né un database
 condiviso, in nessuna delle due modalità.
 
 ### Usare Nummo senza account (Standard)
 
 1. Apri l'app e scegli **Standard → Inizia subito**. Non servono registrazione, accesso o Firebase.
 2. Al primo avvio vengono create cinque categorie predefinite; da lì registri spese, abbonamenti, fondi e liste.
-3. Proteggi i dati: **menu → Archiviazione e backup → Scarica backup (JSON)** e conserva il file fuori dal browser.
+3. Proteggi i dati: **menu → Archiviazione e backup → Scarica backup (JSON)** e conserva il file fuori dal browser
+   (per esempio su Google Drive: Nummo non si collega a Drive, il file lo salvi tu).
    Il **promemoria backup** (menu → Notifiche) te lo ricorda quando i dati sono cambiati.
 
 **I dati esistono solo su quel dispositivo e in quel browser.** Si perdono se cancelli i dati del sito o la cronologia
@@ -222,8 +226,10 @@ ogni dominio personalizzato.
 Esistono manifest e icone, quindi dal browser mobile (es. Chrome Android: ⋮ → «Installa app» o
 «Aggiungi a schermata Home») si può aggiungere Nummo alla schermata Home. Limiti reali:
 
-- Il service worker (`sw.js`) serve solo alle notifiche di sistema e non mette nulla in cache: **non è garantita l'apertura a freddo senza rete**.
-- In modalità Avanzata le modifiche, i backup e le importazioni richiedono la rete; gli inserimenti possono restare in coda nell'SDK fino alla conferma del server.
+- Il service worker (`sw.js`) serve alle notifiche di sistema e, senza rete, mostra la pagina «Sei offline» di Nummo al posto di quella del browser;
+  non mette in cache l'app né i dati: **non è garantita l'apertura a freddo senza rete**.
+- In modalità Avanzata, con l'app aperta e senza rete, si possono inserire più spese di fila: restano sul dispositivo con l'etichetta
+  «In attesa di invio» e partono al ritorno della connessione. Modifiche, eliminazioni, backup e importazioni richiedono la rete.
 - L'installazione e il login da app installata non sono ancora stati provati su dispositivi reali (iOS compreso).
 
 ## Sviluppo e aggiornamenti

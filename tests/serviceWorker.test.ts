@@ -101,3 +101,88 @@ test('service worker: «Ricordamelo tra 3 giorni» avvisa il servizio push senza
   assert.equal(sw.fetches[0]!.url, 'https://push.example/v1/snooze');
   assert.deepEqual(JSON.parse(JSON.stringify(sw.fetches[0]!.body)), { subscription: { endpoint: 'https://fcm.googleapis.com/x' } });
 });
+
+// The offline page (21 November): the worker caches /offline.html and its font at install and answers a failed page
+// navigation with it; every other request is left to the browser, and the network always comes first.
+function loadOffline() {
+  const listeners: Record<string, (event: any) => void> = {};
+  const stores = new Map<string, Map<string, string>>([['nummo-offline-v0', new Map()], ['other-cache', new Map()]]);
+  let online = true;
+  const requested: string[] = [];
+  const base = 'https://nummo.example/sw.js';
+  const self: any = {
+    location: new URL(base), addEventListener: (type: string, listener: (event: any) => void) => { listeners[type] = listener; },
+    skipWaiting: () => {}, registration: {}, clients: { claim: async () => {} },
+  };
+  const open = async (name: string) => {
+    if (!stores.has(name)) stores.set(name, new Map());
+    const store = stores.get(name)!;
+    const key = (request: string | Request) => new URL(typeof request === 'string' ? request : request.url, base).pathname;
+    return {
+      addAll: async (requests: Request[]) => { for (const request of requests) store.set(key(request), `${key(request)} (${request.cache})`); },
+      match: async (request: string) => (store.has(key(request)) ? new Response(store.get(key(request))) : undefined),
+    };
+  };
+  const caches = { open, keys: async () => [...stores.keys()], delete: async (name: string) => stores.delete(name) };
+  const fetch = async (request: Request) => {
+    requested.push(request.url);
+    if (!online) throw new TypeError('Failed to fetch');
+    return new Response(`network ${new URL(request.url).pathname}`);
+  };
+  // Relative URLs resolve against the worker's address, as in a real service worker.
+  class SandboxRequest extends Request { constructor(input: string, init?: RequestInit) { super(new URL(input, base), init); } }
+  const context = vm.createContext({ self, URL, Promise, JSON, Response, Request: SandboxRequest, TypeError, caches, fetch });
+  vm.runInContext(readFileSync('public/sw.js', 'utf8'), context);
+  const lifecycle = async (type: string) => {
+    let work: Promise<unknown> = Promise.resolve();
+    listeners[type]!({ waitUntil: (p: Promise<unknown>) => { work = p; } });
+    await work;
+  };
+  // undefined: not handled (the browser fetches as without a worker).
+  const navigate = async (path: string, mode: RequestMode | 'navigate' = 'navigate', method = 'GET') => {
+    let answer: Promise<Response> | undefined;
+    listeners.fetch!({ request: { url: new URL(path, base).href, mode, method }, respondWith: (p: Promise<Response>) => { answer = p; } });
+    if (!answer) return undefined;
+    const response = await answer.catch(() => null);
+    return response ? (response.type === 'error' ? 'error' : await response.text()) : 'rejected';
+  };
+  return { lifecycle, navigate, stores, requested, setOnline: (value: boolean) => { online = value; } };
+}
+
+test('service worker: pagina offline in cache all’installazione, vecchie cache della pagina eliminate, le altre no', async () => {
+  const sw = loadOffline();
+  await sw.lifecycle('install');
+  assert.deepEqual([...sw.stores.get('nummo-offline-v1')!.keys()], ['/offline.html', '/fonts/GoogleSans-latin.woff2']);
+  assert.match(sw.stores.get('nummo-offline-v1')!.get('/offline.html')!, /\(reload\)/, 'scaricata dalla rete, non dalla cache HTTP');
+  await sw.lifecycle('activate');
+  assert.deepEqual([...sw.stores.keys()].sort(), ['nummo-offline-v1', 'other-cache']);
+});
+
+test('service worker: rete sempre per prima; senza rete la navigazione riceve la pagina offline, il resto resta al browser', async () => {
+  const sw = loadOffline();
+  await sw.lifecycle('install');
+  // Online: the app comes from the network, never from the cache.
+  assert.equal(await sw.navigate('/'), 'network /');
+  assert.equal(await sw.navigate('/fonts/GoogleSans-latin.woff2', 'cors'), 'network /fonts/GoogleSans-latin.woff2');
+  sw.setOnline(false);
+  assert.match((await sw.navigate('/'))!, /^\/offline\.html/);
+  assert.match((await sw.navigate('/#guida'))!, /^\/offline\.html/);
+  assert.match((await sw.navigate('/fonts/GoogleSans-latin.woff2', 'cors'))!, /^\/fonts\/GoogleSans-latin\.woff2/);
+  // Bundle, other fonts, icons, other origins and non-GET requests: no answer from the worker (nothing cached).
+  for (const [path, mode, method] of [['/_expo/static/js/web/index-abc.js', 'no-cors', 'GET'], ['/fonts/GoogleSans-latin-ext.woff2', 'cors', 'GET'],
+    ['/manifest.webmanifest', 'cors', 'GET'], ['https://firestore.googleapis.com/x', 'cors', 'GET'], ['/', 'navigate', 'POST']] as const) {
+    assert.equal(await sw.navigate(path, mode, method), undefined, path);
+  }
+});
+
+test('service worker: senza pagina offline in cache una navigazione fallita resta un errore di rete', async () => {
+  const sw = loadOffline();
+  sw.setOnline(false);
+  assert.equal(await sw.navigate('/'), 'error');
+});
+
+test('service worker: un solo indirizzo per la pagina offline e per le notifiche', async () => {
+  const { serviceWorkerUrl } = await import('../src/services/pushNotifications.ts');
+  assert.equal(serviceWorkerUrl(null), '/sw.js');
+  assert.equal(serviceWorkerUrl({ url: 'https://push.example/', key: 'BKEY' }), '/sw.js?push=https%3A%2F%2Fpush.example%2F&key=BKEY');
+});

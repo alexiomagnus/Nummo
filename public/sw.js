@@ -1,6 +1,8 @@
-// Nummo service worker: system notifications only. No `fetch` handler and no cache: the app keeps loading from the
-// network exactly as without it (no offline start is promised). Registered by src/services/pushNotifications.ts as
-// /sw.js?push=<push service URL>; the push service sends only the kind of reminder and, for a summary, its dates.
+// Nummo service worker: system notifications and Nummo's own offline page. The app always loads from the network: only
+// when a page navigation fails (no connection) the worker answers with /offline.html, cached at install with the font
+// it uses. Never the app, never any data, no offline start (21 November). Registered at startup by
+// src/services/pushNotifications.ts as /sw.js, or /sw.js?push=<push service URL>&key=… when notifications are configured;
+// the push service sends only the kind of reminder and, for a summary, its dates.
 'use strict';
 
 const params = new URL(self.location.href).searchParams;
@@ -67,8 +69,37 @@ const show = (data) => {
   return self.registration.showNotification(title, options);
 };
 
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+// The offline page and what it shows. A new name for every change of these files: the old cache is deleted on activate.
+const offlineCache = 'nummo-offline-v1';
+const offlineFiles = ['/offline.html', '/fonts/GoogleSans-latin.woff2'];
+self.addEventListener('install', (event) => {
+  // Fetched fresh (not from the HTTP cache); a failure must not stop the notifications, so it is never fatal.
+  event.waitUntil(caches.open(offlineCache)
+    .then((cache) => cache.addAll(offlineFiles.map((path) => new Request(path, { cache: 'reload' }))))
+    .catch(() => {})
+    .then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', (event) => event.waitUntil(caches.keys()
+  .then((names) => Promise.all(names.filter((name) => name.startsWith('nummo-offline-') && name !== offlineCache).map((name) => caches.delete(name))))
+  .then(() => self.clients.claim())));
+
+// Network first, always: the cache answers only when the network fails. Page navigations get the offline page; the
+// offline page's own files get their cached copy. Every other request is left to the browser (no respondWith).
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+  if (request.mode === 'navigate') {
+    event.respondWith(fetch(request).catch(() => caches.open(offlineCache)
+      .then((cache) => cache.match('/offline.html'))
+      .then((page) => page || Response.error())));
+  } else if (offlineFiles.includes(url.pathname) && url.pathname !== '/offline.html') {
+    event.respondWith(fetch(request).catch(() => caches.open(offlineCache)
+      .then((cache) => cache.match(url.pathname))
+      .then((file) => file || Response.error())));
+  }
+});
 
 // Every push must show a notification (browsers require it): an unreadable message shows the generic one.
 self.addEventListener('push', (event) => {
