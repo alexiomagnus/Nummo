@@ -57,12 +57,12 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
   return (
     <View style={[styles.layout, dense && styles.denseLayout]} aria-busy={dataState === 'loading'}>
       <View>
-        <View style={styles.firstRow}>
-          <View style={styles.amount}>
+        <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
+          <View style={[styles.amount, compact && styles.amountCompact]}>
             <TextInput outlineStyle={inputOutline} label={amountOptional ? t("Importo (facoltativo)") : t("Importo")} value={values.amount} onChangeText={(value) => onChange('amount', value)}
               mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'} error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
               onBlur={() => onBlur('amount')} accessibilityLabel={amountOptional ? t("Importo in euro, facoltativo") : t("Importo in euro, obbligatorio")}
-              contentStyle={styles.amountText} left={leadingIcon(iconShapes.euro)} />
+              contentStyle={[styles.amountText, compact && styles.amountTextCompact, compact && values.amount.length >= 7 && styles.amountTextLong]} left={leadingIcon(iconShapes.euro)} />
           </View>
           <View style={[styles.date, compact && styles.dateCompact]}>
             <DateField value={values.date} disabled={disabled} error={Boolean(errors.date)} onChange={(date) => onChange('date', date)} />
@@ -124,11 +124,20 @@ const styles = StyleSheet.create({
   half: { flex: 1, minWidth: 0 },
   amount: { flex: 1, minWidth: 0 },
   date: { width: 200, flexShrink: 0 },
-  // Phones: date to the right of the amount, the row split in two equal halves.
-  dateCompact: { flex: 1, width: 'auto', minWidth: 0, flexShrink: 1 },
+  // Phones: date to the right of the amount, the row split in two equal halves, as long as each half holds its value: below
+  // 2 × 156 + gap the row wraps and each field takes the whole width (edit dialog at 360–390 px, where the halves cut
+  // «19 nov 2026» and the amount; 21 November). 156 = leading icon area + «19 nov 2026» + padding, and «1234,56» at 28 px.
+  firstRowCompact: { flexWrap: 'wrap', rowGap: spacing.md },
+  amountCompact: { flexGrow: 1, flexShrink: 1, flexBasis: 156 },
+  dateCompact: { flexGrow: 1, flexShrink: 1, flexBasis: 156, width: 'auto', minWidth: 0 },
   text: { fontSize: 18 },
   description: { minHeight: 128 },
   amountText: { fontSize: 28, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  // No trailing icon: Paper's 16 dp after the value would only cut it sooner on phones. Paper's own `paddingHorizontal`
+  // is overridden only by the same shorthand on RN Web (paddingRight/paddingEnd were ignored); its paddingLeft 0 stays.
+  amountTextCompact: { paddingHorizontal: spacing.xs },
+  // Phones, thousands («1234,56», 7 characters): 24 px, so that the value fits half of a 360 px row (28 px needed 8 dp more).
+  amountTextLong: { fontSize: 24 },
   // The counter row under the description would add its whole height to the gap before the next field (Esercente):
   // 8 dp of it overlap that gap (user's request, 17 November).
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs, marginBottom: -spacing.sm },

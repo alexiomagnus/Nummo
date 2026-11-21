@@ -79,6 +79,18 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Importo e Data non più tagliati su smartphone — 21 novembre 2026
+
+- Su richiesta (difetto preesistente visto a 360 px): in `ExpenseFields` (modifica spesa, revisione dello scontrino, template, Nuova spesa)
+  su smartphone la riga Importo/Data va a capo quando le metà sono sotto 156 dp (`flexBasis` 156 + `flexWrap`): nei dialoghi da 320 a 390
+  px Data va sotto l'Importo a tutta larghezza; da 412 px e nella pagina Nuova spesa da 360 px restano affiancati. Importo su smartphone:
+  padding destro da 16 a 4 (solo `paddingHorizontal` lo sostituisce su RN Web: `paddingRight`/`paddingEnd` erano ignorati, sinistro
+  già 0) e carattere 24 invece di 28 da 7 caratteri («1234,56»).
+- **Verifica:** Chromium headless, demo con `nummo-esercenti-v10.json`: modifica spesa («48,20», «19 nov 2026») e Nuova spesa («1234,56»,
+  «Oggi») a 320, 360, 390 e 412 px: in ogni caso larghezza del testo ≤ spazio dell'input (nessun valore tagliato); nessun errore JS.
+  `npm run check` OK. Non committato, non pubblicato. Non provati: un importo da 8 caratteri o più («12345,67») a 360 px, il carattere
+  scelto in Impostazioni diverso dal predefinito.
+
 ## Annulla e Salva a 96 su smartphone nei dialoghi di modifica — 21 novembre 2026
 
 - Su richiesta: accanto al cestino (modifica spesa, template, prodotto) «Annulla» e «Salva» sono larghi almeno 96 invece di 112 su
