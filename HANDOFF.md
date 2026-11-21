@@ -35,7 +35,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
+  `origin`. Ultimi commit di codice, tutti pubblicati: `b2a80ce` (vibrazione su legenda e segmenti), `9ae0d33` (selezione di
+  Analisi più reattiva), `a8f73a2` (formattatori Intl in cache), `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
   categoria in Analisi), `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
   sessione), `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
   sessione), `8e513f4` (Annulla/Salva a 96), `3d1b5ea` («Torna indietro», scansione, abbonamenti, cestino), `fdfce0e` (tastiera, altra
@@ -49,7 +50,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `cc60ea6` («Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola;
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `b2a80ce` (vibrazione su legenda e segmenti; con `9ae0d33`, selezione di Analisi
+  più reattiva, e `a8f73a2`, formattatori in cache) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200, bundle
+  online identico a `dist/`. Prima, **Hosting** da `cc60ea6` («Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola;
   con `278b016`, fondo accanto alla categoria nei dettagli di Analisi su smartphone) pubblicato su richiesta il 21 novembre (pomeriggio):
   «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `4d69d04` (feedback aptico nella barra mobile e in Analisi, interruttore
   «Vibrazione»; con `0f218da`, tastiera aperta a passi) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200,
@@ -197,8 +200,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `nummo-utente-medio.json`, CPU 4×: legenda dei Blocchi a 1478×900, cinque tocchi a 200–250 ms l'uno dall'altro → selezione cambiata in un
   fotogramma, nessuna dissolvenza incrociata, nessun long task oltre il primo (60 ms, montaggio), prima ~100 ms per tocco. Ciambella a
   390×844 touch: 5 tocchi sulla legenda → 5 vibrazioni, nessun long task; «Abbonamenti» → vibrazione e selezione. Nessun errore JS.
-  Non provato su telefono reale. Committato in tre parti: `a8f73a2` (formattatori), `9ae0d33` (selezione), poi la vibrazione con
-  questa documentazione.
+  Non provato su telefono reale. Committato in tre parti: `a8f73a2` (formattatori), `9ae0d33` (selezione), `b2a80ce` (vibrazione e
+  documenti). Pubblicato su Hosting il 21 novembre (pomeriggio).
 
 ## «Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola — 21 novembre 2026
 
@@ -597,6 +600,11 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (pomeriggio, quinta parte): Hosting da `b2a80ce`** (con `a8f73a2` e `9ae0d33`): vibrazione su legenda e
+  segmenti, selezione di Analisi senza render dell'intera pagina, fondi di selezione istantanei, formattatori in cache. `npm run
+  deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules invariate. Da provare sul telefono: cambio rapido
+  di categoria nella legenda, segmenti Spese/Abbonamenti, vibrazione.
 
 - **Rilascio del 21 novembre (pomeriggio, quarta parte): Hosting da `cc60ea6`** («Crea»/«Salva» a pillola e a tutta larghezza; `278b016`,
   fondo accanto alla categoria nei dettagli di Analisi). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a
@@ -3691,7 +3699,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `cc60ea6` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `b2a80ce` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
