@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { HelperText, Portal, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
+import { HelperText, Portal, ProgressBar, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, compactIconPadding, CancelButton, ConfirmButton, dialogActionPair, dialogActionsRow } from '../../components/Button';
 import { SwitchRow } from '../../components/SwitchRow';
@@ -15,7 +15,7 @@ import {
 import { aiProviderLabels, aiSetupProblem, receiptPrompt } from '../../domain/receiptAi';
 import { useI18n } from '../../i18n/I18nProvider';
 import { analyzeReceipt, isAbort } from '../../services/receiptAi';
-import { inputOutline, radius, spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { ExpenseFields } from '../expenses/ExpenseFields';
 import { useReceiptAi } from './aiSettings';
@@ -50,7 +50,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const wide = useSizeClass() !== 'compact';
   const { width: windowWidth } = useWindowDimensions();
   const ai = useReceiptAi();
-  const setupProblem = aiSetupProblem(ai.settings);
+  // The API key is written only in Settings (user's request, 21 November: no key field in this dialog); a missing key is
+  // said here like a missing service or model, and the scan waits for it.
+  const setupProblem = aiSetupProblem(ai.settings) ?? (ai.apiKey.trim() ? null : 'Inserisci la chiave API nelle Impostazioni.');
   const aiReady = setupProblem === null;
   const provider = ai.settings.provider === 'none' ? '' : aiProviderLabels[ai.settings.provider];
 
@@ -211,16 +213,14 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     body = <>
       {picture}
       <View style={styles.row}>{zoom}</View>
-      {/* Service or model still to choose: said here, the scan waits for Settings. The key can be written here too. */}
+      {/* Service, model or key still missing: said here, the scan waits for Settings. */}
       {setupProblem && <HelperText type="info" style={{ paddingHorizontal: 0 }}>{t(setupProblem)}</HelperText>}
-      {aiReady && <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Chiave API")} value={ai.apiKey} onChangeText={ai.setApiKey}
-        secureTextEntry autoComplete="off" autoCapitalize="none" autoCorrect={false} spellCheck={false} />}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {sourceButtons('outlined')}
     </>;
     actions = [
       <CancelButton key="cancel" onPress={onClose}>{t("Annulla")}</CancelButton>,
-      <ConfirmButton key="scan" disabled={preparing || !aiReady || !ai.apiKey.trim()} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</ConfirmButton>,
+      <ConfirmButton key="scan" disabled={preparing || !aiReady} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</ConfirmButton>,
     ];
   } else if (stage === 'consent') {
     body = <>

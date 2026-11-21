@@ -211,6 +211,31 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Nessun campo «Chiave API» nel dialogo di scansione — 21 novembre 2026 (notte)
+
+- Su richiesta (screenshot di «Scansiona scontrino» con il campo «Chiave API» sopra «Scatta una foto»): il campo è tolto da
+  `ScanReceiptDialog`; la chiave si scrive solo nella scheda «Analisi scontrini con AI» delle Impostazioni. Senza chiave salvata il dialogo
+  lo dice come per servizio o modello mancanti, «Inserisci la chiave API nelle Impostazioni.» (IT/EN), e «Scansiona» resta disattivato.
+  `aiSetupProblem` (dominio) invariato: il controllo della chiave è nel dialogo. `AGENTS.md` (riga `src/features/receipts/`).
+- **Verifica:** `npm run check` OK (**520/520**). Chromium headless su un export demo in Standard, scansione accesa (OpenAI, modello
+  salvato), rete esterna bloccata, immagine caricata dal file: 1280×900 e 390×844, senza chiave (messaggio nel passo iniziale e dopo la
+  foto, «Scansiona» disattivato) e con una chiave finta salvata (nessun messaggio, «Scansiona» attivo); nessun campo di testo nel dialogo,
+  nessuna richiesta esterna, nessun errore JS. Scansione reale non provata. Non committato, non pubblicato.
+
+## Vibrazione: Chrome Android tace con il telefono in silenzioso — 21 novembre 2026 (notte)
+
+- Su richiesta («nessuna vibrazione, si sente solo se tengo premuto»). Anche a 8/7 ms (online da `1934641`) nessuna vibrazione dell'app
+  sul Pixel 8; la pressione prolungata vibra. **Causa trovata nel sorgente di Chrome** (`services/device/vibration/android/.../
+  VibrationManagerAndroid.java`, letto da GitHub): `vibrate` chiama il motore solo se `getRingerMode() != RINGER_MODE_SILENT`; altrimenti
+  non fa nulla, mentre `navigator.vibrate()` nella pagina risponde comunque `true`. La pressione prolungata è un feedback di sistema di
+  Android, che il silenzioso non blocca. Nello screenshot del desktop (KDE Connect) il Pixel 8 risultava con l'audio disattivato.
+  Nessuna soluzione possibile dalla pagina. Riga sotto l'interruttore «Vibrazione»: «… Su Android non vibra con il telefono in
+  silenzioso.» (IT/EN), commento in `haptics.ts`, `AGENTS.md`. Durate 8/7 invariate.
+- **Da confermare sul telefono:** suoneria non in silenzioso → la barra vibra? Se no: risparmio energetico, «Vibrazione contenuti
+  multimediali» (Android usa quell'intensità per le vibrazioni senza attributi come queste: dalla documentazione, non verificato); se vibra
+  ma non si sente sui tocchi veloci, alzare `tap` a 10 (ultima durata percepita). Pagina di prova (artifact) con controlli 100/300 ms.
+- **Verifica:** `npm run check` OK (**520/520**). Non committato, non pubblicato.
+
 ## Dettagli di una categoria in Analisi più chiari — 21 novembre 2026 (notte)
 
 - Su richiesta (screenshot di «Servizi digitali», «informazioni confusionarie»): ogni riga ripeteva icona e nome della categoria già nel

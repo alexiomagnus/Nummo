@@ -61,7 +61,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   <h2>Impulso singolo</h2>
   <p>Quale sembra un clic secco e quale un ronzio? Cerca il più corto che senti ancora con chiarezza.</p>
   <div class="grid" id="single"></div>
-  <p class="mute">35–50 ms sono gli impulsi che usa expo-haptics sul web: utili come confronto, non come scelta.</p>
+  <p class="mute">35–50 ms sono gli impulsi che usa expo-haptics sul web: utili come confronto, non come scelta. 100 e 300 ms sono solo un controllo: se nemmeno 300 ms vibra, la durata non c'entra e la causa è un'impostazione del telefono o di Chrome.</p>
   <h2>Due impulsi ravvicinati</h2>
   <p>Due tick da 7 ms separati da una pausa. Sotto una certa pausa si fondono in una vibrazione sola: è il motivo della distanza minima tra due vibrazioni dell'app.</p>
   <div class="grid" id="double"></div>
@@ -90,7 +90,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
     log.textContent = (ok ? 'Inviato: ' : 'Rifiutato dal browser: ') + text;
     return ok;
   };
-  const singles = [[2], [3], [4], [5], [6], [7, 'tick attuale'], [8, 'tap attuale'], [10, 'primo'], [15], [20], [35, 'expo web'], [50, 'expo web']];
+  const singles = [[2], [3], [4], [5], [6], [7, 'tick attuale'], [8, 'tap attuale'], [10, 'primo'], [15], [20], [35, 'expo web'], [50, 'expo web'], [100, 'controllo'], [300, 'controllo']];
   document.getElementById('single').innerHTML = singles.map(([ms, note]) =>
     `<button data-ms="${ms}" class="${note && note.includes('attuale') ? 'now' : ''}">${ms} ms${note ? `<small>${note}</small>` : ''}</button>`).join('');
   document.getElementById('single').addEventListener('click', (e) => {

@@ -155,7 +155,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
           <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
-          <SwitchRow label={t("Vibrazione")} supporting={t("Una breve vibrazione quando interagisci con l'app.")}
+          <SwitchRow label={t("Vibrazione")} supporting={t("Una breve vibrazione quando interagisci con l'app. Su Android non vibra con il telefono in silenzioso.")}
             value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />
         </Card>
         {archiveSections}

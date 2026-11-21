@@ -1,4 +1,7 @@
 // Haptic feedback on the web: the Vibration API is the only one a page can use (Chrome/Edge/Samsung Internet on Android).
+// Chrome on Android drops every page vibration while the ringer is on silent (VibrationManagerAndroid.java: vibrates only
+// if getRingerMode() != RINGER_MODE_SILENT), with no error and `vibrate()` still returning true: the page cannot tell or
+// work around it. The system's own haptics (a long press) still work then. Said under the «Vibrazione» switch.
 // Safari (iOS) and Firefox do not offer it, and desktop browsers have no motor: there the call does nothing. Pure and
 // injectable (navigator and clock are passed in) so it can be tested without a browser; the switch lives in the preferences.
 //
