@@ -134,7 +134,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - Su richiesta (screenshot con «+198%» sotto la barra di «Servizi digitali»): tolta dalle Barre la variazione rispetto ai giorni precedenti
   di pari durata, anche dall'etichetta accessibile. Rimossi il calcolo (`variation`, `change`, `previousFrom`/`previousTo` in
   `insights.ts`), la chiave «{p0} rispetto al periodo precedente» di `en.ts` e i test del confronto; resta la quota sul totale.
-- **Verifica:** typecheck e `npm test` OK (509/509). Non provato nel browser; non committato né pubblicato.
+- **Verifica:** typecheck e `npm test` OK (509/509). Non provato nel browser. Committato in `26c5b8d` e pubblicato su Hosting
+  (21 novembre): «Deploy complete!», sito 200. Rules invariate.
 
 ## «Salva» e «Crea» con vibrazione, matita dei template evidenziata, niente messaggio dopo il salvataggio — 21 novembre 2026
 
