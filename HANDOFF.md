@@ -77,7 +77,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `314064b` (matita dei template da 28 dp), `e008fcd` (nessun campo «Chiave API» nella scansione, «Vibrazione» e telefono in
+  `origin`. Ultimi commit di codice, tutti pubblicati: `8bf4f4d` (separatore delle schede, menu «immagine», vibrazione 5/4 solo touch), `314064b` (matita dei template da 28 dp), `e008fcd` (nessun campo «Chiave API» nella scansione, «Vibrazione» e telefono in
   silenzioso), `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di scorrimento senza frecce), `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
   selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
   pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
@@ -101,7 +101,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `314064b` (matita dei template da 28 dp) pubblicato su richiesta il 21 novembre
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `8bf4f4d` (separatore delle schede, niente menu «immagine» al tocco
+  prolungato, vibrazione 5/4 ms solo su touch) pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`: «Deploy complete!», sito
+  200, bundle online identico a `dist/` (SHA-256, con `tap:5,tick:4`). Rules invariate. Prima, **Hosting** da `314064b` (matita dei template da 28 dp) pubblicato su richiesta il 21 novembre
   (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate.
   Prima, **Hosting** da `e008fcd` (nessun campo «Chiave API» nel dialogo di scansione; testo di
   «Vibrazione» sul telefono in silenzioso) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!»,
@@ -238,7 +240,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   vero, tocco sull'icona di «Fondi» nella barra → `elementFromPoint` dà il contenitore (non l'`<img>`), pagina Fondi aperta, **una**
   vibrazione `[5]`; pressione prolungata sull'icona del fondo senza `contextmenu` su un'immagine; interruttore e nuovo testo presenti.
   Nessun errore JS. **Non provati:** menu di Chrome sul telefono reale, percezione di 5/4 ms sul Pixel 8 (da sentire senza Non disturbare;
-  se troppo debole, 6/5). Non committato, non pubblicato.
+  se troppo debole, 6/5). Committato in `8bf4f4d`, inviato e pubblicato su Hosting (vedi «Produzione»).
 
 ## Matita dei template più grande — 21 novembre 2026 (notte)
 
