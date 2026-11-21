@@ -29,7 +29,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `3d1b5ea` pubblicato su richiesta il 21 novembre (mezzogiorno): tastiera
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `8e513f4` (Annulla/Salva a 96 su smartphone accanto al cestino) pubblicato su
+  richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `3d1b5ea` pubblicato su richiesta il 21 novembre (mezzogiorno): tastiera
   virtuale nello stesso fotogramma (`fdfce0e`), «Torna indietro» in «Collega il tuo Firebase», pulsanti della revisione dello scontrino,
   esercente negli abbonamenti, cestino con contorno rosso su smartphone. Prima, **Hosting** da `bdc742b` («Chiudi» con contorno) pubblicato su richiesta il 21 novembre
   (notte, quarta parte). Prima, **Rules e Hosting** da `817a2f1` pubblicati su richiesta il 21 novembre (notte, terza
@@ -83,8 +84,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - Su richiesta: accanto al cestino (modifica spesa, template, prodotto) «Annulla» e «Salva» sono larghi almeno 96 invece di 112 su
   smartphone (`narrowOnPhone` di `CancelButton`/`ConfirmButton`); altrove e da medium resta 112.
 - **Verifica:** Chromium headless, modifica spesa: 390 e **360 px** cestino + Annulla 97 + Salva 96 su una riga; 320 px ancora a capo
-  (cestino sopra, atteso: ≈238 dp disponibili); 1400 px invariato (Elimina con etichetta, 110/112). `npm run check` OK. Non committato,
-  non pubblicato.
+  (cestino sopra, atteso: ≈238 dp disponibili); 1400 px invariato (Elimina con etichetta, 110/112). `npm run check` OK. Committato in
+  `8e513f4` e pubblicato.
 
 ## Cestino con contorno, azioni degli abbonamenti a tutta larghezza su smartphone — 21 novembre 2026
 
@@ -456,6 +457,9 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (pomeriggio): Hosting da `8e513f4`** (Annulla/Salva a 96 su smartphone nei dialoghi di modifica).
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules e Worker non toccati.
 
 - **Rilascio del 21 novembre (mezzogiorno): Hosting da `3d1b5ea`** (con `fdfce0e`: stato della tastiera virtuale applicato nello stesso
   fotogramma, lavoro di un'altra sessione committato a parte; mai provato su telefono reale). `npm run deploy:hosting`: «Deploy complete!»,
