@@ -3,10 +3,10 @@ import { test } from 'node:test';
 import type { Category } from '../src/domain/category.ts';
 import { newDraft, validateDraft } from '../src/domain/expense.ts';
 import {
-  aiResponseError, amountsIn, amountText, datesIn, emptyProposal, parseAiReceipt, parseReceiptText, receiptDescriptions, receiptNotes, scanConflicts, scanPatch, suggestCategory, suggestDescription,
+  aiResponseError, amountText, emptyProposal, parseAiReceipt, receiptNotes, scanConflicts, scanPatch,
 } from '../src/domain/receipt.ts';
 import {
-  aiDestination, aiErrors, aiModelsEmpty, aiSetupProblem, buildAiRequest, buildModelsRequest, compatibleBase, curateGeminiModels, parseAiKeys, readAiModels, recommendedModel, withAiKey, defaultAiSettings, parseAiSettings, readAiAnswer, receiptPrompt, type AiSettings,
+  aiDestination, aiErrors, aiModelsEmpty, aiProviders, aiSetupProblem, buildAiRequest, buildModelsRequest, curateGeminiModels, parseAiKeys, readAiModels, recommendedModel, withAiKey, defaultAiSettings, parseAiSettings, readAiAnswer, receiptPrompt, type AiSettings,
 } from '../src/domain/receiptAi.ts';
 import { analyzeReceipt, listAiModels } from '../src/services/receiptAi.ts';
 import { english } from '../src/i18n/en.ts';
@@ -20,112 +20,6 @@ const categories: Category[] = [
   { id: 'c-move', label: 'Trasporti', icon: 'train' },
 ];
 const today = '2026-11-16';
-
-const supermarket = [
-  'SUPERMERCATO PROVA SRL', 'VIA ROMA 1 - 00100 ROMA', 'P.IVA 01234567890', 'DOCUMENTO COMMERCIALE', 'di vendita o prestazione',
-  'DESCRIZIONE            IVA   Prezzo(€)', 'LATTE INTERO 1L        4%      1,29', 'PASTA 500G             4%      0,89', 'DETERSIVO             22%      5,50',
-  'SCONTO FEDELTA                -1,00', 'SUBTOTALE                     7,68', 'TOTALE COMPLESSIVO           24,75', 'di cui IVA                    2,25',
-  'Pagamento contante           30,00', 'Pagamento elettronico         0,00', 'Resto                         5,25', '12/11/2026 18:42', 'DOCUMENTO N. 0042-0017',
-].join('\n');
-
-test('scontrini: importi italiani letti come centesimi, senza scambiare date, quantità e percentuali', () => {
-  assert.deepEqual(amountsIn('TOTALE 12,50 €'), [1250]);
-  assert.deepEqual(amountsIn('1.234,56'), [123456]);
-  assert.deepEqual(amountsIn('EUR 12.50'), [1250]);
-  assert.deepEqual(amountsIn('TOTALE 24, 75'), [2475]);
-  assert.deepEqual(amountsIn('2 x 1,50   3,00'), [150, 300]);
-  assert.deepEqual(amountsIn('12/11/2026 18:42'), []);
-  assert.deepEqual(amountsIn('12.11.2026'), []);
-  assert.deepEqual(amountsIn('0,500 kg'), []);
-  assert.deepEqual(amountsIn('N. 0042'), []);
-});
-
-test('scontrini: date italiane, anno a due cifre, mese scritto; mai future o inesistenti', () => {
-  assert.deepEqual(datesIn('12/11/2026 18:42', today), ['2026-11-12']);
-  assert.deepEqual(datesIn('Data 05-03-26', today), ['2026-03-05']);
-  assert.deepEqual(datesIn('12.11.2026', today), ['2026-11-12']);
-  assert.deepEqual(datesIn('2026-11-12', today), ['2026-11-12']);
-  assert.deepEqual(datesIn('12 novembre 2026', today), ['2026-11-12']);
-  assert.deepEqual(datesIn('3 Nov 2026', today), ['2026-11-03']);
-  // Day first; the American order only when day-first is not a date.
-  assert.deepEqual(datesIn('03/04/2026', today), ['2026-04-03']);
-  assert.deepEqual(datesIn('11/13/2026', today), ['2026-11-13']);
-  assert.deepEqual(datesIn('31/02/2026', today), []);
-  assert.deepEqual(datesIn('17/11/2026', today), []);
-  assert.deepEqual(datesIn('01/01/1999', today), []);
-});
-
-test('scontrini: il totale pagato non è subtotale, IVA, sconto, contanti o resto', () => {
-  const scan = parseReceiptText(supermarket, categories, today);
-  assert.equal(scan.amountMinor, 2475);
-  assert.equal(scan.status.amount, 'found');
-  assert.equal(scan.date, '2026-11-12');
-  assert.equal(scan.status.date, 'found');
-  // The shop is the merchant; the description is only what was bought, from the kind of shop.
-  assert.equal(scan.merchant, 'Supermercato Prova Srl');
-  assert.equal(scan.description, 'Spesa');
-  // The shop's name, the description and the category are always to be checked.
-  assert.deepEqual([scan.status.merchant, scan.status.description], ['uncertain', 'uncertain']);
-  assert.ok(receiptDescriptions.every((word) => word in english));
-  assert.equal(suggestDescription('FARMACIA PROVA'), 'Farmacia');
-  assert.equal(suggestDescription('BAR DEL SUPERMERCATO'), '');
-  assert.equal(parseReceiptText('NEGOZIO PROVA\nTOTALE 5,00', categories, today).description, '');
-  assert.equal(scan.categoryId, 'c-food');
-  assert.equal(scan.status.categoryId, 'uncertain');
-  assert.deepEqual(scan.notes, []);
-});
-
-test('scontrini: errori tipici dell’OCR nelle parole, totale su due righe, più totali', () => {
-  assert.equal(parseReceiptText('BAR PROVA\nT0TALE EUR0   3,20\nC0NTANTI 5,00\nREST0 1,80', categories, today).amountMinor, 320);
-  assert.equal(parseReceiptText('NEGOZIO\nTOTALE\n18,90\nCONTANTI 20,00', categories, today).amountMinor, 1890);
-  const many = parseReceiptText('NEGOZIO\nTOTALE 20,00\nSCONTO 2,00\nTOTALE 18,00', categories, today);
-  assert.equal(many.amountMinor, 1800);
-  assert.equal(many.status.amount, 'uncertain');
-  assert.ok(many.notes.includes(receiptNotes.manyTotals));
-  // «Totale complessivo» wins over a plain «totale» printed earlier.
-  const strong = parseReceiptText('TOTALE REPARTO 20,00\nTOTALE COMPLESSIVO 18,00', categories, today);
-  assert.deepEqual([strong.amountMinor, strong.status.amount], [1800, 'found']);
-});
-
-test('scontrini: senza riga del totale l’importo è dedotto e segnalato, mai dato per certo', () => {
-  const card = parseReceiptText('NEGOZIO PROVA\nARTICOLO 9,90\nPAGAMENTO ELETTRONICO 9,90', categories, today);
-  assert.deepEqual([card.amountMinor, card.status.amount], [990, 'uncertain']);
-  assert.ok(card.notes.includes(receiptNotes.fromPayment));
-  const cash = parseReceiptText('NEGOZIO PROVA\nCONTANTI 20,00\nRESTO 5,50', categories, today);
-  assert.deepEqual([cash.amountMinor, cash.status.amount], [1450, 'uncertain']);
-  const largest = parseReceiptText('NEGOZIO PROVA\nPANE 2,10\nLATTE 1,29\nIVA 10,00', categories, today);
-  assert.deepEqual([largest.amountMinor, largest.status.amount], [210, 'uncertain']);
-  assert.ok(largest.notes.includes(receiptNotes.largest));
-});
-
-test('scontrini: valori mancanti restano mancanti, niente dati inventati', () => {
-  const cut = parseReceiptText('SUPERMERCATO PROVA\nLATTE\nPASTA', categories, today);
-  assert.equal(cut.amountMinor, null);
-  assert.equal(cut.date, '');
-  assert.deepEqual([cut.status.amount, cut.status.date], ['missing', 'missing']);
-  assert.equal(emptyProposal(cut), false);
-  const blurred = parseReceiptText('~~ ,. |\n 4 ;;\n', categories, today);
-  assert.equal(emptyProposal(blurred), true);
-  assert.deepEqual([blurred.description, blurred.merchant], ['', '']);
-  // A description guessed from a word is not a reading: alone it leaves nothing to review.
-  assert.equal(emptyProposal(parseAiReceipt(JSON.stringify({ description: 'Spesa' }), categories, today)), true);
-  // Out of the range of an expense: not proposed.
-  assert.equal(parseReceiptText('TOTALE 0,00', categories, today).amountMinor, null);
-  const dates = parseReceiptText('NEGOZIO\nTOTALE 5,00\n10/11/2026\nReso entro 14/11/2026', categories, today);
-  assert.deepEqual([dates.date, dates.status.date], ['2026-11-10', 'uncertain']);
-});
-
-test('scontrini: la categoria è solo una di quelle esistenti, altrimenti nessuna', () => {
-  assert.equal(suggestCategory('FARMACIA PROVA', categories), '');
-  assert.equal(suggestCategory('FARMACIA PROVA', [...categories, { id: 'c-health', label: 'Salute', icon: 'cross' }]), 'c-health');
-  // By icon when no name fits.
-  assert.equal(suggestCategory('STAZIONE DI SERVIZIO\nGASOLIO', [{ id: 'c-x', label: 'Macchina', icon: 'fuel' }]), 'c-x');
-  // Two fitting categories or two kinds of shop: no guess.
-  assert.equal(suggestCategory('SUPERMERCATO', [{ id: 'a', label: 'Spesa casa', icon: null }, { id: 'b', label: 'Alimentari', icon: null }]), '');
-  assert.equal(suggestCategory('SUPERMERCATO CON FARMACIA', [...categories, { id: 'c-health', label: 'Salute', icon: 'cross' }]), '');
-  assert.equal(suggestCategory('RICEVUTA TRASPORTI URBANI', categories), 'c-move');
-  assert.equal(suggestCategory('SUPERMERCATO', []), '');
-});
 
 const answer = (value: unknown) => JSON.stringify(value);
 
@@ -159,6 +53,9 @@ test('AI: risposte non valide rifiutate; campi sbagliati o impossibili restano m
   assert.ok(odd.notes.includes(receiptNotes.dateRange));
   assert.deepEqual(odd.items, []);
   assert.equal(emptyProposal(odd), true);
+  // A description is the model's guess, not a reading: alone it leaves nothing to review.
+  assert.equal(emptyProposal(parseAiReceipt(answer({ description: 'Spesa' }), categories, today)), true);
+  assert.equal(emptyProposal(parseAiReceipt(answer({ merchant: 'Negozio' }), categories, today)), false);
   const future = parseAiReceipt(answer({ date: '2027-01-01', total: '-5.00' }), categories, today);
   assert.deepEqual([future.date, future.amountMinor], ['', null]);
   const huge = parseAiReceipt(answer({ total: '999999.99' }), categories, today);
@@ -193,7 +90,7 @@ test('scansione: i dati accettati compilano solo i campi vuoti, salvo sostituzio
 });
 
 test('scansione: nessuna registrazione automatica, il modulo compilato passa dalla validazione di sempre', () => {
-  const scan = parseReceiptText(supermarket, categories, today);
+  const scan = parseAiReceipt(answer({ merchant: 'SUPERMERCATO PROVA SRL', description: 'Spesa', date: '2026-11-12', total: '24.75', category: 'Alimentari' }), categories, today);
   const values = { amount: amountText(scan.amountMinor), date: scan.date, description: scan.description, merchant: scan.merchant, categoryId: scan.categoryId };
   const patch = scanPatch(newDraft(), values, false);
   // Only the base fields: recurrence, trial, promo and fund are never set by a scan.
@@ -213,7 +110,7 @@ test('scansione: nessuna registrazione automatica, il modulo compilato passa dal
   assert.equal(validateDraft({ ...draft, amount: '24,7x' }, categories).ok, false);
 });
 
-const openai: AiSettings = { provider: 'openai', model: 'modello-prova', endpoint: '', consent: '', scan: 'ocr' };
+const openai: AiSettings = { enabled: true, provider: 'openai', model: 'modello-prova', consent: '' };
 const image = { mime: 'image/jpeg', base64: 'QUJD' };
 
 test('AI: impostazioni dal browser validate, la chiave non ne fa mai parte', () => {
@@ -221,34 +118,33 @@ test('AI: impostazioni dal browser validate, la chiave non ne fa mai parte', () 
   assert.deepEqual(parseAiSettings('{oops'), defaultAiSettings);
   assert.deepEqual(parseAiSettings(JSON.stringify({ provider: 'altro', model: 5, apiKey: 'sk-finta', key: 'sk-finta' })), defaultAiSettings);
   const saved = parseAiSettings(JSON.stringify({ provider: 'gemini', model: ' m ', endpoint: '', consent: 'generativelanguage.googleapis.com', apiKey: 'finta' }));
-  assert.deepEqual(saved, { provider: 'gemini', model: 'm', endpoint: '', consent: 'generativelanguage.googleapis.com', scan: 'ocr' });
-  assert.equal(parseAiSettings(JSON.stringify({ scan: 'ai' })).scan, 'ai');
-  assert.equal(parseAiSettings(JSON.stringify({ scan: 'altro' })).scan, 'ocr');
+  // Saved before the switch existed (21 November): on for whoever had chosen a service; `endpoint` and `scan` ignored.
+  assert.deepEqual(saved, { enabled: true, provider: 'gemini', model: 'm', consent: 'generativelanguage.googleapis.com' });
   assert.equal('apiKey' in saved, false);
-  assert.equal(aiSetupProblem(defaultAiSettings) !== null, true);
+  // Off by default, and an explicit choice always wins.
+  assert.equal(defaultAiSettings.enabled, false);
+  assert.equal(parseAiSettings(JSON.stringify({ enabled: false, provider: 'claude', model: 'm' })).enabled, false);
+  assert.deepEqual(parseAiSettings(JSON.stringify({ enabled: true })), { ...defaultAiSettings, enabled: true });
+  // The removed OpenAI-compatible API reads as no service chosen (and off, for old settings).
+  assert.deepEqual(parseAiSettings(JSON.stringify({ provider: 'compatible', model: 'llava', endpoint: 'http://localhost/v1', scan: 'ai' })), defaultAiSettings);
+  assert.deepEqual(aiProviders, ['openai', 'gemini', 'claude']);
+  assert.equal(aiSetupProblem(defaultAiSettings), 'Scegli il servizio AI nelle Impostazioni.');
   assert.equal(aiSetupProblem({ ...openai, model: '' }), 'Indica il modello da usare.');
   assert.equal(aiSetupProblem(openai), null);
-  assert.equal(aiSetupProblem({ ...openai, provider: 'compatible', endpoint: 'http://esempio.test/v1' }), 'Indica un indirizzo HTTPS valido per l’API.');
 });
 
-test('AI: indirizzi compatibili solo HTTPS (o HTTP sullo stesso dispositivo), destinazione del consenso', () => {
-  assert.equal(compatibleBase('https://esempio.test/v1/'), 'https://esempio.test/v1');
-  assert.equal(compatibleBase('https://esempio.test/v1/chat/completions'), 'https://esempio.test/v1');
-  assert.equal(compatibleBase('http://localhost/v1'), 'http://localhost/v1');
-  for (const bad of ['', 'esempio.test', 'http://esempio.test/v1', 'ftp://esempio.test', 'https://utente:segreto@esempio.test/v1', 'https://esempio.test/v1?key=1', 'javascript:alert(1)']) {
-    assert.equal(compatibleBase(bad), null, bad);
-  }
+test('AI: destinazione del consenso per servizio', () => {
   assert.equal(aiDestination(openai), 'api.openai.com');
   assert.equal(aiDestination({ ...openai, provider: 'gemini' }), 'generativelanguage.googleapis.com');
-  assert.equal(aiDestination({ ...openai, provider: 'compatible', endpoint: 'https://esempio.test/v1' }), 'esempio.test');
   assert.equal(aiDestination(defaultAiSettings), '');
 });
 
 test('AI: richiesta per provider, chiave solo nelle intestazioni, categorie esistenti nel prompt', () => {
-  const prompt = receiptPrompt(categories, today, 'TOTALE 24,75');
+  const prompt = receiptPrompt(categories, today);
   assert.match(prompt, /"Alimentari", "Intrattenimento"/);
   assert.match(prompt, /2026-11-16/);
-  assert.match(prompt, /TOTALE 24,75/);
+  assert.doesNotMatch(prompt, /OCR/);
+  assert.match(receiptPrompt(categories, today, 'English'), /"Groceries"/);
   assert.match(receiptPrompt([], today), /category: null/);
   const request = buildAiRequest(openai, ' chiave-finta ', image, prompt);
   assert.equal(request.url, 'https://api.openai.com/v1/chat/completions');
@@ -271,15 +167,13 @@ test('AI: richiesta per provider, chiave solo nelle intestazioni, categorie esis
   assert.deepEqual(claudeBody.messages[0].content[0], { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'QUJD' } });
   assert.deepEqual([claudeBody.model, claudeBody.max_tokens, 'thinking' in claudeBody, 'temperature' in claudeBody], ['claude-opus-5-5', 16000, false, false]);
   assert.equal(aiDestination({ ...openai, provider: 'claude' }), 'api.anthropic.com');
-  const custom = buildAiRequest({ ...openai, provider: 'compatible', endpoint: 'https://esempio.test/v1/' }, 'k', image, prompt);
-  assert.equal(custom.url, 'https://esempio.test/v1/chat/completions');
   assert.throws(() => buildAiRequest(openai, '  ', image, prompt), { message: 'Inserisci la chiave API.' });
-  assert.throws(() => buildAiRequest(defaultAiSettings, 'k', image, prompt), { message: 'Analisi con AI non attiva.' });
+  assert.throws(() => buildAiRequest(defaultAiSettings, 'k', image, prompt), { message: 'Scegli il servizio AI nelle Impostazioni.' });
 });
 
 test('AI: risposte ed errori del provider (chiave, limite, modello, server, risposta vuota)', () => {
   assert.equal(readAiAnswer('openai', 200, { choices: [{ message: { content: '{"total":"1.00"}' } }] }), '{"total":"1.00"}');
-  assert.equal(readAiAnswer('compatible', 200, { choices: [{ message: { content: [{ type: 'text', text: '{"a":' }, { type: 'text', text: '1}' }] } }] }), '{"a":1}');
+  assert.equal(readAiAnswer('openai', 200, { choices: [{ message: { content: [{ type: 'text', text: '{"a":' }, { type: 'text', text: '1}' }] } }] }), '{"a":1}');
   assert.equal(readAiAnswer('gemini', 200, { candidates: [{ content: { parts: [{ text: '{"total":' }, { text: '"1.00"}' }] } }] }), '{"total":"1.00"}');
   assert.equal(readAiAnswer('claude', 200, { stop_reason: 'end_turn', content: [{ type: 'thinking', thinking: '' }, { type: 'text', text: '{"total":"1.00"}' }] }), '{"total":"1.00"}');
   assert.throws(() => readAiAnswer('claude', 200, { stop_reason: 'refusal', content: [{ type: 'text', text: 'no' }] }), { message: aiErrors.empty });
@@ -321,7 +215,7 @@ test('AI: invio con rete assente, timeout, annullamento e risposta malformata', 
 });
 
 test('scansione: ogni messaggio di dominio ha la traduzione inglese', () => {
-  for (const message of [...Object.values(receiptNotes), ...Object.values(aiErrors), aiResponseError, 'Indica il modello da usare.', 'Indica un indirizzo HTTPS valido per l’API.', 'Inserisci la chiave API.', 'Analisi con AI non attiva.']) {
+  for (const message of [...Object.values(receiptNotes), ...Object.values(aiErrors), aiResponseError, 'Indica il modello da usare.', 'Inserisci la chiave API.', 'Scegli il servizio AI nelle Impostazioni.']) {
     assert.ok(Object.hasOwn(english, message), message);
   }
 });
@@ -340,11 +234,8 @@ test('AI: richiesta dell’elenco dei modelli per servizio, chiave mai nell’in
   assert.equal(claude.url, 'https://api.anthropic.com/v1/models?limit=1000');
   assert.deepEqual(claude.init.headers, { 'x-api-key': 'chiave-finta', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' });
   for (const request of [openAi, gemini, claude]) assert.ok(!request.url.includes('chiave-finta'));
-  // A compatible server: asked as soon as the address is usable, with the key only if there is one.
-  const local = { ...base, provider: 'compatible' as const, endpoint: 'http://localhost:11434/v1/' };
-  assert.deepEqual(buildModelsRequest(local, ''), { url: 'http://localhost:11434/v1/models', init: { method: 'GET', headers: {} } });
-  assert.deepEqual(buildModelsRequest(local, 'k')!.init.headers, { Authorization: 'Bearer k' });
-  assert.equal(buildModelsRequest({ ...local, endpoint: 'http://esempio.test/v1' }, 'k'), null);
+  // Without a key nothing is asked, whatever the service (also while the scan is off: the card passes no key).
+  for (const provider of aiProviders) assert.equal(buildModelsRequest({ ...base, provider }, ''), null);
 });
 
 test('AI: lettura dell’elenco dei modelli, filtri ed errori', () => {
@@ -377,16 +268,12 @@ test('AI: lettura dell’elenco dei modelli, filtri ed errori', () => {
     ['gpt-4o-mini', 'gpt-5-mini']);
   assert.deepEqual(readAiModels('claude', 200, { data: [{ type: 'model', id: 'claude-sonnet-4-6' }, { type: 'model', id: 'claude-haiku-4-5-20251001' }] }),
     ['claude-haiku-4-5-20251001', 'claude-sonnet-4-6']);
-  // Compatible servers: nothing filtered, `data`, `models` or a bare array.
-  assert.deepEqual(readAiModels('compatible', 200, { object: 'list', data: [{ id: 'llava:13b' }, { id: 'nomic-embed-text' }] }), ['llava:13b', 'nomic-embed-text']);
-  assert.deepEqual(readAiModels('compatible', 200, { models: [{ name: 'llava' }] }), ['llava']);
-  assert.deepEqual(readAiModels('compatible', 200, ['b', 'a']), ['a', 'b']);
   for (const body of [null, {}, { data: [] }, { data: 'x' }, { data: [{ id: 'whisper-1' }] }]) assert.throws(() => readAiModels('openai', 200, body), { message: aiModelsEmpty });
   assert.throws(() => readAiModels('openai', 401, { error: { message: 'Incorrect API key provided: sk-finta' } }), { message: aiErrors.key });
   assert.throws(() => readAiModels('gemini', 400, { error: { message: 'API key not valid.' } }), { message: aiErrors.key });
   assert.throws(() => readAiModels('claude', 429, {}), { message: aiErrors.limit });
-  assert.throws(() => readAiModels('compatible', 404, null), { message: aiErrors.models });
-  assert.throws(() => readAiModels('compatible', 503, null), { message: aiErrors.server });
+  assert.throws(() => readAiModels('claude', 404, null), { message: aiErrors.models });
+  assert.throws(() => readAiModels('openai', 503, null), { message: aiErrors.server });
   for (const message of [aiModelsEmpty, aiErrors.models]) assert.ok(english[message as keyof typeof english]);
 });
 
@@ -397,7 +284,6 @@ test('AI: modello consigliato', () => {
   assert.equal(recommendedModel('gemini', ['gemini-2.5-flash-lite', 'gemini-2.5-flash']), 'gemini-2.5-flash');
   assert.equal(recommendedModel('claude', ['claude-haiku-4-5-20251001', 'claude-sonnet-4-6']), 'claude-haiku-4-5-20251001');
   assert.equal(recommendedModel('claude', ['claude-opus-5-5', 'claude-sonnet-4-6']), 'claude-sonnet-4-6');
-  assert.equal(recommendedModel('compatible', ['llava']), null);
   // Scelta dell'utente del 17 novembre: con Gemini si propone prima gemini-3.1-flash-lite.
   assert.equal(recommendedModel('gemini', ['gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-pro']), 'gemini-3.1-flash-lite');
 });

@@ -19,6 +19,7 @@ import { FundField, type FundChoice } from '../funds/FundField';
 import { noFund, resolveFund } from '../../domain/funds';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ScanReceiptDialog } from '../receipts/ScanReceiptDialog';
+import { useReceiptAi } from '../receipts/aiSettings';
 import type { RankedMerchant } from '../../domain/merchant';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
@@ -50,6 +51,8 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
   const [formKey, setFormKey] = useState(0);
   const [scanning, setScanning] = useState(false);
+  // «Scansiona scontrino» exists only once the scan is switched on in Settings (off by default, 21 November).
+  const scanEnabled = useReceiptAi().settings.enabled;
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
   const busy = submission.status === 'sending' || submission.status === 'uncertain';
   const dataState = store.ready ? 'ready' : store.error ? 'error' : 'loading';
@@ -133,14 +136,14 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. No message
           when the fields are filled (removed on request, 17 November): the filled fields speak for themselves. */}
       {/* Phones: as wide as «Importo» below (same halves and gap as the amount/date row), so both edges line up. */}
-      <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
+      {scanEnabled && <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
         <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={size === 'compact' && styles.scanHalf}
           compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
           accessibilityLabel={t("Scansiona scontrino")}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{narrow ? t("Scansiona") : t("Scansiona scontrino")}</Button>
         {size === 'compact' && <View style={styles.scanHalf} />}
-      </View>
-      {scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
+      </View>}
+      {scanEnabled && scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={update} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}

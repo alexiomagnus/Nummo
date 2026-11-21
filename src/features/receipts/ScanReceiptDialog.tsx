@@ -3,20 +3,18 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, compactIconPadding } from '../../components/Button';
-import { ChoiceChips } from '../../components/ChoiceChips';
 import { SwitchRow } from '../../components/SwitchRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import type { RankedMerchant } from '../../domain/merchant';
 import { todayInRome } from '../../domain/policy';
 import {
-  amountText, emptyProposal, parseAiReceipt, parseReceiptText, receiptDescriptions, receiptFields, scanConflicts, scanPatch,
+  amountText, emptyProposal, parseAiReceipt, receiptFields, scanConflicts, scanPatch,
   type ReceiptField, type ReceiptProposal, type ReceiptValues,
 } from '../../domain/receipt';
 import { aiProviderLabels, aiSetupProblem, receiptPrompt } from '../../domain/receiptAi';
 import { useI18n } from '../../i18n/I18nProvider';
-import { analyzeReceipt } from '../../services/receiptAi';
-import { isAbort, recognizeReceipt } from '../../services/receiptOcr';
+import { analyzeReceipt, isAbort } from '../../services/receiptAi';
 import { inputOutline, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { ExpenseFields } from '../expenses/ExpenseFields';
@@ -34,39 +32,34 @@ type Props = {
   onClose: () => void;
 };
 
-type Method = 'ocr' | 'ai';
 type Stage = 'pick' | 'camera' | 'ready' | 'consent' | 'working' | 'review';
 
 const fieldLabels: Readonly<Record<ReceiptField, string>> = { amount: 'Importo', date: 'Data', description: 'Descrizione', merchant: 'Esercente', categoryId: 'Categoria' };
 const unreadable = 'Non è stato possibile leggere lo scontrino: prova con una foto più nitida e completa.';
 
-// Scan of a receipt for the new-expense form, in one dialog: choose or take a picture, preview it, read it (on the
-// device, or with the user's AI provider when set up), then review. The picture exists only in this component's
+// Scan of a receipt for the new-expense form, in one dialog: choose or take a picture, preview it, read it with the
+// user's AI provider (the only kind of scan since 21 November: the local OCR was removed on request), then review. The picture exists only in this component's
 // memory and is released when the dialog closes. Nothing is ever saved from here.
 export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClose }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const wide = useSizeClass() !== 'compact';
   const ai = useReceiptAi();
-  const aiReady = aiSetupProblem(ai.settings) === null;
+  const setupProblem = aiSetupProblem(ai.settings);
+  const aiReady = setupProblem === null;
   const provider = ai.settings.provider === 'none' ? '' : aiProviderLabels[ai.settings.provider];
 
   const [stage, setStage] = useState<Stage>('pick');
-  // The kind of scan chosen in Settings, when the AI one can be used; the other stays one tap away.
-  const [method, setMethod] = useState<Method>(aiReady && ai.settings.scan === 'ai' ? 'ai' : 'ocr');
   const [image, setImage] = useState<Blob | null>(null);
   const [preview, setPreview] = useState('');
   const [preparing, setPreparing] = useState(false);
-  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [failed, setFailed] = useState<Method | null>(null);
+  const [failed, setFailed] = useState(false);
   const [proposal, setProposal] = useState<ReceiptProposal | null>(null);
   const [values, setValues] = useState<ReceiptValues>({ amount: '', date: '', description: '', merchant: '', categoryId: '' });
   const [replace, setReplace] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const running = useRef<AbortController | null>(null);
-  // Text already read from the current picture: given to the AI as a second source, never shown.
-  const ocrText = useRef('');
   const camera = useRef<HTMLInputElement>(null);
   const gallery = useRef<HTMLInputElement>(null);
 
@@ -85,7 +78,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const openCamera = async () => {
     // Only a browser without getUserMedia (or a page outside a secure context) falls back to the system camera.
     if (!navigator.mediaDevices?.getUserMedia) { camera.current?.click(); return; }
-    setError(null); setFailed(null);
+    setError(null); setFailed(false);
     const back = stage === 'camera' ? 'pick' : stage;
     setStage('camera');
     try {
@@ -118,50 +111,42 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
 
   const choose = async (file: Blob | undefined) => {
     if (!file) return;
-    setPreparing(true); setError(null); setFailed(null);
+    setPreparing(true); setError(null); setFailed(false);
     try {
       const prepared = await prepareImage(file);
-      ocrText.current = '';
       setImage(prepared); setPreview(URL.createObjectURL(prepared)); setProposal(null); setZoomed(false); setStage('ready');
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : 'Formato non supportato: usa una foto JPEG, PNG o WebP.');
     } finally { setPreparing(false); }
   };
 
-  const run = async (how: Method) => {
+  const run = async () => {
     if (!image) return;
     const controller = new AbortController();
     running.current = controller;
-    setMethod(how); setStage('working'); setProgress(null); setError(null); setFailed(null);
+    setStage('working'); setError(null); setFailed(false);
     const today = todayInRome();
     try {
-      let result: ReceiptProposal;
-      if (how === 'ocr') {
-        const text = await recognizeReceipt(image, controller.signal, setProgress);
-        ocrText.current = text;
-        result = parseReceiptText(text, categories, today);
-      } else {
-        const base64 = await toBase64(image);
-        const raw = await analyzeReceipt(ai.settings, ai.apiKey, { mime: image.type || 'image/jpeg', base64 },
-          receiptPrompt(categories, today, ocrText.current || undefined, locale === 'it-IT' ? 'Italian' : 'English'), controller.signal);
-        result = parseAiReceipt(raw, categories, today);
-      }
+      const base64 = await toBase64(image);
+      const raw = await analyzeReceipt(ai.settings, ai.apiKey, { mime: image.type || 'image/jpeg', base64 },
+        receiptPrompt(categories, today, locale === 'it-IT' ? 'Italian' : 'English'), controller.signal);
+      const result: ReceiptProposal = parseAiReceipt(raw, categories, today);
       if (controller.signal.aborted) return;
-      if (emptyProposal(result)) { setError(unreadable); setFailed(how); setStage('ready'); return; }
+      if (emptyProposal(result)) { setError(unreadable); setFailed(true); setStage('ready'); return; }
       setProposal(result);
+      // The model already answers in the user's language.
       setValues({ amount: amountText(result.amountMinor, locale === 'it-IT' ? ',' : '.'), date: result.date,
-        // The local scan proposes a fixed word («Spesa»): shown in the user's language. The AI already answers in it.
-        description: receiptDescriptions.includes(result.description) ? t(result.description) : result.description, merchant: result.merchant, categoryId: result.categoryId });
+        description: result.description, merchant: result.merchant, categoryId: result.categoryId });
       setReplace(false);
       setStage('review');
     } catch (problem) {
       if (controller.signal.aborted || isAbort(problem)) return;
-      setError(problem instanceof Error ? problem.message : unreadable); setFailed(how); setStage('ready');
+      setError(problem instanceof Error ? problem.message : unreadable); setFailed(true); setStage('ready');
     } finally { if (running.current === controller) running.current = null; }
   };
   const start = () => {
-    if (method === 'ai' && !ai.consented) { setStage('consent'); return; }
-    void run(method);
+    if (!ai.consented) { setStage('consent'); return; }
+    void run();
   };
   const cancelWork = () => { running.current?.abort(); running.current = null; setStage('ready'); };
 
@@ -198,6 +183,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     body = <>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         {t("Fotografa o carica lo scontrino: Nummo propone importo, data, descrizione, esercente e categoria. Controlli tutto prima di salvare.")}</Text>
+      {setupProblem && <HelperText type="info" style={{ paddingHorizontal: 0 }}>{t(setupProblem)}</HelperText>}
       {sourceButtons('contained-tonal')}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>;
@@ -218,38 +204,33 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     body = <>
       {picture}
       <View style={styles.row}>{zoom}</View>
-      {aiReady && <View style={styles.block}>
-        <ChoiceChips label={t("Tipo di scansione")} value={method} onChange={(value) => { if (value) setMethod(value); }}
-          options={[{ value: 'ocr', label: t("Standard") }, { value: 'ai', label: t("Avanzata con AI") }]} />
-        {/* No note under the scan type (both removed on request, 17 November). */}
-        {method === 'ai' && <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Chiave API")} value={ai.apiKey} onChangeText={ai.setApiKey}
-          secureTextEntry autoComplete="off" autoCapitalize="none" autoCorrect={false} spellCheck={false} />}
-      </View>}
+      {/* Service or model still to choose: said here, the scan waits for Settings. The key can be written here too. */}
+      {setupProblem && <HelperText type="info" style={{ paddingHorizontal: 0 }}>{t(setupProblem)}</HelperText>}
+      {aiReady && <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Chiave API")} value={ai.apiKey} onChangeText={ai.setApiKey}
+        secureTextEntry autoComplete="off" autoCapitalize="none" autoCorrect={false} spellCheck={false} />}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
-      {failed === 'ai' && <View style={styles.row}><Button mode="contained-tonal" onPress={() => void run('ocr')}>{t("Usa la scansione standard")}</Button></View>}
       {sourceButtons('outlined')}
     </>;
     actions = <>
       <Button onPress={onClose}>{t("Annulla")}</Button>
-      <Button mode="contained" disabled={preparing || (method === 'ai' && !ai.apiKey.trim())} onPress={start}>{failed === method ? t("Riprova") : t("Scansiona")}</Button>
+      <Button mode="contained" disabled={preparing || !aiReady || !ai.apiKey.trim()} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</Button>
     </>;
   } else if (stage === 'consent') {
     body = <>
       <Text variant="titleSmall">{t("Inviare la foto a {p0}?", { p0: provider })}</Text>
       <Text variant="bodyMedium">{t("Con la scansione avanzata la foto dello scontrino esce da questo dispositivo e viene inviata a {p0} ({p1}), che la tratta secondo le proprie condizioni. Nummo non la conserva.", { p0: provider, p1: ai.destination })}</Text>
-      <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Uno scontrino può contenere dati personali, come le ultime cifre della carta o il codice fiscale. La scansione standard resta sempre disponibile.")}</Text>
+      <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Uno scontrino può contenere dati personali, come le ultime cifre della carta o il codice fiscale.")}</Text>
     </>;
     actions = <>
       <Button onPress={() => setStage('ready')}>{t("Annulla")}</Button>
-      <Button mode="contained" onPress={() => { ai.giveConsent(); void run('ai'); }}>{t("Acconsento e invio")}</Button>
+      <Button mode="contained" onPress={() => { ai.giveConsent(); void run(); }}>{t("Acconsento e invio")}</Button>
     </>;
   } else if (stage === 'working') {
     body = <>
       {picture}
       <View style={styles.block} accessibilityLiveRegion="polite">
-        <Text variant="bodyMedium">{method === 'ai' ? t("Analisi con {p0} in corso…", { p0: provider })
-          : progress === null ? t("Preparazione del lettore… La prima volta richiede qualche secondo in più.") : t("Lettura dello scontrino…")}</Text>
-        <ProgressBar indeterminate={method === 'ai' || progress === null} progress={progress ?? 0} style={styles.progress}
+        <Text variant="bodyMedium">{t("Analisi con {p0} in corso…", { p0: provider })}</Text>
+        <ProgressBar indeterminate style={styles.progress}
           accessibilityLabel={t("Scansione in corso")} />
       </View>
     </>;

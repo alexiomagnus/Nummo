@@ -1217,3 +1217,26 @@ Su richiesta (screenshot: «Spazio Conad» finiva nella Descrizione). Decisioni:
   controllare» e da sola non rende valida una scansione (`emptyProposal` la ignora).
 - **Scansione predefinita** (`scan` in `nummo.receiptAi.v1`, `ocr` di base): scelta nella scheda delle Impostazioni, decide solo con
   quale tipo si apre il dialogo quando l'AI è configurata; l'altro tipo, il consenso e il ripiego sull'OCR restano invariati.
+
+## Scansione dello scontrino solo con AI, spenta di base — 21 novembre 2026
+
+Su richiesta: l'AI è la lettura che conviene usare, quindi l'OCR locale è stato tolto del tutto. Le sezioni del 16 e 17 novembre
+sulla scansione restano come storia; dove parlano di OCR, scansione predefinita o «API compatibile OpenAI» sono superate.
+
+- **Rimossi:** Tesseract.js e i dati `ita`/`eng` (devDependency e lockfile), `scripts/sync-ocr.ts`, `npm run ocr:sync` e il suo uso in
+  `dev`, `dev:demo`, `build:demo` e `build:cloud`, la cartella generata `public/ocr/` (circa 16 MB non più nell'export), l'intestazione
+  Hosting `/ocr/**`, `services/receiptOcr.ts`, la lettura del testo in `domain/receipt.ts` (totali, date, esercente, tipo di negozio),
+  il testo OCR passato al prompt, il tipo di scansione nel dialogo, il ripiego sull'OCR e la «Scansione predefinita».
+- **Rimosso anche il servizio «API compatibile OpenAI»** (indirizzo personalizzato): restano OpenAI, Google Gemini e Claude. Un'impostazione
+  salvata con `compatible` vale «nessun servizio scelto»; la sua chiave resta nel browser ma non si usa più.
+- **Interruttore.** `enabled` in `nummo.receiptAi.v1`, spento di base. Finché è spento «Scansiona scontrino» non compare in Nuova spesa e
+  nella scheda «Analisi scontrini con AI» servizio, chiave e modello sono attenuati e `inert`, senza richieste al servizio. Compatibilità:
+  un'impostazione senza `enabled` vale accesa solo se aveva già un servizio scelto, così chi usava l'AI non perde il pulsante.
+- **Dialogo.** Se manca il servizio o il modello lo dice («Scegli il servizio AI nelle Impostazioni.») e «Scansiona» resta disattivato; un
+  errore dell'AI mostra il messaggio e «Riprova». Consenso, revisione, `scanPatch` e il resto delle regole sono invariati.
+- **Nessun cambiamento** a `DataStore`, Rules, backup o dati salvati.
+- **Abbonamenti ChatGPT/Claude al posto della chiave (valutato, non implementato).** Claude: i token OAuth dei piani Free/Pro/Max sono
+  ammessi solo in Claude Code e Claude.ai, l'uso in app di terzi è vietato dai termini (febbraio 2026) e bloccato (aprile 2026): non fattibile.
+  OpenAI: «Sign in with ChatGPT» con uso del piano (DevDay, 29 settembre 2026) consente ad app di terzi aderenti di usare il piano dell'utente;
+  da verificare se l'accesso per sviluppatori è aperto o su adesione, i limiti per app e se il flusso funziona da una pagina statica senza
+  backend. Decisione rinviata all'utente.

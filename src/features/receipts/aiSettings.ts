@@ -1,5 +1,6 @@
-// Settings of the optional AI scan, shared by the Settings card and the scan dialog. Provider, model, address and the
-// consent given are kept in this browser (`nummo.receiptAi.v1`). The API keys are kept apart, one per destination, in
+// Settings of the receipt scan (AI only since 21 November), shared by the Settings card, the new-expense form (which
+// shows «Scansiona scontrino» only while `enabled`) and the scan dialog. Switch, provider, model and the consent given
+// are kept in this browser (`nummo.receiptAi.v1`). The API keys are kept apart, one per destination, in
 // `nummo.receiptAi.keys.v1` (user's choice of 17 November: before, the key lived in memory only and had to be written
 // again after every reload). They never leave this browser except in the requests to their own service.
 import { useSyncExternalStore } from 'react';
@@ -27,7 +28,7 @@ function changeSettings(change: Partial<AiSettings>) {
 function setApiKey(value: string) {
   const destination = aiDestination(state.settings);
   const keys = { ...state.keys, [destination]: value };
-  // No destination yet (an OpenAI-compatible API without a valid address): the key waits in memory.
+  // No destination yet (no service chosen): the key waits in memory.
   if (destination !== '') {
     let saved: AiKeys = {};
     try { saved = parseAiKeys(localStorage.getItem(aiKeysStorageKey)); } catch { /* storage denied */ }

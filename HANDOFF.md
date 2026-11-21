@@ -10,8 +10,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. In serata/notte: rami uniti eliminati
   (14 locali, 3 remoti); file di collaudo v9/v10 con test, importati nell'emulatore e collaudati dall'interfaccia della demo; le quattro
   osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
+- **Scansione solo con AI (21 novembre, inviata su `origin`, non pubblicata):** OCR e «API compatibile OpenAI» rimossi, interruttore in
+  Impostazioni; dettagli nella sezione omonima qui sotto. Va pubblicata insieme ai commit in attesa.
 - **Prossima sessione, priorità consigliate:** (0) su autorizzazione, pubblicare su Hosting `0e536a5`…`9ad8e02` (produzione ferma a
-  `de79c95`); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
+  `de79c95`) e la scansione solo con AI; (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
@@ -51,7 +53,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   più nera.
 - **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
   pagina si ricarica sulla schermata di accesso e la cache su disco si cancella) → nuovo accesso.
-- **Da verificare su dispositivo:** «Carica foto» (galleria) e qualità della foto per l'OCR; blocco dello zoom con due dita (Android
+- **Da verificare su dispositivo:** «Carica foto» (galleria) e scansione con l'AI da telefono; blocco dello zoom con due dita (Android
   e iPhone); ritocchi mobile del 17 novembre su iPhone reale e scheda AI con Gemini reale; icona dell'app (cache del launcher), filtri
   di Spese/Analisi e dissolvenza del segnaposto d'avvio sul Pixel 8; tastiera automatica di Nuova lista/Nuovo fondo (su iOS
   probabilmente non si apre).
@@ -70,6 +72,22 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Scansione dello scontrino solo con AI, spenta di base — 21 novembre 2026
+
+- Su richiesta: OCR locale eliminato (Tesseract.js e dati dal lockfile, `scripts/sync-ocr.ts`, `ocr:sync` e il suo uso negli script,
+  `public/ocr/` generata e cancellata, intestazione Hosting `/ocr/**`, `services/receiptOcr.ts`, parsing del testo in `domain/receipt.ts`,
+  tipo e «Scansione predefinita»). Tolto anche il servizio «API compatibile OpenAI»: restano OpenAI, Google Gemini, Claude.
+- Interruttore «Scansione dello scontrino» in testa alla scheda «Analisi scontrini con AI» (`enabled` in `nummo.receiptAi.v1`, spento di
+  base): finché è spento «Scansiona scontrino» non compare in Nuova spesa e il resto della scheda è attenuato (0,38) e `inert`, senza
+  richieste dell'elenco dei modelli. Chi aveva già scelto un servizio lo trova acceso (nessun `enabled` salvato + servizio = acceso).
+- Dialogo: niente scelta del tipo né ripiego; con servizio o modello mancante dice «Scegli il servizio AI nelle Impostazioni.» o
+  «Indica il modello da usare.» e «Scansiona» resta disattivato; errore → messaggio e «Riprova». Guida pubblica e `en.ts` aggiornati
+  (24 traduzioni non più usate rimosse). Decisione e valutazione degli abbonamenti ChatGPT/Claude in `docs/architecture.md`.
+- **Verifica:** `npm run check` OK, **494/494** (7 test dell'OCR tolti, test dell'interruttore e della compatibilità aggiunti); nessuna
+  traccia di Tesseract in `dist-demo/`. Chromium headless 1280×900 (demo, Standard): senza interruttore nessun «Scansiona», scheda attenuata
+  e `inert`; acceso → servizi attivi, Gemini salvato, pulsante presente, dialogo aperto. Non provati: smartphone, scansione reale con una
+  chiave. Committato e inviato su richiesta; non pubblicato su Hosting.
 
 ## Pulsanti di prova delle notifiche nascosti — 21 novembre 2026
 

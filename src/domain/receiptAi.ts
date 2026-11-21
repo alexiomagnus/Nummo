@@ -4,15 +4,18 @@
 // and reaches this module just to build one request. Never in Firestore, backups, logs or URLs.
 import type { Category } from './category.ts';
 
-export const aiProviders = ['openai', 'gemini', 'claude', 'compatible'] as const;
+// The «API compatibile OpenAI» provider and the local OCR were removed on 21 November (user's request): a saved
+// `compatible` provider reads as no provider chosen, and its key (kept by destination) is simply never used again.
+export const aiProviders = ['openai', 'gemini', 'claude'] as const;
 export type AiProvider = (typeof aiProviders)[number];
-export const aiProviderLabels: Readonly<Record<AiProvider, string>> = { openai: 'OpenAI', gemini: 'Google Gemini', claude: 'Claude', compatible: 'API compatibile OpenAI' };
+export const aiProviderLabels: Readonly<Record<AiProvider, string>> = { openai: 'OpenAI', gemini: 'Google Gemini', claude: 'Claude' };
 
-// `consent`: the destination (see `aiDestination`) the user agreed to send receipt pictures to; '' = never asked.
-// `scan`: the kind of scan the dialog starts with (the AI one only once it is set up); the other stays one tap away.
-export type AiSettings = Readonly<{ provider: AiProvider | 'none'; model: string; endpoint: string; consent: string; scan: 'ocr' | 'ai' }>;
+// `enabled`: the receipt scan is on (Settings switch): only then «Scansiona scontrino» appears in the new-expense form.
+// `provider`: 'none' until a service is chosen. `consent`: the destination (see `aiDestination`) the user agreed to send
+// receipt pictures to; '' = never asked.
+export type AiSettings = Readonly<{ enabled: boolean; provider: AiProvider | 'none'; model: string; consent: string }>;
 export const aiSettingsKey = 'nummo.receiptAi.v1';
-export const defaultAiSettings: AiSettings = { provider: 'none', model: '', endpoint: '', consent: '', scan: 'ocr' };
+export const defaultAiSettings: AiSettings = { enabled: false, provider: 'none', model: '', consent: '' };
 
 const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
 
@@ -23,7 +26,10 @@ export function parseAiSettings(raw: string | null): AiSettings {
   try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
   const o = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
   const provider = (aiProviders as readonly string[]).includes(o.provider as string) ? (o.provider as AiProvider) : 'none';
-  return { provider, model: text(o.model, 100), endpoint: text(o.endpoint, 300), consent: text(o.consent, 400), scan: o.scan === 'ai' ? 'ai' : 'ocr' };
+  // Settings saved before the switch existed: the scan stays on for whoever had already chosen a service. The fields of
+  // the removed features (`endpoint`, `scan`) are ignored.
+  const enabled = typeof o.enabled === 'boolean' ? o.enabled : provider !== 'none';
+  return { enabled, provider, model: provider === 'none' ? '' : text(o.model, 100), consent: text(o.consent, 400) };
 }
 
 // Saved API keys, by destination (see `aiDestination`): a key belongs to one service and is never sent elsewhere.
@@ -57,30 +63,18 @@ const openAiBase = 'https://api.openai.com/v1';
 const geminiBase = 'https://generativelanguage.googleapis.com/v1beta';
 const claudeBase = 'https://api.anthropic.com/v1';
 
-// Base address of an OpenAI-compatible API: HTTPS only, or plain HTTP for a server on this same device. null = not usable.
-export function compatibleBase(endpoint: string): string | null {
-  let url: URL;
-  try { url = new URL(endpoint.trim()); } catch { return null; }
-  const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]';
-  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) return null;
-  if (url.username || url.password || url.search || url.hash) return null;
-  return (url.origin + url.pathname).replace(/\/+$/, '').replace(/\/chat\/completions$/, '');
-}
-
 // Where the picture goes with these settings (host only for the known providers); also what consent is given for.
 export function aiDestination(settings: AiSettings): string {
   if (settings.provider === 'openai') return 'api.openai.com';
   if (settings.provider === 'gemini') return 'generativelanguage.googleapis.com';
   if (settings.provider === 'claude') return 'api.anthropic.com';
-  if (settings.provider === 'compatible') { const base = compatibleBase(settings.endpoint); return base ? new URL(base).host : ''; }
   return '';
 }
 
 // What is still missing before the AI scan can be offered (source-language message), or null when it is set up.
 export function aiSetupProblem(settings: AiSettings): string | null {
-  if (settings.provider === 'none') return 'Analisi con AI non attiva.';
+  if (settings.provider === 'none') return 'Scegli il servizio AI nelle Impostazioni.';
   if (!settings.model) return 'Indica il modello da usare.';
-  if (settings.provider === 'compatible' && !compatibleBase(settings.endpoint)) return 'Indica un indirizzo HTTPS valido per l’API.';
   return null;
 }
 
@@ -88,7 +82,7 @@ export type AiImage = Readonly<{ mime: string; base64: string }>;
 export type AiRequest = Readonly<{ url: string; init: { method: 'POST'; headers: Record<string, string>; body: string } }>;
 
 // The instructions. The model must answer with one JSON object and may only choose among the given category names.
-export function receiptPrompt(categories: readonly Category[], today: string, ocrText?: string, language: 'Italian' | 'English' = 'Italian'): string {
+export function receiptPrompt(categories: readonly Category[], today: string, language: 'Italian' | 'English' = 'Italian'): string {
   const names = categories.map((category) => JSON.stringify(category.label)).join(', ');
   return [
     'You read a photo of a purchase receipt (often Italian) and extract its data. Answer with ONE JSON object and nothing else:',
@@ -103,7 +97,6 @@ export function receiptPrompt(categories: readonly Category[], today: string, oc
     names ? `- category: the best fitting one of exactly these names, or null if none fits: ${names}. Never invent another name.` : '- category: null.',
     '- uncertain: the names among "merchant", "description", "date", "total", "category" you are not sure about.',
     'Use null for anything missing or unreadable. Never guess or invent a value. If the picture is not a receipt, answer with all nulls.',
-    ...(ocrText ? ['Text read from the same picture by an OCR, possibly with errors (the picture prevails):', ocrText.slice(0, 4000)] : []),
   ].join('\n');
 }
 
@@ -129,8 +122,7 @@ export function buildAiRequest(settings: AiSettings, apiKey: string, image: AiIm
       messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.base64 } }, { type: 'text', text: prompt }] }],
     });
   }
-  const base = settings.provider === 'openai' ? openAiBase : compatibleBase(settings.endpoint)!;
-  return post(`${base}/chat/completions`, { Authorization: `Bearer ${apiKey.trim()}` }, {
+  return post(`${openAiBase}/chat/completions`, { Authorization: `Bearer ${apiKey.trim()}` }, {
     model: settings.model,
     messages: [{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${image.mime};base64,${image.base64}` } }] }],
     response_format: { type: 'json_object' },
@@ -140,13 +132,13 @@ export function buildAiRequest(settings: AiSettings, apiKey: string, image: AiIm
 export const aiErrors = {
   key: 'Chiave API non valida o senza permessi.',
   limit: 'Limite di utilizzo dell’API raggiunto: riprova più tardi.',
-  model: 'Modello o indirizzo non trovato: controlla le impostazioni dell’AI.',
+  model: 'Modello non trovato: controlla le impostazioni dell’AI.',
   request: 'Il servizio AI ha rifiutato la richiesta: controlla che il modello accetti immagini.',
   server: 'Il servizio AI non è disponibile in questo momento.',
   timeout: 'Il servizio AI non ha risposto in tempo.',
   network: 'Servizio AI non raggiungibile: controlla la connessione.',
   empty: 'La risposta dell’AI non è valida.',
-  models: 'Elenco dei modelli non disponibile per questo servizio o indirizzo.',
+  models: 'Elenco dei modelli non disponibile per questo servizio.',
 } as const;
 
 // The model's text from a provider answer, or a thrown source-language error. `body` is the parsed JSON of the answer
@@ -171,7 +163,7 @@ export function readAiAnswer(provider: AiProvider, status: number, body: unknown
     answer = Array.isArray(parts) ? parts.map((part) => o(part).text).filter((part) => typeof part === 'string').join('') : undefined;
   } else {
     const content = o(o(Array.isArray(o(body).choices) ? (o(body).choices as unknown[])[0] : null).message).content;
-    // Some compatible servers answer with content parts instead of one string.
+    // Content parts instead of one string are read too.
     answer = Array.isArray(content) ? content.map((part) => o(part).text).filter((part) => typeof part === 'string').join('') : content;
   }
   if (typeof answer !== 'string' || !answer.trim()) throw new Error(aiErrors.empty);
@@ -184,14 +176,10 @@ export function readAiAnswer(provider: AiProvider, status: number, body: unknown
 export type AiModelsRequest = Readonly<{ url: string; init: { method: 'GET'; headers: Record<string, string> } }>;
 export const aiModelsEmpty = 'Il servizio non ha elencato modelli adatti.';
 
-// What can be asked right now, or null: the known providers need a key, a compatible server (often local) may not.
+// What can be asked right now, or null: every provider needs a key.
 export function buildModelsRequest(settings: AiSettings, apiKey: string): AiModelsRequest | null {
   const key = apiKey.trim();
   const get = (url: string, headers: Record<string, string>): AiModelsRequest => ({ url, init: { method: 'GET', headers } });
-  if (settings.provider === 'compatible') {
-    const base = compatibleBase(settings.endpoint);
-    return base ? get(`${base}/models`, key ? { Authorization: `Bearer ${key}` } : {}) : null;
-  }
   if (settings.provider === 'none' || !key) return null;
   if (settings.provider === 'openai') return get(`${openAiBase}/models`, { Authorization: `Bearer ${key}` });
   // The key travels in a header, never in the address (`?key=`): addresses end up in histories and logs.
@@ -253,8 +241,8 @@ export function readAiModels(provider: AiProvider, status: number, body: unknown
     const curated = curateGeminiModels(names.filter((name): name is string => typeof name === 'string'));
     if (curated.length > 0) names = curated;
   } else {
-    // Compatible servers answer like OpenAI (`data`), a few with `models` or a bare array.
-    const rows = Array.isArray(body) ? body : list(o(body).data).length ? list(o(body).data) : list(o(body).models);
+    // OpenAI and Claude list their models in `data`.
+    const rows = list(o(body).data);
     names = rows.map((model) => (typeof model === 'string' ? model : o(model).id ?? o(model).name));
     if (provider === 'openai') {
       names = names.filter((name) => typeof name === 'string' && openAiChat.test(name) && !openAiOther.test(name));
@@ -273,7 +261,6 @@ const recommendedModels: Readonly<Record<AiProvider, readonly string[]>> = {
   openai: ['gpt-5-mini', 'gpt-4o-mini'],
   gemini: ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.5-flash-lite'],
   claude: ['claude-haiku-4-5', 'claude-sonnet-4-6'],
-  compatible: [],
 };
 
 // The first recommended model present in the list: its exact name, else its dated edition («claude-haiku-4-5-20251001»).

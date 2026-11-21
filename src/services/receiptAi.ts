@@ -4,6 +4,9 @@ import { aiErrors, buildAiRequest, buildModelsRequest, readAiAnswer, readAiModel
 
 type Fetcher = (url: string, init: RequestInit) => Promise<Pick<Response, 'status' | 'json'>>;
 
+// Thrown when the caller's signal stops a request: not an error to show.
+export const isAbort = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
+
 // The model's raw text answer (to be validated by `parseAiReceipt`). Rejects with a source-language message, or with
 // an AbortError when `signal` stops the request.
 export async function analyzeReceipt(settings: AiSettings, apiKey: string, image: AiImage, prompt: string, signal: AbortSignal,
