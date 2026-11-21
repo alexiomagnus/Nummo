@@ -5,7 +5,6 @@ import type { Category } from '../../domain/category';
 import { barTransition } from '../../theme/motion';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { useI18n } from '../../i18n/I18nProvider';
-import { numberFormat } from '../../i18n/translate';
 import { radius, spacing } from '../../theme/tokens';
 import { rankCategories, type RankingRow } from './insights';
 import { seriesColor, type ChartColors } from './charts';
@@ -16,7 +15,7 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
   rows: readonly RankingRow[]; total: number; colors: ChartColors;
   categories: readonly Category[]; onOpen: (key: string) => void;
 }) {
-  const { t, formatAmount, locale } = useI18n();
+  const { t, formatAmount } = useI18n();
   const sorted = rankCategories(rows, 'amount');
   const maximum = Math.max(0, ...sorted.map(row => row.total));
   const icons = new Map(categories.map(category => [category.id, category.icon]));
@@ -26,12 +25,10 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
         const name = seriesLabel(series, t);
         const amount = formatAmount(series.total);
         const share = categoryPercent(series.total, total);
-        const change = series.change !== null && Math.abs(series.change) >= 1
-          ? numberFormat(locale, { maximumFractionDigits: 0, signDisplay: 'always' }).format(series.change) + '%' : null;
         return <View key={series.key} role="listitem">
           <StateLayerPressable role="button" layerColor={colors.text} radius={radius.card}
             onPress={() => onOpen(series.key)}
-            accessibilityLabel={[name, amount, share, change && t('{p0} rispetto al periodo precedente', { p0: change })].filter(Boolean).join(', ')}
+            accessibilityLabel={[name, amount, share].filter(Boolean).join(', ')}
             style={styles.barRow}>
             <View style={styles.header}>
               <IconTile icon={icons.get(series.key) ?? null} />
@@ -45,7 +42,6 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
               </View>
               <View style={styles.footer}>
                 <Text variant="bodySmall" style={{ color: colors.muted }}>{share}</Text>
-                {change && <Text variant="bodySmall" style={{ color: colors.muted }}>{change}</Text>}
               </View>
             </View>
           </StateLayerPressable>

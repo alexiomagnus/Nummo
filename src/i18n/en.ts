@@ -19,7 +19,6 @@ export const english: Readonly<Record<string, string>> = {
   "Totale nel periodo": "Period total",
   "Categoria principale": "Top category",
   "{p0} transazioni": "{p0} transactions",
-  "{p0} rispetto al periodo precedente": "{p0} versus the previous period",
   "Andamento nel tempo": "Spending over time",
   "Mostra andamento nel tempo": "Show spending over time",
   "Nella pagina Analisi, il grafico delle spese giorno per giorno.": "On the Analysis page, a chart of spending day by day.",

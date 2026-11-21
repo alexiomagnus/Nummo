@@ -129,6 +129,13 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Barre di Analisi senza variazione percentuale — 21 novembre 2026
+
+- Su richiesta (screenshot con «+198%» sotto la barra di «Servizi digitali»): tolta dalle Barre la variazione rispetto ai giorni precedenti
+  di pari durata, anche dall'etichetta accessibile. Rimossi il calcolo (`variation`, `change`, `previousFrom`/`previousTo` in
+  `insights.ts`), la chiave «{p0} rispetto al periodo precedente» di `en.ts` e i test del confronto; resta la quota sul totale.
+- **Verifica:** typecheck e `npm test` OK (509/509). Non provato nel browser; non committato né pubblicato.
+
 ## «Salva» e «Crea» con vibrazione, matita dei template evidenziata, niente messaggio dopo il salvataggio — 21 novembre 2026
 
 - Su richiesta: (1) «Salva» di Nuova spesa e «Crea» di Templates danno un `tap` al tocco, solo se «Vibrazione» è accesa (stesso cancello di
