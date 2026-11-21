@@ -76,9 +76,10 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
           </ScrollView>
         </Dialog.ScrollArea>
         <Dialog.Actions style={dialogActionsRow}>
-          <CancelButton onPress={onDismiss}>{t("Annulla")}</CancelButton>
-          {/* «OK» is two letters: the shared minimum width keeps it a full-size target (17 November: it was 37 dp wide). */}
-          <ConfirmButton disabled={picked < minDate || picked > maxDate} onPress={() => onConfirm(picked === today ? '' : picked)}>OK</ConfirmButton>
+          {/* Smaller than the other dialogs' actions (user's request, 21 November); «OK» keeps a minimum width all the same
+              (17 November: it was 37 dp wide). */}
+          <CancelButton small onPress={onDismiss}>{t("Annulla")}</CancelButton>
+          <ConfirmButton small disabled={picked < minDate || picked > maxDate} onPress={() => onConfirm(picked === today ? '' : picked)}>OK</ConfirmButton>
         </Dialog.Actions>
       </Dialog>
     </Portal>

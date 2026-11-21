@@ -188,6 +188,12 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## «Annulla» e «OK» più piccoli nel selettore della data — 21 novembre 2026 (notte)
+
+- Su richiesta (screenshot del dialogo «Seleziona data»): `CancelButton`/`ConfirmButton` hanno la variante `small` (larghi almeno 88,
+  alti 40, l'altezza dei pulsanti Material 3), usata solo in `DateField`; gli altri dialoghi restano a 112×48.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser né sul telefono. Non committato, non pubblicato.
+
 ## Gemini: consigliato `gemini-3.5-flash-lite` — 21 novembre 2026 (notte)
 
 - Su richiesta: in `recommendedModels` Gemini propone prima `gemini-3.5-flash-lite` (poi `gemini-3.1-flash-lite`, `gemini-2.5-flash`).
