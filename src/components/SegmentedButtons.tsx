@@ -28,7 +28,7 @@ const steps = [{ padding: spacing.md, gap: spacing.sm }, { padding: spacing.sm, 
 // from the segment width and the label's natural width (hidden nowrap clone); the filled colour still marks selection.
 export function SegmentedButtons<T extends string>({ options, value, onChange, label, error, disabled }: Props<T>) {
   const { colors } = useTheme();
-  const haptic = useHaptics(); // a short vibration on every press («Vibrazione» in Settings)
+  const haptic = useHaptics(); // a light tick when the selection changes («Vibrazione» in Settings)
   const border = error ? colors.error : colors.outline;
   const [widths, setWidths] = useState<Readonly<Record<string, { segment?: number; text?: number }>>>({});
   const measure = (key: string, part: 'segment' | 'text', width: number) =>
@@ -59,7 +59,7 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
         const room = roomOf(option.value, index, padding);
         const fits = room !== null && room >= gap + checkSize;
         return (
-          <StateLayerPressable key={option.value} disabled={disabled} layerColor={color} onPress={() => { haptic(); onChange(option.value); }}
+          <StateLayerPressable key={option.value} disabled={disabled} layerColor={color} onPress={() => { if (!selected) haptic('tick'); onChange(option.value); }}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled} accessibilityLabel={option.accessibilityLabel ?? option.label}
             onLayout={(event) => measure(option.value, 'segment', event.nativeEvent.layout.width)}
             style={[styles.segment,

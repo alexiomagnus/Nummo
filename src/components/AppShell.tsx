@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { HapticKind } from '../theme/haptics';
 import { layerTransition } from '../theme/motion';
 import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
-import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt } from './navIndicator';
+import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt, slotWithHysteresis } from './navIndicator';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { batchKeyboardReports, observeViewportShrink, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
@@ -369,7 +369,7 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
       event.preventDefault();
       const value = at(event.clientX);
       position.setValue(value);
-      const next = Math.round(value);
+      const next = slotWithHysteresis(value, slot);
       if (next !== slot) { slot = next; latest.current.haptic('tick'); }
       setFocus(next);
     };
@@ -383,7 +383,8 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
       setFocus(null);
       setLift(0);
       const { destinations: items, index: current, onSelect: select } = latest.current;
-      const target = commit ? Math.round(at(event.clientX)) : current;
+      // The destination opened is the one highlighted (and ticked) under the finger, dead band included.
+      const target = commit ? slot ?? Math.round(at(event.clientX)) : current;
       if (target < 0) { fade(0); return; }
       moveTo(target);
       const item = items[target];

@@ -1,11 +1,22 @@
 // Haptic feedback on the web: the Vibration API is the only one a page can use (Chrome/Edge/Samsung Internet on Android).
 // Safari (iOS) and Firefox do not offer it, and desktop browsers have no motor: there the call does nothing. Pure and
-// injectable (the navigator is passed in) so it can be tested without a browser; the switch lives in the preferences.
+// injectable (navigator and clock are passed in) so it can be tested without a browser; the switch lives in the preferences.
+//
+// A page cannot reach Android's native haptic effects (EFFECT_CLICK/TICK, the primitives behind `performHapticFeedback`
+// and expo-haptics' `performAndroidHapticsAsync`, which exist only in native apps): the browser turns every request into
+// a plain one-shot vibration of the given length. Expo-haptics on the web does the same with 35–60 ms pulses, longer than
+// these. So crispness depends on what is left to the page: pulses as short as still felt, never chained into a buzz.
 
-// `tap`: a press that selects (a destination, a chart part). `tick`: a lighter mark while a finger drags across the
-// navigation pill and enters another destination. Durations in ms, short enough to read as a click, not a buzz.
+// `tap`: a press that moves somewhere (a destination of the navigation bar, «Nuova spesa», the release of a drag on the
+// pill). `tick`: a lighter mark for a selection (segments, legend rows, chart parts, a destination crossed while dragging).
+// Durations in ms; to compare others on a phone, `docs/testing/prova-vibrazione.html`.
 export const hapticPatterns = { tap: 10, tick: 6 } as const;
 export type HapticKind = keyof typeof hapticPatterns;
+
+// Minimum time between two accepted vibrations. Each call restarts the motor, and pulses closer than this are felt as one
+// longer buzz (fast drag across the pill, finger hovering on a slot border, release right after the last tick): the later
+// request is dropped, never queued.
+export const hapticGap = 60;
 
 type VibratingNavigator = { vibrate?: (pattern: number | number[]) => boolean };
 
@@ -13,9 +24,23 @@ export function canVibrate(nav: VibratingNavigator | undefined): nav is Required
   return typeof nav?.vibrate === 'function';
 }
 
-// Returns whether the browser accepted the vibration. It refuses (or throws, in some embedded views) before the user's
-// first interaction with the page: never an error for the app.
-export function vibrate(kind: HapticKind, enabled: boolean, nav: VibratingNavigator | undefined = typeof navigator === 'undefined' ? undefined : navigator): boolean {
-  if (!enabled || !canVibrate(nav)) return false;
-  try { return nav.vibrate(hapticPatterns[kind]); } catch { return false; }
+export type Haptics = (kind: HapticKind, enabled: boolean) => boolean;
+
+// One gate per app (the provider creates it). Returns whether the browser accepted the vibration. It refuses (or throws,
+// in some embedded views) before the user's first interaction with the page: never an error for the app, and a refused
+// request does not hold back the next one.
+export function createHaptics(
+  nav: VibratingNavigator | undefined = typeof navigator === 'undefined' ? undefined : navigator,
+  now: () => number = () => (typeof performance === 'undefined' ? Date.now() : performance.now()),
+): Haptics {
+  let last = Number.NEGATIVE_INFINITY;
+  return (kind, enabled) => {
+    if (!enabled || !canVibrate(nav)) return false;
+    const time = now();
+    if (time - last < hapticGap) return false;
+    let accepted = false;
+    try { accepted = nav.vibrate(hapticPatterns[kind]); } catch { accepted = false; }
+    if (accepted) last = time;
+    return accepted;
+  };
 }

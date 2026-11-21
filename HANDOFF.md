@@ -24,6 +24,11 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   riga «Git» si fermava a `9ad8e02`; (6) commento in `ExpenseEditor.tsx` e sezione «Pulsanti dei dialoghi uniformi» davano per buono
   «Elimina» da solo sopra Annulla/Salva su smartphone, poi giudicato difettoso dall'utente e sostituito dal cestino (`3d1b5ea`). Le
   sezioni di questa sessione scritte «non committato» sono aggiornate con il commit. Codice e `AGENTS.md` coincidevano per il resto.
+- **Analisi iniziale del 21 novembre (notte), corretta su richiesta:** la Guida («Template per le spese», IT e EN) diceva l'importo
+  facoltativo, obbligatorio da `e4bf945`: ora «descrizione, importo, data, esercente, categoria e fondo»; la sezione «Fondo accanto alla
+  categoria…» dava `subtitleBelow` per rimossa, ora segnata come superata. Non committato.
+- **Feedback aptico rivisto (21 novembre, notte):** zona morta sulla barra, distanza minima tra vibrazioni, `tick` per le selezioni,
+  pagina di prova delle durate; sezione dedicata qui sotto. Non committato; da provare sul Pixel 8 con la pagina di prova.
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, interruttore «Vibrazione» spento); tastiera virtuale (aprire e chiudere su
   un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
@@ -115,6 +120,27 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Feedback aptico: impulsi singoli senza ronzio — 21 novembre 2026
+
+- Su richiesta (vibrazioni «lunghe, ronzanti, poco precise» sul Pixel 8). **Analisi:** nessuna libreria, solo
+  `navigator.vibrate` da `theme/haptics.ts` tramite `useHaptics()`; un impulso per tocco già prima (misurato). Cause trovate:
+  (1) trascinamento sulla barra senza zona morta: con il dito fermo sul confine tra due voci lo slot cambiava a ogni evento e
+  ogni cambio vibrava, **24 impulsi a 33 ms** (≈800 ms di ronzio, misurato su `HEAD` in Chromium); (2) nessuna distanza minima
+  tra vibrazioni: trascinamento veloce e rilascio davano impulsi a 54–67 ms, fusi; (3) segmenti, legenda e grafici con il `tap`
+  da 10 ms anche per una selezione, e il segmento già scelto vibrava senza cambiare nulla. Il resto (impulso a durata fissa,
+  forma decisa da Chrome) non dipende dal codice: expo-haptics sul web usa 35–60 ms ed è stato scartato (`docs/architecture.md`).
+- **Correzioni:** `createHaptics` (cancello unico nel `HapticsProvider`, scarta richieste entro 60 ms, una richiesta rifiutata
+  non blocca la successiva), `slotWithHysteresis` (zona morta 0,15 di passo; la destinazione aperta al rilascio è quella
+  evidenziata), `tick` per segmenti, legenda, blocchi e ciambella, segmenti senza vibrazione se la scelta non cambia. Durate
+  invariate (10/6 ms) finché non si scelgono sul telefono. Pagina di prova `docs/testing/prova-vibrazione.html`, pubblicata anche
+  come artifact privato «Prova della vibrazione» per aprirla dal telefono.
+- **Verifica:** `npm run check` OK (**510/510**); test nuovi in `tests/haptics.test.ts` (cancello, rifiuto, zona morta). Chromium headless
+  390×844 touch, demo Standard con `nummo-utente-medio.json`, `navigator.vibrate` registrato: tocco di ogni destinazione [10];
+  segmento già scelto nessuna, altro [6]; scorrimento, importazione e digitazione nessuna; dito fermo sul confine 1 tick + 1 tap
+  al rilascio (prima 24 + 1); trascinamento veloce su quattro voci 3 tick a 65 ms, rilascio scartato (prima 4 a 54–80 ms);
+  5 righe della legenda [6] ciascuna (prima [10]); «Vibrazione» spenta nessuna; nessun errore JS. **Qualità percepita non
+  verificata su Pixel 8.** Non committato, non pubblicato.
 
 ## Importo obbligatorio nei template, matita nell'elenco, fondo a capo in Analisi — 21 novembre 2026
 
@@ -238,6 +264,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** typecheck e `npm test` OK (506/506), `build:demo` OK. Chromium headless, demo Standard con `nummo-utente-medio.json`,
   Analisi a blocchi su 12 mesi, «Medio · Casa e bollette» → «Mostra transazioni»: a 390 e 360 px data, categoria e fondo sulla stessa
   riga, dentro il dialogo, nomi lunghi accorciati; senza fondo, la categoria intera. Nessun errore JS. Committato in `278b016`, pubblicato su Hosting con `cc60ea6`.
+- **Superato** da `e4bf945` (su richiesta): su smartphone il fondo è di nuovo in una riga propria sotto data e categoria e
+  `subtitleBelow` è tornata in `ListRow`; da medium resta accanto alla categoria.
 
 ## Feedback aptico nella barra mobile e in Analisi — 21 novembre 2026
 

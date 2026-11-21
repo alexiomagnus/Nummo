@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prova della vibrazione</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500&display=swap">
+<style>
+/* VOICE: banco di prova tecnico, asciutto, per una persona con il telefono in mano.
+   IDEA: un foglio di taratura: ogni pulsante è un campione da sentire e confrontare.
+   PICTURE: la barra di navigazione di Nummo da trascinare, in cima, come in app.
+   COLOUR and TYPE: ghiaccio e inchiostro, un solo rosa per i valori attuali; Space Grotesk + Inter.
+   LAYOUT: una colonna, sezioni a fasce, pulsanti grandi da 48 px. */
+:root{color-scheme:light dark;--bg:light-dark(#dff1f7,#06222e);--ink:light-dark(#06222e,#dff1f7);--soft:light-dark(#b9dbe6,#0f3a4a);--card:light-dark(#ffffff,#0b2d3a);--hot:#ff2e7e;--mute:light-dark(#2f5563,#9cc3d1)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,4vw,48px) max(5vw,16px);max-width:820px;margin:0 auto}
+h1,h2{font-family:"Space Grotesk",Inter,sans-serif;font-weight:500;line-height:1.05;text-wrap:balance;margin:0 0 10px}
+h1{font-size:clamp(32px,7vw,44px)}h2{font-size:22px;margin-top:8px}
+p{margin:0 0 12px;max-width:68ch}.mute{color:var(--mute);font-size:14px}
+.status{display:inline-block;padding:6px 12px;border-radius:999px;background:var(--card);font-size:14px;font-weight:600}
+.status.no{background:var(--hot);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin:12px 0}
+button{font:600 16px/1 Inter,system-ui,sans-serif;color:var(--ink);background:var(--card);border:1px solid var(--soft);border-radius:16px;min-height:56px;padding:8px;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+button small{font-weight:400;font-size:13px;color:var(--mute)}
+button.now{border:2px solid var(--hot)}
+button:active{background:var(--soft)}
+button:focus-visible,.pill:focus-visible{outline:3px solid var(--hot);outline-offset:2px}
+.pill{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;border-radius:999px;background:var(--card);touch-action:none;user-select:none;-webkit-user-select:none;margin:14px 0 8px}
+.pill span{position:relative;z-index:1;text-align:center;padding:16px 0;font-weight:600;border-radius:999px;transition:background .12s}
+.pill span.on{background:var(--soft)}
+@media(prefers-reduced-motion:reduce){.pill span{transition:none}}
+.opts{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:8px 0}
+label{display:flex;gap:8px;align-items:center;min-height:44px}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--hot)}
+select{font:16px Inter,system-ui,sans-serif;min-height:44px;border-radius:12px;padding:0 10px;background:var(--card);color:var(--ink);border:1px solid var(--soft)}
+.meter{font-family:"Space Grotesk",Inter,sans-serif;font-size:20px}
+.log{font-size:14px;color:var(--mute);min-height:1.5em}
+ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
+</style>
+</head>
+<body>
+<section class="band">
+  <h1>Prova della vibrazione</h1>
+  <p>Apri questa pagina con Chrome sul Pixel 8 e tocca i campioni: ogni pulsante chiama <code>navigator.vibrate</code>, l'unica API che Nummo può usare come pagina web, con la durata indicata. I valori in rosa sono quelli dell'app oggi.</p>
+  <span id="status" class="status">Controllo…</span>
+  <h2>Trascinamento sulla barra</h2>
+  <p>Trascina il dito sulla barra come nell'app. Prova a fermarlo sul confine tra due voci.</p>
+  <div id="pill" class="pill" role="group" aria-label="Barra di prova"><span>Spese</span><span>Analisi</span><span>Fondi</span><span>Liste</span></div>
+  <div class="opts">
+    <label><input type="checkbox" id="dead" checked> Zona morta sui confini</label>
+    <label><input type="checkbox" id="gap" checked> Distanza minima 60 ms</label>
+    <label>Tick <select id="tickMs"><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option></select> ms</label>
+  </div>
+  <p class="meter" id="dragOut">Impulsi nell'ultimo trascinamento: 0</p>
+  <p class="mute">Togli zona morta e distanza minima per sentire il comportamento di prima: con il dito fermo sul confine partiva un impulso ogni 33 ms circa, cioè un ronzio.</p>
+</section>
+<section class="band">
+  <h2>Impulso singolo</h2>
+  <p>Quale sembra un clic secco e quale un ronzio? Cerca il più corto che senti ancora con chiarezza.</p>
+  <div class="grid" id="single"></div>
+  <p class="mute">35–50 ms sono gli impulsi che usa expo-haptics sul web: utili come confronto, non come scelta.</p>
+  <h2>Due impulsi ravvicinati</h2>
+  <p>Due tick da 6 ms separati da una pausa. Sotto una certa pausa si fondono in una vibrazione sola: è il motivo della distanza minima tra due vibrazioni dell'app.</p>
+  <div class="grid" id="double"></div>
+  <p class="log" id="log" aria-live="polite"></p>
+</section>
+<section class="band">
+  <h2>Cosa annotare</h2>
+  <ol>
+    <li>La durata più breve che senti ancora netta per il <b>tap</b> (destinazioni della barra) e quella per il <b>tick</b> (segmenti, grafici, legenda).</li>
+    <li>Da quale pausa i due impulsi si sentono separati.</li>
+    <li>Se la barra, con zona morta e distanza minima, dà sempre un solo tick per voce attraversata.</li>
+    <li>Se cambia qualcosa con il telefono in modalità silenziosa o con risparmio energetico, e con l'intensità in Impostazioni → Suoni e vibrazione → Vibrazione e feedback aptico.</li>
+  </ol>
+  <p class="mute">Pagina di prova del repository Nummo (<code>docs/testing/prova-vibrazione.html</code>): non legge né salva dati.</p>
+</section>
+<script>
+{
+  const can = typeof navigator.vibrate === 'function';
+  const status = document.getElementById('status');
+  status.textContent = can ? 'Vibrazione disponibile in questo browser' : 'Questo browser non offre la vibrazione (Safari, Firefox, computer)';
+  if (!can) status.classList.add('no');
+  const log = document.getElementById('log');
+  const buzz = (pattern, text) => {
+    let ok = false;
+    try { ok = can && navigator.vibrate(pattern); } catch { ok = false; }
+    log.textContent = (ok ? 'Inviato: ' : 'Rifiutato dal browser: ') + text;
+    return ok;
+  };
+  const singles = [[3], [4], [5], [6, 'tick attuale'], [8], [10, 'tap attuale'], [12], [15], [20], [35, 'expo web'], [50, 'expo web']];
+  document.getElementById('single').innerHTML = singles.map(([ms, note]) =>
+    `<button data-ms="${ms}" class="${note && note.includes('attuale') ? 'now' : ''}">${ms} ms${note ? `<small>${note}</small>` : ''}</button>`).join('');
+  document.getElementById('single').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (b) buzz(Number(b.dataset.ms), b.dataset.ms + ' ms');
+  });
+  const pauses = [15, 30, 45, 60, 100];
+  document.getElementById('double').innerHTML = pauses.map((p) =>
+    `<button data-p="${p}" class="${p === 60 ? 'now' : ''}">pausa ${p}<small>${p === 60 ? 'minimo app' : '6 + 6 ms'}</small></button>`).join('');
+  document.getElementById('double').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (b) buzz([6, Number(b.dataset.p), 6], 'due tick, pausa ' + b.dataset.p + ' ms');
+  });
+
+  const pill = document.getElementById('pill');
+  const items = [...pill.children];
+  const dead = document.getElementById('dead'), gap = document.getElementById('gap'), tickMs = document.getElementById('tickMs');
+  const out = document.getElementById('dragOut');
+  let current = 0, slot = null, pointer = null, count = 0, last = -Infinity;
+  const show = (i) => items.forEach((n, k) => n.classList.toggle('on', k === i));
+  show(current);
+  const at = (x) => {
+    const r = pill.getBoundingClientRect(), step = (r.width - 8) / 4;
+    return Math.min(3, Math.max(0, (x - r.left - 4 - step / 2) / step));
+  };
+  const nextSlot = (v, cur) => {
+    const near = Math.round(v);
+    if (!dead.checked || cur === null || near === cur) return near;
+    return Math.abs(v - cur) > 0.65 ? near : cur;
+  };
+  const tick = (ms) => {
+    const now = performance.now();
+    if (gap.checked && now - last < 60) return;
+    try { if (can && navigator.vibrate(ms)) { last = now; count++; } } catch { /* refused */ }
+    out.textContent = "Impulsi nell'ultimo trascinamento: " + count;
+  };
+  pill.addEventListener('pointerdown', (e) => {
+    pointer = e.pointerId; slot = current; count = 0;
+    try { pill.setPointerCapture(e.pointerId); } catch { /* gone */ }
+    const s = Math.round(at(e.clientX));
+    if (s !== current) { slot = s; tick(10); }
+    show(slot);
+  });
+  pill.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== pointer) return;
+    const s = nextSlot(at(e.clientX), slot);
+    if (s !== slot) { slot = s; tick(Number(tickMs.value)); show(slot); }
+  });
+  const end = (e) => {
+    if (e.pointerId !== pointer) return;
+    pointer = null;
+    if (slot !== null && slot !== current) { current = slot; tick(10); }
+    show(current);
+  };
+  pill.addEventListener('pointerup', end);
+  pill.addEventListener('pointercancel', end);
+}
+</script>
+</body>
+</html>

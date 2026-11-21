@@ -1270,3 +1270,18 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
 - **Compatibilità, senza migrazioni:** `amount_minor` resta `number | null` nel dominio, nel decoder, nelle Rules e nel backup v11. I
   template salvati prima senza importo si leggono ancora e riempiono Nuova spesa lasciando l'importo da scrivere; alla prima modifica il
   modulo lo chiede. Nessuna modifica a Rules, `DataStore` o `backupVersion`: la regola è solo del modulo.
+
+## Feedback aptico sul web: niente expo-haptics, impulsi singoli con distanza minima — 21 novembre 2026
+
+- **Contesto.** Su richiesta (vibrazione «lunga e ronzante» sul Pixel 8) si è valutato `expo-haptics` con
+  `performAndroidHapticsAsync` (effetti nativi `Context_Click`, `Segment_Tick`, `Confirm`, `Toggle_On/Off`, `Reject`).
+- **Decisione.** Non adottarlo. Nummo è solo web: gli effetti nativi Android (`performHapticFeedback`, `EFFECT_CLICK`/`TICK`,
+  primitive) esistono solo nelle app native e la libreria li dichiara «Android»; sul web chiama lo stesso `navigator.vibrate`
+  con impulsi da 35–60 ms (`ExpoHaptics.web.ts`), più lunghi dei 10/6 ms già usati. Una dipendenza in più senza vantaggio.
+- **Cosa resta alla pagina:** impulsi singoli brevi (`tap` per spostarsi, `tick` per selezionare), mai pattern; un solo
+  cancello per app che scarta le richieste entro 60 ms dall'ultima accettata; zona morta di 0,15 di passo sui confini della
+  barra mobile durante il trascinamento (prima un dito fermo sul confine dava un impulso ogni 33 ms, misurato); nessuna
+  vibrazione quando la scelta non cambia. Conferma, rifiuto e interruttori senza vibrazione: sul web sarebbero solo durate o
+  impulsi multipli, non effetti distinti.
+- **Limiti.** La forma dell'impulso (attacco, frenata del motore) la decide Chrome/Android, non la pagina; Safari/iOS e Firefox
+  non vibrano. Le durate si scelgono provandole sul telefono con `docs/testing/prova-vibrazione.html`.

@@ -79,7 +79,7 @@ const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, 
   const haptic = useHaptics();
   return <View nativeID={selectable ? `dashboard-category-${item.key}` : undefined} role="listitem">
     <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
-      onPress={() => { haptic(); if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
+      onPress={() => { haptic('tick'); if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
       style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.secondaryContainer }, selectionFill]}>
       <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />

@@ -19,6 +19,17 @@ export function slotAt(x: number, width: number, count: number, padding: number,
   return Math.min(count - 1, Math.max(0, raw));
 }
 
+// Destination under a dragging finger, with a dead band around each border: the slot changes only once the finger is
+// `margin` of a step past the midpoint between two destinations. Without it a finger resting on a border flipped the slot
+// back and forth at every pointer event, and each flip vibrated (a buzz instead of one tick). A jump over several slots
+// (fast drag) goes straight to the nearest one.
+export const slotHysteresis = 0.15;
+export function slotWithHysteresis(value: number, current: number | null, margin: number = slotHysteresis): number {
+  const nearest = Math.round(value);
+  if (current === null || nearest === current) return nearest;
+  return Math.abs(value - current) > 0.5 + margin ? nearest : current;
+}
+
 // A drag becomes a navigation gesture only once clearly horizontal: small or vertical movements stay taps.
 export const dragThreshold = 8;
 export function isHorizontalDrag(dx: number, dy: number): boolean {
