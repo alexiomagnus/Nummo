@@ -34,9 +34,22 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
         -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent var(--nummo-peek, 100%));
         mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent var(--nummo-peek, 100%));
       }
+      /* With a mouse or touchpad (any pointer but a coarse one), Chromium draws the standard bar (scrollbar-width/color) with arrow buttons at both ends: the WebKit
+         bar below has none (user's request, 21 November: a cleaner bar), the same thin thumb, transparent track, and in
+         dialogs the same «only while scrolling». Touch screens keep the overlay bar; Firefox keeps the standard thin one. */
       @supports selector(::-webkit-scrollbar) {
+        @media not (pointer: coarse) {
+          *, [role='dialog'] *, [role='dialog'] [${scrollingAttribute}] { scrollbar-width: auto; scrollbar-color: auto; }
+          ::-webkit-scrollbar { width: 10px; height: 10px; }
+          ::-webkit-scrollbar-button { display: none; }
+          ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+          ::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; border: 2px solid transparent; border-radius: 5px; }
+          [role='dialog'] ::-webkit-scrollbar-thumb { background: transparent; }
+          [role='dialog'] [${scrollingAttribute}]::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; }
+        }
         [data-panel-scroll] { scrollbar-width: auto; scrollbar-color: auto; }
         [data-panel-scroll]::-webkit-scrollbar { width: 10px; }
+        [data-panel-scroll]::-webkit-scrollbar-button { display: none; }
         [data-panel-scroll]::-webkit-scrollbar-track { background: transparent; margin-block: ${radius.dialog}px; }
         [data-panel-scroll]::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; border: 2px solid transparent; border-radius: 5px; }
       }

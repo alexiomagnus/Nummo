@@ -209,6 +209,43 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Dettagli di una categoria in Analisi più chiari — 21 novembre 2026 (notte)
+
+- Su richiesta (screenshot di «Servizi digitali», «informazioni confusionarie»): ogni riga ripeteva icona e nome della categoria già nel
+  titolo, e mancava il totale. Ora, se le transazioni sono di **una** categoria: in testa «3 transazioni · **Totale: 149,76 €**»; righe
+  senza icona (`iconless`, nuova prop di `ListRow`) né categoria, con descrizione, sotto data e fondo (avatar e nome) sulla stessa riga,
+  importo a destra anche su smartphone (prima tra descrizione e data). «Altre» (più categorie) invariato: icona e categoria per riga.
+  Chiave «Totale: {p0}» già tradotta.
+- **Verifica:** `npm run check` OK. Chromium headless su `dist-demo`, Standard, backup `nummo-utente-medio.json` importato dall'interfaccia,
+  Analisi → «Medio · Alimentari» → «Mostra transazioni»: 390×844 e 1280×900 come previsto, nessun errore JS. Non provato in inglese nel
+  browser né su telefono. Non committato, non pubblicato.
+
+## Vibrazione 8/7 ms — 21 novembre 2026 (notte)
+
+- Su richiesta («la vibrazione da smartphone non sta funzionando»). **Analisi:** codice invariato da `1518b0c`; in Chromium headless
+  (`dist-demo`, Standard, 412×915 touch, `navigator.vibrate` osservato ma inoltrato al browser) ogni tocco sulla barra chiede 6 ms e il
+  trascinamento Spese→Liste 5+5+5 e 6 al rilascio, **tutti accettati** (`true`), attivazione utente presente, nessun errore. L'app quindi
+  chiede la vibrazione; sul Pixel 8 non arriva. Storico: 10/6 percepiti (troppo forti), 6/4 non sentiti, 4/3 nulla, ora 6/5 nulla: sotto
+  circa un ciclo del motore (~7 ms) l'impulso singolo non si sente. **Correzione:** `hapticPatterns` → `tap` 8, `tick` 7 (più corti di 10,
+  mai sotto 7). Pagina di prova con 7/8 come attuali e tick fino a 10. Ricontrollato in Chromium: 8 e 7+7+7+8, accettati.
+- **Se resta muto anche così**, la causa è del telefono: Chrome su Android non vibra con la suoneria in **silenzioso**, Android scarta
+  queste vibrazioni con il **risparmio energetico** e le regola con «Vibrazione contenuti multimediali» (Suoni e vibrazione → Vibrazione e
+  feedback aptico). Da provare con `docs/testing/prova-vibrazione.html` (7, 8, 10 ms). Supposizioni dalla documentazione, non verificate sul telefono.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato sul telefono. Non committato, non pubblicato.
+
+## Barre di scorrimento senza triangoli — 21 novembre 2026 (notte)
+
+- Su richiesta (screenshot del menu Categoria su desktop: triangoli sopra e sotto la barra): erano i pulsanti a freccia della barra
+  standard di Chromium (`scrollbar-width: thin`/`scrollbar-color`, su Linux e Windows). In `GlobalStyle`, dove esiste
+  `::-webkit-scrollbar` e il puntatore non è touch (`not (pointer: coarse)`), si usa per ogni elemento la barra WebKit come nel pannello
+  desktop: 10 px, cursore `outline` arrotondato, traccia trasparente, `::-webkit-scrollbar-button` nascosto; nei dialoghi il cursore resta
+  trasparente finché non si scorre (`data-scrolling`). Touch e Firefox invariati. `(pointer: fine)` scartato: Chromium headless dichiara
+  `pointer: none`.
+- **Verifica:** `npm run check` OK (**520/520**). Chromium headless su un export demo in Standard, tema scuro: 1280×460 menu Categoria
+  aperto, barre del menu e del pannello con `scrollbar-width: auto`, larghe 10, cursore arrotondato senza triangoli (screenshot);
+  390×844 touch: regola non applicata. Nessun errore JS. Non provati: Chrome desktop reale, Windows, Safari macOS (lì la barra diventa
+  sempre visibile invece che sovrapposta, come già nel pannello), barra nei dialoghi mentre si scorre. Non committato, non pubblicato.
+
 ## «Esci» riporta alla scelta della modalità — 21 novembre 2026 (notte)
 
 - Su richiesta (screenshot di «Semplifica le tue spese.»): «Esci» dal menu account, da «Questo Nummo è privato» e da «Ultimo passaggio»
@@ -220,7 +257,16 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `afterward`, anche senza cache su disco: smontando `AdvancedRoot` prima che vedesse «signed-out», l'indizio restava e, senza modalità
   salvata, `initialStorageMode` avrebbe riaperto l'Avanzata al caricamento successivo (sviluppo/hybrid; in produzione la pagina si ricarica
   e l'indizio era già cancellato).
-- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser (serve un accesso Google). Committato e pubblicato su Hosting (vedi «Produzione»).
+- **Verifica:** `npm run check` OK (**520/520**). Committato in `cffe2e8` e pubblicato su Hosting (vedi «Produzione»).
+- **Provato nel browser con la demo (21 novembre, dopo la pubblicazione):** Chromium headless, export demo dedicati (cache in memoria e
+  cache su disco) con emulatori miei su 39099/39280 (config temporanea `.nummo-esci-check.json`, rimossa; il runner hybrid 36786 non
+  toccato), accesso dal popup dell'emulatore, script scritto per l'occasione (non nel repository). Sei scenari, tutti OK: proprietario
+  dal menu account (cache in memoria e su disco, 390×844 e 1280×900 con cache su disco), «Questo Nummo è privato» con l'account
+  estraneo (memoria e disco), «Ultimo passaggio» con un progetto `demo-guida` collegato (memoria e disco). In ognuno: dopo «Esci» la
+  scelta della modalità, `nummo.storageMode.v1` e `nummo.session.hint.v1` cancellati, ancora la scelta dopo il ricaricamento,
+  «Continua con Firebase» porta all'accesso (nessun accesso automatico), progetto collegato conservato, nessun errore JS. Controprova
+  con l'ordine precedente alla correzione (export a parte, codice ripristinato): con la cache in memoria l'indizio restava («local») e
+  dopo il ricaricamento si riapriva l'accesso dell'Avanzata invece della scelta. Non provato con un accesso Google reale né sul telefono.
 
 ## «Dati della modalità Standard» più chiara, nota del backup con asterisco — 21 novembre 2026 (notte)
 

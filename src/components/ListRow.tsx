@@ -45,15 +45,17 @@ type Props = {
   controls?: string;
   // Tighter vertical rhythm for dense lists (title up to two lines).
   dense?: boolean;
+  // No icon tile: every row of the list would show the same icon (Analisi details of one category).
+  iconless?: boolean;
 };
 
 // The one list row of the app (Spese, Categorie): icon tile, title + subtitle, trailing slot, hairline divider.
 // Every row has the same minimum height and centres its content vertically.
-export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense, subtitleExtra, subtitleBelow }: Props) {
+export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense, subtitleExtra, subtitleBelow, iconless }: Props) {
   const { colors } = useTheme();
   const expandable = onPress !== undefined && expanded !== undefined;
   const content = <>
-    <IconTile icon={icon} />
+    {!iconless && <IconTile icon={icon} />}
     <View style={styles.text}>
       <Text variant="bodyLarge" numberOfLines={dense ? 2 : 3}>{title}</Text>
       {meta}

@@ -12,8 +12,10 @@
 // Durations in ms; to compare others on a phone, `docs/testing/prova-vibrazione.html`.
 // Shortened twice on 21 November on request (10/6 → 6/4 → 4/3): felt too strong and buzzy on a Pixel 8; a shorter pulse is
 // the only way a page can make it softer (the browser fixes the strength). At 4/3 the Pixel 8 gave nothing at all (the motor
-// does not start for so short a pulse): back to 6 for `tap`, the shortest felt, and 5 for `tick`, just under it.
-export const hapticPatterns = { tap: 6, tick: 5 } as const;
+// does not start for so short a pulse): 6/5, then nothing at 6/5 either (21 November, night; the app's calls checked in
+// Chromium: requested and accepted). The only durations ever felt on the Pixel 8 are 10/6: below about one cycle of its
+// actuator (~7 ms) a one-shot pulse gives nothing. So 8/7: shorter (softer) than 10, but never under 7.
+export const hapticPatterns = { tap: 8, tick: 7 } as const;
 export type HapticKind = keyof typeof hapticPatterns;
 
 // Minimum time between two accepted vibrations. Each call restarts the motor, and pulses closer than this are felt as one

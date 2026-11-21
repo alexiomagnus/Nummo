@@ -52,7 +52,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   <div class="opts">
     <label><input type="checkbox" id="dead" checked> Zona morta sui confini</label>
     <label><input type="checkbox" id="gap" checked> Distanza minima 60 ms</label>
-    <label>Tick <select id="tickMs"><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option></select> ms</label>
+    <label>Tick <select id="tickMs"><option>3</option><option>4</option><option>5</option><option>6</option><option selected>7</option><option>8</option><option>10</option></select> ms</label>
   </div>
   <p class="meter" id="dragOut">Impulsi nell'ultimo trascinamento: 0</p>
   <p class="mute">Togli zona morta e distanza minima per sentire il comportamento di prima: con il dito fermo sul confine partiva un impulso ogni 33 ms circa, cioè un ronzio.</p>
@@ -63,7 +63,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   <div class="grid" id="single"></div>
   <p class="mute">35–50 ms sono gli impulsi che usa expo-haptics sul web: utili come confronto, non come scelta.</p>
   <h2>Due impulsi ravvicinati</h2>
-  <p>Due tick da 5 ms separati da una pausa. Sotto una certa pausa si fondono in una vibrazione sola: è il motivo della distanza minima tra due vibrazioni dell'app.</p>
+  <p>Due tick da 7 ms separati da una pausa. Sotto una certa pausa si fondono in una vibrazione sola: è il motivo della distanza minima tra due vibrazioni dell'app.</p>
   <div class="grid" id="double"></div>
   <p class="log" id="log" aria-live="polite"></p>
 </section>
@@ -90,7 +90,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
     log.textContent = (ok ? 'Inviato: ' : 'Rifiutato dal browser: ') + text;
     return ok;
   };
-  const singles = [[2], [3], [4], [5, 'tick attuale'], [6, 'tap attuale'], [7], [8], [10, 'primo'], [15], [20], [35, 'expo web'], [50, 'expo web']];
+  const singles = [[2], [3], [4], [5], [6], [7, 'tick attuale'], [8, 'tap attuale'], [10, 'primo'], [15], [20], [35, 'expo web'], [50, 'expo web']];
   document.getElementById('single').innerHTML = singles.map(([ms, note]) =>
     `<button data-ms="${ms}" class="${note && note.includes('attuale') ? 'now' : ''}">${ms} ms${note ? `<small>${note}</small>` : ''}</button>`).join('');
   document.getElementById('single').addEventListener('click', (e) => {
@@ -98,9 +98,9 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   });
   const pauses = [15, 30, 45, 60, 100];
   document.getElementById('double').innerHTML = pauses.map((p) =>
-    `<button data-p="${p}" class="${p === 60 ? 'now' : ''}">pausa ${p}<small>${p === 60 ? 'minimo app' : '5 + 5 ms'}</small></button>`).join('');
+    `<button data-p="${p}" class="${p === 60 ? 'now' : ''}">pausa ${p}<small>${p === 60 ? 'minimo app' : '7 + 7 ms'}</small></button>`).join('');
   document.getElementById('double').addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (b) buzz([5, Number(b.dataset.p), 5], 'due tick, pausa ' + b.dataset.p + ' ms');
+    const b = e.target.closest('button'); if (b) buzz([7, Number(b.dataset.p), 7], 'due tick, pausa ' + b.dataset.p + ' ms');
   });
 
   const pill = document.getElementById('pill');
