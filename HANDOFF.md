@@ -147,7 +147,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - Poi, su richiesta (due screenshot): distanza tra Categoria e pulsanti su desktop a **72** (prima 24, 40, 56) più 16 sotto i pulsanti (pannello più
   alto); su smartphone «Scansiona di nuovo» occupa da sola tutta la riga e «Annulla»/«Usa questi dati» si dividono la successiva
   (`fullRow`, `flexGrow`), così i tre pulsanti sono allineati ai campi invece di essere a destra a gradini. **Non provato nel browser**
-  (né a 390 px né a 1400 px): da controllare che i margini laterali dei pulsanti coincidano con quelli degli input.
+  (né a 390 px né a 1400 px): da controllare che i margini laterali dei pulsanti coincidano con quelli degli input. Committato in `2b9e763` e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200.
 - **Verifica:** typecheck e `npm test` OK (509/509). **Non provato nel browser**: da controllare a 1400×900 e a ~900 px (foto non
   collassata al minimo di 240, nessuna barra di scorrimento nuova). Committato in `830ac24` e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200; layout mai visto nel browser da me.
 
