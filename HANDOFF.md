@@ -132,7 +132,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   il messaggio («Spesa salvata e confermata da Firestore.», «Spesa salvata.», «Abbonamento salvato.»): il modulo che si svuota è l'esito; le tre
   traduzioni sono rimosse da `en.ts`. (4) Template spenti di base: già così nel codice (`defaultPreferences.templatesEnabled = false`); il
   campo visto nello screenshot dipende dall'interruttore salvato nel browser dell'utente, non è cambiato nulla.
-- **Verifica:** typecheck e `npm test` OK (510/510). Non provato nel browser né su telefono; non committato né pubblicato.
+- **Verifica:** typecheck e `npm test` OK (510/510). Non provato nel browser né su telefono. Committato in `a29ced9` e pubblicato su
+  Hosting (21 novembre): «Deploy complete!», sito 200. Rules invariate.
 
 ## Feedback aptico: impulsi singoli senza ronzio — 21 novembre 2026
 
