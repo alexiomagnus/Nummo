@@ -1,4 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
+import { dateTimeFormat } from '../../i18n/translate';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, TextInput as NativeInput, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
@@ -13,7 +14,7 @@ import { maxPromoAfter, type PriceChange, type PriceScope } from '../../domain/p
 import { scheduleDateAt, type CalendarChange, type Recurrence } from '../../domain/recurrence';
 import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 
-const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const dateFormat = (locale: string) => dateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 export const formatLongDate = (date: string, locale: string) => dateFormat(locale).format(new Date(`${date}T00:00:00Z`));
 
 // Date of renewal number `index` (1 = first renewal), for texts that say when a price starts.

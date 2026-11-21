@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import ts from 'typescript';
 import { english } from '../src/i18n/en.ts';
-import { formatCivilDate, formatCurrency, translate } from '../src/i18n/translate.ts';
+import { dateTimeFormat, formatCivilDate, formatCurrency, numberFormat, translate } from '../src/i18n/translate.ts';
 import { seriesLabel } from '../src/features/dashboard/seriesLabel.ts';
 import { otherCategoriesKey, uncategorizedKey, periodLabels, sortLabels } from '../src/domain/history.ts';
 import { categoryIconLabels, defaultCategories, categoryNameError } from '../src/domain/category.ts';
@@ -156,4 +156,14 @@ test('notifiche e protezione: testi della pagina, degli avvisi e dello stato tra
   assert.equal(translate('en', '{p0} in {p1} spese', { p0: '€12.50', p1: 3 }), '€12.50 in 3 expenses');
   // Il backup su Google Drive è stato rimosso: nessun testo residuo nel catalogo.
   assert.equal(Object.keys(english).some((key) => key.includes('Google Drive')), false);
+});
+
+test('formattatori Intl riusati per lingua e opzioni, risultato invariato', () => {
+  assert.equal(numberFormat('it-IT', { style: 'currency', currency: 'EUR' }), numberFormat('it-IT', { style: 'currency', currency: 'EUR' }));
+  assert.notEqual(numberFormat('it-IT', { style: 'currency', currency: 'EUR' }), numberFormat('en-GB', { style: 'currency', currency: 'EUR' }));
+  assert.equal(dateTimeFormat('it-IT', { month: 'long', timeZone: 'UTC' }), dateTimeFormat('it-IT', { month: 'long', timeZone: 'UTC' }));
+  assert.notEqual(dateTimeFormat('it-IT', { month: 'long', timeZone: 'UTC' }), dateTimeFormat('it-IT', { month: 'short', timeZone: 'UTC' }));
+  assert.equal(formatCurrency(123456, 'it'), new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(1234.56));
+  assert.equal(formatCivilDate('2026-11-21', 'it'), new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date('2026-11-21T00:00:00Z')));
+  assert.equal(formatCivilDate('2026-11-21', 'en', { month: 'long' }), 'November');
 });

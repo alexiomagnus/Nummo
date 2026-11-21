@@ -34,10 +34,28 @@ export function translate(language: Language, message: string, values: Values = 
   return message.slice(0, message.indexOf(source)) + interpolate(target ?? source, values) + message.slice(message.indexOf(source) + source.length);
 }
 
+// Intl formatters are costly to build (locale data lookup) and cheap to reuse: one per locale and options, built on first
+// use. Creating one per amount or date made every list and chart render pay for it (21 November: about 6 ms per tap of
+// the Analisi legend with CPU 4×). Options must be plain data (they are the cache key).
+const numberFormats = new Map<string, Intl.NumberFormat>();
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+export function numberFormat(locale: string, options: Intl.NumberFormatOptions = {}): Intl.NumberFormat {
+  const key = locale + JSON.stringify(options);
+  let format = numberFormats.get(key);
+  if (!format) { format = new Intl.NumberFormat(locale, options); numberFormats.set(key, format); }
+  return format;
+}
+export function dateTimeFormat(locale: string, options: Intl.DateTimeFormatOptions = {}): Intl.DateTimeFormat {
+  const key = locale + JSON.stringify(options);
+  let format = dateFormats.get(key);
+  if (!format) { format = new Intl.DateTimeFormat(locale, options); dateFormats.set(key, format); }
+  return format;
+}
+
 export function formatCurrency(amountMinor: number, language: Language): string {
-  return new Intl.NumberFormat(locales[language], { style: 'currency', currency: 'EUR' }).format(amountMinor / 100);
+  return numberFormat(locales[language], { style: 'currency', currency: 'EUR' }).format(amountMinor / 100);
 }
 
 export function formatCivilDate(date: string, language: Language, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }): string {
-  return new Intl.DateTimeFormat(locales[language], { ...options, timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
+  return dateTimeFormat(locales[language], { ...options, timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
 }

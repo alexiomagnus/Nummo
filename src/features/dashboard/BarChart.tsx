@@ -5,6 +5,7 @@ import type { Category } from '../../domain/category';
 import { barTransition } from '../../theme/motion';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { useI18n } from '../../i18n/I18nProvider';
+import { numberFormat } from '../../i18n/translate';
 import { radius, spacing } from '../../theme/tokens';
 import { rankCategories, type RankingRow } from './insights';
 import { seriesColor, type ChartColors } from './charts';
@@ -26,7 +27,7 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
         const amount = formatAmount(series.total);
         const share = categoryPercent(series.total, total);
         const change = series.change !== null && Math.abs(series.change) >= 1
-          ? new Intl.NumberFormat(locale, { maximumFractionDigits: 0, signDisplay: 'always' }).format(series.change) + '%' : null;
+          ? numberFormat(locale, { maximumFractionDigits: 0, signDisplay: 'always' }).format(series.change) + '%' : null;
         return <View key={series.key} role="listitem">
           <StateLayerPressable role="button" layerColor={colors.text} radius={radius.card}
             onPress={() => onOpen(series.key)}

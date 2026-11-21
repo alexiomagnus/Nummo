@@ -1,4 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
+import { dateTimeFormat } from '../../i18n/translate';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
@@ -10,7 +11,7 @@ import type { Category } from '../../domain/category';
 import type { Renewal } from '../../domain/history';
 import { radius, spacing } from '../../theme/tokens';
 
-const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const dateFormat = (locale: string) => dateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 type Props = { renewals: readonly Renewal[]; categories: readonly Category[]; soon: number; days: number };
 

@@ -1,4 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
+import { dateTimeFormat } from '../../i18n/translate';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
@@ -14,9 +15,9 @@ import { shape, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { dailySpendingRows, initialDayCount } from './dailySpending';
 
-const weekdayFormat = (locale: string) => new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-const yearDateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-const fullDateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const weekdayFormat = (locale: string) => dateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const yearDateFormat = (locale: string) => dateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const fullDateFormat = (locale: string) => dateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const dateValue = (date: string) => new Date(`${date}T00:00:00Z`);
 
 type Props = { data: Pick<Breakdown, 'buckets'>; occurrences: readonly Occurrence[]; categories: readonly Category[]; today: string };
