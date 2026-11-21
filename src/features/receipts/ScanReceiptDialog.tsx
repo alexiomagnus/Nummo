@@ -182,7 +182,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   if (stage === 'pick') {
     body = <>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-        {t("Fotografa o carica lo scontrino: Nummo propone importo, data, descrizione, esercente e categoria. Controlli tutto prima di salvare.")}</Text>
+        {t("Fotografa o carica lo scontrino: Nummo propone importo, data, descrizione, esercente e categoria.")}</Text>
       {setupProblem && <HelperText type="info" style={{ paddingHorizontal: 0 }}>{t(setupProblem)}</HelperText>}
       {sourceButtons('contained-tonal')}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}

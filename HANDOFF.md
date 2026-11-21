@@ -696,7 +696,7 @@ Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezi
   impulsi 4/3 ms, Guida senza «confronto con i periodi precedenti». `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online
   identico a `dist/`. **Attenzione:** la build ha incluso anche una modifica **non committata** di un'altra sessione,
   `ScanReceiptDialog.tsx` (testo del dialogo di scansione senza «Controlli tutto prima di salvare.»); la traduzione corrispondente in
-  `en.ts` è finita per errore in `e7953bf`. Online è coerente; in Git lo sarà quando quell'altra sessione committa il file.
+  `en.ts` è finita per errore in `e7953bf`. Online è coerente; `ScanReceiptDialog.tsx` committato poi su richiesta, Git allineato.
 
 - **Rilascio del 21 novembre (notte, seconda parte): Hosting da `976a5cb`**: vibrazione più delicata (`tap` 6 ms, `tick` 4 ms).
   `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules invariate. Da sentire sul Pixel 8.
