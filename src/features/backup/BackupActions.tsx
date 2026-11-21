@@ -29,7 +29,7 @@ type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: Imp
 
 // `onBackupDownloaded`: told when a full backup download has started (Standard mode: it resets the backup reminder).
 export function BackupActions({ backend, enabled, onBackupDownloaded }: { backend: DataStore; enabled: boolean; onBackupDownloaded?: (at: string) => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
   const notify = useSnackbar();
@@ -37,6 +37,15 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const [status, setStatus] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
+  // The three file actions (CSV, download, import) share one width, the widest of their labels (user's request, 21 November):
+  // measured in the current language, so switching language measures again from the natural widths. Phones stack them full width.
+  const [actionWidth, setActionWidth] = useState<{ locale: string; width: number }>({ locale: '', width: 0 });
+  const measureAction = (width: number) => setActionWidth((old) => {
+    const base = old.locale === locale ? old.width : 0;
+    return width > base + 0.5 ? { locale, width: Math.ceil(width) } : old.locale === locale ? old : { locale, width: base };
+  });
+  const sameWidth = !compact && actionWidth.locale === locale && actionWidth.width > 0 ? { minWidth: actionWidth.width } : null;
+  const fileAction = compact ? {} : { style: sameWidth, onLayout: (event: { nativeEvent: { layout: { width: number } } }) => measureAction(event.nativeEvent.layout.width) };
   // The preview appears below the buttons, often out of sight on phones: bring it into view when a file has been read
   // (only as far as needed; no animation with reduced motion).
   const reduceMotion = useReducedMotion();
@@ -101,14 +110,14 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     <View style={styles.group}>
       <Text variant="titleSmall">{t("Consulta le spese")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportCsvFile()}>{t("Esporta transazioni (CSV)")}</Button>
+        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportCsvFile()}>{t("Esporta transazioni (CSV)")}</Button>
       </View>
     </View>
     <View style={styles.group}>
       <Text variant="titleSmall">{t("Backup completo")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportBackup()}>{t("Scarica backup (JSON)")}</Button>
-        <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
+        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportBackup()}>{t("Scarica backup (JSON)")}</Button>
+        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
       </View>
     </View>
     {preview && merge && replace && <View ref={previewRef} style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
