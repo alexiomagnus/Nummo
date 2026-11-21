@@ -32,8 +32,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   da provare sul Pixel 8 con la pagina di prova. Inviato a `origin` su richiesta.
 - **Vibrazione più delicata (21 novembre, notte):** su richiesta («ancora troppo forte e zanzarosa») `tap` 10 → 6 ms e `tick` 6 → 4 ms
   (l'intensità la fissa il browser: si può solo accorciare). `npm run check` 510/510; Chromium: barra [6], segmenti/legenda [4], un
-  solo impulso per tocco, nessuno in scorrimento/digitazione. Pagina di prova (anche l'artifact) aggiornata con 2–6 ms. Non committato,
-  non pubblicato; non sentito sul Pixel 8.
+  solo impulso per tocco, nessuno in scorrimento/digitazione. Pagina di prova (anche l'artifact) aggiornata con 2–6 ms. Committato in
+  `976a5cb` e pubblicato su Hosting (bundle online identico a `dist/`, con `tap:6,tick:4`); non sentito sul Pixel 8.
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, interruttore «Vibrazione» spento); tastiera virtuale (aprire e chiudere su
   un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
@@ -61,7 +61,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `7dc02a2` (feedback aptico senza ronzio; con `3c8f614`, testo dei template
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `976a5cb` (vibrazione più delicata, 6/4 ms) pubblicato su richiesta il
+  21 novembre (notte): «Deploy complete!», sito 200, bundle identico a `dist/`. Prima, **Hosting** da `7dc02a2` (feedback aptico senza ronzio; con `3c8f614`, testo dei template
   nella Guida) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256).
   Rules invariate. Prima, **Hosting** da `e4bf945` (importo obbligatorio nei template, matita, fondo a capo in Analisi
   su smartphone, testo di «Vibrazione») pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico
@@ -665,6 +666,9 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (notte, seconda parte): Hosting da `976a5cb`**: vibrazione più delicata (`tap` 6 ms, `tick` 4 ms).
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules invariate. Da sentire sul Pixel 8.
 
 - **Rilascio del 21 novembre (notte): Hosting da `7dc02a2`** (con `3c8f614`): vibrazione senza ronzio (zona morta sulla barra,
   distanza minima di 60 ms, `tick` per le selezioni), importo dei template obbligatorio anche nella Guida. `npm run deploy:hosting`
