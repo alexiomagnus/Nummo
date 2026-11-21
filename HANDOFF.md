@@ -77,7 +77,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
+  `origin`. Ultimi commit di codice, tutti pubblicati: `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
   selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
   pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
   pulsante «Template» invariato), `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
@@ -100,7 +100,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `1c83b54` (con `1518b0c`; spese offline, pagina offline, passaggio dei dati,
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `69566dc` (scheda «Dati della modalità Standard», note con asterisco)
+  pubblicato su richiesta il 21 novembre (sera tardi) con `npm run deploy:hosting` da un worktree pulito di `69566dc` (l'albero principale
+  aveva modifiche non committate di un'altra sessione a `App.tsx`/`useSession.ts`, escluse): «Deploy complete!», sito 200, bundle online
+  identico a quello costruito (SHA-256). Rules invariate. Prima, **Hosting** da `1c83b54` (con `1518b0c`; spese offline, pagina offline, passaggio dei dati,
   vibrazione 6/5 ms) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle, `sw.js` e `offline.html` identici
   a `dist/`. Prima, **Hosting** da `3ad9a75` (testo «Il pulsante Template compare…») pubblicato su richiesta il
   21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `ee2fcdc` (pulsante «Template» nella prima riga di Nuova spesa) pubblicato su
@@ -230,7 +233,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   offline), priorità (0) con 6/5 ms, riga «Git» fino a `8c1ff66`, pubblicazione fino a `8c1ff66`, «Verifiche», «Funzionalità
   implementate» (spese offline, pagina offline, passaggio tra le modalità, vibrazione), sezione «Template accanto a Scansiona scontrino»
   segnata come superata, runner hybrid 36786 attivo; in `docs/architecture.md` la tabella «Piattaforme».
-- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser. Non pubblicato.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser. Committato in `69566dc`, inviato e pubblicato su Hosting
+  (worktree pulito, senza le modifiche non committate di un'altra sessione).
 
 ## «Annulla» e «OK» più piccoli nel selettore della data — 21 novembre 2026 (notte)
 
@@ -4117,8 +4121,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `8c1ff66` è online su Hosting (fase «Dati della modalità Standard» del
-  21 novembre, sera tardi, committata ma non pubblicata); ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `69566dc` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
