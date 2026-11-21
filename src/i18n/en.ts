@@ -969,5 +969,5 @@ export const english: Readonly<Record<string, string>> = {
   "L’esercente nei template richiede un backup versione 11 o successiva.": "The merchant in templates requires a version 11 or later backup.",
   "Scegli il fondo, oppure Nessun fondo.": "Choose the fund, or No fund.",
   "Template per le spese": "Templates for expenses",
-  "Se attivi i Template dal menu, puoi salvare spese già pronte (descrizione, esercente, categoria, fondo, data e, se vuoi, importo) e sceglierle in Nuova spesa per compilare tutto in un attimo.": "If you turn on Templates from the menu, you can save ready-made expenses (description, merchant, category, fund, date and, if you like, amount) and pick them in New expense to fill everything in at once.",
+  "Se attivi i Template dal menu, puoi salvare spese già pronte (descrizione, importo, data, esercente, categoria e fondo) e sceglierle in Nuova spesa per compilare tutto in un attimo.": "If you turn on Templates from the menu, you can save ready-made expenses (description, amount, date, merchant, category and fund) and pick them in New expense to fill everything in at once.",
 };
