@@ -34,8 +34,18 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   (l'intensità la fissa il browser: si può solo accorciare). `npm run check` 510/510; Chromium: barra [6], segmenti/legenda [4], un
   solo impulso per tocco, nessuno in scorrimento/digitazione. Pagina di prova (anche l'artifact) aggiornata con 2–6 ms. Committato in
   `976a5cb` e pubblicato su Hosting (bundle online identico a `dist/`, con `tap:6,tick:4`); non sentito sul Pixel 8.
+  **Superato da `1c7ca7f`** (punto seguente).
+- **Vibrazione tolta da segmenti e legenda, impulsi 4/3 ms (21 novembre, pomeriggio):** su richiesta nessuna vibrazione su
+  `SegmentedButtons` e sulle righe della legenda di Analisi; `tap` 6 → 4 ms, `tick` 4 → 3 ms; Guida senza «confronto con i periodi
+  precedenti» (`e7953bf`). Committato in `1c7ca7f` e pubblicato su Hosting (15:11). Non sentito sul Pixel 8: 3 ms può essere quasi
+  impercettibile.
+- **Revisione dello scontrino (21 novembre, pomeriggio–sera):** su richiesta, a più riprese: foto alta quanto i campi su desktop, titolo
+  «Controlla i dati», pulsanti nella colonna dei campi (da medium) o allineati ai campi (smartphone), impilati sotto 500 di colonna;
+  intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. **Mai visto
+  nel browser**: da controllare a ~390, ~570, ~900 e 1400 px (sezione dedicata qui sotto).
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
-  sulla barra, blocchi e ciambella di Analisi, interruttore «Vibrazione» spento); tastiera virtuale (aprire e chiudere su
+  sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
+  revisione dello scontrino a varie larghezze (mai vista nel browser); tastiera virtuale (aprire e chiudere su
   un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
   sotto 412), azioni degli abbonamenti, revisione dello scontrino; poi in produzione: pagina Templates (in Avanzata compaiono i
   template salvati prima del 16 novembre, se ce n'erano), scansione dello scontrino da attivare in Impostazioni, pulsanti dei dialoghi,
@@ -45,7 +55,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
+  `origin`. Ultimi commit di codice, tutti pubblicati: `3b74ea4`, `2b9e763`, `830ac24` (revisione dello scontrino: foto, pulsanti,
+  titolo «Controlla i dati»), `a2029bb` (intro del dialogo di scansione più breve), `1c7ca7f` (vibrazione tolta da segmenti e legenda,
+  4/3 ms), `e7953bf` (Guida senza confronto con i periodi precedenti), `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
   template con contorno, nessun messaggio dopo il salvataggio), `976a5cb` (vibrazione più delicata, 6/4 ms), `3c8f614` (Guida: importo dei template obbligatorio), `7dc02a2` (vibrazione senza ronzio), `e4bf945` (importo obbligatorio nei template, matita nell'elenco, fondo a capo in
   Analisi su smartphone, testo di «Vibrazione»), `b2a80ce` (vibrazione su legenda e segmenti), `9ae0d33` (selezione di
   Analisi più reattiva), `a8f73a2` (formattatori Intl in cache), `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
@@ -62,7 +74,13 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `26c5b8d` (Barre senza variazione percentuale; con `a29ced9`, vibrazione su «Salva»/«Crea», matita
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `3b74ea4` (revisione dello scontrino: pulsanti uguali su smartphone, foto fino
+  alla Categoria su desktop, pulsanti impilati in colonna stretta) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito
+  200. Prima, **Hosting** da `2b9e763` e, prima ancora, da `830ac24` (revisione dello scontrino), stessa giornata, «Deploy complete!»,
+  sito 200; per questi tre il bundle online non è registrato come confrontato con `dist/`. Prima, **Hosting** da `1c7ca7f` (con `e7953bf`;
+  vibrazione 4/3 ms, niente vibrazione su segmenti e legenda) il 21 novembre alle 15:11: bundle identico a `dist/`, con la modifica
+  di `ScanReceiptDialog.tsx` poi committata in `a2029bb` (vedi «Registro dei rilasci»). Rules invariate.
+  Prima, **Hosting** da `26c5b8d` (Barre senza variazione percentuale; con `a29ced9`, vibrazione su «Salva»/«Crea», matita
   dei template, nessun messaggio dopo il salvataggio) pubblicato su richiesta il 21 novembre: «Deploy complete!», sito 200; bundle online non confrontato con `dist/`. Rules invariate.
   Prima, **Hosting** da `976a5cb` (vibrazione più delicata, 6/4 ms) pubblicato su richiesta il
   21 novembre (notte): «Deploy complete!», sito 200, bundle identico a `dist/`. Prima, **Hosting** da `7dc02a2` (feedback aptico senza ronzio; con `3c8f614`, testo dei template
@@ -96,6 +114,11 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
   identico a `dist/`): audit React e ID icona storiche. Worker `nummo-push` invariato (ripubblicato dall'utente per `f454d12`).
   Da provare in produzione: un archivio o un backup con un'icona storica, se ne esistono. Cronologia nel «Registro dei rilasci» qui sotto.
+- **Terzo riallineamento documentale (21 novembre, sera).** Su richiesta, dopo una verifica (`main` = `origin/main`, albero pulito,
+  `npm run check` OK **509/509** su `3b74ea4`): «Git», «Produzione», «Registro dei rilasci» e «Prossime attività» fermi a `26c5b8d`
+  (mancavano `e7953bf`, `1c7ca7f`, `a2029bb`, `830ac24`, `2b9e763`, `3b74ea4`, tutti pubblicati); vibrazione 6/4 ms data come attuale
+  (oggi 4/3); sezione 4/3 ms senza commit/rilascio; «Funzionalità implementate» con la variazione delle Barre, rimossa. `AGENTS.md` e
+  codice coincidevano. Nessun codice toccato.
 - **Secondo riallineamento documentale (21 novembre, pomeriggio).** Su richiesta, dopo una verifica (`main` = `origin/main`, albero
   pulito, `npm run check` OK **502/502**): corretti «Funzionalità implementate» (scansione solo AI, Templates, backup v11), «Prossime
   attività» (Rules del 20–21 novembre), tre sezioni ancora «Non pubblicato» (`9ad8e02`, `9dd0880`, `0e536a5`/`661b984`, usciti con
@@ -103,6 +126,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
+- **Verifiche (21 novembre, sera).** `npm run check` OK su `3b74ea4` (typecheck, **509/509**, build demo), albero pulito, `main` =
+  `origin/main` dopo un fetch. `test:emulator` non rieseguito: Rules, `DataStore` e servizi invariati da `817a2f1`.
 - **Verifiche (21 novembre, notte).** `npm run check` OK (typecheck, **510/510**, build demo) su `0fa04a9`; dopo `a29ced9` e `26c5b8d` solo typecheck e
   `npm test` OK (**509/509**, un test in meno per il confronto delle Barre rimosso), senza rifare `npm run check` né la build demo (il deploy ricostruisce il bundle cloud).
   Prima: **507/507** su `e4bf945` (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
@@ -186,7 +211,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` OK (**509/509**). Chromium headless 390×844 touch, demo Standard con `nummo-utente-medio.json`:
   destinazioni [4], segmenti nessuna, legenda nessuna, dito fermo sul confine della barra [3] + [4] al rilascio, trascinamento veloce
   [3,3,3], nessuna in scorrimento/digitazione o con «Vibrazione» spenta, nessun errore JS. Non sentito sul Pixel 8: 3 ms potrebbe
-  essere quasi impercettibile.
+  essere quasi impercettibile. Committato in `1c7ca7f` (Guida in `e7953bf`) e pubblicato su Hosting (21 novembre, 15:11; vedi
+  «Registro dei rilasci»).
 - Nella stessa fase, controllando il lavoro dell'altra sessione (`a29ced9`, `26c5b8d`): la Guida («Analisi e grafici», IT/EN)
   prometteva ancora il «confronto con i periodi precedenti», tolto dalle Barre con `26c5b8d`; frase corretta.
 
@@ -716,6 +742,11 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilasci del 21 novembre (pomeriggio–sera): Hosting da `830ac24`, poi da `2b9e763`, poi da `3b74ea4`** (con `a2029bb`, già online
+  dal rilascio di `1c7ca7f`): revisione dello scontrino (foto alta quanto i campi su desktop, titolo «Controlla i dati», pulsanti nella
+  colonna dei campi o allineati ai campi su smartphone, impilati sotto 500 di colonna). `npm run deploy:hosting`: «Deploy complete!», sito
+  200 per ciascuno; confronto del bundle con `dist/` non registrato. Rules invariate. Layout mai visto nel browser: da controllare.
 
 - **Rilascio del 21 novembre (pomeriggio, 15:11): Hosting da `1c7ca7f`** (con `e7953bf`): niente vibrazione su segmenti e legenda,
   impulsi 4/3 ms, Guida senza «confronto con i periodi precedenti». `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online
@@ -3756,7 +3787,8 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   Impostazioni (per browser). Budget mensile generale **non più nell'interfaccia** dal 16 novembre (dati e backup compatibili).
 - **Liste della spesa** (destinazione «Liste»): crea/rinomina/duplica/elimina, checklist con salvataggio automatico, «Registra spesa»
   in transazione (una spesa con `list_id`/`list_items`, lista archiviata); eliminare la spesa riattiva la lista. Limite 100 prodotti.
-- **Analisi:** periodi mese, mese scorso, 3 e 12 mesi; Ciambella, Blocchi e Barre (variazione per categoria), andamento giornaliero;
+- **Analisi:** periodi mese, mese scorso, 3 e 12 mesi; Ciambella, Blocchi e Barre (quota sul totale; variazione rispetto al periodo
+  precedente rimossa con `26c5b8d`), andamento giornaliero;
   filtro «Fondo».
 - **Archiviazione e backup** (menu account, sotto Categorie): stato e cambio della modalità, CSV di sola consultazione, JSON
   `nummo-backup` **v11** (con i template) unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
@@ -3834,7 +3866,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `26c5b8d` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `3b74ea4` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
