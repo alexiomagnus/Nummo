@@ -154,7 +154,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   fino al fondo del campo Categoria e «Ingrandisci la foto» sta a sinistra, sulla riga dei pulsanti. Poi, su richiesta (screenshot di una
   finestra stretta, colonna dei campi ≈308: «Scansiona di nuovo» e «Annulla» sulla stessa riga di larghezze diverse): sotto 500 di colonna (`inlineRowMinimum`,
   misurata con `onLayout`) i pulsanti si impilano come su smartphone, «Scansiona di nuovo» a tutta larghezza e «Annulla»/«Usa questi dati» metà e metà.
-  **Non provato nel browser** (né a 570 né a 1400 px); non committato né pubblicato.
+  **Non provato nel browser** (né a 570 né a 1400 px). Committato in `3b74ea4` (con le due modifiche precedenti di questa sezione, mai
+  pubblicate a parte) e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200.
 - **Verifica:** typecheck e `npm test` OK (509/509). **Non provato nel browser**: da controllare a 1400×900 e a ~900 px (foto non
   collassata al minimo di 240, nessuna barra di scorrimento nuova). Committato in `830ac24` e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200; layout mai visto nel browser da me.
 
