@@ -6,6 +6,7 @@ import { Text } from 'react-native-paper';
 import type { Breakdown, Series } from '../../domain/history';
 import { spacing } from '../../theme/tokens';
 import { donutMetrics } from './donutLayout';
+import { useHaptics } from '../../components/Haptics';
 
 export type ChartColors = {
   series: readonly string[]; // 12 validated categorical slots, fixed order
@@ -37,6 +38,7 @@ export function DonutChart({ data, colors, active, onActive }: ChartProps) {
   const [width, onLayout] = useWidth();
   // Hover is only a preview. A clicked/tapped selection belongs to the dashboard and survives pointer exit.
   const [hovered, setHovered] = useState<number | null>(null);
+  const haptic = useHaptics(); // tap on a part of the chart («Vibrazione» in Settings)
   const highlighted = hovered ?? active;
   const focus = highlighted === null ? null : data.series[highlighted];
   const amount = focus ? formatAmount(focus.total) : '';
@@ -73,7 +75,7 @@ export function DonutChart({ data, colors, active, onActive }: ChartProps) {
               opacity={highlighted === null || highlighted === index ? 1 : 0.35} style={{ cursor: 'pointer', transition: 'opacity 150ms cubic-bezier(0.2, 0, 0, 1)' }}
               onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(index); }}
               onPointerLeave={() => setHovered(null)}
-              onClick={() => { setHovered(null); onActive(active === index ? null : index); }} />
+              onClick={() => { haptic(); setHovered(null); onActive(active === index ? null : index); }} />
           ))}
         </svg>
         {focus && centerSide >= 64 && <View pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.caption, {

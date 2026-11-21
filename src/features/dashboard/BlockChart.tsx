@@ -10,6 +10,7 @@ import type { Breakdown, Series } from '../../domain/history';
 import { transition } from '../../theme/motion';
 import { motion, radius, spacing } from '../../theme/tokens';
 import { seriesColor, type ChartColors } from './charts';
+import { useHaptics } from '../../components/Haptics';
 import { blockLayout, blockRadius, blockTileBounds } from './categoryPresentation';
 import { blockLabelColors } from './blockLabels';
 
@@ -33,6 +34,7 @@ export function BlockChart({ data, colors, active, onActive, percent, onOpen }: 
   const { t, formatAmount } = useI18n();
   const theme = useTheme();
   const [hovered, setHovered] = useState<number | null>(null);
+  const haptic = useHaptics(); // tap on a part of the chart («Vibrazione» in Settings)
   const shown = hovered ?? active;
   const focus = shown === null ? null : data.series[shown] ?? null;
   const [width, setWidth] = useState(0);
@@ -59,7 +61,7 @@ export function BlockChart({ data, colors, active, onActive, percent, onOpen }: 
             <StateLayerPressable key={series.key} layerColor={layer} radius={corner} role="button"
               // A press ends any preview. Focus previews only from the keyboard: a tap leaves the focus on the tile, and the
               // browser fires focus again when the window or tab comes back, which must not open details nobody chose.
-              onPress={() => { setHovered(null); onActive(selected ? null : index); }} aria-pressed={selected}
+              onPress={() => { haptic(); setHovered(null); onActive(selected ? null : index); }} aria-pressed={selected}
               onHoverIn={() => setHovered(index)} onHoverOut={() => setHovered((current) => (current === index ? null : current))}
               onFocus={(event) => { if (isKeyboardFocus(event.currentTarget)) setHovered(index); }} onBlur={() => setHovered((current) => (current === index ? null : current))}
               accessibilityLabel={`${name}: ${amount}, ${share}`}

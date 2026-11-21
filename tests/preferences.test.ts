@@ -107,3 +107,12 @@ test('fondi archiviati: visibili di base, solo booleani accettati, scelta conser
   const saved = { ...defaultPreferences, showArchivedFunds: false };
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
 });
+
+test('preferenze: vibrazione accesa di base, solo booleani, scelta conservata', () => {
+  assert.equal(defaultPreferences.haptics, true);
+  assert.equal(parsePreferences('{}').haptics, true);
+  for (const bad of ['"false"', '0', 'null']) assert.equal(parsePreferences(`{"haptics":${bad}}`).haptics, true);
+  assert.equal(parsePreferences('{"haptics":false}').haptics, false);
+  const saved = { ...defaultPreferences, haptics: false };
+  assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+});

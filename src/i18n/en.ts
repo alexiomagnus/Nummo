@@ -27,6 +27,8 @@ export const english: Readonly<Record<string, string>> = {
   "Mostra liste archiviate": "Show archived lists",
   "Mostra fondi archiviati": "Show archived funds",
   "Nella pagina Fondi, i fondi che non usi più.": "On the Funds page, the funds you no longer use.",
+  "Vibrazione": "Vibration",
+  "Una breve vibrazione quando tocchi la barra in basso o i grafici di Analisi, sui telefoni che la permettono.": "A short vibration when you tap the bottom bar or the Analysis charts, on phones that allow it.",
   "Nella pagina Liste, le liste già registrate come spesa.": "On the Lists page, the lists already recorded as an expense.",
   "Funzionalità": "Features",
   "Spese giornaliere: usa le frecce per cambiare giorno": "Daily spending: use arrow keys to change day",

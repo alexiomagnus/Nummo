@@ -149,6 +149,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
           <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
+          <SwitchRow label={t("Vibrazione")} supporting={t("Una breve vibrazione quando tocchi la barra in basso o i grafici di Analisi, sui telefoni che la permettono.")}
+            value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />
         </Card>
         {archiveSections}
         <ReceiptAiCard />

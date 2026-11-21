@@ -7,6 +7,7 @@ import { AppShell } from './src/components/AppShell';
 import { Button } from './src/components/Button';
 import { Card } from './src/components/Card';
 import { IconStyleProvider } from './src/components/CategoryGlyph';
+import { HapticsProvider } from './src/components/Haptics';
 import { useOverlayMotion, usePresence } from './src/components/Overlay';
 import { ThemeIcon } from './src/components/ThemeIcon';
 import { SvgIcon, iconShapes } from './src/components/SvgIcon';
@@ -61,6 +62,7 @@ export default function App() {
   return (
     <I18nProvider language={preferences.language}>
       <IconStyleProvider style={preferences.iconStyle}>
+        <HapticsProvider enabled={preferences.haptics}>
         <SafeAreaProvider initialMetrics={safeArea}>
           <PaperProvider theme={theme}>
             <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} />
@@ -68,6 +70,7 @@ export default function App() {
               preferences={preferences} onChangePreferences={updatePreferences} onResetPreferences={resetPreferences} />
           </PaperProvider>
         </SafeAreaProvider>
+        </HapticsProvider>
       </IconStyleProvider>
     </I18nProvider>
   );

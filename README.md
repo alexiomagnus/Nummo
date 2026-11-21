@@ -115,6 +115,8 @@ Due strade:
 - **Liste della spesa** con checklist, totale manuale e registrazione di una sola spesa per acquisto.
 - **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice, con le colonne finali «Fondo» ed «Esercente») e backup JSON v11 (con i template), unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
+- Vibrazione breve al tocco della barra in basso su smartphone e dei grafici di Analisi (blocchi e ciambella), accesa di base e
+  disattivabile in **Impostazioni → Funzionalità → Vibrazione**; solo dove il browser lo permette (Chrome e simili su Android, non Safari/iOS né Firefox).
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.

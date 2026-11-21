@@ -16,11 +16,13 @@ export type ChartType = (typeof chartTypes)[number];
 // `timeFormat` how hours are written (24 or 12 hours, AM/PM), `timeZone` the clock of the notification hour («auto» = the device's, or an IANA name).
 // `templatesEnabled`: the Template field of «Nuova spesa» (off by default; the saved templates are archive data). Reintroduced
 // on 21 November 2026: a value saved before the 16 November removal applies again.
-export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; timeFormat: TimeFormat; timeZone: string };
+// `haptics`: short vibration on the phone navigation bar and on the Analisi charts (on by default; does nothing where the
+// browser cannot vibrate).
+export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; haptics: boolean; timeFormat: TimeFormat; timeZone: string };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -43,6 +45,7 @@ export function parsePreferences(raw: string | null): Preferences {
     showArchivedLists: typeof o.showArchivedLists === 'boolean' ? o.showArchivedLists : defaultPreferences.showArchivedLists,
     showArchivedFunds: typeof o.showArchivedFunds === 'boolean' ? o.showArchivedFunds : defaultPreferences.showArchivedFunds,
     templatesEnabled: typeof o.templatesEnabled === 'boolean' ? o.templatesEnabled : defaultPreferences.templatesEnabled,
+    haptics: typeof o.haptics === 'boolean' ? o.haptics : defaultPreferences.haptics,
     timeFormat: oneOf(timeFormats, o.timeFormat, defaultPreferences.timeFormat),
     timeZone: parseTimeZoneChoice(o.timeZone),
   };

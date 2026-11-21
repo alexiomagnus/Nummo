@@ -172,6 +172,25 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Committato in
   `3d1b5ea` e pubblicato.
 
+## Feedback aptico nella barra mobile e in Analisi — 21 novembre 2026
+
+- Su richiesta: vibrazione breve (Vibration API, l'unica disponibile a una pagina web) al tocco di una destinazione e del pulsante
+  tondo nella barra in basso su smartphone, un «tick» più leggero a ogni destinazione attraversata trascinando il dito sulla pillola
+  e un tocco al rilascio che apre la destinazione; in Analisi al tocco di un blocco o di uno spicchio della ciambella. Rail e drawer
+  (medium/expanded) invariati. Interruttore «Vibrazione» in Impostazioni → Funzionalità, **acceso di base** (`haptics` in
+  `nummo.preferences.v1`; valori non booleani → acceso).
+- Codice: `src/theme/haptics.ts` (puro, navigator iniettabile: `tap` 10 ms, `tick` 6 ms; spento, senza API, rifiuto o eccezione →
+  nessuna vibrazione e nessun errore), `components/Haptics.tsx` (`HapticsProvider` in `App.tsx`, `useHaptics()` stabile),
+  `AppShell` (`NavigationBar`, `useSlidingIndicator`), `charts.tsx` (ciambella), `BlockChart.tsx`; traduzioni in `en.ts`; README e AGENTS.
+- **Limiti:** Safari/iOS (anche installata) e Firefox non offrono la Vibration API: lì l'interruttore non ha effetto. Chrome vibra
+  solo dopo la prima interazione con la pagina (sempre vera per un tocco). Il pulsante dei blocchi vibra anche con Invio da tastiera.
+- **Verifica:** `npm run check` OK (**506/506**: 3 test nuovi, `tests/haptics.test.ts` e preferenze; i 503 di partenza comprendono il test
+  della tastiera a passi dell'altra sessione, `0f218da`). Chromium headless 390×844 touch, demo Standard con
+  `nummo-utente-medio.json` unito, `navigator.vibrate` sostituito da un registratore: tocco «Analisi» [10]; spicchio [10] e selezionato;
+  trascinamento Spese → Liste partendo da Analisi [6,6,6,6,10] e Liste aperta; «Nuova spesa» [10]; blocco [10]; interruttore
+  «Vibrazione» → `haptics: false` salvato, poi tocchi su barra e blocco senza vibrazioni; nessun errore JS. **Non provato su telefono
+  reale** (intensità percepita delle durate scelte). Committato dopo `0f218da` (tastiera), a parte. Non pubblicato.
+
 ## Tastiera aperta a passi: il campo resta in vista — 21 novembre 2026
 
 - Seguito della sezione seguente. iOS riduce il visual viewport a passi durante l'animazione della tastiera; la conferma arriva al primo
@@ -186,7 +205,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   316–364 nello stesso fotogramma dell'ultimo passo; tastiera in un passo, dialogo Nuova lista a passi, cambio di campo e cicli, desktop
   1400×900 invariati; nessun errore. Long task con 6 passi e CPU 4× uguali a quelli del codice committato (confronto in un worktree
   temporaneo, rimosso): vengono dal relayout della pagina. `npm run typecheck` OK, `npm test` **503/503**. Non provato su iPhone reale.
-  Non committato.
+  Committato in `0f218da` (separato dal feedback aptico). Non pubblicato.
 
 ## Tastiera virtuale: transizione in un solo fotogramma — 21 novembre 2026
 
