@@ -214,6 +214,12 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Matita dei template più grande — 21 novembre 2026 (notte)
+
+- Su richiesta (screenshot di una riga della pagina Templates): la matita decorativa a destra di ogni template passa da 24 a 28 dp,
+  sempre nel riquadro 44×44 con contorno (`TemplatesPage.tsx`, `AGENTS.md`).
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser. Committato, inviato e pubblicato su Hosting (vedi «Produzione»).
+
 ## Nessun campo «Chiave API» nel dialogo di scansione — 21 novembre 2026 (notte)
 
 - Su richiesta (screenshot di «Scansiona scontrino» con il campo «Chiave API» sopra «Scatta una foto»): il campo è tolto da

@@ -71,8 +71,8 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
                 pressLabel={t("Modifica {p0}", { p0: template.description })} onPress={() => setEditing(template)}
                 trailing={<View style={styles.trailing}>
                   {template.amount_minor !== null && <Text variant="titleMedium" style={listRowStyles.amount}>{formatAmount(template.amount_minor)}</Text>}
-                  {/* The whole row opens the editor; the pencil only tells that it can be edited (user's request, 21 November). */}
-                  <View aria-hidden style={[styles.edit, { borderColor: colors.outline }]}><SvgIcon shape={iconShapes.pencil} size={24} color={colors.onSurfaceVariant} /></View>
+                  {/* The whole row opens the editor; the pencil only tells that it can be edited (user's request, 21 November); 28 dp in the 44 box (24 looked small, user's request of 21 November). */}
+                  <View aria-hidden style={[styles.edit, { borderColor: colors.outline }]}><SvgIcon shape={iconShapes.pencil} size={28} color={colors.onSurfaceVariant} /></View>
                 </View>} />;
             })}</View>}
         </Card>
