@@ -64,7 +64,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
+  `origin`. Ultimi commit di codice, tutti pubblicati: `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
   sulla riga del primo pulsante impilato), `3b74ea4`, `2b9e763`, `830ac24` (revisione dello scontrino: foto, pulsanti,
   titolo «Controlla i dati»), `a2029bb` (intro del dialogo di scansione più breve), `1c7ca7f` (vibrazione tolta da segmenti e legenda,
   4/3 ms), `e7953bf` (Guida senza confronto con i periodi precedenti), `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
@@ -84,7 +84,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `ee2fcdc` (pulsante «Template» nella prima riga di Nuova spesa) pubblicato su
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `3ad9a75` (testo «Il pulsante Template compare…») pubblicato su richiesta il
+  21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `ee2fcdc` (pulsante «Template» nella prima riga di Nuova spesa) pubblicato su
   richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `62e3639` (24 px tra il campo riportato in vista e la tastiera virtuale)
   pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto» sulla riga del
   primo pulsante impilato) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`.
@@ -826,6 +827,9 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (notte): Hosting da `3ad9a75`**: testo «Il pulsante Template compare…» (IT/EN) al posto di «Il campo…».
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256) e con il testo nuovo. Rules invariate.
 
 - **Rilascio del 21 novembre (sera, terza parte): Hosting da `ee2fcdc`**: pulsante «Template» accanto a «Scansiona scontrino» (o al suo
   posto), in `primary`, con la sola icona della categoria dopo la scelta; «Salva» di nuovo sopra la navigazione su smartphone.
@@ -3962,7 +3966,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `ee2fcdc` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `3ad9a75` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
