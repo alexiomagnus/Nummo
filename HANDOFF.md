@@ -77,7 +77,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
+  `origin`. Ultimi commit di codice, tutti pubblicati: `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di scorrimento senza frecce), `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
   selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
   pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
   pulsante «Template» invariato), `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
@@ -100,7 +100,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `cffe2e8` («Esci» riporta alla scelta della modalità) pubblicato su richiesta
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di
+  scorrimento senza frecce dell'altra sessione) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy
+  complete!», sito 200, bundle online identico a `dist/` (SHA-256, con `tap:8,tick:7`). Rules invariate. Prima, **Hosting** da `cffe2e8` («Esci» riporta alla scelta della modalità) pubblicato su richiesta
   il 21 novembre (sera tardi) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules
   invariate. Prima, **Hosting** da `69566dc` (scheda «Dati della modalità Standard», note con asterisco)
   pubblicato su richiesta il 21 novembre (sera tardi) con `npm run deploy:hosting` da un worktree pulito di `69566dc` (l'albero principale
@@ -218,7 +220,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   Chiave «Totale: {p0}» già tradotta.
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo`, Standard, backup `nummo-utente-medio.json` importato dall'interfaccia,
   Analisi → «Medio · Alimentari» → «Mostra transazioni»: 390×844 e 1280×900 come previsto, nessun errore JS. Non provato in inglese nel
-  browser né su telefono. Non committato, non pubblicato.
+  browser né su telefono. Committato in `1934641`, inviato e pubblicato su Hosting.
 
 ## Vibrazione 8/7 ms — 21 novembre 2026 (notte)
 
@@ -231,7 +233,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Se resta muto anche così**, la causa è del telefono: Chrome su Android non vibra con la suoneria in **silenzioso**, Android scarta
   queste vibrazioni con il **risparmio energetico** e le regola con «Vibrazione contenuti multimediali» (Suoni e vibrazione → Vibrazione e
   feedback aptico). Da provare con `docs/testing/prova-vibrazione.html` (7, 8, 10 ms). Supposizioni dalla documentazione, non verificate sul telefono.
-- **Verifica:** `npm run check` OK (**520/520**). Non provato sul telefono. Non committato, non pubblicato.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato sul telefono. Committato in `1934641`, inviato e pubblicato su Hosting.
 
 ## Barre di scorrimento senza triangoli — 21 novembre 2026 (notte)
 
@@ -244,7 +246,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` OK (**520/520**). Chromium headless su un export demo in Standard, tema scuro: 1280×460 menu Categoria
   aperto, barre del menu e del pannello con `scrollbar-width: auto`, larghe 10, cursore arrotondato senza triangoli (screenshot);
   390×844 touch: regola non applicata. Nessun errore JS. Non provati: Chrome desktop reale, Windows, Safari macOS (lì la barra diventa
-  sempre visibile invece che sovrapposta, come già nel pannello), barra nei dialoghi mentre si scorre. Non committato, non pubblicato.
+  sempre visibile invece che sovrapposta, come già nel pannello), barra nei dialoghi mentre si scorre. Committato in `1934641`, inviato e pubblicato su Hosting.
 
 ## «Esci» riporta alla scelta della modalità — 21 novembre 2026 (notte)
 
@@ -4173,7 +4175,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `cffe2e8` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `1934641` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
