@@ -24,8 +24,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   riga «Git» si fermava a `9ad8e02`; (6) commento in `ExpenseEditor.tsx` e sezione «Pulsanti dei dialoghi uniformi» davano per buono
   «Elimina» da solo sopra Annulla/Salva su smartphone, poi giudicato difettoso dall'utente e sostituito dal cestino (`3d1b5ea`). Le
   sezioni di questa sessione scritte «non committato» sono aggiornate con il commit. Codice e `AGENTS.md` coincidevano per il resto.
-- **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: tastiera virtuale (aprire e chiudere su
-  un campo in basso e in un dialogo: nessun doppio salto; iOS), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
+- **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
+  sulla barra, blocchi e ciambella di Analisi, interruttore «Vibrazione» spento); tastiera virtuale (aprire e chiudere su
+  un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
   sotto 412), azioni degli abbonamenti, revisione dello scontrino; poi in produzione: pagina Templates (in Avanzata compaiono i
   template salvati prima del 16 novembre, se ce n'erano), scansione dello scontrino da attivare in Impostazioni, pulsanti dei dialoghi,
   nuova icona (la cache del browser o del launcher può mostrare ancora quella vecchia); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
@@ -34,7 +35,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
+  `origin`. Ultimi commit di codice, tutti pubblicati: `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
+  sessione), `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
   sessione), `8e513f4` (Annulla/Salva a 96), `3d1b5ea` («Torna indietro», scansione, abbonamenti, cestino), `fdfce0e` (tastiera, altra
   sessione), `bdc742b` («Chiudi» con contorno), `817a2f1` (template, pulsanti uniformi, icona), `e72bc6f`, `4144917` (scansione solo AI).
   Prima, pubblicati con `817a2f1`: `9ad8e02` (pulsanti di prova delle notifiche nascosti
@@ -46,7 +48,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `9a8285a` (Importo e Data non più tagliati su smartphone; con `1a8dc14`,
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `4d69d04` (feedback aptico nella barra mobile e in Analisi, interruttore
+  «Vibrazione»; con `0f218da`, tastiera aperta a passi) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200,
+  bundle online identico a `dist/`. Prima, **Hosting** da `9a8285a` (Importo e Data non più tagliati su smartphone; con `1a8dc14`,
   raggruppamento della tastiera come funzione pura) pubblicato su richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `8e513f4` (Annulla/Salva a 96 su smartphone accanto al cestino) pubblicato su
   richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `3d1b5ea` pubblicato su richiesta il 21 novembre (mezzogiorno): tastiera
   virtuale nello stesso fotogramma (`fdfce0e`), «Torna indietro» in «Collega il tuo Firebase», pulsanti della revisione dello scontrino,
@@ -189,7 +193,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `nummo-utente-medio.json` unito, `navigator.vibrate` sostituito da un registratore: tocco «Analisi» [10]; spicchio [10] e selezionato;
   trascinamento Spese → Liste partendo da Analisi [6,6,6,6,10] e Liste aperta; «Nuova spesa» [10]; blocco [10]; interruttore
   «Vibrazione» → `haptics: false` salvato, poi tocchi su barra e blocco senza vibrazioni; nessun errore JS. **Non provato su telefono
-  reale** (intensità percepita delle durate scelte). Committato dopo `0f218da` (tastiera), a parte. Non pubblicato.
+  reale** (intensità percepita delle durate scelte). Committato in `4d69d04`, dopo `0f218da` (tastiera). Pubblicato su Hosting il 21 novembre (pomeriggio).
 
 ## Tastiera aperta a passi: il campo resta in vista — 21 novembre 2026
 
@@ -205,7 +209,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   316–364 nello stesso fotogramma dell'ultimo passo; tastiera in un passo, dialogo Nuova lista a passi, cambio di campo e cicli, desktop
   1400×900 invariati; nessun errore. Long task con 6 passi e CPU 4× uguali a quelli del codice committato (confronto in un worktree
   temporaneo, rimosso): vengono dal relayout della pagina. `npm run typecheck` OK, `npm test` **503/503**. Non provato su iPhone reale.
-  Committato in `0f218da` (separato dal feedback aptico). Non pubblicato.
+  Committato in `0f218da` (separato dal feedback aptico). Pubblicato su Hosting con `4d69d04`.
 
 ## Tastiera virtuale: transizione in un solo fotogramma — 21 novembre 2026
 
@@ -552,6 +556,10 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (pomeriggio, terza parte): Hosting da `4d69d04`** (feedback aptico e interruttore «Vibrazione»; `0f218da`,
+  tastiera aperta a passi, committato a parte). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`.
+  Rules invariate. Da provare sul telefono: vibrazione su Android (barra, trascinamento, Analisi, interruttore spento), tastiera su iPhone.
 
 - **Rilascio del 21 novembre (pomeriggio, seconda parte): Hosting da `9a8285a`** (Importo/Data su smartphone; `1a8dc14`, lavoro
   sulla tastiera di un'altra sessione, committato a parte). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico
@@ -3638,7 +3646,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `9a8285a` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `4d69d04` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
