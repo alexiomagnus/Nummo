@@ -866,7 +866,7 @@ export const english: Readonly<Record<string, string>> = {
   "24 ore": "24-hour",
   "12 ore (AM/PM)": "12-hour (AM/PM)",
   "Scansiona scontrino": "Scan receipt",
-  "Controlla i dati letti": "Check the data read",
+  "Controlla i dati": "Check the data",
   "Foto dello scontrino": "Receipt photo",
   "Riduci la foto": "Shrink photo",
   "Ingrandisci la foto": "Enlarge photo",

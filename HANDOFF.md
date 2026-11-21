@@ -134,6 +134,19 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Revisione dello scontrino su desktop: foto alta come il modulo — 21 novembre 2026
+
+- Su richiesta (screenshot di «Controlla i dati letti» a larghezza desktop: spazio vuoto sotto i campi, foto alta 420 fissi): nella revisione
+  da medium in su la foto non ha più altezza fissa, occupa quella della colonna dei campi (`pictureFill`: `flex: 1`, minimo 240; colonne
+  con `alignItems: 'stretch'`); «Ingrandisci la foto» resta sotto. Smartphone e foto ingrandita (640) invariati. Nella stessa sessione,
+  su richiesta, tolta dal primo passo del dialogo la frase «Controlli tutto prima di salvare.» (IT e EN; già committata da un'altra sessione in `a2029bb`).
+- Poi, su richiesta (screenshot): nella revisione da medium in su (foto non ingrandita) i tre pulsanti non sono più nella riga delle azioni del
+  dialogo ma nella colonna dei campi, sotto la Categoria con 56 di distanza (prima 24, poi 40), larghi quanto gli input (`flexGrow` uguale, ognuno almeno
+  quanto la sua etichetta, a capo se non entrano). Smartphone e foto ingrandita: azioni di prima. In questo caso `Dialog.Actions` non si
+  rende (eccezione alla regola delle azioni fuori dall'area scorrevole). Titolo della revisione ora «Controlla i dati» (EN «Check the data»).
+- **Verifica:** typecheck e `npm test` OK (509/509). **Non provato nel browser**: da controllare a 1400×900 e a ~900 px (foto non
+  collassata al minimo di 240, nessuna barra di scorrimento nuova). Il cambio di layout non è committato né pubblicato.
+
 ## Barre di Analisi senza variazione percentuale — 21 novembre 2026
 
 - Su richiesta (screenshot con «+198%» sotto la barra di «Servizi digitali»): tolta dalle Barre la variazione rispetto ai giorni precedenti

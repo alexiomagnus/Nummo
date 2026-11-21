@@ -155,7 +155,8 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const apply = () => { onApply(patch); onClose(); };
   const flagged = (status: 'uncertain' | 'missing') => (proposal ? receiptFields.filter((field) => proposal.status[field] === status).map((field) => t(fieldLabels[field])).join(', ') : '');
   const picture = preview ? (
-    <View style={[styles.picture, { backgroundColor: colors.surfaceVariant, height: zoomed ? 640 : wide && stage === 'review' ? 420 : 240 }]}>
+    // Review on a wide window: the photo takes the height of the form beside it (no fixed height, no empty space under the fields).
+    <View style={[styles.picture, { backgroundColor: colors.surfaceVariant }, zoomed ? { height: 640 } : wide && stage === 'review' ? styles.pictureFill : { height: 240 }]}>
       <Image source={{ uri: preview }} resizeMode="contain" style={StyleSheet.absoluteFill} accessibilityLabel={t("Foto dello scontrino")} />
     </View>
   ) : null;
@@ -238,6 +239,8 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   } else {
     const uncertain = flagged('uncertain');
     const missing = flagged('missing');
+    // Wide window, photo not enlarged: the buttons move into the column of the fields (the dialog then has no action row).
+    const inline = wide && !zoomed;
     const review = <View style={styles.block}>
       {(uncertain || missing || proposal!.notes.length > 0) && (
         <View style={[styles.notice, { backgroundColor: colors.tertiaryContainer }]} accessibilityRole="alert">
@@ -256,30 +259,32 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {conflicts.length > 0 && <SwitchRow label={t("Sostituisci i dati già inseriti")} value={replace} onChange={setReplace}
         supporting={t("Hai già compilato: {p0}. Senza questa scelta restano come sono.", { p0: conflicts.map((field) => t(fieldLabels[field])).join(', ') })} />}
     </View>;
-    body = wide && !zoomed
-      ? <View style={styles.columns}><View style={styles.side}>{picture}<View style={styles.row}>{zoom}</View></View><View style={styles.main}>{review}</View></View>
+    const again = <CancelButton key="again" onPress={() => setStage('ready')} style={inline && styles.inlineAction}>{t("Scansiona di nuovo")}</CancelButton>;
+    const cancel = <CancelButton onPress={onClose} style={inline && styles.inlineAction}>{t("Annulla")}</CancelButton>;
+    const use = <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply} style={inline && styles.inlineAction}>{t("Usa questi dati")}</ConfirmButton>;
+    body = inline
+      ? <View style={styles.columns}><View style={styles.side}>{picture}<View style={styles.row}>{zoom}</View></View>
+        {/* The three buttons sit in the column of the fields, as wide as the inputs and a little below the last one (user's request, 21 November). */}
+        <View style={styles.main}>{review}<View style={styles.inlineActions}>{again}{cancel}{use}</View></View></View>
       : <>{picture}<View style={styles.row}>{zoom}</View>{review}</>;
     // «Scansiona di nuovo» outlined like «Annulla» (a way back, to the photo), never a bare text action among the buttons.
     // «Annulla» and «Usa questi dati» stay together: on a phone the row wraps with «Scansiona di nuovo» above the pair,
     // instead of leaving the confirmation alone on the second line. All right-aligned (no auto margin, unlike Elimina).
-    actions = [
-      <CancelButton key="again" onPress={() => setStage('ready')}>{t("Scansiona di nuovo")}</CancelButton>,
-      <View key="pair" style={[dialogActionPair, styles.pairEnd]}>
-        <CancelButton onPress={onClose}>{t("Annulla")}</CancelButton>
-        <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply}>{t("Usa questi dati")}</ConfirmButton>
-      </View>,
+    actions = inline ? null : [
+      again,
+      <View key="pair" style={[dialogActionPair, styles.pairEnd]}>{cancel}{use}</View>,
     ];
   }
 
   return <Portal><Dialog visible dismissable={stage !== 'working' && stage !== 'camera'} onDismiss={onClose} style={wide && stage === 'review' ? styles.wideDialog : undefined}>
-    <Dialog.Title>{stage === 'review' ? t("Controlla i dati letti") : t("Scansiona scontrino")}</Dialog.Title>
+    <Dialog.Title>{stage === 'review' ? t("Controlla i dati") : t("Scansiona scontrino")}</Dialog.Title>
     <Dialog.ScrollArea style={styles.area}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
       {inputs}
       {body}
     </ScrollView></Dialog.ScrollArea>
     {/* `actions` is a button or an array of keyed buttons (or a keyed View holding a pair), never a Fragment: Dialog.Actions clones each child to add
         `compact` and its margin, and a Fragment cannot take them («Invalid prop `compact` supplied to React.Fragment»). */}
-    <Dialog.Actions style={dialogActionsRow}>{actions}</Dialog.Actions>
+    {actions && <Dialog.Actions style={dialogActionsRow}>{actions}</Dialog.Actions>}
   </Dialog></Portal>;
 }
 
@@ -294,11 +299,14 @@ const styles = StyleSheet.create({
   sourcesPhone: { flexWrap: 'nowrap' },
   source: { flex: 1, minWidth: 0 },
   picture: { width: '100%', borderRadius: radius.card, overflow: 'hidden' },
+  pictureFill: { flex: 1, minHeight: 240 },
   camera: { height: 360 },
   progress: { height: 6, borderRadius: radius.pill },
-  columns: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xl },
+  columns: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xl },
   side: { flex: 2, minWidth: 0, gap: spacing.lg },
   main: { flex: 3, minWidth: 0 },
+  inlineActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.xxxl + spacing.sm },
+  inlineAction: { flexGrow: 1 },
   notice: { flexDirection: 'row', gap: spacing.md, padding: spacing.md, borderRadius: radius.card },
   noticeText: { flex: 1, minWidth: 0, gap: spacing.xs },
 });
