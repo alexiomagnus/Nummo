@@ -157,8 +157,8 @@ function ChangeModeDialog({ visible, target, onDismiss, onConfirm }: { visible: 
       <ConfirmButton buttonColor={colors.error} textColor={colors.onError} onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</ConfirmButton>
     </>}>
       <Text variant="bodyMedium" style={muted}>{target === 'advanced'
-        ? t("I dati di questo dispositivo restano qui. Dopo l’accesso puoi portarli nel tuo Firebase: Archiviazione e backup → «Porta qui i dati della Standard».")
-        : t("I dati del progetto Firebase restano lì. Per averli anche su questo dispositivo, prima di cambiare usa «Copia questi dati sul dispositivo» in questa pagina.")}</Text>
+        ? t("I dati di questo dispositivo restano qui. Dopo l’accesso puoi portarli nel tuo Firebase: Archiviazione e backup → «Dal dispositivo a Firebase».")
+        : t("I dati del progetto Firebase restano lì. Per averli anche su questo dispositivo, prima di cambiare usa «Da Firebase al dispositivo» in questa pagina.")}</Text>
       <Text variant="bodyMedium" style={muted}>{t("Consiglio: prima scarica un backup (JSON) e salvalo su Google Drive o in un altro posto sicuro.")}</Text>
     </DialogFrame>
   );

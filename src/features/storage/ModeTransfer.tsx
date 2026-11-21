@@ -105,25 +105,26 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
 
   const muted = { color: theme.colors.onSurfaceVariant };
   const summary = local.state === 'ready'
-    ? t("Su questo dispositivo ci sono dati della modalità Standard: {p0}, {p1}.", {
+    ? t("Sul dispositivo: {p0}, {p1}.", {
       p0: local.counts.expenses === 1 ? t("1 spesa") : t("{p0} spese", { p0: local.counts.expenses }),
       p1: local.counts.categories === 1 ? t("1 categoria") : t("{p0} categorie", { p0: local.counts.categories }) })
-    : local.state === 'absent' ? t("Su questo dispositivo non ci sono dati della modalità Standard.")
+    : local.state === 'absent' ? t("Nessun dato sul dispositivo.")
     : local.state === 'error' ? t(local.message) : t("Controllo dei dati su questo dispositivo…");
   return (
     <Card title={t("Dati della modalità Standard")} style={style}>
       <View style={styles.body}>
         <Text variant="bodyMedium" accessibilityLiveRegion="polite">{summary}</Text>
-        <Text variant="bodySmall" style={muted}>{t("Si aggiunge solo ciò che manca: niente viene sovrascritto o eliminato, in nessuno dei due archivi.")}</Text>
         <View style={[styles.buttons, compact && styles.buttonsCompact]}>
           <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy || local.state !== 'ready'} onPress={() => void bringIn()}>
-            {t("Porta qui i dati della Standard")}</Button>
+            {t("Dal dispositivo a Firebase")}</Button>
           <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy || local.state === 'loading'} onPress={() => void copyOut()}>
-            {t("Copia questi dati sul dispositivo")}</Button>
+            {t("Da Firebase al dispositivo")}</Button>
         </View>
+        {/* Short note under the buttons, as under «Backup completo» (user's request, 21 November: fewer words, clearer). */}
+        <Text variant="bodySmall" style={muted}>{t("* Si aggiunge solo ciò che manca: nulla viene sovrascritto o eliminato.")}</Text>
         {preview && <ImportPreview source={preview.direction === 'in' ? t("Dalla modalità Standard a questo progetto Firebase") : t("Da questo progetto Firebase alla modalità Standard")}
           plan={preview.plan} busy={busy} enabled={enabled} onCancel={() => setPreview(null)} onMerge={() => void merge(preview)}
-          mergeLabel={preview.direction === 'in' ? "Porta qui i dati" : "Copia sul dispositivo"}
+          mergeLabel={preview.direction === 'in' ? "Aggiungi a Firebase" : "Aggiungi al dispositivo"}
           title="Riepilogo del passaggio" blockedTitle="Impossibile unire i dati" />}
         {copied && <View style={styles.done}>
           <Text variant="bodyMedium">{t("I dati sono anche sul dispositivo: nella modalità Standard li trovi senza account.")}</Text>

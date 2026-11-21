@@ -66,7 +66,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   sotto. Committato in `8c1ff66` e pubblicato su Hosting (vedi punto sopra). Restano concordati e non fatti: link diretti alla Console, sito senza progetto di base,
   «Collega un altro dispositivo».
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
-  sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
+  sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 6/5 ms percepibili?);
   revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
   un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
   sotto 412), azioni degli abbonamenti, revisione dello scontrino; poi in produzione: pagina Templates (in Avanzata compaiono i
@@ -77,7 +77,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
+  `origin`. Ultimi commit di codice, tutti pubblicati: `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
+  selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
+  pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
+  pulsante «Template» invariato), `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
   sulla riga del primo pulsante impilato), `3b74ea4`, `2b9e763`, `830ac24` (revisione dello scontrino: foto, pulsanti,
   titolo «Controlla i dati»), `a2029bb` (intro del dialogo di scansione più breve), `1c7ca7f` (vibrazione tolta da segmenti e legenda,
   4/3 ms), `e7953bf` (Guida senza confronto con i periodi precedenti), `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
@@ -156,6 +159,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
+- **Verifiche (21 novembre, sera tardi, ultime).** `npm run check` OK sull'albero di `c48ab1b` più la fase «Dati della modalità Standard»
+  (typecheck, **520/520**, build demo); `test:emulator` **22/22** l'ultima volta su `1c83b54` (passaggio dei dati tra le modalità); da allora
+  Rules, `DataStore` e servizi invariati. I due punti seguenti sono precedenti.
 - **Verifiche (21 novembre, sera).** `npm run check` OK su `3b74ea4` (typecheck, **509/509**, build demo), albero pulito, `main` =
   `origin/main` dopo un fetch. `test:emulator` non rieseguito: Rules, `DataStore` e servizi invariati da `817a2f1`.
 - **Verifiche (21 novembre, notte).** `npm run check` OK (typecheck, **510/510**, build demo) su `0fa04a9`; dopo `a29ced9` e `26c5b8d` solo typecheck e
@@ -181,6 +187,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
   `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
   dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
+- **Ambiente (21 novembre, sera tardi).** Runner hybrid **attivo** dell'utente: PID 36786 (`node scripts/dev-hybrid.ts --clear`, avviato
+  alle 22:59, progetto `nummo-6b6e2`), con il suo lock `.firebase/hybrid.lock` e la config `.nummo-hybrid-36786.json`: non toccarli
+  finché il processo esiste; se si ferma senza pulizia, ispezionare come per il 81456 (punto seguente).
 - **Ambiente (21 novembre, notte).** Il runner hybrid PID 81456 (`npm run dev` del 21 alle 01:20, progetto `nummo-6b6e2`) si è
   fermato senza pulizia: processo inesistente, porte 8180/9099/4000/4400/8081 libere, cartella di sessione `.firebase/hybrid-qVvetQ`
   con la sola `cli-config`, `emulator-data/` fermo all'export del 16 alle 03:42 (eventuali dati scritti in hybrid dal 21 alle 01:20
@@ -194,6 +203,34 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## «Esci» riporta alla scelta della modalità — 21 novembre 2026 (notte)
+
+- Su richiesta (screenshot di «Semplifica le tue spese.»): «Esci» dal menu account, da «Questo Nummo è privato» e da «Ultimo passaggio»
+  non lascia più sulla schermata di accesso Google ma sulla prima schermata (Standard / Avanzata). `useSession().signOut(afterward)`
+  esegue `afterward` solo a uscita riuscita, prima dell'eventuale ricaricamento (cache su disco); `AdvancedRoot` passa
+  `onChangeMode(null)`, che cancella `nummo.storageMode.v1`. Uscita fallita (scritture in attesa): modalità invariata, errore come prima.
+  «Usa la modalità Standard» invariato. Configurazione Firebase collegata e dati non toccati: «Continua con Firebase» riporta allo stesso progetto.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser (serve un accesso Google). Non committato, non pubblicato.
+
+## «Dati della modalità Standard» più chiara, nota del backup con asterisco — 21 novembre 2026 (notte)
+
+- Su richiesta (screenshot della scheda, «non mi risulta chiara»): in `ModeTransfer` riepilogo breve «Sul dispositivo: 72 spese,
+  13 categorie.» (o «Nessun dato sul dispositivo.»), pulsanti con la direzione esplicita «Dal dispositivo a Firebase» e «Da Firebase
+  al dispositivo» (prima «Porta qui i dati della Standard» / «Copia questi dati sul dispositivo»; conferma dell'anteprima «Aggiungi a
+  Firebase» / «Aggiungi al dispositivo», prima «Porta qui i dati» / «Copia sul dispositivo»), nota più corta **sotto** i pulsanti
+  «* Si aggiunge solo ciò che manca: nulla viene sovrascritto o eliminato.». Sotto «Backup completo» la nota diventa «* Salva il file su
+  Google Drive…» con 8 in più di distanza dai pulsanti (`footnote`). Riferimenti aggiornati nel dialogo «Cambia modalità», `en.ts`,
+  `tests/i18n.test.ts`, README, `docs/firebase-personale.md`, `AGENTS.md`.
+- **Test instabile (preesistente), corretto:** `tests/localStore.test.ts` («passaggio tra modalità…») falliva a volte (la spesa `kept`
+  vista come conflitto «Già nel destinatario»): due `createExpense` separati davano a `kept` due `created_at` diversi se fra le due
+  chiamate scattava un millisecondo, e `sameExpense` confronta anche `created_at`. Difetto del test, non dell'app: ora `kept` entra nel
+  destinatario con `importRecords` dal record della sorgente. 15 esecuzioni di fila OK.
+- **Riallineamento documentale (stessa sessione, su richiesta):** «Problemi aperti» e «Prossime attività» (service worker con pagina
+  offline), priorità (0) con 6/5 ms, riga «Git» fino a `8c1ff66`, pubblicazione fino a `8c1ff66`, «Verifiche», «Funzionalità
+  implementate» (spese offline, pagina offline, passaggio tra le modalità, vibrazione), sezione «Template accanto a Scansiona scontrino»
+  segnata come superata, runner hybrid 36786 attivo; in `docs/architecture.md` la tabella «Piattaforme».
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser. Non pubblicato.
 
 ## «Annulla» e «OK» più piccoli nel selettore della data — 21 novembre 2026 (notte)
 
@@ -291,7 +328,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   posto se la scansione è spenta. Su smartphone metà riga ciascuno, allineati a Importo e Data; da medium larghezza naturale, distanza 12.
   Aspetto: contorno, icona «template», etichetta «Template» e freccia in `primary` (provato prima `tertiaryContainer`: nel tema
   predefinito mono è il grigio delle superfici e sembrava disattivato). Scelto un template il pulsante mostra solo l'icona della sua
-  categoria (icona «template» se la categoria non c'è più) e la freccia; il nome resta nell'etichetta accessibile («Template: …») e
+  categoria (icona «template» se la categoria non c'è più) e la freccia (**superato da `1518b0c`**: il pulsante non cambia più dopo la
+  scelta); il nome resta nell'etichetta accessibile («Template: …») e
   nell'elenco. `SelectField` accetta `trigger`/`triggerStyle`/`menuMinWidth` (stesso foglio e menu; menu largo almeno 360 perché le
   descrizioni non siano troncate). La riga «Il pulsante Template compare quando…» (prima «Il campo…», corretta nella sessione del 21 novembre, notte) (template attivi ma nessuno salvato) sta sotto la prima riga.
 - **Verifica:** `npm run check` OK (**509/509**). Chromium headless, `dist-demo` in Standard, tema scuro, backup v11 di prova con due
@@ -3988,7 +4026,8 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   facoltativo con suggerimenti; scansione dello scontrino solo con AI BYOK (Claude, OpenAI, Google Gemini; spenta di base, OCR rimosso il 21 novembre) che
   propone soltanto; Templates facoltativi (pagina dal menu account, pulsante «Template» nella prima riga di Nuova spesa dal 21 novembre, `ee2fcdc`, Esercente facoltativo, limite 100). Pagina Spese a due
   viste: spese singole (ricerca, filtri, card «Totale», «Prodotti (n)») e abbonamenti (stati, prove gratuite, cambio di frequenza,
-  fino a otto prezzi per numero di rinnovo, «Storico dei pagamenti» con eliminazione di un singolo pagamento).
+  fino a otto prezzi per numero di rinnovo, «Storico dei pagamenti» con eliminazione di un singolo pagamento). In Avanzata una nuova
+  spesa offline libera il modulo ed è segnata «In attesa di invio» finché il server non la conferma (`1c83b54`).
 - **Categorie:** pagina dal menu account; nomi unici; 64 ID icona validi (40 attive, 39 selezionabili; ritirate `sofa` e le 24
   storiche, queste ultime solo col contorno), tre stili (minimale, colorato, pixel); cinque predefinite su archivio vuoto.
 - **Fondi** (destinazione «Fondi»): facoltativi; nome, icona, colore, saldo iniziale, ricarica e budget mensili facoltativi; riepilogo
@@ -3999,13 +4038,15 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 - **Analisi:** periodi mese, mese scorso, 3 e 12 mesi; Ciambella, Blocchi e Barre (quota sul totale; variazione rispetto al periodo
   precedente rimossa con `26c5b8d`), andamento giornaliero;
   filtro «Fondo».
-- **Archiviazione e backup** (menu account, sotto Categorie): stato e cambio della modalità, CSV di sola consultazione, JSON
+- **Archiviazione e backup** (menu account, sotto Categorie): stato e cambio della modalità, in Avanzata passaggio dei dati tra le due
+  modalità («Dal dispositivo a Firebase», «Da Firebase al dispositivo», solo unione), CSV di sola consultazione, JSON
   `nummo-backup` **v11** (con i template) unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
   con copia automatica.
 - **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
   orario e fuso scelti dall'utente.
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
-  tastiera virtuale gestita, transizioni con riduzione movimento.
+  tastiera virtuale gestita, transizioni con riduzione movimento; vibrazione breve (6/5 ms) solo su barra mobile, Analisi e
+  «Salva»/«Crea», interruttore «Vibrazione»; pagina offline di Nummo dal service worker (nessun avvio offline).
 - **Collaudo:** `docs/testing/` con quattro backup fittizi (casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
   esercenti v10) e guida ai risultati attesi; spese standard, prove gratuite e cambio di frequenza sono stati spostati in
   `tests/fixtures/` (solo test automatici, commit `302b24e`).
@@ -4036,7 +4077,8 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   assenza di traffico Firebase sulla guida non garantita.
 - **UI mobile (diagnosi storiche non riverificate):** menu Categoria che allarga il viewport o copre la pillola, scroll
   annidato nei menu bassi, etichetta «Dashboard» (oggi «Analisi») troncata a 320 px, Nuova spesa in landscape aperta scorsa.
-- Nessun avvio offline a freddo: `public/sw.js` serve solo alle notifiche di sistema, senza gestore `fetch` né cache. Cache Firestore
+- Nessun avvio offline a freddo: `public/sw.js` serve le notifiche di sistema e, dal 21 novembre (`1c83b54`), solo la pagina offline di
+  Nummo alle navigazioni fallite (cache `nummo-offline-v<n>` con `offline.html` e il font): mai l'app, il bundle o dati. Cache Firestore
   su disco attiva nella build pubblicata e cancellata a «Esci» (dal 17 novembre); collezioni caricate integralmente. Licenza assente; audit dipendenze non aggiornato. Nessun lint configurato.
 - Richieste pregresse senza contesto sufficiente (scritta «minimale» senza testo, colori attivi mobile/rail): chiarire
   con l'utente prima di intervenire.
@@ -4075,7 +4117,8 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `1c83b54` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `8c1ff66` è online su Hosting (fase «Dati della modalità Standard» del
+  21 novembre, sera tardi, committata ma non pubblicata); ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
@@ -4108,5 +4151,5 @@ screen reader, concorrenza tra due dispositivi.
 6. **Riproducibilità:** `npm ci` da clone pulito su Node LTS, audit aggiornato, scelta della licenza.
    Riallineare README e le altre sezioni superate di `docs/architecture.md` («Flusso attivo» fatto il 14 novembre) alle
    funzioni attuali, preservandone le decisioni valide.
-   Unicità server dei nomi fondo, sincronizzazione del predefinito, paginazione e service worker sono evoluzioni da
-   valutare, non lavori pianificati né implementati.
+   Unicità server dei nomi fondo, sincronizzazione del predefinito, paginazione e avvio offline dal service worker (che oggi
+   serve solo notifiche e pagina offline) sono evoluzioni da valutare, non lavori pianificati né implementati.

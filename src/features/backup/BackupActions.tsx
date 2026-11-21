@@ -153,7 +153,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         <Button {...fileAction} mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
       </View>
       {/* The file is the copy that survives losing this device or this project: keep it somewhere else (user's request). */}
-      <Text variant="bodySmall" style={hint}>{t("Salva il file su Google Drive o in un altro posto sicuro, fuori da questo dispositivo.")}</Text>
+      <Text variant="bodySmall" style={[hint, styles.footnote]}>{t("* Salva il file su Google Drive o in un altro posto sicuro, fuori da questo dispositivo.")}</Text>
     </View>
     {preview && <View ref={previewRef}>
       <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => setPreview(null)}
@@ -182,6 +182,8 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
 const styles = StyleSheet.create({
   card: { gap: spacing.xxxl },
   group: { gap: spacing.sm },
+  // Note under the buttons, a little further from them than the buttons are from each other (user's request, 21 November).
+  footnote: { marginTop: spacing.sm },
   lines: { gap: 2 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },

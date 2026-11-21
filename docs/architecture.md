@@ -466,9 +466,9 @@ accessibile completa anche quando il nome viene troncato visivamente.
 | Web Chrome Android, Safari iOS | Obiettivi; dispositivi reali e OAuth mobile da verificare |
 | React/Expo web | Build/typecheck verificati; unico target dichiarato in app.json |
 | App native Android/iOS | Non implementate: UI SVG DOM e login popup richiedono adattamenti; il Firebase JS SDK in RN non fornisce persistenza Firestore nativa equivalente |
-| Installazione Android (manifest + icone) | Manifest e icone presenti (6 nov 2026); installabilità non provata su dispositivo; service worker `sw.js` solo per le notifiche (14 nov), senza cache |
-| Apertura a freddo senza rete | Non implementata: manca il service worker; cache dati ≠ disponibilità offline del bundle |
-| Firebase Hosting | Configurato in `firebase.json` e `npm run deploy:hosting` (solo Hosting); nessuna pubblicazione eseguita |
+| Installazione Android (manifest + icone) | Manifest e icone presenti (6 nov 2026); installabilità non provata su dispositivo; service worker `sw.js` per le notifiche (14 nov) e, dal 21 nov, per la sola pagina offline di Nummo (cache `nummo-offline-v<n>`) |
+| Apertura a freddo senza rete | Non implementata: il service worker non mette in cache l'app né il bundle, senza rete mostra solo `offline.html`; cache dati ≠ disponibilità offline del bundle |
+| Firebase Hosting | Configurato in `firebase.json` e `npm run deploy:hosting` (solo Hosting); pubblicato più volte su autorizzazione sul progetto personale (cronologia nel «Registro dei rilasci» di `HANDOFF.md`) |
 
 **Tastiera virtuale (8 novembre 2026).** Nessuna API web la segnala ovunque (`navigator.virtualKeyboard` solo Chromium
 e con contenuto sovrapposto), quindi è dedotta: campo di testo attivo e viewport visibile sotto l'80% del più alto

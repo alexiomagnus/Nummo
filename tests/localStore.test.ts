@@ -532,7 +532,10 @@ test('passaggio tra modalità: le predefinite di entrambi gli archivi si allinea
   await from.createExpense(expense({ description: 'Pane', category_id: fromFood }));
   await from.createExpense(expense({ description: 'Treno', category_id: travel }));
   await from.createExpense(kept);
-  await to.createExpense(kept);
+  // The same record in both archives, created_at included: two createExpense calls would each take their own time, and
+  // a millisecond between them made the expense a conflict instead of an identical one (flaky until 21 November).
+  const keptRecord = (await from.exportSnapshot()).expenses.filter((e) => e.id === kept.expense_id);
+  await to.importRecords(keptRecord, [], 'merge');
   const move = async () => {
     const { data } = alignCategoriesByName(archiveAsImport(await from.exportSnapshot()), (await to.exportSnapshot()).categories);
     const plan = (await to.previewImport(data)).merge;

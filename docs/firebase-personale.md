@@ -12,7 +12,7 @@ valori. I nomi della Console sono in italiano, tra parentesi in inglese (la Cons
 
 **Prima di iniziare.** Servono un account Google e circa 10 minuti; basta il piano gratuito di Firebase («Spark»), senza carta
 di credito. Le spese della modalità Standard restano sul dispositivo: dopo il collegamento si portano nel proprio Firebase da
-Archiviazione e backup → «Porta qui i dati della Standard».
+Archiviazione e backup → «Dal dispositivo a Firebase».
 
 1. **Crea il progetto.** «Crea un progetto» (Create a project), un nome qualsiasi; Google Analytics non serve.
 2. **Registra l'app web e copia la configurazione.** Icona `</>` (Web), un nome qualsiasi, «Configura anche Firebase Hosting»

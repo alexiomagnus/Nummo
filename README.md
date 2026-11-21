@@ -20,8 +20,8 @@ Alla prima apertura Nummo chiede dove salvare i dati. La scelta resta in questo 
 
 Le due modalità hanno **archivi separati**. Cambiare modalità non copia, non sposta e non cancella nulla: i dati
 dell'altra modalità restano dove sono e si ritrovano tornando indietro. Per portarli dall'una all'altra, in modalità
-Avanzata (l'unica che raggiunge entrambi gli archivi): **menu → Archiviazione e backup → Porta qui i dati della Standard**
-oppure **Copia questi dati sul dispositivo**. Si aggiunge solo ciò che manca, con un riepilogo prima di scrivere; le
+Avanzata (l'unica che raggiunge entrambi gli archivi): **menu → Archiviazione e backup → Dal dispositivo a Firebase**
+oppure **Da Firebase al dispositivo**. Si aggiunge solo ciò che manca, con un riepilogo prima di scrivere; le
 categorie con lo stesso nome (per esempio le cinque predefinite) diventano una sola. Resta possibile anche esportare un
 backup JSON e importarlo dopo il cambio. Nummo **non è un servizio**: non esiste un server centrale né un database
 condiviso, in nessuna delle due modalità.
@@ -273,7 +273,7 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 - Le regole in `firestore.rules` sono la vera protezione dei dati (la `apiKey` è pubblica). Pubblicale prima dell'uso e non usare la modalità test.
 - `.env.local`, `.env.production.local`, `.firebaserc` ed `emulator-data/` sono ignorati da Git: non versionarli e non pubblicarli. Non inserire chiavi di servizio nel frontend.
 - **Backup**: da menu account → «Archiviazione e backup» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
-- Cache su disco (`EXPO_PUBLIC_FIRESTORE_CACHE=persistent`): contiene dati personali finché resti connesso; «Esci» la cancella e ricarica la pagina (se un'altra scheda di Nummo è aperta la cancellazione non riesce e la cache resta fino a un'uscita successiva con una sola scheda). Su un dispositivo condiviso esci sempre.
+- Cache su disco (`EXPO_PUBLIC_FIRESTORE_CACHE=persistent`): contiene dati personali finché resti connesso; «Esci» la cancella e ricarica la pagina sulla scelta della modalità (se un'altra scheda di Nummo è aperta la cancellazione non riesce e la cache resta fino a un'uscita successiva con una sola scheda). Su un dispositivo condiviso esci sempre.
 - Costi, quote, fatturazione e conformità del progetto Firebase sono a tuo carico. Il software è fornito senza garanzie.
 
 ## Risoluzione dei problemi
