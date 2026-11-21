@@ -77,7 +77,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di scorrimento senza frecce), `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
+  `origin`. Ultimi commit di codice, tutti pubblicati: `e008fcd` (nessun campo «Chiave API» nella scansione, «Vibrazione» e telefono in
+  silenzioso), `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di scorrimento senza frecce), `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
   selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
   pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
   pulsante «Template» invariato), `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
@@ -100,7 +101,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `e008fcd` (nessun campo «Chiave API» nel dialogo di scansione; testo di
+  «Vibrazione» sul telefono in silenzioso) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!»,
+  sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. Prima, **Hosting** da `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di
   scorrimento senza frecce dell'altra sessione) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy
   complete!», sito 200, bundle online identico a `dist/` (SHA-256, con `tap:8,tick:7`). Rules invariate. Prima, **Hosting** da `cffe2e8` («Esci» riporta alla scelta della modalità) pubblicato su richiesta
   il 21 novembre (sera tardi) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules
@@ -220,7 +223,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` OK (**520/520**). Chromium headless su un export demo in Standard, scansione accesa (OpenAI, modello
   salvato), rete esterna bloccata, immagine caricata dal file: 1280×900 e 390×844, senza chiave (messaggio nel passo iniziale e dopo la
   foto, «Scansiona» disattivato) e con una chiave finta salvata (nessun messaggio, «Scansiona» attivo); nessun campo di testo nel dialogo,
-  nessuna richiesta esterna, nessun errore JS. Scansione reale non provata. Non committato, non pubblicato.
+  nessuna richiesta esterna, nessun errore JS. Scansione reale non provata. Committato in `e008fcd`, inviato e pubblicato su Hosting.
 
 ## Vibrazione: Chrome Android tace con il telefono in silenzioso — 21 novembre 2026 (notte)
 
@@ -234,7 +237,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Da confermare sul telefono:** suoneria non in silenzioso → la barra vibra? Se no: risparmio energetico, «Vibrazione contenuti
   multimediali» (Android usa quell'intensità per le vibrazioni senza attributi come queste: dalla documentazione, non verificato); se vibra
   ma non si sente sui tocchi veloci, alzare `tap` a 10 (ultima durata percepita). Pagina di prova (artifact) con controlli 100/300 ms.
-- **Verifica:** `npm run check` OK (**520/520**). Non committato, non pubblicato.
+- **Verifica:** `npm run check` OK (**520/520**). Committato in `e008fcd`, inviato e pubblicato su Hosting.
 
 ## Dettagli di una categoria in Analisi più chiari — 21 novembre 2026 (notte)
 
@@ -4200,7 +4203,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `1934641` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `e008fcd` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
