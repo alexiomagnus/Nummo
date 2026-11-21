@@ -44,6 +44,11 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. Provato poi
   nel browser da 360 a 1400 px (sezione «Revisione dello scontrino provata nel browser» qui sotto): conforme, salvo «Usa questi dati»
   troncato sotto 390 px e «Ingrandisci la foto» fra le due righe di pulsanti, corretti in `6f95a08`, pubblicato su Hosting.
+- **«Template» accanto a «Scansiona scontrino» (21 novembre, sera):** su richiesta, perché «Salva» finiva sotto la navigazione su
+  smartphone; pulsante distinto in `primary`, scelto un template solo l'icona della categoria. Non committato, non pubblicato; sezione
+  dedicata qui sotto.
+- **Vibrazione provata nel browser emulato (21 novembre, sera):** tutti i 15 casi come previsto (sezione dedicata qui sotto); percezione
+  sul Pixel 8 ancora da provare.
 - **Tastiera virtuale provata nel browser emulato (21 novembre, sera):** `scripts/check-keyboard.mjs` su `dist-demo`: transizioni in un
   fotogramma ovunque (campo alto/basso, dialogo, 3–4 passi, cambio campo, CPU ×4, 360×640). Su richiesta, 24 px di margine sotto il
   campo riportato in vista (prima a filo della tastiera a 360×640). Committato in `62e3639` e pubblicato su Hosting; sezione dedicata qui sotto.
@@ -166,6 +171,37 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## «Template» accanto a «Scansiona scontrino» — 21 novembre 2026
+
+- Su richiesta (screenshot da iPhone: con i template attivi «Salva» finiva sotto la navigazione): il campo «Template» sopra «Ricorrente»
+  diventa il pulsante `TemplatePicker` (`features/templates/`) nella prima riga di Nuova spesa, accanto a «Scansiona scontrino» o al suo
+  posto se la scansione è spenta. Su smartphone metà riga ciascuno, allineati a Importo e Data; da medium larghezza naturale, distanza 12.
+  Aspetto: contorno, icona «template», etichetta «Template» e freccia in `primary` (provato prima `tertiaryContainer`: nel tema
+  predefinito mono è il grigio delle superfici e sembrava disattivato). Scelto un template il pulsante mostra solo l'icona della sua
+  categoria (icona «template» se la categoria non c'è più) e la freccia; il nome resta nell'etichetta accessibile («Template: …») e
+  nell'elenco. `SelectField` accetta `trigger`/`triggerStyle`/`menuMinWidth` (stesso foglio e menu; menu largo almeno 360 perché le
+  descrizioni non siano troncate). La riga «Il campo Template compare quando…» (template attivi ma nessuno salvato) sta sotto la prima riga.
+- **Verifica:** `npm run check` OK (**509/509**). Chromium headless, `dist-demo` in Standard, tema scuro, backup v11 di prova con due
+  template importato dall'interfaccia: 390×844 con e senza scansione, 360×780, 1280×900 con e senza scansione; aperto il foglio/menu,
+  scelto un template. Smartphone: pulsanti a metà riga (12–189 e 201–378 a 390), «Salva» sopra la navigazione (fondo 676–696 contro
+  768 a 390, 676–696 contro 704 a 360); dopo la scelta solo l'icona del carrello, campi compilati; desktop: menu con i nomi interi;
+  nessuno scorrimento orizzontale, nessun errore JS. Non provato su iPhone reale. Non committato, non pubblicato.
+
+## Vibrazione provata nel browser emulato — 21 novembre 2026
+
+- Su richiesta, prova scritta per l'occasione (non nel repository): Chromium headless 390×844 con tocchi emulati, `dist-demo` in Standard
+  con `nummo-utente-medio.json` importato dall'interfaccia (unione), rete esterna bloccata, ogni `navigator.vibrate` registrato. Codice di
+  `62e3639`. Esiti (durate in ms):
+  - destinazioni Spese/Analisi/Fondi/Liste [4] ciascuna, anche quella già aperta; pulsante tondo «Nuova spesa» [4];
+  - trascinamento lento sulla barra Spese → Liste: [3,3,3] e [4] al rilascio; dito che oscilla ±3 px sul confine Spese|Analisi 20 volte:
+    un [3] all'attraversamento e uno al ritorno, nulla durante le oscillazioni; trascinamento veloce (≈100 ms): [3,3,3] a 82 e 67 ms, il
+    [4] del rilascio scartato dal cancello di 60 ms (come previsto);
+  - segmenti di Spese (anche quello già scelto), scorrimento della pagina, righe della legenda, scrittura nell'Importo: nessuna;
+  - spicchio della ciambella [3] alla selezione e alla deselezione; blocco del grafico a blocchi [3]; «Salva» e «Crea» [4];
+  - «Vibrazione» spenta (destinazioni, «Nuova spesa», «Salva»): nessuna. Tutte le vibrazioni accettate dal browser, nessun errore JS.
+- Dice solo che l'app chiede l'impulso giusto al momento giusto: la percezione di 3–4 ms sul Pixel 8 resta da provare a mano
+  (`docs/testing/prova-vibrazione.html`); iOS e Firefox non hanno la Vibration API. Nessun codice toccato.
 
 ## Tastiera virtuale provata nel browser emulato, margine sotto il campo — 21 novembre 2026
 

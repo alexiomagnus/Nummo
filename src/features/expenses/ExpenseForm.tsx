@@ -21,10 +21,8 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ScanReceiptDialog } from '../receipts/ScanReceiptDialog';
 import { useReceiptAi } from '../receipts/aiSettings';
 import type { RankedMerchant } from '../../domain/merchant';
-import { SelectField } from '../../components/SelectField';
-import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { draftOfTemplate, type TemplateRecord } from '../../domain/template';
-import { NoFundAvatar } from '../funds/FundAvatar';
+import { TemplatePicker } from '../templates/TemplatePicker';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
 // Categories are created only in the Categories page, never from this form.
@@ -34,10 +32,9 @@ type Props = {
   defaultCategoryId?: string;
   // Saved merchants ranked by use (suggestions of «Esercente»).
   merchants?: readonly RankedMerchant[];
-  // Saved templates, given only when they are turned on (Templates page): the field above the repeat fills the form from one.
+  // Saved templates, given only when they are turned on (Templates page): the button beside the scan fills the form from one.
   templates?: readonly TemplateRecord[];
 };
-const noTemplate = 'none';
 
 
 export const ExpenseForm = memo(ExpenseFormView);
@@ -54,6 +51,8 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // Half of a phone narrower than 380 px cannot hold «Scansiona scontrino» (measured: truncated at 360 px).
   const narrow = size === 'compact' && windowWidth < 380;
   const { submission } = store;
+  // Saved templates, given only when they are turned on (Templates page); the button needs at least one.
+  const templateShown = templates !== undefined && templates.length > 0;
   const [draft, setDraft] = useState<ExpenseDraft>(() => newDraft());
   const [errors, setErrors] = useState<FieldErrors>({});
   // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
@@ -139,13 +138,6 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     onChange={(fundId) => update({ fundId })} /> : null;
   const repeat = (
     <View style={{ gap: blockGap }}>
-      {/* Template (Templates page, switch on): below category and fund, above the repeat, as before the removal. */}
-      {templates && templates.length > 0 && <SelectField label={t("Template")} disabled={!enabled} value={templates.some((item) => item.id === templateId) ? templateId : noTemplate}
-        options={[{ value: noTemplate, label: t("Nessun template"), icon: <NoFundAvatar size={24} /> },
-          ...templates.map((item) => ({ value: item.id, label: item.description, icon: <TemplateGlyph template={item} categories={categories} /> }))]}
-        onChange={(value) => applyTemplate(value === noTemplate ? '' : value)} />}
-      {/* Templates turned on but none saved yet: the field cannot appear, so say why. */}
-      {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il campo Template compare quando crei un template nella pagina Templates.")}</Text>}
       <RepeatField gap={blockGap} repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })}>
@@ -163,14 +155,21 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     <View style={[styles.form, desktop && styles.formDesktop]}>
       {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. No message
           when the fields are filled (removed on request, 17 November): the filled fields speak for themselves. */}
-      {/* Phones: as wide as «Importo» below (same halves and gap as the amount/date row), so both edges line up. */}
-      {scanEnabled && <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
-        <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={size === 'compact' && styles.scanHalf}
+      {/* «Scansiona scontrino» and «Template» share the first row (user's request, 21 November: the Template field above the
+          repeat pushed «Salva» under the navigation on phones); without the scan, Template takes its place. Phones: each as
+          wide as «Importo» and «Data» below (same halves and gap as the amount/date row), so the edges line up. */}
+      {(scanEnabled || templateShown) && <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
+        {scanEnabled && <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={size === 'compact' && styles.scanHalf}
           compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
           accessibilityLabel={t("Scansiona scontrino")}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{narrow ? t("Scansiona") : t("Scansiona scontrino")}</Button>
-        {size === 'compact' && <View style={styles.scanHalf} />}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{narrow ? t("Scansiona") : t("Scansiona scontrino")}</Button>}
+        {templateShown && <TemplatePicker templates={templates} categories={categories} disabled={!enabled}
+          value={templates.some((item) => item.id === templateId) ? templateId : ''} onChange={applyTemplate}
+          style={size === 'compact' && styles.scanHalf} />}
+        {size === 'compact' && !(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
       </View>}
+      {/* Templates turned on but none saved yet: the button cannot appear, so say why. */}
+      {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il campo Template compare quando crei un template nella pagina Templates.")}</Text>}
       {scanEnabled && scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={update} />}
@@ -204,20 +203,14 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   );
 }
 
-// Category icon of a template in the picker.
-function TemplateGlyph({ template, categories }: { template: TemplateRecord; categories: readonly Category[] }) {
-  const icon = categories.find((category) => category.id === template.category_id)?.icon;
-  return icon ? <CategoryGlyph icon={icon} size={20} /> : null;
-}
-
 const styles = StyleSheet.create({
   page: { width: '100%' },
   form: { width: '100%', gap: spacing.lg },
   formDesktop: { gap: spacing.md },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row' },
-  scan: { flexDirection: 'row' },
-  scanCompact: { gap: spacing.md },
+  scan: { flexDirection: 'row', gap: spacing.md },
+  scanCompact: {},
   scanHalf: { flex: 1, minWidth: 0 },
   // Full width at every size, pill-shaped (user's request, 21 November): the one primary action of the page.
   submit: { flexGrow: 1, borderRadius: radius.pill },

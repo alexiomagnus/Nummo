@@ -1,6 +1,6 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
@@ -17,6 +17,12 @@ type Props<T extends string> = {
   onChange: (value: T) => void;
   error?: string;
   disabled?: boolean;
+  // Replaces the outlined field with a control of its own (the «Template» button of Nuova spesa): it gets whether the
+  // choices are open; press, focus, accessibility, sheet and menu stay the same. `menuMinWidth`: the menu (from medium) is
+  // at least this wide, for a trigger narrower than its choices.
+  trigger?: (open: boolean) => ReactNode;
+  triggerStyle?: StyleProp<ViewStyle>;
+  menuMinWidth?: number;
 };
 
 // Material 3 exposed dropdown: an outlined text field (label, trailing arrow). On phones the choices open in a modal
@@ -24,16 +30,17 @@ type Props<T extends string> = {
 // the field, below it or above when there is no room. The field is read-only and not focusable itself: the surrounding
 // button owns focus, press and accessibility; the overlay returns focus to it without scrolling.
 
-export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
+export function SelectField<T extends string>({ label, options, value, onChange, error, disabled, trigger, triggerStyle, menuMinWidth = 0 }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<MenuAnchor>({ x: 0, y: 0, width: 0, height: 0 });
   const anchorRef = useRef<ComponentRef<typeof Pressable>>(null);
+  const triggerRef = useRef<ComponentRef<typeof View>>(null);
   const openMenu = () => {
     if (compact) { setOpen(true); return; }
-    anchorRef.current?.measureInWindow((x, y, width, height) => { setAnchor({ x, y, width, height }); setOpen(true); });
+    (trigger ? triggerRef.current : anchorRef.current)?.measureInWindow((x, y, width, height) => { setAnchor({ x, y, width, height }); setOpen(true); });
   };
   const closeMenu = () => setOpen(false);
   const current = options.find((option) => option.value === value);
@@ -48,12 +55,18 @@ export function SelectField<T extends string>({ label, options, value, onChange,
       </StateLayerPressable>
     );
   });
+  const accessibilityLabel = `${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`;
   return (
     <View>
-      <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu}
+      {trigger ? <View ref={triggerRef}>
+        <StateLayerPressable layerColor={colors.onSurface} radius={radius.button} disabled={disabled} onPress={openMenu} style={triggerStyle}
+          accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled} accessibilityLabel={accessibilityLabel}>
+          {trigger(open)}
+        </StateLayerPressable>
+      </View> : <Pressable ref={anchorRef} style={styles.anchor} disabled={disabled} onPress={openMenu}
         {...{ dataSet: { focusRing: 'field' } }}
         accessibilityRole="button" aria-haspopup="listbox" aria-expanded={open} aria-disabled={disabled} aria-invalid={Boolean(error)}
-        accessibilityLabel={`${label}${current ? `: ${current.label}` : t(", obbligatoria, nessuna selezione")}`}>
+        accessibilityLabel={accessibilityLabel}>
         {/* `inert` excludes every descendant, including Paper surfaces that restore pointer events. */}
         <div inert>
           <TextInput outlineStyle={inputOutline} label={label} value={current?.label ?? ''} mode="outlined" readOnly focusable={false} contentStyle={styles.value}
@@ -61,10 +74,10 @@ export function SelectField<T extends string>({ label, options, value, onChange,
             left={current?.icon ? decorativeIcon(() => current.icon, false) : undefined}
             right={decorativeIcon(({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />, false)} />
         </div>
-      </Pressable>
+      </Pressable>}
       {compact
         ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
-        : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={anchor.width} label={label} contentStyle={styles.menu}>{rows}</AnchoredMenu>}
+        : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={Math.max(anchor.width, menuMinWidth)} label={label} contentStyle={styles.menu}>{rows}</AnchoredMenu>}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
   );

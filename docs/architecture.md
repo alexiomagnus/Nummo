@@ -1289,3 +1289,15 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   segmenti e righe della legenda di Analisi.
 - **Limiti.** La forma dell'impulso (attacco, frenata del motore) la decide Chrome/Android, non la pagina; Safari/iOS e Firefox
   non vibrano. Le durate si scelgono provandole sul telefono con `docs/testing/prova-vibrazione.html`.
+
+## «Template» di Nuova spesa nella prima riga, come pulsante — 21 novembre 2026
+
+- **Contesto.** Su smartphone, con i template attivi, il campo «Template» sotto Categoria/Fondo e sopra «Ricorrente» spingeva «Salva»
+  sotto la barra di navigazione (screenshot dell'utente).
+- **Decisione (dell'utente).** Il campo diventa un pulsante-selettore (`TemplatePicker`) nella prima riga, accanto a «Scansiona
+  scontrino», o al suo posto se la scansione è spenta; scelto un template mostra solo l'icona della sua categoria; aspetto distinto dal
+  resto del modulo. Su smartphone i due pulsanti dividono la riga come Importo e Data.
+- **Scelte tecniche.** Contorno, icona ed etichetta in `primary`, con la freccia del selettore: diverso dai campi (contorno grigio) e dal
+  pulsante tonale della scansione con ogni accento; scartato `tertiaryContainer`, che in modalità mono è il grigio neutro delle
+  superfici e sembra disattivato. Scelta con lo stesso foglio (smartphone) e menu (da medium) di `SelectField`, esteso con `trigger`
+  e `menuMinWidth` (360) invece di un secondo selettore. Il nome del template resta nell'etichetta accessibile e nell'elenco.
