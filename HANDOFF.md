@@ -12,14 +12,15 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
 - **Scansione solo con AI (21 novembre, inviata su `origin`, non pubblicata):** OCR e «API compatibile OpenAI» rimossi, interruttore in
   Impostazioni; dettagli nella sezione omonima qui sotto. Va pubblicata insieme ai commit in attesa.
-- **Prossima sessione, priorità consigliate:** (0) su autorizzazione, pubblicare prima le **Rules** (template reintrodotti) e poi
-  Hosting: tutto il lavoro del 21 novembre da `0e536a5` in poi (produzione ferma a `de79c95`); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
+- **Prossima sessione, priorità consigliate:** (0) in produzione, ricaricare l'app e provare: pagina Templates (in Avanzata compaiono i
+  template salvati prima del 16 novembre, se ce n'erano), scansione dello scontrino da attivare in Impostazioni, pulsanti dei dialoghi,
+  nuova icona (la cache del browser o del launcher può mostrare ancora quella vecchia); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, **non ancora pubblicati su Hosting**: `9ad8e02` (pulsanti di prova delle notifiche nascosti
+  `origin`. Ultimi commit di codice (pubblicati con `817a2f1` il 21 novembre, notte): `9ad8e02` (pulsanti di prova delle notifiche nascosti
   dietro `pushTests`, più documenti), `9dd0880` (tre pulsanti di Archiviazione e backup della stessa larghezza), `661b984` (avatar del
   fondo nei dettagli), `0e536a5` (riga dissolta anche su smartphone). Prima, pubblicati: `de79c95` («Fondo» nei dettagli), prima `42d9beb` (riga dissolta nel pannello), prima `41a54ab` (righe intere nel pannello, esercente tolto dai dettagli), prima `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
   `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
@@ -28,7 +29,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `de79c95` pubblicato su richiesta il 21 novembre (notte, seconda parte):
+- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `817a2f1` pubblicati su richiesta il 21 novembre (notte, terza
+  parte): template, scansione solo AI, pulsanti uniformi, icona; dettagli nel «Registro dei rilasci». Prima, **Hosting** da `de79c95` pubblicato su richiesta il 21 novembre (notte, seconda parte):
   riga tagliata dissolta verso il bordo del pannello, «Fondo» nei dettagli della spesa; sito 200, bundle identico a `dist/`. Prima,
   **Hosting** da `41a54ab` pubblicato su richiesta il 21 novembre (notte): righe intere sul
   bordo del pannello desktop, esercente tolto dai dettagli; sito 200, bundle identico a `dist/`. Da provare in Brave: nessuna riga a
@@ -389,6 +391,14 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (notte, terza parte): Rules da `817a2f1`, poi Hosting da `817a2f1`** (tutto il lavoro da `0e536a5`: riga
+  velata su smartphone, fondo nei dettagli di spese e abbonamenti, pulsanti di prova delle notifiche nascosti, scansione solo con AI e
+  spenta di base (OCR rimosso), template reintrodotti con l'Esercente, pulsanti dei dialoghi uniformi, dettagli di Analisi con categoria
+  colorata e fondo, icona più squadrata). Rules: `firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy
+  complete!» (raccolta `templates` di nuovo ammessa). Hosting: `npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
+  identico a `dist/` (SHA-256), `icon.svg` nuovo online, nessun file `/ocr/` (l'indirizzo dà solo il ripiego SPA). Worker non toccato.
+  `npm run check` **501/501**, `test:emulator` **22/22** (sulle Rules pubblicate).
 
 - **Rilascio del 21 novembre (notte, seconda parte): Hosting da `de79c95`** (riga tagliata dal bordo del pannello desktop dissolta
   invece che nascosta, clic che la porta in vista, `42d9beb`; «Fondo» nei dettagli della spesa). `npm run deploy:hosting`: «Deploy
@@ -3451,8 +3461,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione in attesa (21 novembre):** `0e536a5`, `661b984`, `9dd0880`, `9ad8e02` sono su `origin/main` ma non su Hosting
-  (produzione da `de79c95`); `npm run deploy:hosting` solo su autorizzazione. Rules e Worker non toccati da quei commit.
+- **Pubblicazione (21 novembre, notte):** tutto il lavoro fino a `817a2f1` è online (Rules e Hosting), vedi «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
