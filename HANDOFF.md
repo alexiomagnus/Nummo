@@ -29,7 +29,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `8e513f4` (Annulla/Salva a 96 su smartphone accanto al cestino) pubblicato su
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `9a8285a` (Importo e Data non più tagliati su smartphone; con `1a8dc14`,
+  raggruppamento della tastiera come funzione pura) pubblicato su richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `8e513f4` (Annulla/Salva a 96 su smartphone accanto al cestino) pubblicato su
   richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `3d1b5ea` pubblicato su richiesta il 21 novembre (mezzogiorno): tastiera
   virtuale nello stesso fotogramma (`fdfce0e`), «Torna indietro» in «Collega il tuo Firebase», pulsanti della revisione dello scontrino,
   esercente negli abbonamenti, cestino con contorno rosso su smartphone. Prima, **Hosting** da `bdc742b` («Chiudi» con contorno) pubblicato su richiesta il 21 novembre
@@ -88,7 +89,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   già 0) e carattere 24 invece di 28 da 7 caratteri («1234,56»).
 - **Verifica:** Chromium headless, demo con `nummo-esercenti-v10.json`: modifica spesa («48,20», «19 nov 2026») e Nuova spesa («1234,56»,
   «Oggi») a 320, 360, 390 e 412 px: in ogni caso larghezza del testo ≤ spazio dell'input (nessun valore tagliato); nessun errore JS.
-  `npm run check` OK. Non committato, non pubblicato. Non provati: un importo da 8 caratteri o più («12345,67») a 360 px, il carattere
+  `npm run check` OK. Committato in `9a8285a` e pubblicato. Non provati: un importo da 8 caratteri o più («12345,67») a 360 px, il carattere
   scelto in Impostazioni diverso dal predefinito.
 
 ## Annulla e Salva a 96 su smartphone nei dialoghi di modifica — 21 novembre 2026
@@ -157,7 +158,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Correzione** (`fdfce0e`, già pubblicata con `3d1b5ea`): un microtask riunisce gli avvisi `open`/`confirmed` di un evento in un solo
   `flushSync`, ancora prima del disegno; il campo va in vista in un `useLayoutEffect`. `flushSync` dichiarato in `src/types/react-dom.d.ts`
   (`react-dom` è già una dipendenza diretta, senza tipi). `observeVirtualKeyboard` invariato.
-- **Seguito, stesso giorno (non committato):** il raggruppamento è ora la funzione pura `batchKeyboardReports` in `theme/viewport.ts`, con un
+- **Seguito, stesso giorno (`1a8dc14`, pubblicato con `9a8285a`):** il raggruppamento è ora la funzione pura `batchKeyboardReports` in `theme/viewport.ts`, con un
   test (un solo aggiornamento per gruppo, valori più recenti, niente dopo lo smontaggio); commento di `KeyboardContext` corretto (nessuna
   pagina lo legge oggi); `scripts/check-keyboard.mjs`, controllo manuale per fotogramma (`--field top|low|dialog`, `--keyboard`, `--cpu`,
   `--switch`, `--cycles`, `--vp`).
@@ -490,6 +491,10 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (pomeriggio, seconda parte): Hosting da `9a8285a`** (Importo/Data su smartphone; `1a8dc14`, lavoro
+  sulla tastiera di un'altra sessione, committato a parte). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico
+  a `dist/` (il primo controllo aveva letto l'HTML precedente dalla cache). Rules e Worker non toccati.
 
 - **Rilascio del 21 novembre (pomeriggio): Hosting da `8e513f4`** (Annulla/Salva a 96 su smartphone nei dialoghi di modifica).
   `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules e Worker non toccati.
