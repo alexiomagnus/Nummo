@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
+import { BackButton } from '../../components/BackButton';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { useSnackbar } from '../../components/SnackbarHost';
@@ -105,7 +106,8 @@ export function FirebaseConnect({ target, connected, site, signedIn, onCancel }:
     run(site && sameFirebaseProject(parsed.config, site) ? null : parsed.config);
   };
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, styles.withBack]}>
+      <BackButton disabled={busy} onPress={onCancel} />
       <View style={styles.intro}>
         <Text variant="headlineMedium" accessibilityRole="header" aria-level={1}>{t("Collega il tuo Firebase")}</Text>
         <Text variant="bodyLarge" style={muted}>
@@ -197,6 +199,8 @@ export function OwnerSetup({ project, uid, email, busy, error, checking, onCheck
 
 const styles = StyleSheet.create({
   wrap: { width: '100%', maxWidth: 640, alignSelf: 'center', gap: spacing.xl, paddingTop: spacing.xl },
+  // With «Torna indietro» on top, as in the guide: the button takes the place of the top padding.
+  withBack: { paddingTop: 0 },
   intro: { gap: spacing.xs },
   steps: { gap: spacing.lg },
   step: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },

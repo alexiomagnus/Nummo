@@ -74,13 +74,13 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
     </Dialog.Content>
     <Dialog.Actions style={dialogActionsRow}>
       <View style={styles.grow}>
-        <DeleteAction labeled name={item.name} title={t("Eliminare {p0} dalla lista?", { p0: item.name })} description=""
+        <DeleteAction labeled="wide" name={item.name} title={t("Eliminare {p0} dalla lista?", { p0: item.name })} description=""
           onDelete={() => { const done = onDelete(); if (done) close(); return done; }} />
       </View>
       {/* Kept together so that, when the row wraps on narrow phones, the pair moves under Delete as one unit. */}
       <View style={dialogActionPair}>
-        <CancelButton compact onPress={close}>{t("Annulla")}</CancelButton>
-        <ConfirmButton compact onPress={save}>{t("Salva")}</ConfirmButton>
+        <CancelButton onPress={close}>{t("Annulla")}</CancelButton>
+        <ConfirmButton onPress={save}>{t("Salva")}</ConfirmButton>
       </View>
     </Dialog.Actions>
   </Dialog></Portal>;
@@ -90,5 +90,5 @@ const styles = StyleSheet.create({
   dialog: { maxWidth: 480 },
   content: { gap: spacing.md },
   // Natural width (not flexBasis 0), so a crowded row wraps instead of squeezing Delete under the pair.
-  grow: { flexGrow: 1, alignItems: 'flex-start' },
+  grow: { flexGrow: 1, alignItems: 'flex-start', marginRight: 0 },
 });

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { BackButton } from '../../components/BackButton';
 import { spacing } from '../../theme/tokens';
 
 // Public introduction, shown on the mode choice and sign-in screens. Static text only: no data access and no
@@ -29,9 +29,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
   );
   return (
     <View role="article" aria-label={t("Cos'è Nummo e come funziona")} style={styles.wrap}>
-      <Button mode="text" compact onPress={onBack} style={styles.back}
-        icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />}>
-        {t("Torna indietro")}</Button>
+      <BackButton onPress={onBack} />
       <View style={styles.intro}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{t("Cos'è Nummo")}</Text>
         <Text variant="bodyLarge" style={[styles.paragraph, muted]}>
@@ -67,7 +65,6 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
 const styles = StyleSheet.create({
   wrap: { width: '100%', maxWidth: 640, alignSelf: 'center', gap: spacing.xl },
-  back: { alignSelf: 'flex-start', marginLeft: -spacing.sm },
   intro: { gap: spacing.sm },
   title: { fontWeight: '700', letterSpacing: -0.3 },
   section: { gap: spacing.sm },

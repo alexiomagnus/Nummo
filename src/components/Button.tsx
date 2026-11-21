@@ -35,7 +35,9 @@ export const regularIconPadding = {
 // scan dialog): the way back («Annulla», «Indietro») is outlined, the confirmation contained (destructive ones pass the error
 // colours), each at least 112 wide and 48 tall, 12 apart. Paper's Dialog.Actions clones its direct children adding `compact`
 // and 8 dp after every button but the last: these buttons drop that margin (their style is applied last), so the space between
-// them is only the `gap` of `dialogActionsRow`, also where they sit in a plain View.
+// them is only the `gap` of `dialogActionsRow`, also where they sit in a plain View. The `compact` it adds is overridden too:
+// it shrinks the label's side margins from 24 to 8, so a label longer than the minimum width («Usa questi dati») looked
+// cramped next to the others.
 const dialogAction = StyleSheet.create({ button: { minWidth: 112, marginRight: 0 } }).button;
 export const dialogActionsRow = StyleSheet.create({ row: { flexWrap: 'wrap', gap: spacing.md } }).row;
 // «Annulla» and the confirmation kept together next to a left-hand action (Elimina): when the row wraps on a narrow phone, the
@@ -44,8 +46,8 @@ export const dialogActionPair = StyleSheet.create({ pair: { flexDirection: 'row'
 
 type ActionProps = Omit<ComponentProps<typeof PaperButton>, 'mode'>;
 export function CancelButton({ style, ...rest }: ActionProps) {
-  return <Button {...rest} mode="outlined" style={[style, dialogAction]} />;
+  return <Button {...rest} compact={false} mode="outlined" style={[style, dialogAction]} />;
 }
 export function ConfirmButton({ style, ...rest }: ActionProps) {
-  return <Button {...rest} mode="contained" style={[style, dialogAction]} />;
+  return <Button {...rest} compact={false} mode="contained" style={[style, dialogAction]} />;
 }

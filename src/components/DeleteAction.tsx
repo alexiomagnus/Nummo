@@ -65,8 +65,13 @@ const styles = StyleSheet.create({
 
 // Trash icon first, explicit confirmation dialog second. The action seen when the dialog
 // was opened is the one confirmed, even if the parent re-renders with newer data meanwhile.
-export function DeleteAction({ name, title, description, onDelete, labeled, mode = 'text', disabled, onOpenChange }: { name: string; title?: string; description?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
+// `labeled="wide"`: «Elimina» with its label from medium, only the outlined trash icon (error colour, 48×48) on phones, where the
+// label next to «Annulla»/«Salva» did not fit and the row wrapped, leaving Elimina alone on a line (user's choice, 21 November).
+export function DeleteAction({ name, title, description, onDelete, labeled: labeledProp, mode = 'text', disabled, onOpenChange }: { name: string; title?: string; description?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean | 'wide'; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { t } = useI18n();
+  const phone = useSizeClass() === 'compact';
+  const labeled = labeledProp === 'wide' ? !phone : labeledProp;
+  const danger = labeledProp === 'wide';
   const action = useRef(onDelete);
   const [open, setOpen] = useState(false);
   const { colors } = useTheme();
@@ -76,7 +81,10 @@ export function DeleteAction({ name, title, description, onDelete, labeled, mode
   return <>
     {labeled
       ? <Button mode={mode} disabled={disabled} icon={icon} textColor={colors.error} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</Button>
-      : <IconButton disabled={disabled} icon={icon} style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 }} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request} />}
+      // In the edit dialogs (phones) the trash is outlined like «Annulla» beside it (same 48 dp height and radius), the outline in
+      // the icon's own error red (user's request, 21 November).
+      : <IconButton disabled={disabled} icon={icon} mode={danger ? 'outlined' : undefined} iconColor={danger ? colors.error : undefined}
+        style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: danger ? radius.button : 8, ...(danger ? { borderColor: colors.error } : {}) }} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request} />}
     <DeleteDialog visible={open} name={name} title={title} description={description} onDismiss={dismiss} onConfirm={() => action.current()} />
   </>;
 }

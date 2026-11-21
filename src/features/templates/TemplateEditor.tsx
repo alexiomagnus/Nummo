@@ -30,7 +30,7 @@ export function TemplateEditor({ template, categories, fundChoices, merchants, e
       </ScrollView></Dialog.ScrollArea>
       {/* Buttons as direct children of Dialog.Actions (it clones each one): never a Fragment. */}
       <Dialog.Actions style={dialogActionsRow}>
-        <View style={styles.remove}><DeleteAction labeled name={template.description} onOpenChange={setDeleting}
+        <View style={styles.remove}><DeleteAction labeled="wide" name={template.description} onOpenChange={setDeleting}
           onDelete={() => { const removed = onDelete(); if (removed) close(); return removed; }} /></View>
         <View style={dialogActionPair}>
           <CancelButton disabled={deleting} onPress={close}>{t("Annulla")}</CancelButton>
@@ -45,5 +45,5 @@ const styles = StyleSheet.create({
   area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm },
   // Natural width (not flexBasis 0): on a narrow phone the row wraps, Elimina above, instead of overlapping «Annulla».
-  remove: { flexGrow: 1, alignItems: 'flex-start' },
+  remove: { flexGrow: 1, alignItems: 'flex-start', marginRight: 0 },
 });

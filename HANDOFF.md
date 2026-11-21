@@ -29,7 +29,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `817a2f1` pubblicati su richiesta il 21 novembre (notte, terza
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `bdc742b` («Chiudi» con contorno) pubblicato su richiesta il 21 novembre
+  (notte, quarta parte). Prima, **Rules e Hosting** da `817a2f1` pubblicati su richiesta il 21 novembre (notte, terza
   parte): template, scansione solo AI, pulsanti uniformi, icona; dettagli nel «Registro dei rilasci». Prima, **Hosting** da `de79c95` pubblicato su richiesta il 21 novembre (notte, seconda parte):
   riga tagliata dissolta verso il bordo del pannello, «Fondo» nei dettagli della spesa; sito 200, bundle identico a `dist/`. Prima,
   **Hosting** da `41a54ab` pubblicato su richiesta il 21 novembre (notte): righe intere sul
@@ -74,6 +75,53 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Cestino con contorno, azioni degli abbonamenti a tutta larghezza su smartphone — 21 novembre 2026
+
+- Su richiesta (screenshot): il cestino di `DeleteAction labeled="wide"` su smartphone ha il contorno come «Annulla» (IconButton `outlined`,
+  48×48, `radius.button`, icona in `error`). Poi, su richiesta, anche il contorno nello stesso rosso `error` dell'icona (verificato: bordo
+  `#FFB4AB` da 1 px nel tema scuro, come l'icona). In Spese → Abbonamenti, su smartphone Annulla/Pausa (o Riattiva)/Modifica si allargano fino a
+  coprire tutta la riga (`flexGrow: 1` da larghezza naturale); desktop invariato.
+- **Verifica:** Chromium headless, demo con `nummo-esercenti-v10.json`: modifica spesa a 390×844 (cestino 48 con bordo, stessa riga di
+  Annulla/Salva); «V10 Netflix» a 390×844 (109/99/118 dp, da 26 a 364 in un dettaglio largo 364) e 360×800 (96/96/104). `npm run check` OK.
+  Non committato, non pubblicato.
+
+## «Elimina» solo icona su smartphone nei dialoghi di modifica — 21 novembre 2026
+
+- Su richiesta (opzione A dell'analisi dello screenshot «Modifica spesa»): su smartphone «Elimina» andava a capo da solo, a sinistra e
+  rientrato, perché con l'etichetta (≈100 dp) la riga chiedeva ≈356 dp su ≈308 disponibili a 390 px. Ora `DeleteAction labeled="wide"`:
+  etichetta da medium, su compact solo il cestino 48×48 in `error` (etichetta accessibile «Elimina {nome}» invariata). Usato in modifica
+  spesa, modifica template e modifica prodotto (`ListDialogs`). Ai contenitori di «Elimina» `marginRight: 0`, che annulla gli 8 dp aggiunti
+  da `Dialog.Actions` (resta solo il gap di 12).
+- **Verifica:** Chromium headless, demo Standard con `nummo-esercenti-v10.json`, modifica spesa: 1400×900 «Elimina» con etichetta, una riga;
+  390×844 cestino + Annulla + Salva su una riga (y 625); **360×800 e 320×640 ancora a capo** (≈278 dp disponibili per 296 richiesti):
+  cestino sopra, coppia sotto. Template e prodotto hanno la stessa struttura, non riaperti nel browser. `npm run check` OK.
+  Non committato, non pubblicato. Visto di passaggio, preesistente: a 360 px Importo e Data della modifica spesa tagliano il valore.
+
+## Pulsanti della revisione dello scontrino, esercente negli abbonamenti — 21 novembre 2026
+
+- Su richiesta (screenshot di «Controlla i dati letti»): «Scansiona di nuovo» non è più di solo testo ma con contorno (`CancelButton`);
+  «Annulla» e «Usa questi dati» sono uniti in `dialogActionPair` (senza margine automatico): desktop «Scansiona di nuovo · Annulla · Usa
+  questi dati» a destra; smartphone «Scansiona di nuovo» sopra, la coppia sotto (prima «Usa questi dati» restava da solo sulla seconda riga).
+  «Usa questi dati» sembrava stretto perché `Dialog.Actions` di Paper aggiunge `compact` (margini dell'etichetta 8 invece di 24):
+  `CancelButton`/`ConfirmButton` ora lo annullano sempre (`compact={false}`), in tutti i dialoghi; tolto il `compact` esplicito dai dialoghi
+  del prodotto in `ListDialogs`. Con etichette entro i 112 dp nulla cambia.
+- Su richiesta (screenshot dei dettagli di TorBox): nei dettagli di un abbonamento, dopo la Categoria, «Esercente» con l'icona negozio in
+  `primary`, solo se la serie ne ha uno; `SubscriptionList` riceve `merchantNames` da `Workspace` (la stessa mappa di `ExpenseList`).
+- **Verifica:** Chromium headless sulla demo Standard con `nummo-esercenti-v10.json` unito; risposta di Claude simulata nella pagina
+  (nessuna richiesta reale): revisione a 1400×900 (174/110/145 × 48, una riga) e 390×844 (Scansiona di nuovo sopra, coppia sotto);
+  «V10 Netflix» mostra «Esercente Netflix» a 1400×900 e 390×844; nessun errore JS. `npm run check` OK (501/501). Non committato,
+  non pubblicato.
+
+## «Torna indietro» in «Collega il tuo Firebase» — 21 novembre 2026
+
+- Su richiesta (screenshot della pagina accanto a «Cos'è Nummo»): in testa a `FirebaseConnect` c'è ora «Torna indietro» come nella guida,
+  con la stessa azione di «Annulla» (`onCancel`), disattivato durante il collegamento. Nuovo `components/BackButton.tsx` (pulsante di testo
+  compatto con chevron, allineato al bordo), usato anche da `Guide.tsx` al posto del pulsante in linea; nella pagina il padding superiore
+  lascia il posto al pulsante, come nella guida. Testo già tradotto («Go back»). `OwnerSetup` invariato.
+- **Verifica:** Chromium headless sulla demo, Avanzata da disconnessi → «Usa il tuo progetto Firebase»: a 390×844 pulsante a y 76 e titolo
+  a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Non committato,
+  non pubblicato.
 
 ## «Chiudi» con contorno — 21 novembre 2026
 
@@ -398,6 +446,9 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (notte, quarta parte): Hosting da `bdc742b`** («Chiudi» con contorno come «Annulla»). `npm run
+  deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules e Worker non toccati.
 
 - **Rilascio del 21 novembre (notte, terza parte): Rules da `817a2f1`, poi Hosting da `817a2f1`** (tutto il lavoro da `0e536a5`: riga
   velata su smartphone, fondo nei dettagli di spese e abbonamenti, pulsanti di prova delle notifiche nascosti, scansione solo con AI e

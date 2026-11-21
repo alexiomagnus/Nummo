@@ -109,8 +109,10 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
       {store.error && <HelperText type="error">{t(store.error)}</HelperText>}
     </ScrollView></Dialog.ScrollArea>
     <Dialog.Actions style={dialogActionsRow}>
-      {/* Natural width (not flexBasis 0): on a narrow phone the row wraps, Elimina above, instead of overlapping «Annulla». */}
-      {store.remove && <View style={{ flexGrow: 1, alignItems: 'flex-start' }}><DeleteAction labeled disabled={busy} onOpenChange={setDeleting}
+      {/* Natural width (not flexBasis 0): if the row still has to wrap, Elimina goes above instead of overlapping «Annulla».
+          On phones Elimina is the trash icon only, so it shares the row with the pair. `marginRight: 0` drops the 8 dp that
+          Dialog.Actions adds after every child but the last: the only space is the row's 12 dp gap. */}
+      {store.remove && <View style={{ flexGrow: 1, alignItems: 'flex-start', marginRight: 0 }}><DeleteAction labeled="wide" disabled={busy} onOpenChange={setDeleting}
         name={series ? t("la serie {p0}", { p0: record.description }) : record.description}
         description={[(series ? t("Eliminando questa ricorrenza si elimina l’intera serie. ") : '') + (listNote === 'linked' ? t("La lista collegata tornerà tra quelle attive. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
         onDelete={async () => {

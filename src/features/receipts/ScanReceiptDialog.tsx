@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button, compactIconPadding, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
+import { Button, compactIconPadding, CancelButton, ConfirmButton, dialogActionPair, dialogActionsRow } from '../../components/Button';
 import { SwitchRow } from '../../components/SwitchRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
@@ -259,10 +259,15 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     body = wide && !zoomed
       ? <View style={styles.columns}><View style={styles.side}>{picture}<View style={styles.row}>{zoom}</View></View><View style={styles.main}>{review}</View></View>
       : <>{picture}<View style={styles.row}>{zoom}</View>{review}</>;
+    // «Scansiona di nuovo» outlined like «Annulla» (a way back, to the photo), never a bare text action among the buttons.
+    // «Annulla» and «Usa questi dati» stay together: on a phone the row wraps with «Scansiona di nuovo» above the pair,
+    // instead of leaving the confirmation alone on the second line. All right-aligned (no auto margin, unlike Elimina).
     actions = [
-      <CancelButton key="cancel" onPress={onClose}>{t("Annulla")}</CancelButton>,
-      <Button key="again" style={styles.plain} onPress={() => setStage('ready')}>{t("Scansiona di nuovo")}</Button>,
-      <ConfirmButton key="apply" disabled={Object.keys(patch).length === 0} onPress={apply}>{t("Usa questi dati")}</ConfirmButton>,
+      <CancelButton key="again" onPress={() => setStage('ready')}>{t("Scansiona di nuovo")}</CancelButton>,
+      <View key="pair" style={[dialogActionPair, styles.pairEnd]}>
+        <CancelButton onPress={onClose}>{t("Annulla")}</CancelButton>
+        <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply}>{t("Usa questi dati")}</ConfirmButton>
+      </View>,
     ];
   }
 
@@ -272,7 +277,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {inputs}
       {body}
     </ScrollView></Dialog.ScrollArea>
-    {/* `actions` is a button or an array of keyed buttons, never a Fragment: Dialog.Actions clones each child to add
+    {/* `actions` is a button or an array of keyed buttons (or a keyed View holding a pair), never a Fragment: Dialog.Actions clones each child to add
         `compact` and its margin, and a Fragment cannot take them («Invalid prop `compact` supplied to React.Fragment»). */}
     <Dialog.Actions style={dialogActionsRow}>{actions}</Dialog.Actions>
   </Dialog></Portal>;
@@ -282,7 +287,7 @@ const styles = StyleSheet.create({
   wideDialog: { maxWidth: 920 },
   area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
-  plain: { marginRight: 0 },
+  pairEnd: { marginLeft: 0 },
   block: { gap: spacing.md },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: -spacing.sm },
   sources: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

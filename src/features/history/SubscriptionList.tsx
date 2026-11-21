@@ -25,6 +25,8 @@ type Props = {
   // Funds (archived included): with at least one, the details show the series' fund with its avatar, or «Nessun fondo»
   // (as in the expense details); with none, no field.
   funds?: readonly Fund[];
+  // Merchant name by expense ID (as in the expense list), shown in the details when the series has one.
+  merchantNames?: ReadonlyMap<string, string>;
   error: string | null;
   // Status changes need the server (transaction on the revision seen here).
   canChange: boolean;
@@ -55,7 +57,7 @@ export function StatusBadge({ status, inTrial = false }: { status: SubscriptionS
   );
 }
 
-export function SubscriptionList({ subscriptions: allSeries, categories, funds, error, canChange, emptyLabel, onEdit, onSetStatus, onRemovePayment, today }: Props) {
+export function SubscriptionList({ subscriptions: allSeries, categories, funds, merchantNames, error, canChange, emptyLabel, onEdit, onSetStatus, onRemovePayment, today }: Props) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -102,6 +104,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, funds, 
         {subscriptions.map((summary) => (
           <SubscriptionRow key={summary.entry.id} summary={summary} category={categoryById.get(summary.entry.category_id ?? '')}
             fund={fundById.size > 0 ? fundById.get(summary.entry.fund_id ?? '') ?? null : undefined}
+            merchant={merchantNames?.get(summary.entry.id)}
             open={expanded.has(summary.entry.id)} compact={compact} canChange={canChange}
             working={busy === summary.entry.id} formatDate={formatDate}
             onToggle={() => toggle(setExpanded, summary.entry.id)} onHistory={() => setHistory(summary.entry.id)}
@@ -118,9 +121,9 @@ export function SubscriptionList({ subscriptions: allSeries, categories, funds, 
 
 // Same card as the expense list (issue #6): the whole card toggles its details, no chevron or edit button when closed,
 // amount right-aligned, status badge under the name; edit and status actions live in the expanded details.
-function SubscriptionRow({ summary, category, fund, open, compact, canChange, working, formatDate, onToggle, onHistory, onEdit, onChange }: {
+function SubscriptionRow({ summary, category, fund, merchant, open, compact, canChange, working, formatDate, onToggle, onHistory, onEdit, onChange }: {
   // undefined: no funds at all (no field); null: the series has no fund (or a fund no longer listed).
-  summary: SubscriptionSummary; category?: Category; fund?: Fund | null; open: boolean; compact: boolean; canChange: boolean; working: boolean;
+  summary: SubscriptionSummary; category?: Category; fund?: Fund | null; merchant?: string; open: boolean; compact: boolean; canChange: boolean; working: boolean;
   formatDate: (date: string) => string; onToggle: () => void; onHistory: () => void; onEdit: () => void; onChange: (status: SubscriptionStatus) => void;
 }) {
   const { t, formatAmount } = useI18n();
@@ -166,6 +169,8 @@ function SubscriptionRow({ summary, category, fund, open, compact, canChange, wo
             <Field label={t("Pagamenti effettuati")} value={String(payments.length)} />
             <Field label={t("Totale speso")} value={formatAmount(total)} />
             <Field label={t("Categoria")} value={category?.label ?? t("Senza categoria")} />
+            {merchant && <Field label={t("Esercente")} value={merchant}
+              icon={<SvgIcon shape={iconShapes.store} size={20} color={colors.primary} />} />}
             {fund !== undefined && <Field label={t("Fondo")} value={fund ? fund.name : t("Nessun fondo")}
               icon={fund ? <FundAvatar fund={fund} size={20} /> : <NoFundAvatar size={20} />} />}
             <Field label={t("Inizio")} value={formatDate(entry.expense_date)} />
@@ -174,20 +179,20 @@ function SubscriptionRow({ summary, category, fund, open, compact, canChange, wo
           <View style={[styles.actions, compact && styles.compactActions]}>
             {/* Desktop: the history sits at the far left of the actions row (auto margin), apart from the status actions. */}
             {!compact && <View style={styles.historySlot}>{history}</View>}
-            {status !== 'cancelled' && <Button compact={compact} mode="outlined" textColor={colors.error} disabled={!canChange || working}
+            {status !== 'cancelled' && <Button compact={compact} mode="outlined" textColor={colors.error} style={compact && styles.fill} disabled={!canChange || working}
               contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label}
               accessibilityLabel={t("Annulla abbonamento")}
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
               onPress={() => onChange('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
             {/* Pause/resume in the middle, between cancel and edit. Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
-            {status === 'active' && <Button compact={compact} mode="outlined" style={compact && styles.statusAction} contentStyle={pausePad?.content} labelStyle={pausePad?.label} disabled={!canChange || working} loading={working}
+            {status === 'active' && <Button compact={compact} mode="outlined" style={compact && [styles.statusAction, styles.fill]} contentStyle={pausePad?.content} labelStyle={pausePad?.label} disabled={!canChange || working} loading={working}
               accessibilityLabel={t("Metti in pausa")}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
               onPress={() => onChange('paused')}>{compact ? t("Pausa") : t("Metti in pausa")}</Button>}
-            {status !== 'active' && <Button compact={compact} mode="contained-tonal" style={compact && styles.statusAction} contentStyle={iconPad?.content} labelStyle={iconPad?.label} disabled={!canChange || working} loading={working}
+            {status !== 'active' && <Button compact={compact} mode="contained-tonal" style={compact && [styles.statusAction, styles.fill]} contentStyle={iconPad?.content} labelStyle={iconPad?.label} disabled={!canChange || working} loading={working}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
               onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
-            <Button compact={compact} mode="outlined" style={narrow && styles.narrowEdit}
+            <Button compact={compact} mode="outlined" style={compact && [narrow && styles.narrowEdit, styles.fill]}
               contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
           </View>
@@ -201,7 +206,7 @@ function SubscriptionRow({ summary, category, fund, open, compact, canChange, wo
   );
 }
 
-// `icon`: shown before the value (the fund's avatar); a long value wraps beside it.
+// `icon`: shown before the value (the fund's avatar, the merchant's shop); a long value wraps beside it.
 function Field({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   const { colors } = useTheme();
   const text = <Text variant="bodyMedium" style={[listRowStyles.amount, icon ? styles.iconText : undefined]}>{value}</Text>;
@@ -227,6 +232,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm },
   // Phones: compact buttons with short labels on one row (still 48 dp tall); they wrap only on very narrow screens.
   compactActions: { gap: spacing.xs },
+  // Phones: the actions share the whole width of the row (user's request, 21 November), each from its natural width.
+  fill: { flexGrow: 1 },
   narrowEdit: { minWidth: 50 },
   statusAction: { minWidth: 98 },
   textOnlyLabel: { marginHorizontal: spacing.md },
