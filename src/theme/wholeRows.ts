@@ -1,10 +1,12 @@
-// Desktop panel (AppShell): a row is shown whole or not at all at the bottom edge (user's request, 21 November). Rows
-// opt in with `dataSet={{ wholeRow: 'true' }}` (Spese/Categorie rows, month headings, fund cards); the one that starts
-// inside the panel but runs past its bottom gets `data-clipped`, which GlobalStyle makes invisible and not clickable,
-// so the panel ends on the last whole row. It appears again as soon as it fits. Pure geometry here, DOM wiring below.
+// Desktop panel (AppShell): a row is never cut in half by the bottom edge (user's request, 21 November). Rows opt in with
+// `dataSet={{ wholeRow: 'true' }}` (Spese/Categorie rows, month headings, fund cards); the one that starts inside the
+// panel but runs past its bottom gets `data-clipped` and its visible height in `--nummo-peek`: GlobalStyle fades it out
+// towards the edge, a hint that more follows below (also requested on 21 November: hiding it entirely read as the end of
+// the list). A click on it scrolls it into view whole. Pure geometry here, DOM wiring below.
 
 export const wholeRowSelector = '[data-whole-row]';
 export const clippedAttribute = 'data-clipped';
+export const peekProperty = '--nummo-peek';
 
 export type Edge = { top: number; bottom: number };
 
@@ -46,6 +48,8 @@ export function observeWholeRows(scroller: HTMLElement): () => void {
       const hide = hidden.has(index) && !(focused && row.contains(focused));
       const edge = edges[index]!;
       if (!hide && edge.bottom > edge.top && edge.top >= box.top && edge.bottom <= box.bottom + 0.5) next.set(row, edge.top);
+      if (hide) row.style.setProperty(peekProperty, `${Math.max(0, Math.round(box.bottom - edge.top))}px`);
+      else if (row.hasAttribute(clippedAttribute)) row.style.removeProperty(peekProperty);
       if (hide !== row.hasAttribute(clippedAttribute)) {
         if (hide) row.setAttribute(clippedAttribute, ''); else row.removeAttribute(clippedAttribute);
       }
@@ -53,6 +57,17 @@ export function observeWholeRows(scroller: HTMLElement): () => void {
     shown = next;
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+  // The faded row does not take clicks (pointer-events: none): a click on its area brings it into view whole.
+  const reveal = (event: MouseEvent) => {
+    const row = Array.from(scroller.querySelectorAll<HTMLElement>(`[${clippedAttribute}]`)).find((candidate) => {
+      const rect = candidate.getBoundingClientRect();
+      return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+    });
+    if (!row) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    scroller.scrollBy({ top: Math.ceil(row.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom), behavior: reduce ? 'auto' : 'smooth' });
+  };
+  scroller.addEventListener('click', reveal);
   scroller.addEventListener('scroll', schedule, { passive: true });
   scroller.addEventListener('focusin', schedule);
   const resize = new ResizeObserver(schedule);
@@ -64,10 +79,14 @@ export function observeWholeRows(scroller: HTMLElement): () => void {
   schedule();
   return () => {
     if (frame) cancelAnimationFrame(frame);
+    scroller.removeEventListener('click', reveal);
     scroller.removeEventListener('scroll', schedule);
     scroller.removeEventListener('focusin', schedule);
     resize.disconnect();
     mutations.disconnect();
-    for (const row of Array.from(scroller.querySelectorAll(`[${clippedAttribute}]`))) row.removeAttribute(clippedAttribute);
+    for (const row of Array.from(scroller.querySelectorAll<HTMLElement>(`[${clippedAttribute}]`))) {
+      row.removeAttribute(clippedAttribute);
+      row.style.removeProperty(peekProperty);
+    }
   };
 }
