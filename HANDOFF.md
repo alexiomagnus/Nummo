@@ -75,6 +75,13 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## «Chiudi» con contorno — 21 novembre 2026
+
+- Su richiesta: «Chiudi» dei dialoghi a una sola azione (transazioni di Analisi, Prodotti, Storico dei pagamenti) e del riepilogo aperto da
+  una notifica usa `CancelButton` come «Annulla» (contorno, minimo 112×48); tolta l'etichetta più grande 16/600 del 16 novembre. Restano
+  com'erano il «Chiudi» dello snackbar e l'etichetta accessibile dello sfondo dei dialoghi (non sono pulsanti di dialogo).
+- **Verifica:** Chromium headless, Analisi a 1400×900 e 390×844. `npm run check` OK. Non committato, non pubblicato.
+
 ## Pulsanti dei dialoghi uniformi — 21 novembre 2026
 
 - Su richiesta (screenshot: «Elimina · Annulla · Salva» con «Annulla» di solo testo). **Analisi:** «Annulla» era di testo in 11 punti e

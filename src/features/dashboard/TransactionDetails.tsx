@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, dialogActionsRow } from '../../components/Button';
 import { ListRow } from '../../components/ListRow';
 import type { Category } from '../../domain/category';
 import type { Fund } from '../../domain/funds';
@@ -44,16 +44,13 @@ export function TransactionDetails({ title, items, categories, funds = [], onClo
           meta={compact ? amount : undefined} trailing={compact ? undefined : amount} />;
       })}
     </ScrollView></AppDialog.ScrollArea>
-    <AppDialog.Actions><Button onPress={onClose} style={styles.close} labelStyle={styles.closeLabel}>{t('Chiudi')}</Button></AppDialog.Actions>
+    <AppDialog.Actions style={dialogActionsRow}><CancelButton onPress={onClose}>{t("Chiudi")}</CancelButton></AppDialog.Actions>
   </AppDialog></Portal>;
 }
 
 const styles = StyleSheet.create({
   // Only ListRow draws separators; the area's dividers appear only on an edge that hides rows (AppDialog.ScrollArea).
   area: { minHeight: 0 },
-  // The only action: a little larger than a standard text button (16/600 label, like «Salva»).
-  close: { minWidth: 96 },
-  closeLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   extra: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1, minWidth: 0 },
   fund: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
   fundBelow: { marginTop: 2 },

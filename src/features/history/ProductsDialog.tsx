@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, dialogActionsRow } from '../../components/Button';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import { radius, spacing } from '../../theme/tokens';
@@ -31,7 +31,7 @@ export function ProductsDialog({ description, products, onClose }: {
         ))}
       </View>
     </ScrollView></AppDialog.ScrollArea>
-    <AppDialog.Actions><Button onPress={onClose} style={styles.close} labelStyle={styles.closeLabel}>{t("Chiudi")}</Button></AppDialog.Actions>
+    <AppDialog.Actions style={dialogActionsRow}><CancelButton onPress={onClose}>{t("Chiudi")}</CancelButton></AppDialog.Actions>
   </AppDialog></Portal>;
 }
 
@@ -41,7 +41,4 @@ const styles = StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingVertical: spacing.sm },
   mark: { width: 32, height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   name: { flex: 1, minWidth: 0 },
-  // The only action: a little larger than a standard text button (16/600 label, like «Salva»).
-  close: { minWidth: 96 },
-  closeLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
 });

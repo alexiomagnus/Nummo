@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { Button } from '../../components/Button';
+import { Button, CancelButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -90,7 +90,7 @@ function OpenedSummary({ notifications, from, to, onClose }: { notifications: No
           : <Text variant="bodyLarge">{count === 1 ? t("{p0} in 1 spesa", { p0: formatAmount(total) }) : t("{p0} in {p1} spese", { p0: formatAmount(total), p1: count })}</Text>}
         {top && <Text variant="bodyMedium">{t("Categoria principale: {p0} ({p1})", { p0: top.label, p1: formatAmount(top.amount) })}</Text>}
         <Text variant="bodySmall" style={muted}>{t("Abbonamenti esclusi.")}</Text>
-        <View style={styles.actions}><Button mode="text" onPress={onClose}>{t("Chiudi")}</Button></View>
+        <View style={styles.actions}><CancelButton onPress={onClose}>{t("Chiudi")}</CancelButton></View>
       </View>
     </Card>
   );
