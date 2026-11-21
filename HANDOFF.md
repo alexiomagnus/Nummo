@@ -53,13 +53,17 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   fotogramma ovunque (campo alto/basso, dialogo, 3–4 passi, cambio campo, CPU ×4, 360×640). Su richiesta, 24 px di margine sotto il
   campo riportato in vista (prima a filo della tastiera a 360×640). Committato in `62e3639` e pubblicato su Hosting; sezione dedicata qui sotto.
 - **Vibrazione 6/5 ms, barra che spariva, scansione spenta (21 novembre, notte):** su richiesta; sezione dedicata qui sotto.
-  Committato e inviato a `origin`; non pubblicato su Hosting.
+  Committato in `1518b0c`, pubblicato su Hosting insieme a `1c83b54`.
+- **Stessa sessione, dopo:** «Ripristina predefiniti» completo e `gemini-3.5-flash-lite` consigliato (`dabe2eb`), «Annulla»/«OK» più piccoli
+  nel selettore della data (`01c2b7f`); con la guida «Collega il tuo Firebase» dell'altra sessione (`8c1ff66`, committata su richiesta
+  dopo `npm run check` OK **520/520** sull'albero completo) pubblicati su Hosting il 21 novembre (notte) con `npm run deploy:hosting`:
+  «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. Da provare sul telefono.
 - **Spese offline, pagina offline, passaggio dei dati tra le modalità (21 novembre, notte; altra sessione, in parallelo alla
   precedente):** su richiesta; sezione dedicata qui sotto. `npm run check` **520/520**, `test:emulator` **22/22**, provato nel browser con la
   demo. Committato in `1c83b54`, inviato e pubblicato su Hosting su richiesta (con `1518b0c` della sessione sulla vibrazione): «Deploy
   complete!», sito 200, bundle, `sw.js` e `offline.html` online identici a `dist/`. Rules invariate. Da provare sul telefono.
 - **Nuovo testo della guida «Collega il tuo Firebase» (21 novembre, notte):** su richiesta, dalla bozza concordata; sezione dedicata qui
-  sotto. **Non committato, non pubblicato.** Restano concordati e non fatti: link diretti alla Console, sito senza progetto di base,
+  sotto. Committato in `8c1ff66` e pubblicato su Hosting (vedi punto sopra). Restano concordati e non fatti: link diretti alla Console, sito senza progetto di base,
   «Collega un altro dispositivo».
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
@@ -195,14 +199,14 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 - Su richiesta (screenshot del dialogo «Seleziona data»): `CancelButton`/`ConfirmButton` hanno la variante `small` (larghi almeno 88,
   alti 40, l'altezza dei pulsanti Material 3), usata solo in `DateField`; gli altri dialoghi restano a 112×48.
-- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser né sul telefono. Non committato, non pubblicato.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser né sul telefono. Committato in `01c2b7f` e pubblicato su Hosting.
 
 ## Gemini: consigliato `gemini-3.5-flash-lite` — 21 novembre 2026 (notte)
 
 - Su richiesta: in `recommendedModels` Gemini propone prima `gemini-3.5-flash-lite` (poi `gemini-3.1-flash-lite`, `gemini-2.5-flash`).
   «(consigliato)» si sposta su quel modello; la preselezione avviene solo a campo Modello vuoto, quindi un modello già salvato resta finché
   l'utente non lo cambia. Se il servizio non elenca `gemini-3.5-flash-lite`, vale il consigliato successivo. Test aggiornati.
-- **Verifica:** `npm run check` OK (**520/520**). Non provato con una chiave Gemini reale. Committato e inviato a `origin`; non pubblicato su Hosting.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato con una chiave Gemini reale. Committato, inviato e pubblicato su Hosting (`dabe2eb`).
 
 ## «Ripristina predefiniti» riporta tutto ai valori predefiniti — 21 novembre 2026 (notte)
 
@@ -210,7 +214,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   restava attiva. Ora riporta anche la scheda AI (`resetReceiptAi` in `aiSettings.ts`: spenta, nessun servizio, modello o consenso) e,
   con un archivio aperto, «Categorie preferite» e «Fondo preferito» (`onResetArchive`, terzo argomento di `renderSettings`). Le chiavi
   API salvate restano (sono credenziali, non impostazioni: si cancellano solo con «Dimentica la chiave»).
-- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser né sul telefono. Committato e inviato a `origin`; non pubblicato su Hosting.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser né sul telefono. Committato, inviato e pubblicato su Hosting (`dabe2eb`).
 
 ## Nuovo testo della guida «Collega il tuo Firebase» — 21 novembre 2026 (notte)
 
@@ -272,13 +276,13 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   riferimento; ridimensionamenti con la pagina in background ignorati. Test nuovo in `tests/viewport.test.ts`.
 - **Scansione dello scontrino:** `parseAiSettings` la dava accesa a chi aveva scelto un servizio prima che esistesse l'interruttore;
   ora è accesa solo con `enabled: true` salvato (chi la vuole la riaccende in Impostazioni). Test aggiornato.
-- **Verifica:** `npm run check` OK (**511/511**). Non provato nel browser né sul telefono. Committato e inviato a `origin`; non pubblicato su Hosting.
+- **Verifica:** `npm run check` OK (**511/511**). Non provato nel browser né sul telefono. Committato, inviato e pubblicato su Hosting (`dabe2eb`).
 - **Pulsante «Template» (stessa sessione, su richiesta):** non cambia più dopo la scelta (sempre icona «template» ed etichetta
   «Template»); «Nessun template» svuota tutto il modulo di Nuova spesa (bozza, errori, campi rimontati come dopo un salvataggio),
-  anche se i dati erano stati scritti a mano. Committato e inviato a `origin`; non pubblicato su Hosting.
+  anche se i dati erano stati scritti a mano. Committato, inviato e pubblicato su Hosting (`dabe2eb`).
 - **Pagina Templates con l'interruttore spento (stessa sessione, su richiesta):** «Nuovo template» e «I tuoi template» non spariscono
   più: restano visibili in grigio (opacità 0,38 come la scheda AI) e non raggiungibili (`inert`, campi e «Crea» disabilitati). Testo
-  dell'interruttore «…il pulsante Template» invece di «…il campo Template» (IT/EN). Committato e inviato a `origin`; non pubblicato su Hosting.
+  dell'interruttore «…il pulsante Template» invece di «…il campo Template» (IT/EN). Committato, inviato e pubblicato su Hosting (`dabe2eb`).
 
 ## «Template» accanto a «Scansiona scontrino» — 21 novembre 2026
 
