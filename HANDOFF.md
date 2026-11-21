@@ -214,7 +214,11 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   esegue `afterward` solo a uscita riuscita, prima dell'eventuale ricaricamento (cache su disco); `AdvancedRoot` passa
   `onChangeMode(null)`, che cancella `nummo.storageMode.v1`. Uscita fallita (scritture in attesa): modalità invariata, errore come prima.
   «Usa la modalità Standard» invariato. Configurazione Firebase collegata e dati non toccati: «Continua con Firebase» riporta allo stesso progetto.
-- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser (serve un accesso Google). Non committato, non pubblicato.
+- **Correzione prima del commit:** l'indizio di sessione (`nummo.session.hint.v1`) si cancella subito dopo l'uscita riuscita, prima di
+  `afterward`, anche senza cache su disco: smontando `AdvancedRoot` prima che vedesse «signed-out», l'indizio restava e, senza modalità
+  salvata, `initialStorageMode` avrebbe riaperto l'Avanzata al caricamento successivo (sviluppo/hybrid; in produzione la pagina si ricarica
+  e l'indizio era già cancellato).
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser (serve un accesso Google). Committato e pubblicato su Hosting (vedi «Produzione»).
 
 ## «Dati della modalità Standard» più chiara, nota del backup con asterisco — 21 novembre 2026 (notte)
 

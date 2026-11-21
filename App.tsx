@@ -201,6 +201,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const [templatesRequest, setTemplatesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const session = useSession(!configMissing);
+  // «Esci» goes back to the first screen (Standard / Avanzata), not to the sign-in screen (user's request, 21 November).
+  const signOut = () => { if (session.status === 'signed-in') session.signOut(() => onChangeMode(null)); };
   const storageNote = t(demo || firestoreEmulator
     ? 'Spese e categorie negli emulatori locali Firestore.'
     : 'Spese e categorie nel tuo progetto Firebase personale.') + ' ' + t(persistentCache
@@ -215,7 +217,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
     <ModeTransfer style={styles.wide} backend={backend} enabled={enabled} shown={shown} onChangeMode={onChangeMode} />
   </>;
   const account = session.status === 'signed-in'
-    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)}
       onOpenBackup={openBackup} /> : null;
 
@@ -262,9 +264,9 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
             : customFirebaseConfig
               ? <OwnerSetup project={customFirebaseConfig.projectId} uid={session.user.uid} email={session.user.email} busy={session.busy}
                 error={session.error} checking={checking} onCheck={() => setAttempt((n) => n + 1)}
-                onChangeProject={() => setConnectOpen(true)} onSignOut={session.signOut} />
+                onChangeProject={() => setConnectOpen(true)} onSignOut={signOut} />
               : <AccessDenied email={session.user.email} busy={session.busy} error={session.error}
-                onSignOut={session.signOut} onUseStandard={() => { session.signOut(); onChangeMode('standard'); }}
+                onSignOut={signOut} onUseStandard={() => { session.signOut(); onChangeMode('standard'); }}
                 onConnect={customFirebaseTarget ? () => setConnectOpen(true) : undefined} />}
         </AppShell>
       ) : null}
