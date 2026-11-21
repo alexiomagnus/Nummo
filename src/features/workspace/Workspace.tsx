@@ -367,7 +367,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
-          <SubscriptionList subscriptions={shownSubscriptions} emptyLabel={fundFilter === allFunds ? undefined : "Nessun abbonamento per questo fondo."} categories={categoryState.categories} error={error}
+          <SubscriptionList subscriptions={shownSubscriptions} funds={fundState.funds} emptyLabel={fundFilter === allFunds ? undefined : "Nessun abbonamento per questo fondo."} categories={categoryState.categories} error={error}
             canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} onRemovePayment={removePayment} today={today} />
         </>}
       </View>

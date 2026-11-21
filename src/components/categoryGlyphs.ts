@@ -29,7 +29,8 @@ export const categoryGlyphs: Record<CategoryIcon, string> = {
   train: '<rect x="5" y="3.5" width="14" height="13" rx="3"/><path d="M5 11h14M9 16.5 7 20.5M15 16.5l2 4M9 7.5h.01M15 7.5h.01"/>',
   bike: '<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-8h5l3 8M10 8 8.5 6H7M12.5 12.5H9"/>',
   fuel: '<path d="M5 20V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15M4 20h11"/><path d="M5 9h9M14 8l3 2.5V16a1.5 1.5 0 0 0 3 0V9l-3-3"/>',
-  wifi: '<path d="M3 9.5a14 14 0 0 1 18 0M6 13a9.5 9.5 0 0 1 12 0M9 16.5a5 5 0 0 1 6 0M12 20h.01"/>',
+  // Two arcs and a dot, as the pixel sprite (user's request, 21 November): three marks, not three arcs plus the dot.
+  wifi: '<path d="M2.5 10.5a13.5 13.5 0 0 1 19 0M6.5 14.5a8 8 0 0 1 11 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/>',
   music: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   film: '<rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M8 4v16M16 4v16M3.5 9h4.5M3.5 15h4.5M16 9h4.5M16 15h4.5"/>',
   camera: '<path d="M4 8h3l1.5-2.5h7L17 8h3v11H4V8Z"/><circle cx="12" cy="13" r="3.5"/>',

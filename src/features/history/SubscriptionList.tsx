@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding, regularIconPadding } from '../../components/Button';
@@ -9,6 +9,8 @@ import { fadeTransition } from '../../theme/motion';
 import { leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
+import type { Fund } from '../../domain/funds';
+import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
 import { searchSubscriptions, type SubscriptionSummary } from '../../domain/history';
 import { StatusDialog } from './StatusDialog';
 import { PaymentsDialog } from './PaymentsDialog';
@@ -20,6 +22,9 @@ import { useSizeClass } from '../../theme/useSizeClass';
 type Props = {
   subscriptions: readonly SubscriptionSummary[];
   categories: readonly Category[];
+  // Funds (archived included): with at least one, the details show the series' fund with its avatar, or «Nessun fondo»
+  // (as in the expense details); with none, no field.
+  funds?: readonly Fund[];
   error: string | null;
   // Status changes need the server (transaction on the revision seen here).
   canChange: boolean;
@@ -50,13 +55,14 @@ export function StatusBadge({ status, inTrial = false }: { status: SubscriptionS
   );
 }
 
-export function SubscriptionList({ subscriptions: allSeries, categories, error, canChange, emptyLabel, onEdit, onSetStatus, onRemovePayment, today }: Props) {
+export function SubscriptionList({ subscriptions: allSeries, categories, funds, error, canChange, emptyLabel, onEdit, onSetStatus, onRemovePayment, today }: Props) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const dates = useMemo(() => dateFormat(locale), [locale]);
   const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
   const categoryById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
+  const fundById = useMemo(() => new Map((funds ?? []).map((fund) => [fund.id, fund])), [funds]);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   // Subscription whose payment history is open (a dialog: the list can be long and payments can be removed there).
   const [history, setHistory] = useState<string | null>(null);
@@ -95,6 +101,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
       <View role="list">
         {subscriptions.map((summary) => (
           <SubscriptionRow key={summary.entry.id} summary={summary} category={categoryById.get(summary.entry.category_id ?? '')}
+            fund={fundById.size > 0 ? fundById.get(summary.entry.fund_id ?? '') ?? null : undefined}
             open={expanded.has(summary.entry.id)} compact={compact} canChange={canChange}
             working={busy === summary.entry.id} formatDate={formatDate}
             onToggle={() => toggle(setExpanded, summary.entry.id)} onHistory={() => setHistory(summary.entry.id)}
@@ -111,8 +118,9 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
 
 // Same card as the expense list (issue #6): the whole card toggles its details, no chevron or edit button when closed,
 // amount right-aligned, status badge under the name; edit and status actions live in the expanded details.
-function SubscriptionRow({ summary, category, open, compact, canChange, working, formatDate, onToggle, onHistory, onEdit, onChange }: {
-  summary: SubscriptionSummary; category?: Category; open: boolean; compact: boolean; canChange: boolean; working: boolean;
+function SubscriptionRow({ summary, category, fund, open, compact, canChange, working, formatDate, onToggle, onHistory, onEdit, onChange }: {
+  // undefined: no funds at all (no field); null: the series has no fund (or a fund no longer listed).
+  summary: SubscriptionSummary; category?: Category; fund?: Fund | null; open: boolean; compact: boolean; canChange: boolean; working: boolean;
   formatDate: (date: string) => string; onToggle: () => void; onHistory: () => void; onEdit: () => void; onChange: (status: SubscriptionStatus) => void;
 }) {
   const { t, formatAmount } = useI18n();
@@ -158,6 +166,8 @@ function SubscriptionRow({ summary, category, open, compact, canChange, working,
             <Field label={t("Pagamenti effettuati")} value={String(payments.length)} />
             <Field label={t("Totale speso")} value={formatAmount(total)} />
             <Field label={t("Categoria")} value={category?.label ?? t("Senza categoria")} />
+            {fund !== undefined && <Field label={t("Fondo")} value={fund ? fund.name : t("Nessun fondo")}
+              icon={fund ? <FundAvatar fund={fund} size={20} /> : <NoFundAvatar size={20} />} />}
             <Field label={t("Inizio")} value={formatDate(entry.expense_date)} />
             <Field label={t(inTrial ? "Primo pagamento" : "Prossimo rinnovo")} value={next ? formatDate(next.date) : t("Nessuno")} />
           </View>
@@ -191,12 +201,14 @@ function SubscriptionRow({ summary, category, open, compact, canChange, working,
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+// `icon`: shown before the value (the fund's avatar); a long value wraps beside it.
+function Field({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   const { colors } = useTheme();
+  const text = <Text variant="bodyMedium" style={[listRowStyles.amount, icon ? styles.iconText : undefined]}>{value}</Text>;
   return (
     <View style={styles.field}>
       <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{label}</Text>
-      <Text variant="bodyMedium" style={listRowStyles.amount}>{value}</Text>
+      {icon ? <View style={styles.iconValue}>{icon}{text}</View> : text}
     </View>
   );
 }
@@ -210,6 +222,8 @@ const styles = StyleSheet.create({
   details: { gap: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md, paddingHorizontal: spacing.md },
   fields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
   field: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
+  iconValue: { flexDirection: 'row', alignItems: 'center', gap: 6, minWidth: 0 },
+  iconText: { flexShrink: 1 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm },
   // Phones: compact buttons with short labels on one row (still 48 dp tall); they wrap only on very narrow screens.
   compactActions: { gap: spacing.xs },

@@ -187,7 +187,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {sourceButtons('contained-tonal')}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>;
-    actions = <Button onPress={onClose}>{t("Annulla")}</Button>;
+    actions = <Button mode="outlined" style={styles.action} onPress={onClose}>{t("Annulla")}</Button>;
   } else if (stage === 'camera') {
     body = <>
       <View style={[styles.picture, styles.camera, { backgroundColor: colors.surfaceVariant }]}>
@@ -197,8 +197,8 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
         {cameraReady ? t("Inquadra tutto lo scontrino, ben illuminato e senza pieghe.") : t("Avvio della fotocamera…")}</Text>
     </>;
     actions = <>
-      <Button onPress={closeCamera}>{t("Annulla")}</Button>
-      <Button mode="contained" disabled={!cameraReady} onPress={() => void shoot()}>{t("Scatta")}</Button>
+      <Button mode="outlined" style={styles.action} onPress={closeCamera}>{t("Annulla")}</Button>
+      <Button mode="contained" style={styles.action} disabled={!cameraReady} onPress={() => void shoot()}>{t("Scatta")}</Button>
     </>;
   } else if (stage === 'ready') {
     body = <>
@@ -212,8 +212,8 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {sourceButtons('outlined')}
     </>;
     actions = <>
-      <Button onPress={onClose}>{t("Annulla")}</Button>
-      <Button mode="contained" disabled={preparing || !aiReady || !ai.apiKey.trim()} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</Button>
+      <Button mode="outlined" style={styles.action} onPress={onClose}>{t("Annulla")}</Button>
+      <Button mode="contained" style={styles.action} disabled={preparing || !aiReady || !ai.apiKey.trim()} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</Button>
     </>;
   } else if (stage === 'consent') {
     body = <>
@@ -222,8 +222,8 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Uno scontrino può contenere dati personali, come le ultime cifre della carta o il codice fiscale.")}</Text>
     </>;
     actions = <>
-      <Button onPress={() => setStage('ready')}>{t("Annulla")}</Button>
-      <Button mode="contained" onPress={() => { ai.giveConsent(); void run(); }}>{t("Acconsento e invio")}</Button>
+      <Button mode="outlined" style={styles.action} onPress={() => setStage('ready')}>{t("Annulla")}</Button>
+      <Button mode="contained" style={styles.action} onPress={() => { ai.giveConsent(); void run(); }}>{t("Acconsento e invio")}</Button>
     </>;
   } else if (stage === 'working') {
     body = <>
@@ -234,7 +234,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
           accessibilityLabel={t("Scansione in corso")} />
       </View>
     </>;
-    actions = <Button onPress={cancelWork}>{t("Annulla")}</Button>;
+    actions = <Button mode="outlined" style={styles.action} onPress={cancelWork}>{t("Annulla")}</Button>;
   } else {
     const uncertain = flagged('uncertain');
     const missing = flagged('missing');
@@ -260,9 +260,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       ? <View style={styles.columns}><View style={styles.side}>{picture}<View style={styles.row}>{zoom}</View></View><View style={styles.main}>{review}</View></View>
       : <>{picture}<View style={styles.row}>{zoom}</View>{review}</>;
     actions = <>
-      <Button onPress={onClose}>{t("Annulla")}</Button>
+      <Button mode="outlined" style={styles.action} onPress={onClose}>{t("Annulla")}</Button>
       <Button onPress={() => setStage('ready')}>{t("Scansiona di nuovo")}</Button>
-      <Button mode="contained" disabled={Object.keys(patch).length === 0} onPress={apply}>{t("Usa questi dati")}</Button>
+      <Button mode="contained" style={styles.action} disabled={Object.keys(patch).length === 0} onPress={apply}>{t("Usa questi dati")}</Button>
     </>;
   }
 
@@ -280,7 +280,10 @@ const styles = StyleSheet.create({
   wideDialog: { maxWidth: 920 },
   area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
-  actions: { flexWrap: 'wrap', gap: spacing.xs },
+  actions: { flexWrap: 'wrap', gap: spacing.md },
+  // «Annulla» outlined and as wide as the main action beside it («Scansiona», «Scatta»…: user's request, 21 November), like
+  // the confirmation of DeleteAction, instead of a narrow text label.
+  action: { minWidth: 116 },
   block: { gap: spacing.md },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: -spacing.sm },
   sources: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

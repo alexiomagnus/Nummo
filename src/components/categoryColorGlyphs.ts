@@ -39,7 +39,8 @@ export const categoryColorGlyphs: Record<ActiveCategoryIcon, ColorGlyph> = {
   sofa: { hue: 'blue', shape: `<path ${T} d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3H5Z"/><path ${B} d="M3 12.5a2 2 0 0 1 4 0V14h10v-1.5a2 2 0 0 1 4 0V18H3v-5.5Z"/><path ${L} d="M6 18v2M18 18v2"/>` },
   key: { hue: 'amber', shape: `<path stroke="{i}" stroke-width="3.6" d="m10.5 12.5 9-9M15.5 7.5l2.5 2.5M18 5l2 2"/><path stroke="{b}" stroke-width="2" d="m10.5 12.5 9-9M15.5 7.5l2.5 2.5M18 5l2 2"/><circle ${B} cx="7.5" cy="15.5" r="4.5"/><circle ${T} cx="6.5" cy="16.5" r="1.5"/>` },
   bulb: { hue: 'amber', shape: `<path ${B} d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/><rect ${T} x="9.5" y="16" width="5" height="2.2" rx="1"/><path ${L} d="M10.5 21h3"/><path stroke="{o}" d="M9.8 8.3a2.6 2.6 0 0 1 2-1.7"/>` },
-  wifi: { hue: 'blue', shape: `<path stroke="{b}" stroke-width="2.4" d="M3 9.5a14 14 0 0 1 18 0M6 13a9.5 9.5 0 0 1 12 0M9 16.5a5 5 0 0 1 6 0"/><circle fill="{l}" stroke="none" cx="12" cy="20" r="1.6"/>` },
+  // Two thick arcs and a large dot, as the pixel sprite (user's request, 21 November).
+  wifi: { hue: 'blue', shape: `<path stroke="{b}" stroke-width="2.8" d="M2.5 10.5a13.5 13.5 0 0 1 19 0M6.5 14.5a8 8 0 0 1 11 0"/><circle fill="{l}" stroke="none" cx="12" cy="19" r="2.2"/>` },
   // Transport
   train: { hue: 'teal', shape: `<rect ${B} x="5" y="3.5" width="14" height="13" rx="3"/><rect ${T} x="7.2" y="6.2" width="9.6" height="5" rx="1"/><path ${L} d="M9 16.5 7 20.5M15 16.5l2 4"/>${dot(9, 14, 2.4)}${dot(15, 14, 2.4)}` },
   bike: { hue: 'teal', shape: `<circle ${T} cx="6" cy="16" r="3.5"/><circle ${T} cx="18" cy="16" r="3.5"/><path stroke="{b}" stroke-width="2.2" d="M6 16l4-8h5l3 8M12.5 12.5H9"/><path ${L} d="M10 8 8.5 6H7"/>` },

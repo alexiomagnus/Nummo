@@ -73,6 +73,33 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Icona «internet» (wifi) a tre segni negli stili minimale e colorato — 21 novembre 2026
+
+- Su richiesta: minimale e colorato avevano tre archi più il punto; ora, come lo sprite pixel art, due archi e un punto. Stessa geometria nei
+  due set (archi `M2.5 10.5a13.5 13.5 0 0 1 19 0` e `M6.5 14.5a8 8 0 0 1 11 0`, punto a 12,19): minimale con tratto standard e punto pieno
+  (`fill="currentColor"`, r 1,2), colorato con archi `{b}` da 2,8 e punto `{l}` r 2,2. Sprite pixel invariato; ID, tinta e Rules invariati.
+- **Verifica:** anteprima dei tre stili affiancati (Chromium headless, tema scuro, 96 px) con il wrapper di `SvgIcon`. `npm run check` OK
+  (**494/494**, compresi i test di icone e contrasti). Non vista nell'app con una categoria reale. Committato e inviato su richiesta; non pubblicato.
+
+## Scansiona scontrino: «Annulla» proporzionato all'azione — 21 novembre 2026
+
+- Su richiesta (screenshot del dialogo): «Annulla» era un'etichetta di testo stretta (73×48) accanto a «Scansiona» pieno (115×48). Ora in
+  ogni passaggio del dialogo «Annulla» è con contorno e ha la stessa larghezza minima (116) dell'azione principale («Scansiona», «Scatta»,
+  «Acconsento e invio», «Usa questi dati»), come nelle conferme di `DeleteAction`. «Scansiona di nuovo» resta di testo.
+- Ritocchi successivi, su richiesta: spazio tra i pulsanti delle azioni da 4 a 8, poi a 12 (`spacing.md`).
+- **Verifica:** Chromium headless, demo con scansione accesa e un'immagine sintetica, 390×844 e 1280×900: «Annulla» 114×48, «Scansiona»
+  116×48. `npm run check` OK (**494/494**). Committato e inviato su richiesta; non pubblicato.
+
+## Fondo nei dettagli degli abbonamenti — 21 novembre 2026
+
+- Su richiesta: in Spese → Abbonamenti, i dettagli aperti mostrano «Fondo» dopo la Categoria, con l'avatar del fondo (20 px) e il nome,
+  o l'avatar tratteggiato e «Nessun fondo»; nessun campo se non esiste alcun fondo (archiviati compresi), come nelle spese singole.
+  `SubscriptionList` riceve `funds={fundState.funds}` da `Workspace`; `Field` accetta un'icona prima del valore (nome lungo a capo).
+- Layout invariato: i campi a `flexBasis` 140 danno sei colonne su desktop e tre righe da due su smartphone.
+- **Verifica:** `npm run check` OK (**494/494**). Chromium headless, demo in Standard con `nummo-utente-medio.json` unito dall'interfaccia:
+  1400×900 (una riga di sei campi, «Nessun fondo» su Affitto) e 390×844 (due colonne, «Medio · Tempo libero» con avatar a capo su
+  Netflix). Committato e inviato su richiesta; non pubblicato.
+
 ## Scansione dello scontrino solo con AI, spenta di base — 21 novembre 2026
 
 - Su richiesta: OCR locale eliminato (Tesseract.js e dati dal lockfile, `scripts/sync-ocr.ts`, `ocr:sync` e il suo uso negli script,
