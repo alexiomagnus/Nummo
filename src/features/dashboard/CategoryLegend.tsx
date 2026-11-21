@@ -5,6 +5,7 @@ import { Button } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import type { Category } from '../../domain/category';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
+import { useHaptics } from '../../components/Haptics';
 import { selectionFill } from '../../theme/motion';
 import { useI18n } from '../../i18n/I18nProvider';
 import { otherCategoriesKey, type Series } from '../../domain/history';
@@ -75,9 +76,10 @@ const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, 
   const { t, formatAmount } = useI18n();
   const theme = useTheme();
   const selectable = index !== undefined;
+  const haptic = useHaptics();
   return <View nativeID={selectable ? `dashboard-category-${item.key}` : undefined} role="listitem">
     <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
-      onPress={() => { if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
+      onPress={() => { haptic(); if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
       style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.secondaryContainer }, selectionFill]}>
       <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />

@@ -179,6 +179,27 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Committato in
   `3d1b5ea` e pubblicato.
 
+## Vibrazione su legenda e segmenti, selezione più reattiva — 21 novembre 2026
+
+- Su richiesta (screenshot della legenda di Analisi e di «Spese | Abbonamenti»): vibrazione anche al tocco delle righe della legenda di
+  Analisi (anche quelle dentro «Altre») e di ogni `SegmentedButtons` (Spese/Abbonamenti, ricorrenza, stato, movimento, notifiche).
+- **Glitch segnalato** (cambio rapido di categoria nella legenda), misurato in Chromium headless (1478×900, Blocchi, CPU 4×, registro per
+  fotogramma): (1) ogni tocco rifaceva il render di **tutta** la pagina Analisi (filtri, menu, riepilogo, andamento): long task di
+  ~100 ms per tocco; (2) durante quel task la vecchia evidenziazione iniziava a sparire e la nuova partiva ~50 ms dopo (nessuna riga
+  selezionata per 3 fotogrammi), poi una dissolvenza incrociata di 150 ms con due righe a metà; (3) `formatCurrency` e `formatCivilDate`
+  creavano un `Intl` nuovo per ogni importo/data (~6 ms per tocco con CPU 4×, e in ogni elenco dell'app).
+- **Correzioni:** `CategoryChart` (memo in `Dashboard.tsx`) tiene la categoria selezionata, con chiave periodo+fondo (che la azzera come
+  prima); `openCategory` e i colori stabili. `LegendRow` memo: cambiano solo le due righe coinvolte. `selectionFill` (`motion.ts`): fondo
+  della selezione istantaneo in legenda, `SegmentedButtons` e `ChoiceChips` (stesso difetto: testo nuovo sul fondo vecchio per 150 ms).
+  `numberFormat`/`dateTimeFormat` in `i18n/translate.ts` con cache, usati da `formatCurrency`/`formatCivilDate`, rinnovi, prezzi,
+  dettaglio giornaliero e variazioni delle Barre. Non toccati: attenuazione di blocchi e spicchi (150 ms, scelta grafica del grafico).
+- **Verifica:** `npm run check` OK (**507/507**, test dei formattatori in `tests/i18n.test.ts`). Chromium headless, demo Standard con
+  `nummo-utente-medio.json`, CPU 4×: legenda dei Blocchi a 1478×900, cinque tocchi a 200–250 ms l'uno dall'altro → selezione cambiata in un
+  fotogramma, nessuna dissolvenza incrociata, nessun long task oltre il primo (60 ms, montaggio), prima ~100 ms per tocco. Ciambella a
+  390×844 touch: 5 tocchi sulla legenda → 5 vibrazioni, nessun long task; «Abbonamenti» → vibrazione e selezione. Nessun errore JS.
+  Non provato su telefono reale. Committato in tre parti: `a8f73a2` (formattatori), `9ae0d33` (selezione), poi la vibrazione con
+  questa documentazione.
+
 ## «Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola — 21 novembre 2026
 
 - Su richiesta (screenshot di Templates su smartphone): «Crea» di «Nuovo template» occupa tutta la larghezza del modulo a ogni dimensione,
