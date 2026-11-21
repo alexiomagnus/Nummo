@@ -35,7 +35,9 @@ function useCopy() {
   };
 }
 
-function Step({ index, title, children }: { index: number; title: string; children?: ReactNode }) {
+// One numbered step: a short title, then what to do in the console and, when useful, why it is needed.
+function Step({ index, title, children, why }: { index: number; title: string; children?: ReactNode; why?: string }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
     <View style={styles.step} role="listitem">
@@ -43,21 +45,33 @@ function Step({ index, title, children }: { index: number; title: string; childr
         <Text variant="labelLarge" style={{ color: colors.onSecondaryContainer }}>{index}</Text>
       </View>
       <View style={styles.stepBody}>
-        <Text variant="bodyMedium">{title}</Text>
+        <Text variant="titleSmall" accessibilityRole="header" aria-level={3}>{title}</Text>
         {children}
+        {why && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+          <Text variant="bodySmall" style={[styles.strong, { color: colors.onSurfaceVariant }]}>{t("Perché serve:")}</Text> {why}</Text>}
       </View>
     </View>
   );
 }
 
-// A value to type elsewhere (domain, UID): shown in full, selectable, with a copy button.
-function CopyValue({ label, value }: { label: string; value: string }) {
+// A paragraph of a step (instructions in the words of the Firebase console).
+function Line({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
+  const { colors } = useTheme();
+  return <Text variant="bodyMedium" style={muted ? { color: colors.onSurfaceVariant } : undefined}>{children}</Text>;
+}
+
+// A value to type elsewhere (domain, collection, UID): shown in full, selectable, with a copy button. `caption`: what
+// the value is, when the step asks for several.
+function CopyValue({ label, value, caption }: { label: string; value: string; caption?: string }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const copy = useCopy();
   return (
     <View style={[styles.value, { backgroundColor: colors.surfaceVariant }]}>
-      <Text variant="bodyMedium" selectable style={[styles.valueText, { color: colors.onSurfaceVariant }]}>{value}</Text>
+      <View style={styles.valueText}>
+        {caption && <Text variant="labelSmall" style={{ color: colors.onSurfaceVariant }}>{caption}</Text>}
+        <Text variant="bodyMedium" selectable style={{ color: colors.onSurfaceVariant }}>{value}</Text>
+      </View>
       <Button mode="text" compact icon={copyIcon} accessibilityLabel={t("Copia {p0}", { p0: label })} onPress={() => copy(value)}>{t("Copia")}</Button>
     </View>
   );
@@ -75,6 +89,16 @@ function RulesActions() {
   );
 }
 
+function Bullet({ children }: { children: ReactNode }) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.bullet} role="listitem">
+      <Text variant="bodyMedium" aria-hidden style={{ color: colors.onSurfaceVariant }}>•</Text>
+      <Text variant="bodyMedium" style={styles.bulletText}>{children}</Text>
+    </View>
+  );
+}
+
 type ConnectProps = {
   target: CustomFirebaseTarget;
   // The project connected from this browser, if any, and the one built into the site (null when missing).
@@ -84,8 +108,9 @@ type ConnectProps = {
   onCancel: () => void;
 };
 
-// «Collega il tuo Firebase»: the steps in the Firebase console, then the configuration pasted here. Saved in this
-// browser only; the page reloads on the new project.
+// «Collega il tuo Firebase»: what is needed, then six short steps in the Firebase console, with the configuration pasted
+// right after it is copied (step 2), and why each step matters. Console names in Italian with the English ones in
+// brackets: the console may be in either language. Saved in this browser only; the page reloads on the new project.
 export function FirebaseConnect({ target, connected, site, signedIn, onCancel }: ConnectProps) {
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -111,7 +136,7 @@ export function FirebaseConnect({ target, connected, site, signedIn, onCancel }:
       <View style={styles.intro}>
         <Text variant="headlineMedium" accessibilityRole="header" aria-level={1}>{t("Collega il tuo Firebase")}</Text>
         <Text variant="bodyLarge" style={muted}>
-          {t("Usa la modalità Avanzata con un progetto Firebase tuo: i dati passano direttamente da questo browser al tuo progetto e solo il tuo account Google può aprirli.")}</Text>
+          {t("Con un progetto Firebase tuo, le spese si salvano nel tuo account Google e le ritrovi su ogni dispositivo. Solo tu puoi aprirle.")}</Text>
       </View>
       {connected && (
         <Card title={t("Progetto collegato")}>
@@ -121,30 +146,54 @@ export function FirebaseConnect({ target, connected, site, signedIn, onCancel }:
           </View>}
         </Card>
       )}
-      <Card title={t("Nella Console Firebase")}>
-        <View role="list" style={styles.steps}>
-          <Step index={1} title={t("Crea un progetto e, nella sua pagina iniziale, aggiungi un'app Web.")} />
-          <Step index={2} title={t("Authentication → Metodo di accesso: attiva Google. Poi Impostazioni → Domini autorizzati: aggiungi questo indirizzo.")}>
-            <CopyValue label={t("indirizzo")} value={host} />
-          </Step>
-          <Step index={3} title={t("Firestore Database → Crea database, in modalità produzione. Poi Regole: incolla le regole di Nummo e premi Pubblica.")}>
-            <RulesActions />
-          </Step>
-          <Step index={4} title={t("Impostazioni progetto → Le tue app: copia il blocco firebaseConfig e incollalo qui sotto.")} />
+      <Card title={t("Prima di iniziare")}>
+        <View role="list" style={styles.bullets}>
+          <Bullet>{t("Ti servono un account Google e circa 10 minuti.")}</Bullet>
+          <Bullet>{t("Basta il piano gratuito di Firebase («Spark»): non serve una carta di credito.")}</Bullet>
+          <Bullet>{t("Le spese della modalità Standard restano su questo dispositivo: dopo il collegamento le porti nel tuo Firebase da Archiviazione e backup.")}</Bullet>
+          <Bullet>{t("Tieni aperte due schede: questa e la Console Firebase.")}</Bullet>
         </View>
         <View style={styles.start}>
-          <Button mode="text" compact onPress={() => openExternal(firebaseConsoleUrl)}>{t("Apri la Console Firebase")}</Button>
+          <Button mode="contained-tonal" onPress={() => openExternal(firebaseConsoleUrl)}>{t("Apri la Console Firebase")}</Button>
         </View>
       </Card>
-      <Card title={t("Configurazione del progetto")}>
-        <TextInput mode="outlined" outlineStyle={inputOutline} multiline numberOfLines={6} value={text} disabled={busy}
-          label={t("firebaseConfig")} accessibilityLabel={t("Configurazione del progetto Firebase")}
-          placeholder={'const firebaseConfig = {\n  apiKey: "…",\n  authDomain: "…",\n  projectId: "…",\n  appId: "…"\n};'}
-          autoCapitalize="none" autoCorrect={false} spellCheck={false} style={styles.code}
-          onChangeText={(value) => { setText(value); setError(null); }} />
+      <Card title={t("Nella Console Firebase")}>
+        <View role="list" style={styles.steps}>
+          <Step index={1} title={t("Crea il progetto")}>
+            <Line>{t("Premi «Crea un progetto» (Create a project) e dagli un nome, per esempio «nummo-tuonome». Google Analytics non serve: puoi disattivarlo.")}</Line>
+          </Step>
+          <Step index={2} title={t("Registra l'app web e copia la configurazione")}
+            why={t("dice a Nummo qual è il tuo progetto. Questi valori non sono una password: i dati li proteggono il tuo accesso Google e le regole del passaggio 6.")}>
+            <Line>{t("Nella pagina del progetto premi l'icona </> (Web). Scrivi un nome qualsiasi, lascia non spuntato «Configura anche Firebase Hosting» e premi «Registra app».")}</Line>
+            <Line>{t("Firebase mostra un blocco che inizia con «const firebaseConfig = {»: copialo tutto, graffe comprese, e incollalo qui.")}</Line>
+            <TextInput mode="outlined" outlineStyle={inputOutline} multiline numberOfLines={6} value={text} disabled={busy} error={error !== null && error.fields !== undefined}
+              label={t("firebaseConfig")} accessibilityLabel={t("Configurazione del progetto Firebase")}
+              placeholder={'const firebaseConfig = {\n  apiKey: "…",\n  authDomain: "…",\n  projectId: "…",\n  appId: "…"\n};'}
+              autoCapitalize="none" autoCorrect={false} spellCheck={false} style={styles.code}
+              onChangeText={(value) => { setText(value); setError(null); }} />
+            <Line muted>{t("Se l'hai chiuso: ingranaggio accanto a «Panoramica del progetto» → Impostazioni progetto (Project settings) → Le tue app (Your apps).")}</Line>
+          </Step>
+          <Step index={3} title={t("Attiva l'accesso con Google")} why={t("entri in Nummo con il tuo account Google.")}>
+            <Line>{t("Menu a sinistra → Authentication → «Inizia» (Get started). Nella scheda «Metodo di accesso» (Sign-in method) scegli Google, attivalo, scegli la tua email come email di assistenza e premi «Salva».")}</Line>
+          </Step>
+          <Step index={4} title={t("Autorizza questo indirizzo")}
+            why={t("stai usando Nummo da questo indirizzo, ma i dati vanno nel tuo progetto, che accetta l'accesso con Google solo dagli indirizzi che autorizzi tu. Senza questo passaggio l'accesso si ferma con «Questo indirizzo non è tra i domini autorizzati del progetto Firebase». Autorizzarlo vuol dire fidarsi della versione di Nummo pubblicata qui.")}>
+            <Line>{t("Sempre in Authentication apri la scheda «Impostazioni» (Settings), poi «Domini autorizzati» (Authorized domains) → «Aggiungi dominio» (Add domain) e incolla:")}</Line>
+            <CopyValue label={t("indirizzo")} value={host} />
+          </Step>
+          <Step index={5} title={t("Crea il database")} why={t("è dove si salvano le tue spese.")}>
+            <Line>{t("Menu a sinistra → Firestore Database → «Crea database» (Create database). Scegli una località in Europa: non si può cambiare dopo. Poi scegli la modalità di produzione (production mode), non quella di prova.")}</Line>
+          </Step>
+          <Step index={6} title={t("Pubblica le regole di Nummo")} why={t("le regole fanno entrare solo te e controllano che i dati salvati siano corretti.")}>
+            <Line>{t("In Firestore Database apri la scheda «Regole» (Rules), cancella tutto il testo che c'è, incolla le regole di Nummo e premi «Pubblica» (Publish).")}</Line>
+            <RulesActions />
+          </Step>
+        </View>
+      </Card>
+      <Card title={t("Collega")}>
+        <Text variant="bodyMedium" style={muted}>
+          {t("La configurazione resta salvata in questo browser. Dopo il collegamento accedi con Google: manca solo un ultimo passaggio, te lo indica Nummo.")}</Text>
         {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error.message, { p0: error.fields ?? '' })}</HelperText>}
-        <Text variant="bodySmall" style={muted}>
-          {t("La configurazione resta solo in questo browser. Dopo il collegamento accedi con Google: Nummo ti dirà come completare l'ultimo passaggio.")}</Text>
         <View style={styles.actions}>
           <Button mode="contained" disabled={busy || text.trim() === ''} loading={busy} onPress={connect} contentStyle={styles.button}>{t("Collega")}</Button>
           <Button mode="outlined" disabled={busy} onPress={onCancel} contentStyle={styles.button}>{t("Annulla")}</Button>
@@ -173,19 +222,27 @@ export function OwnerSetup({ project, uid, email, busy, error, checking, onCheck
           {email
             ? t("Indica nel progetto {p0} che l'account {p1} è il proprietario di questo Nummo.", { p0: project, p1: email })
             : t("Indica nel progetto {p0} che questo account è il proprietario di questo Nummo.", { p0: project })}</Text>
+        <Text variant="bodyMedium" style={muted}>
+          {t("Nummo non può farlo da solo: le regole impediscono a chiunque di nominarsi proprietario, così nessun altro può farlo al posto tuo.")}</Text>
       </View>
       <Card title={t("Nella Console Firebase")}>
         <View role="list" style={styles.steps}>
-          <Step index={1} title={t("Firestore Database → Regole: se non l'hai già fatto, incolla le regole di Nummo e premi Pubblica.")}>
+          <Step index={1} title={t("Controlla le regole")}>
+            <Line>{t("Se non l'hai già fatto, in Firestore Database → «Regole» (Rules) incolla le regole di Nummo e premi «Pubblica» (Publish).")}</Line>
             <RulesActions />
           </Step>
-          <Step index={2} title={t("Firestore Database → Dati → Avvia raccolta: ID raccolta «config», ID documento «owner», un campo «uid» di tipo stringa con questo valore:")}>
-            <CopyValue label={t("UID")} value={uid} />
+          <Step index={2} title={t("Crea il documento del proprietario")}>
+            <Line>{t("Firestore Database → scheda «Dati» (Data) → «Avvia raccolta» (Start collection), poi compila:")}</Line>
+            <CopyValue label={t("ID raccolta")} caption={t("ID raccolta (Collection ID)")} value="config" />
+            <CopyValue label={t("ID documento")} caption={t("ID documento (Document ID): scrivilo tu, non premere «ID automatico»")} value="owner" />
+            <CopyValue label={t("nome del campo")} caption={t("Campo (Field), tipo string")} value="uid" />
+            <CopyValue label={t("UID")} caption={t("Valore (Value)")} value={uid} />
+            <Line>{t("Poi premi «Salva» (Save).")}</Line>
           </Step>
-          <Step index={3} title={t("Torna qui e premi «Controlla di nuovo».")} />
+          <Step index={3} title={t("Torna qui e premi «Controlla di nuovo»")} />
         </View>
         <Text variant="bodySmall" style={muted}>
-          {t("Se il proprietario è già impostato con un altro account, esci e accedi con quello.")}</Text>
+          {t("Se non funziona: controlla che l'ID documento sia esattamente «owner», che il tipo del campo sia string e che il valore non abbia spazi. Se il proprietario è già un altro account, esci e accedi con quello.")}</Text>
         {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
         <View style={styles.actions}>
           <Button mode="contained" disabled={busy || checking} loading={checking} onPress={onCheck} contentStyle={styles.button}>{t("Controlla di nuovo")}</Button>
@@ -205,9 +262,13 @@ const styles = StyleSheet.create({
   steps: { gap: spacing.lg },
   step: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
   badge: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  stepBody: { flex: 1, minWidth: 0, gap: spacing.sm, paddingTop: 4 },
+  stepBody: { flex: 1, minWidth: 0, gap: spacing.sm, paddingTop: 2 },
+  strong: { fontWeight: '700' },
+  bullets: { gap: spacing.sm },
+  bullet: { flexDirection: 'row', gap: spacing.sm },
+  bulletText: { flex: 1, minWidth: 0 },
   value: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.tile, paddingLeft: spacing.md, paddingVertical: 2 },
-  valueText: { flex: 1, minWidth: 0 },
+  valueText: { flex: 1, minWidth: 0, paddingVertical: spacing.xs },
   inline: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm },
   code: { minHeight: 140 },
   helper: { paddingHorizontal: 0 },

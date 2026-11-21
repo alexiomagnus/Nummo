@@ -4,31 +4,56 @@ Nummo usa il tuo progetto Firebase. La configurazione web è pubblica: protegge 
 la combinazione UID + Security Rules, non la segretezza di `apiKey`. Non inserire mai
 chiavi di servizio, client secret o credenziali Admin in `.env` del frontend.
 
-## Collegare il tuo Firebase dall'app (senza installare nulla)
+## Parte 1 — Per chi usa l'app: collegare il tuo Firebase
 
 Dal sito pubblicato, in modalità Avanzata: «Usa il tuo progetto Firebase» sotto «Accedi con Google», oppure «Collega il tuo
-Firebase» nella schermata «Questo Nummo è privato». La pagina elenca i passaggi nella Console Firebase:
+Firebase» nella schermata «Questo Nummo è privato». La pagina dell'app ripete questi passaggi, con i pulsanti per copiare i
+valori. I nomi della Console sono in italiano, tra parentesi in inglese (la Console può essere nell'una o nell'altra lingua).
 
-1. progetto e app Web;
-2. Authentication → Google attivo e, in Impostazioni → Domini autorizzati, l'indirizzo del sito che si sta usando (mostrato
-   con «Copia»): senza, l'accesso fallisce con `auth/unauthorized-domain`;
-3. Firestore in modalità produzione e Regole di Nummo («Copia le regole» copia `public/firestore.rules`, copia identica a
-   `firestore.rules` imposta dai test; «Apri il file» la mostra);
-4. il blocco `firebaseConfig` da Impostazioni progetto, incollato nel campo. Si leggono solo `apiKey`, `authDomain`,
-   `projectId`, `appId` (validati; le altre chiavi sono ignorate).
+**Prima di iniziare.** Servono un account Google e circa 10 minuti; basta il piano gratuito di Firebase («Spark»), senza carta
+di credito. Le spese della modalità Standard restano sul dispositivo: dopo il collegamento si portano nel proprio Firebase da
+Archiviazione e backup → «Porta qui i dati della Standard».
 
-La configurazione è salvata **solo in quel browser** (`nummo.firebaseConfig.v1`), mai inviata altrove; la pagina si
-ricarica sul nuovo progetto (l'SDK si inizializza una volta per pagina; un account connesso esce prima). Dopo il primo
-accesso con Google, finché `config/owner` manca o le Regole non sono pubblicate, compare «Ultimo passaggio»: UID con
-«Copia» e istruzioni per creare `config/owner` con il campo stringa `uid`, poi «Controlla di nuovo». L'app non scrive mai
-il proprietario: le Regole restano invariate. In «Archiviazione e backup» il progetto appare come «Progetto collegato da
-te», con «Scollega progetto» (esce e torna al progetto del sito; i dati restano nel progetto dell'utente).
+1. **Crea il progetto.** «Crea un progetto» (Create a project), un nome qualsiasi; Google Analytics non serve.
+2. **Registra l'app web e copia la configurazione.** Icona `</>` (Web), un nome qualsiasi, «Configura anche Firebase Hosting»
+   **non** spuntato, «Registra app». Copia tutto il blocco `const firebaseConfig = {…}` e incollalo nel campo della pagina.
+   *Perché:* dice a Nummo qual è il tuo progetto; non è una password, i dati li proteggono l'accesso Google e le regole.
+   Se hai chiuso la finestra: ingranaggio → Impostazioni progetto (Project settings) → Le tue app (Your apps).
+3. **Attiva l'accesso con Google.** Authentication → «Inizia» (Get started) → scheda «Metodo di accesso» (Sign-in method) →
+   Google, attivato, con la tua email come email di assistenza → «Salva».
+4. **Autorizza l'indirizzo del sito.** Authentication → scheda «Impostazioni» (Settings) → «Domini autorizzati» (Authorized
+   domains) → «Aggiungi dominio»: l'indirizzo mostrato dalla pagina (per il sito pubblicato `nummo-6b6e2.web.app`).
+   *Perché:* il sito sta su un altro progetto, ma i dati vanno nel tuo, che accetta l'accesso con Google solo dai domini che
+   autorizzi (di base `localhost` e i domini `firebaseapp.com`/`web.app` del tuo progetto). Senza, l'accesso si ferma con
+   «Questo indirizzo non è tra i domini autorizzati del progetto Firebase» (`auth/unauthorized-domain`). Autorizzarlo vuol
+   dire fidarsi della versione di Nummo pubblicata a quell'indirizzo.
+5. **Crea il database.** Firestore Database → «Crea database» (Create database), località in Europa (non si cambia dopo),
+   **modalità di produzione** (production mode), non di prova.
+6. **Pubblica le regole di Nummo.** Scheda «Regole» (Rules): cancella tutto, incolla le regole («Copia le regole» nella pagina)
+   e «Pubblica» (Publish). Le regole fanno entrare solo il proprietario e validano i dati.
 
-Vincoli: solo build `cloud` con progetti reali; nella demo locale (`emulator`) solo progetti `demo-`, per le prove (serve
-un emulatore senza `singleProjectMode`); non disponibile in `hybrid`. Su un altro browser o dispositivo il collegamento va
-ripetuto. Le notifiche push restano indipendenti da Firebase.
+Poi «Collega»: la pagina si ricarica sul tuo progetto e chiede di accedere con Google. Compare **«Ultimo passaggio»**, perché
+nessuno può nominarsi proprietario dall'app (lo impediscono le regole): in Firestore Database → «Dati» (Data) → «Avvia
+raccolta» (Start collection) crea la raccolta `config`, il documento con ID **scritto a mano** `owner` (non «ID automatico»)
+e un campo `uid` di tipo **string** con l'UID mostrato dalla pagina (tutti i valori hanno «Copia»), poi «Salva» e, nell'app,
+«Controlla di nuovo». Errori frequenti: ID documento automatico, tipo del campo diverso da string, spazi nel valore.
 
-## Prova senza servizi cloud
+Il collegamento vale **solo per quel browser**: su un altro dispositivo o browser va ripetuto (passaggi 1–6 già fatti: basta
+incollare la configurazione e accedere). In «Archiviazione e backup» il progetto appare come «Progetto collegato da te», con
+«Scollega progetto» (esce e torna al progetto del sito; i dati restano nel tuo progetto).
+
+### Dettagli tecnici del collegamento
+
+- Si leggono solo `apiKey`, `authDomain`, `projectId`, `appId` (validati; le altre chiavi del blocco sono ignorate), salvati in
+  `nummo.firebaseConfig.v1` e mai inviati altrove; la pagina si ricarica perché l'SDK si inizializza una volta per pagina (un
+  account connesso esce prima). «Copia le regole» copia `public/firestore.rules`, identica a `firestore.rules` (lo impongono i test).
+- «Ultimo passaggio» compare finché `config/owner` manca o le regole non sono pubblicate; l'app non scrive mai il proprietario.
+- Vincoli: solo build `cloud` con progetti reali; nella demo locale (`emulator`) solo progetti `demo-`, con un emulatore senza
+  `singleProjectMode`; non disponibile in `hybrid`. Le notifiche push restano indipendenti da Firebase.
+
+## Parte 2 — Per chi installa Nummo (sviluppatori)
+
+### Prova senza servizi cloud
 
 Node conforme a `package.json`, npm e Java 21 consigliati per la CLI corrente:
 
@@ -44,7 +69,7 @@ senza export/import perde i dati dell'emulatore: esportali prima se servono. Il 
 incluso contiene account dimostrativi, non dati reali. Le porte restano su loopback.
 Non avviare due suite sulle stesse porte; istruzioni alternative in AGENTS.md.
 
-## Installazione personale
+### Installazione personale
 
 Questi sono passaggi manuali: nessuna risorsa reale, fatturazione o regola cloud è
 stata modificata durante questa migrazione.
@@ -91,7 +116,7 @@ Un wizard interno che chiedesse solo `firebaseConfig` non completerebbe i passag
 2, 4, 5 e 6. Per questo la prima versione BYOF usa configurazione a build e questa
 guida; nessuna credenziale amministrativa è richiesta dal client.
 
-## Mantenere il login reale con Firestore locale
+### Mantenere il login reale con Firestore locale
 
 Il progetto personale esistente e `.env.local` (le 4 variabili `EXPO_PUBLIC_FIREBASE_*`)
 restano validi. Per avviare tutto lo sviluppo hybrid:
@@ -132,7 +157,7 @@ proprietario o Rules. `npm run emulators:personal -- --project ID_PROGETTO` e
 Non avviare Auth Emulator in hybrid; non esporre porte in rete. Se Firestore cade
 dopo l'avvio, l'avviso UI dopo 10 s resta informativo, senza reinviare le spese.
 
-## Offline e dispositivi
+### Offline e dispositivi
 
 Per un dispositivo fidato puoi aggiungere:
 
@@ -154,7 +179,7 @@ App native Expo/RN richiedono un progetto separato di adattamento (login, SVG,
 persistenza); non basta attivare questa opzione. Vedi le
 [differenze ufficiali degli ambienti SDK](https://firebase.google.com/docs/web/environments-js-sdk).
 
-## Backup e passaggio dai vecchi dati
+### Backup e passaggio dai vecchi dati
 
 Da «Archiviazione e backup» (menu account) ci sono due cose distinte:
 
@@ -177,7 +202,7 @@ Durante il backup evita modifiche da altre sessioni. Conserva i backup fuori dal
 esportati da versioni precedenti non sono più importabili: usa un backup JSON. Procedura completa e vecchio emulatore in
 [migrazione-byof.md](migrazione-byof.md).
 
-## Pubblicazione su Firebase Hosting
+### Pubblicazione su Firebase Hosting
 
 `firebase.json` contiene la sezione `hosting` (cartella `dist/`); `npm run deploy:hosting` ricostruisce con
 `build:cloud` e pubblica **solo Hosting** sul progetto delle variabili `EXPO_PUBLIC_FIREBASE_PROJECT_ID`.

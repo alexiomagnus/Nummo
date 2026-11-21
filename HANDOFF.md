@@ -58,6 +58,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   precedente):** su richiesta; sezione dedicata qui sotto. `npm run check` **520/520**, `test:emulator` **22/22**, provato nel browser con la
   demo. Committato in `1c83b54`, inviato e pubblicato su Hosting su richiesta (con `1518b0c` della sessione sulla vibrazione): «Deploy
   complete!», sito 200, bundle, `sw.js` e `offline.html` online identici a `dist/`. Rules invariate. Da provare sul telefono.
+- **Nuovo testo della guida «Collega il tuo Firebase» (21 novembre, notte):** su richiesta, dalla bozza concordata; sezione dedicata qui
+  sotto. **Non committato, non pubblicato.** Restano concordati e non fatti: link diretti alla Console, sito senza progetto di base,
+  «Collega un altro dispositivo».
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
   revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
@@ -208,6 +211,22 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   con un archivio aperto, «Categorie preferite» e «Fondo preferito» (`onResetArchive`, terzo argomento di `renderSettings`). Le chiavi
   API salvate restano (sono credenziali, non impostazioni: si cancellano solo con «Dimentica la chiave»).
 - **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser né sul telefono. Committato e inviato a `origin`; non pubblicato su Hosting.
+
+## Nuovo testo della guida «Collega il tuo Firebase» — 21 novembre 2026 (notte)
+
+- Su richiesta, dalla bozza approvata: `FirebaseConnect` con «Prima di iniziare» (account Google e 10 minuti, piano Spark senza carta,
+  spese Standard da portare dopo il collegamento, due schede aperte, «Apri la Console Firebase»), sei passaggi con titolo, istruzioni e
+  «Perché serve» (progetto; app web e configurazione, con il campo incollato **qui** invece che in fondo; accesso Google; dominio da
+  autorizzare con il perché di `nummo-6b6e2.web.app`; database in Europa in produzione; regole), poi «Collega». «Ultimo passaggio» spiega
+  perché Nummo non può nominare il proprietario e dà `config`, `owner` (da scrivere a mano, non «ID automatico»), `uid` (string) e UID,
+  ciascuno con «Copia», più gli errori frequenti. Nomi della Console in italiano con l'inglese tra parentesi; in inglese solo i nomi inglesi.
+  Etichette italiane della Console **non verificate** su una Console reale. Traduzioni vecchie rimosse da `en.ts`.
+- `docs/firebase-personale.md` diviso: Parte 1 per chi usa l'app (gli stessi passaggi in prosa, con il perché del dominio), Parte 2 per
+  chi installa Nummo. `AGENTS.md` (riga `src/features/session/`).
+- **Verifica:** typecheck e `npm test` OK (**520/520**). Chromium headless su un export demo dedicato con emulatori miei su porte 39099/39280
+  (config temporanea `.nummo-guide-check.json` senza `singleProjectMode`, rimossa; porte 8180/4000 occupate da emulatori non miei, non toccati):
+  390×844 IT dalla schermata di accesso a «Collega il tuo Firebase», incollato un progetto `demo-guida`, «Collega», accesso Google
+  dall'emulatore → «Ultimo passaggio» con i quattro valori; 1280×900 EN. Nessun errore JS.
 
 ## Spese offline, pagina offline, passaggio dei dati tra le modalità — 21 novembre 2026 (notte)
 
