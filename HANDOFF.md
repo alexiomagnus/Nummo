@@ -145,7 +145,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   quanto la sua etichetta, a capo se non entrano). Smartphone e foto ingrandita: azioni di prima. In questo caso `Dialog.Actions` non si
   rende (eccezione alla regola delle azioni fuori dall'area scorrevole). Titolo della revisione ora «Controlla i dati» (EN «Check the data»).
 - **Verifica:** typecheck e `npm test` OK (509/509). **Non provato nel browser**: da controllare a 1400×900 e a ~900 px (foto non
-  collassata al minimo di 240, nessuna barra di scorrimento nuova). Il cambio di layout non è committato né pubblicato.
+  collassata al minimo di 240, nessuna barra di scorrimento nuova). Committato in `830ac24` e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200; layout mai visto nel browser da me.
 
 ## Barre di Analisi senza variazione percentuale — 21 novembre 2026
 
