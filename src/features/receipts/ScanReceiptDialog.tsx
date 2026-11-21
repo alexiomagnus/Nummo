@@ -259,9 +259,12 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {conflicts.length > 0 && <SwitchRow label={t("Sostituisci i dati già inseriti")} value={replace} onChange={setReplace}
         supporting={t("Hai già compilato: {p0}. Senza questa scelta restano come sono.", { p0: conflicts.map((field) => t(fieldLabels[field])).join(', ') })} />}
     </View>;
-    const again = <CancelButton key="again" onPress={() => setStage('ready')} style={inline && styles.inlineAction}>{t("Scansiona di nuovo")}</CancelButton>;
-    const cancel = <CancelButton onPress={onClose} style={inline && styles.inlineAction}>{t("Annulla")}</CancelButton>;
-    const use = <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply} style={inline && styles.inlineAction}>{t("Usa questi dati")}</ConfirmButton>;
+    // Phone: «Scansiona di nuovo» on its own full-width row, then «Annulla» and «Usa questi dati» sharing the next one, so all three
+    // line up with the fields (user's request, 21 November).
+    const grow = inline || !wide ? styles.inlineAction : undefined;
+    const again = <CancelButton key="again" onPress={() => setStage('ready')} style={[grow, !wide && styles.fullRow]}>{t("Scansiona di nuovo")}</CancelButton>;
+    const cancel = <CancelButton onPress={onClose} style={grow}>{t("Annulla")}</CancelButton>;
+    const use = <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply} style={grow}>{t("Usa questi dati")}</ConfirmButton>;
     body = inline
       ? <View style={styles.columns}><View style={styles.side}>{picture}<View style={styles.row}>{zoom}</View></View>
         {/* The three buttons sit in the column of the fields, as wide as the inputs and a little below the last one (user's request, 21 November). */}
@@ -272,7 +275,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     // instead of leaving the confirmation alone on the second line. All right-aligned (no auto margin, unlike Elimina).
     actions = inline ? null : [
       again,
-      <View key="pair" style={[dialogActionPair, styles.pairEnd]}>{cancel}{use}</View>,
+      <View key="pair" style={[dialogActionPair, styles.pairEnd, !wide && styles.fullRow]}>{cancel}{use}</View>,
     ];
   }
 
@@ -305,8 +308,9 @@ const styles = StyleSheet.create({
   columns: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xl },
   side: { flex: 2, minWidth: 0, gap: spacing.lg },
   main: { flex: 3, minWidth: 0 },
-  inlineActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.xxxl + spacing.sm },
+  inlineActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.xxxl + spacing.xl, marginBottom: spacing.lg },
   inlineAction: { flexGrow: 1 },
+  fullRow: { flexBasis: '100%', flexGrow: 1 },
   notice: { flexDirection: 'row', gap: spacing.md, padding: spacing.md, borderRadius: radius.card },
   noticeText: { flex: 1, minWidth: 0, gap: spacing.xs },
 });
