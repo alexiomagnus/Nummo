@@ -692,6 +692,12 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
 
+- **Rilascio del 21 novembre (pomeriggio, 15:11): Hosting da `1c7ca7f`** (con `e7953bf`): niente vibrazione su segmenti e legenda,
+  impulsi 4/3 ms, Guida senza «confronto con i periodi precedenti». `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online
+  identico a `dist/`. **Attenzione:** la build ha incluso anche una modifica **non committata** di un'altra sessione,
+  `ScanReceiptDialog.tsx` (testo del dialogo di scansione senza «Controlli tutto prima di salvare.»); la traduzione corrispondente in
+  `en.ts` è finita per errore in `e7953bf`. Online è coerente; in Git lo sarà quando quell'altra sessione committa il file.
+
 - **Rilascio del 21 novembre (notte, seconda parte): Hosting da `976a5cb`**: vibrazione più delicata (`tap` 6 ms, `tick` 4 ms).
   `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules invariate. Da sentire sul Pixel 8.
 
