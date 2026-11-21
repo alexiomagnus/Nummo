@@ -43,7 +43,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   «Controlla i dati», pulsanti nella colonna dei campi (da medium) o allineati ai campi (smartphone), impilati sotto 500 di colonna;
   intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. Provato poi
   nel browser da 360 a 1400 px (sezione «Revisione dello scontrino provata nel browser» qui sotto): conforme, salvo «Usa questi dati»
-  troncato sotto 390 px e «Ingrandisci la foto» fra le due righe di pulsanti, corretti (non committato, non pubblicato).
+  troncato sotto 390 px e «Ingrandisci la foto» fra le due righe di pulsanti, corretti in `6f95a08`, pubblicato su Hosting.
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
   revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
@@ -56,7 +56,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `3b74ea4`, `2b9e763`, `830ac24` (revisione dello scontrino: foto, pulsanti,
+  `origin`. Ultimi commit di codice, tutti pubblicati: `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
+  sulla riga del primo pulsante impilato), `3b74ea4`, `2b9e763`, `830ac24` (revisione dello scontrino: foto, pulsanti,
   titolo «Controlla i dati»), `a2029bb` (intro del dialogo di scansione più breve), `1c7ca7f` (vibrazione tolta da segmenti e legenda,
   4/3 ms), `e7953bf` (Guida senza confronto con i periodi precedenti), `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
   template con contorno, nessun messaggio dopo il salvataggio), `976a5cb` (vibrazione più delicata, 6/4 ms), `3c8f614` (Guida: importo dei template obbligatorio), `7dc02a2` (vibrazione senza ronzio), `e4bf945` (importo obbligatorio nei template, matita nell'elenco, fondo a capo in
@@ -75,7 +76,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `3b74ea4` (revisione dello scontrino: pulsanti uguali su smartphone, foto fino
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto» sulla riga del
+  primo pulsante impilato) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`.
+  Prima, **Hosting** da `3b74ea4` (revisione dello scontrino: pulsanti uguali su smartphone, foto fino
   alla Categoria su desktop, pulsanti impilati in colonna stretta) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito
   200. Prima, **Hosting** da `2b9e763` e, prima ancora, da `830ac24` (revisione dello scontrino), stessa giornata, «Deploy complete!»,
   sito 200; per questi tre il bundle online non è registrato come confrontato con `dist/`. Prima, **Hosting** da `1c7ca7f` (con `e7953bf`;
@@ -172,7 +175,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   «Scansiona» in Nuova spesa. Inoltre «Ingrandisci la foto», con i pulsanti impilati, stava a metà fra le due righe: ora è sulla riga del
   primo pulsante (`sideActions` in alto; su una riga sola invariato).
 - **Verifica:** `npm run check` OK (**509/509**); ripetuta la prova a 360, 384, 390, 760, 1400: «Usa i dati» intero a 360/384, «Usa
-  questi dati» da 390, «Ingrandisci la foto» allineato al primo pulsante, nessun errore JS. Non committato, non pubblicato.
+  questi dati» da 390, «Ingrandisci la foto» allineato al primo pulsante, nessun errore JS. Committato in `6f95a08` e pubblicato su Hosting (21 novembre): «Deploy complete!», sito 200,
+  bundle online identico a `dist/` (SHA-256), con «Usa i dati». Rules invariate.
 
 ## Revisione dello scontrino su desktop: foto alta come il modulo — 21 novembre 2026
 
@@ -757,6 +761,10 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (sera): Hosting da `6f95a08`**: revisione dello scontrino con «Usa i dati» sugli smartphone sotto 390 px
+  (prima troncato) e «Ingrandisci la foto» sulla riga del primo pulsante impilato; prima prova nel browser della revisione da 360 a 1400 px.
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate.
 
 - **Rilasci del 21 novembre (pomeriggio–sera): Hosting da `830ac24`, poi da `2b9e763`, poi da `3b74ea4`** (con `a2029bb`, già online
   dal rilascio di `1c7ca7f`): revisione dello scontrino (foto alta quanto i campi su desktop, titolo «Controlla i dati», pulsanti nella
@@ -3881,7 +3889,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `3b74ea4` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `6f95a08` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
