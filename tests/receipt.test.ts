@@ -118,8 +118,8 @@ test('AI: impostazioni dal browser validate, la chiave non ne fa mai parte', () 
   assert.deepEqual(parseAiSettings('{oops'), defaultAiSettings);
   assert.deepEqual(parseAiSettings(JSON.stringify({ provider: 'altro', model: 5, apiKey: 'sk-finta', key: 'sk-finta' })), defaultAiSettings);
   const saved = parseAiSettings(JSON.stringify({ provider: 'gemini', model: ' m ', endpoint: '', consent: 'generativelanguage.googleapis.com', apiKey: 'finta' }));
-  // Saved before the switch existed (21 November): on for whoever had chosen a service; `endpoint` and `scan` ignored.
-  assert.deepEqual(saved, { enabled: true, provider: 'gemini', model: 'm', consent: 'generativelanguage.googleapis.com' });
+  // Saved before the switch existed (21 November): off even with a service chosen; `endpoint` and `scan` ignored.
+  assert.deepEqual(saved, { enabled: false, provider: 'gemini', model: 'm', consent: 'generativelanguage.googleapis.com' });
   assert.equal('apiKey' in saved, false);
   // Off by default, and an explicit choice always wins.
   assert.equal(defaultAiSettings.enabled, false);

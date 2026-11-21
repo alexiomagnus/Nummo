@@ -204,6 +204,43 @@ test('tastiera virtuale: un tocco su un campo che diventa scorrimento non nascon
   stop();
 });
 
+test('tastiera virtuale: la barra torna anche se il viewport non recupera l’altezza di riferimento', (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  const body = { tagName: 'BODY' }, input = { tagName: 'INPUT', type: 'text' };
+  const doc = Object.assign(new EventTarget(), { activeElement: input as object, visibilityState: 'visible' });
+  // Reference measured with the address bar hidden (915); with the bar shown again the page is 859 tall.
+  const visual = Object.assign(new EventTarget(), { height: 915, width: 412, scale: 1 });
+  const target = Object.assign(new EventTarget(), { innerHeight: 915, innerWidth: 412, visualViewport: visual, document: doc });
+  const states: boolean[] = [];
+  const confirmed: boolean[] = [];
+  const stop = observeVirtualKeyboard(target as unknown as Window, (open) => states.push(open), (value) => confirmed.push(value));
+  const resize = (height: number) => { visual.height = height; visual.dispatchEvent(new Event('resize')); };
+  resize(503);
+  assert.deepEqual(states, [true]);
+  doc.activeElement = body; doc.dispatchEvent(new Event('focusout'));
+  context.mock.timers.tick(0);
+  resize(859);
+  context.mock.timers.tick(900);
+  assert.deepEqual(states, [true], 'durante la chiusura la barra resta nascosta');
+  context.mock.timers.tick(200);
+  assert.deepEqual(states, [true, false], 'oltre il limite di chiusura la barra ricompare');
+  assert.deepEqual(confirmed, [true, false]);
+  // The new reference is the page's own height: the next keyboard closes without waiting.
+  doc.activeElement = input; doc.dispatchEvent(new Event('focusin')); context.mock.timers.tick(0);
+  resize(480);
+  doc.activeElement = body; doc.dispatchEvent(new Event('focusout')); context.mock.timers.tick(0);
+  resize(859);
+  assert.deepEqual(states, [true, false, true, false], 'altezza ritrovata: barra subito visibile');
+  // A page in the background (task switch) does not move the reference.
+  doc.visibilityState = 'hidden'; resize(1200); doc.visibilityState = 'visible';
+  doc.activeElement = input; doc.dispatchEvent(new Event('focusin')); context.mock.timers.tick(0);
+  resize(480);
+  doc.activeElement = body; doc.dispatchEvent(new Event('focusout')); context.mock.timers.tick(0);
+  resize(859);
+  assert.deepEqual(states, [true, false, true, false, true, false], 'misure in background ignorate');
+  stop();
+});
+
 test('scroll padding: altezza della barra pubblicata sul contenitore scorrevole più vicino e ripristinata', () => {
   const style = (initial: Record<string, string> = {}) => {
     const values = new Map(Object.entries(initial));

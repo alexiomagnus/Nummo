@@ -25,8 +25,9 @@ type Props = {
 // (or in its place when the scan is off), so that the form no longer pushes «Salva» under the navigation on phones. Outline,
 // icons and label in the primary colour, unlike the grey-outlined fields and the tonal scan button, so it reads as something
 // else: a shortcut that fills the form (not the tertiary container: in mono mode it is the neutral surface variant, which
-// looks disabled). With a template chosen the button shows only that template's category icon (its name
-// stays in the accessible label and in the list). Same sheet (phones) and menu (from medium) as every other select.
+// looks disabled). The button never changes once a template is chosen (user's request, 21 November): always the template
+// icon and «Template»; the choice shows in the filled fields and as the selected entry of the list. Same sheet (phones)
+// and menu (from medium) as every other select.
 export function TemplatePicker({ templates, categories, value, onChange, disabled, style }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -40,11 +41,8 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
         onChange={(id) => onChange(id === noTemplate ? '' : id)}
         triggerStyle={[styles.button, { borderColor: colors.primary }, disabled && { opacity: stateOpacity.disabled }]}
         trigger={(open) => <>
-          <View style={styles.lead}>
-            {chosen ? <TemplateGlyph template={chosen} categories={categories} size={24} fallbackColor={color} />
-              : <SvgIcon shape={iconShapes.template} size={20} color={color} />}
-          </View>
-          {!chosen && <Text variant="labelLarge" numberOfLines={1} style={[styles.label, { color }]}>{t("Template")}</Text>}
+          <View style={styles.lead}><SvgIcon shape={iconShapes.template} size={20} color={color} /></View>
+          <Text variant="labelLarge" numberOfLines={1} style={[styles.label, { color }]}>{t("Template")}</Text>
           {/* The arrow says it is a choice, not an action. */}
           <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={20} color={color} />
         </>} />
@@ -52,11 +50,10 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
   );
 }
 
-// Category icon of a template; the template icon when its category no longer exists.
-function TemplateGlyph({ template, categories, size, fallbackColor }: { template: TemplateRecord; categories: readonly Category[]; size: number; fallbackColor?: string }) {
+// Category icon of a template in the list; none when its category no longer exists.
+function TemplateGlyph({ template, categories, size }: { template: TemplateRecord; categories: readonly Category[]; size: number }) {
   const icon = categories.find((category) => category.id === template.category_id)?.icon;
-  if (icon) return <CategoryGlyph icon={icon} size={size} />;
-  return fallbackColor ? <SvgIcon shape={iconShapes.template} size={20} color={fallbackColor} /> : null;
+  return icon ? <CategoryGlyph icon={icon} size={size} /> : null;
 }
 
 const styles = StyleSheet.create({

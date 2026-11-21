@@ -27,9 +27,9 @@ export function parseAiSettings(raw: string | null): AiSettings {
   try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
   const o = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
   const provider = (aiProviders as readonly string[]).includes(o.provider as string) ? (o.provider as AiProvider) : 'none';
-  // Settings saved before the switch existed: the scan stays on for whoever had already chosen a service. The fields of
-  // the removed features (`endpoint`, `scan`) are ignored.
-  const enabled = typeof o.enabled === 'boolean' ? o.enabled : provider !== 'none';
+  // Off unless switched on in Settings: settings saved before the switch existed (a service chosen, no `enabled`) read as
+  // off too (user's request of 21 November). The fields of the removed features (`endpoint`, `scan`) are ignored.
+  const enabled = o.enabled === true;
   return { enabled, provider, model: provider === 'none' ? '' : text(o.model, 100), consent: text(o.consent, 400) };
 }
 

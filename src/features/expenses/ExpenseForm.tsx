@@ -95,11 +95,17 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     });
   };
   // Fills amount (when the template has one), date, description, merchant (when it has one), category and fund; never the
-  // repeat. A category or fund that no longer exists is left to be chosen again.
+  // repeat. A category or fund that no longer exists is left to be chosen again. «Nessun template» clears the whole form,
+  // as after a saved expense (user's request, 21 November), whether or not it had been filled from a template.
   const applyTemplate = (id: string) => {
     const template = templates?.find((item) => item.id === id);
     setTemplateId(template ? template.id : '');
-    if (!template) return;
+    if (!template) {
+      setDraft(newDraft());
+      setErrors({});
+      setFormKey((key) => key + 1);
+      return;
+    }
     const filled = draftOfTemplate(template);
     const fundId = template.fund_id === null ? noFund : fundChoices.some((choice) => choice.fund.id === template.fund_id) ? template.fund_id : '';
     update({ description: filled.description, date: filled.date, categoryId: existingCategory(template.category_id, categories), fundId,

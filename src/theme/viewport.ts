@@ -12,6 +12,10 @@ export function visibleViewportHeight(layoutHeight: number, visual?: { height: n
 // viewport, iOS only the visual one; both are covered). A rotation or window resize changes the width and resets the
 // reference; browser bars and pinch zoom stay below the threshold or are ignored.
 export const keyboardHeightRatio = 0.8;
+// Longest time the navigation stays hidden for a keyboard that is closing. Recovering 95 % of the tallest height ends it
+// sooner; without a limit, a viewport that never got that tall again (the browser's address bar shown again after it
+// had been hidden while the reference was measured, an Android task switch) kept the bar hidden for good.
+export const keyboardClosingLimit = 1000;
 export type KeyboardReference = { width: number; tallest: number };
 
 export function nextKeyboardReference(previous: KeyboardReference | null, width: number, height: number): KeyboardReference {
@@ -53,16 +57,27 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   let confirmed = false;
   let publishedConfirmed = false;
   let openingTimer: ReturnType<typeof setTimeout> | undefined;
+  let closingTimer: ReturnType<typeof setTimeout> | undefined;
   const publish = (next: boolean) => {
     if (next !== open) { open = next; update(open); }
     if (confirmed !== publishedConfirmed) { publishedConfirmed = confirmed; onConfirmedChange?.(confirmed); }
   };
   const evaluate = () => {
     const detected = height !== null && keyboardOpen(reference, height, isTextEntry(doc.activeElement as FocusTarget));
-    if (detected) { confirmed = true; opening = false; clearTimeout(openingTimer); }
+    if (detected) { confirmed = true; opening = false; clearTimeout(openingTimer); clearTimeout(closingTimer); closingTimer = undefined; }
     // Blur often precedes the keyboard's closing animation. Keep navigation out
-    // of the shrinking viewport until it has almost recovered its full height.
-    const closing = confirmed && height !== null && reference !== null && height < reference.tallest * 0.95;
+    // of the shrinking viewport until it has almost recovered its full height, for keyboardClosingLimit at most.
+    const closing = !detected && confirmed && height !== null && reference !== null && height < reference.tallest * 0.95;
+    if (closing && closingTimer === undefined) {
+      // Still short when the limit expires: that height is the page's own now, the new reference.
+      closingTimer = setTimeout(() => {
+        closingTimer = undefined;
+        confirmed = false;
+        if (reference !== null && height !== null) reference = { width: reference.width, tallest: height };
+        evaluate();
+      }, keyboardClosingLimit);
+    }
+    if (!closing && !detected) { clearTimeout(closingTimer); closingTimer = undefined; }
     const next = opening || detected || closing;
     if (!next) confirmed = false;
     publish(next);
@@ -86,6 +101,9 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
     evaluate();
   };
   const resize = () => {
+    // Background windows may report transient dimensions during Android task transitions: they must not become the
+    // reference, or the bar would wait for a height the page never reaches again.
+    if (doc.visibilityState === 'hidden') return;
     const measured = visibleViewportHeight(target.innerHeight, visual);
     if (measured === null) return; // pinch zoom: keep the current state
     // The visual width: the layout viewport can widen while a wide overlay is shown, the visual one cannot.
@@ -108,6 +126,7 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   return () => {
     clearTimeout(pending);
     clearTimeout(openingTimer);
+    clearTimeout(closingTimer);
     target.removeEventListener('resize', resize);
     visual?.removeEventListener('resize', resize);
     doc.removeEventListener('focusin', focusChange);

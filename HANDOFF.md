@@ -52,6 +52,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Tastiera virtuale provata nel browser emulato (21 novembre, sera):** `scripts/check-keyboard.mjs` su `dist-demo`: transizioni in un
   fotogramma ovunque (campo alto/basso, dialogo, 3–4 passi, cambio campo, CPU ×4, 360×640). Su richiesta, 24 px di margine sotto il
   campo riportato in vista (prima a filo della tastiera a 360×640). Committato in `62e3639` e pubblicato su Hosting; sezione dedicata qui sotto.
+- **Vibrazione 6/5 ms, barra che spariva, scansione spenta (21 novembre, notte):** su richiesta; sezione dedicata qui sotto.
+  Committato e inviato a `origin`; non pubblicato su Hosting.
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
   revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
@@ -179,6 +181,27 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Vibrazione 6/5 ms, barra che spariva, scansione spenta di base — 21 novembre 2026 (notte)
+
+- Verifica iniziale: `main` = `origin/main`, albero pulito, `npm run check` OK (**509/509**) su `c745f2b`; documenti e codice coincidenti.
+- **Vibrazione assente** sul Pixel 8 dopo `1c7ca7f`: il codice chiede l'impulso (provato nel browser emulato), ma 4/3 ms sono troppo
+  brevi perché il motore parta. `hapticPatterns` → `tap` 6 ms (ultima durata percepita), `tick` 5 ms; pagina di prova con 5/6 come
+  attuali e scelte del tick 3–8. Da sentire sul telefono.
+- **Barra inferiore che a volte spariva:** in `observeVirtualKeyboard` lo stato «tastiera in chiusura» durava finché il viewport non
+  tornava al 95 % dell'altezza più alta vista alla stessa larghezza. Se quel riferimento era stato misurato con la barra degli indirizzi
+  nascosta (915 → 859 a 412 di larghezza: sotto il 95 %) o durante un cambio d'app Android, la chiusura non finiva mai e la barra
+  restava nascosta. Ora: chiusura al massimo `keyboardClosingLimit` (1 s), poi la barra torna e l'altezza attuale diventa il nuovo
+  riferimento; ridimensionamenti con la pagina in background ignorati. Test nuovo in `tests/viewport.test.ts`.
+- **Scansione dello scontrino:** `parseAiSettings` la dava accesa a chi aveva scelto un servizio prima che esistesse l'interruttore;
+  ora è accesa solo con `enabled: true` salvato (chi la vuole la riaccende in Impostazioni). Test aggiornato.
+- **Verifica:** `npm run check` OK (**511/511**). Non provato nel browser né sul telefono. Committato e inviato a `origin`; non pubblicato su Hosting.
+- **Pulsante «Template» (stessa sessione, su richiesta):** non cambia più dopo la scelta (sempre icona «template» ed etichetta
+  «Template»); «Nessun template» svuota tutto il modulo di Nuova spesa (bozza, errori, campi rimontati come dopo un salvataggio),
+  anche se i dati erano stati scritti a mano. Committato e inviato a `origin`; non pubblicato su Hosting.
+- **Pagina Templates con l'interruttore spento (stessa sessione, su richiesta):** «Nuovo template» e «I tuoi template» non spariscono
+  più: restano visibili in grigio (opacità 0,38 come la scheda AI) e non raggiungibili (`inert`, campi e «Crea» disabilitati). Testo
+  dell'interruttore «…il pulsante Template» invece di «…il campo Template» (IT/EN). Committato e inviato a `origin`; non pubblicato su Hosting.
 
 ## «Template» accanto a «Scansiona scontrino» — 21 novembre 2026
 

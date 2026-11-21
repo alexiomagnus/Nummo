@@ -12,7 +12,7 @@ import type { SyncedTemplate } from '../../domain/firestore';
 import type { RankedMerchant } from '../../domain/merchant';
 import { templatePolicy } from '../../domain/template';
 import { useI18n } from '../../i18n/I18nProvider';
-import { layout, radius, spacing } from '../../theme/tokens';
+import { layout, radius, spacing, stateOpacity } from '../../theme/tokens';
 import type { FundChoice } from '../funds/FundField';
 import { TemplateEditor } from './TemplateEditor';
 import { TemplateFields, useTemplateForm } from './TemplateForm';
@@ -32,7 +32,8 @@ type Props = {
 
 // Page of the account menu (below Categories): the switch that turns templates on (off by default), a short explanation,
 // the form of a new template and the list of saved ones, each editable and deletable. Templates fill «Nuova spesa» and
-// nothing else: they are never spending by themselves. Off, the saved templates are kept, only the picker is hidden.
+// nothing else: they are never spending by themselves. Off, the saved templates are kept and this page shows them greyed
+// out; only the picker of Nuova spesa is hidden.
 // Removed on 16 November 2026, reintroduced on 21 November on request (now with «Esercente»).
 export function TemplatesPage({ remote, categories, fundChoices, fundNames, merchants, enabled, onToggle }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
@@ -48,13 +49,14 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
       <Card>
         <Text variant="bodyMedium" style={muted}>{t("Un template è una spesa già pronta, semplifica la gestione delle spese.")}</Text>
         <SwitchRow label={t("Usa i template")} value={enabled} onChange={onToggle}
-          supporting={enabled ? t("In Nuova spesa compare il campo Template.") : t("In Nuova spesa non compare il campo Template.")} />
+          supporting={enabled ? t("In Nuova spesa compare il pulsante Template.") : t("In Nuova spesa non compare il pulsante Template.")} />
       </Card>
-      {enabled && <>
+      {/* Off: greyed out (M3 disabled opacity) and unreachable, never hidden (user's request, 21 November), like the AI card. */}
+      <View style={[styles.sections, !enabled && { opacity: stateOpacity.disabled }]} aria-disabled={!enabled} {...{ inert: enabled ? undefined : true }}>
         <Card title={t("Nuovo template")}>
           {full ? <Text variant="bodyMedium" style={muted}>{t("Hai raggiunto il limite di {p0} template: eliminane uno per aggiungerne altri.", { p0: templatePolicy.maxTemplates })}</Text> : <>
-            <TemplateFields form={form} disabled={!remote.ready} />
-            <View style={styles.actions}><Button mode="contained" disabled={!remote.ready} onPress={() => { haptic(); form.submit(); }} contentStyle={styles.createContent} labelStyle={styles.createLabel} style={styles.create}>{t("Crea")}</Button></View>
+            <TemplateFields form={form} disabled={!remote.ready || !enabled} />
+            <View style={styles.actions}><Button mode="contained" disabled={!remote.ready || !enabled} onPress={() => { haptic(); form.submit(); }} contentStyle={styles.createContent} labelStyle={styles.createLabel} style={styles.create}>{t("Crea")}</Button></View>
           </>}
           {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
         </Card>
@@ -74,7 +76,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
                 </View>} />;
             })}</View>}
         </Card>
-      </>}
+      </View>
       {editing && <TemplateEditor template={editing} categories={categories} fundChoices={fundChoices} merchants={merchants} error={remote.error}
         onSave={(data) => remote.update(editing, data)} onDelete={() => remote.remove(editing)} close={() => setEditing(null)} />}
     </View>
@@ -83,6 +85,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
 
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
+  sections: { width: '100%', gap: layout.sectionGap },
   // As tall as «Salva» in Nuova spesa, aligned to the right.
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.sm },
   // Like «Salva» of Nuova spesa (user's request, 21 November): full width at every size, pill-shaped.
