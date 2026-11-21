@@ -18,6 +18,7 @@ import { inputOutline, motion, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { expenseMonths } from './expenseMonths';
 import { ProductsDialog } from './ProductsDialog';
+import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
 
 type Props = {
   occurrences: readonly Occurrence[];
@@ -206,7 +207,10 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
             </View>
             {fund !== undefined && <View style={styles.detailField}>
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Fondo")}</Text>
-              <Text variant="bodyMedium">{fund ? fund.name : t("Nessun fondo")}</Text>
+              <View style={styles.fundValue}>
+                {fund ? <FundAvatar fund={fund} size={20} /> : <NoFundAvatar size={20} />}
+                <Text variant="bodyMedium" style={styles.fundName}>{fund ? fund.name : t("Nessun fondo")}</Text>
+              </View>
             </View>}
             {item.recurrence && <View style={styles.detailField}>
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
@@ -303,6 +307,8 @@ const styles = StyleSheet.create({
   compactLine: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.lg },
   compactFields: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: spacing.md },
   empty: { gap: spacing.sm },
+  fundValue: { flexDirection: 'row', alignItems: 'center', gap: 6, minWidth: 0 },
+  fundName: { flexShrink: 1 },
   merchantMark: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
   merchantName: { flexShrink: 1, minWidth: 0 },
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
