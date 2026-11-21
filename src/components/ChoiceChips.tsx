@@ -2,6 +2,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
+import { selectionFill } from '../theme/motion';
 import { radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -37,7 +38,7 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
             accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}
             style={[styles.chip, { minHeight: height }, selected
               ? { backgroundColor: colors.secondaryContainer, borderColor: colors.secondaryContainer }
-              : { borderColor: colors.outlineVariant }]}>
+              : { borderColor: colors.outlineVariant }, selectionFill]}>
             {selected && showCheck ? <SvgIcon shape={iconShapes.check} size={18} color={color} /> : option.icon}
             <Text variant="labelLarge" style={[styles.label, { color }]}>{option.label}</Text>
           </StateLayerPressable>

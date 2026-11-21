@@ -28,6 +28,9 @@ export function transitions(parts: readonly TransitionPart[]): ViewStyle {
 // Shared presets: state layers fade, selected fills and borders cross-fade, dimming (chart focus) eases.
 export const fadeTransition = transition(['opacity']);
 export const fillTransition = transition(['background-color', 'border-color', 'color', 'opacity']);
+// Selected fills (segments, chips, legend rows) switch at once, after fillTransition in the style array: a cross-fade
+// left two half-selected items, or the new label colour on the old fill, when switching quickly (21 November).
+export const selectionFill = transition(['opacity']);
 
 // Quicker fade for state layers so press feedback feels immediate (hover and release still ease out).
 export const layerTransition = transition(['opacity'], 100);

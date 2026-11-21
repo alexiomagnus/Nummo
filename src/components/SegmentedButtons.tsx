@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
+import { selectionFill } from '../theme/motion';
 import { radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -64,7 +65,7 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
               index === options.length - 1 && styles.lastSegment,
               index > 0 && { borderLeftWidth: 1, borderLeftColor: border },
               { paddingHorizontal: padding, gap },
-              selected && { backgroundColor: colors.secondaryContainer }]}>
+              selected && { backgroundColor: colors.secondaryContainer }, selectionFill]}>
             {selected && fits && <SvgIcon shape={iconShapes.check} size={checkSize} color={color} />}
             <Text variant="labelLarge" numberOfLines={1} style={[styles.label, { color }]}>{option.label}</Text>
             {/* Natural width of the label, out of the layout and invisible; +2 because onLayout rounds. */}

@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import type { Category } from '../../domain/category';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
+import { selectionFill } from '../../theme/motion';
 import { useI18n } from '../../i18n/I18nProvider';
 import { otherCategoriesKey, type Series } from '../../domain/history';
 import { shape, spacing } from '../../theme/tokens';
@@ -29,27 +30,11 @@ function columnsOf<T>(items: readonly T[], count: number): T[][] {
 const legendRadius = shape.md;
 
 export function CategoryLegend({ series, others, categories, total, colors, active, onActive, showSeries = true, onOpen, compact = false }: Props) {
-  const { t, formatAmount } = useI18n();
-  const theme = useTheme();
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [width, setWidth] = useState(0);
   const columns = compact && width >= twoColumnsFrom ? 2 : 1;
-  const icons = new Map(categories.map((category) => [category.id, category.icon] as const));
-  const iconOf = (item: Series) => icons.get(item.key) ?? null;
-  const content = (item: Series) => <>
-    <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />
-    {/* Icon before the name it belongs to; the slot is kept empty for synthetic series so names stay aligned. */}
-    <View style={styles.icon}>{iconOf(item) && <CategoryGlyph icon={iconOf(item)!} size={24} color={theme.colors.onSurfaceVariant} />}</View>
-    <Text variant="bodyMedium" numberOfLines={compact ? 1 : undefined} style={compact ? styles.compactLabel : styles.label}>{seriesLabel(item, t)}</Text>
-    {compact ? <>
-      {/* Fixed right-aligned columns: amounts and shares line up from row to row. */}
-      <Text variant="bodyMedium" style={[styles.number, styles.amountColumn]}>{formatAmount(item.total)}</Text>
-      <Text variant="bodyMedium" style={[styles.number, styles.shareColumn, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
-    </> : <View style={styles.numbers}>
-      <Text variant="bodyMedium" style={styles.number}>{formatAmount(item.total)}</Text>
-      <Text variant="bodyMedium" style={[styles.number, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
-    </View>}
-  </>;
+  const icons = useMemo(() => new Map(categories.map((category) => [category.id, category.icon] as const)), [categories]);
   // Compact table: equal columns; spacing separates rows without divider lines.
   const table = <T,>(items: readonly T[], row: (item: T) => ReactNode, label: string, id?: string) => (
     <View nativeID={id} role="list" accessibilityLabel={label} style={styles.table}>
@@ -58,22 +43,14 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
       </View>)}
     </View>
   );
+  // Rows are memoised: a new selection re-renders only the row that loses it and the one that gains it.
   const seriesRow = (item: Series) => {
     const index = series.indexOf(item);
-    return <View key={item.key} nativeID={`dashboard-category-${item.key}`} role="listitem">
-      <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
-        onPress={() => onActive(active === index ? null : index)} aria-pressed={active === index}
-        accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
-        style={[styles.row, compact && styles.compactRow, active === index && { backgroundColor: theme.colors.secondaryContainer }]}>
-        {content(item)}
-      </StateLayerPressable>
-    </View>;
+    return <LegendRow key={item.key} item={item} index={index} selected={active === index} onActive={onActive} icon={icons.get(item.key) ?? null}
+      colors={colors} total={total} compact={compact} />;
   };
-  const otherRow = (item: Series) => <View key={item.key} role="listitem">
-    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
-      accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
-      onPress={() => onOpen?.(item.key)} style={[styles.row, compact && styles.compactRow]}>{content(item)}</StateLayerPressable>
-  </View>;
+  const otherRow = (item: Series) => <LegendRow key={item.key} item={item} onOpen={onOpen} icon={icons.get(item.key) ?? null}
+    colors={colors} total={total} compact={compact} />;
   return <View style={styles.legend} onLayout={compact ? (event) => setWidth(event.nativeEvent.layout.width) : undefined}>
     {showSeries && (compact ? table(series, seriesRow, t('Legenda: categorie, importi e percentuali'))
       : <View role="list" accessibilityLabel={t('Legenda: categorie, importi e percentuali')}>{series.map(seriesRow)}</View>)}
@@ -87,6 +64,37 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
     </>}
   </View>;
 }
+
+type RowProps = { item: Series; icon: Category['icon'] | null; colors: ChartColors; total: number; compact: boolean } &
+  ({ index: number; selected: boolean; onActive: (index: number | null) => void; onOpen?: undefined } | { onOpen?: (key: string) => void; index?: undefined; selected?: undefined; onActive?: undefined });
+
+// One legend row. A series row selects its category (second press clears); a row inside «Altre» opens its transactions.
+// The selected fill appears and disappears at once, without the cross-fade of other fills: switching quickly between rows
+// must never show two half-selected rows (user's report, 21 November).
+const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, index, selected, onActive, onOpen }: RowProps) {
+  const { t, formatAmount } = useI18n();
+  const theme = useTheme();
+  const selectable = index !== undefined;
+  return <View nativeID={selectable ? `dashboard-category-${item.key}` : undefined} role="listitem">
+    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
+      onPress={() => { if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
+      accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
+      style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.secondaryContainer }, selectionFill]}>
+      <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />
+      {/* Icon before the name it belongs to; the slot is kept empty for synthetic series so names stay aligned. */}
+      <View style={styles.icon}>{icon && <CategoryGlyph icon={icon} size={24} color={theme.colors.onSurfaceVariant} />}</View>
+      <Text variant="bodyMedium" numberOfLines={compact ? 1 : undefined} style={compact ? styles.compactLabel : styles.label}>{seriesLabel(item, t)}</Text>
+      {compact ? <>
+        {/* Fixed right-aligned columns: amounts and shares line up from row to row. */}
+        <Text variant="bodyMedium" style={[styles.number, styles.amountColumn]}>{formatAmount(item.total)}</Text>
+        <Text variant="bodyMedium" style={[styles.number, styles.shareColumn, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
+      </> : <View style={styles.numbers}>
+        <Text variant="bodyMedium" style={styles.number}>{formatAmount(item.total)}</Text>
+        <Text variant="bodyMedium" style={[styles.number, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
+      </View>}
+    </StateLayerPressable>
+  </View>;
+});
 
 const styles = StyleSheet.create({
   legend: { gap: spacing.sm, minWidth: 0 },
