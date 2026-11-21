@@ -51,8 +51,9 @@ dentro l'app.
   sistema», che chiede il permesso del browser. Richiedono un piccolo servizio di invio (consigliato Cloudflare Workers,
   piano gratuito) e le variabili `EXPO_PUBLIC_NUMMO_PUSH_URL`/`EXPO_PUBLIC_NUMMO_PUSH_KEY`: configurazione, privacy,
   compatibilità (iPhone solo con Nummo nella schermata Home) e prove in [docs/notifiche-push.md](docs/notifiche-push.md).
-  Il servizio riceve solo gli orari dei promemoria, mai importi o descrizioni. «Invia notifica di prova» mostra subito
-  una notifica di sistema; «Prova con Nummo chiusa» fa arrivare una vera push dal servizio dopo circa 30 secondi.
+  Il servizio riceve solo gli orari dei promemoria, mai importi o descrizioni. I pulsanti di prova («Invia notifica di prova»,
+  «Prova con Nummo chiusa») sono nascosti dal 21 novembre 2026; per il debugging si riattivano con `pushTests` in
+  `src/features/notifications/NotificationsPage.tsx`.
 - Senza notifiche di sistema (spente, browser che non le supporta, installazione senza servizio) non arriva alcun
   promemoria o riepilogo; la pagina Notifiche lo dice.
 

@@ -67,6 +67,29 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Pulsanti di prova delle notifiche nascosti — 21 novembre 2026
+
+- Su richiesta: in Notifiche non compaiono più «Invia notifica di prova» e «Prova con Nummo chiusa» (né il messaggio «Chiudi Nummo
+  ora…»). Codice conservato per il debugging dietro la costante `pushTests = false` in `NotificationsPage.tsx`; invariati
+  `usePushNotifications` (`localTest`/`remoteTest`), l'API `/v1/test` del servizio push e le traduzioni (ancora referenziate).
+  README, `docs/notifiche-push.md` e AGENTS aggiornati. `npm run check` OK. Non pubblicato.
+
+## Pulsanti di Archiviazione e backup della stessa larghezza — 21 novembre 2026
+
+- Su richiesta: «Esporta transazioni (CSV)», «Scarica backup (JSON)» e «Importa backup (JSON)» hanno la stessa larghezza, quella
+  dell'etichetta più lunga nella lingua corrente (`BackupActions`: `onLayout` dei tre pulsanti e `minWidth` comune, rimisurata al
+  cambio di lingua). Su smartphone restano impilati a tutta larghezza come prima.
+- **Verifica:** Chromium headless 1600×900 (demo): 233 px ciascuno in italiano, 236 px in inglese. `npm run check` OK. Non pubblicato.
+
+## Riga velata anche su smartphone, icona del fondo nei dettagli — 21 novembre 2026
+
+- Su richiesta: la riga dissolta verso il bordo inferiore (prima solo nel pannello desktop) vale a ogni dimensione con navigazione:
+  `AppShell` marca lo scroller con `data-whole-rows` e avvia `observeWholeRows` con `hasNav`; `data-panel-scroll` resta solo per la
+  barra di scorrimento del pannello. Su smartphone il bordo è quello sopra la barra di navigazione.
+- Nei dettagli della spesa il «Fondo» ha l'avatar del fondo (20 px, `FundAvatar`) o quello tratteggiato di «Nessun fondo».
+- **Verifica:** Chromium headless 500×900 (compact, demo, Standard): riga velata sopra la barra, avatar accanto a «Medio · Spesa e
+  casa». `npm run check` OK. Non pubblicato.
+
 ## Fondo nei dettagli della spesa — 21 novembre 2026
 
 - Su richiesta: nei dettagli di una spesa (Spese, vista spese singole) il campo «Fondo» dopo la Categoria, con il nome del fondo

@@ -20,6 +20,11 @@ import type { PushState } from './usePushNotifications';
 
 const icon = (shape: string) => ({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape} size={size} color={color} />;
 
+// Test buttons («Invia notifica di prova», «Prova con Nummo chiusa»): hidden since 21 November on request, kept for
+// debugging. Set to true to show them again; the hook (localTest/remoteTest), the service API /v1/test and the
+// translations are unchanged.
+const pushTests: boolean = false;
+
 // System notifications of this browser: one plain status line and only the actions that make sense in that state.
 function SystemNotifications({ push }: { push: PushState }) {
   const { t } = useI18n();
@@ -54,11 +59,13 @@ function SystemNotifications({ push }: { push: PushState }) {
     {line(t("Attive su questo dispositivo: arrivano anche con Nummo chiusa."))}
     {failure && line(t("Il servizio delle notifiche non risponde: gli orari dei promemoria verranno aggiornati più tardi."), true)}
     <View style={styles.actions}>
-      <Button mode="contained-tonal" disabled={busy} onPress={() => void push.localTest().then((ok) => { if (!ok) notify(t("Impossibile mostrare la notifica di prova.")); })}>{t("Invia notifica di prova")}</Button>
-      <Button mode="outlined" disabled={busy} onPress={() => void remote(30)}>{t("Prova con Nummo chiusa")}</Button>
+      {pushTests && <>
+        <Button mode="contained-tonal" disabled={busy} onPress={() => void push.localTest().then((ok) => { if (!ok) notify(t("Impossibile mostrare la notifica di prova.")); })}>{t("Invia notifica di prova")}</Button>
+        <Button mode="outlined" disabled={busy} onPress={() => void remote(30)}>{t("Prova con Nummo chiusa")}</Button>
+      </>}
       <Button mode="text" disabled={busy} loading={busy} onPress={() => { setWaiting(false); void push.disable(); }}>{t("Disattiva su questo dispositivo")}</Button>
     </View>
-    {waiting && line(t("Chiudi Nummo ora: entro circa un minuto arriverà una notifica push dal servizio. Se arriva, le notifiche funzionano anche ad app chiusa."))}
+    {pushTests && waiting && line(t("Chiudi Nummo ora: entro circa un minuto arriverà una notifica push dal servizio. Se arriva, le notifiche funzionano anche ad app chiusa."))}
   </>;
   return (
     <Card title={t("Notifiche di sistema")}>

@@ -107,6 +107,8 @@ da sola alla riattivazione, sostituendo la vecchia sottoscrizione).
 
 ## Prova sul tuo dispositivo
 
+- **Pulsanti nascosti dal 21 novembre 2026:** per mostrarli di nuovo durante il debugging impostare `pushTests = true` in
+  `src/features/notifications/NotificationsPage.tsx` (hook, API `/v1/test` e testi invariati).
 - **Aspetto**: Notifiche → «Invia notifica di prova». È una vera notifica di sistema, mostrata dal service worker,
   ma **non passa dal servizio push**: prova solo permesso e aspetto.
 - **Consegna ad app chiusa**: «Prova con Nummo chiusa», poi chiudi Nummo (su telefono anche dall'elenco delle app
