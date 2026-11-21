@@ -61,6 +61,9 @@ function useVirtualKeyboard() {
   return state;
 }
 
+// Room left between the focused field and the virtual keyboard when the field is brought into view.
+const keyboardFieldMargin = spacing.xl;
+
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
 // standing drawer (expanded). The content scrolls inside the shell, nothing is position: fixed.
 export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, brand, children }: Props<T>) {
@@ -75,11 +78,17 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // The confirmation comes at the first step past the threshold, but iOS shrinks its visual viewport in steps during the
   // keyboard animation: while the keyboard is open every further shrinking brings the field back into view too
   // (observeViewportShrink; DOM only, no render per step). `nearest` honours the scroll padding reserved by sticky bars.
+  // A margin under the field, only for this scroll: without it the field ended flush on the keyboard (360×640 with a
+  // 300 px keyboard) and what is right under it (the counter of «Descrizione») stayed covered.
   useLayoutEffect(() => {
     if (!keyboardConfirmed || typeof document === 'undefined') return undefined;
     const reveal = () => {
       const active = document.activeElement;
-      if (active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
+      if (!(active instanceof HTMLElement) || active === document.body) return;
+      const previous = active.style.scrollMarginBottom;
+      active.style.scrollMarginBottom = `${keyboardFieldMargin}px`;
+      active.scrollIntoView({ block: 'nearest' });
+      active.style.scrollMarginBottom = previous;
     };
     reveal();
     return observeViewportShrink(window, reveal);

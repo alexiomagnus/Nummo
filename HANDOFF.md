@@ -44,6 +44,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. Provato poi
   nel browser da 360 a 1400 px (sezione «Revisione dello scontrino provata nel browser» qui sotto): conforme, salvo «Usa questi dati»
   troncato sotto 390 px e «Ingrandisci la foto» fra le due righe di pulsanti, corretti in `6f95a08`, pubblicato su Hosting.
+- **Tastiera virtuale provata nel browser emulato (21 novembre, sera):** `scripts/check-keyboard.mjs` su `dist-demo`: transizioni in un
+  fotogramma ovunque (campo alto/basso, dialogo, 3–4 passi, cambio campo, CPU ×4, 360×640). Su richiesta, 24 px di margine sotto il
+  campo riportato in vista (prima a filo della tastiera a 360×640). Non committato, non pubblicato; sezione dedicata qui sotto.
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
   revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
@@ -162,6 +165,22 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Tastiera virtuale provata nel browser emulato, margine sotto il campo — 21 novembre 2026
+
+- Su richiesta, `scripts/check-keyboard.mjs` sulla demo (Standard, rete esterna bloccata, tastiera simulata riducendo il viewport) con
+  `6f95a08`: 390×844 campo alto, basso e dialogo Nuova lista; apertura in 4 passi; cambio di campo a tastiera aperta; CPU ×4 per due cicli;
+  360×640 con tastiera di 300 in 3 passi, anche nel dialogo. In ogni caso `#root` = viewport a ogni fotogramma, apertura e chiusura in un
+  fotogramma, barra invisibile ma con il suo spazio dal tocco alla conferma, campo sempre in vista, nessun errore JS. Con CPU ×4 otto task
+  lunghi (54–101 ms) attorno a tocco e chiusura, senza fotogrammi intermedi; senza rallentamento nessuno.
+- **Corretto:** a 360×640 con tastiera di 300 il campo riportato in vista finiva a filo della tastiera (292..340 su 340), coprendo ciò che
+  sta sotto (contatore della Descrizione). Ora `AppShell` dà al campo attivo `scroll-margin-bottom` di 24 (`keyboardFieldMargin` =
+  `spacing.xl`) solo durante `scrollIntoView` e poi lo ripristina: campo a 268..316, stesso fotogramma; Tab da tastiera fisica e altri
+  scorrimenti invariati. Dove il campo era già lontano dalla tastiera (390×844) nessuno scorrimento in più.
+- Osservato nella prova, non dipendente dalla tastiera: alla prima apertura di un archivio vuoto il messaggio «Categorie predefinite
+  aggiunte» sta sopra la tastiera e copre il campo per qualche secondo.
+- **Verifica:** `npm run check` OK (**509/509**); prove ripetute (360×640 con e senza passi, 390×844 basso/passi/cambio, dialogo a 360×640):
+  stessi esiti più il margine. Animazione reale della tastiera e iOS non riprodotti: confermare su telefono. Non committato, non pubblicato.
 
 ## Revisione dello scontrino provata nel browser, «Usa i dati» su smartphone stretti — 21 novembre 2026
 
