@@ -26,9 +26,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   sezioni di questa sessione scritte «non committato» sono aggiornate con il commit. Codice e `AGENTS.md` coincidevano per il resto.
 - **Analisi iniziale del 21 novembre (notte), corretta su richiesta:** la Guida («Template per le spese», IT e EN) diceva l'importo
   facoltativo, obbligatorio da `e4bf945`: ora «descrizione, importo, data, esercente, categoria e fondo»; la sezione «Fondo accanto alla
-  categoria…» dava `subtitleBelow` per rimossa, ora segnata come superata. Non committato.
+  categoria…» dava `subtitleBelow` per rimossa, ora segnata come superata. Committato in `3c8f614` e pubblicato su Hosting.
 - **Feedback aptico rivisto (21 novembre, notte):** zona morta sulla barra, distanza minima tra vibrazioni, `tick` per le selezioni,
-  pagina di prova delle durate; sezione dedicata qui sotto. Non committato; da provare sul Pixel 8 con la pagina di prova.
+  pagina di prova delle durate; sezione dedicata qui sotto. Committato in `7dc02a2` e pubblicato su Hosting (21 novembre, notte);
+  da provare sul Pixel 8 con la pagina di prova. Commit non inviati a `origin` (non richiesto).
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, interruttore «Vibrazione» spento); tastiera virtuale (aprire e chiudere su
   un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
@@ -56,7 +57,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `e4bf945` (importo obbligatorio nei template, matita, fondo a capo in Analisi
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `7dc02a2` (feedback aptico senza ronzio; con `3c8f614`, testo dei template
+  nella Guida) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256).
+  Rules invariate. Prima, **Hosting** da `e4bf945` (importo obbligatorio nei template, matita, fondo a capo in Analisi
   su smartphone, testo di «Vibrazione») pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico
   a `dist/`. Prima, **Hosting** da `b2a80ce` (vibrazione su legenda e segmenti; con `9ae0d33`, selezione di Analisi
   più reattiva, e `a8f73a2`, formattatori in cache) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200, bundle
@@ -140,7 +143,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   segmento già scelto nessuna, altro [6]; scorrimento, importazione e digitazione nessuna; dito fermo sul confine 1 tick + 1 tap
   al rilascio (prima 24 + 1); trascinamento veloce su quattro voci 3 tick a 65 ms, rilascio scartato (prima 4 a 54–80 ms);
   5 righe della legenda [6] ciascuna (prima [10]); «Vibrazione» spenta nessuna; nessun errore JS. **Qualità percepita non
-  verificata su Pixel 8.** Non committato, non pubblicato.
+  verificata su Pixel 8.** Committato in `7dc02a2` e pubblicato su Hosting (21 novembre, notte).
 
 ## Importo obbligatorio nei template, matita nell'elenco, fondo a capo in Analisi — 21 novembre 2026
 
@@ -647,6 +650,11 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (notte): Hosting da `7dc02a2`** (con `3c8f614`): vibrazione senza ronzio (zona morta sulla barra,
+  distanza minima di 60 ms, `tick` per le selezioni), importo dei template obbligatorio anche nella Guida. `npm run deploy:hosting`
+  (dopo `--dry-run`): «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. La pagina di prova
+  resta in `docs/testing/`, non nell'export. Da provare sul Pixel 8: barra, segmenti, legenda, pagina di prova.
 
 - **Rilascio del 21 novembre (sera): Hosting da `e4bf945`**: importo obbligatorio nei template (i template senza importo salvati prima
   restano validi), matita nell'elenco dei template, fondo in una riga propria nei dettagli di Analisi su smartphone, testo breve di
