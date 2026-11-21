@@ -84,9 +84,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
-- **Verifiche (21 novembre, su `9a8285a`).** `npm run check` OK (typecheck, **502/502**, build demo; 501 fino a `8e513f4`, il test in più
-  è di `batchKeyboardReports`; 499 nelle sezioni del 20–21 novembre precede i test di `wholeRows`). `test:emulator` **22/22** l'ultima
-  volta sulle Rules dei template (`817a2f1`, sezione Templates); da allora Rules, `DataStore`, servizi e dominio non sono cambiati.
+- **Verifiche (21 novembre, sera).** `npm run check` OK (typecheck, **507/507**, build demo) con le modifiche non committate della
+  sezione «Importo obbligatorio nei template» (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
+  (`817a2f1`); da allora Rules, `DataStore` e servizi non sono cambiati (il dominio solo nella validazione del modulo dei template).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
   più nera.
 - **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
@@ -113,6 +113,23 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Importo obbligatorio nei template, matita nell'elenco, fondo a capo in Analisi — 21 novembre 2026
+
+- Su richiesta: (1) nel modulo dei template (pagina Templates e modifica) l'importo è **obbligatorio** («Inserisci l’importo.», etichetta
+  «Importo»); `amountOptional` di `ExpenseFields` e le due traduzioni «facoltativo» rimosse. Nessuna migrazione: `amount_minor` resta
+  `number | null` in dominio, decoder, Rules e backup v11; un template salvato prima senza importo si legge ancora, riempie Nuova spesa
+  senza importo e alla modifica lo chiede (`docs/architecture.md`). (2) Nell'elenco «I tuoi template» ogni riga, già tutta premibile, ha a
+  destra una matita decorativa (20 dp, `onSurfaceVariant`, `aria-hidden`) dopo l'importo. (3) Nei dettagli delle transazioni di Analisi
+  (`TransactionDetails`) su smartphone il fondo torna in una riga propria sotto data e categoria (ripristinato `subtitleBelow` di
+  `ListRow`, cioè il codice prima di `278b016`); da medium resta accanto alla categoria.
+- **Verifica:** `npm run check` OK (507/507; test del template aggiornato: importo mancante rifiutato, template senza importo ancora
+  letto e rifiutato alla modifica). Chromium headless su una copia di `dist-demo/`, Standard con `nummo-utente-medio.json` unito: «Crea»
+  senza importo → errore sotto Importo, nessun template; con «45,00» → «I tuoi template (1)», matita a destra a 1400×900 e 390×844;
+  Analisi Barre 12 mesi, «Medio · Casa e bollette»: a 390×844 fondo sotto, a 1400×900 accanto alla categoria. **Non committato, non
+  pubblicato.** Template preesistenti senza importo non provati nel browser (solo test).
+- Su richiesta, nella stessa sessione: riga di supporto di «Vibrazione» (Impostazioni → Funzionalità) ora «Una breve vibrazione quando
+  interagisci con l'app.» (EN «A short vibration when you interact with the app.»). Typecheck e test OK. Non committato, non pubblicato.
 
 ## Importo e Data non più tagliati su smartphone — 21 novembre 2026
 

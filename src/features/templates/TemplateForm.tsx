@@ -48,12 +48,12 @@ export type TemplateFormState = ReturnType<typeof useTemplateForm>;
 
 // The fields of a template: the very same ones as «Nuova spesa» (amount and date on the first row, description, merchant,
 // category with the fund beside it or below it on phones), minus the repeat: a recurring expense already repeats by
-// itself. Only the amount and the merchant may stay empty.
+// itself. Only the merchant may stay empty (the amount is required since 21 November, on request).
 export function TemplateFields({ form, disabled, dense }: { form: TemplateFormState; disabled?: boolean; dense?: boolean }) {
   const { draft, errors, update, formKey, categories, fundChoices, merchants } = form;
   const size = useSizeClass();
   return (
-    <ExpenseFields dense={dense ?? size === 'expanded'} key={formKey} values={draft} errors={errors} categories={categories} disabled={disabled} amountOptional
+    <ExpenseFields dense={dense ?? size === 'expanded'} key={formKey} values={draft} errors={errors} categories={categories} disabled={disabled}
       fund={fundChoices.length > 0 ? <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={disabled}
         onChange={(fundId) => update({ fundId })} /> : undefined} fundBelow={size === 'compact'}
       merchant={{ value: draft.merchant, merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}

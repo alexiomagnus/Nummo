@@ -8,15 +8,18 @@ const cat = '11111111-1111-4111-8111-111111111111';
 const fund = '22222222-2222-4222-8222-222222222222';
 const categories = [{ id: cat, label: 'Alimentari', icon: 'cart' as const }];
 const now = new Date('2026-11-15T10:00:00Z');
-const ok = { description: 'Caffè', amount: '', date: '2026-11-10', categoryId: cat, fundId: '', merchant: '' };
+const ok = { description: 'Caffè', amount: '1,80', date: '2026-11-10', categoryId: cat, fundId: '', merchant: '' };
 const record = (over: Partial<TemplateRecord> = {}): TemplateRecord => ({ id: '33333333-3333-4333-8333-333333333333', description: 'Caffè', amount_minor: null,
   date: '2026-11-10', category_id: cat, fund_id: null, merchant: null, created_at: '2026-11-11T10:00:00.000Z', ...over });
 
-test('template: l’importo è facoltativo, descrizione, data e categoria no', () => {
+test('template: importo, descrizione, data e categoria obbligatori (importo dal 21 novembre); i template senza importo si leggono ancora', () => {
   const result = validateTemplateDraft(ok, categories, [], { fundChosen: false, now });
-  assert.deepEqual(result, { ok: true, data: { description: 'Caffè', amount_minor: null, date: '2026-11-10', category_id: cat, fund_id: null, merchant: null } });
-  const withAmount = validateTemplateDraft({ ...ok, amount: '1,80' }, categories, [], { fundChosen: false, now });
-  assert.equal(withAmount.ok && withAmount.data.amount_minor, 180);
+  assert.deepEqual(result, { ok: true, data: { description: 'Caffè', amount_minor: 180, date: '2026-11-10', category_id: cat, fund_id: null, merchant: null } });
+  const noAmount = validateTemplateDraft({ ...ok, amount: ' ' }, categories, [], { fundChosen: false, now });
+  assert.ok(!noAmount.ok && noAmount.errors.amount === 'Inserisci l’importo.');
+  // Saved before 21 November without an amount: still valid when read; editing it asks for one.
+  assert.equal(parseTemplate(record())?.amount_minor, null);
+  assert.ok(!validateTemplateDraft(draftOfTemplate(record()), categories, [], { fundChosen: false, now }).ok);
   const empty = validateTemplateDraft({ ...ok, description: ' ', categoryId: '', date: '' }, categories, [], { fundChosen: false, now });
   assert.ok(!empty.ok && empty.errors.description && empty.errors.categoryId && empty.errors.date && !empty.errors.amount);
   const bad = validateTemplateDraft({ ...ok, amount: 'abc', date: '2026-12-01', description: 'x'.repeat(101) }, categories, [], { fundChosen: false, now });

@@ -1262,3 +1262,11 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   di un file anteriore alla v11 è rifiutato. Unione e sostituzione come le liste (`planById`, conflitto `template`).
 - **Rules da pubblicare** prima dell'Hosting: senza, in Avanzata il listener dei template fallisce (`permission-denied`), mostrato come
   errore della sola pagina Templates; spese, fondi e liste non ne dipendono.
+
+## Importo obbligatorio nei template — 21 novembre 2026
+
+- Su richiesta, il modulo dei template (pagina Templates e modifica) richiede l'importo, come Nuova spesa («Inserisci l’importo.»);
+  `amountOptional` di `ExpenseFields` è rimossa.
+- **Compatibilità, senza migrazioni:** `amount_minor` resta `number | null` nel dominio, nel decoder, nelle Rules e nel backup v11. I
+  template salvati prima senza importo si leggono ancora e riempiono Nuova spesa lasciando l'importo da scrivere; alla prima modifica il
+  modulo lo chiede. Nessuna modifica a Rules, `DataStore` o `backupVersion`: la regola è solo del modulo.

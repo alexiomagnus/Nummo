@@ -1,5 +1,5 @@
 // Templates (pure, no SDK): saved presets for «Nuova spesa». A template holds what the form fills in at once: amount
-// (optional), date, description, merchant (optional), category and fund. Never the repeat: a recurring expense already
+// (required by the form since 21 November, on request; older templates may have none), date, description, merchant (optional), category and fund. Never the repeat: a recurring expense already
 // repeats by itself. Removed on 16 November 2026 and reintroduced on 21 November on request; the merchant came with the
 // reintroduction. It is only a name: a merchant is created together with the expense saved from the form, never by a
 // template (merchant.ts).
@@ -15,7 +15,8 @@ export const templatePolicy = { maxTemplates: 100, maxDate: '2099-12-31' } as co
 
 export type TemplateData = Readonly<{
   description: string;
-  // Optional: a template can leave the amount to be typed each time.
+  // Required when saving from the form (21 November, on request); null only in templates saved before, which still read
+  // (Nuova spesa then leaves the amount to be typed) and must get one when edited.
   amount_minor: number | null;
   // Civil date (Europe/Rome) the form is filled with.
   date: string;
@@ -51,7 +52,7 @@ export function validateTemplateDraft(draft: TemplateDraft, categories: readonly
   else if (Array.from(description).length > expensePolicy.maxDescriptionLength) errors.description = `Usa al massimo ${expensePolicy.maxDescriptionLength} caratteri.`;
   const amountText = draft.amount.trim();
   const amount = amountText ? parseAmountMinor(amountText) : null;
-  if (amountText && amount === null) errors.amount = 'Importo non valido (es. 12,50).';
+  if (amount === null) errors.amount = amountText ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo.';
   const category = draft.categoryId ? categories.find((item) => item.id === draft.categoryId) : undefined;
   if (!draft.categoryId) errors.categoryId = categories.length === 0 ? 'Crea prima una categoria nella sezione Categorie.' : 'Seleziona una categoria.';
   else if (!category) errors.categoryId = 'La categoria scelta non esiste più.';
@@ -65,7 +66,7 @@ export function validateTemplateDraft(draft: TemplateDraft, categories: readonly
   if (!draft.date || !isValidDate(draft.date) || draft.date < expensePolicy.minDate || draft.date > todayInRome(now)) {
     errors.date = 'Inserisci una data valida dal 01/01/2000 a oggi (AAAA-MM-GG).';
   }
-  if (Object.keys(errors).length > 0 || !category) return { ok: false, errors };
+  if (Object.keys(errors).length > 0 || !category || amount === null) return { ok: false, errors };
   return { ok: true, data: { description, amount_minor: amount, date: draft.date, category_id: category.id, fund_id: fund?.id ?? null, merchant: merchant || null } };
 }
 

@@ -4,6 +4,7 @@ import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ListRow, listRowStyles } from '../../components/ListRow';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { SwitchRow } from '../../components/SwitchRow';
 import type { Category } from '../../domain/category';
 import type { SyncedTemplate } from '../../domain/firestore';
@@ -64,7 +65,11 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
                 template.merchant, formatDate(template.date)].filter(Boolean).join(' · ');
               return <ListRow key={template.id} icon={category?.icon ?? null} title={template.description} subtitle={details} divider={index < remote.templates.length - 1}
                 pressLabel={t("Modifica {p0}", { p0: template.description })} onPress={() => setEditing(template)}
-                trailing={template.amount_minor !== null ? <Text variant="titleMedium" style={listRowStyles.amount}>{formatAmount(template.amount_minor)}</Text> : undefined} />;
+                trailing={<View style={styles.trailing}>
+                  {template.amount_minor !== null && <Text variant="titleMedium" style={listRowStyles.amount}>{formatAmount(template.amount_minor)}</Text>}
+                  {/* The whole row opens the editor; the pencil only tells that it can be edited (user's request, 21 November). */}
+                  <View aria-hidden style={styles.edit}><SvgIcon shape={iconShapes.pencil} size={20} color={colors.onSurfaceVariant} /></View>
+                </View>} />;
             })}</View>}
         </Card>
       </>}
@@ -82,4 +87,6 @@ const styles = StyleSheet.create({
   create: { flexGrow: 1, borderRadius: radius.pill },
   createContent: { minHeight: layout.controlHeight },
   createLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
+  trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  edit: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
 });
