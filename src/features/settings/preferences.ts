@@ -16,7 +16,7 @@ export type ChartType = (typeof chartTypes)[number];
 // `timeFormat` how hours are written (24 or 12 hours, AM/PM), `timeZone` the clock of the notification hour («auto» = the device's, or an IANA name).
 // `templatesEnabled`: the Template field of «Nuova spesa» (off by default; the saved templates are archive data). Reintroduced
 // on 21 November 2026: a value saved before the 16 November removal applies again.
-// `haptics`: short vibration on the phone navigation bar, the Analisi charts and legend and the segmented buttons (on by default; does nothing where the
+// `haptics`: short vibration on the phone navigation bar, the Analisi charts, «Salva» and «Crea» (on by default; does nothing where the
 // browser cannot vibrate).
 export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; haptics: boolean; timeFormat: TimeFormat; timeZone: string };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };

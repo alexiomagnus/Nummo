@@ -1285,5 +1285,7 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   impulsi multipli, non effetti distinti.
 - **Durate (stesso giorno, su richiesta):** da 10/6 a 6/4 ms, perché ancora «forte e zanzarosa» sul Pixel 8; l'intensità la fissa
   il browser, quindi più delicata significa solo più breve.
+- **Seguito (stesso giorno, su richiesta):** durate 4/3 ms per una vibrazione ancora più leggera; nessuna vibrazione su pulsanti a
+  segmenti e righe della legenda di Analisi.
 - **Limiti.** La forma dell'impulso (attacco, frenata del motore) la decide Chrome/Android, non la pagina; Safari/iOS e Firefox
   non vibrano. Le durate si scelgono provandole sul telefono con `docs/testing/prova-vibrazione.html`.

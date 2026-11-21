@@ -153,6 +153,18 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** typecheck e `npm test` OK (510/510). Non provato nel browser né su telefono. Committato in `a29ced9` e pubblicato su
   Hosting (21 novembre): «Deploy complete!», sito 200. Rules invariate.
 
+## Vibrazione tolta da segmenti e legenda, impulsi 4/3 ms — 21 novembre 2026
+
+- Su richiesta (screenshot di «Spese | Abbonamenti» e della legenda di Analisi): nessuna vibrazione su `SegmentedButtons` (tutti) e
+  sulle righe della legenda (`CategoryLegend`); restano barra mobile, blocchi e ciambella, «Salva» e «Crea». Durate ancora più brevi:
+  `tap` 6 → 4 ms, `tick` 4 → 3 ms. README, `AGENTS.md`, `docs/architecture.md` e pagina di prova (anche l'artifact) allineati.
+- **Verifica:** `npm run check` OK (**509/509**). Chromium headless 390×844 touch, demo Standard con `nummo-utente-medio.json`:
+  destinazioni [4], segmenti nessuna, legenda nessuna, dito fermo sul confine della barra [3] + [4] al rilascio, trascinamento veloce
+  [3,3,3], nessuna in scorrimento/digitazione o con «Vibrazione» spenta, nessun errore JS. Non sentito sul Pixel 8: 3 ms potrebbe
+  essere quasi impercettibile.
+- Nella stessa fase, controllando il lavoro dell'altra sessione (`a29ced9`, `26c5b8d`): la Guida («Analisi e grafici», IT/EN)
+  prometteva ancora il «confronto con i periodi precedenti», tolto dalle Barre con `26c5b8d`; frase corretta.
+
 ## Feedback aptico: impulsi singoli senza ronzio — 21 novembre 2026
 
 - Su richiesta (vibrazioni «lunghe, ronzanti, poco precise» sul Pixel 8). **Analisi:** nessuna libreria, solo

@@ -8,11 +8,11 @@
 // these. So crispness depends on what is left to the page: pulses as short as still felt, never chained into a buzz.
 
 // `tap`: a press that moves somewhere (a destination of the navigation bar, «Nuova spesa», the release of a drag on the
-// pill). `tick`: a lighter mark for a selection (segments, legend rows, chart parts, a destination crossed while dragging).
+// pill). `tick`: a lighter mark for a selection (chart parts, a destination crossed while dragging).
 // Durations in ms; to compare others on a phone, `docs/testing/prova-vibrazione.html`.
-// Shortened on 21 November (10/6 → 6/4) on request: felt too strong and buzzy on a Pixel 8; a shorter pulse is the only
-// way a page can make it softer (the browser fixes the strength).
-export const hapticPatterns = { tap: 6, tick: 4 } as const;
+// Shortened twice on 21 November on request (10/6 → 6/4 → 4/3): felt too strong and buzzy on a Pixel 8; a shorter pulse is
+// the only way a page can make it softer (the browser fixes the strength).
+export const hapticPatterns = { tap: 4, tick: 3 } as const;
 export type HapticKind = keyof typeof hapticPatterns;
 
 // Minimum time between two accepted vibrations. Each call restarts the motor, and pulses closer than this are felt as one
