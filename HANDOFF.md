@@ -35,7 +35,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `b2a80ce` (vibrazione su legenda e segmenti), `9ae0d33` (selezione di
+  `origin`. Ultimi commit di codice, tutti pubblicati: `e4bf945` (importo obbligatorio nei template, matita nell'elenco, fondo a capo in
+  Analisi su smartphone, testo di «Vibrazione»), `b2a80ce` (vibrazione su legenda e segmenti), `9ae0d33` (selezione di
   Analisi più reattiva), `a8f73a2` (formattatori Intl in cache), `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
   categoria in Analisi), `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
   sessione), `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
@@ -50,7 +51,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `b2a80ce` (vibrazione su legenda e segmenti; con `9ae0d33`, selezione di Analisi
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `e4bf945` (importo obbligatorio nei template, matita, fondo a capo in Analisi
+  su smartphone, testo di «Vibrazione») pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico
+  a `dist/`. Prima, **Hosting** da `b2a80ce` (vibrazione su legenda e segmenti; con `9ae0d33`, selezione di Analisi
   più reattiva, e `a8f73a2`, formattatori in cache) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200, bundle
   online identico a `dist/`. Prima, **Hosting** da `cc60ea6` («Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola;
   con `278b016`, fondo accanto alla categoria nei dettagli di Analisi su smartphone) pubblicato su richiesta il 21 novembre (pomeriggio):
@@ -84,8 +87,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
-- **Verifiche (21 novembre, sera).** `npm run check` OK (typecheck, **507/507**, build demo) con le modifiche non committate della
-  sezione «Importo obbligatorio nei template» (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
+- **Verifiche (21 novembre, sera).** `npm run check` OK (typecheck, **507/507**, build demo) su `e4bf945` (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
   (`817a2f1`); da allora Rules, `DataStore` e servizi non sono cambiati (il dominio solo nella validazione del modulo dei template).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
   più nera.
@@ -126,10 +128,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` OK (507/507; test del template aggiornato: importo mancante rifiutato, template senza importo ancora
   letto e rifiutato alla modifica). Chromium headless su una copia di `dist-demo/`, Standard con `nummo-utente-medio.json` unito: «Crea»
   senza importo → errore sotto Importo, nessun template; con «45,00» → «I tuoi template (1)», matita a destra a 1400×900 e 390×844;
-  Analisi Barre 12 mesi, «Medio · Casa e bollette»: a 390×844 fondo sotto, a 1400×900 accanto alla categoria. **Non committato, non
-  pubblicato.** Template preesistenti senza importo non provati nel browser (solo test).
+  Analisi Barre 12 mesi, «Medio · Casa e bollette»: a 390×844 fondo sotto, a 1400×900 accanto alla categoria. Committato in `e4bf945` e
+  pubblicato su Hosting (21 novembre, sera). Template preesistenti senza importo non provati nel browser (solo test).
 - Su richiesta, nella stessa sessione: riga di supporto di «Vibrazione» (Impostazioni → Funzionalità) ora «Una breve vibrazione quando
-  interagisci con l'app.» (EN «A short vibration when you interact with the app.»). Typecheck e test OK. Non committato, non pubblicato.
+  interagisci con l'app.» (EN «A short vibration when you interact with the app.»). Typecheck e test OK. Committato in `e4bf945` e pubblicato.
 
 ## Importo e Data non più tagliati su smartphone — 21 novembre 2026
 
@@ -617,6 +619,11 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (sera): Hosting da `e4bf945`**: importo obbligatorio nei template (i template senza importo salvati prima
+  restano validi), matita nell'elenco dei template, fondo in una riga propria nei dettagli di Analisi su smartphone, testo breve di
+  «Vibrazione». `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules invariate. Da provare sul
+  telefono: pagina Templates (Crea senza importo, matita), dettagli di una categoria in Analisi.
 
 - **Rilascio del 21 novembre (pomeriggio, quinta parte): Hosting da `b2a80ce`** (con `a8f73a2` e `9ae0d33`): vibrazione su legenda e
   segmenti, selezione di Analisi senza render dell'intera pagina, fondi di selezione istantanei, formattatori in cache. `npm run
@@ -3716,7 +3723,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `b2a80ce` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `e4bf945` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
