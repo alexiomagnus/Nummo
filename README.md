@@ -120,7 +120,8 @@ Due strade:
 - **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice, con le colonne finali «Fondo» ed «Esercente») e backup JSON v11 (con i template), unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
 - Vibrazione breve al tocco della barra in basso su smartphone, dei grafici di Analisi (blocchi e ciambella) e di «Salva» e «Crea», accesa di base e
-  disattivabile in **Impostazioni → Funzionalità → Vibrazione**; solo dove il browser lo permette (Chrome e simili su Android, non Safari/iOS né Firefox).
+  disattivabile in **Impostazioni → Funzionalità → Vibrazione**; solo su telefoni e tablet dove il browser lo permette (Chrome e simili su Android,
+  non Safari/iOS né Firefox), mai su computer, dove l'interruttore non compare. Con il telefono in silenzioso o in Non disturbare Android non vibra.
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.

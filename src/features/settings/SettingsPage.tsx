@@ -22,6 +22,10 @@ import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
 import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 import { resetReceiptAi } from '../receipts/aiSettings';
+import { hasHaptics } from '../../theme/haptics';
+
+// Read once: the primary pointer of a device does not change while the page is open.
+const vibrationAvailable = hasHaptics();
 
 type Props = {
   preferences: Preferences;
@@ -155,8 +159,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
           <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
-          <SwitchRow label={t("Vibrazione")} supporting={t("Una breve vibrazione quando interagisci con l'app. Su Android non vibra con il telefono in silenzioso.")}
-            value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />
+          {/* Only where the device can vibrate (finger as primary pointer): never on desktop (22 November, on request). */}
+          {vibrationAvailable && <SwitchRow label={t("Vibrazione")} supporting={t("Una breve vibrazione quando interagisci con l'app. Su Android non vibra con il telefono in silenzioso o in Non disturbare.")}
+            value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />}
         </Card>
         {archiveSections}
         <ReceiptAiCard />

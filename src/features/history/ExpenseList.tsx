@@ -125,9 +125,11 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, me
           </View>
           <View style={styles.totalText}>
             <Text variant="titleMedium" style={[tone, styles.strong]}>{t("Totale")}</Text>
-            <Text variant="bodyLarge" style={tone}>
-              <Text variant="headlineSmall" style={[tone, styles.amount, styles.strong]}>{amounts.format(resultsTotal / 100)}</Text> · {totalCount}
-            </Text>
+            <View style={styles.figures}>
+              <Text variant="headlineSmall" style={[tone, styles.amount, styles.strong]}>{amounts.format(resultsTotal / 100)}</Text>
+              <View aria-hidden style={[styles.figureDivider, { backgroundColor: theme.colors.onPrimaryContainer }]} />
+              <Text variant="bodyLarge" style={tone}>{totalCount}</Text>
+            </View>
           </View>
         </View>
       )}
@@ -328,4 +330,8 @@ const styles = StyleSheet.create({
   totalTile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   totalText: { flex: 1, minWidth: 0 },
   strong: { fontWeight: '600' },
+  // Total and count apart, with a thin vertical line between them (22 November, on request: the «·» was too close and
+  // a «–» did not please). Text on one baseline; wraps on a very narrow card.
+  figures: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: spacing.md },
+  figureDivider: { width: 1, height: 20, alignSelf: 'center', opacity: 0.4 },
 });

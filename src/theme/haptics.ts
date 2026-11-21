@@ -1,9 +1,11 @@
 // Haptic feedback on the web: the Vibration API is the only one a page can use (Chrome/Edge/Samsung Internet on Android).
-// Chrome on Android drops every page vibration while the ringer is on silent (VibrationManagerAndroid.java: vibrates only
-// if getRingerMode() != RINGER_MODE_SILENT), with no error and `vibrate()` still returning true: the page cannot tell or
-// work around it. The system's own haptics (a long press) still work then. Said under the «Vibrazione» switch.
-// Safari (iOS) and Firefox do not offer it, and desktop browsers have no motor: there the call does nothing. Pure and
-// injectable (navigator and clock are passed in) so it can be tested without a browser; the switch lives in the preferences.
+// Chrome on Android gives nothing while the phone is on silent (VibrationManagerAndroid.java: vibrates only if
+// getRingerMode() != RINGER_MODE_SILENT) or in Do Not Disturb (found by the user on the Pixel 8, 22 November), with no error
+// and `vibrate()` still returning true: the page cannot tell or work around it. The system's own haptics (a long press)
+// still work then. Said under the «Vibrazione» switch.
+// Only on touch devices (primary pointer coarse: phones, tablets): never on desktop, where there is no motor and the
+// switch is not shown (22 November, user's request). Safari (iOS) and Firefox do not offer the API: there it does nothing.
+// Pure and injectable (navigator, clock and media query are passed in) so it can be tested without a browser.
 //
 // A page cannot reach Android's native haptic effects (EFFECT_CLICK/TICK, the primitives behind `performHapticFeedback`
 // and expo-haptics' `performAndroidHapticsAsync`, which exist only in native apps): the browser turns every request into
@@ -13,12 +15,10 @@
 // `tap`: a press that moves somewhere (a destination of the navigation bar, «Nuova spesa», the release of a drag on the
 // pill). `tick`: a lighter mark for a selection (chart parts, a destination crossed while dragging).
 // Durations in ms; to compare others on a phone, `docs/testing/prova-vibrazione.html`.
-// Shortened twice on 21 November on request (10/6 → 6/4 → 4/3): felt too strong and buzzy on a Pixel 8; a shorter pulse is
-// the only way a page can make it softer (the browser fixes the strength). At 4/3 the Pixel 8 gave nothing at all (the motor
-// does not start for so short a pulse): 6/5, then nothing at 6/5 either (21 November, night; the app's calls checked in
-// Chromium: requested and accepted). The only durations ever felt on the Pixel 8 are 10/6: below about one cycle of its
-// actuator (~7 ms) a one-shot pulse gives nothing. So 8/7: shorter (softer) than 10, but never under 7.
-export const hapticPatterns = { tap: 8, tick: 7 } as const;
+// History on the Pixel 8: 10/6 felt too strong and buzzy; 6/4, 4/3, 6/5 and 8/7 were «not felt», but the phone was in Do
+// Not Disturb all along (22 November): none of those was a limit of the motor. 8/7, felt once Do Not Disturb was off, is
+// still too strong for the user: 5/4, softer (a page can only shorten the pulse; the browser fixes the strength).
+export const hapticPatterns = { tap: 5, tick: 4 } as const;
 export type HapticKind = keyof typeof hapticPatterns;
 
 // Minimum time between two accepted vibrations. Each call restarts the motor, and pulses closer than this are felt as one
@@ -27,9 +27,21 @@ export type HapticKind = keyof typeof hapticPatterns;
 export const hapticGap = 60;
 
 type VibratingNavigator = { vibrate?: (pattern: number | number[]) => boolean };
+type MediaQuery = (query: string) => { matches: boolean };
 
 export function canVibrate(nav: VibratingNavigator | undefined): nav is Required<VibratingNavigator> {
   return typeof nav?.vibrate === 'function';
+}
+
+const browserMedia: MediaQuery | undefined = typeof matchMedia === 'function' ? (query) => matchMedia(query) : undefined;
+
+// Whether this device gets haptics at all (and the «Vibrazione» switch is shown): the API exists and the primary pointer
+// is a finger. Desktop (mouse, touchpad) never, even with a touchscreen as a second pointer.
+export function hasHaptics(
+  nav: VibratingNavigator | undefined = typeof navigator === 'undefined' ? undefined : navigator,
+  media: MediaQuery | undefined = browserMedia,
+): boolean {
+  return canVibrate(nav) && media?.('(pointer: coarse)').matches === true;
 }
 
 export type Haptics = (kind: HapticKind, enabled: boolean) => boolean;
@@ -40,10 +52,12 @@ export type Haptics = (kind: HapticKind, enabled: boolean) => boolean;
 export function createHaptics(
   nav: VibratingNavigator | undefined = typeof navigator === 'undefined' ? undefined : navigator,
   now: () => number = () => (typeof performance === 'undefined' ? Date.now() : performance.now()),
+  media: MediaQuery | undefined = browserMedia,
 ): Haptics {
   let last = Number.NEGATIVE_INFINITY;
+  const available = hasHaptics(nav, media);
   return (kind, enabled) => {
-    if (!enabled || !canVibrate(nav)) return false;
+    if (!enabled || !available || !canVibrate(nav)) return false;
     const time = now();
     if (time - last < hapticGap) return false;
     let accepted = false;

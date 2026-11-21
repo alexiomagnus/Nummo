@@ -34,7 +34,11 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
         </View>
         <View style={styles.text}>
           <Text variant="titleMedium" style={[tone, styles.strong]}>{t("Prossimo mese")}</Text>
-          <Text variant="bodyLarge" style={tone}><Text variant="headlineSmall" style={[tone, styles.amount, styles.strong]}>{formatAmount(soon)}</Text> · {count}</Text>
+          <View style={styles.figures}>
+            <Text variant="headlineSmall" style={[tone, styles.amount, styles.strong]}>{formatAmount(soon)}</Text>
+            <View aria-hidden style={[styles.figureDivider, { backgroundColor: colors.onPrimaryContainer }]} />
+            <Text variant="bodyLarge" style={tone}>{count}</Text>
+          </View>
         </View>
         <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={24} color={colors.onPrimaryContainer} />
       </StateLayerPressable>
@@ -71,6 +75,9 @@ const styles = StyleSheet.create({
   text: { flex: 1, minWidth: 0 },
   amount: { fontVariant: ['tabular-nums'] },
   strong: { fontWeight: '600' },
+  // Same separator as the «Totale» card of Spese.
+  figures: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: spacing.md },
+  figureDivider: { width: 1, height: 20, alignSelf: 'center', opacity: 0.4 },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 60, paddingVertical: spacing.sm },
   divider: { height: StyleSheet.hairlineWidth, opacity: 0.25 },

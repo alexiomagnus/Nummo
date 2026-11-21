@@ -216,6 +216,30 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Separatore delle schede in evidenza, menu «immagine» al tocco prolungato, vibrazione 5/4 solo touch — 22 novembre 2026
+
+- **Separatore.** Su richiesta (screenshot del «Totale» di Spese, «1673,77 € · 66 spese»): prima un «–» con 8 di margine, poi, perché
+  il trattino non piaceva, una **linea verticale sottile** (1×20, `onPrimaryContainer` al 40 %, `aria-hidden`) con 12 per lato tra
+  importo e conteggio, testo sulla stessa linea di base, a capo solo in una scheda strettissima (`figures`/`figureDivider`). Nel «Totale»
+  di Spese (`ExpenseList.tsx`) e in «Prossimo mese» degli abbonamenti (`UpcomingRenewals.tsx`), le sole due schede con questo schema;
+  etichette accessibili invariate, gli altri «·» dell'app invariati.
+- **Menu «svg>.bin» al tocco prolungato** (screenshot da Pixel 8 in Fondi: «Copia/Scarica/Condividi immagine»): ogni icona è un `Image`
+  di react-native-web, cioè un `<img>` trasparente sopra lo sfondo, e Chrome Android apre il menu delle immagini. In `GlobalStyle`, solo su
+  touch (`(hover: none) and (pointer: coarse)`): `img { pointer-events: none; -webkit-user-drag: none; }`; il tocco va al contenitore e
+  quindi al pulsante che lo racchiude. Vale anche per la foto dello scontrino (il riquadro «Ingrandisci la foto» resta il bersaglio).
+- **Vibrazione.** Causa del silenzio sul Pixel 8 trovata dall'utente: **Non disturbare** attivo; tutte le prove «senza vibrazione» del
+  21 novembre (6/4, 4/3, 6/5, 8/7) erano in quello stato, quindi non c'è un limite del motore accertato. Su richiesta più morbida:
+  `tap` 8 → **5** ms, `tick` 7 → **4** ms. Su richiesta **mai su desktop**: `hasHaptics` (Vibration API e `(pointer: coarse)`, letto una
+  volta all'avvio) spegne il cancello e nasconde l'interruttore «Vibrazione» nelle Impostazioni. Riga sotto l'interruttore: «… non vibra con
+  il telefono in silenzioso o in Non disturbare.» (IT/EN). Pagina di prova con 5/4 come attuali. `AGENTS.md`, README.
+- **Verifica:** `npm run check` OK (**521/521**, nuovo test «mai su desktop»). Chromium headless su `dist-demo`, Standard, tema scuro, backup
+  `nummo-utente-medio.json` importato dall'interfaccia: 1280×900 «6540,09 € | 187 spese» e «800,88 € | 4 rinnovi», `pointer: coarse`
+  falso, nessun «Vibrazione» nelle Impostazioni, nessuna chiamata a `vibrate`; 390×844 con touch emulato: stesse schede, `pointer: coarse`
+  vero, tocco sull'icona di «Fondi» nella barra → `elementFromPoint` dà il contenitore (non l'`<img>`), pagina Fondi aperta, **una**
+  vibrazione `[5]`; pressione prolungata sull'icona del fondo senza `contextmenu` su un'immagine; interruttore e nuovo testo presenti.
+  Nessun errore JS. **Non provati:** menu di Chrome sul telefono reale, percezione di 5/4 ms sul Pixel 8 (da sentire senza Non disturbare;
+  se troppo debole, 6/5). Non committato, non pubblicato.
+
 ## Matita dei template più grande — 21 novembre 2026 (notte)
 
 - Su richiesta (screenshot di una riga della pagina Templates): la matita decorativa a destra di ogni template passa da 24 a 28 dp,
@@ -4139,8 +4163,8 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 - **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
   orario e fuso scelti dall'utente.
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
-  tastiera virtuale gestita, transizioni con riduzione movimento; vibrazione breve (6/5 ms) solo su barra mobile, Analisi e
-  «Salva»/«Crea», interruttore «Vibrazione»; pagina offline di Nummo dal service worker (nessun avvio offline).
+  tastiera virtuale gestita, transizioni con riduzione movimento; vibrazione breve (5/4 ms dal 22 novembre) solo su dispositivi touch,
+  nella barra mobile, in Analisi e su «Salva»/«Crea», interruttore «Vibrazione» (assente su desktop); pagina offline di Nummo dal service worker (nessun avvio offline).
 - **Collaudo:** `docs/testing/` con quattro backup fittizi (casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
   esercenti v10) e guida ai risultati attesi; spese standard, prove gratuite e cambio di frequenza sono stati spostati in
   `tests/fixtures/` (solo test automatici, commit `302b24e`).

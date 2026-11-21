@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { canVibrate, createHaptics, hapticGap, hapticPatterns } from '../src/theme/haptics.ts';
+import { canVibrate, createHaptics, hapticGap, hapticPatterns, hasHaptics } from '../src/theme/haptics.ts';
 import { slotWithHysteresis } from '../src/components/navIndicator.ts';
 
 function recorder(accept: boolean | (() => boolean) = true) {
@@ -9,10 +9,14 @@ function recorder(accept: boolean | (() => boolean) = true) {
   return { calls, nav };
 }
 
+// Primary pointer of a phone (finger) or of a desktop (mouse, touchpad).
+const touch = (query: string) => ({ matches: query === '(pointer: coarse)' });
+const desktop = (query: string) => ({ matches: query === '(pointer: fine)' });
+
 test('vibrazione: un solo impulso breve per tipo, solo se attiva e disponibile', () => {
   const { calls, nav } = recorder();
   let clock = 0;
-  const haptics = createHaptics(nav, () => clock);
+  const haptics = createHaptics(nav, () => clock, touch);
   assert.equal(haptics('tap', true), true);
   clock += hapticGap;
   assert.equal(haptics('tick', true), true);
@@ -27,7 +31,7 @@ test('vibrazione: un solo impulso breve per tipo, solo se attiva e disponibile',
 test('vibrazione: richieste ravvicinate scartate, mai un ronzio da impulsi in fila', () => {
   const { calls, nav } = recorder();
   let clock = 1000;
-  const haptics = createHaptics(nav, () => clock);
+  const haptics = createHaptics(nav, () => clock, touch);
   assert.equal(haptics('tick', true), true);
   clock += 16; // next frame of a fast drag
   assert.equal(haptics('tick', true), false);
@@ -42,7 +46,7 @@ test('vibrazione: una richiesta rifiutata dal browser non blocca la successiva',
   let accept = false;
   const { calls, nav } = recorder(() => accept);
   let clock = 0;
-  const haptics = createHaptics(nav, () => clock);
+  const haptics = createHaptics(nav, () => clock, touch);
   assert.equal(haptics('tap', true), false); // before the first user interaction
   accept = true;
   clock += 1;
@@ -53,10 +57,20 @@ test('vibrazione: una richiesta rifiutata dal browser non blocca la successiva',
 test('vibrazione: browser senza Vibration API o che rifiuta, mai un errore', () => {
   assert.equal(canVibrate(undefined), false);
   assert.equal(canVibrate({}), false);
-  assert.equal(createHaptics(undefined)('tap', true), false);
-  assert.equal(createHaptics({})('tap', true), false);
-  assert.equal(createHaptics({ vibrate: () => false })('tap', true), false);
-  assert.equal(createHaptics({ vibrate: () => { throw new Error('blocked'); } })('tap', true), false);
+  assert.equal(createHaptics(undefined, undefined, touch)('tap', true), false);
+  assert.equal(createHaptics({}, undefined, touch)('tap', true), false);
+  assert.equal(createHaptics({ vibrate: () => false }, undefined, touch)('tap', true), false);
+  assert.equal(createHaptics({ vibrate: () => { throw new Error('blocked'); } }, undefined, touch)('tap', true), false);
+});
+
+test('vibrazione: mai su desktop, anche se il browser offre la Vibration API', () => {
+  const { calls, nav } = recorder();
+  assert.equal(hasHaptics(nav, touch), true);
+  assert.equal(hasHaptics(nav, desktop), false);
+  assert.equal(hasHaptics(nav, undefined), false); // no media queries: unknown device, no haptics
+  assert.equal(hasHaptics({}, touch), false);
+  assert.equal(createHaptics(nav, () => 0, desktop)('tap', true), false);
+  assert.equal(calls.length, 0);
 });
 
 test('barra mobile: zona morta sul confine tra due destinazioni, un solo cambio per attraversamento', () => {

@@ -86,6 +86,10 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       @media (hover: none) and (pointer: coarse) {
         body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+        /* Every icon is a react-native-web Image: a transparent <img> over a background. A long press on it opened Chrome
+           Android's image menu («svg>.bin», Copia/Scarica immagine: 22 November, user's request). The touch goes to the
+           container instead (the pressable around it still gets it); no image is ever meant to be saved from the page. */
+        img { pointer-events: none; -webkit-user-drag: none; }
         /* No pinch zoom on the page (user's request, 17 November): only panning. Element rules (touch-action: none
            of drag handles) are more specific and win; the viewport meta and the gesture guard below do the rest. */
         * { touch-action: pan-x pan-y; }
