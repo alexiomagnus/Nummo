@@ -53,7 +53,7 @@ import { readDefaultFund, writeDefaultFund } from '../funds/defaultFund';
 import { DoneButton } from '../../components/DoneButton';
 import { PreferredCategoriesCard } from '../categories/PreferredCategoriesCard';
 import { PreferredFundCard } from '../funds/PreferredFundCard';
-import { readPreferredCategories, writePreferredCategories, type PreferredCategories } from '../categories/preferredCategories';
+import { noPreferredCategories, readPreferredCategories, writePreferredCategories, type PreferredCategories } from '../categories/preferredCategories';
 import type { FundChoice } from '../funds/FundField';
 import { monthOf, monthOverview } from '../../domain/funds';
 import { ListsPage } from '../lists/ListsPage';
@@ -89,7 +89,7 @@ type DashboardSettingsProps = {
 };
 
 // `renderSettings` draws the settings page (preferences live in App); `onDone` returns to the originating section.
-type AccountPageProps = { categoriesRequest?: number; templatesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode;
+type AccountPageProps = { categoriesRequest?: number; templatesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) => ReactNode;
   // Storage section of the backup page (where the data is, protection, mode change), drawn by the app for the current mode;
   // a function receives the open archive (Advanced: the move of data between modes) and whether the page is shown.
   storage?: StorageSlot };
@@ -231,7 +231,7 @@ type SectionsProps = DashboardSettingsProps & {
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
   subscriptions: ReturnType<typeof subscriptionSummaries>; merchants: readonly RankedMerchant[];
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
-  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode; storage?: StorageSlot; localArchive?: LocalArchive;
+  fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) => ReactNode; storage?: StorageSlot; localArchive?: LocalArchive;
 };
 
 function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, templateState, backend, store, categoryState, occurrences, subscriptions, merchants, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
@@ -400,7 +400,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         <PreferredCategoriesCard categories={categoryState.categories} value={preferred} onChange={changePreferred} />
         {fundState.funds.some((fund) => !fund.archived) && <PreferredFundCard funds={fundState.funds.filter((fund) => !fund.archived)}
           value={defaultFundId} onChange={changeDefaultFund} />}
-      </>)}
+      </>, () => { changePreferred(noPreferredCategories); changeDefaultFund(''); })}
     {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} opened={opened} onCloseOpened={() => setOpened(null)} timeFormat={dashboardPreferences.timeFormat} timeZone={dashboardPreferences.timeZone}
       exporting={exporting} onExport={() => void exportFromReminder()} />}
     {section === 'templates' && !starting && <TemplatesPage remote={templateState} categories={categoryState.categories} fundChoices={fundChoices}

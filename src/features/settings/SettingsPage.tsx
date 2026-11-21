@@ -21,6 +21,7 @@ import { deviceTimeZone } from '../../domain/pushSchedule';
 import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
 import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
+import { resetReceiptAi } from '../receipts/aiSettings';
 
 type Props = {
   preferences: Preferences;
@@ -30,6 +31,8 @@ type Props = {
   onDone: () => void;
   // Sections that need the open archive (preferred categories), given by the workspace; absent when signed out.
   archiveSections?: ReactNode;
+  // Back to the defaults of what `archiveSections` shows (preferred categories and fund of the open archive).
+  onResetArchive?: () => void;
 };
 
 const themeOptions: { value: ThemeChoice; label: string }[] = [
@@ -51,7 +54,10 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
 // Sections stack on phones (Lingua, Carattere, Formato dell'ora, Fuso orario, then Tema and Colore); when the page is wide enough, Lingua,
 // Carattere, Formato dell'ora and Fuso orario form the left column and Tema and Colore the right one, and the wider sections follow at full width.
-export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections }: Props) {
+export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections, onResetArchive }: Props) {
+  // «Ripristina predefiniti» brings back the defaults of everything on this page (user's request, 21 November): the
+  // preferences, the receipt scan (off, no service) and, with an archive open, its preferred categories and fund.
+  const resetAll = () => { onReset(); resetReceiptAi(); onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
@@ -157,7 +163,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
       </View>
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}
-      <Button mode="outlined" textColor={colors.secondary} style={styles.reset} onPress={onReset}
+      <Button mode="outlined" textColor={colors.secondary} style={styles.reset} onPress={resetAll}
         icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
         {t("Ripristina predefiniti")}
       </Button>

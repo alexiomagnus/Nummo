@@ -4,7 +4,7 @@
 // `nummo.receiptAi.keys.v1` (user's choice of 17 November: before, the key lived in memory only and had to be written
 // again after every reload). They never leave this browser except in the requests to their own service.
 import { useSyncExternalStore } from 'react';
-import { aiDestination, aiKeysStorageKey, aiSettingsKey, parseAiKeys, parseAiSettings, withAiKey, type AiKeys, type AiSettings } from '../../domain/receiptAi';
+import { aiDestination, aiKeysStorageKey, aiSettingsKey, defaultAiSettings, parseAiKeys, parseAiSettings, withAiKey, type AiKeys, type AiSettings } from '../../domain/receiptAi';
 
 // `keys`: what was typed for each destination in this page (starting from the saved ones); only usable keys are saved.
 type State = Readonly<{ settings: AiSettings; keys: AiKeys }>;
@@ -39,6 +39,14 @@ function setApiKey(value: string) {
     } catch { /* kept for this session only */ }
   }
   set({ ...state, keys });
+}
+
+// «Ripristina predefiniti» of Settings (user's request, 21 November): scan off, no service, model or consent. The saved
+// API keys are kept: they are credentials, not settings, and only «Dimentica la chiave» deletes them (choosing the same
+// service again shows its key).
+export function resetReceiptAi(): void {
+  try { localStorage.removeItem(aiSettingsKey); } catch { /* kept for this session only */ }
+  set({ ...state, settings: defaultAiSettings });
 }
 
 export function useReceiptAi() {

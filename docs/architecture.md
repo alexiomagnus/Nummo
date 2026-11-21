@@ -1179,7 +1179,7 @@ Su richiesta, supera due decisioni qui sotto:
   script della pagina (Nummo non carica script di terzi) e da chi usa il dispositivo. Resta fuori da Firestore, backup, bundle, log e URL.
 - **Modello a sola scelta.** Il campo «Modello» è un `SelectField` con l'elenco del servizio: nessun nome scritto a mano. Senza elenco
   (chiave assente, rete, CORS) il campo resta disabilitato, con l'errore e «Riprova»; un modello già salvato resta tra le voci. Il
-  consigliato (con Gemini prima `gemini-3.1-flash-lite`) è segnato «(consigliato)» e preselezionato solo a campo vuoto.
+  consigliato (con Gemini prima `gemini-3.1-flash-lite`; dal 21 novembre, su richiesta, `gemini-3.5-flash-lite`) è segnato «(consigliato)» e preselezionato solo a campo vuoto.
 - **Elenco dei modelli ridotto** (screenshot del piano gratuito di Gemini, decine di voci): per Gemini restano solo le famiglie stabili
   `gemini-<versione>-flash-lite`, `-flash`, `-pro` (con o senza edizione `-001`, una voce per versione), le due versioni più recenti di
   flash-lite e flash e la più recente di pro, più i consigliati se elencati (`curateGeminiModels`). Fuori generatori di immagini, voce e

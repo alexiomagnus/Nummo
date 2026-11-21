@@ -84,7 +84,7 @@ type RootProps = {
 // What the three screens below share: the theme button, the settings page and the mode switch.
 type ModeProps = RootProps & {
   themeToggle: ReactNode;
-  renderSettings: (onDone: () => void, archiveSections?: ReactNode) => ReactNode;
+  renderSettings: (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) => ReactNode;
   onChangeMode: (mode: StorageMode | null) => void;
 };
 
@@ -101,8 +101,8 @@ function Root(props: RootProps) {
     <IconButton size={24} style={styles.touch} icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
-  const renderSettings = (onDone: () => void, archiveSections?: ReactNode) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
-    onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} />;
+  const renderSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
+    onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} onResetArchive={onResetArchive} />;
   const shared = { ...props, themeToggle, renderSettings, onChangeMode: changeMode };
   if (mode === 'advanced') return <AdvancedRoot {...shared} />;
   if (mode === 'standard') return <StandardRoot {...shared} />;

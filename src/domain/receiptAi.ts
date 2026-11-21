@@ -260,7 +260,8 @@ export function readAiModels(provider: AiProvider, status: number, body: unknown
 // Small, cheap models that read pictures well, best first: proposed when the user has not chosen one yet.
 const recommendedModels: Readonly<Record<AiProvider, readonly string[]>> = {
   openai: ['gpt-5-mini', 'gpt-4o-mini'],
-  gemini: ['gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.5-flash-lite'],
+  // gemini-3.5-flash-lite first: user's choice of 21 November (before, gemini-3.1-flash-lite, chosen on 17 November).
+  gemini: ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'],
   claude: ['claude-haiku-4-5', 'claude-sonnet-4-6'],
 };
 

@@ -188,6 +188,21 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Gemini: consigliato `gemini-3.5-flash-lite` — 21 novembre 2026 (notte)
+
+- Su richiesta: in `recommendedModels` Gemini propone prima `gemini-3.5-flash-lite` (poi `gemini-3.1-flash-lite`, `gemini-2.5-flash`).
+  «(consigliato)» si sposta su quel modello; la preselezione avviene solo a campo Modello vuoto, quindi un modello già salvato resta finché
+  l'utente non lo cambia. Se il servizio non elenca `gemini-3.5-flash-lite`, vale il consigliato successivo. Test aggiornati.
+- **Verifica:** `npm run check` OK (**520/520**). Non provato con una chiave Gemini reale. Committato e inviato a `origin`; non pubblicato su Hosting.
+
+## «Ripristina predefiniti» riporta tutto ai valori predefiniti — 21 novembre 2026 (notte)
+
+- Su richiesta: il pulsante delle Impostazioni riportava ai valori predefiniti solo `nummo.preferences.v1`; la scansione dello scontrino
+  restava attiva. Ora riporta anche la scheda AI (`resetReceiptAi` in `aiSettings.ts`: spenta, nessun servizio, modello o consenso) e,
+  con un archivio aperto, «Categorie preferite» e «Fondo preferito» (`onResetArchive`, terzo argomento di `renderSettings`). Le chiavi
+  API salvate restano (sono credenziali, non impostazioni: si cancellano solo con «Dimentica la chiave»).
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser né sul telefono. Committato e inviato a `origin`; non pubblicato su Hosting.
+
 ## Spese offline, pagina offline, passaggio dei dati tra le modalità — 21 novembre 2026 (notte)
 
 - **Prima della fase:** analisi su richiesta della guida a Firebase (bozza del nuovo testo, link diretti, sito senza progetto di base,

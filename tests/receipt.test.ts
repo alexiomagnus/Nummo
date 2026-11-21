@@ -259,7 +259,7 @@ test('AI: lettura dell’elenco dei modelli, filtri ed errori', () => {
   const freeBody = { models: free.map((name) => ({ name: `models/${name}`, supportedGenerationMethods: ['generateContent'] })) };
   assert.deepEqual(readAiModels('gemini', 200, freeBody),
     ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.7-flash', 'gemini-3.8-flash']);
-  assert.equal(recommendedModel('gemini', readAiModels('gemini', 200, freeBody)), 'gemini-3.1-flash-lite');
+  assert.equal(recommendedModel('gemini', readAiModels('gemini', 200, freeBody)), 'gemini-3.5-flash-lite');
   // Un'edizione «-001» vale la sua versione; nomi mai visti (nessuna famiglia nota) restano tutti visibili invece di un elenco vuoto.
   assert.deepEqual(curateGeminiModels(['gemini-2.0-flash-001']), ['gemini-2.0-flash-001']);
   assert.deepEqual(readAiModels('gemini', 200, { models: [{ name: 'models/gemini-ultra-x', supportedGenerationMethods: ['generateContent'] }] }), ['gemini-ultra-x']);
@@ -284,7 +284,9 @@ test('AI: modello consigliato', () => {
   assert.equal(recommendedModel('gemini', ['gemini-2.5-flash-lite', 'gemini-2.5-flash']), 'gemini-2.5-flash');
   assert.equal(recommendedModel('claude', ['claude-haiku-4-5-20251001', 'claude-sonnet-4-6']), 'claude-haiku-4-5-20251001');
   assert.equal(recommendedModel('claude', ['claude-opus-5-5', 'claude-sonnet-4-6']), 'claude-sonnet-4-6');
-  // Scelta dell'utente del 17 novembre: con Gemini si propone prima gemini-3.1-flash-lite.
+  // Scelta dell'utente del 21 novembre: con Gemini si propone prima gemini-3.5-flash-lite (dal 17 novembre era gemini-3.1-flash-lite).
+  assert.equal(recommendedModel('gemini', ['gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-2.5-pro']), 'gemini-3.5-flash-lite');
+  // Se il servizio non lo elenca, resta il consigliato successivo.
   assert.equal(recommendedModel('gemini', ['gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-pro']), 'gemini-3.1-flash-lite');
 });
 
