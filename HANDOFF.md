@@ -77,7 +77,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `e008fcd` (nessun campo «Chiave API» nella scansione, «Vibrazione» e telefono in
+  `origin`. Ultimi commit di codice, tutti pubblicati: `314064b` (matita dei template da 28 dp), `e008fcd` (nessun campo «Chiave API» nella scansione, «Vibrazione» e telefono in
   silenzioso), `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di scorrimento senza frecce), `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
   selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
   pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
@@ -101,7 +101,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `e008fcd` (nessun campo «Chiave API» nel dialogo di scansione; testo di
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `314064b` (matita dei template da 28 dp) pubblicato su richiesta il 21 novembre
+  (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate.
+  Prima, **Hosting** da `e008fcd` (nessun campo «Chiave API» nel dialogo di scansione; testo di
   «Vibrazione» sul telefono in silenzioso) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!»,
   sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. Prima, **Hosting** da `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di
   scorrimento senza frecce dell'altra sessione) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy
@@ -218,7 +220,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 - Su richiesta (screenshot di una riga della pagina Templates): la matita decorativa a destra di ogni template passa da 24 a 28 dp,
   sempre nel riquadro 44×44 con contorno (`TemplatesPage.tsx`, `AGENTS.md`).
-- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser. Committato, inviato e pubblicato su Hosting (vedi «Produzione»).
+- **Verifica:** `npm run check` OK (**520/520**). Non provato nel browser. Committato in `314064b`, inviato e pubblicato su Hosting (vedi «Produzione»).
 
 ## Nessun campo «Chiave API» nel dialogo di scansione — 21 novembre 2026 (notte)
 
@@ -4209,7 +4211,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `e008fcd` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `314064b` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
