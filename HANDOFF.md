@@ -65,6 +65,15 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Fondo nei dettagli della spesa — 21 novembre 2026
+
+- Su richiesta: nei dettagli di una spesa (Spese, vista spese singole) il campo «Fondo» dopo la Categoria, con il nome del fondo
+  (archiviati compresi) o «Nessun fondo»; nessun campo se non esiste alcun fondo. `ExpenseList` riceve `funds={fundState.funds}` da
+  `Workspace`. Traduzioni già presenti.
+- **Ritocco precedente, stesso giorno:** la riga tagliata dal bordo del pannello desktop si dissolve invece di sparire (sezione seguente).
+- **Verifica:** Chromium headless 1600×900 (demo, Standard, backup di collaudo): «Fondo | Medio · Spesa e casa» e «Fondo | Nessun fondo».
+  `npm run check` OK. Pubblicato il 21 novembre (notte), vedi «Registro dei rilasci».
+
 ## Righe intere nel pannello desktop, esercente tolto dai dettagli — 21 novembre 2026
 
 - Su richiesta: (1) tolto «Esercente» dai dettagli della spesa (resta accanto alla data e nell'etichetta accessibile della riga).
@@ -74,6 +83,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   riceve `data-clipped` (`opacity: 0`, `pointer-events: none`); mai nascoste righe più alte della vista, iniziate sopra o con il focus.
   Una riga intera che cresce (dettagli aperti) fa scorrere il pannello invece di sparire.
 - **Verifica:** Chromium headless 1600×900 (demo, Standard). `npm run check` **501/501**. Pubblicato il 21 novembre (sera).
+- **Ritocco successivo (su richiesta: nascondere del tutto la riga sembrava la fine dell'elenco):** la riga tagliata non sparisce più
+  ma si dissolve verso il bordo (`mask-image` da 55 % a trasparente sul bordo del pannello, altezza visibile in `--nummo-peek`),
+  resta non cliccabile e un clic sulla sua area la fa scorrere in vista intera. Verificato in Chromium headless 1600×900 (porzione
+  visibile 25 e 50 px; clic → riga intera, non espansa).
 
 ## Esercente accanto alla data in Spese — 21 novembre 2026
 

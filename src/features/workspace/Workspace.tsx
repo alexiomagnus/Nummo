@@ -363,7 +363,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
-        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} merchantNames={merchantNames}
+        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} merchantNames={merchantNames} funds={fundState.funds}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
