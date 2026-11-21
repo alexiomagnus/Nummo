@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, ConfirmButton, dialogActionsRow, dialogActionPair } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
 import type { Category } from '../../domain/category';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -108,8 +108,9 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
       {priceError && <HelperText type="error" accessibilityRole="alert">{t(priceError)}</HelperText>}
       {store.error && <HelperText type="error">{t(store.error)}</HelperText>}
     </ScrollView></Dialog.ScrollArea>
-    <Dialog.Actions style={{ flexWrap: 'wrap', gap: spacing.xs }}>
-      {store.remove && <View style={{ flex: 1, alignItems: 'flex-start' }}><DeleteAction labeled disabled={busy} onOpenChange={setDeleting}
+    <Dialog.Actions style={dialogActionsRow}>
+      {/* Natural width (not flexBasis 0): on a narrow phone the row wraps, Elimina above, instead of overlapping «Annulla». */}
+      {store.remove && <View style={{ flexGrow: 1, alignItems: 'flex-start' }}><DeleteAction labeled disabled={busy} onOpenChange={setDeleting}
         name={series ? t("la serie {p0}", { p0: record.description }) : record.description}
         description={[(series ? t("Eliminando questa ricorrenza si elimina l’intera serie. ") : '') + (listNote === 'linked' ? t("La lista collegata tornerà tra quelle attive. ") : '') + t("L’operazione non può essere annullata."), store.error && t(store.error)].filter(Boolean).join('\n\n')}
         onDelete={async () => {
@@ -120,6 +121,6 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
             return removed;
           } finally { setBusy(false); }
         }} /></View>}
-    <Button disabled={busy || deleting} style={{ minWidth: 88 }} onPress={close}>{t("Annulla")}</Button><Button mode="contained" disabled={busy || deleting} loading={busy && !deleting} style={{ minWidth: 88 }} onPress={() => void save()}>{t("Salva")}</Button></Dialog.Actions>
+    <View style={dialogActionPair}><CancelButton disabled={busy || deleting} onPress={close}>{t("Annulla")}</CancelButton><ConfirmButton disabled={busy || deleting} loading={busy && !deleting} onPress={() => void save()}>{t("Salva")}</ConfirmButton></View></Dialog.Actions>
   </Dialog></Portal>;
 }

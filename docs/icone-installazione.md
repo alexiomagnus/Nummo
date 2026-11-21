@@ -8,7 +8,7 @@ degli asset di installazione nel repository.
 
 | Asset in `public/icons/` | Uso |
 | --- | --- |
-| `icon.svg` | Favicon a colori, simbolo scalato a 0,72, fondo «squircle» (stondatura ampia, stile Material 3 Expressive) |
+| `icon.svg` | Favicon a colori, simbolo scalato a 0,72, fondo «squircle» (dal 21 novembre più squadrato: punti di controllo a 4 unità dagli angoli su 64, prima 10) |
 | `icon-192.png`, `icon-512.png` | Manifest `any`, installazione/splash secondo il browser: **RGBA con angoli trasparenti** (stessa forma di `icon.svg`, resa con Chromium headless a sfondo trasparente). Prima erano quadrati opachi, e i launcher desktop li mostravano squadrati |
 | `icon-maskable-512.png` | Manifest `maskable`, sfondo pieno e simbolo centrale |
 | `apple-touch-icon.png` | Collegamento Apple, 180×180 |

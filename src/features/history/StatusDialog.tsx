@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { DateField } from '../../components/DateField';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { paymentsRemoved, type SubscriptionSummary } from '../../domain/history';
@@ -79,10 +79,10 @@ export function StatusDialog({ summary, status, today, onConfirm, close }: Props
           {!next && <HelperText type="error" accessibilityRole="alert">{t("Troppe variazioni di stato per questo abbonamento: per continuare creane uno nuovo.")}</HelperText>}
         </ScrollView>
       </Dialog.ScrollArea>
-      <Dialog.Actions style={styles.actions}>
-        <Button style={styles.action} disabled={busy} onPress={close}>{t("Indietro")}</Button>
-        <Button mode="contained" style={styles.action} disabled={busy || !next} loading={busy}
-          buttonColor={cancel ? colors.error : undefined} textColor={cancel ? colors.onError : undefined} onPress={() => void submit()}>{title}</Button>
+      <Dialog.Actions style={dialogActionsRow}>
+        <CancelButton disabled={busy} onPress={close}>{t("Indietro")}</CancelButton>
+        <ConfirmButton disabled={busy || !next} loading={busy}
+          buttonColor={cancel ? colors.error : undefined} textColor={cancel ? colors.onError : undefined} onPress={() => void submit()}>{title}</ConfirmButton>
       </Dialog.Actions>
     </Dialog>
   </Portal>;
@@ -94,6 +94,4 @@ const styles = StyleSheet.create({
   removed: { gap: spacing.xs },
   strong: { fontWeight: '600' },
   payment: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
-  actions: { flexWrap: 'wrap', gap: spacing.xs },
-  action: { minWidth: 96, flexShrink: 1 },
 });

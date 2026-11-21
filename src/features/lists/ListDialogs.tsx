@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Portal, TextInput } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, ConfirmButton, dialogActionsRow, dialogActionPair } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction } from '../../components/DeleteAction';
 import { SelectField } from '../../components/SelectField';
@@ -12,7 +12,7 @@ import { itemNameError, listNameError } from '../../domain/shoppingList';
 import { existingCategory } from '../categories/preferredCategories';
 import { NoFundAvatar } from '../funds/FundAvatar';
 import { useI18n } from '../../i18n/I18nProvider';
-import { inputOutline, layout, spacing } from '../../theme/tokens';
+import { inputOutline, spacing } from '../../theme/tokens';
 
 // New list or rename: name and the category proposed when the list is registered.
 export function ListEditor({ record, categories, defaultCategoryId = '', onSave, close }: {
@@ -44,9 +44,9 @@ export function ListEditor({ record, categories, defaultCategoryId = '', onSave,
       </View>
       <SelectField label={t("Categoria predefinita")} options={options} value={categoryId ?? ''} onChange={setCategoryId} />
     </Dialog.Content>
-    <Dialog.Actions>
-      <Button style={styles.listAction} onPress={close}>{t("Annulla")}</Button>
-      <Button style={styles.listAction} mode="contained" onPress={save}>{record ? t("Salva") : t("Crea")}</Button>
+    <Dialog.Actions style={dialogActionsRow}>
+      <CancelButton onPress={close}>{t("Annulla")}</CancelButton>
+      <ConfirmButton onPress={save}>{record ? t("Salva") : t("Crea")}</ConfirmButton>
     </Dialog.Actions>
   </Dialog></Portal>;
 }
@@ -72,15 +72,15 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </View>
     </Dialog.Content>
-    <Dialog.Actions style={styles.actions}>
+    <Dialog.Actions style={dialogActionsRow}>
       <View style={styles.grow}>
         <DeleteAction labeled name={item.name} title={t("Eliminare {p0} dalla lista?", { p0: item.name })} description=""
           onDelete={() => { const done = onDelete(); if (done) close(); return done; }} />
       </View>
       {/* Kept together so that, when the row wraps on narrow phones, the pair moves under Delete as one unit. */}
-      <View style={styles.pair}>
-        <Button compact style={styles.pairAction} onPress={close}>{t("Annulla")}</Button>
-        <Button compact style={styles.pairAction} mode="contained" onPress={save}>{t("Salva")}</Button>
+      <View style={dialogActionPair}>
+        <CancelButton compact onPress={close}>{t("Annulla")}</CancelButton>
+        <ConfirmButton compact onPress={save}>{t("Salva")}</ConfirmButton>
       </View>
     </Dialog.Actions>
   </Dialog></Portal>;
@@ -89,10 +89,6 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
 const styles = StyleSheet.create({
   dialog: { maxWidth: 480 },
   content: { gap: spacing.md },
-  listAction: { minWidth: layout.minTouch * 2 },
-  actions: { flexWrap: 'wrap', gap: spacing.xs },
   // Natural width (not flexBasis 0), so a crowded row wraps instead of squeezing Delete under the pair.
   grow: { flexGrow: 1, alignItems: 'flex-start' },
-  pair: { flexDirection: 'row', gap: spacing.sm, marginLeft: 'auto' },
-  pairAction: { minWidth: layout.minTouch * 2, flexShrink: 1 },
 });

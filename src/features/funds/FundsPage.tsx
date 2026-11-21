@@ -2,7 +2,7 @@ import { memo, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { Button, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
 import { Reveal } from '../../components/Reveal';
 import { SelectField } from '../../components/SelectField';
@@ -300,12 +300,12 @@ function AssignDialog({ funds, orphans, ready, error, defaultFundId, onAssign, c
         <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{t("Puoi sempre cambiare il fondo di una singola spesa dalla sua modifica.")}</Text>
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </Dialog.Content>
-      <Dialog.Actions>
-        <Button disabled={busy} onPress={close}>{t("Annulla")}</Button>
-        <Button mode="contained" disabled={busy || !ready || !fundId} loading={busy} onPress={async () => {
+      <Dialog.Actions style={dialogActionsRow}>
+        <CancelButton disabled={busy} onPress={close}>{t("Annulla")}</CancelButton>
+        <ConfirmButton disabled={busy || !ready || !fundId} loading={busy} onPress={async () => {
           setBusy(true);
           try { if (await onAssign(fundId)) close(); } finally { setBusy(false); }
-        }}>{t("Assegna")}</Button>
+        }}>{t("Assegna")}</ConfirmButton>
       </Dialog.Actions>
     </Dialog>
   </Portal>;

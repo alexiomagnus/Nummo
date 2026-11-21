@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { DateField } from '../../components/DateField';
 import { leadingIcon } from '../../components/FieldIcon';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
@@ -91,9 +91,9 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
         </ScrollView>
       </Dialog.ScrollArea>
-      <Dialog.Actions>
-        <Button style={styles.action} disabled={busy} onPress={close}>{t("Annulla")}</Button>
-        <Button mode="contained" style={styles.action} disabled={blocked} loading={busy} onPress={() => void save()}>{kind === 'transfer' ? t("Trasferisci") : t("Aggiungi")}</Button>
+      <Dialog.Actions style={dialogActionsRow}>
+        <CancelButton disabled={busy} onPress={close}>{t("Annulla")}</CancelButton>
+        <ConfirmButton disabled={blocked} loading={busy} onPress={() => void save()}>{kind === 'transfer' ? t("Trasferisci") : t("Aggiungi")}</ConfirmButton>
       </Dialog.Actions>
     </Dialog>
   </Portal>;
@@ -103,5 +103,4 @@ const styles = StyleSheet.create({
   area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
   field: { gap: spacing.xs },
-  action: { minWidth: 96, flexShrink: 1 },
 });

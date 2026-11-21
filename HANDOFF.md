@@ -12,8 +12,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
 - **Scansione solo con AI (21 novembre, inviata su `origin`, non pubblicata):** OCR e «API compatibile OpenAI» rimossi, interruttore in
   Impostazioni; dettagli nella sezione omonima qui sotto. Va pubblicata insieme ai commit in attesa.
-- **Prossima sessione, priorità consigliate:** (0) su autorizzazione, pubblicare su Hosting `0e536a5`…`9ad8e02` (produzione ferma a
-  `de79c95`) e la scansione solo con AI; (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
+- **Prossima sessione, priorità consigliate:** (0) su autorizzazione, pubblicare prima le **Rules** (template reintrodotti) e poi
+  Hosting: tutto il lavoro del 21 novembre da `0e536a5` in poi (produzione ferma a `de79c95`); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
@@ -72,6 +72,73 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Pulsanti dei dialoghi uniformi — 21 novembre 2026
+
+- Su richiesta (screenshot: «Elimina · Annulla · Salva» con «Annulla» di solo testo). **Analisi:** «Annulla» era di testo in 11 punti e
+  con contorno in 4; larghezze 88, 96 fissa, 96 minima, `minTouch*2`, 116 o nessuna; altezza 40 nelle conferme di eliminazione e in
+  Archiviazione, 48 altrove; spazio 8 nelle conferme, 12 nei dialoghi.
+- **Correzione:** in `components/Button.tsx` `CancelButton` (contorno), `ConfirmButton` (pieno), `dialogActionsRow` (a capo, spazio 12) e
+  `dialogActionPair` (Annulla + conferma uniti accanto a Elimina); minimo 112×48, margine di Paper annullato. Usati in: modifica spesa,
+  template, categoria, fondo, movimento, assegnazione fondo, stato abbonamento («Indietro»), lista e prodotto, registrazione lista,
+  selettore della data (Annulla/OK), conferma di eliminazione (`DeleteAction`), dialoghi di Archiviazione, anteprima del ripristino,
+  scansione dello scontrino. Invariati: «Chiudi» dei dialoghi a una sola azione, il modulo di collegamento Firebase (già con contorno, in
+  colonna), «Scansiona di nuovo».
+- Trovato e corretto anche un difetto preesistente: su smartphone «Elimina» della modifica spesa si sovrapponeva ad «Annulla» (contenitore
+  `flex: 1`); ora la riga va a capo con Elimina sopra e la coppia Annulla/Salva sotto.
+- **Verifica:** Chromium headless, demo Standard con `nummo-utente-medio.json`: modifica spesa, conferma di eliminazione e selettore data
+  a 1400×900 e 390×844 (Annulla 112, Salva/OK 112, alti 48, nessuna sovrapposizione). `npm run check` OK. Committato e inviato su richiesta; non pubblicato.
+
+## Icona dell'app un po' più squadrata — 21 novembre 2026
+
+- Su richiesta (favicon della scheda): il fondo «squircle» di `icon.svg` era quasi un cerchio a 16 px. Punti di controllo della curva
+  spostati da 10 a 6 unità dagli angoli (su 64): angoli ancora morbidi, più quadrato. Scelto dopo un confronto k=10/7/5/3 a 16, 32 e 96 px.
+  Poi, su nuova richiesta, ancora un po' più squadrato: **4 unità** (SVG e PNG rigenerati allo stesso modo).
+- Rigenerati con Chromium headless a sfondo trasparente `icon-192.png` e `icon-512.png` (RGBA, stessa forma); invariati
+  `icon-maskable-512.png` e `apple-touch-icon.png` (quadrati, mascherati dal sistema) e `icon-monochrome.svg`. `docs/icone-installazione.md`
+  aggiornato. Dopo la pubblicazione browser e launcher possono tenere in cache la vecchia icona. Committato e inviato su richiesta; non pubblicato.
+
+## Templates reintrodotti, con l'Esercente — 21 novembre 2026
+
+- Su richiesta. Ripristinata dalla storia Git (`f9c4d8f^`) la funzione eliminata il 16 novembre: pagina «Templates» nel menu account
+  (dopo Categorie), interruttore «Usa i template» (spento di base), campo «Template» in Nuova spesa (sotto Categoria/Fondo, sopra
+  «Ricorrente»), modifica ed eliminazione, limite 100. In più l'**Esercente** facoltativo, salvato come nome (mai un documento
+  `merchants`). Decisione e dettagli in `docs/architecture.md`.
+- Dati: `DataStore` in entrambe le modalità; IndexedDB `templates` (passo 2, già nello schema: i template di prima tornano visibili);
+  Firestore `templates/{uuid}` con Rules (radice e `public/` identiche; `merchant` facoltativo per i documenti vecchi). **Backup v11**
+  (`templates`); lettore v7 di nuovo con i template, v8–v10 senza.
+- **Verifiche:** `npm run check` OK, **501/501** (test di dominio, store locale con record vecchio senza esercente, backup v11/v7/v8–v10;
+  aggiornate le asserzioni di versione e i confronti dei file di collaudo v9/v10). `npm run test:emulator` **22/22** su porte dedicate
+  (config temporanea `.nummo-templates-check.json` nella radice, rimossa; emulatori dell'utente su 8180/4000/4400 non toccati), compreso
+  il test dei template: Rules, scritture, documento senza `merchant`, modifica che conserva la creazione, backup. Chromium headless, demo
+  Standard con `nummo-utente-medio.json`: menu → Templates → interruttore → nuovo template con importo, Esercente, categoria e fondo →
+  «I tuoi template (1)» → Nuova spesa → campo Template → tutti i campi compilati (1400×900 e 390×844).
+- **Da fare prima della pubblicazione (su autorizzazione):** pubblicare le **Rules** (`firebase deploy --only firestore:rules --project
+  nummo-6b6e2`), poi Hosting. Senza Rules, in Avanzata la pagina Templates mostra l'errore di permessi. Committato e inviato su richiesta; non pubblicato.
+
+## Ordine dei servizi AI, categoria e fondo nei dettagli di Analisi — 21 novembre 2026
+
+- Su richiesta: nella scheda «Analisi scontrini con AI» i servizi sono nell'ordine Claude, OpenAI, Google Gemini (`aiProviders`; etichette
+  invariate, «OpenAI» resta il nome mostrato).
+- Analisi, dialogo delle transazioni di una categoria (`TransactionDetails`): sotto il nome la data, poi la categoria in `primary` (prima
+  era grigia dopo «·») e, se la spesa ha un fondo, l'avatar del fondo (16 px) e il nome; nessun «Nessun fondo» nella riga. Da medium tutto
+  su una riga; su smartphone il fondo va su una riga propria sotto data e categoria (nuova prop `subtitleBelow` di `ListRow`). `Dashboard`
+  passa `funds`.
+- **Verifica:** Chromium headless, demo in Standard con `nummo-utente-medio.json` unito, Analisi a barre su 12 mesi, dialogo «Medio · Casa
+  e bollette»: 1400×900 (una riga per spesa, Affitto senza fondo) e 390×844 (fondo sotto). `npm run check` OK. Committato e inviato su richiesta; non pubblicato.
+
+## Errore «Invalid prop `compact` supplied to `React.Fragment`» — 21 novembre 2026
+
+- Segnalato dall'utente in sviluppo. **Causa:** `Dialog.Actions` di Paper clona ogni figlio diretto aggiungendo `compact`, `uppercase` e
+  `style`; in `ScanReceiptDialog` le azioni dei passaggi fotocamera, pronto, consenso e revisione erano un Fragment (`actions = <>…</>`),
+  quindi Paper clonava il Fragment. React lo segnala quando aggiorna l'elemento (non al primo montaggio). Presente dal 16 novembre; solo
+  avviso di sviluppo, nessun effetto in produzione (ma i pulsanti non ricevevano `compact` né il margine di Paper).
+- **Correzione:** azioni come array di pulsanti con `key`; `marginRight: 0` su ogni pulsante annulla gli 8 dp che Paper aggiunge, così lo
+  spazio resta solo il `gap` di 12 approvato. Gli altri `Dialog.Actions` dell'app hanno già i pulsanti come figli diretti. Regola in AGENTS.
+- **Verifica:** Expo di sviluppo su porta 8099 (con `CI=1` il watcher è spento e serviva codice vecchio: riavviato senza), Chromium
+  headless 390×844, passaggio «pronto» con digitazione nella chiave: col file precedente due `console.error` con l'avviso e un nodo
+  `FRAGMENT` dentro `Dialog.Actions`; con la correzione nessun errore, pulsanti clonati direttamente, gap 13 px, 114/116 px. Server fermato.
+  `npm run check` OK. Committato e inviato su richiesta; non pubblicato.
 
 ## Icona «internet» (wifi) a tre segni negli stili minimale e colorato — 21 novembre 2026
 

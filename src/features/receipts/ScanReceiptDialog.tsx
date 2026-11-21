@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button, compactIconPadding } from '../../components/Button';
+import { Button, compactIconPadding, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { SwitchRow } from '../../components/SwitchRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
@@ -187,7 +187,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {sourceButtons('contained-tonal')}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>;
-    actions = <Button mode="outlined" style={styles.action} onPress={onClose}>{t("Annulla")}</Button>;
+    actions = <CancelButton onPress={onClose}>{t("Annulla")}</CancelButton>;
   } else if (stage === 'camera') {
     body = <>
       <View style={[styles.picture, styles.camera, { backgroundColor: colors.surfaceVariant }]}>
@@ -196,10 +196,10 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }} accessibilityLiveRegion="polite">
         {cameraReady ? t("Inquadra tutto lo scontrino, ben illuminato e senza pieghe.") : t("Avvio della fotocamera…")}</Text>
     </>;
-    actions = <>
-      <Button mode="outlined" style={styles.action} onPress={closeCamera}>{t("Annulla")}</Button>
-      <Button mode="contained" style={styles.action} disabled={!cameraReady} onPress={() => void shoot()}>{t("Scatta")}</Button>
-    </>;
+    actions = [
+      <CancelButton key="cancel" onPress={closeCamera}>{t("Annulla")}</CancelButton>,
+      <ConfirmButton key="shoot" disabled={!cameraReady} onPress={() => void shoot()}>{t("Scatta")}</ConfirmButton>,
+    ];
   } else if (stage === 'ready') {
     body = <>
       {picture}
@@ -211,20 +211,20 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {sourceButtons('outlined')}
     </>;
-    actions = <>
-      <Button mode="outlined" style={styles.action} onPress={onClose}>{t("Annulla")}</Button>
-      <Button mode="contained" style={styles.action} disabled={preparing || !aiReady || !ai.apiKey.trim()} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</Button>
-    </>;
+    actions = [
+      <CancelButton key="cancel" onPress={onClose}>{t("Annulla")}</CancelButton>,
+      <ConfirmButton key="scan" disabled={preparing || !aiReady || !ai.apiKey.trim()} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</ConfirmButton>,
+    ];
   } else if (stage === 'consent') {
     body = <>
       <Text variant="titleSmall">{t("Inviare la foto a {p0}?", { p0: provider })}</Text>
       <Text variant="bodyMedium">{t("Con la scansione avanzata la foto dello scontrino esce da questo dispositivo e viene inviata a {p0} ({p1}), che la tratta secondo le proprie condizioni. Nummo non la conserva.", { p0: provider, p1: ai.destination })}</Text>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Uno scontrino può contenere dati personali, come le ultime cifre della carta o il codice fiscale.")}</Text>
     </>;
-    actions = <>
-      <Button mode="outlined" style={styles.action} onPress={() => setStage('ready')}>{t("Annulla")}</Button>
-      <Button mode="contained" style={styles.action} onPress={() => { ai.giveConsent(); void run(); }}>{t("Acconsento e invio")}</Button>
-    </>;
+    actions = [
+      <CancelButton key="cancel" onPress={() => setStage('ready')}>{t("Annulla")}</CancelButton>,
+      <ConfirmButton key="consent" onPress={() => { ai.giveConsent(); void run(); }}>{t("Acconsento e invio")}</ConfirmButton>,
+    ];
   } else if (stage === 'working') {
     body = <>
       {picture}
@@ -234,7 +234,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
           accessibilityLabel={t("Scansione in corso")} />
       </View>
     </>;
-    actions = <Button mode="outlined" style={styles.action} onPress={cancelWork}>{t("Annulla")}</Button>;
+    actions = <CancelButton onPress={cancelWork}>{t("Annulla")}</CancelButton>;
   } else {
     const uncertain = flagged('uncertain');
     const missing = flagged('missing');
@@ -259,11 +259,11 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     body = wide && !zoomed
       ? <View style={styles.columns}><View style={styles.side}>{picture}<View style={styles.row}>{zoom}</View></View><View style={styles.main}>{review}</View></View>
       : <>{picture}<View style={styles.row}>{zoom}</View>{review}</>;
-    actions = <>
-      <Button mode="outlined" style={styles.action} onPress={onClose}>{t("Annulla")}</Button>
-      <Button onPress={() => setStage('ready')}>{t("Scansiona di nuovo")}</Button>
-      <Button mode="contained" style={styles.action} disabled={Object.keys(patch).length === 0} onPress={apply}>{t("Usa questi dati")}</Button>
-    </>;
+    actions = [
+      <CancelButton key="cancel" onPress={onClose}>{t("Annulla")}</CancelButton>,
+      <Button key="again" style={styles.plain} onPress={() => setStage('ready')}>{t("Scansiona di nuovo")}</Button>,
+      <ConfirmButton key="apply" disabled={Object.keys(patch).length === 0} onPress={apply}>{t("Usa questi dati")}</ConfirmButton>,
+    ];
   }
 
   return <Portal><Dialog visible dismissable={stage !== 'working' && stage !== 'camera'} onDismiss={onClose} style={wide && stage === 'review' ? styles.wideDialog : undefined}>
@@ -272,7 +272,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {inputs}
       {body}
     </ScrollView></Dialog.ScrollArea>
-    <Dialog.Actions style={styles.actions}>{actions}</Dialog.Actions>
+    {/* `actions` is a button or an array of keyed buttons, never a Fragment: Dialog.Actions clones each child to add
+        `compact` and its margin, and a Fragment cannot take them («Invalid prop `compact` supplied to React.Fragment»). */}
+    <Dialog.Actions style={dialogActionsRow}>{actions}</Dialog.Actions>
   </Dialog></Portal>;
 }
 
@@ -280,10 +282,7 @@ const styles = StyleSheet.create({
   wideDialog: { maxWidth: 920 },
   area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
-  actions: { flexWrap: 'wrap', gap: spacing.md },
-  // «Annulla» outlined and as wide as the main action beside it («Scansiona», «Scatta»…: user's request, 21 November), like
-  // the confirmation of DeleteAction, instead of a narrow text label.
-  action: { minWidth: 116 },
+  plain: { marginRight: 0 },
   block: { gap: spacing.md },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: -spacing.sm },
   sources: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

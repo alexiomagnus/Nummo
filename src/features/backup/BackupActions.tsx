@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { Button } from '../../components/Button';
+import { Button, CancelButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
@@ -93,6 +93,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     [merge.addExpenses.length, "1 spesa", "{p0} spese"], [merge.addCategories.length, "1 categoria", "{p0} categorie"],
     [merge.addFunds.length, "1 fondo", "{p0} fondi"], [merge.addMovements.length, "1 movimento", "{p0} movimenti"],
     [merge.addLists.length, "1 lista", "{p0} liste"], [merge.addMerchants.length, "1 esercente", "{p0} esercenti"],
+    [merge.addTemplates.length, "1 template", "{p0} template"],
   ].filter(([n]) => (n as number) > 0).map(([n, one, many]) => (n === 1 ? t(one as string) : t(many as string, { p0: n as number }))) : [];
   const mergeEmpty = !!merge && added.length === 0;
   // A blocked merge names what differs (the file's own names), at most three, then how many more.
@@ -101,9 +102,9 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     ...(conflicts.more > 0 ? [t("altri {p0}", { p0: conflicts.more })] : [])].join(' · ');
   // Replace: what goes and what is written (new or different items, merchants included).
   const removed = replace ? replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length
-    + replace.removeMovementIds.length + replace.removeListIds.length + replace.removeMerchantIds.length : 0;
+    + replace.removeMovementIds.length + replace.removeListIds.length + replace.removeMerchantIds.length + replace.removeTemplateIds.length : 0;
   const written = replace ? replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length
-    + replace.addMovements.length + replace.addLists.length + replace.addMerchants.length : 0;
+    + replace.addMovements.length + replace.addLists.length + replace.addMerchants.length + replace.addTemplates.length : 0;
   const missing = merge ? merge.missingFundReferences + merge.missingCategoryReferences : 0;
   const finish = () => { setPreview(null); notify("Importazione completata."); };
   return <Card style={styles.card}>
@@ -135,10 +136,10 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         {missing === 1 ? t("1 riferimento a fondi o categorie mancanti.") : t("{p0} riferimenti a fondi o categorie mancanti.", { p0: missing })}</Text>}
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
         {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={() => void run(async () => {
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants); finish();
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates); finish();
         })}>{t("Unisci ai dati esistenti")}</Button>}
         <Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>
-        <Button disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</Button>
+        <CancelButton disabled={busy} onPress={() => setPreview(null)}>{t("Annulla")}</CancelButton>
       </View>
     </View>}
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
@@ -150,7 +151,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         try {
           // Safety copy before the first deletion: the current data stays on disk if anything goes wrong.
           download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants);
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />

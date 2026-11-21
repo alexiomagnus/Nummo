@@ -160,16 +160,17 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
   const [settingsRequest, setSettingsRequest] = useState(0);
   const [notificationsRequest, setNotificationsRequest] = useState(0);
   const [categoriesRequest, setCategoriesRequest] = useState(0);
+  const [templatesRequest, setTemplatesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
   const menu = <AccountMenu email={null} photoURL={null} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
-    onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
+    onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
   return (
     <>
       <View style={styles.fill}>
         <DataWorkspace backend={store} scope="local" storageNote={t('Spese e categorie salvate su questo dispositivo.')}
-          onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} backupRequest={backupRequest} settingsRequest={settingsRequest}
+          onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} backupRequest={backupRequest} settingsRequest={settingsRequest}
           notificationsRequest={notificationsRequest} localArchive={store}
           renderSettings={renderSettings}
           storage={<StandardStorage protection={protection} onChangeMode={onChangeMode} style={styles.wide} />}
@@ -193,6 +194,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const [settingsRequest, setSettingsRequest] = useState(0);
   const [notificationsRequest, setNotificationsRequest] = useState(0);
   const [categoriesRequest, setCategoriesRequest] = useState(0);
+  const [templatesRequest, setTemplatesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const session = useSession(!configMissing);
   const storageNote = t(demo || firestoreEmulator
@@ -207,7 +209,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
     connected={customFirebaseConfig !== null} onDisconnect={() => switchFirebase(null, true)} />;
   const account = session.status === 'signed-in'
     ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={session.signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
-      onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)}
+      onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)}
       onOpenBackup={openBackup} /> : null;
 
   // Startup: while Auth restores the session and the first data load, the workspace shell shows loading status.
@@ -262,7 +264,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       {signedIn && !denied ? (
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
-            onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} backupRequest={backupRequest}
+            onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} backupRequest={backupRequest}
             settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={renderSettings}
             storage={storage()}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}

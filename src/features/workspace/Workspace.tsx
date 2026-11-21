@@ -58,9 +58,11 @@ import type { FundChoice } from '../funds/FundField';
 import { monthOf, monthOverview } from '../../domain/funds';
 import { ListsPage } from '../lists/ListsPage';
 import { useRemoteLists, type RemoteLists } from '../lists/useRemoteLists';
+import { TemplatesPage } from '../templates/TemplatesPage';
+import { useRemoteTemplates, type RemoteTemplates } from '../templates/useRemoteTemplates';
 
 const forecastDays = 30;
-type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categories' | 'backup' | 'settings' | 'notifications';
+type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categories' | 'templates' | 'backup' | 'settings' | 'notifications';
 // «Nuova spesa» is the primary action (FAB), not a destination: one primary navigation only.
 // Categories and import/export open from the account menu, outside the main destinations.
 const destinations: readonly Destination<Section>[] = [
@@ -73,10 +75,10 @@ const destinations: readonly Destination<Section>[] = [
 type ListView = 'expenses' | 'subscriptions';
 // Short labels keep the segmented button on one line at every width; the accessible name of the second is the full one.
 const listViews = [{ value: 'expenses', label: 'Spese', full: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', backup: 'Archiviazione e backup', settings: 'Impostazioni', notifications: 'Notifiche' };
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', templates: 'Templates', backup: 'Archiviazione e backup', settings: 'Impostazioni', notifications: 'Notifiche' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
-const accountPages: ReadonlySet<Section> = new Set(['categories', 'backup', 'settings', 'notifications']);
+const accountPages: ReadonlySet<Section> = new Set(['categories', 'templates', 'backup', 'settings', 'notifications']);
 
 const startGateMs = 4000;
 
@@ -87,7 +89,7 @@ type DashboardSettingsProps = {
 };
 
 // `renderSettings` draws the settings page (preferences live in App); `onDone` returns to the originating section.
-type AccountPageProps = { categoriesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode;
+type AccountPageProps = { categoriesRequest?: number; templatesRequest?: number; backupRequest?: number; settingsRequest?: number; notificationsRequest?: number; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode;
   // Storage section of the backup page (where the data is, protection, mode change), drawn by the app for the current mode.
   storage?: ReactNode };
 
@@ -102,13 +104,14 @@ export function RemoteWorkspace({ uid, ...props }: { uid: string } & WorkspacePr
 
 // The workspace on any store (Firestore or this device). `scope` names the archive for the few browser-side
 // identifiers kept per archive (default fund, one-time default categories): the UID, or `local`.
-export function DataWorkspace({ backend, scope: uid, storageNote, topActions, onReleased, localArchive, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, renderSettings, storage }: { backend: DataStore; scope: string } & WorkspaceProps) {
+export function DataWorkspace({ backend, scope: uid, storageNote, topActions, onReleased, localArchive, dashboardPreferences, onChangeDashboardPreferences, categoriesRequest = 0, templatesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, renderSettings, storage }: { backend: DataStore; scope: string } & WorkspaceProps) {
   const local = backend.kind === 'local';
   const store = useRemoteExpenses(backend, storageNote);
   const categoryState = useRemoteCategories(backend);
   const fundState = useRemoteFunds(backend);
   const listState = useRemoteLists(backend);
   const merchantState = useRemoteMerchants(backend);
+  const templateState = useRemoteTemplates(backend);
   // The device archive needs no network: «online» only gates what waits for a server.
   const [browserOnline, setOnline] = useState(navigator.onLine);
   const online = local || browserOnline;
@@ -123,10 +126,11 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   const subscriptions = useMemo(() => subscriptionSummaries(store.expenses, today), [store.expenses, today]);
   // Merchants ranked by how often and how recently the expenses use them (suggestions of «Esercente»).
   const merchants = useMemo(() => rankMerchants(merchantState.merchants, store.expenses, today), [merchantState.merchants, store.expenses, today]);
-  // Lists and merchants count once loaded: a listener that fails (e.g. Rules not yet published) must not block expenses and funds.
-  const pending = Boolean(store.sync?.pending || categoryState.sync.pending || fundState.sync.pending || listState.sync.pending || merchantState.sync.pending);
+  // Lists, merchants and templates count once loaded: a listener that fails (e.g. Rules not yet published) must not block expenses and funds.
+  const pending = Boolean(store.sync?.pending || categoryState.sync.pending || fundState.sync.pending || listState.sync.pending || merchantState.sync.pending
+    || templateState.sync.pending);
   const cached = Boolean(store.sync?.fromCache || categoryState.sync.fromCache || fundState.sync.fromCache || (listState.ready && listState.sync.fromCache)
-    || (merchantState.ready && merchantState.sync.fromCache));
+    || (merchantState.ready && merchantState.sync.fromCache) || (templateState.ready && templateState.sync.fromCache));
   // Funds are part of the archive: the form waits for them too, so the fund field never appears late.
   const ready = store.ready && categoryState.ready && fundState.ready;
   const synchronized = ready && !pending && !cached && online;
@@ -146,14 +150,14 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   useEffect(() => { if (released) onReleased?.(); }, [released]);
   return <WorkspaceNavigation dashboardPreferences={dashboardPreferences} onChangeDashboardPreferences={onChangeDashboardPreferences}
     uid={uid} backend={backend} store={store} localArchive={localArchive} categoryState={categoryState} starting={!released}
-    listState={listState} occurrences={occurrences} subscriptions={subscriptions} merchants={merchants}
+    listState={listState} templateState={templateState} occurrences={occurrences} subscriptions={subscriptions} merchants={merchants}
     online={online} synchronized={synchronized} error={error} fundState={fundState} today={today}
-    renderSettings={renderSettings} storage={storage} settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} categoriesRequest={categoriesRequest}
+    renderSettings={renderSettings} storage={storage} settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest}
     backupRequest={backupRequest} topActions={topActions} status={status} />;
 }
 
 // Navigation is presentation state: switching pages does not rerun the remote hooks or recreate their store objects.
-function WorkspaceNavigation({ categoriesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, topActions, status, ...props }:
+function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, backupRequest = 0, settingsRequest = 0, notificationsRequest = 0, topActions, status, ...props }:
   Omit<SectionsProps, 'section' | 'onNavigate' | 'returnTo'> & AccountPageProps & {
     topActions?: ReactNode; status: ReturnType<typeof describeSync>;
   }) {
@@ -165,6 +169,7 @@ function WorkspaceNavigation({ categoriesRequest = 0, backupRequest = 0, setting
       returnTo: accountPages.has(next) && !accountPages.has(previous.section) ? previous.section : previous.returnTo }));
   }, []);
   useRequest(categoriesRequest, () => navigate('categories'));
+  useRequest(templatesRequest, () => navigate('templates'));
   useRequest(backupRequest, () => navigate('backup'));
   useRequest(settingsRequest, () => navigate('settings'));
   useRequest(notificationsRequest, () => navigate('notifications'));
@@ -220,14 +225,14 @@ function recoveryBackup(expenses: readonly ExpenseRecord[], categories: readonly
 
 type SectionsProps = DashboardSettingsProps & {
   uid: string; section: Section; onNavigate: (section: Section) => void; returnTo: Section; backend: DataStore; store: ExpenseStore;
-  listState: RemoteLists;
+  listState: RemoteLists; templateState: RemoteTemplates;
   categoryState: ReturnType<typeof useRemoteCategories>; occurrences: ReturnType<typeof expandOccurrences>;
   subscriptions: ReturnType<typeof subscriptionSummaries>; merchants: readonly RankedMerchant[];
   online: boolean; synchronized: boolean; error: string | null; starting: boolean;
   fundState: RemoteFunds; today: string; renderSettings?: (onDone: () => void, archiveSections?: ReactNode) => ReactNode; storage?: ReactNode; localArchive?: LocalArchive;
 };
 
-function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, backend, store, categoryState, occurrences, subscriptions, merchants, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
+function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, section, onNavigate, returnTo, listState, templateState, backend, store, categoryState, occurrences, subscriptions, merchants, online, synchronized, error, starting, fundState, today, renderSettings, storage, localArchive }: SectionsProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const notify = useSnackbar();
@@ -242,6 +247,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     [fundState.funds, fundState.movements, store.expenses, today]);
   const choiceOf = (item: (typeof fundSummary.funds)[number]): FundChoice => ({ fund: item.fund, remaining: item.remaining });
   const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary]);
+  const fundNames = useMemo(() => new Map(fundState.funds.map((fund) => [fund.id, fund.name])), [fundState.funds]);
   const editorFundChoices = editing ? fundSummary.funds.filter((item) => !item.fund.archived || item.fund.id === editing.fund_id).map(choiceOf) : [];
   const fundsError = fundState.ready ? null : fundState.error;
   // Releasing the startup cover after 4 seconds enables navigation, not incomplete form controls.
@@ -334,7 +340,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   return <>
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
     {section !== 'lists' && section !== 'settings' && <PageHeader title={heading}
-      action={section === 'categories' || section === 'backup' || section === 'notifications' ? (
+      action={section === 'categories' || section === 'templates' || section === 'backup' || section === 'notifications' ? (
         <DoneButton onPress={() => onNavigate(returnTo)} />
       ) : undefined} />}
     {!!store.recovery?.length && (
@@ -354,7 +360,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
       <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
         <ExpenseForm categories={categoryState.categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
-          defaultCategoryId={preferred.expense} store={formStore} merchants={merchants} />
+          defaultCategoryId={preferred.expense} store={formStore} merchants={merchants}
+          templates={dashboardPreferences.templatesEnabled ? templateState.templates : undefined} />
       </div>
     </View>
     <VisitedSection active={section === 'list' && !starting}>
@@ -394,6 +401,9 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       </>)}
     {section === 'notifications' && !starting && <NotificationsPage notifications={notifications} opened={opened} onCloseOpened={() => setOpened(null)} timeFormat={dashboardPreferences.timeFormat} timeZone={dashboardPreferences.timeZone}
       exporting={exporting} onExport={() => void exportFromReminder()} />}
+    {section === 'templates' && !starting && <TemplatesPage remote={templateState} categories={categoryState.categories} fundChoices={fundChoices}
+      fundNames={fundNames} merchants={merchants} enabled={dashboardPreferences.templatesEnabled}
+      onToggle={(templatesEnabled) => onChangeDashboardPreferences({ templatesEnabled })} />}
     {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}

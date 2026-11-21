@@ -127,7 +127,7 @@ test('AI: impostazioni dal browser validate, la chiave non ne fa mai parte', () 
   assert.deepEqual(parseAiSettings(JSON.stringify({ enabled: true })), { ...defaultAiSettings, enabled: true });
   // The removed OpenAI-compatible API reads as no service chosen (and off, for old settings).
   assert.deepEqual(parseAiSettings(JSON.stringify({ provider: 'compatible', model: 'llava', endpoint: 'http://localhost/v1', scan: 'ai' })), defaultAiSettings);
-  assert.deepEqual(aiProviders, ['openai', 'gemini', 'claude']);
+  assert.deepEqual(aiProviders, ['claude', 'openai', 'gemini']);
   assert.equal(aiSetupProblem(defaultAiSettings), 'Scegli il servizio AI nelle Impostazioni.');
   assert.equal(aiSetupProblem({ ...openai, model: '' }), 'Indica il modello da usare.');
   assert.equal(aiSetupProblem(openai), null);

@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native';
 import { Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from './AppDialog';
-import { Button } from './Button';
+import { CancelButton, ConfirmButton, dialogActionsRow } from './Button';
 import { leadingIcon } from './FieldIcon';
 import { expensePolicy, todayInRome } from '../domain/policy';
 import { inputOutline, radius, spacing } from '../theme/tokens';
@@ -75,10 +75,10 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
             </View>
           </ScrollView>
         </Dialog.ScrollArea>
-        <Dialog.Actions>
-          <Button onPress={onDismiss}>{t("Annulla")}</Button>
-          {/* «OK» is two letters: without a minimum the target was 37 dp wide, below the 48 dp touch size (17 November). */}
-          <Button disabled={picked < minDate || picked > maxDate} style={styles.ok} onPress={() => onConfirm(picked === today ? '' : picked)}>OK</Button>
+        <Dialog.Actions style={dialogActionsRow}>
+          <CancelButton onPress={onDismiss}>{t("Annulla")}</CancelButton>
+          {/* «OK» is two letters: the shared minimum width keeps it a full-size target (17 November: it was 37 dp wide). */}
+          <ConfirmButton disabled={picked < minDate || picked > maxDate} onPress={() => onConfirm(picked === today ? '' : picked)}>OK</ConfirmButton>
         </Dialog.Actions>
       </Dialog>
     </Portal>
@@ -134,7 +134,6 @@ function Calendar({ selected, month, minDate, maxDate, onMonth, onPick }: { sele
 
 const styles = StyleSheet.create({
   // Material 3 minimum width of a text button.
-  ok: { minWidth: 64 },
   field: { borderRadius: radius.input },
   dialog: { maxWidth: 360 },
   scrollArea: { minHeight: 0, paddingHorizontal: 0, marginTop: 0, marginBottom: 0 },

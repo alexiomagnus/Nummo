@@ -8,7 +8,7 @@ stesso archivio senza conflitti tra loro.
 ## Casi limite (backup v5)
 
 File: [`nummo-test-casi-limite-2026-11-08.json`](nummo-test-casi-limite-2026-11-08.json).
-Dati interamente fittizi, formato storico `nummo-backup` **v5**, leggibile dal client corrente (backup v10):
+Dati interamente fittizi, formato storico `nummo-backup` **v5**, leggibile dal client corrente (backup v11):
 89 spese/serie, 15 categorie, 6 fondi, 2 movimenti, 4 liste con 112 prodotti. Circa 76 kB.
 Non è compatibile con versioni dell’app che leggono solo backup v1/v2/v3.
 
@@ -138,14 +138,14 @@ Valori calcolati con il dominio al **20 novembre 2026**, su archivio contenente 
 3. Eliminare un altro pagamento della `V9 Lavanderia`: rifiutato con «Troppi pagamenti eliminati per questo abbonamento: per
    continuare creane uno nuovo.», nessuna modifica. Eliminare invece il pagamento del 15 novembre di `V9 Streaming`: il totale
    di novembre scende di 12,99 € in Spese, Analisi e Fondi; una nuova unione del file segnala ora il conflitto su quella serie.
-4. Esportare il JSON: il file è v10 con gli stessi `skipped_payments` (array); il CSV ha una riga per pagamento rimasto, senza
+4. Esportare il JSON: il file è v11 (dal 21 novembre; v10 prima) con gli stessi `skipped_payments` (array); il CSV ha una riga per pagamento rimasto, senza
    le date eliminate.
 5. In Avanzata (demo/emulatore) l'importazione deve riuscire anche per la Lavanderia: i suoi 60 numeri (il massimo) diventano
    una stringa compatta controllata dalle Rules.
 
 ## Esercenti (backup v10)
 
-File: [`nummo-esercenti-v10.json`](nummo-esercenti-v10.json), backup **v10** (formato attuale), dati fittizi, circa 17 kB.
+File: [`nummo-esercenti-v10.json`](nummo-esercenti-v10.json), backup **v10** (formato attuale fino al 21 novembre, poi v11 con i template), dati fittizi, circa 17 kB.
 27 spese `V10` (26 singole e la serie `V10 Netflix`), 5 categorie `V10 ·`, nessun fondo, **12 esercenti**, di cui uno mai usato.
 `V10 Lampadine` è l'unica spesa senza esercente. La serie Netflix ha anche un pagamento eliminato (18 agosto, n. 2): 5 pagamenti,
 69,95 €.

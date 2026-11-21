@@ -6,7 +6,8 @@ import type { Category } from './category.ts';
 
 // The «API compatibile OpenAI» provider and the local OCR were removed on 21 November (user's request): a saved
 // `compatible` provider reads as no provider chosen, and its key (kept by destination) is simply never used again.
-export const aiProviders = ['openai', 'gemini', 'claude'] as const;
+// Order of the Settings choices (user's request, 21 November): Claude, OpenAI (ChatGPT), Gemini.
+export const aiProviders = ['claude', 'openai', 'gemini'] as const;
 export type AiProvider = (typeof aiProviders)[number];
 export const aiProviderLabels: Readonly<Record<AiProvider, string>> = { openai: 'OpenAI', gemini: 'Google Gemini', claude: 'Claude' };
 

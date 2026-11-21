@@ -195,6 +195,20 @@ service cloud.firestore {
         && (d.expense_id == null || uuid(d.expense_id))
         && d.created_at is timestamp && d.created_at <= request.time && d.updated_at == request.time;
     }
+    // Template of «Nuova spesa» (mirrors parseTemplateData in src/domain/template.ts): amount (optional), date, description,
+    // merchant name (optional; absent in templates saved before 21 November 2026), category and fund. No repeat; plain
+    // writes, last wins. Reintroduced on 21 November 2026.
+    function template(d) {
+      return d.keys().hasAll(['description', 'amount_minor', 'date', 'category_id', 'fund_id', 'created_at', 'updated_at'])
+        && d.keys().hasOnly(['description', 'amount_minor', 'date', 'category_id', 'fund_id', 'merchant', 'created_at', 'updated_at'])
+        && d.description is string && d.description.size() > 0 && d.description.size() <= 100 && d.description == d.description.trim() && !d.description.matches('.*[\\t\\r\\n].*')
+        && (d.amount_minor == null || (d.amount_minor is int && d.amount_minor > 0 && d.amount_minor <= 9999999))
+        && d.date is string && d.date.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') && validDate(d.date) && d.date >= '2000-01-01' && d.date <= '2099-12-31'
+        && uuid(d.category_id) && (d.fund_id == null || uuid(d.fund_id))
+        && (!('merchant' in d) || d.merchant == null || (d.merchant is string && d.merchant.size() > 0 && d.merchant.size() <= 60
+          && d.merchant == d.merchant.trim() && !d.merchant.matches('.*[\\t\\r\\n].*') && !d.merchant.matches('.*  .*')))
+        && d.created_at is timestamp && d.created_at <= request.time && d.updated_at == request.time;
+    }
     // Product of a list: one small document, so ticking it is a single write the SDK can queue offline.
     function listItem(d) {
       return d.keys().hasAll(['list_id', 'name', 'checked', 'position']) && d.keys().hasOnly(['list_id', 'name', 'checked', 'position'])
@@ -264,6 +278,12 @@ service cloud.firestore {
       allow read: if owner(uid);
       allow create: if owner(uid) && uuid(id) && listItem(request.resource.data);
       allow update: if owner(uid) && listItem(request.resource.data) && request.resource.data.list_id == resource.data.list_id;
+      allow delete: if owner(uid);
+    }
+    match /users/{uid}/templates/{id} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && uuid(id) && template(request.resource.data);
+      allow update: if owner(uid) && template(request.resource.data) && request.resource.data.created_at == resource.data.created_at;
       allow delete: if owner(uid);
     }
     match /users/{uid}/categoryNames/{key} {

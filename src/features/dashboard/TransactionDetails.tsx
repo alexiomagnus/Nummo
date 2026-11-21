@@ -1,17 +1,24 @@
-import { ScrollView, StyleSheet } from 'react-native';
-import { Portal, Text } from 'react-native-paper';
+import { useMemo } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog } from '../../components/AppDialog';
 import { Button } from '../../components/Button';
 import { ListRow } from '../../components/ListRow';
 import type { Category } from '../../domain/category';
+import type { Fund } from '../../domain/funds';
+import { FundAvatar } from '../funds/FundAvatar';
 import type { Occurrence } from '../../domain/history';
 import { useI18n } from '../../i18n/I18nProvider';
+import { spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 
-export function TransactionDetails({ title, items, categories, onClose }: {
-  title: string; items: readonly Occurrence[]; categories: readonly Category[]; onClose: () => void;
+// `funds` (archived included): a row whose expense has a fund shows its avatar and name after the category.
+export function TransactionDetails({ title, items, categories, funds = [], onClose }: {
+  title: string; items: readonly Occurrence[]; categories: readonly Category[]; funds?: readonly Fund[]; onClose: () => void;
 }) {
   const { t, formatAmount, formatDate } = useI18n();
+  const { colors } = useTheme();
+  const fundById = useMemo(() => new Map(funds.map((fund) => [fund.id, fund])), [funds]);
   const compact = useSizeClass() === 'compact';
   return <Portal><AppDialog visible onDismiss={onClose}>
     <AppDialog.Title>{title}</AppDialog.Title>
@@ -23,8 +30,17 @@ export function TransactionDetails({ title, items, categories, onClose }: {
       {[...items].sort((a, b) => b.date.localeCompare(a.date) || a.key.localeCompare(b.key)).map((item, index) => {
         const category = categories.find(category => category.id === item.category_id);
         const amount = <Text style={{ fontVariant: ['tabular-nums'] }}>{formatAmount(item.amount_minor)}</Text>;
+        const fund = fundById.get(item.fund_id ?? '');
+        // Date, then the category in another colour (user's request, 21 November), then the fund with its avatar: on one
+        // line from medium; on phones the fund has a line of its own under date and category.
+        const categoryName = <Text variant="labelMedium" numberOfLines={1} style={[styles.shrink, { color: colors.primary }]}>{category?.label ?? t('Senza categoria')}</Text>;
+        const fundMark = fund && <View style={[styles.fund, compact && styles.fundBelow]}>
+          <FundAvatar fund={fund} size={16} />
+          <Text variant="labelMedium" numberOfLines={1} style={[styles.shrink, { color: colors.onSurfaceVariant }]}>{fund.name}</Text>
+        </View>;
+        const extra = compact ? categoryName : <View style={styles.extra}>{categoryName}{fundMark}</View>;
         return <ListRow key={item.key} divider={index < items.length - 1} icon={category?.icon ?? null} title={item.description}
-          subtitle={formatDate(item.date) + ' · ' + (category?.label ?? t('Senza categoria'))}
+          subtitle={formatDate(item.date)} subtitleExtra={extra} subtitleBelow={compact ? fundMark : undefined}
           meta={compact ? amount : undefined} trailing={compact ? undefined : amount} />;
       })}
     </ScrollView></AppDialog.ScrollArea>
@@ -38,4 +54,8 @@ const styles = StyleSheet.create({
   // The only action: a little larger than a standard text button (16/600 label, like «Salva»).
   close: { minWidth: 96 },
   closeLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
+  extra: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1, minWidth: 0 },
+  fund: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
+  fundBelow: { marginTop: 2 },
+  shrink: { flexShrink: 1, minWidth: 0 },
 });

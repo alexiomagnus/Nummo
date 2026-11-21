@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { Button, CancelButton, ConfirmButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
@@ -131,11 +131,11 @@ function DisconnectDialog({ visible, project, onDismiss, onConfirm }: { visible:
   const title = t("Scollegare il progetto?");
   return (
     <DialogFrame visible={visible} title={title} label={title} onDismiss={() => { if (!busy) { setError(null); onDismiss(); } }} actions={<>
-      <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={() => { setError(null); onDismiss(); }}>{t("Annulla")}</Button>
-      <Button mode="contained" disabled={busy} loading={busy} contentStyle={styles.button} onPress={() => {
+      <CancelButton disabled={busy} onPress={() => { setError(null); onDismiss(); }}>{t("Annulla")}</CancelButton>
+      <ConfirmButton disabled={busy} loading={busy} onPress={() => {
         setBusy(true); setError(null);
         void onConfirm().then((failure) => { if (failure) { setError(failure); setBusy(false); } });
-      }}>{t("Scollega")}</Button>
+      }}>{t("Scollega")}</ConfirmButton>
     </>}>
       <Text variant="bodyMedium">{t("Esci e questo browser torna al progetto Firebase del sito. I dati restano nel tuo progetto {p0}: puoi ricollegarlo quando vuoi.", { p0: project })}</Text>
       {error && <Text variant="bodySmall" accessibilityRole="alert" style={{ color: colors.error }}>{t(error)}</Text>}
@@ -151,9 +151,9 @@ function ChangeModeDialog({ visible, target, onDismiss, onConfirm }: { visible: 
   const title = target === 'advanced' ? t("Passare alla modalità Avanzata?") : t("Passare alla modalità Standard?");
   return (
     <DialogFrame visible={visible} title={title} label={title} onDismiss={onDismiss} actions={<>
-      <Button mode="outlined" contentStyle={styles.button} onPress={onDismiss}>{t("Annulla")}</Button>
+      <CancelButton onPress={onDismiss}>{t("Annulla")}</CancelButton>
       {/* Same warning colours as a deletion: switching archive is not something to do lightly. */}
-      <Button mode="contained" buttonColor={colors.error} textColor={colors.onError} contentStyle={styles.button} onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</Button>
+      <ConfirmButton buttonColor={colors.error} textColor={colors.onError} onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</ConfirmButton>
     </>}>
       <Text variant="bodyMedium" style={muted}>{target === 'advanced'
         ? t("I dati salvati su questo dispositivo restano qui e non vengono copiati nel progetto Firebase: li ritrovi tornando alla modalità Standard.")
@@ -177,7 +177,6 @@ const styles = StyleSheet.create({
   container: { flexShrink: 1, minHeight: 0 },
   scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0 },
   dialogBody: { paddingHorizontal: spacing.xl, gap: spacing.md },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
-  button: { paddingHorizontal: spacing.xs, minHeight: 40 },
 });

@@ -103,7 +103,7 @@ Due strade:
 ## Funzionalità
 
 - **Scansione dello scontrino** in Nuova spesa, facoltativa e spenta di base: si attiva in Impostazioni («Analisi scontrini con AI»),
-  dove si scelgono il servizio (OpenAI, Google Gemini o Claude), la chiave API personale e il modello; finché è spenta il pulsante
+  dove si scelgono il servizio (Claude, OpenAI o Google Gemini), la chiave API personale e il modello; finché è spenta il pulsante
   «Scansiona scontrino» non compare. L'AI propone importo, data, descrizione, esercente e categoria da controllare prima di salvare.
   La chiave resta salvata solo in questo browser (una per servizio) e la foto viene inviata al servizio scelto solo dopo il consenso.
   Nessuna lettura sul dispositivo (OCR rimosso il 21 novembre 2026).
@@ -111,8 +111,9 @@ Due strade:
 - **Abbonamenti** settimanali, mensili e annuali, con prove gratuite, variazioni di prezzo, pausa/annullamento e cambi di frequenza futuri che conservano i pagamenti maturati.
 - **Categorie** personalizzabili, con 39 icone selezionabili in tre stili, e **Analisi** con totali e grafici.
 - **Fondi e budget** facoltativi: un fondo è un gruppo di spese (nome, colore, icona) con ricarica mensile e budget mensile facoltativi; la pagina Fondi mostra la spesa del mese e i budget, «Aggiungi»/«Trasferisci» per i fondi con saldo e, aprendo un fondo, solo i totali del mese (aggiunte, trasferimenti, ricariche, speso). Nessuna cifra di saldo mostrata.
+- **Templates** (facoltativi, dal menu account): spese già pronte (descrizione, importo facoltativo, data, esercente, categoria e fondo) da scegliere nel campo «Template» di Nuova spesa per compilarla in un attimo. Spenti di base; si attivano nella pagina Templates. Inclusi nel backup (versione 11).
 - **Liste della spesa** con checklist, totale manuale e registrazione di una sola spesa per acquisto.
-- **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice, con le colonne finali «Fondo» ed «Esercente») e backup JSON v10, unico formato di ripristino, con lettori delle versioni precedenti.
+- **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice, con le colonne finali «Fondo» ed «Esercente») e backup JSON v11 (con i template), unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata

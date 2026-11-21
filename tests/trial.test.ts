@@ -102,7 +102,7 @@ test('prova: modifica prima dell’addebito cambia il prezzo base, dopo conserva
 test('prova: backup (v5+), round trip, conflitti e lettori storici senza migrazioni implicite', () => {
   const e = trial();
   const file = JSON.parse(makeBackup({ expenses: [e], categories: [] }));
-  assert.equal(file.version, 10);
+  assert.equal(file.version, 11);
   assert.deepEqual(parseBackup({ ...file, version: 5 }).expenses[0], e);
   const restored = parseBackup(file);
   assert.deepEqual(restored.expenses[0], e);

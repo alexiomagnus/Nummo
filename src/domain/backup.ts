@@ -7,13 +7,16 @@ import { todayInRome } from './policy.ts';
 import { parseListRecord, sameListRecord, sortItems, type ShoppingListRecord } from './shoppingList.ts';
 import { recurrenceLabels } from './recurrence.ts';
 import { parseMerchant, type Merchant } from './merchant.ts';
+import { parseTemplate, sameTemplate, type TemplateRecord } from './template.ts';
 
 // Two distinct outputs:
 // - CSV: a read-only table of the spending (one row per occurrence up to today) for spreadsheets. Never imported.
 // - JSON: the only backup/restore format, versioned so that later schema changes can migrate older files.
 
 // `budget`: the general monthly budget schedule (issue #7); absent or empty = none. `merchants`: absent or empty = none.
-export type ImportData = { expenses: ExpenseRecord[]; categories: Category[]; funds: Fund[]; movements: Movement[]; lists: ShoppingListRecord[]; budget?: BudgetChange[]; merchants?: Merchant[] };
+// `templates`: presets of «Nuova spesa» (v7, then again from v11); absent or empty = none.
+export type ImportData = { expenses: ExpenseRecord[]; categories: Category[]; funds: Fund[]; movements: Movement[]; lists: ShoppingListRecord[]; budget?: BudgetChange[]; merchants?: Merchant[];
+  templates?: TemplateRecord[] };
 
 export const backupFormat = 'nummo-backup';
 // Bump when the file shape changes and add a reader for the old number to `readers`.
@@ -26,13 +29,15 @@ export const backupFormat = 'nummo-backup';
 // files have none and the `templates` of a v7 file are ignored on import (nothing else in the file depends on them).
 // v9 adds `skipped_payments` (payments of a subscription removed by hand); older files have none.
 // v10 adds `merchants` and the expenses' `merchant_id`; older files have no merchants (every expense without one).
-export const backupVersion = 10;
+// v11 brings `templates` back (reintroduced on 21 November 2026), now with an optional `merchant` name. The `templates` of a
+// v7 file are read again (without merchant); v8–v10 files have none.
+export const backupVersion = 11;
 
 // --- JSON backup -----------------------------------------------------------------------------
 
 // Only what a restore needs: no Firestore bookkeeping (revision, updated_at, name_key), no account or
 // project identifiers. Output is deterministic (sorted) so that two exports of the same data are equal.
-export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[]; budget?: readonly BudgetChange[]; merchants?: readonly Merchant[] }, now = new Date()): string {
+export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[]; budget?: readonly BudgetChange[]; merchants?: readonly Merchant[]; templates?: readonly TemplateRecord[] }, now = new Date()): string {
   const expenses = data.expenses.map((e) => ({
     id: e.id, amount_minor: e.amount_minor, currency: e.currency, description: e.description, category_id: e.category_id,
     expense_date: e.expense_date, recurrence: e.recurrence, price_changes: e.price_changes.map((c) => ({ index: c.index, amount_minor: c.amount_minor, once: c.once })),
@@ -60,12 +65,16 @@ export function makeBackup(data: { expenses: readonly ExpenseRecord[]; categorie
   })).sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
   const general_budget = (data.budget ?? []).map((c) => ({ month: c.month, amount_minor: c.amount_minor }));
   const merchants = (data.merchants ?? []).map((m) => ({ id: m.id, name: m.name })).sort((a, b) => a.id.localeCompare(b.id));
+  const templates = (data.templates ?? []).map((x) => ({
+    id: x.id, description: x.description, amount_minor: x.amount_minor, date: x.date, category_id: x.category_id, fund_id: x.fund_id,
+    ...(x.merchant ? { merchant: x.merchant } : {}), created_at: x.created_at,
+  })).sort((a, b) => a.description.localeCompare(b.description) || a.id.localeCompare(b.id));
   return JSON.stringify({ format: backupFormat, version: backupVersion, exported_at: now.toISOString(), categories, funds, movements, lists,
-    ...(merchants.length ? { merchants } : {}), ...(general_budget.length ? { general_budget } : {}), expenses }, null, 2);
+    ...(merchants.length ? { merchants } : {}), ...(templates.length ? { templates } : {}), ...(general_budget.length ? { general_budget } : {}), expenses }, null, 2);
 }
 
 // Strict validation of the body shared by the file reader and the store. Anything invalid rejects the whole file.
-export function validateBackupData(rawExpenses: unknown, rawCategories: unknown, rawFunds: unknown = [], rawMovements: unknown = [], rawLists: unknown = [], rawBudget: unknown = undefined, rawMerchants: unknown = []): ImportData {
+export function validateBackupData(rawExpenses: unknown, rawCategories: unknown, rawFunds: unknown = [], rawMovements: unknown = [], rawLists: unknown = [], rawBudget: unknown = undefined, rawMerchants: unknown = [], rawTemplates: unknown = []): ImportData {
   if (!Array.isArray(rawExpenses) || !Array.isArray(rawCategories) || !Array.isArray(rawFunds) || !Array.isArray(rawMovements) || !Array.isArray(rawLists)
     || !Array.isArray(rawMerchants)) throw new Error('Formato backup non riconosciuto.');
   // One merchant per key (the ID is the key of the name): a second spelling of the same name would be a duplicate.
@@ -74,6 +83,13 @@ export function validateBackupData(rawExpenses: unknown, rawCategories: unknown,
     const merchant = parseMerchant(item);
     if (!merchant || merchants.some((m) => m.id === merchant.id)) throw new Error('Esercenti nel backup non validi o duplicati.');
     merchants.push(merchant);
+  }
+  if (!Array.isArray(rawTemplates)) throw new Error('Template nel backup non validi o duplicati.');
+  const templates: TemplateRecord[] = [];
+  for (const item of rawTemplates) {
+    const template = parseTemplate(item);
+    if (!template || templates.some((x) => x.id === template.id) || template.date > todayInRome() || Date.parse(template.created_at) > Date.now()) throw new Error('Template nel backup non validi o duplicati.');
+    templates.push({ ...template, created_at: new Date(template.created_at).toISOString() });
   }
   const lists: ShoppingListRecord[] = [];
   const itemIds = new Set<string>();
@@ -118,7 +134,7 @@ export function validateBackupData(rawExpenses: unknown, rawCategories: unknown,
   }
   const budget = rawBudget === undefined ? [] : parseBudgets(rawBudget);
   if (!budget) throw new Error('Budget mensile nel backup non valido.');
-  return { expenses, categories, funds, movements, lists, ...(budget.length ? { budget } : {}), ...(merchants.length ? { merchants } : {}) };
+  return { expenses, categories, funds, movements, lists, ...(budget.length ? { budget } : {}), ...(merchants.length ? { merchants } : {}), ...(templates.length ? { templates } : {}) };
 }
 
 // One reader per supported version; each returns the current in-memory shape.
@@ -133,13 +149,16 @@ const readers: Record<number, (file: Record<string, unknown>) => ImportData> = {
   5: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists),
   // v6: frequency switches of subscriptions (`calendar_changes`, schema_version 3); older expenses have none.
   6: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
-  // v7: its `templates` are ignored (templates no longer exist); v8 is v7 without them.
-  7: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
+  // v7: templates of «Nuova spesa» (without merchant). Ignored by Nummo between 16 and 21 November 2026, read again since.
+  7: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget, [], file.templates ?? []),
+  // v8–v10 were written while templates did not exist: they have none (a `templates` field there is ignored).
   8: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
   // v9: payments removed by hand (`skipped_payments`); older expenses have none.
   9: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget),
   // v10: merchants and the expenses' `merchant_id`.
   10: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget, file.merchants ?? []),
+  // v11: templates again, with an optional merchant name.
+  11: (file) => validateBackupData(file.expenses, file.categories, file.funds, file.movements, file.lists, file.general_budget, file.merchants ?? [], file.templates ?? []),
 };
 
 export function parseBackup(value: unknown): ImportData {
@@ -155,6 +174,8 @@ export function parseBackup(value: unknown): ImportData {
   if (file.version < 10 && ('merchants' in file || (Array.isArray(file.expenses) && file.expenses.some((e: unknown) => e && typeof e === 'object' && 'merchant_id' in e))))
     throw new Error('Gli esercenti richiedono un backup versione 10 o successiva.');
   if (file.version < 6 && 'general_budget' in file) throw new Error('Il budget mensile generale richiede un backup versione 6 o successiva.');
+  if (file.version < 11 && Array.isArray(file.templates) && file.templates.some((x: unknown) => x && typeof x === 'object' && 'merchant' in x))
+    throw new Error('L’esercente nei template richiede un backup versione 11 o successiva.');
   const reader = readers[file.version];
   if (!reader) throw new Error('Versione del backup non supportata.');
   return reader(file);
@@ -163,7 +184,7 @@ export function parseBackup(value: unknown): ImportData {
 // --- Import planning (pure; used for the preview and again by the store before writing) -----------
 
 export type ImportMode = 'merge' | 'replace';
-export type ImportConflict = Readonly<{ kind: 'expense' | 'category' | 'fund' | 'movement' | 'list' | 'budget'; id: string; label: string }>;
+export type ImportConflict = Readonly<{ kind: 'expense' | 'category' | 'fund' | 'movement' | 'list' | 'budget' | 'template'; id: string; label: string }>;
 export type ImportPlan = Readonly<{
   mode: ImportMode;
   addExpenses: ExpenseRecord[];
@@ -171,6 +192,7 @@ export type ImportPlan = Readonly<{
   addFunds: Fund[];
   addMovements: Movement[];
   addLists: ShoppingListRecord[];
+  addTemplates: TemplateRecord[];
   // Merchants to write: new IDs (merge and replace), and in a replace those whose name differs from the file.
   addMerchants: Merchant[];
   sameMerchants: number;
@@ -184,12 +206,14 @@ export type ImportPlan = Readonly<{
   sameFunds: number;
   sameMovements: number;
   sameLists: number;
+  sameTemplates: number;
   // 'replace' only: saved items that are not identical to a file item.
   removeExpenseIds: string[];
   removeCategoryIds: string[];
   removeFundIds: string[];
   removeMovementIds: string[];
   removeListIds: string[];
+  removeTemplateIds: string[];
   // 'merge' only: same ID (or same category name) with different content. Any conflict blocks the merge.
   conflicts: ImportConflict[];
   // Categories after the import ('merge' can exceed the application limit).
@@ -236,8 +260,8 @@ function planById<T extends { id: string }>(file: readonly T[], saved: readonly 
   return { add, identical, conflicts, remove };
 }
 
-export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & Partial<Pick<ImportData, 'funds' | 'movements' | 'lists' | 'budget' | 'merchants'>>,
-  current: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[]; budget?: readonly BudgetChange[]; merchants?: readonly Merchant[] }, mode: ImportMode): ImportPlan {
+export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & Partial<Pick<ImportData, 'funds' | 'movements' | 'lists' | 'budget' | 'merchants' | 'templates'>>,
+  current: { expenses: readonly ExpenseRecord[]; categories: readonly Category[]; funds?: readonly Fund[]; movements?: readonly Movement[]; lists?: readonly ShoppingListRecord[]; budget?: readonly BudgetChange[]; merchants?: readonly Merchant[]; templates?: readonly TemplateRecord[] }, mode: ImportMode): ImportPlan {
   // Merchants are identified by their name key: the same merchant in the file and in the archive is never a conflict. A
   // merge keeps the saved spelling of the name; a replace makes it equal to the file.
   const savedMerchants = new Map((current.merchants ?? []).map((m) => [m.id, m]));
@@ -253,6 +277,7 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
   }
   const movements = planById(data.movements ?? [], current.movements ?? [], sameMovement, mode, (m) => m.note, 'movement');
   const lists = planById(data.lists ?? [], current.lists ?? [], sameListRecord, mode, (l) => l.name, 'list');
+  const templates = planById(data.templates ?? [], current.templates ?? [], sameTemplate, mode, (x) => x.description, 'template');
   // The general budget never overwrites a different saved one in a merge; a replace makes it equal to the file.
   const fileBudget = data.budget ?? [];
   const savedBudget = current.budget ?? [];
@@ -294,11 +319,11 @@ export function planImport(data: Pick<ImportData, 'expenses' | 'categories'> & P
   const finalCategories = new Set(mode === 'replace' ? fileCategories.keys() : [...savedCategories.keys(), ...fileCategories.keys()]);
   const finalFunds = new Set(mode === 'replace' ? fileFunds.map((f) => f.id) : [...(current.funds ?? []).map((f) => f.id), ...fileFunds.map((f) => f.id)]);
   return {
-    mode, addExpenses, addCategories, addFunds: funds.add, addMovements: movements.add, addLists: lists.add, setBudget,
+    mode, addExpenses, addCategories, addFunds: funds.add, addMovements: movements.add, addLists: lists.add, addTemplates: templates.add, setBudget,
     addMerchants, sameMerchants: fileMerchants.length - addMerchants.length, removeMerchantIds,
-    sameExpenses, sameCategories, sameFunds: funds.identical, sameMovements: movements.identical, sameLists: lists.identical,
-    removeExpenseIds, removeCategoryIds, removeFundIds: funds.remove, removeMovementIds: movements.remove, removeListIds: lists.remove,
-    conflicts: [...conflicts, ...funds.conflicts, ...movements.conflicts, ...lists.conflicts, ...budgetConflicts],
+    sameExpenses, sameCategories, sameFunds: funds.identical, sameMovements: movements.identical, sameLists: lists.identical, sameTemplates: templates.identical,
+    removeExpenseIds, removeCategoryIds, removeFundIds: funds.remove, removeMovementIds: movements.remove, removeListIds: lists.remove, removeTemplateIds: templates.remove,
+    conflicts: [...conflicts, ...funds.conflicts, ...movements.conflicts, ...lists.conflicts, ...templates.conflicts, ...budgetConflicts],
     categoryTotal: finalCategories.size,
     missingCategoryReferences: data.expenses.filter((e) => e.category_id !== null && !finalCategories.has(e.category_id)).length,
     missingFundReferences: data.expenses.filter((e) => e.fund_id && !finalFunds.has(e.fund_id)).length

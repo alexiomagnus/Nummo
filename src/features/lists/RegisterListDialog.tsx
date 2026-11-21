@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { SwitchRow } from '../../components/SwitchRow';
 import type { Category } from '../../domain/category';
 import { newDraft, validateDraft, type ExpenseData, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
@@ -81,9 +81,9 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
       {attempted && error && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
         {t("Puoi riprovare: se la spesa era già stata salvata non verrà duplicata.")}</Text>}
     </ScrollView></Dialog.ScrollArea>
-    <Dialog.Actions style={styles.actions}>
-      <Button disabled={busy} onPress={close}>{t("Annulla")}</Button>
-      <Button mode="contained" disabled={busy || !canRegister} loading={busy} onPress={() => void register()}>{attempted && error ? t("Riprova") : t("Registra")}</Button>
+    <Dialog.Actions style={[styles.actions, dialogActionsRow]}>
+      <CancelButton disabled={busy} onPress={close}>{t("Annulla")}</CancelButton>
+      <ConfirmButton disabled={busy || !canRegister} loading={busy} onPress={() => void register()}>{attempted && error ? t("Riprova") : t("Registra")}</ConfirmButton>
     </Dialog.Actions>
   </Dialog></Portal>;
 }

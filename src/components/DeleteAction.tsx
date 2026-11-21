@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from './AppDialog';
-import { Button } from './Button';
+import { Button, CancelButton, ConfirmButton } from './Button';
 import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -42,10 +42,10 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
             </ScrollView>
           </Dialog.ScrollArea>
           <View style={[styles.actions, compact && styles.actionsCompact]}>
-            <Button mode="outlined" disabled={busy} contentStyle={styles.button} onPress={onDismiss}>{t("Annulla")}</Button>
-            <Button mode="contained" buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy} contentStyle={styles.button}
+            <CancelButton disabled={busy} onPress={onDismiss}>{t("Annulla")}</CancelButton>
+            <ConfirmButton buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy}
               accessibilityLabel={confirmLabel ?? t("Conferma eliminazione di {p0}", { p0: name })}
-              onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{confirmLabel ?? t("Elimina")}</Button>
+              onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{confirmLabel ?? t("Elimina")}</ConfirmButton>
           </View>
         </View>
       </Dialog>
@@ -59,9 +59,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl },
   title: { flex: 1 },
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
-  button: { paddingHorizontal: spacing.xs, minHeight: 40 },
 });
 
 // Trash icon first, explicit confirmation dialog second. The action seen when the dialog

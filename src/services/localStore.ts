@@ -9,13 +9,14 @@ import { parseExpenseRequest, sameFieldValue, type ExpenseRecord } from '../doma
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import {
   categoryNameKey, parseSyncedBudget, parseSyncedCategory, parseSyncedExpense, parseSyncedFund, parseSyncedList, parseSyncedListItem,
-  parseSyncedMovement, type SyncedBudget, type SyncedCategory, type SyncedExpense, type SyncedFund, type SyncedList, type SyncedListItem, type SyncedMovement,
+  parseSyncedMovement, parseSyncedTemplate, type SyncedBudget, type SyncedCategory, type SyncedExpense, type SyncedFund, type SyncedList, type SyncedListItem, type SyncedMovement,
 } from '../domain/firestore.ts';
 import { parseFundData, parseMovementData, type BudgetChange, type Fund, type FundData, type Movement, type MovementData } from '../domain/funds.ts';
 import { todayInRome } from '../domain/policy.ts';
 import { itemNameError, listNameError, normalizeListText, parseListData, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 import { trialTimingError } from '../domain/trial.ts';
 import { parseMerchant, type Merchant } from '../domain/merchant.ts';
+import { parseTemplateData, templateFields, type TemplateRecord } from '../domain/template.ts';
 import { checkNewMerchant, invalidArchive, listRecords, type DataStore } from './dataStore.ts';
 import type { LocalDatabase, LocalRow, LocalStoreName, LocalTx } from './localDatabase.ts';
 
@@ -120,13 +121,13 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     return budget;
   };
   async function readArchive(tx: LocalTx) {
-    const [e, c, f, m, l, i, b, s] = [await tx.getAll('expenses'), await tx.getAll('categories'), await tx.getAll('funds'), await tx.getAll('movements'),
-      await tx.getAll('lists'), await tx.getAll('listItems'), await tx.get('settings', budgetId), await tx.getAll('merchants')];
+    const [e, c, f, m, l, i, b, s, x] = [await tx.getAll('expenses'), await tx.getAll('categories'), await tx.getAll('funds'), await tx.getAll('movements'),
+      await tx.getAll('lists'), await tx.getAll('listItems'), await tx.get('settings', budgetId), await tx.getAll('merchants'), await tx.getAll('templates')];
     const lists = parseAll(l, parseSyncedList);
     const items = parseAll(i, parseSyncedListItem);
     return { expenses: parseAll(e, parseSyncedExpense), categories: parseAll(c, parseSyncedCategory), funds: parseAll(f, parseSyncedFund),
       movements: parseAll(m, parseSyncedMovement), lists: listRecords(lists, items), items, budgetRecord: readBudget(b), budget: readBudget(b)?.budgets ?? [],
-      merchants: parseAll(s, parseMerchant) };
+      merchants: parseAll(s, parseMerchant), templates: parseAll(x, parseSyncedTemplate) };
   }
   // The merchant of an expense being written: a new one is created (an existing one keeps its name), a named one must exist.
   async function putMerchant(tx: LocalTx, merchantId: string | null, created: Merchant | null) {
@@ -152,6 +153,7 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     watchLists: watch('lists', parseSyncedList),
     watchListItems: watch('listItems', parseSyncedListItem),
     watchMerchants: watch('merchants', parseMerchant),
+    watchTemplates: watch('templates', parseSyncedTemplate),
     watchBudget: (next, error) => subscribe('settings', (rows) => next({ budget: readBudget(rows.find((row) => row.id === budgetId)), fromCache: false, pending: false }), error),
 
     async confirmExpense(request) {
@@ -331,6 +333,20 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     removeListItem(item) {
       queued(['listItems'], async (tx) => { tx.delete('listItems', item.id); });
     },
+    // Templates: plain writes like the checklist; an edit keeps the creation time (also of a template saved before the
+    // 16 November removal, still in its store).
+    saveTemplate(id, data, previous) {
+      const fields = templateFields(data);
+      if (!parseTemplateData({ ...fields })) throw new Error('Template non valido.');
+      queued(['templates'], async (tx) => {
+        const current = await tx.get('templates', id);
+        const time = now();
+        tx.put('templates', { id, ...fields, created_at: typeof current?.created_at === 'string' ? current.created_at : previous?.created_at ?? time, updated_at: time });
+      });
+    },
+    removeTemplate(template) {
+      queued(['templates'], async (tx) => { tx.delete('templates', template.id); });
+    },
     // ONE write creates the expense and archives the list. Repeating it finds the same expense and does nothing; a list
     // already registered is refused, so a purchase is never counted twice.
     async registerList(list, expenseId, data, remember = false) {
@@ -355,8 +371,8 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
 
     async exportSnapshot() {
       await queue;
-      const { expenses, categories, funds, movements, lists, budget, merchants } = await db.read(readArchive);
-      return { expenses, categories, funds, movements, lists, budget, merchants };
+      const { expenses, categories, funds, movements, lists, budget, merchants, templates } = await db.read(readArchive);
+      return { expenses, categories, funds, movements, lists, budget, merchants, templates };
     },
     // Preview for the import dialog: what each mode would do on the data saved now. No writes.
     async previewImport(data: ImportData) {
@@ -368,10 +384,11 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     // to the file. Either way it is ONE local transaction: the plan is computed inside it on the data it will change, and
     // a failure at any point leaves the archive exactly as it was — never a half-restored database.
     async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [],
-      movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = [], merchantRecords: readonly Merchant[] = []) {
-      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget, merchantRecords);
+      movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = [], merchantRecords: readonly Merchant[] = [],
+      templateRecords: readonly TemplateRecord[] = []) {
+      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget, merchantRecords, templateRecords);
       await queue;
-      await commit(['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'merchants'], async (tx) => {
+      await commit(['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'merchants', 'templates'], async (tx) => {
         const current = await readArchive(tx);
         const plan = planImport(checked, current, mode);
         if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi diversi dai dati salvati. Nessuna modifica.`);
@@ -387,6 +404,8 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
         for (const id of plan.removeCategoryIds) tx.delete('categories', id);
         for (const id of plan.removeMerchantIds) tx.delete('merchants', id);
         for (const m of plan.addMerchants) tx.put('merchants', { id: m.id, name: m.name });
+        for (const id of plan.removeTemplateIds) tx.delete('templates', id);
+        for (const t of plan.addTemplates) tx.put('templates', { id: t.id, ...templateFields(t), created_at: t.created_at, updated_at: time });
         const takenNames = new Map(current.categories.filter((c) => !plan.removeCategoryIds.includes(c.id)).map((c) => [c.name_key, c.id]));
         for (const c of plan.addCategories) {
           const name_key = categoryNameKey(c.label);

@@ -3,6 +3,7 @@ import { isUtcTimestamp, isUuid, parseExpenseRecord, type ExpenseRecord } from '
 import { parseExpenseRequest } from './contract.ts';
 import { parseBudgets, parseFund, parseMovement, type BudgetChange, type Fund, type Movement } from './funds.ts';
 import { parseListItem, parseShoppingList, type ListItem, type ShoppingList } from './shoppingList.ts';
+import { parseTemplate, type TemplateRecord } from './template.ts';
 export type SyncedExpense = ExpenseRecord & { revision: number; updated_at: string };
 export type SyncedCategory = Category & { revision: number; updated_at: string; name_key: string };
 export function categoryNameKey(label: string): string {
@@ -64,4 +65,13 @@ export function parseSyncedBudget(value: unknown): SyncedBudget | null {
   const budgets = v ? parseBudgets(v.budgets) : null;
   if (!v || !budgets || !isUtcTimestamp(v.updated_at) || !Number.isSafeInteger(v.revision) || (v.revision as number) < 1) return null;
   return { budgets, revision: v.revision as number, updated_at: v.updated_at };
+}
+
+// Templates of «Nuova spesa»: last write wins (no revision), like lists. See template.ts.
+export type SyncedTemplate = TemplateRecord & { updated_at: string };
+export function parseSyncedTemplate(value: unknown): SyncedTemplate | null {
+  const v = value as { updated_at?: unknown } | null;
+  const template = parseTemplate(value);
+  if (!v || !template || !isUtcTimestamp(v.updated_at)) return null;
+  return { ...template, updated_at: v.updated_at };
 }

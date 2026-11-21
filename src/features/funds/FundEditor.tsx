@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'rea
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { Button, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { leadingIcon } from '../../components/FieldIcon';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -154,9 +154,9 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
         </ScrollView>
       </Dialog.ScrollArea>
-      <Dialog.Actions>
-        <Button style={styles.action} disabled={busy} onPress={close}>{t("Annulla")}</Button>
-        <Button mode="contained" style={styles.action} disabled={blocked} loading={busy} onPress={() => void save()}>{record ? t("Salva") : t("Crea")}</Button>
+      <Dialog.Actions style={dialogActionsRow}>
+        <CancelButton disabled={busy} onPress={close}>{t("Annulla")}</CancelButton>
+        <ConfirmButton disabled={blocked} loading={busy} onPress={() => void save()}>{record ? t("Salva") : t("Crea")}</ConfirmButton>
       </Dialog.Actions>
     </Dialog>
   </Portal>;
@@ -194,5 +194,4 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'flex-start' },
   grow: { flexGrow: 1, flexBasis: 160, minWidth: 0 },
   day: { width: 96 },
-  action: { minWidth: 96, flexShrink: 1 },
 });

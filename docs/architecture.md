@@ -1240,3 +1240,25 @@ sulla scansione restano come storia; dove parlano di OCR, scansione predefinita 
   OpenAI: «Sign in with ChatGPT» con uso del piano (DevDay, 29 settembre 2026) consente ad app di terzi aderenti di usare il piano dell'utente;
   da verificare se l'accesso per sviluppatori è aperto o su adesione, i limiti per app e se il flusso funziona da una pagina statica senza
   backend. Decisione rinviata all'utente.
+
+## Templates reintrodotti, con l'Esercente — 21 novembre 2026
+
+Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, adattata al codice di oggi. Le sezioni del
+16 novembre sulla rimozione restano come storia.
+
+- **Ripristinato dalla storia Git** (`f9c4d8f^`): `domain/template.ts`, `features/templates/` (pagina, editor, modulo, hook), metodi
+  `DataStore.watchTemplates/saveTemplate/removeTemplate` in entrambe le implementazioni, Rules `templates/{uuid}`, voce «Templates» del
+  menu account (dopo Categorie), preferenza `templatesEnabled` (spenta di base), campo «Template» di Nuova spesa, `amountOptional` di
+  `ExpenseFields`, voce della guida pubblica.
+- **Novità rispetto al 15 novembre:** campo Esercente facoltativo nel template, salvato come **nome** (`merchant`, normalizzato, massimo 60
+  caratteri), mai come documento `merchants`: l'esercente si crea come sempre solo insieme alla spesa salvata dal modulo, quindi un
+  template non scrive mai esercenti. Il modulo del template usa il layout attuale (fondo accanto alla Categoria o sotto su smartphone,
+  Esercente con suggerimenti); l'hook usa `dataErrors` come gli altri.
+- **Dati esistenti:** lo store IndexedDB `templates` (passo 2) non era mai stato svuotato e i documenti Firestore `templates` erano solo
+  resi inaccessibili dalle Rules: i template salvati prima del 16 novembre tornano visibili. Sono senza `merchant`: il decoder lo legge
+  come assente, le Rules lo ammettono facoltativo (`hasAll` senza, `hasOnly` con) e la prima modifica lo scrive.
+- **Backup v11:** `templates` di nuovo, ciascuno con `merchant` solo se presente. Il lettore v7 legge di nuovo i template (senza
+  esercente); v8–v10, scritti mentre i template non esistevano, non ne hanno (un campo `templates` lì si ignora); un esercente nei template
+  di un file anteriore alla v11 è rifiutato. Unione e sostituzione come le liste (`planById`, conflitto `template`).
+- **Rules da pubblicare** prima dell'Hosting: senza, in Avanzata il listener dei template fallisce (`permission-denied`), mostrato come
+  errore della sola pagina Templates; spese, fondi e liste non ne dipendono.

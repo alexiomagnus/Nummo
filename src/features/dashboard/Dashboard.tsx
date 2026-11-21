@@ -141,7 +141,7 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
             </View>}
         </Card>}
       {preferences.dashboardTrend && <Card><TimeChart key={period} days={insights.days} /></Card>}
-      {detail && <TransactionDetails {...detail} categories={categories} onClose={() => setDetail(null)} />}
+      {detail && <TransactionDetails {...detail} categories={categories} funds={funds} onClose={() => setDetail(null)} />}
 
     </View>
   );

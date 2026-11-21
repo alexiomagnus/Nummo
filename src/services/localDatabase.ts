@@ -3,7 +3,8 @@
 // Never localStorage: records live in object stores keyed by `id`, written in atomic transactions.
 
 // `templates` came with schema step 2: step 1 keeps the stores it always created. Templates were removed from Nummo on
-// 16 November 2026: the store stays in the schema (steps never change) but nothing reads or writes it any more.
+// 16 November 2026 (the store stayed, unread) and reintroduced on 21 November: the same store, so templates saved before
+// the removal come back as they were.
 const firstStoreNames = ['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'meta'] as const;
 // `merchants` came with step 3.
 export const localStoreNames = [...firstStoreNames, 'templates', 'merchants'] as const;

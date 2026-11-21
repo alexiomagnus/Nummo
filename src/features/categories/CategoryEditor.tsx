@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { HelperText, Portal, Text, TextInput } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button } from '../../components/Button';
+import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { categoryNameError, type Category, type CategoryIcon } from '../../domain/category';
 import { useI18n } from '../../i18n/I18nProvider';
 import { inputOutline, spacing } from '../../theme/tokens';
@@ -52,9 +52,9 @@ export function CategoryEditor({ record, categories, ready, error, onSave, close
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
         </ScrollView>
       </Dialog.ScrollArea>
-      <Dialog.Actions>
-        <Button style={styles.action} disabled={busy} onPress={close}>{t('Annulla')}</Button>
-        <Button mode="contained" style={styles.action} disabled={blocked} loading={busy} onPress={() => void save()}>{t('Salva')}</Button>
+      <Dialog.Actions style={dialogActionsRow}>
+        <CancelButton disabled={busy} onPress={close}>{t('Annulla')}</CancelButton>
+        <ConfirmButton disabled={blocked} loading={busy} onPress={() => void save()}>{t('Salva')}</ConfirmButton>
       </Dialog.Actions>
     </Dialog>
   </Portal>;
@@ -63,5 +63,4 @@ export function CategoryEditor({ record, categories, ready, error, onSave, close
 const styles = StyleSheet.create({
   area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.md },
-  action: { width: 96, flexShrink: 1 },
 });

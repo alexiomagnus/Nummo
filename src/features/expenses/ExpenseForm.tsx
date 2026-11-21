@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { existingCategory } from '../categories/preferredCategories';
 import { memo, useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { HelperText, Text } from 'react-native-paper';
+import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding } from '../../components/Button';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { layout, spacing } from '../../theme/tokens';
@@ -21,6 +21,10 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ScanReceiptDialog } from '../receipts/ScanReceiptDialog';
 import { useReceiptAi } from '../receipts/aiSettings';
 import type { RankedMerchant } from '../../domain/merchant';
+import { SelectField } from '../../components/SelectField';
+import { CategoryGlyph } from '../../components/CategoryGlyph';
+import { draftOfTemplate, type TemplateRecord } from '../../domain/template';
+import { NoFundAvatar } from '../funds/FundAvatar';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
 // Categories are created only in the Categories page, never from this form.
@@ -30,16 +34,20 @@ type Props = {
   defaultCategoryId?: string;
   // Saved merchants ranked by use (suggestions of «Esercente»).
   merchants?: readonly RankedMerchant[];
+  // Saved templates, given only when they are turned on (Templates page): the field above the repeat fills the form from one.
+  templates?: readonly TemplateRecord[];
 };
+const noTemplate = 'none';
 
 
 export const ExpenseForm = memo(ExpenseFormView);
 
 const noMerchants: readonly RankedMerchant[] = [];
 
-function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '', merchants = noMerchants }: Props) {
+function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '', merchants = noMerchants, templates }: Props) {
   const { t } = useI18n();
   const notify = useSnackbar();
+  const { colors } = useTheme();
   const size = useSizeClass();
   const { width: windowWidth } = useWindowDimensions();
   const desktop = size === 'expanded';
@@ -51,6 +59,8 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
   const [formKey, setFormKey] = useState(0);
   const [scanning, setScanning] = useState(false);
+  // The template the form was filled from (shown in its field until saved); the fields stay editable afterwards.
+  const [templateId, setTemplateId] = useState('');
   // «Scansiona scontrino» exists only once the scan is switched on in Settings (off by default, 21 November).
   const scanEnabled = useReceiptAi().settings.enabled;
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
@@ -64,6 +74,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     setDraft(newDraft());
     setErrors({});
     setFormKey((key) => key + 1);
+    setTemplateId('');
     notify(submission.request.first_payment_date ? "Abbonamento salvato." : store.local ? "Spesa salvata." : "Spesa salvata e confermata da Firestore.");
     store.startNew();
   }, [submission.status]);
@@ -84,6 +95,17 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       if ('repeat' in patch) delete next.recurrence;
       return next;
     });
+  };
+  // Fills amount (when the template has one), date, description, merchant (when it has one), category and fund; never the
+  // repeat. A category or fund that no longer exists is left to be chosen again.
+  const applyTemplate = (id: string) => {
+    const template = templates?.find((item) => item.id === id);
+    setTemplateId(template ? template.id : '');
+    if (!template) return;
+    const filled = draftOfTemplate(template);
+    const fundId = template.fund_id === null ? noFund : fundChoices.some((choice) => choice.fund.id === template.fund_id) ? template.fund_id : '';
+    update({ description: filled.description, date: filled.date, categoryId: existingCategory(template.category_id, categories), fundId,
+      ...(template.amount_minor !== null ? { amount: filled.amount } : {}), ...(template.merchant ? { merchant: template.merchant } : {}) });
   };
   // Leaving a field empty is not an error yet: missing values are reported on save.
   const validateField = (field: BaseField) => {
@@ -118,6 +140,13 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     onChange={(fundId) => update({ fundId })} /> : null;
   const repeat = (
     <View style={{ gap: blockGap }}>
+      {/* Template (Templates page, switch on): below category and fund, above the repeat, as before the removal. */}
+      {templates && templates.length > 0 && <SelectField label={t("Template")} disabled={!enabled} value={templates.some((item) => item.id === templateId) ? templateId : noTemplate}
+        options={[{ value: noTemplate, label: t("Nessun template"), icon: <NoFundAvatar size={24} /> },
+          ...templates.map((item) => ({ value: item.id, label: item.description, icon: <TemplateGlyph template={item} categories={categories} /> }))]}
+        onChange={(value) => applyTemplate(value === noTemplate ? '' : value)} />}
+      {/* Templates turned on but none saved yet: the field cannot appear, so say why. */}
+      {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il campo Template compare quando crei un template nella pagina Templates.")}</Text>}
       <RepeatField gap={blockGap} repeat={draft.repeat} recurrence={draft.recurrence}
         error={errors.recurrence} disabled={!enabled} onRepeatChange={(value) => update({ repeat: value })}
         onRecurrenceChange={(recurrence) => update({ recurrence })}>
@@ -174,6 +203,12 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     </View>
     </View>
   );
+}
+
+// Category icon of a template in the picker.
+function TemplateGlyph({ template, categories }: { template: TemplateRecord; categories: readonly Category[] }) {
+  const icon = categories.find((category) => category.id === template.category_id)?.icon;
+  return icon ? <CategoryGlyph icon={icon} size={20} /> : null;
 }
 
 const styles = StyleSheet.create({

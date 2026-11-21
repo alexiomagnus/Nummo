@@ -6,7 +6,8 @@ import type { ImportData, ImportMode, ImportPlan } from '../domain/backup.ts';
 import type { Category, CategoryIcon } from '../domain/category.ts';
 import type { ExpenseRecord, Receipt } from '../domain/contract.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
-import type { SyncedBudget, SyncedCategory, SyncedExpense, SyncedFund, SyncedList, SyncedListItem, SyncedMovement } from '../domain/firestore.ts';
+import type { SyncedBudget, SyncedCategory, SyncedExpense, SyncedFund, SyncedList, SyncedListItem, SyncedMovement, SyncedTemplate } from '../domain/firestore.ts';
+import type { TemplateData, TemplateRecord } from '../domain/template.ts';
 import type { BudgetChange, Fund, FundData, Movement, MovementData } from '../domain/funds.ts';
 import { parseMerchant, type Merchant } from '../domain/merchant.ts';
 import { sortItems, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
@@ -19,7 +20,7 @@ type Watch<T> = (next: (value: SnapshotState<T>) => void, error: (reason: Error)
 // A complete, confirmed copy of the archive (backups and CSV).
 export type ArchiveSnapshot = {
   expenses: SyncedExpense[]; categories: SyncedCategory[]; funds: SyncedFund[]; movements: SyncedMovement[];
-  lists: ShoppingListRecord[]; budget: BudgetChange[]; merchants: Merchant[];
+  lists: ShoppingListRecord[]; budget: BudgetChange[]; merchants: Merchant[]; templates: SyncedTemplate[];
 };
 
 export type DataStore = {
@@ -35,6 +36,7 @@ export type DataStore = {
   // Merchants (merchant.ts): created only together with the first expense that uses them, never edited or deleted from
   // the interface (only a «replace» import removes them).
   watchMerchants: Watch<Merchant>;
+  watchTemplates: Watch<SyncedTemplate>;
   // Read-only verification of an uncertain save; never a second write.
   confirmExpense(request: ExpenseRequest): Promise<Receipt>;
   // `merchant`: a merchant used for the first time (its ID is `request.merchant_id`), saved in the same atomic write as the
@@ -60,11 +62,16 @@ export type DataStore = {
   addListItem(listId: string, name: string, position: number): void;
   updateListItem(item: SyncedListItem, change: Partial<Pick<SyncedListItem, 'name' | 'checked'>>): void;
   removeListItem(item: SyncedListItem): void;
+  // Templates of «Nuova spesa»: plain writes (last wins, no revision), validated at once (they throw) and saved in the
+  // background like the list edits; `previous` keeps the creation time of an edited template.
+  saveTemplate(id: string, data: TemplateData, previous?: SyncedTemplate): void;
+  removeTemplate(template: SyncedTemplate): void;
   registerList(list: SyncedList, expenseId: string, data: ExpenseData, remember?: boolean): Promise<void>;
   exportSnapshot(): Promise<ArchiveSnapshot>;
   previewImport(data: ImportData): Promise<{ merge: ImportPlan; replace: ImportPlan }>;
   importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode?: ImportMode, fundRecords?: readonly Fund[],
-    movementRecords?: readonly Movement[], shoppingLists?: readonly ShoppingListRecord[], generalBudget?: readonly BudgetChange[], merchantRecords?: readonly Merchant[]): Promise<void>;
+    movementRecords?: readonly Movement[], shoppingLists?: readonly ShoppingListRecord[], generalBudget?: readonly BudgetChange[], merchantRecords?: readonly Merchant[],
+    templateRecords?: readonly TemplateRecord[]): Promise<void>;
 };
 
 // Lists of the archive with their items (backups and import plans). Items whose list no longer exists are left out.

@@ -25,6 +25,8 @@ type Props = {
   subtitle?: string;
   // On the subtitle line, after it (Spese: the merchant beside the date); shrinks before the subtitle does.
   subtitleExtra?: ReactNode;
+  // A line of its own under the subtitle (Analisi details on phones: the fund).
+  subtitleBelow?: ReactNode;
   // Between title and subtitle (phones put the amount here).
   meta?: ReactNode;
   // Right side, vertically centred (amount, actions).
@@ -47,7 +49,7 @@ type Props = {
 
 // The one list row of the app (Spese, Categorie): icon tile, title + subtitle, trailing slot, hairline divider.
 // Every row has the same minimum height and centres its content vertically.
-export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense, subtitleExtra }: Props) {
+export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense, subtitleExtra, subtitleBelow }: Props) {
   const { colors } = useTheme();
   const expandable = onPress !== undefined && expanded !== undefined;
   const content = <>
@@ -59,6 +61,7 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
         <Text variant="bodySmall" style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{subtitle}</Text>
         {subtitleExtra}
       </View> : subtitle ? <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{subtitle}</Text> : null}
+      {subtitleBelow}
     </View>
     {(trailing || expandable) && <View style={styles.trailing}>
       {trailing}

@@ -146,7 +146,7 @@ test('backup v10: esercenti e merchant_id in andata e ritorno; riferimenti manca
   const expenses = [parseExpenseRecord(record(1, { merchant_id: 'm-amazon' }))!, parseExpenseRecord(record(2))!];
   const json = makeBackup({ expenses, categories: [], merchants: [amazon] }, now);
   const file = JSON.parse(json);
-  assert.equal(file.version, 10);
+  assert.equal(file.version, 11);
   assert.deepEqual(file.merchants, [{ id: 'm-amazon', name: 'Amazon' }]);
   assert.equal(file.expenses.find((e: { id: string }) => e.id === expenses[0]!.id).merchant_id, 'm-amazon');
   assert.equal('merchant_id' in file.expenses.find((e: { id: string }) => e.id === expenses[1]!.id), false);
