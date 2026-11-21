@@ -104,13 +104,14 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // The scroller fills the rounded panel, which clips it: content scrolls out of view at the panel's own edge, never at
   // a line inside it. The scrollbar would run straight through the corners (browsers do not bend it to the radius):
   // `data-panel-scroll` lets GlobalStyle stop its track a corner radius short of both ends.
-  const panelScroll = showPanel ? { dataSet: { panelScroll: 'true' } } : null;
-  // Desktop panel only: the bottom edge never cuts a marked row in half (wholeRows.ts).
+  // Every size with navigation (desktop panel, tablets, phones above the floating bar): a marked row cut by the bottom
+  // edge of the page fades out towards it (`data-whole-rows`, wholeRows.ts).
+  const scrollMarks = hasNav ? { dataSet: showPanel ? { panelScroll: 'true', wholeRows: 'true' } : { wholeRows: 'true' } } : null;
   useEffect(() => {
-    if (!showPanel || typeof document === 'undefined') return undefined;
+    if (!hasNav || typeof document === 'undefined') return undefined;
     const node = (scroller.current as { getScrollableNode?: () => unknown } | null)?.getScrollableNode?.();
     return node instanceof HTMLElement ? observeWholeRows(node) : undefined;
-  }, [showPanel]);
+  }, [hasNav]);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>
@@ -141,7 +142,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           <View style={[styles.scroll, panel, styles.panelClip, { backgroundColor: panelBg }]}>
-          <ScrollView ref={scroller} style={styles.scroll} {...panelScroll} keyboardShouldPersistTaps="handled"
+          <ScrollView ref={scroller} style={styles.scroll} {...scrollMarks} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
               <KeyboardContext.Provider value={keyboard}>

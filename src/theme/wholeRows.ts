@@ -1,4 +1,5 @@
-// Desktop panel (AppShell): a row is never cut in half by the bottom edge (user's request, 21 November). Rows opt in with
+// Page scroller (AppShell: desktop panel, tablets and phones): a row is never cut in half by the bottom edge (user's
+// request, 21 November; phones too since the same day). Rows opt in with
 // `dataSet={{ wholeRow: 'true' }}` (Spese/Categorie rows, month headings, fund cards); the one that starts inside the
 // panel but runs past its bottom gets `data-clipped` and its visible height in `--nummo-peek`: GlobalStyle fades it out
 // towards the edge, a hint that more follows below (also requested on 21 November: hiding it entirely read as the end of
