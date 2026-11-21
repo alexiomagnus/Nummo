@@ -10,9 +10,23 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. In serata/notte: rami uniti eliminati
   (14 locali, 3 remoti); file di collaudo v9/v10 con test, importati nell'emulatore e collaudati dall'interfaccia della demo; le quattro
   osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
-- **Scansione solo con AI (21 novembre, inviata su `origin`, non pubblicata):** OCR e «API compatibile OpenAI» rimossi, interruttore in
-  Impostazioni; dettagli nella sezione omonima qui sotto. Va pubblicata insieme ai commit in attesa.
-- **Prossima sessione, priorità consigliate:** (0) in produzione, ricaricare l'app e provare: pagina Templates (in Avanzata compaiono i
+- **Sessione del 21 novembre (giorno).** Su richiesta: analisi iniziale con le discrepanze qui sotto, poi «Torna indietro» in «Collega il
+  tuo Firebase», pulsanti della revisione dello scontrino, esercente e azioni a tutta larghezza negli abbonamenti, «Elimina» come cestino
+  con contorno rosso su smartphone, Annulla/Salva a 96 accanto al cestino, Importo e Data non più tagliati; tutto committato e pubblicato
+  su Hosting (ultimo `9a8285a`). Nella stessa giornata un'altra sessione ha lavorato sulla tastiera virtuale (`fdfce0e`, `1a8dc14`),
+  committata a parte e pubblicata insieme: mai provata su telefono reale.
+- **Discrepanze trovate all'inizio della sessione del 21 novembre e corrette qui (solo documentazione):** (1) questo riepilogo dava la
+  scansione solo con AI come «non pubblicata», ma era uscita con `817a2f1`; (2) le sezioni del 21 novembre fino a `817a2f1` (pulsanti
+  uniformi, icona, Templates, ordine dei servizi AI, Fragment, wifi, «Annulla» della scansione, fondo negli abbonamenti, scansione solo
+  AI) finivano con «non pubblicato», e Templates chiedeva ancora di pubblicare le Rules, già pubblicate; (3) «Chiudi» con contorno era
+  «non committato, non pubblicato», ma è `bdc742b`, pubblicato; (4) «Verifiche» diceva `test:emulator` sulle Rules di `ad5aa73` e Rules
+  /servizi non più toccati, mentre `4144917` e `817a2f1` li toccano (il 22/22 sulle Rules dei template è nella sezione Templates); (5) la
+  riga «Git» si fermava a `9ad8e02`; (6) commento in `ExpenseEditor.tsx` e sezione «Pulsanti dei dialoghi uniformi» davano per buono
+  «Elimina» da solo sopra Annulla/Salva su smartphone, poi giudicato difettoso dall'utente e sostituito dal cestino (`3d1b5ea`). Le
+  sezioni di questa sessione scritte «non committato» sono aggiornate con il commit. Codice e `AGENTS.md` coincidevano per il resto.
+- **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: tastiera virtuale (aprire e chiudere su
+  un campo in basso e in un dialogo: nessun doppio salto; iOS), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
+  sotto 412), azioni degli abbonamenti, revisione dello scontrino; poi in produzione: pagina Templates (in Avanzata compaiono i
   template salvati prima del 16 novembre, se ce n'erano), scansione dello scontrino da attivare in Impostazioni, pulsanti dei dialoghi,
   nuova icona (la cache del browser o del launcher può mostrare ancora quella vecchia); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
@@ -20,7 +34,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice (pubblicati con `817a2f1` il 21 novembre, notte): `9ad8e02` (pulsanti di prova delle notifiche nascosti
+  `origin`. Ultimi commit di codice, tutti pubblicati: `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
+  sessione), `8e513f4` (Annulla/Salva a 96), `3d1b5ea` («Torna indietro», scansione, abbonamenti, cestino), `fdfce0e` (tastiera, altra
+  sessione), `bdc742b` («Chiudi» con contorno), `817a2f1` (template, pulsanti uniformi, icona), `e72bc6f`, `4144917` (scansione solo AI).
+  Prima, pubblicati con `817a2f1`: `9ad8e02` (pulsanti di prova delle notifiche nascosti
   dietro `pushTests`, più documenti), `9dd0880` (tre pulsanti di Archiviazione e backup della stessa larghezza), `661b984` (avatar del
   fondo nei dettagli), `0e536a5` (riga dissolta anche su smartphone). Prima, pubblicati: `de79c95` («Fondo» nei dettagli), prima `42d9beb` (riga dissolta nel pannello), prima `41a54ab` (righe intere nel pannello, esercente tolto dai dettagli), prima `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
   `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
@@ -53,9 +70,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
-- **Verifiche (21 novembre, su `9ad8e02`).** `npm run check` OK (typecheck, **501/501**, build demo); il conteggio 499 riportato
-  sopra e nelle sezioni del 20–21 novembre precede i test di `wholeRows`. `test:emulator`
-  **22/22** l'ultima volta sulle Rules di `ad5aa73` (sera; Rules, `DataStore` e servizi non più toccati da allora).
+- **Verifiche (21 novembre, su `9a8285a`).** `npm run check` OK (typecheck, **502/502**, build demo; 501 fino a `8e513f4`, il test in più
+  è di `batchKeyboardReports`; 499 nelle sezioni del 20–21 novembre precede i test di `wholeRows`). `test:emulator` **22/22** l'ultima
+  volta sulle Rules dei template (`817a2f1`, sezione Templates); da allora Rules, `DataStore`, servizi e dominio non sono cambiati.
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
   più nera.
 - **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
@@ -108,7 +125,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   coprire tutta la riga (`flexGrow: 1` da larghezza naturale); desktop invariato.
 - **Verifica:** Chromium headless, demo con `nummo-esercenti-v10.json`: modifica spesa a 390×844 (cestino 48 con bordo, stessa riga di
   Annulla/Salva); «V10 Netflix» a 390×844 (109/99/118 dp, da 26 a 364 in un dettaglio largo 364) e 360×800 (96/96/104). `npm run check` OK.
-  Non committato, non pubblicato.
+  Committato in `3d1b5ea` e pubblicato.
 
 ## «Elimina» solo icona su smartphone nei dialoghi di modifica — 21 novembre 2026
 
@@ -120,7 +137,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** Chromium headless, demo Standard con `nummo-esercenti-v10.json`, modifica spesa: 1400×900 «Elimina» con etichetta, una riga;
   390×844 cestino + Annulla + Salva su una riga (y 625); **360×800 e 320×640 ancora a capo** (≈278 dp disponibili per 296 richiesti):
   cestino sopra, coppia sotto. Template e prodotto hanno la stessa struttura, non riaperti nel browser. `npm run check` OK.
-  Non committato, non pubblicato. Visto di passaggio, preesistente: a 360 px Importo e Data della modifica spesa tagliano il valore.
+  Committato in `3d1b5ea` e pubblicato. Superato in parte: da 360 px la riga ora non va più a capo (Annulla/Salva a 96, `8e513f4`);
+  Importo e Data tagliati a 360 px corretti in `9a8285a`.
 
 ## Pulsanti della revisione dello scontrino, esercente negli abbonamenti — 21 novembre 2026
 
@@ -134,8 +152,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `primary`, solo se la serie ne ha uno; `SubscriptionList` riceve `merchantNames` da `Workspace` (la stessa mappa di `ExpenseList`).
 - **Verifica:** Chromium headless sulla demo Standard con `nummo-esercenti-v10.json` unito; risposta di Claude simulata nella pagina
   (nessuna richiesta reale): revisione a 1400×900 (174/110/145 × 48, una riga) e 390×844 (Scansiona di nuovo sopra, coppia sotto);
-  «V10 Netflix» mostra «Esercente Netflix» a 1400×900 e 390×844; nessun errore JS. `npm run check` OK (501/501). Non committato,
-  non pubblicato.
+  «V10 Netflix» mostra «Esercente Netflix» a 1400×900 e 390×844; nessun errore JS. `npm run check` OK (501/501). Committato in
+  `3d1b5ea` e pubblicato.
 
 ## «Torna indietro» in «Collega il tuo Firebase» — 21 novembre 2026
 
@@ -144,8 +162,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   compatto con chevron, allineato al bordo), usato anche da `Guide.tsx` al posto del pulsante in linea; nella pagina il padding superiore
   lascia il posto al pulsante, come nella guida. Testo già tradotto («Go back»). `OwnerSetup` invariato.
 - **Verifica:** Chromium headless sulla demo, Avanzata da disconnessi → «Usa il tuo progetto Firebase»: a 390×844 pulsante a y 76 e titolo
-  a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Non committato,
-  non pubblicato.
+  a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Committato in
+  `3d1b5ea` e pubblicato.
 
 ## Tastiera virtuale: transizione in un solo fotogramma — 21 novembre 2026
 
@@ -173,7 +191,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - Su richiesta: «Chiudi» dei dialoghi a una sola azione (transazioni di Analisi, Prodotti, Storico dei pagamenti) e del riepilogo aperto da
   una notifica usa `CancelButton` come «Annulla» (contorno, minimo 112×48); tolta l'etichetta più grande 16/600 del 16 novembre. Restano
   com'erano il «Chiudi» dello snackbar e l'etichetta accessibile dello sfondo dei dialoghi (non sono pulsanti di dialogo).
-- **Verifica:** Chromium headless, Analisi a 1400×900 e 390×844. `npm run check` OK. Non committato, non pubblicato.
+- **Verifica:** Chromium headless, Analisi a 1400×900 e 390×844. `npm run check` OK. Committato in `bdc742b` e pubblicato (Hosting, 21 novembre, notte).
 
 ## Pulsanti dei dialoghi uniformi — 21 novembre 2026
 
@@ -185,11 +203,12 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   template, categoria, fondo, movimento, assegnazione fondo, stato abbonamento («Indietro»), lista e prodotto, registrazione lista,
   selettore della data (Annulla/OK), conferma di eliminazione (`DeleteAction`), dialoghi di Archiviazione, anteprima del ripristino,
   scansione dello scontrino. Invariati: «Chiudi» dei dialoghi a una sola azione, il modulo di collegamento Firebase (già con contorno, in
-  colonna), «Scansiona di nuovo».
+  colonna), «Scansiona di nuovo» (con contorno dal 21 novembre, mezzogiorno, `3d1b5ea`).
 - Trovato e corretto anche un difetto preesistente: su smartphone «Elimina» della modifica spesa si sovrapponeva ad «Annulla» (contenitore
   `flex: 1`); ora la riga va a capo con Elimina sopra e la coppia Annulla/Salva sotto.
+  Superato: su smartphone Elimina è il solo cestino con contorno sulla stessa riga (`3d1b5ea`, `8e513f4`).
 - **Verifica:** Chromium headless, demo Standard con `nummo-utente-medio.json`: modifica spesa, conferma di eliminazione e selettore data
-  a 1400×900 e 390×844 (Annulla 112, Salva/OK 112, alti 48, nessuna sovrapposizione). `npm run check` OK. Committato e inviato su richiesta; non pubblicato.
+  a 1400×900 e 390×844 (Annulla 112, Salva/OK 112, alti 48, nessuna sovrapposizione). `npm run check` OK. Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Icona dell'app un po' più squadrata — 21 novembre 2026
 
@@ -198,7 +217,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   Poi, su nuova richiesta, ancora un po' più squadrato: **4 unità** (SVG e PNG rigenerati allo stesso modo).
 - Rigenerati con Chromium headless a sfondo trasparente `icon-192.png` e `icon-512.png` (RGBA, stessa forma); invariati
   `icon-maskable-512.png` e `apple-touch-icon.png` (quadrati, mascherati dal sistema) e `icon-monochrome.svg`. `docs/icone-installazione.md`
-  aggiornato. Dopo la pubblicazione browser e launcher possono tenere in cache la vecchia icona. Committato e inviato su richiesta; non pubblicato.
+  aggiornato. Dopo la pubblicazione browser e launcher possono tenere in cache la vecchia icona. Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Templates reintrodotti, con l'Esercente — 21 novembre 2026
 
@@ -215,8 +234,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   il test dei template: Rules, scritture, documento senza `merchant`, modifica che conserva la creazione, backup. Chromium headless, demo
   Standard con `nummo-utente-medio.json`: menu → Templates → interruttore → nuovo template con importo, Esercente, categoria e fondo →
   «I tuoi template (1)» → Nuova spesa → campo Template → tutti i campi compilati (1400×900 e 390×844).
-- **Da fare prima della pubblicazione (su autorizzazione):** pubblicare le **Rules** (`firebase deploy --only firestore:rules --project
-  nummo-6b6e2`), poi Hosting. Senza Rules, in Avanzata la pagina Templates mostra l'errore di permessi. Committato e inviato su richiesta; non pubblicato.
+- **Pubblicazione:** fatta su richiesta nell'ordine previsto, prima le **Rules** e poi Hosting, da `817a2f1` (21 novembre, notte; «Registro
+  dei rilasci»). Da provare in produzione: la pagina Templates in Avanzata.
 
 ## Ordine dei servizi AI, categoria e fondo nei dettagli di Analisi — 21 novembre 2026
 
@@ -227,7 +246,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   su una riga; su smartphone il fondo va su una riga propria sotto data e categoria (nuova prop `subtitleBelow` di `ListRow`). `Dashboard`
   passa `funds`.
 - **Verifica:** Chromium headless, demo in Standard con `nummo-utente-medio.json` unito, Analisi a barre su 12 mesi, dialogo «Medio · Casa
-  e bollette»: 1400×900 (una riga per spesa, Affitto senza fondo) e 390×844 (fondo sotto). `npm run check` OK. Committato e inviato su richiesta; non pubblicato.
+  e bollette»: 1400×900 (una riga per spesa, Affitto senza fondo) e 390×844 (fondo sotto). `npm run check` OK. Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Errore «Invalid prop `compact` supplied to `React.Fragment`» — 21 novembre 2026
 
@@ -240,7 +259,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** Expo di sviluppo su porta 8099 (con `CI=1` il watcher è spento e serviva codice vecchio: riavviato senza), Chromium
   headless 390×844, passaggio «pronto» con digitazione nella chiave: col file precedente due `console.error` con l'avviso e un nodo
   `FRAGMENT` dentro `Dialog.Actions`; con la correzione nessun errore, pulsanti clonati direttamente, gap 13 px, 114/116 px. Server fermato.
-  `npm run check` OK. Committato e inviato su richiesta; non pubblicato.
+  `npm run check` OK. Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Icona «internet» (wifi) a tre segni negli stili minimale e colorato — 21 novembre 2026
 
@@ -248,7 +267,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   due set (archi `M2.5 10.5a13.5 13.5 0 0 1 19 0` e `M6.5 14.5a8 8 0 0 1 11 0`, punto a 12,19): minimale con tratto standard e punto pieno
   (`fill="currentColor"`, r 1,2), colorato con archi `{b}` da 2,8 e punto `{l}` r 2,2. Sprite pixel invariato; ID, tinta e Rules invariati.
 - **Verifica:** anteprima dei tre stili affiancati (Chromium headless, tema scuro, 96 px) con il wrapper di `SvgIcon`. `npm run check` OK
-  (**494/494**, compresi i test di icone e contrasti). Non vista nell'app con una categoria reale. Committato e inviato su richiesta; non pubblicato.
+  (**494/494**, compresi i test di icone e contrasti). Non vista nell'app con una categoria reale. Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Scansiona scontrino: «Annulla» proporzionato all'azione — 21 novembre 2026
 
@@ -257,7 +276,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   «Acconsento e invio», «Usa questi dati»), come nelle conferme di `DeleteAction`. «Scansiona di nuovo» resta di testo.
 - Ritocchi successivi, su richiesta: spazio tra i pulsanti delle azioni da 4 a 8, poi a 12 (`spacing.md`).
 - **Verifica:** Chromium headless, demo con scansione accesa e un'immagine sintetica, 390×844 e 1280×900: «Annulla» 114×48, «Scansiona»
-  116×48. `npm run check` OK (**494/494**). Committato e inviato su richiesta; non pubblicato.
+  116×48. `npm run check` OK (**494/494**). Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Fondo nei dettagli degli abbonamenti — 21 novembre 2026
 
@@ -267,7 +286,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - Layout invariato: i campi a `flexBasis` 140 danno sei colonne su desktop e tre righe da due su smartphone.
 - **Verifica:** `npm run check` OK (**494/494**). Chromium headless, demo in Standard con `nummo-utente-medio.json` unito dall'interfaccia:
   1400×900 (una riga di sei campi, «Nessun fondo» su Affitto) e 390×844 (due colonne, «Medio · Tempo libero» con avatar a capo su
-  Netflix). Committato e inviato su richiesta; non pubblicato.
+  Netflix). Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Scansione dello scontrino solo con AI, spenta di base — 21 novembre 2026
 
@@ -283,7 +302,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` OK, **494/494** (7 test dell'OCR tolti, test dell'interruttore e della compatibilità aggiunti); nessuna
   traccia di Tesseract in `dist-demo/`. Chromium headless 1280×900 (demo, Standard): senza interruttore nessun «Scansiona», scheda attenuata
   e `inert`; acceso → servizi attivi, Gemini salvato, pulsante presente, dialogo aperto. Non provati: smartphone, scansione reale con una
-  chiave. Committato e inviato su richiesta; non pubblicato su Hosting.
+  chiave. Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Pulsanti di prova delle notifiche nascosti — 21 novembre 2026
 
