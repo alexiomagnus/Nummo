@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { HelperText, Portal, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, compactIconPadding, CancelButton, ConfirmButton, dialogActionPair, dialogActionsRow } from '../../components/Button';
@@ -34,6 +34,8 @@ type Props = {
 
 // Width of the column of the fields under which the three review buttons no longer fit one row (natural widths ≈ 466 + gaps).
 const inlineRowMinimum = 500;
+// Half of a phone narrower than this cannot hold «Usa questi dati» (measured: truncated from 384 px down, whole at 390).
+const shortUseLabelBelow = 390;
 type Stage = 'pick' | 'camera' | 'ready' | 'consent' | 'working' | 'review';
 
 const fieldLabels: Readonly<Record<ReceiptField, string>> = { amount: 'Importo', date: 'Data', description: 'Descrizione', merchant: 'Esercente', categoryId: 'Categoria' };
@@ -46,6 +48,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const wide = useSizeClass() !== 'compact';
+  const { width: windowWidth } = useWindowDimensions();
   const ai = useReceiptAi();
   const setupProblem = aiSetupProblem(ai.settings);
   const aiReady = setupProblem === null;
@@ -270,7 +273,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     const grow = stacked || !wide ? styles.equal : inline ? styles.inlineAction : undefined;
     const again = <CancelButton key="again" onPress={() => setStage('ready')} style={[grow, (stacked || !wide) && styles.fullRow]}>{t("Scansiona di nuovo")}</CancelButton>;
     const cancel = <CancelButton onPress={onClose} style={grow}>{t("Annulla")}</CancelButton>;
-    const use = <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply} style={grow}>{t("Usa questi dati")}</ConfirmButton>;
+    // Narrow phones: short label, full name for screen readers (like «Scansiona scontrino» in the form).
+    const use = <ConfirmButton disabled={Object.keys(patch).length === 0} onPress={apply} style={grow} accessibilityLabel={t("Usa questi dati")}>
+      {!wide && windowWidth < shortUseLabelBelow ? t("Usa i dati") : t("Usa questi dati")}</ConfirmButton>;
     body = inline
       ? <>
         <View style={styles.columns}><View style={styles.side}>{picture}</View><View style={styles.main}>{review}</View></View>
@@ -318,8 +323,9 @@ const styles = StyleSheet.create({
   side: { flex: 2, minWidth: 0, gap: spacing.lg },
   main: { flex: 3, minWidth: 0 },
   actionsRow: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xl, marginTop: spacing.xxxl + spacing.xl - spacing.lg, marginBottom: spacing.lg },
-  // «Ingrandisci la foto» on the line of the buttons, so the photo itself ends where the fields end.
-  sideActions: { flex: 2, minWidth: 0, justifyContent: 'center', alignItems: 'flex-start' },
+  // «Ingrandisci la foto» on the line of the buttons, so the photo itself ends where the fields end; with the buttons stacked,
+  // on the line of the first one (it is as tall as a button), never floating between the two rows.
+  sideActions: { flex: 2, minWidth: 0, justifyContent: 'flex-start', alignItems: 'flex-start' },
   inlineActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   inlineAction: { flexGrow: 1 },
   fullRow: { flexBasis: '100%', flexGrow: 1 },

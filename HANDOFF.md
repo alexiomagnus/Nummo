@@ -41,11 +41,12 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   impercettibile.
 - **Revisione dello scontrino (21 novembre, pomeriggio–sera):** su richiesta, a più riprese: foto alta quanto i campi su desktop, titolo
   «Controlla i dati», pulsanti nella colonna dei campi (da medium) o allineati ai campi (smartphone), impilati sotto 500 di colonna;
-  intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. **Mai visto
-  nel browser**: da controllare a ~390, ~570, ~900 e 1400 px (sezione dedicata qui sotto).
+  intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. Provato poi
+  nel browser da 360 a 1400 px (sezione «Revisione dello scontrino provata nel browser» qui sotto): conforme, salvo «Usa questi dati»
+  troncato sotto 390 px e «Ingrandisci la foto» fra le due righe di pulsanti, corretti (non committato, non pubblicato).
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 4/3 ms percepibili?);
-  revisione dello scontrino a varie larghezze (mai vista nel browser); tastiera virtuale (aprire e chiudere su
+  revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
   un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
   sotto 412), azioni degli abbonamenti, revisione dello scontrino; poi in produzione: pagina Templates (in Avanzata compaiono i
   template salvati prima del 16 novembre, se ce n'erano), scansione dello scontrino da attivare in Impostazioni, pulsanti dei dialoghi,
@@ -158,6 +159,20 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Revisione dello scontrino provata nel browser, «Usa i dati» su smartphone stretti — 21 novembre 2026
+
+- Su richiesta, prima prova nel browser della revisione («Controlla i dati») di `830ac24`/`2b9e763`/`3b74ea4`: Chromium headless su
+  `dist-demo`, Standard, impostazioni AI di prova e risposta del servizio simulata nella pagina (nessuna chiamata reale), a 360, 375, 384,
+  390, 412, 599, 640, 760, 900, 1024 e 1400 px. Conforme: pulsanti allineati ai campi (scarto ≤ 1 px), «Annulla»/«Usa questi dati» uguali
+  su smartphone, impilati con colonna < 500 (640–900), su una riga da 1024; foto fino al fondo della Categoria, 73 px tra Categoria e
+  pulsanti, nessuno scorrimento su desktop né orizzontale, nessun errore JS.
+- **Difetto trovato e corretto:** sotto 390 px «Usa questi dati» era troncato («Usa questi …» a 360, «Usa questi d…» a 375–384). Ora su
+  smartphone sotto 390 (`shortUseLabelBelow`) l'etichetta è «Usa i dati» (EN «Use data»), nome completo in `accessibilityLabel`, come
+  «Scansiona» in Nuova spesa. Inoltre «Ingrandisci la foto», con i pulsanti impilati, stava a metà fra le due righe: ora è sulla riga del
+  primo pulsante (`sideActions` in alto; su una riga sola invariato).
+- **Verifica:** `npm run check` OK (**509/509**); ripetuta la prova a 360, 384, 390, 760, 1400: «Usa i dati» intero a 360/384, «Usa
+  questi dati» da 390, «Ingrandisci la foto» allineato al primo pulsante, nessun errore JS. Non committato, non pubblicato.
 
 ## Revisione dello scontrino su desktop: foto alta come il modulo — 21 novembre 2026
 

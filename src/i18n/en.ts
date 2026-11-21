@@ -887,6 +887,7 @@ export const english: Readonly<Record<string, string>> = {
   "Hai già compilato: {p0}. Senza questa scelta restano come sono.": "You already filled in: {p0}. Without this choice they stay as they are.",
   "Scansiona di nuovo": "Scan again",
   "Usa questi dati": "Use this data",
+  "Usa i dati": "Use data",
   "Non è stato possibile leggere lo scontrino: prova con una foto più nitida e completa.": "The receipt could not be read: try a sharper, complete photo.",
   "Lo scontrino non è in euro: controlla l’importo.": "The receipt is not in euros: check the amount.",
   "La categoria proposta dall’AI non esiste tra le tue: scegline una.": "The category suggested by the AI is not among yours: choose one.",
