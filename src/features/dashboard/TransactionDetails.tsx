@@ -31,16 +31,16 @@ export function TransactionDetails({ title, items, categories, funds = [], onClo
         const category = categories.find(category => category.id === item.category_id);
         const amount = <Text style={{ fontVariant: ['tabular-nums'] }}>{formatAmount(item.amount_minor)}</Text>;
         const fund = fundById.get(item.fund_id ?? '');
-        // Date, then the category in another colour (user's request, 21 November), then the fund with its avatar: on one
-        // line from medium; on phones the fund has a line of its own under date and category.
+        // Date, then the category in another colour, then the fund with its avatar, on one line at every size (user's
+        // requests, 21 November: on phones the fund first had a line of its own); long names end with «…».
         const categoryName = <Text variant="labelMedium" numberOfLines={1} style={[styles.shrink, { color: colors.primary }]}>{category?.label ?? t('Senza categoria')}</Text>;
-        const fundMark = fund && <View style={[styles.fund, compact && styles.fundBelow]}>
+        const fundMark = fund && <View style={styles.fund}>
           <FundAvatar fund={fund} size={16} />
           <Text variant="labelMedium" numberOfLines={1} style={[styles.shrink, { color: colors.onSurfaceVariant }]}>{fund.name}</Text>
         </View>;
-        const extra = compact ? categoryName : <View style={styles.extra}>{categoryName}{fundMark}</View>;
+        const extra = <View style={styles.extra}>{categoryName}{fundMark}</View>;
         return <ListRow key={item.key} divider={index < items.length - 1} icon={category?.icon ?? null} title={item.description}
-          subtitle={formatDate(item.date)} subtitleExtra={extra} subtitleBelow={compact ? fundMark : undefined}
+          subtitle={formatDate(item.date)} subtitleExtra={extra}
           meta={compact ? amount : undefined} trailing={compact ? undefined : amount} />;
       })}
     </ScrollView></AppDialog.ScrollArea>
@@ -53,6 +53,5 @@ const styles = StyleSheet.create({
   area: { minHeight: 0 },
   extra: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1, minWidth: 0 },
   fund: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
-  fundBelow: { marginTop: 2 },
   shrink: { flexShrink: 1, minWidth: 0 },
 });

@@ -176,6 +176,15 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Committato in
   `3d1b5ea` e pubblicato.
 
+## Fondo accanto alla categoria nei dettagli di Analisi su smartphone — 21 novembre 2026
+
+- Su richiesta (screenshot di «Servizi digitali» su iPhone): nel dialogo delle transazioni di una categoria (`TransactionDetails`) il fondo
+  (avatar e nome) sta ora accanto alla categoria, sulla riga della data, anche su smartphone; prima andava su una riga propria sotto.
+  Nomi lunghi accorciati con «…» (categoria e fondo si restringono insieme). Tolta da `ListRow` la prop `subtitleBelow`, rimasta senza usi.
+- **Verifica:** typecheck e `npm test` OK (506/506), `build:demo` OK. Chromium headless, demo Standard con `nummo-utente-medio.json`,
+  Analisi a blocchi su 12 mesi, «Medio · Casa e bollette» → «Mostra transazioni»: a 390 e 360 px data, categoria e fondo sulla stessa
+  riga, dentro il dialogo, nomi lunghi accorciati; senza fondo, la categoria intera. Nessun errore JS. Non committato, non pubblicato.
+
 ## Feedback aptico nella barra mobile e in Analisi — 21 novembre 2026
 
 - Su richiesta: vibrazione breve (Vibration API, l'unica disponibile a una pagina web) al tocco di una destinazione e del pulsante
