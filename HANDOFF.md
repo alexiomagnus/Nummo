@@ -67,6 +67,10 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
   identico a `dist/`): audit React e ID icona storiche. Worker `nummo-push` invariato (ripubblicato dall'utente per `f454d12`).
   Da provare in produzione: un archivio o un backup con un'icona storica, se ne esistono. Cronologia nel «Registro dei rilasci» qui sotto.
+- **Secondo riallineamento documentale (21 novembre, pomeriggio).** Su richiesta, dopo una verifica (`main` = `origin/main`, albero
+  pulito, `npm run check` OK **502/502**): corretti «Funzionalità implementate» (scansione solo AI, Templates, backup v11), «Prossime
+  attività» (Rules del 20–21 novembre), tre sezioni ancora «Non pubblicato» (`9ad8e02`, `9dd0880`, `0e536a5`/`661b984`, usciti con
+  `817a2f1`), «Scansiona di nuovo» di testo (superato); in `AGENTS.md` campi di `nummo.receiptAi.v1` e `BackButton`. Nessun codice toccato.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
@@ -92,6 +96,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
   `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
   dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
+- **Ambiente (21 novembre).** Runner hybrid **attivo** (PID 81456, `npm run dev` avviato il 21 alle 01:20, progetto `nummo-6b6e2`):
+  `.firebase/hybrid.lock` e `.nummo-hybrid-81456.json` sono suoi, porte 8180/4000/4400/8081 occupate. Non è un residuo: non toccarli;
+  per suite o prove usare porte dedicate.
 - **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
@@ -273,7 +280,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 - Su richiesta (screenshot del dialogo): «Annulla» era un'etichetta di testo stretta (73×48) accanto a «Scansiona» pieno (115×48). Ora in
   ogni passaggio del dialogo «Annulla» è con contorno e ha la stessa larghezza minima (116) dell'azione principale («Scansiona», «Scatta»,
-  «Acconsento e invio», «Usa questi dati»), come nelle conferme di `DeleteAction`. «Scansiona di nuovo» resta di testo.
+  «Acconsento e invio», «Usa questi dati»), come nelle conferme di `DeleteAction`. «Scansiona di nuovo» restava di testo (superato: con contorno da `3d1b5ea`).
 - Ritocchi successivi, su richiesta: spazio tra i pulsanti delle azioni da 4 a 8, poi a 12 (`spacing.md`).
 - **Verifica:** Chromium headless, demo con scansione accesa e un'immagine sintetica, 390×844 e 1280×900: «Annulla» 114×48, «Scansiona»
   116×48. `npm run check` OK (**494/494**). Committato e pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
@@ -309,14 +316,14 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - Su richiesta: in Notifiche non compaiono più «Invia notifica di prova» e «Prova con Nummo chiusa» (né il messaggio «Chiudi Nummo
   ora…»). Codice conservato per il debugging dietro la costante `pushTests = false` in `NotificationsPage.tsx`; invariati
   `usePushNotifications` (`localTest`/`remoteTest`), l'API `/v1/test` del servizio push e le traduzioni (ancora referenziate).
-  README, `docs/notifiche-push.md` e AGENTS aggiornati. `npm run check` OK. Non pubblicato.
+  README, `docs/notifiche-push.md` e AGENTS aggiornati. `npm run check` OK. Committato in `9ad8e02`. Pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Pulsanti di Archiviazione e backup della stessa larghezza — 21 novembre 2026
 
 - Su richiesta: «Esporta transazioni (CSV)», «Scarica backup (JSON)» e «Importa backup (JSON)» hanno la stessa larghezza, quella
   dell'etichetta più lunga nella lingua corrente (`BackupActions`: `onLayout` dei tre pulsanti e `minWidth` comune, rimisurata al
   cambio di lingua). Su smartphone restano impilati a tutta larghezza come prima.
-- **Verifica:** Chromium headless 1600×900 (demo): 233 px ciascuno in italiano, 236 px in inglese. `npm run check` OK. Non pubblicato.
+- **Verifica:** Chromium headless 1600×900 (demo): 233 px ciascuno in italiano, 236 px in inglese. `npm run check` OK. Committato in `9dd0880`. Pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Riga velata anche su smartphone, icona del fondo nei dettagli — 21 novembre 2026
 
@@ -325,7 +332,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   barra di scorrimento del pannello. Su smartphone il bordo è quello sopra la barra di navigazione.
 - Nei dettagli della spesa il «Fondo» ha l'avatar del fondo (20 px, `FundAvatar`) o quello tratteggiato di «Nessun fondo».
 - **Verifica:** Chromium headless 500×900 (compact, demo, Standard): riga velata sopra la barra, avatar accanto a «Medio · Spesa e
-  casa». `npm run check` OK. Non pubblicato.
+  casa». `npm run check` OK. Committati in `0e536a5` (riga velata) e `661b984` (avatar). Pubblicato con `817a2f1` (Rules e Hosting, 21 novembre, notte).
 
 ## Fondo nei dettagli della spesa — 21 novembre 2026
 
@@ -3507,7 +3514,8 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 - **Sessione (Avanzata):** login Google popup, logout dopo le scritture pendenti con cancellazione della cache su disco, isolamento
   per UID, «Questo Nummo è privato» per chi non è il proprietario, errori `auth/...` validati IT/EN; guida pubblica `#guida`.
 - **Spese:** CRUD con UUID stabile, conferma server, revisioni e conflitti espliciti, bozza conservata tra sezioni; Esercente
-  facoltativo con suggerimenti; scansione dello scontrino (OCR sul dispositivo o AI BYOK) che propone soltanto. Pagina Spese a due
+  facoltativo con suggerimenti; scansione dello scontrino solo con AI BYOK (Claude, OpenAI, Google Gemini; spenta di base, OCR rimosso il 21 novembre) che
+  propone soltanto; Templates facoltativi (pagina dal menu account, campo «Template» in Nuova spesa, Esercente facoltativo, limite 100). Pagina Spese a due
   viste: spese singole (ricerca, filtri, card «Totale», «Prodotti (n)») e abbonamenti (stati, prove gratuite, cambio di frequenza,
   fino a otto prezzi per numero di rinnovo, «Storico dei pagamenti» con eliminazione di un singolo pagamento).
 - **Categorie:** pagina dal menu account; nomi unici; 64 ID icona validi (40 attive, 39 selezionabili; ritirate `sofa` e le 24
@@ -3520,7 +3528,7 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 - **Analisi:** periodi mese, mese scorso, 3 e 12 mesi; Ciambella, Blocchi e Barre (variazione per categoria), andamento giornaliero;
   filtro «Fondo».
 - **Archiviazione e backup** (menu account, sotto Categorie): stato e cambio della modalità, CSV di sola consultazione, JSON
-  `nummo-backup` **v10** unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
+  `nummo-backup` **v11** (con i template) unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
   con copia automatica.
 - **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
   orario e fuso scelti dall'utente.
@@ -3595,7 +3603,8 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre, notte):** tutto il lavoro fino a `817a2f1` è online (Rules e Hosting), vedi «Registro dei rilasci».
+- **Pubblicazione (21 novembre):** tutto il codice fino a `9a8285a` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+  «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
@@ -3605,8 +3614,9 @@ screen reader, concorrenza tra due dispositivi.
    Già fatti: Escape in `AppDialog` e riallineamento README/architettura (12 novembre).
 
 1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
-   poi la sera con `skipped_payments` (`1dbb396`) e infine con gli esercenti (`f5411fb`). Da verificare ricaricando l'app: caricamento,
-   sincronizzazione, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
+   poi la sera con `skipped_payments` (`1dbb396`), con gli esercenti (`f5411fb`), il 20 novembre con le 24 ID icona storiche
+   (`ad5aa73`) e il 21 novembre con i template (`817a2f1`). Da verificare ricaricando l'app: caricamento, sincronizzazione, pagina
+   Templates, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
    serve autorizzazione. ID icona eliminati: chiuso (vedi «Problemi aperti»); resta facoltativa la verifica sui dati reali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
    unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino,
