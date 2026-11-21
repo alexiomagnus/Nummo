@@ -33,7 +33,7 @@ La navigazione mobile si nasconde già al tocco su un campo scrivibile (anticipo
 annullato subito se il tocco diventa uno scorrimento: `pointercancel` o scroll senza campo attivo),
 ma conserva il proprio spazio fino alla conferma dal viewport: il bersaglio non deve spostarsi tra pressione e rilascio;
 e, dopo conferma dal viewport, resta nascosta durante la chiusura fino al recupero dell'altezza;
-il solo focus da tastiera fisica non la nasconde. `KeyboardContext` in `AppShell` condivide solo questo stato visuale.
+il solo focus da tastiera fisica non la nasconde. `KeyboardContext` in `AppShell` condivide solo questo stato visuale, applicato nello **stesso fotogramma** del nuovo viewport (`useVirtualKeyboard`: un microtask riunisce gli avvisi in un solo `flushSync`, e il campo attivo va in vista in un `useLayoutEffect`, non in un `requestAnimationFrame`): un normale `setState` da un listener `resize` arriva un fotogramma dopo l'altezza di `--nummo-viewport-height` e fa saltare il contenuto due volte (21 novembre). `react-dom` è senza tipi: solo `flushSync` dichiarato in `src/types/react-dom.d.ts`.
 Nei dialoghi e nei fogli (`[role=dialog]`) la barra di scorrimento è trasparente e compare solo mentre si scorre (`observeScrolling`, attributo `data-scrolling`, CSS in `GlobalStyle` senza `transition` globali).
 Barre sticky in fondo a uno scroller: pubblicarne l'altezza con `reserveScrollPadding` (`src/theme/viewport.ts`), applicata
 come scroll padding solo in navigazione da tastiera fisica (il focus programmatico dei `Menu` Paper non deve scorrere).

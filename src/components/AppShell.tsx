@@ -1,6 +1,7 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { Logo } from './Logo';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { Animated, Easing, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,10 +40,33 @@ const barSide = floatingBarSideSpace(iPhone, spacing.md, spacing.xs);
 export const useKeyboardOpen = () => useContext(KeyboardContext);
 
 function useVirtualKeyboard() {
-  const [open, setOpen] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  useEffect(() => (typeof window === 'undefined' ? undefined : observeVirtualKeyboard(window, setOpen, setConfirmed)), []);
-  return { open, confirmed };
+  const [state, setState] = useState({ open: false, confirmed: false });
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    // Commit in the same frame as the viewport change. The keyboard resizes the viewport in the browser's resize step
+    // and the page's new height is painted in that frame (GlobalStyle sets --nummo-viewport-height from the same
+    // event), but React renders an update from a native `resize` listener in a later task, one frame late: the shrunken
+    // page would still reserve the hidden bar's room for a frame (content jumping twice), and on closing it would show
+    // an empty strip before the bar returns. The observer reports `open` and `confirmed` separately, and window and
+    // visual viewport fire their own events: a microtask (still before the paint) gathers them into one synchronous
+    // render, which also runs the shell's layout effect (focused field scrolled into view). Only DOM events and timers
+    // call back here, never a render.
+    let next = { open: false, confirmed: false };
+    let queued = false;
+    let live = true;
+    const commit = () => {
+      queued = false;
+      const value = next;
+      if (live) flushSync(() => setState((previous) => (previous.open === value.open && previous.confirmed === value.confirmed ? previous : value)));
+    };
+    const schedule = (change: Partial<typeof next>) => {
+      next = { ...next, ...change };
+      if (!queued) { queued = true; queueMicrotask(commit); }
+    };
+    const stop = observeVirtualKeyboard(window, (open) => schedule({ open }), (confirmed) => schedule({ confirmed }));
+    return () => { live = false; stop(); };
+  }, []);
+  return state;
 }
 
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
@@ -53,15 +77,14 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const size = useSizeClass();
   const reduceMotion = useReducedMotion();
   const { open: keyboard, confirmed: keyboardConfirmed } = useVirtualKeyboard();
-  // Once the keyboard changes the layout, bring the focused field back
-  // into view once it has settled. `nearest` honours the scroll padding reserved by sticky bars.
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const frame = requestAnimationFrame(() => {
-      const active = document.activeElement;
-      if (keyboardConfirmed && active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
-    });
-    return () => cancelAnimationFrame(frame);
+  // Once the keyboard changes the layout, bring the focused field back into view. The confirmation is committed with
+  // flushSync inside the viewport's resize event (see useVirtualKeyboard), so the layout is final here: scrolling now
+  // lands in the same frame as the new height (a frame later the field would show cut by the keyboard for a frame).
+  // `nearest` honours the scroll padding reserved by sticky bars.
+  useLayoutEffect(() => {
+    if (!keyboardConfirmed || typeof document === 'undefined') return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
   }, [keyboardConfirmed]);
   const page = useRef<ComponentRef<typeof View>>(null);
   const previousSection = useRef(selected);
