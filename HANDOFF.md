@@ -35,7 +35,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
+  `origin`. Ultimi commit di codice, tutti pubblicati: `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
+  categoria in Analisi), `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
   sessione), `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
   sessione), `8e513f4` (Annulla/Salva a 96), `3d1b5ea` («Torna indietro», scansione, abbonamenti, cestino), `fdfce0e` (tastiera, altra
   sessione), `bdc742b` («Chiudi» con contorno), `817a2f1` (template, pulsanti uniformi, icona), `e72bc6f`, `4144917` (scansione solo AI).
@@ -48,7 +49,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `4d69d04` (feedback aptico nella barra mobile e in Analisi, interruttore
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `cc60ea6` («Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola;
+  con `278b016`, fondo accanto alla categoria nei dettagli di Analisi su smartphone) pubblicato su richiesta il 21 novembre (pomeriggio):
+  «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `4d69d04` (feedback aptico nella barra mobile e in Analisi, interruttore
   «Vibrazione»; con `0f218da`, tastiera aperta a passi) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200,
   bundle online identico a `dist/`. Prima, **Hosting** da `9a8285a` (Importo e Data non più tagliati su smartphone; con `1a8dc14`,
   raggruppamento della tastiera come funzione pura) pubblicato su richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `8e513f4` (Annulla/Salva a 96 su smartphone accanto al cestino) pubblicato su
@@ -182,7 +185,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   come «Salva» di Nuova spesa (prima minimo 140, allineato a destra); entrambi hanno ora la forma a pillola (`radius.pill`) invece del
   raggio 16 degli altri pulsanti. Altezza invariata (56). `ExpenseForm.tsx`, `TemplatesPage.tsx`.
 - **Verifica:** typecheck e `npm test` OK, `build:demo` OK. Chromium headless, demo Standard: 390×844 e 1400×900, «Salva» e «Crea» larghi
-  quanto il contenitore (366 e 1056 px), alti 56, `border-radius` 999 px; nessun errore JS. Non committato, non pubblicato.
+  quanto il contenitore (366 e 1056 px), alti 56, `border-radius` 999 px; nessun errore JS. Committato in `cc60ea6` e pubblicato su Hosting (21 novembre, pomeriggio).
 
 ## Fondo accanto alla categoria nei dettagli di Analisi su smartphone — 21 novembre 2026
 
@@ -191,7 +194,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   Nomi lunghi accorciati con «…» (categoria e fondo si restringono insieme). Tolta da `ListRow` la prop `subtitleBelow`, rimasta senza usi.
 - **Verifica:** typecheck e `npm test` OK (506/506), `build:demo` OK. Chromium headless, demo Standard con `nummo-utente-medio.json`,
   Analisi a blocchi su 12 mesi, «Medio · Casa e bollette» → «Mostra transazioni»: a 390 e 360 px data, categoria e fondo sulla stessa
-  riga, dentro il dialogo, nomi lunghi accorciati; senza fondo, la categoria intera. Nessun errore JS. Non committato, non pubblicato.
+  riga, dentro il dialogo, nomi lunghi accorciati; senza fondo, la categoria intera. Nessun errore JS. Committato in `278b016`, pubblicato su Hosting con `cc60ea6`.
 
 ## Feedback aptico nella barra mobile e in Analisi — 21 novembre 2026
 
@@ -573,6 +576,10 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (pomeriggio, quarta parte): Hosting da `cc60ea6`** («Crea»/«Salva» a pillola e a tutta larghezza; `278b016`,
+  fondo accanto alla categoria nei dettagli di Analisi). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a
+  `dist/`. Rules invariate. Da provare sul telefono: dettagli di una categoria in Analisi, pagine Templates e Nuova spesa.
 
 - **Rilascio del 21 novembre (pomeriggio, terza parte): Hosting da `4d69d04`** (feedback aptico e interruttore «Vibrazione»; `0f218da`,
   tastiera aperta a passi, committato a parte). `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`.
@@ -3663,7 +3670,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `4d69d04` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `cc60ea6` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
