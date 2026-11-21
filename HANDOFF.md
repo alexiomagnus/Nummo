@@ -10,16 +10,19 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. In serata/notte: rami uniti eliminati
   (14 locali, 3 remoti); file di collaudo v9/v10 con test, importati nell'emulatore e collaudati dall'interfaccia della demo; le quattro
   osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
-- **Prossima sessione, priorità consigliate:** (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
+- **Prossima sessione, priorità consigliate:** (0) su autorizzazione, pubblicare su Hosting `0e536a5`…`9ad8e02` (produzione ferma a
+  `de79c95`); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
   storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
   reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimo commit di codice: `de79c95` («Fondo» nei dettagli), prima `42d9beb` (riga dissolta nel pannello), prima `41a54ab` (righe intere nel pannello, esercente tolto dai dettagli), prima `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
+  `origin`. Ultimi commit di codice, **non ancora pubblicati su Hosting**: `9ad8e02` (pulsanti di prova delle notifiche nascosti
+  dietro `pushTests`, più documenti), `9dd0880` (tre pulsanti di Archiviazione e backup della stessa larghezza), `661b984` (avatar del
+  fondo nei dettagli), `0e536a5` (riga dissolta anche su smartphone). Prima, pubblicati: `de79c95` («Fondo» nei dettagli), prima `42d9beb` (riga dissolta nel pannello), prima `41a54ab` (righe intere nel pannello, esercente tolto dai dettagli), prima `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
   `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
-  collaudo); i commit successivi toccano solo questo file (l'hash di testa non si
-  scrive qui: ogni commit che lo registrasse lo renderebbe superato).
+  collaudo). L'hash di testa non si scrive qui: ogni commit che lo registrasse lo renderebbe superato; i commit che toccano solo
+  documenti non sono elencati.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
@@ -41,7 +44,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
-- **Verifiche (20 novembre, notte, albero pubblicato).** `npm run check` OK (typecheck, **499/499**, build demo). `test:emulator`
+- **Verifiche (21 novembre, su `9ad8e02`).** `npm run check` OK (typecheck, **501/501**, build demo); il conteggio 499 riportato
+  sopra e nelle sezioni del 20–21 novembre precede i test di `wholeRows`. `test:emulator`
   **22/22** l'ultima volta sulle Rules di `ad5aa73` (sera; Rules, `DataStore` e servizi non più toccati da allora).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
   più nera.
@@ -3278,7 +3282,7 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   economica è la registrazione transazionale.
 - Backup v4 aggiunge fondi, movimenti, liste; piani e `status_changes` stringhe compatte in Firestore per il budget
   di espressioni delle Rules, array nel backup.
-- Pagina Importa ed esporta montata nascosta fuori pagina per conservare anteprima e operazioni in corso.
+- Pagina «Archiviazione e backup» (ex «Importa ed esporta») montata nascosta fuori pagina per conservare anteprima e operazioni in corso.
 
 ## Problemi aperti e limitazioni
 
@@ -3334,6 +3338,9 @@ dry-run/deploy, audit, import UI dei backup fittizi, dispositivi reali, touch, t
 screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
+
+- **Pubblicazione in attesa (21 novembre):** `0e536a5`, `661b984`, `9dd0880`, `9ad8e02` sono su `origin/main` ma non su Hosting
+  (produzione da `de79c95`); `npm run deploy:hosting` solo su autorizzazione. Rules e Worker non toccati da quei commit.
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
