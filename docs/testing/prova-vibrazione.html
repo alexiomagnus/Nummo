@@ -52,7 +52,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   <div class="opts">
     <label><input type="checkbox" id="dead" checked> Zona morta sui confini</label>
     <label><input type="checkbox" id="gap" checked> Distanza minima 60 ms</label>
-    <label>Tick <select id="tickMs"><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option></select> ms</label>
+    <label>Tick <select id="tickMs"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select> ms</label>
   </div>
   <p class="meter" id="dragOut">Impulsi nell'ultimo trascinamento: 0</p>
   <p class="mute">Togli zona morta e distanza minima per sentire il comportamento di prima: con il dito fermo sul confine partiva un impulso ogni 33 ms circa, cioè un ronzio.</p>
@@ -63,7 +63,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   <div class="grid" id="single"></div>
   <p class="mute">35–50 ms sono gli impulsi che usa expo-haptics sul web: utili come confronto, non come scelta.</p>
   <h2>Due impulsi ravvicinati</h2>
-  <p>Due tick da 6 ms separati da una pausa. Sotto una certa pausa si fondono in una vibrazione sola: è il motivo della distanza minima tra due vibrazioni dell'app.</p>
+  <p>Due tick da 4 ms separati da una pausa. Sotto una certa pausa si fondono in una vibrazione sola: è il motivo della distanza minima tra due vibrazioni dell'app.</p>
   <div class="grid" id="double"></div>
   <p class="log" id="log" aria-live="polite"></p>
 </section>
@@ -90,7 +90,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
     log.textContent = (ok ? 'Inviato: ' : 'Rifiutato dal browser: ') + text;
     return ok;
   };
-  const singles = [[3], [4], [5], [6, 'tick attuale'], [8], [10, 'tap attuale'], [12], [15], [20], [35, 'expo web'], [50, 'expo web']];
+  const singles = [[2], [3], [4, 'tick attuale'], [5], [6, 'tap attuale'], [8], [10, 'prima'], [15], [20], [35, 'expo web'], [50, 'expo web']];
   document.getElementById('single').innerHTML = singles.map(([ms, note]) =>
     `<button data-ms="${ms}" class="${note && note.includes('attuale') ? 'now' : ''}">${ms} ms${note ? `<small>${note}</small>` : ''}</button>`).join('');
   document.getElementById('single').addEventListener('click', (e) => {
@@ -98,9 +98,9 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   });
   const pauses = [15, 30, 45, 60, 100];
   document.getElementById('double').innerHTML = pauses.map((p) =>
-    `<button data-p="${p}" class="${p === 60 ? 'now' : ''}">pausa ${p}<small>${p === 60 ? 'minimo app' : '6 + 6 ms'}</small></button>`).join('');
+    `<button data-p="${p}" class="${p === 60 ? 'now' : ''}">pausa ${p}<small>${p === 60 ? 'minimo app' : '4 + 4 ms'}</small></button>`).join('');
   document.getElementById('double').addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (b) buzz([6, Number(b.dataset.p), 6], 'due tick, pausa ' + b.dataset.p + ' ms');
+    const b = e.target.closest('button'); if (b) buzz([4, Number(b.dataset.p), 4], 'due tick, pausa ' + b.dataset.p + ' ms');
   });
 
   const pill = document.getElementById('pill');
@@ -129,7 +129,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
     pointer = e.pointerId; slot = current; count = 0;
     try { pill.setPointerCapture(e.pointerId); } catch { /* gone */ }
     const s = Math.round(at(e.clientX));
-    if (s !== current) { slot = s; tick(10); }
+    if (s !== current) { slot = s; tick(6); }
     show(slot);
   });
   pill.addEventListener('pointermove', (e) => {
@@ -140,7 +140,7 @@ ol{padding-left:22px;margin:0}li{margin:0 0 8px;max-width:68ch}
   const end = (e) => {
     if (e.pointerId !== pointer) return;
     pointer = null;
-    if (slot !== null && slot !== current) { current = slot; tick(10); }
+    if (slot !== null && slot !== current) { current = slot; tick(6); }
     show(current);
   };
   pill.addEventListener('pointerup', end);

@@ -1283,5 +1283,7 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   barra mobile durante il trascinamento (prima un dito fermo sul confine dava un impulso ogni 33 ms, misurato); nessuna
   vibrazione quando la scelta non cambia. Conferma, rifiuto e interruttori senza vibrazione: sul web sarebbero solo durate o
   impulsi multipli, non effetti distinti.
+- **Durate (stesso giorno, su richiesta):** da 10/6 a 6/4 ms, perché ancora «forte e zanzarosa» sul Pixel 8; l'intensità la fissa
+  il browser, quindi più delicata significa solo più breve.
 - **Limiti.** La forma dell'impulso (attacco, frenata del motore) la decide Chrome/Android, non la pagina; Safari/iOS e Firefox
   non vibrano. Le durate si scelgono provandole sul telefono con `docs/testing/prova-vibrazione.html`.

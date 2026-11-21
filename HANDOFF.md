@@ -29,7 +29,11 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   categoria…» dava `subtitleBelow` per rimossa, ora segnata come superata. Committato in `3c8f614` e pubblicato su Hosting.
 - **Feedback aptico rivisto (21 novembre, notte):** zona morta sulla barra, distanza minima tra vibrazioni, `tick` per le selezioni,
   pagina di prova delle durate; sezione dedicata qui sotto. Committato in `7dc02a2` e pubblicato su Hosting (21 novembre, notte);
-  da provare sul Pixel 8 con la pagina di prova. Commit non inviati a `origin` (non richiesto).
+  da provare sul Pixel 8 con la pagina di prova. Inviato a `origin` su richiesta.
+- **Vibrazione più delicata (21 novembre, notte):** su richiesta («ancora troppo forte e zanzarosa») `tap` 10 → 6 ms e `tick` 6 → 4 ms
+  (l'intensità la fissa il browser: si può solo accorciare). `npm run check` 510/510; Chromium: barra [6], segmenti/legenda [4], un
+  solo impulso per tocco, nessuno in scorrimento/digitazione. Pagina di prova (anche l'artifact) aggiornata con 2–6 ms. Non committato,
+  non pubblicato; non sentito sul Pixel 8.
 - **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
   sulla barra, blocchi e ciambella di Analisi, interruttore «Vibrazione» spento); tastiera virtuale (aprire e chiudere su
   un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
