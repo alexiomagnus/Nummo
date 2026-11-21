@@ -33,8 +33,8 @@ export function TemplateEditor({ template, categories, fundChoices, merchants, e
         <View style={styles.remove}><DeleteAction labeled="wide" name={template.description} onOpenChange={setDeleting}
           onDelete={() => { const removed = onDelete(); if (removed) close(); return removed; }} /></View>
         <View style={dialogActionPair}>
-          <CancelButton disabled={deleting} onPress={close}>{t("Annulla")}</CancelButton>
-          <ConfirmButton disabled={deleting} onPress={form.submit}>{t("Salva")}</ConfirmButton>
+          <CancelButton narrowOnPhone disabled={deleting} onPress={close}>{t("Annulla")}</CancelButton>
+          <ConfirmButton narrowOnPhone disabled={deleting} onPress={form.submit}>{t("Salva")}</ConfirmButton>
         </View>
       </Dialog.Actions>
     </Dialog>

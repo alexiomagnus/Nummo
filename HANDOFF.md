@@ -78,6 +78,14 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Annulla e Salva a 96 su smartphone nei dialoghi di modifica — 21 novembre 2026
+
+- Su richiesta: accanto al cestino (modifica spesa, template, prodotto) «Annulla» e «Salva» sono larghi almeno 96 invece di 112 su
+  smartphone (`narrowOnPhone` di `CancelButton`/`ConfirmButton`); altrove e da medium resta 112.
+- **Verifica:** Chromium headless, modifica spesa: 390 e **360 px** cestino + Annulla 97 + Salva 96 su una riga; 320 px ancora a capo
+  (cestino sopra, atteso: ≈238 dp disponibili); 1400 px invariato (Elimina con etichetta, 110/112). `npm run check` OK. Non committato,
+  non pubblicato.
+
 ## Cestino con contorno, azioni degli abbonamenti a tutta larghezza su smartphone — 21 novembre 2026
 
 - Su richiesta (screenshot): il cestino di `DeleteAction labeled="wide"` su smartphone ha il contorno come «Annulla» (IconButton `outlined`,

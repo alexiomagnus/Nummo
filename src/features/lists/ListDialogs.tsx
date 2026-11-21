@@ -79,8 +79,8 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
       </View>
       {/* Kept together so that, when the row wraps on narrow phones, the pair moves under Delete as one unit. */}
       <View style={dialogActionPair}>
-        <CancelButton onPress={close}>{t("Annulla")}</CancelButton>
-        <ConfirmButton onPress={save}>{t("Salva")}</ConfirmButton>
+        <CancelButton narrowOnPhone onPress={close}>{t("Annulla")}</CancelButton>
+        <ConfirmButton narrowOnPhone onPress={save}>{t("Salva")}</ConfirmButton>
       </View>
     </Dialog.Actions>
   </Dialog></Portal>;

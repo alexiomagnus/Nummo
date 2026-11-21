@@ -123,6 +123,6 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
             return removed;
           } finally { setBusy(false); }
         }} /></View>}
-    <View style={dialogActionPair}><CancelButton disabled={busy || deleting} onPress={close}>{t("Annulla")}</CancelButton><ConfirmButton disabled={busy || deleting} loading={busy && !deleting} onPress={() => void save()}>{t("Salva")}</ConfirmButton></View></Dialog.Actions>
+    <View style={dialogActionPair}><CancelButton narrowOnPhone disabled={busy || deleting} onPress={close}>{t("Annulla")}</CancelButton><ConfirmButton narrowOnPhone disabled={busy || deleting} loading={busy && !deleting} onPress={() => void save()}>{t("Salva")}</ConfirmButton></View></Dialog.Actions>
   </Dialog></Portal>;
 }

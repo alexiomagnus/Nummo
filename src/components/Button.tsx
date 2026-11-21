@@ -2,6 +2,7 @@ import type { ComponentProps } from 'react';
 import { StyleSheet } from 'react-native';
 import { Button as PaperButton } from 'react-native-paper';
 import { layout, radius, spacing } from '../theme/tokens';
+import { useSizeClass } from '../theme/useSizeClass';
 
 // The one button of the app: Paper's button with a 48 dp touch height. Corner radius comes from the
 // token `radius.button` (16 dp, as fields and cards). Callers still choose the role: contained (primary),
@@ -38,16 +39,23 @@ export const regularIconPadding = {
 // them is only the `gap` of `dialogActionsRow`, also where they sit in a plain View. The `compact` it adds is overridden too:
 // it shrinks the label's side margins from 24 to 8, so a label longer than the minimum width («Usa questi dati») looked
 // cramped next to the others.
-const dialogAction = StyleSheet.create({ button: { minWidth: 112, marginRight: 0 } }).button;
+const dialogActionStyles = StyleSheet.create({ button: { minWidth: 112, marginRight: 0 }, phone: { minWidth: 96 } });
+const dialogAction = dialogActionStyles.button;
 export const dialogActionsRow = StyleSheet.create({ row: { flexWrap: 'wrap', gap: spacing.md } }).row;
 // «Annulla» and the confirmation kept together next to a left-hand action (Elimina): when the row wraps on a narrow phone, the
 // pair moves under it as one unit, never split.
 export const dialogActionPair = StyleSheet.create({ pair: { flexDirection: 'row', gap: spacing.md, marginLeft: 'auto' } }).pair;
 
-type ActionProps = Omit<ComponentProps<typeof PaperButton>, 'mode'>;
-export function CancelButton({ style, ...rest }: ActionProps) {
-  return <Button {...rest} compact={false} mode="outlined" style={[style, dialogAction]} />;
+// `narrowOnPhone`: 96 instead of 112 on phones, for «Annulla»/«Salva» next to the trash of the edit dialogs (expense,
+// template, product), so that the three fit one row from 360 px (user's request, 21 November).
+type ActionProps = Omit<ComponentProps<typeof PaperButton>, 'mode'> & { narrowOnPhone?: boolean };
+function useActionStyle(narrowOnPhone?: boolean) {
+  const phone = useSizeClass() === 'compact';
+  return narrowOnPhone && phone ? [dialogAction, dialogActionStyles.phone] : dialogAction;
 }
-export function ConfirmButton({ style, ...rest }: ActionProps) {
-  return <Button {...rest} compact={false} mode="contained" style={[style, dialogAction]} />;
+export function CancelButton({ style, narrowOnPhone, ...rest }: ActionProps) {
+  return <Button {...rest} compact={false} mode="outlined" style={[style, useActionStyle(narrowOnPhone)]} />;
+}
+export function ConfirmButton({ style, narrowOnPhone, ...rest }: ActionProps) {
+  return <Button {...rest} compact={false} mode="contained" style={[style, useActionStyle(narrowOnPhone)]} />;
 }
