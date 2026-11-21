@@ -10,7 +10,7 @@ import type { SyncedTemplate } from '../../domain/firestore';
 import type { RankedMerchant } from '../../domain/merchant';
 import { templatePolicy } from '../../domain/template';
 import { useI18n } from '../../i18n/I18nProvider';
-import { layout, spacing } from '../../theme/tokens';
+import { layout, radius, spacing } from '../../theme/tokens';
 import type { FundChoice } from '../funds/FundField';
 import { TemplateEditor } from './TemplateEditor';
 import { TemplateFields, useTemplateForm } from './TemplateForm';
@@ -78,7 +78,8 @@ const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   // As tall as «Salva» in Nuova spesa, aligned to the right.
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.sm },
-  create: { minWidth: 140 },
+  // Like «Salva» of Nuova spesa (user's request, 21 November): full width at every size, pill-shaped.
+  create: { flexGrow: 1, borderRadius: radius.pill },
   createContent: { minHeight: layout.controlHeight },
   createLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
 });

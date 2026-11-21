@@ -5,7 +5,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding } from '../../components/Button';
 import { useSnackbar } from '../../components/SnackbarHost';
-import { layout, spacing } from '../../theme/tokens';
+import { layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import type { Category } from '../../domain/category';
@@ -220,7 +220,8 @@ const styles = StyleSheet.create({
   scan: { flexDirection: 'row' },
   scanCompact: { gap: spacing.md },
   scanHalf: { flex: 1, minWidth: 0 },
-  submit: { flexGrow: 1 },
+  // Full width at every size, pill-shaped (user's request, 21 November): the one primary action of the page.
+  submit: { flexGrow: 1, borderRadius: radius.pill },
   label: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   button: { minHeight: layout.controlHeight },
 });

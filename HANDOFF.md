@@ -176,6 +176,14 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Committato in
   `3d1b5ea` e pubblicato.
 
+## «Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola — 21 novembre 2026
+
+- Su richiesta (screenshot di Templates su smartphone): «Crea» di «Nuovo template» occupa tutta la larghezza del modulo a ogni dimensione,
+  come «Salva» di Nuova spesa (prima minimo 140, allineato a destra); entrambi hanno ora la forma a pillola (`radius.pill`) invece del
+  raggio 16 degli altri pulsanti. Altezza invariata (56). `ExpenseForm.tsx`, `TemplatesPage.tsx`.
+- **Verifica:** typecheck e `npm test` OK, `build:demo` OK. Chromium headless, demo Standard: 390×844 e 1400×900, «Salva» e «Crea» larghi
+  quanto il contenitore (366 e 1056 px), alti 56, `border-radius` 999 px; nessun errore JS. Non committato, non pubblicato.
+
 ## Fondo accanto alla categoria nei dettagli di Analisi su smartphone — 21 novembre 2026
 
 - Su richiesta (screenshot di «Servizi digitali» su iPhone): nel dialogo delle transazioni di una categoria (`TransactionDetails`) il fondo
