@@ -45,7 +45,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
   gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
 - **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `e4bf945` (importo obbligatorio nei template, matita nell'elenco, fondo a capo in
+  `origin`. Ultimi commit di codice, tutti pubblicati: `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
+  template con contorno, nessun messaggio dopo il salvataggio), `976a5cb` (vibrazione più delicata, 6/4 ms), `3c8f614` (Guida: importo dei template obbligatorio), `7dc02a2` (vibrazione senza ronzio), `e4bf945` (importo obbligatorio nei template, matita nell'elenco, fondo a capo in
   Analisi su smartphone, testo di «Vibrazione»), `b2a80ce` (vibrazione su legenda e segmenti), `9ae0d33` (selezione di
   Analisi più reattiva), `a8f73a2` (formattatori Intl in cache), `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
   categoria in Analisi), `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
@@ -61,7 +62,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `976a5cb` (vibrazione più delicata, 6/4 ms) pubblicato su richiesta il
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `26c5b8d` (Barre senza variazione percentuale; con `a29ced9`, vibrazione su «Salva»/«Crea», matita
+  dei template, nessun messaggio dopo il salvataggio) pubblicato su richiesta il 21 novembre: «Deploy complete!», sito 200; bundle online non confrontato con `dist/`. Rules invariate.
+  Prima, **Hosting** da `976a5cb` (vibrazione più delicata, 6/4 ms) pubblicato su richiesta il
   21 novembre (notte): «Deploy complete!», sito 200, bundle identico a `dist/`. Prima, **Hosting** da `7dc02a2` (feedback aptico senza ronzio; con `3c8f614`, testo dei template
   nella Guida) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256).
   Rules invariate. Prima, **Hosting** da `e4bf945` (importo obbligatorio nei template, matita, fondo a capo in Analisi
@@ -100,7 +103,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
   pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
   «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
-- **Verifiche (21 novembre, sera).** `npm run check` OK (typecheck, **507/507**, build demo) su `e4bf945` (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
+- **Verifiche (21 novembre, notte).** `npm run check` OK (typecheck, **510/510**, build demo) su `0fa04a9`; dopo `a29ced9` e `26c5b8d` solo typecheck e
+  `npm test` OK (**509/509**, un test in meno per il confronto delle Barre rimosso), senza rifare `npm run check` né la build demo (il deploy ricostruisce il bundle cloud).
+  Prima: **507/507** su `e4bf945` (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
   (`817a2f1`); da allora Rules, `DataStore` e servizi non sono cambiati (il dominio solo nella validazione del modulo dei template).
 - **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
   più nera.
@@ -3786,7 +3791,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `e4bf945` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
+- **Pubblicazione (21 novembre):** tutto il codice fino a `26c5b8d` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
   «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
