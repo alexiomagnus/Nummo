@@ -172,6 +172,22 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Committato in
   `3d1b5ea` e pubblicato.
 
+## Tastiera aperta a passi: il campo resta in vista — 21 novembre 2026
+
+- Seguito della sezione seguente. iOS riduce il visual viewport a passi durante l'animazione della tastiera; la conferma arriva al primo
+  passo oltre la soglia e il campo attivo veniva portato in vista solo lì. Riprodotto con `scripts/check-keyboard.mjs --steps 4`
+  (nuova opzione: viewport ridotto in N passi a un fotogramma di distanza): campo basso di Nuova spesa (332–380) tagliato di 16 px sotto
+  il bordo dopo l'ultimo passo (364), `scrollTop` fermo a 0.
+- **Correzione:** `observeViewportShrink` (`theme/viewport.ts`, target iniettabile) avvisa a ogni nuovo restringimento, in un microtask
+  dopo tutti i listener dell'evento (variabile dell'altezza compresa) e prima del disegno; `AppShell`, finché la tastiera è confermata,
+  riporta in vista il campo attivo (`scrollIntoView` `nearest`). Solo DOM, nessun render per passo; la crescita si ignora. Test in
+  `tests/viewport.test.ts`.
+- **Verifica** (export separato nello scratchpad: `dist-demo/` era in ricostruzione da un'altra sessione): 4 e 6 passi (CPU 4×) → campo
+  316–364 nello stesso fotogramma dell'ultimo passo; tastiera in un passo, dialogo Nuova lista a passi, cambio di campo e cicli, desktop
+  1400×900 invariati; nessun errore. Long task con 6 passi e CPU 4× uguali a quelli del codice committato (confronto in un worktree
+  temporaneo, rimosso): vengono dal relayout della pagina. `npm run typecheck` OK, `npm test` **503/503**. Non provato su iPhone reale.
+  Non committato.
+
 ## Tastiera virtuale: transizione in un solo fotogramma — 21 novembre 2026
 
 - Su richiesta (glitch all'apertura della tastiera). **Causa:** l'altezza della pagina (`--nummo-viewport-height`, impostata da

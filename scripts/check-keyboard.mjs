@@ -7,9 +7,9 @@
 // Requires `chromium` in PATH. A real keyboard (its animation, iOS) is not reproduced: confirm on a device.
 //
 // npm run build:demo && node scripts/check-keyboard.mjs dist-demo [--field top|low|dialog] [--keyboard 330]
-//   [--vp 390x844] [--cpu 4] [--switch] [--cycles 1] [--out DIR]
+//   [--vp 390x844] [--cpu 4] [--steps 1] [--switch] [--cycles 1] [--out DIR]
 // --field: first field of Nuova spesa, the lowest visible one, or the name of the Nuova lista dialog.
-// --switch: with the keyboard open, move to the first and then to the lowest field. --cpu: CPU throttling rate.
+// --steps N: the keyboard opens in N viewport steps. --switch: with the keyboard open, move to the first and then to the lowest field. --cpu: CPU throttling rate.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -27,8 +27,9 @@ const keyboard = Number(opt('keyboard', '330'));
 const cpu = Number(opt('cpu', '1'));
 const cycles = Number(opt('cycles', '1'));
 const switching = process.argv.includes('--switch');
+const steps = Number(opt('steps', '1'));
 const out = opt('out', null);
-assert.ok(width > 0 && height > keyboard && keyboard >= 0 && cpu >= 1 && cycles >= 1);
+assert.ok(width > 0 && height > keyboard && keyboard >= 0 && cpu >= 1 && cycles >= 1 && Number.isInteger(steps) && steps >= 1);
 const mobile = width < 600;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -123,7 +124,11 @@ try {
     const target = await fieldAt(field);
     assert.ok(target, 'No text field found for --field ' + field);
     await mark('touch on the field'); await tap(target); await sleep(150);
-    await mark(`keyboard opens (viewport ${height - keyboard})`); await viewport(height - keyboard); await sleep(700);
+    await mark(`keyboard opens (viewport ${height - keyboard}${steps > 1 ? `, ${steps} steps` : ''})`);
+    // --steps: the viewport shrinks in steps one frame apart, as iOS reports its keyboard animation (and some Android
+    // keyboards their suggestion strip): the focused field must stay in view after the last one, not only the first.
+    for (let step = 1; step <= steps; step++) { await viewport(height - Math.round(keyboard * step / steps)); if (step < steps) await sleep(17); }
+    await sleep(700);
     if (switching) for (const which of ['top', 'low']) {
       const next = await fieldAt(field === 'dialog' ? 'dialog' : which);
       if (!next) { await mark(`no other field (${which})`); continue; }

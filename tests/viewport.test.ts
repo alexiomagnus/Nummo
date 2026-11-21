@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { batchKeyboardReports, initialFocusAllowed, isTextEntry, keyboardOpen, nextKeyboardReference, observeVirtualKeyboard, observeViewportHeight, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight } from '../src/theme/viewport.ts';
+import { batchKeyboardReports, initialFocusAllowed, isTextEntry, keyboardOpen, nextKeyboardReference, observeViewportShrink, observeVirtualKeyboard, observeViewportHeight, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight } from '../src/theme/viewport.ts';
 
 test('viewport: tastiera e barre browser riducono lo spazio disponibile; fallback senza API e zoom indipendente', () => {
   assert.equal(visibleViewportHeight(900, { height: 750.4, scale: 1 }), 750);
@@ -269,4 +269,27 @@ test('tastiera virtuale: gli avvisi dello stesso evento diventano un solo aggior
   reports.cancel();
   queued.shift()!();
   assert.equal(commits.length, 2);
+});
+
+test('tastiera virtuale: ogni nuovo restringimento del viewport riporta in vista il campo, la crescita no', () => {
+  const queued: (() => void)[] = [];
+  let reveals = 0;
+  const visual = Object.assign(new EventTarget(), { height: 604, width: 390, scale: 1 });
+  const target = Object.assign(new EventTarget(), { innerHeight: 844, innerWidth: 390, visualViewport: visual });
+  const stop = observeViewportShrink(target as unknown as Window, () => { reveals++; }, (run) => queued.push(run));
+  const resize = (height: number, on: EventTarget = visual) => { visual.height = height; on.dispatchEvent(new Event('resize')); };
+  // iOS: the visual viewport keeps shrinking after the keyboard has been confirmed.
+  resize(484); resize(364);
+  assert.equal(queued.length, 2, 'un passo, un controllo');
+  for (const run of queued.splice(0)) run();
+  assert.equal(reveals, 2);
+  // The same height reported by the window too, sub-pixel noise and growth: nothing to do.
+  resize(364, target); resize(363.5); resize(500); resize(844);
+  assert.equal(queued.length, 0);
+  // A shrink measured against the latest height, not the first one.
+  resize(700);
+  assert.equal(queued.length, 1);
+  stop();
+  resize(300);
+  assert.equal(queued.length, 1, 'nessun ascolto dopo la rimozione');
 });

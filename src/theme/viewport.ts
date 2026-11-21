@@ -141,6 +141,25 @@ export function batchKeyboardReports(commit: (state: KeyboardState) => void, que
   };
 }
 
+// While the keyboard is open, call `onShrink` whenever the visible viewport gets shorter again: iOS shrinks its visual
+// viewport in steps during the keyboard animation, and a suggestion strip may shrink it later. `onShrink` runs in a
+// microtask, after every listener of that resize event (GlobalStyle's new --nummo-viewport-height included) and still
+// before the paint. Growth (keyboard closing, browser bars) is ignored. Returns the cleanup.
+export function observeViewportShrink(target: Window, onShrink: () => void, queue: (run: () => void) => void = queueMicrotask): () => void {
+  const visual = target.visualViewport;
+  const measure = () => visual?.height ?? target.innerHeight;
+  let last = measure();
+  const resize = () => {
+    const height = measure();
+    const shrunk = height < last - 1;
+    last = height;
+    if (shrunk) queue(onShrink);
+  };
+  target.addEventListener('resize', resize);
+  visual?.addEventListener('resize', resize);
+  return () => { target.removeEventListener('resize', resize); visual?.removeEventListener('resize', resize); };
+}
+
 // Scrollbars of overlays appear only while their content scrolls: each scrolled element is marked with
 // `data-scrolling` and unmarked `delay` ms after its last scroll event (CSS in GlobalStyle draws the thumb).
 export const scrollingAttribute = 'data-scrolling';

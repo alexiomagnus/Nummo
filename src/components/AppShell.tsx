@@ -10,7 +10,7 @@ import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } f
 import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt } from './navIndicator';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
-import { batchKeyboardReports, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
+import { batchKeyboardReports, observeViewportShrink, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
 import { observeWholeRows } from '../theme/wholeRows';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -70,11 +70,17 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // Once the keyboard changes the layout, bring the focused field back into view. The confirmation is committed with
   // flushSync inside the viewport's resize event (see useVirtualKeyboard), so the layout is final here: scrolling now
   // lands in the same frame as the new height (a frame later the field would show cut by the keyboard for a frame).
-  // `nearest` honours the scroll padding reserved by sticky bars.
+  // The confirmation comes at the first step past the threshold, but iOS shrinks its visual viewport in steps during the
+  // keyboard animation: while the keyboard is open every further shrinking brings the field back into view too
+  // (observeViewportShrink; DOM only, no render per step). `nearest` honours the scroll padding reserved by sticky bars.
   useLayoutEffect(() => {
-    if (!keyboardConfirmed || typeof document === 'undefined') return;
-    const active = document.activeElement;
-    if (active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
+    if (!keyboardConfirmed || typeof document === 'undefined') return undefined;
+    const reveal = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active !== document.body) active.scrollIntoView({ block: 'nearest' });
+    };
+    reveal();
+    return observeViewportShrink(window, reveal);
   }, [keyboardConfirmed]);
   const page = useRef<ComponentRef<typeof View>>(null);
   const previousSection = useRef(selected);
