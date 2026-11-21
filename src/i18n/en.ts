@@ -958,7 +958,7 @@ export const english: Readonly<Record<string, string>> = {
   "Fondo eliminato": "Deleted fund",
   "Template": "Template",
   "Nessun template": "No template",
-  "Il campo Template compare quando crei un template nella pagina Templates.": "The Template field appears once you create a template in the Templates page.",
+  "Il pulsante Template compare quando crei un template nella pagina Templates.": "The Template button appears once you create a template in the Templates page.",
   "1 template": "1 template",
   "{p0} template": "{p0} templates",
   "Template non valido.": "Invalid template.",

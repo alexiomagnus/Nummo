@@ -169,7 +169,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
         {size === 'compact' && !(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
       </View>}
       {/* Templates turned on but none saved yet: the button cannot appear, so say why. */}
-      {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il campo Template compare quando crei un template nella pagina Templates.")}</Text>}
+      {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il pulsante Template compare quando crei un template nella pagina Templates.")}</Text>}
       {scanEnabled && scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={update} />}

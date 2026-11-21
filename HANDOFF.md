@@ -165,9 +165,15 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
   `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
   dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
-- **Ambiente (21 novembre).** Runner hybrid **attivo** (PID 81456, `npm run dev` avviato il 21 alle 01:20, progetto `nummo-6b6e2`):
-  `.firebase/hybrid.lock` e `.nummo-hybrid-81456.json` sono suoi, porte 8180/4000/4400/8081 occupate. Non è un residuo: non toccarli;
-  per suite o prove usare porte dedicate.
+- **Ambiente (21 novembre, notte).** Il runner hybrid PID 81456 (`npm run dev` del 21 alle 01:20, progetto `nummo-6b6e2`) si è
+  fermato senza pulizia: processo inesistente, porte 8180/9099/4000/4400/8081 libere, cartella di sessione `.firebase/hybrid-qVvetQ`
+  con la sola `cli-config`, `emulator-data/` fermo all'export del 16 alle 03:42 (eventuali dati scritti in hybrid dal 21 alle 01:20
+  persi con l'emulatore). Su richiesta: lock rinominato in `.firebase/hybrid.lock.stale-81456`, config `.nummo-hybrid-81456.json`
+  rimossa dalla radice; le altre cartelle e i `stale-*` conservati. `npm run dev` non è più bloccato.
+- **Quarto riallineamento (21 novembre, notte).** Su richiesta, dopo una verifica (`main` = `origin/main` dopo un fetch, albero pulito,
+  `npm run check` OK **509/509** su `118b446`): runner hybrid dato per attivo ma fermo (punto sopra); testo «Il campo Template compare…»
+  diventato «Il pulsante Template compare…» (IT/EN, `ExpenseForm.tsx`, `en.ts`); «Funzionalità implementate» e `AGENTS.md` con il
+  pulsante «Template» invece del campo; etichetta breve «Scansiona» sotto 380 px (da `d66d3db`) ora citata in `AGENTS.md`.
 - **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
@@ -182,7 +188,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   predefinito mono è il grigio delle superfici e sembrava disattivato). Scelto un template il pulsante mostra solo l'icona della sua
   categoria (icona «template» se la categoria non c'è più) e la freccia; il nome resta nell'etichetta accessibile («Template: …») e
   nell'elenco. `SelectField` accetta `trigger`/`triggerStyle`/`menuMinWidth` (stesso foglio e menu; menu largo almeno 360 perché le
-  descrizioni non siano troncate). La riga «Il campo Template compare quando…» (template attivi ma nessuno salvato) sta sotto la prima riga.
+  descrizioni non siano troncate). La riga «Il pulsante Template compare quando…» (prima «Il campo…», corretta nella sessione del 21 novembre, notte) (template attivi ma nessuno salvato) sta sotto la prima riga.
 - **Verifica:** `npm run check` OK (**509/509**). Chromium headless, `dist-demo` in Standard, tema scuro, backup v11 di prova con due
   template importato dall'interfaccia: 390×844 con e senza scansione, 360×780, 1280×900 con e senza scansione; aperto il foglio/menu,
   scelto un template. Smartphone: pulsanti a metà riga (12–189 e 201–378 a 390), «Salva» sopra la navigazione (fondo 676–696 contro
@@ -3867,7 +3873,7 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   per UID, «Questo Nummo è privato» per chi non è il proprietario, errori `auth/...` validati IT/EN; guida pubblica `#guida`.
 - **Spese:** CRUD con UUID stabile, conferma server, revisioni e conflitti espliciti, bozza conservata tra sezioni; Esercente
   facoltativo con suggerimenti; scansione dello scontrino solo con AI BYOK (Claude, OpenAI, Google Gemini; spenta di base, OCR rimosso il 21 novembre) che
-  propone soltanto; Templates facoltativi (pagina dal menu account, campo «Template» in Nuova spesa, Esercente facoltativo, limite 100). Pagina Spese a due
+  propone soltanto; Templates facoltativi (pagina dal menu account, pulsante «Template» nella prima riga di Nuova spesa dal 21 novembre, `ee2fcdc`, Esercente facoltativo, limite 100). Pagina Spese a due
   viste: spese singole (ricerca, filtri, card «Totale», «Prodotti (n)») e abbonamenti (stati, prove gratuite, cambio di frequenza,
   fino a otto prezzi per numero di rinnovo, «Storico dei pagamenti» con eliminazione di un singolo pagamento).
 - **Categorie:** pagina dal menu account; nomi unici; 64 ID icona validi (40 attive, 39 selezionabili; ritirate `sofa` e le 24
