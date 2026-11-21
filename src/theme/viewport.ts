@@ -118,6 +118,29 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   };
 }
 
+export type KeyboardState = Readonly<{ open: boolean; confirmed: boolean }>;
+
+// observeVirtualKeyboard reports `open` and `confirmed` one at a time, and window and visual viewport fire their own
+// resize events for one keyboard change. Gather every report made before `queue` runs into a single `commit` of the
+// latest state, so the shell renders once (AppShell commits it with flushSync from a microtask, still before the paint:
+// the same frame as the new viewport height). `cancel` drops a pending commit (unmount).
+export function batchKeyboardReports(commit: (state: KeyboardState) => void, queue: (run: () => void) => void = queueMicrotask) {
+  let next: KeyboardState = { open: false, confirmed: false };
+  let queued = false;
+  let live = true;
+  const schedule = (change: Partial<KeyboardState>) => {
+    next = { ...next, ...change };
+    if (queued) return;
+    queued = true;
+    queue(() => { queued = false; if (live) commit(next); });
+  };
+  return {
+    open: (open: boolean) => schedule({ open }),
+    confirmed: (confirmed: boolean) => schedule({ confirmed }),
+    cancel: () => { live = false; },
+  };
+}
+
 // Scrollbars of overlays appear only while their content scrolls: each scrolled element is marked with
 // `data-scrolling` and unmarked `delay` ms after its last scroll event (CSS in GlobalStyle draws the thumb).
 export const scrollingAttribute = 'data-scrolling';

@@ -10,7 +10,7 @@ import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } f
 import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt } from './navIndicator';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
-import { observeVirtualKeyboard } from '../theme/viewport';
+import { batchKeyboardReports, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
 import { observeWholeRows } from '../theme/wholeRows';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -32,7 +32,8 @@ type Props<T extends string> = {
   children: ReactNode;
 };
 
-// Virtual keyboard open (inferred, see viewport.ts). Pages read it to give the fields the room left above the keyboard.
+// Virtual keyboard open (inferred, see viewport.ts), for pages that need the room left above the keyboard. No page reads it
+// today: the shell itself hides the navigation bar and scrolls the focused field into view.
 const KeyboardContext = createContext(false);
 // Fixed for the session: only the iPhone lowers the floating bar into its home-indicator area.
 const iPhone = typeof navigator !== 'undefined' && isIPhone(navigator.userAgent);
@@ -40,31 +41,20 @@ const barSide = floatingBarSideSpace(iPhone, spacing.md, spacing.xs);
 export const useKeyboardOpen = () => useContext(KeyboardContext);
 
 function useVirtualKeyboard() {
-  const [state, setState] = useState({ open: false, confirmed: false });
+  const [state, setState] = useState<KeyboardState>({ open: false, confirmed: false });
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     // Commit in the same frame as the viewport change. The keyboard resizes the viewport in the browser's resize step
     // and the page's new height is painted in that frame (GlobalStyle sets --nummo-viewport-height from the same
     // event), but React renders an update from a native `resize` listener in a later task, one frame late: the shrunken
     // page would still reserve the hidden bar's room for a frame (content jumping twice), and on closing it would show
-    // an empty strip before the bar returns. The observer reports `open` and `confirmed` separately, and window and
-    // visual viewport fire their own events: a microtask (still before the paint) gathers them into one synchronous
-    // render, which also runs the shell's layout effect (focused field scrolled into view). Only DOM events and timers
-    // call back here, never a render.
-    let next = { open: false, confirmed: false };
-    let queued = false;
-    let live = true;
-    const commit = () => {
-      queued = false;
-      const value = next;
-      if (live) flushSync(() => setState((previous) => (previous.open === value.open && previous.confirmed === value.confirmed ? previous : value)));
-    };
-    const schedule = (change: Partial<typeof next>) => {
-      next = { ...next, ...change };
-      if (!queued) { queued = true; queueMicrotask(commit); }
-    };
-    const stop = observeVirtualKeyboard(window, (open) => schedule({ open }), (confirmed) => schedule({ confirmed }));
-    return () => { live = false; stop(); };
+    // an empty strip before the bar returns. The reports are gathered in a microtask (still before the paint) into one
+    // synchronous render, which also runs the shell's layout effect (focused field scrolled into view). Only DOM events
+    // and timers call back here, never a render.
+    const reports = batchKeyboardReports((value) => flushSync(() => setState((previous) =>
+      (previous.open === value.open && previous.confirmed === value.confirmed ? previous : value))));
+    const stop = observeVirtualKeyboard(window, reports.open, reports.confirmed);
+    return () => { reports.cancel(); stop(); };
   }, []);
   return state;
 }

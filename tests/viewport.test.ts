@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { initialFocusAllowed, isTextEntry, keyboardOpen, nextKeyboardReference, observeVirtualKeyboard, observeViewportHeight, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight } from '../src/theme/viewport.ts';
+import { batchKeyboardReports, initialFocusAllowed, isTextEntry, keyboardOpen, nextKeyboardReference, observeVirtualKeyboard, observeViewportHeight, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight } from '../src/theme/viewport.ts';
 
 test('viewport: tastiera e barre browser riducono lo spazio disponibile; fallback senza API e zoom indipendente', () => {
   assert.equal(visibleViewportHeight(900, { height: 750.4, scale: 1 }), 750);
@@ -247,4 +247,26 @@ test('barre di scorrimento dei dialoghi: visibili solo durante lo scorrimento', 
   listener!({ target: element } as never);
   stop();
   assert.ok(!attrs.has(scrollingAttribute) && listener === null, 'arresto pulito');
+});
+
+test('tastiera virtuale: gli avvisi dello stesso evento diventano un solo aggiornamento, mai dopo lo smontaggio', () => {
+  const queued: (() => void)[] = [];
+  const commits: { open: boolean; confirmed: boolean }[] = [];
+  const reports = batchKeyboardReports((state) => commits.push(state), (run) => queued.push(run));
+  // Opening confirmed by a resize: `open` and `confirmed` in one event, window and visual viewport both firing.
+  reports.open(true); reports.confirmed(true); reports.open(true);
+  assert.equal(queued.length, 1, 'one commit scheduled per batch');
+  assert.deepEqual(commits, []);
+  queued.shift()!();
+  assert.deepEqual(commits, [{ open: true, confirmed: true }]);
+  // Closing: the latest values win, the earlier ones of the batch are not committed.
+  reports.open(false); reports.confirmed(false);
+  queued.shift()!();
+  assert.deepEqual(commits.at(-1), { open: false, confirmed: false });
+  assert.equal(commits.length, 2);
+  // A batch still pending when the shell unmounts is dropped.
+  reports.open(true);
+  reports.cancel();
+  queued.shift()!();
+  assert.equal(commits.length, 2);
 });

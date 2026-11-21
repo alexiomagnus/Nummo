@@ -134,6 +134,27 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   a y 148, a 1400×900 allineato alla colonna; «Torna indietro» riporta all'accesso; nessun errore JS. `npm run check` OK. Non committato,
   non pubblicato.
 
+## Tastiera virtuale: transizione in un solo fotogramma — 21 novembre 2026
+
+- Su richiesta (glitch all'apertura della tastiera). **Causa:** l'altezza della pagina (`--nummo-viewport-height`, impostata da
+  `GlobalStyle` nell'evento `resize`) era dipinta subito, mentre lo stato della tastiera in `AppShell` (`setState` da un listener nativo
+  `resize`, priorità predefinita di React) arrivava un fotogramma dopo, e `scrollIntoView` del campo attivo un altro ancora
+  (`requestAnimationFrame`). Misurato in Chromium (Nuova spesa 390×844, CPU 4×), prima: apertura in tre stati in ~84 ms (area 212 px con
+  la barra invisibile che occupava ancora 88 px → 300 → campo portato in vista), chiusura in due (striscia vuota di 88 px, poi la barra).
+  Non responsabili: transizioni CSS, `position: fixed` (assente), rimontaggi al focus, `100dvh`, dialoghi (stessa variabile).
+- **Correzione** (`fdfce0e`, già pubblicata con `3d1b5ea`): un microtask riunisce gli avvisi `open`/`confirmed` di un evento in un solo
+  `flushSync`, ancora prima del disegno; il campo va in vista in un `useLayoutEffect`. `flushSync` dichiarato in `src/types/react-dom.d.ts`
+  (`react-dom` è già una dipendenza diretta, senza tipi). `observeVirtualKeyboard` invariato.
+- **Seguito, stesso giorno (non committato):** il raggruppamento è ora la funzione pura `batchKeyboardReports` in `theme/viewport.ts`, con un
+  test (un solo aggiornamento per gruppo, valori più recenti, niente dopo lo smontaggio); commento di `KeyboardContext` corretto (nessuna
+  pagina lo legge oggi); `scripts/check-keyboard.mjs`, controllo manuale per fotogramma (`--field top|low|dialog`, `--keyboard`, `--cpu`,
+  `--switch`, `--cycles`, `--vp`).
+- **Verifica:** `scripts/check-keyboard.mjs` su `dist-demo`: campo basso con tastiera 480 e CPU 4× (apertura con scorrimento e chiusura in
+  un fotogramma ciascuna), dialogo Nuova lista, passaggio tra campi con tastiera aperta e due cicli (nessuno spostamento), desktop
+  1400×900 invariato; nessun errore. Long task con CPU 4× tra 57 e 99 ms, variabili tra esecuzioni come prima della correzione.
+  `npm run check` OK. **Non provato su telefono reale:** l'animazione della tastiera di sistema e iOS (che riduce solo il visual viewport, a
+  passi: il campo va in vista una volta sola, alla conferma) restano da verificare.
+
 ## «Chiudi» con contorno — 21 novembre 2026
 
 - Su richiesta: «Chiudi» dei dialoghi a una sola azione (transazioni di Analisi, Prodotti, Storico dei pagamenti) e del riepilogo aperto da
