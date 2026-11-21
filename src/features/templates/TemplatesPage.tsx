@@ -5,6 +5,7 @@ import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { useHaptics } from '../../components/Haptics';
 import { SwitchRow } from '../../components/SwitchRow';
 import type { Category } from '../../domain/category';
 import type { SyncedTemplate } from '../../domain/firestore';
@@ -36,6 +37,7 @@ type Props = {
 export function TemplatesPage({ remote, categories, fundChoices, fundNames, merchants, enabled, onToggle }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
+  const haptic = useHaptics();
   const muted = { color: colors.onSurfaceVariant };
   const [editing, setEditing] = useState<SyncedTemplate | null>(null);
   const form = useTemplateForm({ categories, fundChoices, merchants, onSubmit: remote.create });
@@ -52,7 +54,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
         <Card title={t("Nuovo template")}>
           {full ? <Text variant="bodyMedium" style={muted}>{t("Hai raggiunto il limite di {p0} template: eliminane uno per aggiungerne altri.", { p0: templatePolicy.maxTemplates })}</Text> : <>
             <TemplateFields form={form} disabled={!remote.ready} />
-            <View style={styles.actions}><Button mode="contained" disabled={!remote.ready} onPress={form.submit} contentStyle={styles.createContent} labelStyle={styles.createLabel} style={styles.create}>{t("Crea")}</Button></View>
+            <View style={styles.actions}><Button mode="contained" disabled={!remote.ready} onPress={() => { haptic(); form.submit(); }} contentStyle={styles.createContent} labelStyle={styles.createLabel} style={styles.create}>{t("Crea")}</Button></View>
           </>}
           {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
         </Card>
@@ -68,7 +70,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
                 trailing={<View style={styles.trailing}>
                   {template.amount_minor !== null && <Text variant="titleMedium" style={listRowStyles.amount}>{formatAmount(template.amount_minor)}</Text>}
                   {/* The whole row opens the editor; the pencil only tells that it can be edited (user's request, 21 November). */}
-                  <View aria-hidden style={styles.edit}><SvgIcon shape={iconShapes.pencil} size={20} color={colors.onSurfaceVariant} /></View>
+                  <View aria-hidden style={[styles.edit, { borderColor: colors.outline }]}><SvgIcon shape={iconShapes.pencil} size={24} color={colors.onSurfaceVariant} /></View>
                 </View>} />;
             })}</View>}
         </Card>
@@ -88,5 +90,5 @@ const styles = StyleSheet.create({
   createContent: { minHeight: layout.controlHeight },
   createLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  edit: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  edit: { width: 44, height: 44, borderRadius: radius.button, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
 });

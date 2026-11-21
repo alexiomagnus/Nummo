@@ -1,6 +1,5 @@
 // Italian source messages are stable UI keys. Never pass user-authored names to t().
 export const english: Readonly<Record<string, string>> = {
-  "Abbonamento salvato.": "Subscription saved.",
   "Prova gratuita": "Free trial",
   "Primo pagamento": "First payment",
   "In prova gratuita": "On free trial",
@@ -403,7 +402,6 @@ export const english: Readonly<Record<string, string>> = {
   "Categoria: dati non disponibili": "Category: data unavailable",
   "Nessuna categoria": "No category",
   "Serve almeno una categoria per salvare la spesa: creala nella pagina Categorie.": "You need at least one category to save the expense: create it in the Categories page.",
-  "Spesa salvata e confermata da Firestore.": "Expense saved and confirmed by Firestore.",
   "Crea prima una categoria nella sezione Categorie.": "First create a category on the Categories page.",
   "Conferma non ancora disponibile: controlla lo stato e l’elenco prima di inserire di nuovo la spesa.": "Confirmation is not yet available: check the status and list before entering the expense again.",
   "Verifica sul server": "Check on server",
@@ -720,7 +718,6 @@ export const english: Readonly<Record<string, string>> = {
   "Ogni settimana": "Every week",
   "14 giorni": "14 days",
   "Ogni mese": "Every month",
-  "Spesa salvata.": "Expense saved.",
   "Problema con i dati": "Data problem",
   "Sul dispositivo": "On device",
   "Lettura dei dati dal dispositivo in corso.": "Reading data from the device.",

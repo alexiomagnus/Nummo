@@ -124,6 +124,16 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## «Salva» e «Crea» con vibrazione, matita dei template evidenziata, niente messaggio dopo il salvataggio — 21 novembre 2026
+
+- Su richiesta: (1) «Salva» di Nuova spesa e «Crea» di Templates danno un `tap` al tocco, solo se «Vibrazione» è accesa (stesso cancello di
+  `useHaptics()`). (2) Matita nell'elenco dei template: 24 dp in un riquadro 44×44 con contorno `outline` (`radius.button`), sempre
+  decorativa (`aria-hidden`, la riga resta il bersaglio). (3) Dopo il salvataggio di una spesa o di un abbonamento da Nuova spesa non compare più
+  il messaggio («Spesa salvata e confermata da Firestore.», «Spesa salvata.», «Abbonamento salvato.»): il modulo che si svuota è l'esito; le tre
+  traduzioni sono rimosse da `en.ts`. (4) Template spenti di base: già così nel codice (`defaultPreferences.templatesEnabled = false`); il
+  campo visto nello screenshot dipende dall'interruttore salvato nel browser dell'utente, non è cambiato nulla.
+- **Verifica:** typecheck e `npm test` OK (510/510). Non provato nel browser né su telefono; non committato né pubblicato.
+
 ## Feedback aptico: impulsi singoli senza ronzio — 21 novembre 2026
 
 - Su richiesta (vibrazioni «lunghe, ronzanti, poco precise» sul Pixel 8). **Analisi:** nessuna libreria, solo

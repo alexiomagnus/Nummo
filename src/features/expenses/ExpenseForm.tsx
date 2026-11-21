@@ -4,7 +4,7 @@ import { memo, useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding } from '../../components/Button';
-import { useSnackbar } from '../../components/SnackbarHost';
+import { useHaptics } from '../../components/Haptics';
 import { layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { newDraft, validateDraft, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
@@ -46,7 +46,7 @@ const noMerchants: readonly RankedMerchant[] = [];
 
 function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '', merchants = noMerchants, templates }: Props) {
   const { t } = useI18n();
-  const notify = useSnackbar();
+  const haptic = useHaptics();
   const { colors } = useTheme();
   const size = useSizeClass();
   const { width: windowWidth } = useWindowDimensions();
@@ -75,7 +75,6 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     setErrors({});
     setFormKey((key) => key + 1);
     setTemplateId('');
-    notify(submission.request.first_payment_date ? "Abbonamento salvato." : store.local ? "Spesa salvata." : "Spesa salvata e confermata da Firestore.");
     store.startNew();
   }, [submission.status]);
   // A category deleted in the other section simply stops being selected; without one, the preferred category if it exists.
@@ -193,7 +192,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
           </>
         ) : (
           <View style={[styles.actions, { marginTop: blockGap - formGap }]}>
-            <Button mode="contained" onPress={save} disabled={!enabled} loading={submission.status === 'sending'}
+            <Button mode="contained" onPress={() => { haptic(); save(); }} disabled={!enabled} loading={submission.status === 'sending'}
               contentStyle={styles.button} labelStyle={styles.label} style={styles.submit}>
               {submission.status === 'sending' ? t("In attesa di conferma…") : t("Salva")}
             </Button>
