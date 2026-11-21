@@ -29,7 +29,9 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
   dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
   radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `bdc742b` («Chiudi» con contorno) pubblicato su richiesta il 21 novembre
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `3d1b5ea` pubblicato su richiesta il 21 novembre (mezzogiorno): tastiera
+  virtuale nello stesso fotogramma (`fdfce0e`), «Torna indietro» in «Collega il tuo Firebase», pulsanti della revisione dello scontrino,
+  esercente negli abbonamenti, cestino con contorno rosso su smartphone. Prima, **Hosting** da `bdc742b` («Chiudi» con contorno) pubblicato su richiesta il 21 novembre
   (notte, quarta parte). Prima, **Rules e Hosting** da `817a2f1` pubblicati su richiesta il 21 novembre (notte, terza
   parte): template, scansione solo AI, pulsanti uniformi, icona; dettagli nel «Registro dei rilasci». Prima, **Hosting** da `de79c95` pubblicato su richiesta il 21 novembre (notte, seconda parte):
   riga tagliata dissolta verso il bordo del pannello, «Fondo» nei dettagli della spesa; sito 200, bundle identico a `dist/`. Prima,
@@ -80,7 +82,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 - Su richiesta (screenshot): il cestino di `DeleteAction labeled="wide"` su smartphone ha il contorno come «Annulla» (IconButton `outlined`,
   48×48, `radius.button`, icona in `error`). Poi, su richiesta, anche il contorno nello stesso rosso `error` dell'icona (verificato: bordo
-  `#FFB4AB` da 1 px nel tema scuro, come l'icona). In Spese → Abbonamenti, su smartphone Annulla/Pausa (o Riattiva)/Modifica si allargano fino a
+  `#FFB4AB` da 1 px nel tema scuro, come l'icona). Committato in `3d1b5ea` e pubblicato. In Spese → Abbonamenti, su smartphone Annulla/Pausa (o Riattiva)/Modifica si allargano fino a
   coprire tutta la riga (`flexGrow: 1` da larghezza naturale); desktop invariato.
 - **Verifica:** Chromium headless, demo con `nummo-esercenti-v10.json`: modifica spesa a 390×844 (cestino 48 con bordo, stessa riga di
   Annulla/Salva); «V10 Netflix» a 390×844 (109/99/118 dp, da 26 a 364 in un dettaglio largo 364) e 360×800 (96/96/104). `npm run check` OK.
@@ -446,6 +448,11 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 21 novembre (mezzogiorno): Hosting da `3d1b5ea`** (con `fdfce0e`: stato della tastiera virtuale applicato nello stesso
+  fotogramma, lavoro di un'altra sessione committato a parte; mai provato su telefono reale). `npm run deploy:hosting`: «Deploy complete!»,
+  sito 200, bundle online identico a `dist/`. Rules e Worker non toccati. Da provare sul telefono: tastiera (nessun doppio salto del
+  contenuto), cestino e azioni degli abbonamenti a 360–412 px.
 
 - **Rilascio del 21 novembre (notte, quarta parte): Hosting da `bdc742b`** («Chiudi» con contorno come «Annulla»). `npm run
   deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Rules e Worker non toccati.
