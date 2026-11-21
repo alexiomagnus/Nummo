@@ -276,13 +276,13 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   riferimento; ridimensionamenti con la pagina in background ignorati. Test nuovo in `tests/viewport.test.ts`.
 - **Scansione dello scontrino:** `parseAiSettings` la dava accesa a chi aveva scelto un servizio prima che esistesse l'interruttore;
   ora è accesa solo con `enabled: true` salvato (chi la vuole la riaccende in Impostazioni). Test aggiornato.
-- **Verifica:** `npm run check` OK (**511/511**). Non provato nel browser né sul telefono. Committato, inviato e pubblicato su Hosting (`dabe2eb`).
+- **Verifica:** `npm run check` OK (**511/511**). Non provato nel browser né sul telefono. Committato in `1518b0c`, inviato e pubblicato su Hosting (con `1c83b54`).
 - **Pulsante «Template» (stessa sessione, su richiesta):** non cambia più dopo la scelta (sempre icona «template» ed etichetta
   «Template»); «Nessun template» svuota tutto il modulo di Nuova spesa (bozza, errori, campi rimontati come dopo un salvataggio),
-  anche se i dati erano stati scritti a mano. Committato, inviato e pubblicato su Hosting (`dabe2eb`).
+  anche se i dati erano stati scritti a mano. Committato in `1518b0c`, inviato e pubblicato su Hosting (con `1c83b54`).
 - **Pagina Templates con l'interruttore spento (stessa sessione, su richiesta):** «Nuovo template» e «I tuoi template» non spariscono
   più: restano visibili in grigio (opacità 0,38 come la scheda AI) e non raggiungibili (`inert`, campi e «Crea» disabilitati). Testo
-  dell'interruttore «…il pulsante Template» invece di «…il campo Template» (IT/EN). Committato, inviato e pubblicato su Hosting (`dabe2eb`).
+  dell'interruttore «…il pulsante Template» invece di «…il campo Template» (IT/EN). Committato in `1518b0c`, inviato e pubblicato su Hosting (con `1c83b54`).
 
 ## «Template» accanto a «Scansiona scontrino» — 21 novembre 2026
 
