@@ -254,7 +254,8 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` OK (**535/535**, due test nuovi). Chromium headless su `dist-demo`, Standard, 390×844 e 1280×900: importo
   «1234567,891» → «12345,89», «12,345» → «12,34», «99999.99» intero; date picker 88/88; dialogo di scansione con una foto caricata
   (OpenAI con chiave finta, nessuna richiesta inviata), icona di ingrandimento funzionante; nome di categoria fermo a 40; schermate
-  controllate; alone squadrato visto prima della modifica (raggio 8). Nessun errore JS. Non provato sul telefono. Non committato.
+  controllate; alone squadrato visto prima della modifica (raggio 8). Nessun errore JS. Non provato sul telefono. Committato in `ec8c5c3`
+  e inviato; **non pubblicato** su Hosting.
 
 ## Riepilogo del passaggio più breve, «Annulla»/«OK» della data più stretti — 22 novembre 2026
 
