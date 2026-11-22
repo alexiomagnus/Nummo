@@ -38,8 +38,11 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **App Android (22 novembre, non committata):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte; serve
-  l'Hosting pubblicato perché l'app installata ne veda gli effetti. Dettagli nella sezione «App Android» qui sotto.
+- **App Android (22 novembre):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte, committate in `759792c`,
+  inviate e pubblicate su Hosting su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online `index-18586346…` identico a
+  `dist/` (SHA-256) e con il ponte; porta online anche i 500 prodotti per lista di `48361b9`, Rules già pubblicate). Rules invariate.
+  Da fare dall'utente: installare `android/app/build/outputs/apk/release/app-release.apk` sul Pixel 8 e copiare altrove la chiave di firma.
+  Dettagli nella sezione «App Android» qui sotto.
 - **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting no.
   **Albero di lavoro non pulito:** lavoro Android non mio e non committato (`android/`, `src/services/androidApp.ts`,
   `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
@@ -133,7 +136,8 @@ rilasci».
   delle Impostazioni con il PIN di Nummo (provato il ponte, non il percorso completo), fotocamera e «Carica una foto» nell'app, CSV.
 - **Per usarla:** pubblicare l'Hosting (autorizzazione; nota: online c'è ancora `17ebce0`, l'Hosting di `48361b9` porta anche i 500
   prodotti per lista, con Rules già pubblicate), poi installare `android/app/build/outputs/apk/release/app-release.apk` sul Pixel 8
-  (`adb install` o file) e spostare i dati con backup e ripristino (archivio separato da Chrome). Non committato.
+  (`adb install` o file) e spostare i dati con backup e ripristino (archivio separato da Chrome). Committato in `759792c`, inviato e
+  pubblicato su Hosting (bundle `index-18586346…`, identico a `dist/`).
 
 ## Prodotti per lista fino a 500 (Rules da pubblicare) — 22 novembre 2026
 
