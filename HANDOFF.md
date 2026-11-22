@@ -154,7 +154,11 @@ rilasci».
     rimette.
 - **Non verificato:** Pixel 8 reale (consegna puntuale in Doze dopo ore, Non disturbare), Android 11–12 (nessuna immagine di sistema
   installata), Avanzata nell'app con le notifiche. 
-- **Noto, non corretto (anche in `sw.js`):** «Il riepilogo dal 8 novembre…» invece di «dall'8» (anche «dall'1», «dall'11»).
+- **Articolo eliso (0.3.1, su richiesta):** davanti a 1, 8 e 11 nei testi delle notifiche, in `sw.js` e `Reminders.kt` («dall’8
+  novembre all’1 dicembre», «si rinnova l’11 novembre»), e nel riquadro del riepilogo aperto in Notifiche (`NotificationsPage`: «Dall’{p0}
+  al {p1}», «Dal {p0} all’{p1}», «Dall’{p0} all’{p1}», in inglese sempre «From {p0} to {p1}»). App 0.3.1 (versionCode 4). Test in
+  `tests/serviceWorker.test.ts`; `npm run check` OK (**575/575**); riquadro provato in Chromium headless sulla demo (quattro forme in
+  italiano, inglese invariato); `assembleRelease` OK; testo di `Reminders.kt` non visto su un dispositivo.
 - Committata in `2b1e8fb` (non inviata); Hosting pubblicato su richiesta (bundle `index-4a671be6…`, identico a `dist/`); release 0.3.0
   installata sul Pixel 8 con `adb install -r` sopra la 0.2.0.
 - **Prova sul Pixel 8 (22 novembre, 18:29, su richiesta)** con l'app di **debug** (`app.nummo.android.debug`, dati propri, demo

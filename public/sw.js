@@ -15,7 +15,7 @@ const texts = {
     test: { title: 'Notifica push di prova', body: 'Arrivata dal servizio di notifiche: funzionano anche ad app chiusa.' },
     local: { title: 'Notifica di prova', body: 'Così appariranno le notifiche di Nummo su questo dispositivo.' },
     other: { title: 'Nummo', body: 'Tocca per aprire Nummo.' },
-    snooze: 'Ricordamelo tra 3 giorni', period: 'dal {from} al {to}', on: 'il {date}', months: ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'],
+    snooze: 'Ricordamelo tra 3 giorni', months: ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'],
   },
   en: {
     backup: { title: 'Backup reminder', body: 'Your Nummo data changed since the last backup. Tap to export a copy.' },
@@ -24,7 +24,7 @@ const texts = {
     test: { title: 'Test push notification', body: 'Delivered by the notification service: they work even with the app closed.' },
     local: { title: 'Test notification', body: 'This is how Nummo notifications look on this device.' },
     other: { title: 'Nummo', body: 'Tap to open Nummo.' },
-    snooze: 'Remind me in 3 days', period: 'for {from} – {to}', on: 'on {date}', months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    snooze: 'Remind me in 3 days', months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   },
 };
 // 64×64 fully transparent PNG, inline: no network request, so it also works offline.
@@ -35,6 +35,12 @@ const day = (lang, date) => {
   const name = texts[lang].months[month - 1];
   return lang === 'it' ? `${dd} ${name}` : `${name} ${dd}`;
 };
+// Italian elides the article before a day read with a vowel (uno, otto, undici): «dall’8 al 14», «all’1», «l’11 novembre».
+const elided = (date) => [1, 8, 11].includes(Number(date.slice(8, 10)));
+const period = (lang, from, to) => lang === 'it'
+  ? `${elided(from) ? 'dall’' : 'dal '}${day(lang, from)} ${elided(to) ? 'all’' : 'al '}${day(lang, to)}`
+  : `for ${day(lang, from)} – ${day(lang, to)}`;
+const on = (lang, date) => lang === 'it' ? `${elided(date) ? 'l’' : 'il '}${day(lang, date)}` : `on ${day(lang, date)}`;
 
 function notification(data) {
   const lang = data && data.lang === 'en' ? 'en' : 'it';
@@ -42,12 +48,12 @@ function notification(data) {
   const t = texts[lang];
   let body = t[kind].body;
   if (kind === 'summary') {
-    const period = civil(data.from) && civil(data.to) ? t.period.replace('{from}', day(lang, data.from)).replace('{to}', day(lang, data.to)) : '';
-    body = body.replace(' {period}', period ? ` ${period}` : '');
+    const dates = civil(data.from) && civil(data.to) ? period(lang, data.from, data.to) : '';
+    body = body.replace(' {period}', dates ? ` ${dates}` : '');
   }
   if (kind === 'renewal') {
     // Without a valid date the sentence still reads: «Un abbonamento si rinnova a breve.».
-    body = civil(data.from) ? body.replace('{date}', t.on.replace('{date}', day(lang, data.from)))
+    body = civil(data.from) ? body.replace('{date}', on(lang, data.from))
       : body.replace(' {date}', lang === 'it' ? ' a breve' : ' soon');
   }
   return {

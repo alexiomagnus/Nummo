@@ -216,16 +216,19 @@ object Reminders {
         return if (lang == "it") "$number $month" else "$month $number"
     }
 
+    // Italian elides the article before a day read with a vowel (uno, otto, undici): «dall’8», «all’1», «l’11» (as public/sw.js).
+    private fun elided(date: String): Boolean = date.substring(8, 10).toInt() in setOf(1, 8, 11)
+
     private fun show(context: Context, job: Job) {
         if (!permitted(context)) return
         val lang = prefs(context).getString("lang", "it") ?: "it"
         val (title, template) = texts.getValue(lang).getValue(job.kind)
         var body = template
         if (job.kind == "summary" && job.from != null && job.to != null) {
-            val period = if (lang == "it") "dal ${day(lang, job.from)} al ${day(lang, job.to)}" else "for ${day(lang, job.from)} – ${day(lang, job.to)}"
+            val period = if (lang == "it") "${if (elided(job.from)) "dall’" else "dal "}${day(lang, job.from)} ${if (elided(job.to)) "all’" else "al "}${day(lang, job.to)}" else "for ${day(lang, job.from)} – ${day(lang, job.to)}"
             body = body.replace("{period}", period)
         }
-        if (job.kind == "renewal") body = body.replace("{date}", job.from?.let { (if (lang == "it") "il " else "on ") + day(lang, it) } ?: if (lang == "it") "a breve" else "soon")
+        if (job.kind == "renewal") body = body.replace("{date}", job.from?.let { (if (lang != "it") "on " else if (elided(it)) "l’" else "il ") + day(lang, it) } ?: if (lang == "it") "a breve" else "soon")
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(NotificationChannel(channel, context.getString(R.string.reminders_channel), NotificationManager.IMPORTANCE_DEFAULT))
         // Tap: Nummo opens on that reminder's page (MainActivity passes it to the page, as the service worker does).

@@ -84,6 +84,9 @@ function SystemNotifications({ push }: { push: PushState }) {
   );
 }
 
+// Italian elides the article before a day read with a vowel (uno, otto, undici): «Dall’8 nov… all’1 dic…», as public/sw.js.
+const elided = (date: string) => [1, 8, 11].includes(Number(date.slice(8, 10)));
+
 // The summary of the period of a tapped notification, computed now from the data on screen.
 function OpenedSummary({ notifications, from, to, onClose }: { notifications: Notifications; from: string; to: string; onClose: () => void }) {
   const { t, formatAmount, formatDate } = useI18n();
@@ -95,7 +98,11 @@ function OpenedSummary({ notifications, from, to, onClose }: { notifications: No
   return (
     <Card title={t("Riepilogo spese")}>
       <View style={styles.block}>
-        <Text variant="bodyMedium" style={muted}>{t("Dal {p0} al {p1}", { p0: formatDate(from), p1: formatDate(to) })}</Text>
+        <Text variant="bodyMedium" style={muted}>{(() => {
+          const dates = { p0: formatDate(from), p1: formatDate(to) };
+          if (elided(from)) return elided(to) ? t("Dall’{p0} all’{p1}", dates) : t("Dall’{p0} al {p1}", dates);
+          return elided(to) ? t("Dal {p0} all’{p1}", dates) : t("Dal {p0} al {p1}", dates);
+        })()}</Text>
         {count === 0 ? <Text variant="bodyLarge">{t("Nessuna spesa in questo periodo.")}</Text>
           : <Text variant="bodyLarge">{count === 1 ? t("{p0} in 1 spesa", { p0: formatAmount(total) }) : t("{p0} in {p1} spese", { p0: formatAmount(total), p1: count })}</Text>}
         {top && <Text variant="bodyMedium">{t("Categoria principale: {p0} ({p1})", { p0: top.label, p1: formatAmount(top.amount) })}</Text>}

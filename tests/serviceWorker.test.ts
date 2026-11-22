@@ -186,3 +186,21 @@ test('service worker: un solo indirizzo per la pagina offline e per le notifiche
   assert.equal(serviceWorkerUrl(null), '/sw.js');
   assert.equal(serviceWorkerUrl({ url: 'https://push.example/', key: 'BKEY' }), '/sw.js?push=https%3A%2F%2Fpush.example%2F&key=BKEY');
 });
+
+test('service worker: articolo eliso davanti a 1, 8 e 11 («dall’8», «all’1», «l’11»), solo in italiano', async () => {
+  const sw = load();
+  await sw.dispatch('push', push({ kind: 'summary', lang: 'it', from: '2026-11-08', to: '2026-12-01' }));
+  await sw.dispatch('push', push({ kind: 'summary', lang: 'it', from: '2026-11-01', to: '2026-11-11' }));
+  await sw.dispatch('push', push({ kind: 'summary', lang: 'it', from: '2026-11-18', to: '2026-11-28' }));
+  await sw.dispatch('push', push({ kind: 'renewal', lang: 'it', from: '2026-11-11', to: '2026-11-11' }));
+  await sw.dispatch('push', push({ kind: 'renewal', lang: 'it', from: '2026-12-01', to: '2026-12-01' }));
+  await sw.dispatch('push', push({ kind: 'summary', lang: 'en', from: '2026-11-08', to: '2026-11-14' }));
+  assert.deepEqual(sw.shown.map((n) => n.options.body), [
+    'Il riepilogo dall’8 novembre all’1 dicembre è pronto. Tocca per vederlo.',
+    'Il riepilogo dall’1 novembre all’11 novembre è pronto. Tocca per vederlo.',
+    'Il riepilogo dal 18 novembre al 28 novembre è pronto. Tocca per vederlo.',
+    'Un abbonamento si rinnova l’11 novembre. Tocca per vedere i rinnovi.',
+    'Un abbonamento si rinnova l’1 dicembre. Tocca per vedere i rinnovi.',
+    'Your summary for November 8 – November 14 is ready. Tap to see it.',
+  ]);
+});
