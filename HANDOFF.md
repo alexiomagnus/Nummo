@@ -6,14 +6,18 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `9929c8f` pubblicato su richiesta il 22 novembre (sera) con
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `67f4a29` (template senza data) pubblicato su richiesta il 22 novembre (sera):
+  «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256; la prima lettura subito dopo il rilascio dava ancora l'HTML
+  precedente, poi quello nuovo). Rules invariate dal `17632af` (nessuna differenza; `firestore.rules` pubblico identico): non ripubblicate.
+  Prima, **Hosting** da `9929c8f` pubblicato su richiesta il 22 novembre (sera) con
   `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
   Prima, **Rules e Hosting** da `17632af`, pubblicati su richiesta il 22 novembre nell'ordine: Rules
   (compilazione OK, «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), sito 200, bundle online identico a `dist/`
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Commit di codice del 22 novembre, tutti pubblicati: `9929c8f`
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Commit di codice del 22 novembre, tutti pubblicati: `67f4a29`
+  (template senza data), `9929c8f`
   (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
   astratti; altra sessione), `a6c2b88` (blocco dell'app con impronta o viso), `ec8c5c3` (scansione più ordinata, categorie su smartphone;
@@ -70,7 +74,7 @@ rilasci».
   e l'elenco non lo mostra. Guida (IT/EN) e README senza «data» nei template.
 - **Verifica:** typecheck, `npm test` **547/547**, `build:demo`. Chromium headless su `dist-demo` (Standard) a 1280×900 e 390×844: nessun campo
   Data visibile, template creato (12,50 €, «Caffè al bar», categoria) con `date` di oggi; nessun errore JS. **Non provati:** dialogo di
-  modifica e scelta del template in Nuova spesa nel browser. Non committato, non pubblicato.
+  modifica e scelta del template in Nuova spesa nel browser. Committato in `67f4a29`, inviato e pubblicato su Hosting (22 novembre, sera).
 
 ## «Elimina tutte le spese», «Cambia modalità» nel colore principale, PIN del blocco in Standard — 22 novembre 2026
 
