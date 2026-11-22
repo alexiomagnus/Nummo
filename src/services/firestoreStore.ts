@@ -176,6 +176,21 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
         if (list?.exists() && list.data().expense_id === previous.id) tx.update(list.ref, { expense_id: null, updated_at: serverTimestamp() });
       });
     },
+    // Read from the server (offline: refused before any delete), then batches of 400: not atomic over the whole archive, so
+    // an interruption says so and running it again finishes the job.
+    async removeAllExpenses() {
+      const saved = await getDocsFromServer(expenses);
+      try {
+        for (let i = 0; i < saved.docs.length; i += 400) {
+          const batch = writeBatch(db);
+          for (const d of saved.docs.slice(i, i + 400)) batch.delete(d.ref);
+          await batch.commit();
+        }
+      } catch {
+        throw new Error('Eliminazione interrotta: alcune spese potrebbero essere già eliminate. Riprova.');
+      }
+      return saved.docs.length;
+    },
     async saveCategory(id: string, name: string, icon: CategoryIcon | null, previous?: SyncedCategory) {
       const label = normalizeCategoryName(name);
       const validation = categoryNameError(label, []);

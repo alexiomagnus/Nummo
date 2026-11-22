@@ -153,8 +153,8 @@ function ChangeModeDialog({ visible, target, onDismiss, onConfirm }: { visible: 
   return (
     <DialogFrame visible={visible} title={title} label={title} onDismiss={onDismiss} actions={<>
       <CancelButton onPress={onDismiss}>{t("Annulla")}</CancelButton>
-      {/* Same warning colours as a deletion: switching archive is not something to do lightly. */}
-      <ConfirmButton buttonColor={colors.error} textColor={colors.onError} onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</ConfirmButton>
+      {/* The app's primary colour (user's request, 22 November): nothing is deleted, only the archive opened changes. */}
+      <ConfirmButton onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</ConfirmButton>
     </>}>
       <Text variant="bodyMedium" style={muted}>{target === 'advanced'
         ? t("I dati di questo dispositivo restano qui. Dopo l’accesso puoi portarli nel tuo Firebase: Archiviazione e backup → «Dal dispositivo a Firebase».")

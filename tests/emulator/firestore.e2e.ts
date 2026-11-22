@@ -754,6 +754,17 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       // The old name is free again after the replacement.
       await owner.store.saveCategory(randomUUID(), `Gruppo ${suffix} 0`, null);
     });
+    await t.test('elimina tutte le spese: solo le spese del proprietario, categorie conservate, ripetibile', async () => {
+      await owner.store.createExpense(expense());
+      await owner.store.createExpense(expense());
+      const before = await owner.store.exportSnapshot();
+      assert.ok(before.expenses.length >= 2);
+      assert.equal(await owner.store.removeAllExpenses(), before.expenses.length);
+      const after = await owner.store.exportSnapshot();
+      assert.equal(after.expenses.length, 0);
+      assert.deepEqual(after.categories.map((c) => c.id).sort(), before.categories.map((c) => c.id).sort());
+      assert.equal(await owner.store.removeAllExpenses(), 0);
+    });
     await t.test('logout revoca accesso ai dati del server', async () => {
       await signOut(second.auth);
       await denied(getDocsFromServer(collection(second.db, 'users', uid, 'expenses')));

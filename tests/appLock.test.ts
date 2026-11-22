@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { defaultAppLock, fromBase64Url, lockOnReturn, parseAppLock, toBase64Url, userVerified } from '../src/domain/appLock.ts';
+import { createPin, defaultAppLock, fromBase64Url, isPin, lockOnReturn, parseAppLock, pinInput, pinMatches, toBase64Url, userVerified } from '../src/domain/appLock.ts';
 
 const id = 'AbCdEfGhIjKlMnOpQrStUv_-0123';
 
@@ -16,8 +16,8 @@ test('blocco: impostazioni assenti, corrotte o senza credenziale → spento', ()
 });
 
 test('blocco: impostazioni valide lette; ritardo sconosciuto → 1 minuto', () => {
-  assert.deepEqual(parseAppLock(JSON.stringify({ enabled: true, credentialId: id, delay: 300 })), { enabled: true, credentialId: id, delay: 300 });
-  assert.deepEqual(parseAppLock(JSON.stringify({ enabled: false, credentialId: id, delay: 0 })), { enabled: false, credentialId: id, delay: 0 });
+  assert.deepEqual(parseAppLock(JSON.stringify({ enabled: true, credentialId: id, delay: 300 })), { enabled: true, credentialId: id, delay: 300, pin: null });
+  assert.deepEqual(parseAppLock(JSON.stringify({ enabled: false, credentialId: id, delay: 0 })), { enabled: false, credentialId: id, delay: 0, pin: null });
   assert.equal(parseAppLock(JSON.stringify({ enabled: true, credentialId: id, delay: 42 })).delay, 60);
 });
 
@@ -48,4 +48,24 @@ test('blocco: sblocca solo con utente presente e verificato (flag UP e UV)', () 
   assert.equal(userVerified(data(0x01)), false); // presence only, no fingerprint/face/PIN
   assert.equal(userVerified(data(0x04)), false);
   assert.equal(userVerified(new Uint8Array(32)), false);
+});
+
+test('PIN del blocco: sei cifre, solo hash con sale, verifica e valori salvati validati', async () => {
+  assert.equal(isPin('123456'), true);
+  for (const bad of ['12345', '1234567', '12345a', ' 123456', '']) assert.equal(isPin(bad), false);
+  assert.equal(pinInput('12-34 5x678'), '123456');
+  const pin = await createPin('482913');
+  assert.ok(!JSON.stringify(pin).includes('482913'), 'mai il PIN in chiaro');
+  assert.equal(await pinMatches('482913', pin), true);
+  assert.equal(await pinMatches('482914', pin), false);
+  assert.equal(await pinMatches('48291', pin), false);
+  // Same PIN, new salt: a different hash.
+  assert.notEqual((await createPin('482913')).hash, pin.hash);
+  await assert.rejects(createPin('1234'), /PIN non valido/);
+  const saved = parseAppLock(JSON.stringify({ enabled: true, credentialId: id, delay: 60, pin }));
+  assert.deepEqual(saved.pin, pin);
+  // A damaged PIN is dropped (the lock screen falls back to the confirmation), the lock stays on.
+  const damaged = parseAppLock(JSON.stringify({ enabled: true, credentialId: id, delay: 60, pin: { salt: 'x', hash: pin.hash } }));
+  assert.equal(damaged.pin, null);
+  assert.equal(damaged.enabled, true);
 });

@@ -112,7 +112,7 @@ function Root(props: RootProps) {
   );
   const renderSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void, profile?: ProfileScope) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
     onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} onResetArchive={onResetArchive}
-    profile={profile ?? (mode === 'standard' ? localProfile : undefined)} />;
+    profile={profile ?? (mode === 'standard' ? localProfile : undefined)} lockPin={mode === 'standard'} />;
   const shared = { ...props, themeToggle, renderSettings, onChangeMode: changeMode };
   if (mode === 'advanced') return <AdvancedRoot {...shared} />;
   if (mode === 'standard') return <StandardRoot {...shared} />;

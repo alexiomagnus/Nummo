@@ -207,6 +207,14 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
         if (list && list.expense_id === previous.id) tx.put('lists', { ...list, expense_id: null, updated_at: now() });
       });
     },
+    // One transaction: all of them or none.
+    async removeAllExpenses() {
+      return commit(['expenses'], async (tx) => {
+        const rows = await tx.getAll('expenses');
+        tx.clear('expenses');
+        return rows.length;
+      });
+    },
     async saveCategory(id: string, name: string, icon: CategoryIcon | null, previous?: SyncedCategory) {
       const label = normalizeCategoryName(name);
       const validation = categoryNameError(label, []);

@@ -29,9 +29,10 @@ export const unlockApp = () => { if (state.locked) set({ locked: false }); };
 export const appLockState = () => state;
 
 // Off without asking the device: only from the lock screen's way out (after a confirmation, or after signing out in the
-// Advanced mode). The credential is kept, so turning the lock on again does not create a new one.
+// Advanced mode). The credential is kept, so turning the lock on again does not create a new one; the PIN goes with the
+// lock (a new one is chosen when it is turned on again).
 export function disableAppLock() {
-  saveAppLock({ ...state.settings, enabled: false });
+  saveAppLock({ ...state.settings, enabled: false, pin: null });
   unlockApp();
 }
 

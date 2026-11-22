@@ -44,6 +44,10 @@ alcuni browser, come Firefox, mostrano una richiesta). **Archiviazione e backup*
 «Archivio locale protetto», «Protezione aggiuntiva non attiva» o «Protezione non disponibile». È una richiesta, non una
 garanzia, e non sostituisce un backup.
 
+**Elimina tutte le spese** (Archiviazione e backup, entrambe le modalità): elimina tutte le spese e gli abbonamenti, dopo una conferma e
+lo scaricamento automatico di una copia (`nummo-backup-prima-di-eliminare.json`); categorie, fondi, movimenti, liste, template ed esercenti
+restano.
+
 **Recupero**: su un dispositivo nuovo o svuotato scegli Standard, poi **Archiviazione e backup → Importa backup (JSON)**. Senza un backup i dati persi non sono recuperabili: nessuno ne ha una copia.
 
 ### Notifiche
@@ -127,7 +131,8 @@ Due strade:
   Nuova spesa senza nulla aperto.
 - **Impostazioni → Blocco dell'app**: Nummo chiede impronta, viso o il PIN del dispositivo all'apertura e quando ci torni dopo il tempo scelto
   (subito, 1, 5 o 15 minuti). Nasconde i dati sullo schermo, non li cifra. Se non riesci a sbloccare: in Avanzata esci e riaccedi con Google, in
-  Standard puoi disattivare il blocco dopo una conferma.
+  Standard lo disattivi con il **PIN di Nummo** (6 cifre) scelto quando lo accendi (con un blocco acceso prima, senza PIN, basta una conferma
+  finché non imposti il PIN dalla stessa scheda). Il PIN è un deterrente come il blocco: resta solo nel browser, come impronta cifrata.
 - Modalità Standard: **Impostazioni → Immagine del profilo** per il pulsante del menu, con uno dei cinque avatar proposti o una tua foto (resta solo
   sul dispositivo, non entra nel backup).
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,

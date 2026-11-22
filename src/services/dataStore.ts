@@ -45,6 +45,10 @@ export type DataStore = {
   // Updates and removals act on the revision seen when the editor opened; a newer one is an explicit conflict.
   updateExpense(previous: SyncedExpense, data: ExpenseData, merchant?: Merchant | null): Promise<void>;
   removeExpense(previous: SyncedExpense): Promise<void>;
+  // «Elimina tutte le spese» (Archiviazione e backup, 22 November, on request): every expense and series, nothing else
+  // (categories, funds, movements, lists, templates and merchants stay; a registered list is left «detached»). Returns
+  // how many were removed. Explicit gesture only, after a confirmation and an automatic backup copy.
+  removeAllExpenses(): Promise<number>;
   saveCategory(id: string, name: string, icon: CategoryIcon | null, previous?: SyncedCategory): Promise<void>;
   removeCategory(previous: SyncedCategory): Promise<void>;
   saveBudget(budgets: readonly BudgetChange[], previous: SyncedBudget | null): Promise<void>;

@@ -556,3 +556,22 @@ test('passaggio tra modalità: le predefinite di entrambi gli archivi si allinea
   assert.equal(again.plan.addExpenses.length + again.plan.addCategories.length, 0);
   assert.equal((await from.exportSnapshot()).categories.find((c) => c.label === 'Alimentari')!.id, fromFood);
 });
+
+test('elimina tutte le spese in locale: solo le spese, in una transazione; il resto resta', async () => {
+  const { store } = open();
+  const categoryId = randomUUID();
+  await store.saveCategory(categoryId, 'Casa', 'house');
+  await store.createExpense(expense({ category_id: categoryId }));
+  await store.createExpense(expense({ recurrence: 'monthly' }));
+  const expenses = latest(store.watchExpenses);
+  await tick();
+  assert.equal(expenses.state.value?.records.length, 2);
+  assert.equal(await store.removeAllExpenses(), 2);
+  await tick();
+  assert.equal(expenses.state.value?.records.length, 0, 'i listener vedono l’archivio senza spese');
+  const snapshot = await store.exportSnapshot();
+  assert.equal(snapshot.expenses.length, 0);
+  assert.deepEqual(snapshot.categories.map((c) => c.id), [categoryId]);
+  assert.equal(await store.removeAllExpenses(), 0, 'ripetibile');
+  expenses.stop();
+});

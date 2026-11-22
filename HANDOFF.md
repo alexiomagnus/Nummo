@@ -1,222 +1,85 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 21 novembre 2026
+## Stato corrente — 22 novembre 2026
 
-Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
-recente, sono cronaca delle singole fasi e possono dire cose superate.
+Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, dal più recente, sono cronaca delle singole fasi
+e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
+rilasci».
 
-- **Sessione del 20 novembre (chiusa).** Fatto, su richiesta: riallineamento di questo file allo stato reale; audit React di rendering,
-  stato e prestazioni con tre correzioni verificate in Chromium (`e4976be`); le 24 ID icona eliminate prima del 14 novembre di nuovo
-  valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. In serata/notte: rami uniti eliminati
-  (14 locali, 3 remoti); file di collaudo v9/v10 con test, importati nell'emulatore e collaudati dall'interfaccia della demo; le quattro
-  osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
-- **Sessione del 21 novembre (giorno).** Su richiesta: analisi iniziale con le discrepanze qui sotto, poi «Torna indietro» in «Collega il
-  tuo Firebase», pulsanti della revisione dello scontrino, esercente e azioni a tutta larghezza negli abbonamenti, «Elimina» come cestino
-  con contorno rosso su smartphone, Annulla/Salva a 96 accanto al cestino, Importo e Data non più tagliati; tutto committato e pubblicato
-  su Hosting (ultimo `9a8285a`). Nella stessa giornata un'altra sessione ha lavorato sulla tastiera virtuale (`fdfce0e`, `1a8dc14`),
-  committata a parte e pubblicata insieme: mai provata su telefono reale.
-- **Discrepanze trovate all'inizio della sessione del 21 novembre e corrette qui (solo documentazione):** (1) questo riepilogo dava la
-  scansione solo con AI come «non pubblicata», ma era uscita con `817a2f1`; (2) le sezioni del 21 novembre fino a `817a2f1` (pulsanti
-  uniformi, icona, Templates, ordine dei servizi AI, Fragment, wifi, «Annulla» della scansione, fondo negli abbonamenti, scansione solo
-  AI) finivano con «non pubblicato», e Templates chiedeva ancora di pubblicare le Rules, già pubblicate; (3) «Chiudi» con contorno era
-  «non committato, non pubblicato», ma è `bdc742b`, pubblicato; (4) «Verifiche» diceva `test:emulator` sulle Rules di `ad5aa73` e Rules
-  /servizi non più toccati, mentre `4144917` e `817a2f1` li toccano (il 22/22 sulle Rules dei template è nella sezione Templates); (5) la
-  riga «Git» si fermava a `9ad8e02`; (6) commento in `ExpenseEditor.tsx` e sezione «Pulsanti dei dialoghi uniformi» davano per buono
-  «Elimina» da solo sopra Annulla/Salva su smartphone, poi giudicato difettoso dall'utente e sostituito dal cestino (`3d1b5ea`). Le
-  sezioni di questa sessione scritte «non committato» sono aggiornate con il commit. Codice e `AGENTS.md` coincidevano per il resto.
-- **Analisi iniziale del 21 novembre (notte), corretta su richiesta:** la Guida («Template per le spese», IT e EN) diceva l'importo
-  facoltativo, obbligatorio da `e4bf945`: ora «descrizione, importo, data, esercente, categoria e fondo»; la sezione «Fondo accanto alla
-  categoria…» dava `subtitleBelow` per rimossa, ora segnata come superata. Committato in `3c8f614` e pubblicato su Hosting.
-- **Feedback aptico rivisto (21 novembre, notte):** zona morta sulla barra, distanza minima tra vibrazioni, `tick` per le selezioni,
-  pagina di prova delle durate; sezione dedicata qui sotto. Committato in `7dc02a2` e pubblicato su Hosting (21 novembre, notte);
-  da provare sul Pixel 8 con la pagina di prova. Inviato a `origin` su richiesta.
-- **Vibrazione più delicata (21 novembre, notte):** su richiesta («ancora troppo forte e zanzarosa») `tap` 10 → 6 ms e `tick` 6 → 4 ms
-  (l'intensità la fissa il browser: si può solo accorciare). `npm run check` 510/510; Chromium: barra [6], segmenti/legenda [4], un
-  solo impulso per tocco, nessuno in scorrimento/digitazione. Pagina di prova (anche l'artifact) aggiornata con 2–6 ms. Committato in
-  `976a5cb` e pubblicato su Hosting (bundle online identico a `dist/`, con `tap:6,tick:4`); non sentito sul Pixel 8.
-  **Superato da `1c7ca7f`** (punto seguente).
-- **Vibrazione tolta da segmenti e legenda, impulsi 4/3 ms (21 novembre, pomeriggio):** su richiesta nessuna vibrazione su
-  `SegmentedButtons` e sulle righe della legenda di Analisi; `tap` 6 → 4 ms, `tick` 4 → 3 ms; Guida senza «confronto con i periodi
-  precedenti» (`e7953bf`). Committato in `1c7ca7f` e pubblicato su Hosting (15:11). Non sentito sul Pixel 8: 3 ms può essere quasi
-  impercettibile.
-- **Revisione dello scontrino (21 novembre, pomeriggio–sera):** su richiesta, a più riprese: foto alta quanto i campi su desktop, titolo
-  «Controlla i dati», pulsanti nella colonna dei campi (da medium) o allineati ai campi (smartphone), impilati sotto 500 di colonna;
-  intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. Provato poi
-  nel browser da 360 a 1400 px (sezione «Revisione dello scontrino provata nel browser» qui sotto): conforme, salvo «Usa questi dati»
-  troncato sotto 390 px e «Ingrandisci la foto» fra le due righe di pulsanti, corretti in `6f95a08`, pubblicato su Hosting.
-- **«Template» accanto a «Scansiona scontrino» (21 novembre, sera):** su richiesta, perché «Salva» finiva sotto la navigazione su
-  smartphone; pulsante distinto in `primary`, scelto un template solo l'icona della categoria. Committato in `ee2fcdc` e pubblicato su
-  Hosting; sezione dedicata qui sotto.
-- **Vibrazione provata nel browser emulato (21 novembre, sera):** tutti i 15 casi come previsto (sezione dedicata qui sotto); percezione
-  sul Pixel 8 ancora da provare.
-- **Tastiera virtuale provata nel browser emulato (21 novembre, sera):** `scripts/check-keyboard.mjs` su `dist-demo`: transizioni in un
-  fotogramma ovunque (campo alto/basso, dialogo, 3–4 passi, cambio campo, CPU ×4, 360×640). Su richiesta, 24 px di margine sotto il
-  campo riportato in vista (prima a filo della tastiera a 360×640). Committato in `62e3639` e pubblicato su Hosting; sezione dedicata qui sotto.
-- **Vibrazione 6/5 ms, barra che spariva, scansione spenta (21 novembre, notte):** su richiesta; sezione dedicata qui sotto.
-  Committato in `1518b0c`, pubblicato su Hosting insieme a `1c83b54`.
-- **Stessa sessione, dopo:** «Ripristina predefiniti» completo e `gemini-3.5-flash-lite` consigliato (`dabe2eb`), «Annulla»/«OK» più piccoli
-  nel selettore della data (`01c2b7f`); con la guida «Collega il tuo Firebase» dell'altra sessione (`8c1ff66`, committata su richiesta
-  dopo `npm run check` OK **520/520** sull'albero completo) pubblicati su Hosting il 21 novembre (notte) con `npm run deploy:hosting`:
-  «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. Da provare sul telefono.
-- **Spese offline, pagina offline, passaggio dei dati tra le modalità (21 novembre, notte; altra sessione, in parallelo alla
-  precedente):** su richiesta; sezione dedicata qui sotto. `npm run check` **520/520**, `test:emulator` **22/22**, provato nel browser con la
-  demo. Committato in `1c83b54`, inviato e pubblicato su Hosting su richiesta (con `1518b0c` della sessione sulla vibrazione): «Deploy
-  complete!», sito 200, bundle, `sw.js` e `offline.html` online identici a `dist/`. Rules invariate. Da provare sul telefono.
-- **Nuovo testo della guida «Collega il tuo Firebase» (21 novembre, notte):** su richiesta, dalla bozza concordata; sezione dedicata qui
-  sotto. Committato in `8c1ff66` e pubblicato su Hosting (vedi punto sopra). Restano concordati e non fatti: link diretti alla Console, sito senza progetto di base,
-  «Collega un altro dispositivo».
-- **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
-  sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 6/5 ms percepibili?);
-  revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
-  un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
-  sotto 412), azioni degli abbonamenti, revisione dello scontrino; poi in produzione: pagina Templates (in Avanzata compaiono i
-  template salvati prima del 16 novembre, se ce n'erano), scansione dello scontrino da attivare in Impostazioni, pulsanti dei dialoghi,
-  nuova icona (la cache del browser o del launcher può mostrare ancora quella vecchia); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
-  storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
-  reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
-  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
-  gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
-- **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
-  `origin`. Ultimi commit di codice, tutti pubblicati: `8bf4f4d` (separatore delle schede, menu «immagine», vibrazione 5/4 solo touch), `314064b` (matita dei template da 28 dp), `e008fcd` (nessun campo «Chiave API» nella scansione, «Vibrazione» e telefono in
-  silenzioso), `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di scorrimento senza frecce), `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
-  selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
-  pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
-  pulsante «Template» invariato), `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
-  sulla riga del primo pulsante impilato), `3b74ea4`, `2b9e763`, `830ac24` (revisione dello scontrino: foto, pulsanti,
-  titolo «Controlla i dati»), `a2029bb` (intro del dialogo di scansione più breve), `1c7ca7f` (vibrazione tolta da segmenti e legenda,
-  4/3 ms), `e7953bf` (Guida senza confronto con i periodi precedenti), `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
-  template con contorno, nessun messaggio dopo il salvataggio), `976a5cb` (vibrazione più delicata, 6/4 ms), `3c8f614` (Guida: importo dei template obbligatorio), `7dc02a2` (vibrazione senza ronzio), `e4bf945` (importo obbligatorio nei template, matita nell'elenco, fondo a capo in
-  Analisi su smartphone, testo di «Vibrazione»), `b2a80ce` (vibrazione su legenda e segmenti), `9ae0d33` (selezione di
-  Analisi più reattiva), `a8f73a2` (formattatori Intl in cache), `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
-  categoria in Analisi), `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
-  sessione), `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
-  sessione), `8e513f4` (Annulla/Salva a 96), `3d1b5ea` («Torna indietro», scansione, abbonamenti, cestino), `fdfce0e` (tastiera, altra
-  sessione), `bdc742b` («Chiudi» con contorno), `817a2f1` (template, pulsanti uniformi, icona), `e72bc6f`, `4144917` (scansione solo AI).
-  Prima, pubblicati con `817a2f1`: `9ad8e02` (pulsanti di prova delle notifiche nascosti
-  dietro `pushTests`, più documenti), `9dd0880` (tre pulsanti di Archiviazione e backup della stessa larghezza), `661b984` (avatar del
-  fondo nei dettagli), `0e536a5` (riga dissolta anche su smartphone). Prima, pubblicati: `de79c95` («Fondo» nei dettagli), prima `42d9beb` (riga dissolta nel pannello), prima `41a54ab` (righe intere nel pannello, esercente tolto dai dettagli), prima `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
-  `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
-  collaudo). L'hash di testa non si scrive qui: ogni commit che lo registrasse lo renderebbe superato; i commit che toccano solo
-  documenti non sono elencati.
-- **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
-  dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
-  radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
-- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `17632af` pubblicati su richiesta il 22 novembre, nell'ordine: Rules (`firebase deploy --only firestore:rules --project nummo-6b6e2`: compilazione OK, «Deploy complete!»; importo fino a 999.999.999,99 €, prezzi compatti fino a 143 caratteri), poi `npm run deploy:hosting` («Deploy complete!»), sito 200, bundle online identico a `dist/` (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Contiene: Indietro di Android, immagine del profilo (Standard e Avanzata, avatar astratti), blocco dell'app, importo massimo e campo Importo, barra dei menu, limiti dei campi. Chi ha collegato il proprio Firebase deve ricopiare le Rules. Prima, **Hosting** da `8bf4f4d` (separatore delle schede, niente menu «immagine» al tocco
-  prolungato, vibrazione 5/4 ms solo su touch) pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`: «Deploy complete!», sito
-  200, bundle online identico a `dist/` (SHA-256, con `tap:5,tick:4`). Rules invariate. Prima, **Hosting** da `314064b` (matita dei template da 28 dp) pubblicato su richiesta il 21 novembre
-  (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate.
-  Prima, **Hosting** da `e008fcd` (nessun campo «Chiave API» nel dialogo di scansione; testo di
-  «Vibrazione» sul telefono in silenzioso) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!»,
-  sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. Prima, **Hosting** da `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di
-  scorrimento senza frecce dell'altra sessione) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy
-  complete!», sito 200, bundle online identico a `dist/` (SHA-256, con `tap:8,tick:7`). Rules invariate. Prima, **Hosting** da `cffe2e8` («Esci» riporta alla scelta della modalità) pubblicato su richiesta
-  il 21 novembre (sera tardi) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules
-  invariate. Prima, **Hosting** da `69566dc` (scheda «Dati della modalità Standard», note con asterisco)
-  pubblicato su richiesta il 21 novembre (sera tardi) con `npm run deploy:hosting` da un worktree pulito di `69566dc` (l'albero principale
-  aveva modifiche non committate di un'altra sessione a `App.tsx`/`useSession.ts`, escluse): «Deploy complete!», sito 200, bundle online
-  identico a quello costruito (SHA-256). Rules invariate. Prima, **Hosting** da `1c83b54` (con `1518b0c`; spese offline, pagina offline, passaggio dei dati,
-  vibrazione 6/5 ms) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle, `sw.js` e `offline.html` identici
-  a `dist/`. Prima, **Hosting** da `3ad9a75` (testo «Il pulsante Template compare…») pubblicato su richiesta il
-  21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `ee2fcdc` (pulsante «Template» nella prima riga di Nuova spesa) pubblicato su
-  richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `62e3639` (24 px tra il campo riportato in vista e la tastiera virtuale)
-  pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto» sulla riga del
-  primo pulsante impilato) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`.
-  Prima, **Hosting** da `3b74ea4` (revisione dello scontrino: pulsanti uguali su smartphone, foto fino
-  alla Categoria su desktop, pulsanti impilati in colonna stretta) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito
-  200. Prima, **Hosting** da `2b9e763` e, prima ancora, da `830ac24` (revisione dello scontrino), stessa giornata, «Deploy complete!»,
-  sito 200; per questi tre il bundle online non è registrato come confrontato con `dist/`. Prima, **Hosting** da `1c7ca7f` (con `e7953bf`;
-  vibrazione 4/3 ms, niente vibrazione su segmenti e legenda) il 21 novembre alle 15:11: bundle identico a `dist/`, con la modifica
-  di `ScanReceiptDialog.tsx` poi committata in `a2029bb` (vedi «Registro dei rilasci»). Rules invariate.
-  Prima, **Hosting** da `26c5b8d` (Barre senza variazione percentuale; con `a29ced9`, vibrazione su «Salva»/«Crea», matita
-  dei template, nessun messaggio dopo il salvataggio) pubblicato su richiesta il 21 novembre: «Deploy complete!», sito 200; bundle online non confrontato con `dist/`. Rules invariate.
-  Prima, **Hosting** da `976a5cb` (vibrazione più delicata, 6/4 ms) pubblicato su richiesta il
-  21 novembre (notte): «Deploy complete!», sito 200, bundle identico a `dist/`. Prima, **Hosting** da `7dc02a2` (feedback aptico senza ronzio; con `3c8f614`, testo dei template
-  nella Guida) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256).
-  Rules invariate. Prima, **Hosting** da `e4bf945` (importo obbligatorio nei template, matita, fondo a capo in Analisi
-  su smartphone, testo di «Vibrazione») pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico
-  a `dist/`. Prima, **Hosting** da `b2a80ce` (vibrazione su legenda e segmenti; con `9ae0d33`, selezione di Analisi
-  più reattiva, e `a8f73a2`, formattatori in cache) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200, bundle
-  online identico a `dist/`. Prima, **Hosting** da `cc60ea6` («Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola;
-  con `278b016`, fondo accanto alla categoria nei dettagli di Analisi su smartphone) pubblicato su richiesta il 21 novembre (pomeriggio):
-  «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `4d69d04` (feedback aptico nella barra mobile e in Analisi, interruttore
-  «Vibrazione»; con `0f218da`, tastiera aperta a passi) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200,
-  bundle online identico a `dist/`. Prima, **Hosting** da `9a8285a` (Importo e Data non più tagliati su smartphone; con `1a8dc14`,
-  raggruppamento della tastiera come funzione pura) pubblicato su richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `8e513f4` (Annulla/Salva a 96 su smartphone accanto al cestino) pubblicato su
-  richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `3d1b5ea` pubblicato su richiesta il 21 novembre (mezzogiorno): tastiera
-  virtuale nello stesso fotogramma (`fdfce0e`), «Torna indietro» in «Collega il tuo Firebase», pulsanti della revisione dello scontrino,
-  esercente negli abbonamenti, cestino con contorno rosso su smartphone. Prima, **Hosting** da `bdc742b` («Chiudi» con contorno) pubblicato su richiesta il 21 novembre
-  (notte, quarta parte). Prima, **Rules e Hosting** da `817a2f1` pubblicati su richiesta il 21 novembre (notte, terza
-  parte): template, scansione solo AI, pulsanti uniformi, icona; dettagli nel «Registro dei rilasci». Prima, **Hosting** da `de79c95` pubblicato su richiesta il 21 novembre (notte, seconda parte):
-  riga tagliata dissolta verso il bordo del pannello, «Fondo» nei dettagli della spesa; sito 200, bundle identico a `dist/`. Prima,
-  **Hosting** da `41a54ab` pubblicato su richiesta il 21 novembre (notte): righe intere sul
-  bordo del pannello desktop, esercente tolto dai dettagli; sito 200, bundle identico a `dist/`. Da provare in Brave: nessuna riga a
-  metà in fondo al pannello, apertura dell'ultima riga visibile. Prima, **Hosting** da `e3fb997` pubblicato su richiesta il 21 novembre (sera) con
-  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare: pannello desktop in Brave
-  (righe tagliate dal bordo arrotondato, barra lontana dagli angoli), Firefox, esercente accanto alla data su telefono. Prima, **Hosting** da `f614f65` (codice di `78b424d`) pubblicato su richiesta il 21 novembre
-  con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare sul telefono: dettagli
-  di una spesa con esercente lungo, anteprima del ripristino, fogli e dialoghi senza striscia in basso. Prima, **Hosting** da
-  `0765e5c` (codice di `aebd0ec`) pubblicato su richiesta il 20 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare in produzione:
-  il ripristino da backup (riepilogo con gli esercenti, conflitto con i nomi) e un messaggio con un dialogo aperto. Prima, il 20 novembre (sera), nell'ordine: **Rules** da `ad5aa73`
-  (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»: le 24 ID icona storiche
-  ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
-  identico a `dist/`): audit React e ID icona storiche. Worker `nummo-push` invariato (ripubblicato dall'utente per `f454d12`).
-  Da provare in produzione: un archivio o un backup con un'icona storica, se ne esistono. Cronologia nel «Registro dei rilasci» qui sotto.
-- **Terzo riallineamento documentale (21 novembre, sera).** Su richiesta, dopo una verifica (`main` = `origin/main`, albero pulito,
-  `npm run check` OK **509/509** su `3b74ea4`): «Git», «Produzione», «Registro dei rilasci» e «Prossime attività» fermi a `26c5b8d`
-  (mancavano `e7953bf`, `1c7ca7f`, `a2029bb`, `830ac24`, `2b9e763`, `3b74ea4`, tutti pubblicati); vibrazione 6/4 ms data come attuale
-  (oggi 4/3); sezione 4/3 ms senza commit/rilascio; «Funzionalità implementate» con la variazione delle Barre, rimossa. `AGENTS.md` e
-  codice coincidevano. Nessun codice toccato.
-- **Secondo riallineamento documentale (21 novembre, pomeriggio).** Su richiesta, dopo una verifica (`main` = `origin/main`, albero
-  pulito, `npm run check` OK **502/502**): corretti «Funzionalità implementate» (scansione solo AI, Templates, backup v11), «Prossime
-  attività» (Rules del 20–21 novembre), tre sezioni ancora «Non pubblicato» (`9ad8e02`, `9dd0880`, `0e536a5`/`661b984`, usciti con
-  `817a2f1`), «Scansiona di nuovo» di testo (superato); in `AGENTS.md` campi di `nummo.receiptAi.v1` e `BackButton`. Nessun codice toccato.
-- **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
-  pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
-  «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
-- **Verifiche (21 novembre, sera tardi, ultime).** `npm run check` OK sull'albero di `c48ab1b` più la fase «Dati della modalità Standard»
-  (typecheck, **520/520**, build demo); `test:emulator` **22/22** l'ultima volta su `1c83b54` (passaggio dei dati tra le modalità); da allora
-  Rules, `DataStore` e servizi invariati. I due punti seguenti sono precedenti.
-- **Verifiche (21 novembre, sera).** `npm run check` OK su `3b74ea4` (typecheck, **509/509**, build demo), albero pulito, `main` =
-  `origin/main` dopo un fetch. `test:emulator` non rieseguito: Rules, `DataStore` e servizi invariati da `817a2f1`.
-- **Verifiche (21 novembre, notte).** `npm run check` OK (typecheck, **510/510**, build demo) su `0fa04a9`; dopo `a29ced9` e `26c5b8d` solo typecheck e
-  `npm test` OK (**509/509**, un test in meno per il confronto delle Barre rimosso), senza rifare `npm run check` né la build demo (il deploy ricostruisce il bundle cloud).
-  Prima: **507/507** su `e4bf945` (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
-  (`817a2f1`); da allora Rules, `DataStore` e servizi non sono cambiati (il dominio solo nella validazione del modulo dei template).
-- **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
-  più nera.
-- **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
-  pagina si ricarica sulla schermata di accesso e la cache su disco si cancella) → nuovo accesso.
-- **Da verificare su dispositivo:** «Carica foto» (galleria) e scansione con l'AI da telefono; blocco dello zoom con due dita (Android
-  e iPhone); ritocchi mobile del 17 novembre su iPhone reale e scheda AI con Gemini reale; icona dell'app (cache del launcher), filtri
-  di Spese/Analisi e dissolvenza del segnaposto d'avvio sul Pixel 8; tastiera automatica di Nuova lista/Nuovo fondo (su iOS
-  probabilmente non si apre).
-- **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
-  Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
-- **Ambiente (17 novembre).** Il runner hybrid avviato il 16 alle 17:26 (PID 40726) si è fermato senza export (riavvio del sistema
-  il 17 alle 20:03): `npm run dev` rifiutava l'avvio per il lock rimasto. Ispezione: processo inesistente, porte 8180/9099/4000/4400/8081
-  libere, cartelle di sessione `.firebase/hybrid-I8KNPH` e `hybrid-iw5CbO` senza export, `emulator-data/` invariato dall'export del
-  16 alle 03:42 (eventuali dati scritti in hybrid dopo le 17:26 del 16 sono andati persi con l'emulatore). Su richiesta: lock rinominato
-  in `.firebase/hybrid.lock.stale-40726`, config `.nummo-hybrid-40726.json` rimossa dalla radice. Le altre cartelle e i lock
-  `stale-*` in `.firebase/` sono conservati. Il prossimo `npm run dev` legge le Rules attuali (con gli esercenti).
-- **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
-  `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
-  dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
-- **Ambiente (21 novembre, sera tardi).** Runner hybrid **attivo** dell'utente: PID 36786 (`node scripts/dev-hybrid.ts --clear`, avviato
-  alle 22:59, progetto `nummo-6b6e2`), con il suo lock `.firebase/hybrid.lock` e la config `.nummo-hybrid-36786.json`: non toccarli
-  finché il processo esiste; se si ferma senza pulizia, ispezionare come per il 81456 (punto seguente).
-- **Ambiente (21 novembre, notte).** Il runner hybrid PID 81456 (`npm run dev` del 21 alle 01:20, progetto `nummo-6b6e2`) si è
-  fermato senza pulizia: processo inesistente, porte 8180/9099/4000/4400/8081 libere, cartella di sessione `.firebase/hybrid-qVvetQ`
-  con la sola `cli-config`, `emulator-data/` fermo all'export del 16 alle 03:42 (eventuali dati scritti in hybrid dal 21 alle 01:20
-  persi con l'emulatore). Su richiesta: lock rinominato in `.firebase/hybrid.lock.stale-81456`, config `.nummo-hybrid-81456.json`
-  rimossa dalla radice; le altre cartelle e i `stale-*` conservati. `npm run dev` non è più bloccato.
-- **Quarto riallineamento (21 novembre, notte).** Su richiesta, dopo una verifica (`main` = `origin/main` dopo un fetch, albero pulito,
-  `npm run check` OK **509/509** su `118b446`): runner hybrid dato per attivo ma fermo (punto sopra); testo «Il campo Template compare…»
-  diventato «Il pulsante Template compare…» (IT/EN, `ExpenseForm.tsx`, `en.ts`); «Funzionalità implementate» e `AGENTS.md` con il
-  pulsante «Template» invece del campo; etichetta breve «Scansiona» sotto 380 px (da `d66d3db`) ora citata in `AGENTS.md`.
-- **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
-- **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
-  browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
-  con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `17632af`, pubblicati su richiesta il 22 novembre nell'ordine: Rules
+  (compilazione OK, «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), sito 200, bundle online identico a `dist/`
+  (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
+  Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
+  per il 21–22 novembre, «Stato corrente precedente».
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Commit di codice del 22 novembre, tutti pubblicati con `17632af`:
+  `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
+  frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
+  astratti; altra sessione), `a6c2b88` (blocco dell'app con impronta o viso), `ec8c5c3` (scansione più ordinata, categorie su smartphone;
+  altra sessione), `b2f6d1e` (Indietro di Android, immagine del profilo in Standard), `c862fa9` (riepilogo del passaggio più breve, «Annulla»/
+  «OK» della data; altra sessione), `8dd92df` (vibrazione al cambio Spese/Abbonamenti), `8bf4f4d` (separatore delle schede, vibrazione 5/4 ms
+  solo touch). L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
+- **Novità del 22 novembre, in breve** (dettagli nelle sezioni datate):
+  - **Indietro (Android e browser)** chiude ciò che è aperto (overlay, lista aperta, pagina del menu, destinazione → Nuova spesa) ed esce
+    solo da Nuova spesa: una voce di guardia nella cronologia (`theme/backStack.ts`, `useBackLayer`).
+  - **Immagine del profilo** in testa alle Impostazioni: nessuna (in Avanzata la foto Google, l'omino se manca), cinque avatar astratti,
+    oppure una foto (quadrato centrale a 192 px). Standard `nummo.profile.v1`, Avanzata `nummo.profile.v1.<uid>`.
+  - **Blocco dell'app** (impronta, viso o PIN, WebAuthn) all'apertura e al ritorno dopo subito/1/5/15 minuti; recupero: in Avanzata «Esci»
+    e nuovo accesso Google, in Standard «Disattiva il blocco» dopo una conferma (deterrente, non protezione forte). Uno schermo, non cifratura.
+  - **Importo massimo 999.999.999,99 €** (spese, prezzi, totale delle liste, template; Rules pubblicate); ricariche e budget dei fondi restano
+    a 99.999,99. Campo Importo che rimpicciolisce il testo su smartphone.
+  - **Limiti di lunghezza**: ricerche ed Esercente 30, nome della lista 40, prodotto 60, «Totale spesa» come l'Importo.
+  - Barra dei menu lontana dagli angoli arrotondati; vibrazione al cambio Spese/Abbonamenti; scansione dello scontrino più ordinata;
+    riepilogo del passaggio dei dati più breve.
+- **Ultima sessione (22 novembre, sera), non committata:** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti
+  dal passaggio dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no.
+- **Verifiche (22 novembre, ultime).** `npm run check` OK su `17632af` (typecheck, **545/545**, build demo). `test:emulator` **22/22** sulle
+  Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
+  servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
+  virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
+  campi. Nessun errore JS.
+- **Da provare sul telefono (priorità):**
+  1. App installata sul Pixel 8: Indietro e gesto Indietro di sistema; blocco con impronta/viso reali (richiesta automatica, «Sblocca»,
+     dove compare la passkey «Nummo» nel gestore delle password), recupero in Avanzata con «Esci»; foto del profilo dalla galleria.
+  2. In produzione (Avanzata): una spesa oltre 99.999,99 € accettata dal server; scelta di un avatar e ritorno alla foto Google.
+  3. iPhone/Safari: Indietro a scorrimento, blocco (Safari può chiedere un tocco: c'è «Sblocca»).
+  4. Rimasti dal 21 novembre: vibrazione 5/4 ms (senza Non disturbare), menu «immagine» al tocco prolungato, tastiera virtuale (campo in basso
+     e nei dialoghi, iOS a passi), modifica spesa a 360–412 px, revisione dello scontrino su telefono reale.
+- **Da verificare su dispositivo (storico):** «Carica foto» e scansione con l'AI da telefono; blocco dello zoom con due dita; ritocchi mobile
+  del 17 novembre su iPhone e scheda AI con Gemini reale; icona dell'app (cache del launcher); tastiera automatica di Nuova lista/Nuovo fondo
+  (su iOS probabilmente non si apre). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
+- **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
+  separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser.
+- **Ambiente.** Runner hybrid dell'utente **attivo**: PID 36786 (`node scripts/dev-hybrid.ts --clear`, dal 21 novembre alle 22:59, progetto
+  `nummo-6b6e2`) con `.firebase/hybrid.lock` e `.nummo-hybrid-36786.json`: non toccarli finché il processo esiste; se si ferma senza pulizia,
+  ispezionare come per i `stale-*` (processo, porte 8180/9099/4000/4400/8081, `emulator-data/`), poi solo su richiesta rinominare il lock.
+  Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
+- **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
+- **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
+  (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
+  `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## «Elimina tutte le spese», «Cambia modalità» nel colore principale, PIN del blocco in Standard — 22 novembre 2026
+
+- **Elimina tutte le spese** (su richiesta: «solamente tutti i dati delle spese registrate», copia automatica prima, solo l'archivio): nuovo
+  gruppo «Elimina le spese» in Archiviazione e backup, entrambe le modalità. `DeleteDialog` → download di `nummo-backup-prima-di-eliminare.json`
+  → `DataStore.removeAllExpenses()` (nuova operazione, in **entrambe** le implementazioni: locale in una transazione con `clear`, Firestore
+  lettura dal server poi gruppi da 400, non atomico, ripetibile, offline rifiutata prima di eliminare). Restano categorie, fondi, movimenti,
+  liste (quelle registrate restano archiviate e diventano «staccate», come dopo un import), template, esercenti, budget. Rules invariate.
+- **«Cambia modalità»** del dialogo di cambio modalità: dal rosso `error` al colore principale (screenshot dell'utente).
+- **Conteggi tolti** da «Dati della modalità Standard» (Avanzata): niente più «Sul dispositivo: n spese, n categorie.», né «Controllo dei
+  dati…»; restano «Nessun dato sul dispositivo.» e gli errori.
+- **PIN del blocco in Standard** (scelta dell'utente: 6 cifre, obbligatorio): accendere il blocco in Standard apre «Scegli il PIN di Nummo»
+  (due volte), poi chiede l'impronta; `pin` = sale 16 byte + PBKDF2-SHA-256 200.000 iterazioni in `nummo.appLock.v1` (`domain/appLock.ts`:
+  `createPin`/`pinMatches`, mai in chiaro; un `pin` danneggiato si ignora). Sulla schermata di blocco, senza «Esci» dell'Avanzata, «Non riesco
+  a sbloccare» chiede il PIN; errato → «PIN errato.». Il PIN si toglie con il blocco e si cambia («Cambia il PIN») solo dopo l'impronta. Un
+  blocco acceso prima, senza PIN, mostra in rosso «Imposta un PIN…» e intanto resta la sola conferma. In Avanzata nessun PIN. Nessun limite
+  ai tentativi (deterrente come il blocco: sei cifre si provano tutte offline da chi controlla il profilo).
+- **Verifica:** `npm run check` OK (**547/547**), `test:emulator` **23/23** su porte proprie (39199/39380, config temporanea rimossa, runner
+  hybrid 36786 non toccato). Chromium headless su `dist-demo` (Standard, `localhost`, autenticatore WebAuthn virtuale): import di
+  `nummo-utente-medio.json` (196 spese), «Elimina tutte le spese» → copia scaricata, 0 spese, 15 categorie e 3 fondi rimasti, «196 spese
+  eliminate.»; «Cambia modalità» verde (primary) nello screenshot; PIN a 5 cifre rifiutato, lettere ignorate, blocco acceso con hash; dopo il
+  ricaricamento, impronta rifiutata, PIN errato rifiutato, PIN giusto → sbloccato, blocco e PIN spenti. Nessun errore JS. **Non provati:**
+  eliminazione in Avanzata nel browser (solo emulatore), «Cambia il PIN», aspetto su smartphone. Non committato, non pubblicato.
 
 ## Ricerche ed Esercente a 30 caratteri — 22 novembre 2026
 
@@ -226,7 +89,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   invariate): esercenti salvati e backup con nomi più lunghi restano validi; la scansione dello scontrino può ancora proporre un nome fino
   a 60. Nuovo test in `tests/merchant.test.ts`.
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900): Esercente 80 → 30, ricerca di Spese 80 → 30;
-  nessun errore JS. Non committato, non pubblicato.
+  nessun errore JS. Committato in `17632af`, pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Limiti nei campi di ricerca e delle liste, immagine del profilo in Avanzata — 22 novembre 2026
 
@@ -245,7 +108,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   6 scelte, «Foto di Google» selezionata e nell'anteprima; avatar «Orbite» → pulsante e `nummo.profile.v1.demo-owner`, menu senza messaggi
   sulla foto; dopo il ricaricamento avatar conservato; «Foto di Google» → di nuovo la foto, chiave tolta. Limiti: ricerca di Spese 150 → 100,
   Esercente 80 → 60, nome della lista 55 → 40. Nessun errore JS. **Non provati nel browser:** ricerca delle categorie (compare da 9
-  categorie), ricerca degli abbonamenti (archivio demo vuoto), foto Google che non si carica nella scheda. Non committato, non pubblicato.
+  categorie), ricerca degli abbonamenti (archivio demo vuoto), foto Google che non si carica nella scheda. Committato in `973e8a9`, pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 - **Blocco dell'app:** su richiesta tolta «Nasconde i dati sullo schermo, non li cifra.» dalla riga sotto l'interruttore (IT/EN); resta
   «All’apertura e quando torni nell’app chiede impronta, viso o il PIN del dispositivo.». Typecheck e `npm test` OK. Il limite resta scritto
   nel README e in `AGENTS.md`.
@@ -271,20 +134,20 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Verifica:** `npm run check` OK, `test:emulator` **22/22** su porte proprie (39199/39380, config temporanea rimossa, runner hybrid 36786
   non toccato), con 999.999.999,99 € accettato e 1.000.000.000,00 rifiutato. Nessun errore JS.
 - **Pubblicazione, nell'ordine:** prima le **Rules** (`firebase deploy --only firestore:rules --project nummo-6b6e2`), poi Hosting; chi ha
-  collegato il proprio Firebase deve ricopiare le Rules. Non committato, non pubblicato.
+  collegato il proprio Firebase deve ricopiare le Rules. Committato in `20b14e0`, pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Avatar «Pietre» al posto di «Onde» — 22 novembre 2026
 
 - Su richiesta («rigenera quest'ultima icona»): «Onde» (`waves`) sostituito da **Pietre** (rosa, id `stones`): tre ciottoli ellittici
   impilati, più stretti verso l'alto e appena inclinati, base/accento/base con 3 di spazio tra l'uno e l'altro. `waves` salvato →
   «Nessuna immagine». EN «Stones». Typecheck, `npm test` **542/542**, build demo; Chromium headless 390×844 scuro e chiaro: selezione,
-  salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; non pubblicato.
+  salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Avatar «Onde» al posto di «Sorriso» — 22 novembre 2026
 
 - Su richiesta («abbandona l'idea della faccia»): «Sorriso» (`smile`) sostituito da **Onde** (rosa, id `waves`): due onde corte a tratto
   tondo, sfalsate (base sopra a sinistra, accento sotto a destra: uguali e allineate sembravano il segno dell'Acquario). Nessuna faccia nel set. `smile` salvato → «Nessuna immagine». EN «Waves». Typecheck, `npm test` **542/542**, build demo; Chromium headless 390×844 scuro
-  e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; non pubblicato.
+  e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Avatar «Girandola» e «Sorriso» al posto di «Moduli» e «Prisma» — 22 novembre 2026
 
@@ -292,7 +155,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   geometrica, testa tonda in base con occhi a pillola e sorriso ritagliati sullo sfondo, più un pallino d'accento; **Girandola** (blu, id
   `pinwheel`) quattro mezzi dischi che girano attorno al centro, alternati base/accento. Gli id `modules`/`prism` salvati si leggono come
   «Nessuna immagine» (mai pubblicati). Nomi EN Pinwheel/Smile, chiavi vecchie tolte da `en.ts`. Typecheck, `npm test` **542/542**, build
-  demo; Chromium headless 390×844 scuro e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; non pubblicato.
+  demo; Chromium headless 390×844 scuro e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Cinque avatar astratti al posto delle icone del profilo — 22 novembre 2026
 
@@ -312,7 +175,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Browser:** Chromium headless su `dist-demo`, Standard: 390×844 scuro e chiaro e 1280×900 chiaro; i cinque avatar cliccati uno per uno:
   `aria-checked` sul solo scelto, `nummo.profile.v1` aggiornato, pulsante in alto aggiornato; avatar salvato mostrato dopo il
   ricaricamento. Nessun errore JS. Ritoccati dopo la prima prova Goccia (più grande) e Prisma (metà più staccate). **Non provato** su
-  Android reale. Committato in `c5d3ee8` e inviato; non pubblicato.
+  Android reale. Committato in `c5d3ee8` e inviato; pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Immagine del profilo: stesse misure del pulsante, tre icone tolte dalla scelta — 22 novembre 2026
 
@@ -326,7 +189,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `tests/profileImage.test.ts`. `AGENTS.md`.
 - **Verifica:** typecheck OK, `npm test` **541/541** sull'albero condiviso con l'altra sessione (blocco dell'app, non committato). Chromium
   headless su `dist-demo`, Standard, tema scuro, 390×844: stile pixel e minimale, zampa nel pulsante e nella scelta della stessa misura
-  (20 px), nove icone in due righe. Nessun errore JS. Non provato sul telefono. Committato in `c5d3ee8` e inviato; non pubblicato.
+  (20 px), nove icone in due righe. Nessun errore JS. Non provato sul telefono. Committato in `c5d3ee8` e inviato; pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 - **Testo tolto:** su richiesta, niente più «Compare sul pulsante del menu, in alto a destra. Resta solo su questo dispositivo e non entra
   nel backup.» sotto l'anteprima (chiave tolta da `en.ts`); la scheda ha solo anteprima, scelte e «Carica una foto». Typecheck e
   `npm test` **541/541**.
@@ -346,7 +209,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   sbloccare» → «Disattiva il blocco» → Nuova spesa; riaccensione con la stessa credenziale (sempre 1); spegnimento con impronta rifiutata
   negato, con impronta accettata riuscito. Nessun errore JS. **Non provati:** il recupero in Avanzata («Esci», serve un accesso Google),
   impronta/viso reali sul Pixel 8 nell'app installata e su iPhone (Safari può chiedere un tocco prima della richiesta: c'è «Sblocca»),
-  dove appare la passkey «Nummo» nel gestore delle password del telefono. Non committato, non pubblicato.
+  dove appare la passkey «Nummo» nel gestore delle password del telefono. Committato in `a6c2b88`, pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Tasto «Indietro» che non esce dall'app, immagine del profilo in Standard — 22 novembre 2026
 
@@ -367,7 +230,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   → Indietro = Nuova spesa; menu account → Indietro lo chiude; Impostazioni dal menu → icona «zampa» salvata, foto 640×400 → JPEG
   quadrato nel pulsante account (36 px) e «La tua foto» selezionata; Indietro = Nuova spesa; dopo il ricaricamento foto conservata e
   nessuna guardia rimasta; Indietro da Nuova spesa esce dalla pagina. Nessun errore JS. **Non provati:** WebAPK sul Pixel 8 (il vero tasto
-  Indietro di sistema e il gesto), iOS Safari (scorrimento indietro), foto reale dalla galleria del telefono. Non committato, non pubblicato.
+  Indietro di sistema e il gesto), iOS Safari (scorrimento indietro), foto reale dalla galleria del telefono. Committato in `b2f6d1e`, pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Scansione più ordinata, importo con limite, Categorie su smartphone — 22 novembre 2026
 
@@ -385,7 +248,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   «1234567,891» → «12345,89», «12,345» → «12,34», «99999.99» intero; date picker 88/88; dialogo di scansione con una foto caricata
   (OpenAI con chiave finta, nessuna richiesta inviata), icona di ingrandimento funzionante; nome di categoria fermo a 40; schermate
   controllate; alone squadrato visto prima della modifica (raggio 8). Nessun errore JS. Non provato sul telefono. Committato in `ec8c5c3`
-  e inviato; **non pubblicato** su Hosting.
+  e inviato; pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Riepilogo del passaggio più breve, «Annulla»/«OK» della data più stretti — 22 novembre 2026
 
@@ -405,7 +268,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Albero condiviso:** durante questa fase un'altra sessione ha modifiche non committate (immagine del profilo, navigazione Indietro:
   `App.tsx`, `AccountMenu.tsx`, `AppDialog.tsx`, `Overlay.tsx`, `ListsPage.tsx`, `image.ts`, `SignIn.tsx`, file nuovi in `settings/`,
   `BackNavigation.ts`, `backStack.ts`, test), anche in file toccati qui (`SettingsPage.tsx`, `Workspace.tsx`, forse `en.ts`). Nel commit
-  separare per parti. Non committato, non pubblicato.
+  separare per parti. Committato in `c862fa9` (separato per parti), pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Vibrazione al cambio Spese/Abbonamenti — 22 novembre 2026
 
@@ -415,7 +278,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `AGENTS.md`, README, commento di `preferences.ts`.
 - **Verifica:** `npm run check` OK (**521/521**). Chromium headless su `dist-demo`, 390×844 con touch emulato: Spese → Abbonamenti `[5]`,
   → Spese `[5]`, di nuovo Spese `[]`; «Ricorrenza» in Nuova spesa → Annuale `[]`. Nessun errore JS. Non sentito sul telefono.
-  Non committato, non pubblicato.
+  Committato in `8dd92df`, pubblicato con `17632af` (Rules e Hosting, 22 novembre).
 
 ## Separatore delle schede in evidenza, menu «immagine» al tocco prolungato, vibrazione 5/4 solo touch — 22 novembre 2026
 
@@ -1285,9 +1148,238 @@ su `main` (il ramo di lavoro `fix/react-audit` non esiste più), pubblicato su H
   con righe `memo`; transizioni solo su `transform`/`opacity`/colori, regola globale del movimento ridotto presente.
 - **Non provati:** archivi grandi, telefono reale, `test:emulator` (nessun cambiamento a `DataStore`, servizi o Rules).
 
+## Stato corrente precedente — 21 novembre 2026 (archivio)
+
+Riepilogo sostituito il 22 novembre dal nuovo «Stato corrente» in apertura; conservato com'era per la cronologia delle pubblicazioni
+del 21–22 novembre (riga «Produzione»), assente dal «Registro dei rilasci». Può dire cose superate.
+
+Leggere questa sezione per prima: è il riepilogo aggiornato. Il «Registro dei rilasci» e le sezioni datate sotto, dal più
+recente, sono cronaca delle singole fasi e possono dire cose superate.
+
+- **Sessione del 20 novembre (chiusa).** Fatto, su richiesta: riallineamento di questo file allo stato reale; audit React di rendering,
+  stato e prestazioni con tre correzioni verificate in Chromium (`e4976be`); le 24 ID icona eliminate prima del 14 novembre di nuovo
+  valide e ritirate (`ad5aa73`); Rules e Hosting pubblicati; lock hybrid 25494 messo da parte. In serata/notte: rami uniti eliminati
+  (14 locali, 3 remoti); file di collaudo v9/v10 con test, importati nell'emulatore e collaudati dall'interfaccia della demo; le quattro
+  osservazioni del collaudo corrette (`aebd0ec`) e pubblicate su Hosting. Dettagli nelle sezioni del 20 novembre.
+- **Sessione del 21 novembre (giorno).** Su richiesta: analisi iniziale con le discrepanze qui sotto, poi «Torna indietro» in «Collega il
+  tuo Firebase», pulsanti della revisione dello scontrino, esercente e azioni a tutta larghezza negli abbonamenti, «Elimina» come cestino
+  con contorno rosso su smartphone, Annulla/Salva a 96 accanto al cestino, Importo e Data non più tagliati; tutto committato e pubblicato
+  su Hosting (ultimo `9a8285a`). Nella stessa giornata un'altra sessione ha lavorato sulla tastiera virtuale (`fdfce0e`, `1a8dc14`),
+  committata a parte e pubblicata insieme: mai provata su telefono reale.
+- **Discrepanze trovate all'inizio della sessione del 21 novembre e corrette qui (solo documentazione):** (1) questo riepilogo dava la
+  scansione solo con AI come «non pubblicata», ma era uscita con `817a2f1`; (2) le sezioni del 21 novembre fino a `817a2f1` (pulsanti
+  uniformi, icona, Templates, ordine dei servizi AI, Fragment, wifi, «Annulla» della scansione, fondo negli abbonamenti, scansione solo
+  AI) finivano con «non pubblicato», e Templates chiedeva ancora di pubblicare le Rules, già pubblicate; (3) «Chiudi» con contorno era
+  «non committato, non pubblicato», ma è `bdc742b`, pubblicato; (4) «Verifiche» diceva `test:emulator` sulle Rules di `ad5aa73` e Rules
+  /servizi non più toccati, mentre `4144917` e `817a2f1` li toccano (il 22/22 sulle Rules dei template è nella sezione Templates); (5) la
+  riga «Git» si fermava a `9ad8e02`; (6) commento in `ExpenseEditor.tsx` e sezione «Pulsanti dei dialoghi uniformi» davano per buono
+  «Elimina» da solo sopra Annulla/Salva su smartphone, poi giudicato difettoso dall'utente e sostituito dal cestino (`3d1b5ea`). Le
+  sezioni di questa sessione scritte «non committato» sono aggiornate con il commit. Codice e `AGENTS.md` coincidevano per il resto.
+- **Analisi iniziale del 21 novembre (notte), corretta su richiesta:** la Guida («Template per le spese», IT e EN) diceva l'importo
+  facoltativo, obbligatorio da `e4bf945`: ora «descrizione, importo, data, esercente, categoria e fondo»; la sezione «Fondo accanto alla
+  categoria…» dava `subtitleBelow` per rimossa, ora segnata come superata. Committato in `3c8f614` e pubblicato su Hosting.
+- **Feedback aptico rivisto (21 novembre, notte):** zona morta sulla barra, distanza minima tra vibrazioni, `tick` per le selezioni,
+  pagina di prova delle durate; sezione dedicata qui sotto. Committato in `7dc02a2` e pubblicato su Hosting (21 novembre, notte);
+  da provare sul Pixel 8 con la pagina di prova. Inviato a `origin` su richiesta.
+- **Vibrazione più delicata (21 novembre, notte):** su richiesta («ancora troppo forte e zanzarosa») `tap` 10 → 6 ms e `tick` 6 → 4 ms
+  (l'intensità la fissa il browser: si può solo accorciare). `npm run check` 510/510; Chromium: barra [6], segmenti/legenda [4], un
+  solo impulso per tocco, nessuno in scorrimento/digitazione. Pagina di prova (anche l'artifact) aggiornata con 2–6 ms. Committato in
+  `976a5cb` e pubblicato su Hosting (bundle online identico a `dist/`, con `tap:6,tick:4`); non sentito sul Pixel 8.
+  **Superato da `1c7ca7f`** (punto seguente).
+- **Vibrazione tolta da segmenti e legenda, impulsi 4/3 ms (21 novembre, pomeriggio):** su richiesta nessuna vibrazione su
+  `SegmentedButtons` e sulle righe della legenda di Analisi; `tap` 6 → 4 ms, `tick` 4 → 3 ms; Guida senza «confronto con i periodi
+  precedenti» (`e7953bf`). Committato in `1c7ca7f` e pubblicato su Hosting (15:11). Non sentito sul Pixel 8: 3 ms può essere quasi
+  impercettibile.
+- **Revisione dello scontrino (21 novembre, pomeriggio–sera):** su richiesta, a più riprese: foto alta quanto i campi su desktop, titolo
+  «Controlla i dati», pulsanti nella colonna dei campi (da medium) o allineati ai campi (smartphone), impilati sotto 500 di colonna;
+  intro del dialogo più breve (`a2029bb`). Committato in `830ac24`, `2b9e763`, `3b74ea4`, ciascuno pubblicato su Hosting. Provato poi
+  nel browser da 360 a 1400 px (sezione «Revisione dello scontrino provata nel browser» qui sotto): conforme, salvo «Usa questi dati»
+  troncato sotto 390 px e «Ingrandisci la foto» fra le due righe di pulsanti, corretti in `6f95a08`, pubblicato su Hosting.
+- **«Template» accanto a «Scansiona scontrino» (21 novembre, sera):** su richiesta, perché «Salva» finiva sotto la navigazione su
+  smartphone; pulsante distinto in `primary`, scelto un template solo l'icona della categoria. Committato in `ee2fcdc` e pubblicato su
+  Hosting; sezione dedicata qui sotto.
+- **Vibrazione provata nel browser emulato (21 novembre, sera):** tutti i 15 casi come previsto (sezione dedicata qui sotto); percezione
+  sul Pixel 8 ancora da provare.
+- **Tastiera virtuale provata nel browser emulato (21 novembre, sera):** `scripts/check-keyboard.mjs` su `dist-demo`: transizioni in un
+  fotogramma ovunque (campo alto/basso, dialogo, 3–4 passi, cambio campo, CPU ×4, 360×640). Su richiesta, 24 px di margine sotto il
+  campo riportato in vista (prima a filo della tastiera a 360×640). Committato in `62e3639` e pubblicato su Hosting; sezione dedicata qui sotto.
+- **Vibrazione 6/5 ms, barra che spariva, scansione spenta (21 novembre, notte):** su richiesta; sezione dedicata qui sotto.
+  Committato in `1518b0c`, pubblicato su Hosting insieme a `1c83b54`.
+- **Stessa sessione, dopo:** «Ripristina predefiniti» completo e `gemini-3.5-flash-lite` consigliato (`dabe2eb`), «Annulla»/«OK» più piccoli
+  nel selettore della data (`01c2b7f`); con la guida «Collega il tuo Firebase» dell'altra sessione (`8c1ff66`, committata su richiesta
+  dopo `npm run check` OK **520/520** sull'albero completo) pubblicati su Hosting il 21 novembre (notte) con `npm run deploy:hosting`:
+  «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. Da provare sul telefono.
+- **Spese offline, pagina offline, passaggio dei dati tra le modalità (21 novembre, notte; altra sessione, in parallelo alla
+  precedente):** su richiesta; sezione dedicata qui sotto. `npm run check` **520/520**, `test:emulator` **22/22**, provato nel browser con la
+  demo. Committato in `1c83b54`, inviato e pubblicato su Hosting su richiesta (con `1518b0c` della sessione sulla vibrazione): «Deploy
+  complete!», sito 200, bundle, `sw.js` e `offline.html` online identici a `dist/`. Rules invariate. Da provare sul telefono.
+- **Nuovo testo della guida «Collega il tuo Firebase» (21 novembre, notte):** su richiesta, dalla bozza concordata; sezione dedicata qui
+  sotto. Committato in `8c1ff66` e pubblicato su Hosting (vedi punto sopra). Restano concordati e non fatti: link diretti alla Console, sito senza progetto di base,
+  «Collega un altro dispositivo».
+- **Prossima sessione, priorità consigliate:** (0) sul telefono, ricaricare l'app e provare: vibrazione su Android (tocco e trascinamento
+  sulla barra, blocchi e ciambella di Analisi, «Salva»/«Crea», interruttore «Vibrazione» spento; impulsi da 6/5 ms percepibili?);
+  revisione dello scontrino su telefono reale (vista nel browser emulato il 21 novembre); tastiera virtuale (aprire e chiudere su
+  un campo in basso e in un dialogo: nessun doppio salto; iOS, anche il campo che resta in vista con la tastiera che si apre a passi), modifica spesa a 360–412 px (cestino, Annulla/Salva, Data sotto l'Importo
+  sotto 412), azioni degli abbonamenti, revisione dello scontrino; poi in produzione: pagina Templates (in Avanzata compaiono i
+  template salvati prima del 16 novembre, se ce n'erano), scansione dello scontrino da attivare in Impostazioni, pulsanti dei dialoghi,
+  nuova icona (la cache del browser o del launcher può mostrare ancora quella vecchia); (1) in produzione, ricaricare l'app e provare un archivio o un backup con un'icona
+  storica (se ne esistono), una spesa con esercente, l'eliminazione di un pagamento e «Esci»/nuovo accesso; (2) collaudo su telefono
+  reale (elenco «Da verificare su dispositivo» qui sotto); (3) facoltativo, su decisione dell'utente: linter con le regole degli hook
+  React (nuova dipendenza), misura delle prestazioni con un archivio grande; collaudo su telefono reale (tastiera virtuale, safe area,
+  gesti) dei file v9/v10 e delle correzioni del 21 novembre, già pubblicate.
+- **Git (21 novembre).** `main` allineato a `origin/main`, tutto inviato su richiesta; solo il ramo `main`, in locale e su
+  `origin`. Ultimi commit di codice, tutti pubblicati: `8bf4f4d` (separatore delle schede, menu «immagine», vibrazione 5/4 solo touch), `314064b` (matita dei template da 28 dp), `e008fcd` (nessun campo «Chiave API» nella scansione, «Vibrazione» e telefono in
+  silenzioso), `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di scorrimento senza frecce), `cffe2e8` («Esci» riporta alla scelta della modalità), `69566dc` (scheda «Dati della modalità Standard», test del passaggio stabile), `8c1ff66` (guida «Collega il tuo Firebase»), `01c2b7f` («Annulla»/«OK» 88×40 nel
+  selettore della data), `dabe2eb` («Ripristina predefiniti» completo, `gemini-3.5-flash-lite`), `1c83b54` (spese offline in Avanzata,
+  pagina offline, passaggio dei dati tra le modalità), `1518b0c` (vibrazione 6/5 ms, barra che spariva, scansione spenta di base,
+  pulsante «Template» invariato), `3ad9a75` (testo «Il pulsante Template compare…», documenti, lock hybrid), `ee2fcdc` (pulsante «Template» accanto a «Scansiona scontrino»), `62e3639` (24 px tra campo attivo e tastiera virtuale), `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto»
+  sulla riga del primo pulsante impilato), `3b74ea4`, `2b9e763`, `830ac24` (revisione dello scontrino: foto, pulsanti,
+  titolo «Controlla i dati»), `a2029bb` (intro del dialogo di scansione più breve), `1c7ca7f` (vibrazione tolta da segmenti e legenda,
+  4/3 ms), `e7953bf` (Guida senza confronto con i periodi precedenti), `26c5b8d` (Barre di Analisi senza variazione percentuale), `a29ced9` (vibrazione su «Salva»/«Crea», matita dei
+  template con contorno, nessun messaggio dopo il salvataggio), `976a5cb` (vibrazione più delicata, 6/4 ms), `3c8f614` (Guida: importo dei template obbligatorio), `7dc02a2` (vibrazione senza ronzio), `e4bf945` (importo obbligatorio nei template, matita nell'elenco, fondo a capo in
+  Analisi su smartphone, testo di «Vibrazione»), `b2a80ce` (vibrazione su legenda e segmenti), `9ae0d33` (selezione di
+  Analisi più reattiva), `a8f73a2` (formattatori Intl in cache), `cc60ea6` («Crea»/«Salva» a pillola), `278b016` (fondo accanto alla
+  categoria in Analisi), `4d69d04` (feedback aptico), `0f218da` (tastiera a passi, altra
+  sessione), `9a8285a` (Importo e Data su smartphone), `1a8dc14` (tastiera, altra
+  sessione), `8e513f4` (Annulla/Salva a 96), `3d1b5ea` («Torna indietro», scansione, abbonamenti, cestino), `fdfce0e` (tastiera, altra
+  sessione), `bdc742b` («Chiudi» con contorno), `817a2f1` (template, pulsanti uniformi, icona), `e72bc6f`, `4144917` (scansione solo AI).
+  Prima, pubblicati con `817a2f1`: `9ad8e02` (pulsanti di prova delle notifiche nascosti
+  dietro `pushTests`, più documenti), `9dd0880` (tre pulsanti di Archiviazione e backup della stessa larghezza), `661b984` (avatar del
+  fondo nei dettagli), `0e536a5` (riga dissolta anche su smartphone). Prima, pubblicati: `de79c95` («Fondo» nei dettagli), prima `42d9beb` (riga dissolta nel pannello), prima `41a54ab` (righe intere nel pannello, esercente tolto dai dettagli), prima `e3fb997` (esercente accanto alla data), prima `231d22c` (pannello desktop), poi
+  `78b424d` (correzioni del collaudo su smartphone emulato), prima `aebd0ec` (osservazioni del
+  collaudo). L'hash di testa non si scrive qui: ogni commit che lo registrasse lo renderebbe superato; i commit che toccano solo
+  documenti non sono elencati.
+- **Ambiente (20 novembre).** Un altro runner hybrid (PID 25494, avviato il 17 alle 20:30) si era fermato senza pulizia. Su richiesta,
+  dopo aver verificato che il processo non c'era più e che le porte erano libere: rimossa la config `.nummo-hybrid-25494.json` dalla
+  radice e rinominato il lock in `.firebase/hybrid.lock.stale-25494`. `npm run dev` non è più bloccato. Gli altri `stale-*` sono conservati.
+- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `17632af` pubblicati su richiesta il 22 novembre, nell'ordine: Rules (`firebase deploy --only firestore:rules --project nummo-6b6e2`: compilazione OK, «Deploy complete!»; importo fino a 999.999.999,99 €, prezzi compatti fino a 143 caratteri), poi `npm run deploy:hosting` («Deploy complete!»), sito 200, bundle online identico a `dist/` (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Contiene: Indietro di Android, immagine del profilo (Standard e Avanzata, avatar astratti), blocco dell'app, importo massimo e campo Importo, barra dei menu, limiti dei campi. Chi ha collegato il proprio Firebase deve ricopiare le Rules. Prima, **Hosting** da `8bf4f4d` (separatore delle schede, niente menu «immagine» al tocco
+  prolungato, vibrazione 5/4 ms solo su touch) pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`: «Deploy complete!», sito
+  200, bundle online identico a `dist/` (SHA-256, con `tap:5,tick:4`). Rules invariate. Prima, **Hosting** da `314064b` (matita dei template da 28 dp) pubblicato su richiesta il 21 novembre
+  (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate.
+  Prima, **Hosting** da `e008fcd` (nessun campo «Chiave API» nel dialogo di scansione; testo di
+  «Vibrazione» sul telefono in silenzioso) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!»,
+  sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate. Prima, **Hosting** da `1934641` (dettagli di una categoria in Analisi, vibrazione 8/7 ms, barre di
+  scorrimento senza frecce dell'altra sessione) pubblicato su richiesta il 21 novembre (notte) con `npm run deploy:hosting`: «Deploy
+  complete!», sito 200, bundle online identico a `dist/` (SHA-256, con `tap:8,tick:7`). Rules invariate. Prima, **Hosting** da `cffe2e8` («Esci» riporta alla scelta della modalità) pubblicato su richiesta
+  il 21 novembre (sera tardi) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules
+  invariate. Prima, **Hosting** da `69566dc` (scheda «Dati della modalità Standard», note con asterisco)
+  pubblicato su richiesta il 21 novembre (sera tardi) con `npm run deploy:hosting` da un worktree pulito di `69566dc` (l'albero principale
+  aveva modifiche non committate di un'altra sessione a `App.tsx`/`useSession.ts`, escluse): «Deploy complete!», sito 200, bundle online
+  identico a quello costruito (SHA-256). Rules invariate. Prima, **Hosting** da `1c83b54` (con `1518b0c`; spese offline, pagina offline, passaggio dei dati,
+  vibrazione 6/5 ms) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle, `sw.js` e `offline.html` identici
+  a `dist/`. Prima, **Hosting** da `3ad9a75` (testo «Il pulsante Template compare…») pubblicato su richiesta il
+  21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `ee2fcdc` (pulsante «Template» nella prima riga di Nuova spesa) pubblicato su
+  richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `62e3639` (24 px tra il campo riportato in vista e la tastiera virtuale)
+  pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `6f95a08` («Usa i dati» sotto 390 px, «Ingrandisci la foto» sulla riga del
+  primo pulsante impilato) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico a `dist/`.
+  Prima, **Hosting** da `3b74ea4` (revisione dello scontrino: pulsanti uguali su smartphone, foto fino
+  alla Categoria su desktop, pulsanti impilati in colonna stretta) pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito
+  200. Prima, **Hosting** da `2b9e763` e, prima ancora, da `830ac24` (revisione dello scontrino), stessa giornata, «Deploy complete!»,
+  sito 200; per questi tre il bundle online non è registrato come confrontato con `dist/`. Prima, **Hosting** da `1c7ca7f` (con `e7953bf`;
+  vibrazione 4/3 ms, niente vibrazione su segmenti e legenda) il 21 novembre alle 15:11: bundle identico a `dist/`, con la modifica
+  di `ScanReceiptDialog.tsx` poi committata in `a2029bb` (vedi «Registro dei rilasci»). Rules invariate.
+  Prima, **Hosting** da `26c5b8d` (Barre senza variazione percentuale; con `a29ced9`, vibrazione su «Salva»/«Crea», matita
+  dei template, nessun messaggio dopo il salvataggio) pubblicato su richiesta il 21 novembre: «Deploy complete!», sito 200; bundle online non confrontato con `dist/`. Rules invariate.
+  Prima, **Hosting** da `976a5cb` (vibrazione più delicata, 6/4 ms) pubblicato su richiesta il
+  21 novembre (notte): «Deploy complete!», sito 200, bundle identico a `dist/`. Prima, **Hosting** da `7dc02a2` (feedback aptico senza ronzio; con `3c8f614`, testo dei template
+  nella Guida) pubblicato su richiesta il 21 novembre (notte): «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256).
+  Rules invariate. Prima, **Hosting** da `e4bf945` (importo obbligatorio nei template, matita, fondo a capo in Analisi
+  su smartphone, testo di «Vibrazione») pubblicato su richiesta il 21 novembre (sera): «Deploy complete!», sito 200, bundle online identico
+  a `dist/`. Prima, **Hosting** da `b2a80ce` (vibrazione su legenda e segmenti; con `9ae0d33`, selezione di Analisi
+  più reattiva, e `a8f73a2`, formattatori in cache) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200, bundle
+  online identico a `dist/`. Prima, **Hosting** da `cc60ea6` («Crea» dei template a tutta larghezza, «Salva» e «Crea» a pillola;
+  con `278b016`, fondo accanto alla categoria nei dettagli di Analisi su smartphone) pubblicato su richiesta il 21 novembre (pomeriggio):
+  «Deploy complete!», sito 200, bundle online identico a `dist/`. Prima, **Hosting** da `4d69d04` (feedback aptico nella barra mobile e in Analisi, interruttore
+  «Vibrazione»; con `0f218da`, tastiera aperta a passi) pubblicato su richiesta il 21 novembre (pomeriggio): «Deploy complete!», sito 200,
+  bundle online identico a `dist/`. Prima, **Hosting** da `9a8285a` (Importo e Data non più tagliati su smartphone; con `1a8dc14`,
+  raggruppamento della tastiera come funzione pura) pubblicato su richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `8e513f4` (Annulla/Salva a 96 su smartphone accanto al cestino) pubblicato su
+  richiesta il 21 novembre (pomeriggio). Prima, **Hosting** da `3d1b5ea` pubblicato su richiesta il 21 novembre (mezzogiorno): tastiera
+  virtuale nello stesso fotogramma (`fdfce0e`), «Torna indietro» in «Collega il tuo Firebase», pulsanti della revisione dello scontrino,
+  esercente negli abbonamenti, cestino con contorno rosso su smartphone. Prima, **Hosting** da `bdc742b` («Chiudi» con contorno) pubblicato su richiesta il 21 novembre
+  (notte, quarta parte). Prima, **Rules e Hosting** da `817a2f1` pubblicati su richiesta il 21 novembre (notte, terza
+  parte): template, scansione solo AI, pulsanti uniformi, icona; dettagli nel «Registro dei rilasci». Prima, **Hosting** da `de79c95` pubblicato su richiesta il 21 novembre (notte, seconda parte):
+  riga tagliata dissolta verso il bordo del pannello, «Fondo» nei dettagli della spesa; sito 200, bundle identico a `dist/`. Prima,
+  **Hosting** da `41a54ab` pubblicato su richiesta il 21 novembre (notte): righe intere sul
+  bordo del pannello desktop, esercente tolto dai dettagli; sito 200, bundle identico a `dist/`. Da provare in Brave: nessuna riga a
+  metà in fondo al pannello, apertura dell'ultima riga visibile. Prima, **Hosting** da `e3fb997` pubblicato su richiesta il 21 novembre (sera) con
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare: pannello desktop in Brave
+  (righe tagliate dal bordo arrotondato, barra lontana dagli angoli), Firefox, esercente accanto alla data su telefono. Prima, **Hosting** da `f614f65` (codice di `78b424d`) pubblicato su richiesta il 21 novembre
+  con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare sul telefono: dettagli
+  di una spesa con esercente lungo, anteprima del ripristino, fogli e dialoghi senza striscia in basso. Prima, **Hosting** da
+  `0765e5c` (codice di `aebd0ec`) pubblicato su richiesta il 20 novembre (notte) con `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/`. Da provare in produzione:
+  il ripristino da backup (riepilogo con gli esercenti, conflitto con i nomi) e un messaggio con un dialogo aperto. Prima, il 20 novembre (sera), nell'ordine: **Rules** da `ad5aa73`
+  (`firebase deploy --only firestore:rules --project nummo-6b6e2`, compilazione OK, «Deploy complete!»: le 24 ID icona storiche
+  ammesse per categorie e fondi), poi **Hosting** da `f3bd4df` (`npm run deploy:hosting`, «Deploy complete!», sito 200, bundle online
+  identico a `dist/`): audit React e ID icona storiche. Worker `nummo-push` invariato (ripubblicato dall'utente per `f454d12`).
+  Da provare in produzione: un archivio o un backup con un'icona storica, se ne esistono. Cronologia nel «Registro dei rilasci» qui sotto.
+- **Terzo riallineamento documentale (21 novembre, sera).** Su richiesta, dopo una verifica (`main` = `origin/main`, albero pulito,
+  `npm run check` OK **509/509** su `3b74ea4`): «Git», «Produzione», «Registro dei rilasci» e «Prossime attività» fermi a `26c5b8d`
+  (mancavano `e7953bf`, `1c7ca7f`, `a2029bb`, `830ac24`, `2b9e763`, `3b74ea4`, tutti pubblicati); vibrazione 6/4 ms data come attuale
+  (oggi 4/3); sezione 4/3 ms senza commit/rilascio; «Funzionalità implementate» con la variazione delle Barre, rimossa. `AGENTS.md` e
+  codice coincidevano. Nessun codice toccato.
+- **Secondo riallineamento documentale (21 novembre, pomeriggio).** Su richiesta, dopo una verifica (`main` = `origin/main`, albero
+  pulito, `npm run check` OK **502/502**): corretti «Funzionalità implementate» (scansione solo AI, Templates, backup v11), «Prossime
+  attività» (Rules del 20–21 novembre), tre sezioni ancora «Non pubblicato» (`9ad8e02`, `9dd0880`, `0e536a5`/`661b984`, usciti con
+  `817a2f1`), «Scansiona di nuovo» di testo (superato); in `AGENTS.md` campi di `nummo.receiptAi.v1` e `BackButton`. Nessun codice toccato.
+- **Riallineamento documentale (21 novembre).** Su richiesta: verificato il repository (`main` = `origin/main` dopo un fetch, albero
+  pulito, `npm run check` OK **499/499**) e corrette le sezioni finali di questo file rimaste indietro («Funzionalità implementate»,
+  «Problemi aperti», «Prossime attività»), più la riga `scripts/` di `AGENTS.md`. Nessun codice toccato.
+- **Verifiche (21 novembre, sera tardi, ultime).** `npm run check` OK sull'albero di `c48ab1b` più la fase «Dati della modalità Standard»
+  (typecheck, **520/520**, build demo); `test:emulator` **22/22** l'ultima volta su `1c83b54` (passaggio dei dati tra le modalità); da allora
+  Rules, `DataStore` e servizi invariati. I due punti seguenti sono precedenti.
+- **Verifiche (21 novembre, sera).** `npm run check` OK su `3b74ea4` (typecheck, **509/509**, build demo), albero pulito, `main` =
+  `origin/main` dopo un fetch. `test:emulator` non rieseguito: Rules, `DataStore` e servizi invariati da `817a2f1`.
+- **Verifiche (21 novembre, notte).** `npm run check` OK (typecheck, **510/510**, build demo) su `0fa04a9`; dopo `a29ced9` e `26c5b8d` solo typecheck e
+  `npm test` OK (**509/509**, un test in meno per il confronto delle Barre rimosso), senza rifare `npm run check` né la build demo (il deploy ricostruisce il bundle cloud).
+  Prima: **507/507** su `e4bf945` (507 anche su `b2a80ce`). `test:emulator` **22/22** l'ultima volta sulle Rules dei template
+  (`817a2f1`); da allora Rules, `DataStore` e servizi non sono cambiati (il dominio solo nella validazione del modulo dei template).
+- **Verificato dall'utente sul telefono (17 novembre):** con la fotocamera nella pagina (`23f8a55`) la barra di stato non diventa
+  più nera.
+- **Da provare in produzione (Avanzata, cloud):** spesa con esercente; eliminazione di un pagamento; accesso → ricarica → «Esci» (la
+  pagina si ricarica sulla schermata di accesso e la cache su disco si cancella) → nuovo accesso.
+- **Da verificare su dispositivo:** «Carica foto» (galleria) e scansione con l'AI da telefono; blocco dello zoom con due dita (Android
+  e iPhone); ritocchi mobile del 17 novembre su iPhone reale e scheda AI con Gemini reale; icona dell'app (cache del launcher), filtri
+  di Spese/Analisi e dissolvenza del segnaposto d'avvio sul Pixel 8; tastiera automatica di Nuova lista/Nuovo fondo (su iOS
+  probabilmente non si apre).
+- **Notifiche su telefono.** Icona doppia e segnaposto «N» risolti e verificati (sezione «immagine grande trasparente»).
+  Consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
+- **Ambiente (17 novembre).** Il runner hybrid avviato il 16 alle 17:26 (PID 40726) si è fermato senza export (riavvio del sistema
+  il 17 alle 20:03): `npm run dev` rifiutava l'avvio per il lock rimasto. Ispezione: processo inesistente, porte 8180/9099/4000/4400/8081
+  libere, cartelle di sessione `.firebase/hybrid-I8KNPH` e `hybrid-iw5CbO` senza export, `emulator-data/` invariato dall'export del
+  16 alle 03:42 (eventuali dati scritti in hybrid dopo le 17:26 del 16 sono andati persi con l'emulatore). Su richiesta: lock rinominato
+  in `.firebase/hybrid.lock.stale-40726`, config `.nummo-hybrid-40726.json` rimossa dalla radice. Le altre cartelle e i lock
+  `stale-*` in `.firebase/` sono conservati. Il prossimo `npm run dev` legge le Rules attuali (con gli esercenti).
+- **Issue.** #4 e #5 **chiuse** su richiesta il 15 novembre con un commento ciascuno: #4 limite di piattaforma (barra
+  `#121212` nell'app installata, non cambiabile dalla pagina), #5 splash di Android/Chrome lasciata com'è più la
+  dissolvenza lato app; nessuna issue aperta. La dissolvenza non è stata riprovata sul telefono dopo la pubblicazione.
+- **Ambiente (21 novembre, sera tardi).** Runner hybrid **attivo** dell'utente: PID 36786 (`node scripts/dev-hybrid.ts --clear`, avviato
+  alle 22:59, progetto `nummo-6b6e2`), con il suo lock `.firebase/hybrid.lock` e la config `.nummo-hybrid-36786.json`: non toccarli
+  finché il processo esiste; se si ferma senza pulizia, ispezionare come per il 81456 (punto seguente).
+- **Ambiente (21 novembre, notte).** Il runner hybrid PID 81456 (`npm run dev` del 21 alle 01:20, progetto `nummo-6b6e2`) si è
+  fermato senza pulizia: processo inesistente, porte 8180/9099/4000/4400/8081 libere, cartella di sessione `.firebase/hybrid-qVvetQ`
+  con la sola `cli-config`, `emulator-data/` fermo all'export del 16 alle 03:42 (eventuali dati scritti in hybrid dal 21 alle 01:20
+  persi con l'emulatore). Su richiesta: lock rinominato in `.firebase/hybrid.lock.stale-81456`, config `.nummo-hybrid-81456.json`
+  rimossa dalla radice; le altre cartelle e i `stale-*` conservati. `npm run dev` non è più bloccato.
+- **Quarto riallineamento (21 novembre, notte).** Su richiesta, dopo una verifica (`main` = `origin/main` dopo un fetch, albero pulito,
+  `npm run check` OK **509/509** su `118b446`): runner hybrid dato per attivo ma fermo (punto sopra); testo «Il campo Template compare…»
+  diventato «Il pulsante Template compare…» (IT/EN, `ExpenseForm.tsx`, `en.ts`); «Funzionalità implementate» e `AGENTS.md` con il
+  pulsante «Template» invece del campo; etichetta breve «Scansiona» sotto 380 px (da `d66d3db`) ora citata in `AGENTS.md`.
+- **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
+- **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel
+  browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
+  con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
 ## Registro dei rilasci — dal 15 novembre 2026
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
+
+- **Rilascio del 22 novembre: Rules e Hosting da `17632af`**: Indietro di Android, immagine del profilo (Standard e Avanzata, avatar
+  astratti), blocco dell'app, importo massimo 999.999.999,99 € (Rules: importi fino a 99.999.999.999 centesimi, prezzi compatti fino a 143
+  caratteri), barra dei menu, limiti dei campi, scansione più ordinata, riepilogo del passaggio più breve, vibrazione al cambio Spese/Abbonamenti.
+  Prima le Rules (`firebase deploy --only firestore:rules --project nummo-6b6e2`, «Deploy complete!»), poi `npm run deploy:hosting`
+  («Deploy complete!»), sito 200, bundle, `sw.js`, `offline.html` e `firestore.rules` online identici a `dist/` (SHA-256).
+- **Rilasci del 21–22 novembre tra `1c83b54` e `8bf4f4d`** (Hosting da `69566dc`, `cffe2e8`, `1934641`, `e008fcd`, `314064b`, `8bf4f4d`):
+  elencati nella riga «Produzione» di «Stato corrente precedente», qui sopra.
 
 - **Rilascio del 21 novembre (notte, seconda parte): Hosting da `1c83b54`** (con `1518b0c`): più spese offline in Avanzata, pagina offline
   di Nummo, passaggio dei dati tra le modalità; vibrazione 6/5 ms, barra che non resta nascosta, scansione spenta se non attivata.
@@ -4436,8 +4528,8 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (21 novembre):** tutto il codice fino a `314064b` è online su Hosting; ultime Rules da `817a2f1` (template). Vedi
-  «Registro dei rilasci».
+- **Pubblicazione (22 novembre):** tutto il codice fino a `17632af` è online su Hosting, Rules comprese (importo massimo 999.999.999,99 €).
+  Vedi «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per

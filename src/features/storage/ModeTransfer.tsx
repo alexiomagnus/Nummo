@@ -28,7 +28,7 @@ async function localArchiveExists(): Promise<boolean> {
   try { return (await factory.databases()).some((db) => db.name === localDatabaseName); } catch { return true; }
 }
 
-type Local = { state: 'loading' } | { state: 'absent' } | { state: 'error'; message: string } | { state: 'ready'; counts: { expenses: number; categories: number } };
+type Local = { state: 'loading' } | { state: 'absent' } | { state: 'error'; message: string } | { state: 'ready' };
 type Preview = { direction: 'in' | 'out'; data: ImportData; plan: ImportPlan };
 
 // «Archiviazione e backup», Advanced mode only: moves data between this Firebase project and the Standard archive of this
@@ -57,7 +57,7 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
     const snapshot = await (await openStore()).exportSnapshot();
     if (!live.current) return;
     setLocal(snapshot.expenses.length + snapshot.categories.length + snapshot.funds.length + snapshot.lists.length + snapshot.templates.length === 0
-      ? { state: 'absent' } : { state: 'ready', counts: { expenses: snapshot.expenses.length, categories: snapshot.categories.length } });
+      ? { state: 'absent' } : { state: 'ready' });
   };
   useEffect(() => {
     live.current = true;
@@ -104,16 +104,13 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
   });
 
   const muted = { color: theme.colors.onSurfaceVariant };
-  const summary = local.state === 'ready'
-    ? t("Sul dispositivo: {p0}, {p1}.", {
-      p0: local.counts.expenses === 1 ? t("1 spesa") : t("{p0} spese", { p0: local.counts.expenses }),
-      p1: local.counts.categories === 1 ? t("1 categoria") : t("{p0} categorie", { p0: local.counts.categories }) })
-    : local.state === 'absent' ? t("Nessun dato sul dispositivo.")
-    : local.state === 'error' ? t(local.message) : t("Controllo dei dati su questo dispositivo…");
+  // No counts when the device has data (user's request, 22 November): only what keeps a button disabled is said.
+  const summary = local.state === 'absent' ? t("Nessun dato sul dispositivo.")
+    : local.state === 'error' ? t(local.message) : null;
   return (
     <Card title={t("Dati della modalità Standard")} style={style}>
       <View style={styles.body}>
-        <Text variant="bodyMedium" accessibilityLiveRegion="polite">{summary}</Text>
+        {summary !== null && <Text variant="bodyMedium" accessibilityLiveRegion="polite">{summary}</Text>}
         <View style={[styles.buttons, compact && styles.buttonsCompact]}>
           <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy || local.state !== 'ready'} onPress={() => void bringIn()}>
             {t("Dal dispositivo a Firebase")}</Button>

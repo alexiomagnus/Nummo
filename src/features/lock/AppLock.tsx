@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { StyleSheet, View } from 'react-native';
-import { HelperText, Text, useTheme } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { AppDialog as Dialog } from '../../components/AppDialog';
 import { useBackLayer } from '../../components/BackNavigation';
 import { Button, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { SwitchRow } from '../../components/SwitchRow';
-import { lockDelays, lockOnReturn, type LockDelay } from '../../domain/appLock';
+import { createPin, lockDelays, lockOnReturn, pinInput, pinLength, pinMatches, isPin, type LockDelay } from '../../domain/appLock';
 import { useI18n } from '../../i18n/I18nProvider';
 import { createLockCredential, platformLockAvailable, verifyLockCredential, type LockOutcome } from '../../services/platformLock';
 import { backLevels } from '../../theme/backStack';
-import { layout, radius, spacing } from '../../theme/tokens';
+import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { appLockState, disableAppLock, lockApp, saveAppLock, setLockRecovery, unlockApp, useAppLock } from './appLockStore';
 
 const unlockErrors: Record<Exclude<LockOutcome, 'ok'>, string> = {
@@ -89,7 +91,22 @@ function LockView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
   const pending = useRef<AbortController | null>(null);
+  // Standard mode with a PIN: the PIN turns the lock off (user's request, 22 November); without one (a lock turned on
+  // before), the confirmation alone, as before.
+  const savedPin = recovery ? null : settings.pin;
+  const disableWithPin = async () => {
+    if (!savedPin || checking) return;
+    setChecking(true);
+    const ok = await pinMatches(pin, savedPin);
+    setChecking(false);
+    if (ok) disableAppLock();
+    else { setPin(''); setPinError(isPin(pin) ? 'PIN errato.' : 'Il PIN ha {p0} cifre.'); }
+  };
+  const stopLeaving = () => { setLeaving(false); setPin(''); setPinError(null); };
   const autoTried = useRef(false);
   const unlock = async (auto: boolean) => {
     if (!settings.credentialId) { unlockApp(); return; }
@@ -139,12 +156,19 @@ function LockView() {
           <View style={[styles.leave, { borderColor: colors.outlineVariant }]}>
             <Text variant="bodyMedium">{recovery
               ? t("Esci dall’account: per rivedere i dati dovrai accedere di nuovo con Google. Il blocco si disattiva.")
+              : savedPin ? t("Inserisci il PIN di Nummo: il blocco si disattiva e Nummo si apre. Potrai riattivarlo dalle Impostazioni.")
               : t("Il blocco si disattiva e Nummo si apre. Potrai riattivarlo dalle Impostazioni.")}</Text>
+            {savedPin && <View>
+              <PinInput label={t("PIN")} value={pin} error={pinError !== null}
+                onChange={(next) => { setPin(next); setPinError(null); }} onSubmit={() => void disableWithPin()} />
+              {pinError && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(pinError, { p0: pinLength })}</HelperText>}
+            </View>}
             <View style={[styles.actions, dialogActionsRow]}>
-              <CancelButton onPress={() => setLeaving(false)}>{t("Annulla")}</CancelButton>
+              <CancelButton onPress={stopLeaving}>{t("Annulla")}</CancelButton>
               {recovery
                 ? <ConfirmButton onPress={recovery}>{t("Esci")}</ConfirmButton>
-                : <ConfirmButton buttonColor={colors.error} textColor={colors.onError} onPress={disableAppLock}>{t("Disattiva il blocco")}</ConfirmButton>}
+                : <ConfirmButton buttonColor={colors.error} textColor={colors.onError} loading={checking} disabled={checking || (savedPin !== null && pin.length === 0)}
+                  onPress={() => { if (savedPin) void disableWithPin(); else disableAppLock(); }}>{t("Disattiva il blocco")}</ConfirmButton>}
             </View>
           </View>
         )}
@@ -153,14 +177,67 @@ function LockView() {
   );
 }
 
+// Six digits, hidden, numeric keyboard on phones.
+function PinInput({ label, value, error, onChange, onSubmit }: { label: string; value: string; error?: boolean; onChange: (value: string) => void; onSubmit?: () => void }) {
+  return <TextInput outlineStyle={inputOutline} mode="outlined" label={label} value={value} error={error} secureTextEntry
+    keyboardType="number-pad" inputMode="numeric" autoComplete="off" maxLength={pinLength}
+    onChangeText={(next) => onChange(pinInput(next))} onSubmitEditing={onSubmit} />;
+}
+
+// Choose the PIN (twice). `onConfirm` returns an error to show, or null when done (the dialog then closes).
+function PinDialog({ visible, onDismiss, onConfirm }: { visible: boolean; onDismiss: () => void; onConfirm: (pin: string) => Promise<string | null> }) {
+  const { t } = useI18n();
+  const compact = useSizeClass() === 'compact';
+  const [first, setFirst] = useState('');
+  const [second, setSecond] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const close = () => { if (busy) return; setFirst(''); setSecond(''); setError(null); onDismiss(); };
+  const confirm = async () => {
+    if (busy) return;
+    if (!isPin(first)) { setError('Il PIN ha {p0} cifre.'); return; }
+    if (first !== second) { setError('I due PIN non coincidono.'); return; }
+    setBusy(true);
+    const failure = await onConfirm(first).catch(() => 'Operazione non riuscita. Riprova.');
+    setBusy(false);
+    if (failure) { setError(failure); return; }
+    setFirst(''); setSecond(''); setError(null);
+  };
+  const title = t("Scegli il PIN di Nummo");
+  return (
+    <Portal>
+      <Dialog visible={visible} onDismiss={close} style={{ maxWidth: 400 }}>
+        <View role="dialog" aria-label={title} style={styles.dialog}>
+          <Dialog.ScrollArea style={styles.dialogArea}>
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.dialogBody}>
+              <Text variant="titleLarge" accessibilityRole="header">{title}</Text>
+              <Text variant="bodyMedium">{t("Se impronta, viso o il PIN del dispositivo non funzionano, con questo PIN disattivi il blocco dalla schermata di blocco.")}</Text>
+              <PinInput label={t("PIN ({p0} cifre)", { p0: pinLength })} value={first} error={error !== null} onChange={(next) => { setFirst(next); setError(null); }} />
+              <PinInput label={t("Ripeti il PIN")} value={second} error={error !== null} onChange={(next) => { setSecond(next); setError(null); }} onSubmit={() => void confirm()} />
+              {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error, { p0: pinLength })}</HelperText>}
+            </ScrollView>
+          </Dialog.ScrollArea>
+          <View style={[styles.dialogActions, compact && styles.dialogActionsCompact, dialogActionsRow]}>
+            <CancelButton disabled={busy} onPress={close}>{t("Annulla")}</CancelButton>
+            <ConfirmButton disabled={busy} loading={busy} onPress={() => void confirm()}>{t("Imposta")}</ConfirmButton>
+          </View>
+        </View>
+      </Dialog>
+    </Portal>
+  );
+}
+
 const delayLabels: Record<LockDelay, string> = { 0: 'Subito', 60: '1 minuto', 300: '5 minuti', 900: '15 minuti' };
 
 // Settings card, both modes. Turning the lock on asks the device to verify the user (it creates, or reuses, the
 // credential); turning it off asks again, so that only the owner of the device can.
-export function AppLockCard() {
+// `requirePin`: the Standard mode, where the lock is turned on only together with a PIN (22 November, on request).
+export function AppLockCard({ requirePin = false }: { requirePin?: boolean }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const { settings } = useAppLock();
+  // 'on': turning the lock on (PIN first, then the device); 'set': a PIN for a lock already on (or a new one).
+  const [choosingPin, setChoosingPin] = useState<'on' | 'set' | null>(null);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,24 +247,39 @@ export function AppLockCard() {
     return () => { live = false; };
   }, []);
   const save = (next: typeof settings) => { if (!saveAppLock(next)) setError('Il browser non ha salvato la scelta: lo spazio per i dati del sito è pieno o bloccato.'); };
-  const turnOn = async () => {
+  // Returns the error to show (also in the PIN dialog), or null when the lock is on.
+  const turnOn = async (pin: string | null): Promise<string | null> => {
+    const saved = pin === null ? null : await createPin(pin);
     // The credential of an earlier lock, if the device still has it; otherwise a new one.
-    if (settings.credentialId && await verifyLockCredential(settings.credentialId) === 'ok') { save({ ...settings, enabled: true }); return; }
+    if (settings.credentialId && await verifyLockCredential(settings.credentialId) === 'ok') { save({ ...settings, enabled: true, pin: saved }); return null; }
     const created = await createLockCredential('Nummo');
-    if (created.outcome === 'ok') save({ ...settings, enabled: true, credentialId: created.credentialId });
-    else setError(created.outcome === 'cancelled' ? 'Attivazione annullata: il blocco resta spento.'
-      : created.outcome === 'unavailable' ? 'Impronta, viso e PIN del dispositivo non sono disponibili in questo browser.' : 'Attivazione non riuscita. Riprova.');
+    if (created.outcome === 'ok') { save({ ...settings, enabled: true, credentialId: created.credentialId, pin: saved }); return null; }
+    return created.outcome === 'cancelled' ? 'Attivazione annullata: il blocco resta spento.'
+      : created.outcome === 'unavailable' ? 'Impronta, viso e PIN del dispositivo non sono disponibili in questo browser.' : 'Attivazione non riuscita. Riprova.';
+  };
+  // A new PIN for a lock already on: only after the device has verified the user, like turning it off.
+  const setPin = async (pin: string): Promise<string | null> => {
+    const outcome = settings.credentialId ? await verifyLockCredential(settings.credentialId) : 'ok';
+    if (outcome !== 'ok') return outcome === 'cancelled' ? 'Verifica annullata: il PIN non è cambiato.' : 'Verifica non riuscita: il PIN non è cambiato.';
+    save({ ...settings, pin: await createPin(pin) });
+    return null;
   };
   const turnOff = async () => {
     const outcome = settings.credentialId ? await verifyLockCredential(settings.credentialId) : 'ok';
-    if (outcome === 'ok') save({ ...settings, enabled: false });
+    if (outcome === 'ok') save({ ...settings, enabled: false, pin: null });
     else setError(outcome === 'cancelled' ? 'Verifica annullata: il blocco resta attivo.' : 'Verifica non riuscita: il blocco resta attivo.');
   };
   const toggle = async (on: boolean) => {
     if (busy) return;
-    setBusy(true);
     setError(null);
-    try { await (on ? turnOn() : turnOff()); } finally { setBusy(false); }
+    if (on && requirePin) { setChoosingPin('on'); return; }
+    setBusy(true);
+    try { if (on) { const failure = await turnOn(null); if (failure) setError(failure); } else await turnOff(); } finally { setBusy(false); }
+  };
+  const confirmPin = async (pin: string) => {
+    const failure = await (choosingPin === 'on' ? turnOn(pin) : setPin(pin));
+    if (!failure) setChoosingPin(null);
+    return failure;
   };
   const missing = available === false && !settings.enabled;
   return (
@@ -202,7 +294,16 @@ export function AppLockCard() {
           options={lockDelays.map((delay) => ({ value: String(delay), label: t(delayLabels[delay]) }))}
           onChange={(value) => { if (value) save({ ...settings, delay: Number(value) as LockDelay }); }} />
       </View>}
+      {settings.enabled && requirePin && <View style={styles.pin}>
+        <Text variant="bodyMedium" style={{ color: settings.pin ? colors.onSurfaceVariant : colors.error }}>{settings.pin
+          ? t("Con il PIN di Nummo disattivi il blocco se impronta, viso o il PIN del dispositivo non funzionano.")
+          : t("Imposta un PIN: senza, chiunque può disattivare il blocco dalla schermata di blocco.")}</Text>
+        <View style={styles.start}>
+          <Button mode="outlined" disabled={busy} onPress={() => setChoosingPin('set')}>{settings.pin ? t("Cambia il PIN") : t("Imposta il PIN")}</Button>
+        </View>
+      </View>}
       {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
+      <PinDialog visible={choosingPin !== null} onDismiss={() => setChoosingPin(null)} onConfirm={confirmPin} />
     </Card>
   );
 }
@@ -218,4 +319,11 @@ const styles = StyleSheet.create({
   card: { width: '100%' },
   delay: { gap: spacing.sm },
   helper: { paddingHorizontal: 0 },
+  pin: { gap: spacing.sm },
+  start: { alignSelf: 'flex-start' },
+  dialog: { flexShrink: 1, minHeight: 0 },
+  dialogArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0 },
+  dialogBody: { paddingHorizontal: spacing.xl, gap: spacing.md },
+  dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
+  dialogActionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
 });

@@ -95,6 +95,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const [status, setStatus] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
+  const [confirmWipe, setConfirmWipe] = useState(false);
   // The three file actions (CSV, download, import) share one width, the widest of their labels (user's request, 21 November):
   // measured in the current language, so switching language measures again from the natural widths. Phones stack them full width.
   const [actionWidth, setActionWidth] = useState<{ locale: string; width: number }>({ locale: '', width: 0 });
@@ -165,6 +166,15 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
       {/* The file is the copy that survives losing this device or this project: keep it somewhere else (user's request). */}
       <Text variant="bodySmall" style={[hint, styles.footnote]}>{t("* Salva il file su Google Drive o in un altro posto sicuro, fuori da questo dispositivo.")}</Text>
     </View>
+    {/* Only the expenses (user's request, 22 November): categories, funds, lists, templates and merchants stay. */}
+    <View style={styles.group}>
+      <Text variant="titleSmall">{t("Elimina le spese")}</Text>
+      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
+        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.trash)} textColor={theme.colors.error} style={[sameWidth, { borderColor: theme.colors.error }]}
+          disabled={!enabled || busy} onPress={() => setConfirmWipe(true)}>{t("Elimina tutte le spese")}</Button>
+      </View>
+      <Text variant="bodySmall" style={[hint, styles.footnote]}>{t("* Categorie, fondi, liste, template ed esercenti restano.")}</Text>
+    </View>
     {preview && <View ref={previewRef}>
       <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => setPreview(null)}
         onMerge={() => void run(async () => {
@@ -183,6 +193,20 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
           download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
           await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates);
           finish(); return true;
+        } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
+      }} />
+    <DeleteDialog visible={confirmWipe} name={t("tutte le spese")} title={t("Eliminare tutte le spese?")} confirmLabel={t("Elimina tutte")}
+      description={t("Si eliminano tutte le spese e gli abbonamenti. Prima viene scaricata una copia dei dati attuali.")}
+      onDismiss={() => setConfirmWipe(false)}
+      onConfirm={async () => {
+        if (busy) return false;
+        setBusy(true); setStatus('');
+        try {
+          // Safety copy before the first deletion, as for «Sostituisci tutti i dati».
+          download('nummo-backup-prima-di-eliminare.json', makeBackup(await backend.exportSnapshot()), 'application/json');
+          const removed = await backend.removeAllExpenses();
+          notify(removed === 1 ? t("1 spesa eliminata.") : t("{p0} spese eliminate.", { p0: removed }));
+          return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }} />
     {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}

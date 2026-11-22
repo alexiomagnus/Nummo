@@ -45,6 +45,8 @@ type Props = {
   // The picture of the account button, first on the page: Standard (`local`), or Advanced signed in (the UID, with the
   // Google photo as the picture when nothing is chosen). Absent: no card (signed out, mode choice).
   profile?: ProfileScope;
+  // Standard mode: the app lock asks for a PIN to turn it off from the lock screen.
+  lockPin?: boolean;
 };
 
 const themeOptions: { value: ThemeChoice; label: string }[] = [
@@ -66,7 +68,7 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
 // Sections stack on phones (Lingua, Carattere, Formato dell'ora, Fuso orario, then Tema and Colore); when the page is wide enough, Lingua,
 // Carattere, Formato dell'ora and Fuso orario form the left column and Tema and Colore the right one, and the wider sections follow at full width.
-export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections, onResetArchive, profile }: Props) {
+export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections, onResetArchive, profile, lockPin = false }: Props) {
   // «Ripristina predefiniti» brings back the defaults of everything on this page (user's request, 21 November): the
   // preferences, the receipt scan (off, no service), the profile picture of the Standard mode and, with an archive open,
   // its preferred categories and fund.
@@ -174,7 +176,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
           {vibrationAvailable && <SwitchRow label={t("Vibrazione")} supporting={t("Una breve vibrazione quando interagisci con l'app. Su Android non vibra con il telefono in silenzioso o in Non disturbare.")}
             value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />}
         </Card>
-        <AppLockCard />
+        <AppLockCard requirePin={lockPin} />
         {archiveSections}
         <ReceiptAiCard />
       </View>
