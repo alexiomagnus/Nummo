@@ -691,7 +691,7 @@ export const english: Readonly<Record<string, string>> = {
   "Nessun pagamento è ancora stato effettuato: la nuova frequenza vale dal primo pagamento.": "No payment has been made yet: the new frequency applies from the first payment.",
   "Non ci sono rinnovi futuri a cui applicare la frequenza.": "There are no future renewals to apply the frequency to.",
   "La data del primo rinnovo con la nuova frequenza deve essere successiva a oggi.": "The date of the first renewal with the new frequency must be after today.",
-  "Troppi cambi di frequenza: il limite è quattro per abbonamento.": "Too many frequency changes: the limit is four per subscription.",
+  "Troppi cambi di frequenza per questo abbonamento: per continuare creane uno nuovo.": "Too many frequency changes for this subscription: create a new one to continue.",
   "I pagamenti eliminati richiedono un backup versione 9 o successiva.": "Removed payments need a version 9 backup or later.",
   "Il cambio di frequenza richiede un backup versione 6 o successiva.": "A frequency change requires a version 6 backup or later.",
   "Altri {p0} di rinnovi previsti": "Another {p0} in expected renewals",

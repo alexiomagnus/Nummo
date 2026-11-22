@@ -133,8 +133,10 @@ test('modulo: prezzo promozionale validato e salvato come variazione dal rinnovo
 test('contratto: schedule validato; spese vecchie senza campo restano valide; confronto per valore', () => {
   assert.deepEqual(parsePriceChanges(undefined), []);
   for (const invalid of [null, 'x', [{ index: 0, amount_minor: 1, once: false }], [{ index: 1, amount_minor: 0, once: false }],
-    [{ index: 1, amount_minor: 1.5, once: false }], [{ index: 1000, amount_minor: 5, once: false }], [{ index: 1, amount_minor: 5 }],
+    [{ index: 1, amount_minor: 1.5, once: false }], [{ index: 5000, amount_minor: 5, once: false }], [{ index: 1, amount_minor: 5 }],
     [{ index: 1, amount_minor: 5, once: false, extra: 1 }], [makeChange(1, 5, false), makeChange(1, 6, false)]]) assert.equal(parsePriceChanges(invalid), null);
+  // Occurrence numbers up to 4999 (999 until 22 November): a weekly series keeps its prices after its 19th year.
+  assert.equal(parsePriceChanges([makeChange(1000, 5, false), makeChange(4999, 6, true)])?.length, 2);
   // Same renewal may have one persistent and one one-off change.
   assert.equal(parsePriceChanges([makeChange(1, 5, false), makeChange(1, 6, true)])?.length, 2);
   const stored = { id: 'x', amount_minor: 600, currency: 'EUR', description: 'Dominio', category_id: null, expense_date: '2025-03-12', recurrence: 'yearly',

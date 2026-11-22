@@ -6,7 +6,7 @@ import { applyFrequencyChange, applyPriceEdit, currentPrice, dataOf } from '../s
 import { expandOccurrences, forecastOccurrences, subscriptionSummary, upcomingRenewals, type ExpenseEntry } from '../src/domain/history.ts';
 import { nextRenewal } from '../src/domain/pricing.ts';
 import {
-  decodeCalendarChanges, encodeCalendarChanges, occurrenceDates, parseCalendarChanges, recurrenceAt, scheduleDateAt, scheduleDates, switchFrequency, type CalendarChange,
+  decodeCalendarChanges, encodeCalendarChanges, maxCalendarChanges, occurrenceDates, parseCalendarChanges, recurrenceAt, scheduleDateAt, scheduleDates, switchFrequency, type CalendarChange,
 } from '../src/domain/recurrence.ts';
 
 const today = '2026-11-10';
@@ -71,12 +71,16 @@ test('applyFrequencyChange: cambio futuro, schema 3, nessun pagamento maturato m
   assert.equal(applyFrequencyChange({ ...base, recurrence: null }, { recurrence: 'yearly', firstDate: '2026-12-01' }, today).ok, true);
 });
 
-test('applyFrequencyChange: un cambio non ancora in vigore si sostituisce, il quinto è rifiutato', () => {
+test('applyFrequencyChange: un cambio non ancora in vigore si sostituisce, oltre il centesimo è rifiutato', () => {
   const base = { expense_date: '2026-08-15', recurrence: 'monthly' as const, schema_version: 3 as const, calendar_changes: [{ index: 3, start: '2026-12-01', recurrence: 'yearly' as const }] };
   const replaced = applyFrequencyChange(base, { recurrence: 'weekly', firstDate: '2026-11-20' }, today);
   assert.deepEqual(replaced.ok && replaced.calendar_changes, [{ index: 3, start: '2026-11-20', recurrence: 'weekly' }]);
-  const full = switchFrequency([1, 2, 3, 4].map((index) => ({ index, start: `2026-0${index}-01`, recurrence: 'weekly' as const })), 5, 'monthly', '2026-12-01');
-  assert.equal(full, null);
+  assert.equal(maxCalendarChanges, 100);
+  const hundred = Array.from({ length: maxCalendarChanges }, (_, i) => ({ index: i + 1, start: '2026-01-01', recurrence: 'weekly' as const }));
+  assert.equal(switchFrequency(hundred, maxCalendarChanges + 1, 'monthly', '2026-12-01'), null);
+  assert.equal(switchFrequency(hundred.slice(0, -1), maxCalendarChanges, 'monthly', '2026-12-01')?.length, maxCalendarChanges);
+  // A switch not in force yet is replaced, so a full list still takes a new date for it.
+  assert.equal(switchFrequency(hundred, maxCalendarChanges, 'monthly', '2026-12-01')?.length, maxCalendarChanges);
   assert.equal(switchFrequency([{ index: 1, start: '2026-02-01', recurrence: 'weekly' }], 3, 'monthly', '2026-12-01')?.length, 2);
 });
 
@@ -99,7 +103,7 @@ test('calendario: codec Firestore rigoroso e validazione in avanti', () => {
   const changes: CalendarChange[] = [{ index: 3, start: '2026-12-01', recurrence: 'yearly' }, { index: 5, start: '2027-12-02', recurrence: 'weekly' }];
   assert.equal(encodeCalendarChanges(changes), '3:2026-12-01:y;5:2027-12-02:w');
   assert.deepEqual(decodeCalendarChanges('3:2026-12-01:y;5:2027-12-02:w'), changes);
-  for (const value of ['', null, [], '0:2026-12-01:y', '3:2026-12-01:x', '3:2026-12-01:y;', '3:2026-12-1:y', Array.from({ length: 5 }, (_, i) => `${i + 1}:2026-12-01:y`).join(';')]) assert.equal(decodeCalendarChanges(value), null);
+  for (const value of ['', null, [], '0:2026-12-01:y', '3:2026-12-01:x', '3:2026-12-01:y;', '3:2026-12-1:y', '10000:2026-12-01:y', '03:2026-12-01:y', 3]) assert.equal(decodeCalendarChanges(value), null);
   assert.deepEqual(parseCalendarChanges(changes, '2026-08-15', 'monthly'), changes);
   assert.deepEqual(parseCalendarChanges(undefined, '2026-08-15', 'monthly'), []);
   const bad = [
@@ -169,4 +173,41 @@ test('riepilogo abbonamenti: la frequenza mostrata è quella in vigore per il pr
   assert.equal(subscriptionSummary(entry({ recurrence: null }), today).frequency, null);
   // A switch that starts later than the next renewal does not apply yet to the one shown... it replaces it: index 3 is next.
   assert.equal(subscriptionSummary(entry({ calendar_changes: [{ index: 5, start: '2027-02-01', recurrence: 'weekly' }] }), today).frequency, 'monthly');
+});
+
+// 100 switches (4 until 22 November) on a weekly series started in 2000: each restarts the day after the occurrence before it,
+// with occurrence numbers past 999 (4 digits, up to 4999).
+function longCalendar(count: number): CalendarChange[] {
+  const changes: CalendarChange[] = [];
+  for (let i = 0; i < count; i++) {
+    const index = 40 * (i + 1);
+    const previous = scheduleDateAt('2000-01-01', 'weekly', changes, index - 1);
+    const start = new Date(Date.parse(`${previous}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+    changes.push({ index, start, recurrence: 'weekly' });
+  }
+  return changes;
+}
+
+test('calendario: 100 cambi accettati in ogni forma, il 101° rifiutato; indici a 4 cifre, stringa più lunga nei limiti delle Rules', () => {
+  const full = longCalendar(maxCalendarChanges);
+  assert.ok(full[full.length - 1]!.index >= 1000);
+  assert.deepEqual(parseCalendarChanges(full, '2000-01-01', 'weekly'), full);
+  assert.deepEqual(parseCalendarChanges(decodeCalendarChanges(encodeCalendarChanges(full)), '2000-01-01', 'weekly'), full);
+  const over = longCalendar(maxCalendarChanges + 1);
+  assert.equal(parseCalendarChanges(over, '2000-01-01', 'weekly'), null);
+  assert.equal(parseCalendarChanges(decodeCalendarChanges(encodeCalendarChanges(over)), '2000-01-01', 'weekly'), null);
+  // Longest stored form: 100 × «4999:YYYY-MM-DD:w» + 99 separators = the 1799 characters the Rules allow.
+  const longest = Array.from({ length: maxCalendarChanges }, (_, i) => ({ index: 4900 + i, start: '2099-12-31', recurrence: 'weekly' as const }));
+  assert.equal(encodeCalendarChanges(longest).length, 1799);
+  // Indexes: 4999 the last, 5000 out of range.
+  assert.equal(parseCalendarChanges([{ index: 5000, start: '2099-12-31', recurrence: 'weekly' }], '2000-01-01', 'weekly'), null);
+  // Record and backup follow the same bound; the history of the series is computed through every switch.
+  const v3 = record({ schema_version: 3, recurrence: 'weekly', expense_date: '2000-01-01', calendar_changes: full });
+  assert.deepEqual(parseExpenseRecord(v3), v3);
+  assert.equal(parseExpenseRecord({ ...v3, calendar_changes: over }), null);
+  const file = JSON.parse(makeBackup({ expenses: [v3], categories: [] }));
+  assert.deepEqual(parseBackup(file).expenses[0], v3);
+  assert.throws(() => parseBackup({ ...file, expenses: [{ ...file.expenses[0], calendar_changes: over }] }));
+  const dates = expandOccurrences([v3], today).map((o) => o.date);
+  assert.ok(dates.length > 1000 && dates.every((date, i) => i === 0 || date > dates[i - 1]!));
 });

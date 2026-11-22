@@ -1338,7 +1338,44 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   Archiviazione e backup (`nummo-backup.json`), che conta come backup per il promemoria. La scelta è dell'utente: eliminare senza backup è
   possibile. Le note precedenti su una «copia automatica» prima della sostituzione sono superate.
 
+## Revisione dei limiti degli abbonamenti — 22 novembre 2026
+
+- Su richiesta (audit dei limiti per un uso pluriennale): `maxCalendarChanges` 4 → **100**, `maxSkippedPayments` 60 → **1000**,
+  `maxOccurrences` 1000 → **5000** (numeri di occorrenza 0–4999), `maxStatusChanges` **1000** (vedi sotto); `maxPriceChanges` resta **8**
+  (le Rules controllano la lista di schema 1 voce per voce e 10 superano già il budget di 1000 espressioni: aumentarlo richiede prima
+  un'altra rappresentazione). «Prezzo promozionale dopo n rinnovi» resta 1–999 (`maxPromoAfter` separato da `maxOccurrences`).
+- **Regex delle Rules e RE2.** RE2 (C++ e il port Go) rifiuta le ripetizioni contate annidate il cui prodotto supera 1000
+  (`(;[0-9]{4}…){0,999}`: 999 × 4). L'emulatore usa RE2J e le accetta, quindi una prova in emulatore non basta. Dove il numero di voci
+  supera questo margine la regex controlla solo la forma (`(;voce)*`) e il numero lo conta `split(sep).size()` (stati: `;`, ≤ 1000;
+  pagamenti eliminati: `,`, ≤ 1000), con `size()` come tetto del documento: conteggio esatto, valido con ogni motore. I cambi di
+  frequenza restano con `{0,99}` (1000/99 = 10 ≥ 4, il ramo più profondo). Tutte le Rules esistenti con ripetizioni contate rispettano
+  il margine (fondi `{0,23}` con `{1,7}`: 43/7 ≥ 1).
+- **Indici a 4 cifre.** Prezzi (lista `index <= 4999`, forma compatta `([1-9][0-9]{0,2}|[1-4][0-9]{3})`, 151 caratteri), cambi di frequenza
+  (stessa alternativa, 1799 caratteri per 100 voci) e pagamenti eliminati (`([0-9]{1,3}|[1-4][0-9]{3})`, 4999 caratteri per 1000; prima le
+  Rules ammettevano fino a 9999 mentre il client si fermava a 999). Caso peggiore in emulatore con tutti i massimi insieme: circa 29 KB.
+- **Prestazioni.** Le occorrenze si calcolano solo fino al giorno chiesto (oggi o la fine del periodo previsto), mai tutte. Con 1000 stati
+  e 1000 pagamenti eliminati il controllo per occorrenza era quadratico (`statusAt` e `includes`: circa 52 ms per serie nel 2099); ora
+  un `Set` e un cursore sulle date crescenti (`paidChecker`, stesso risultato del calcolo semplice, verificato da un test): circa 16 ms.
+- **Compatibilità.** Nessun cambio di formato né di `backupVersion` (v11, come per i 40 stati): i dati esistenti restano validi. Un client
+  non aggiornato (scheda aperta, altro dispositivo) vede come non valida una serie oltre i vecchi limiti finché non ricarica; un Firebase
+  personale con le Rules vecchie rifiuta quelle scritture finché non le ricopia. Pubblicazione: Rules prima di Hosting.
+- **Limiti generali analizzati e non cambiati** (scelta richiesta: nessuna modifica senza verifica): importo massimo, saldi e movimenti,
+  ricariche e budget (99.999,99 €, Rules `[0-9]{1,7}`: coerenti), 24 voci di piano per fondo (si aggiunge una voce per mese in cui il
+  piano cambia: sono 2 anni di cambi mensili o 24 di annuali; alzabile fino a circa 140 senza superare il margine RE2), 100 prodotti per
+  lista (le Rules non possono contare i documenti; alla registrazione `list_items` ≤ 6100 caratteri), 100 template, lunghezze dei testi
+  (identiche tra client e Rules).
+
 ## Cambi di stato degli abbonamenti fino a 40 — 22 novembre 2026
+
+- **Poi 1000, lo stesso giorno** (su richiesta, dopo la domanda «non sarebbe più comodo non avere queste limitazioni?»): `maxStatusChanges`
+  **1000** (circa 500 cicli pausa/riattiva), Rules `size() <= 20999` (1000 × «YYYY-MM-DD:cancelled» + 999 separatori), forma con
+  `(;voce)*` e numero con `split(';').size() <= 1000` (vedi sotto, «Revisione dei limiti»: la prima stesura con `{0,999}` è stata
+  corretta prima di pubblicarla).
+  Un limite resta (non «nessun limite»): le Rules e il decoder del client devono dare un confine preciso ai dati non fidati e al documento
+  (al massimo circa 21 KB per il campo, contro 1 MiB per documento). Il conteggio non dipende dalla lunghezza: 1001 voci brevi
+  («active») stanno sotto i 20999 caratteri e sono rifiutate lo stesso. Caso peggiore rimisurato in emulatore (8 prezzi, 1000 stati di lunghezza massima, prova,
+  4 cambi di frequenza, 60 pagamenti eliminati, fondo, esercente): accettato. Gli altri limiti degli abbonamenti sono invariati. Le note
+  sotto su «40» descrivono il limite di allora.
 
 - Su richiesta (un abbonamento reale bloccato da «Troppe variazioni di stato…»): `maxStatusChanges` da 8 a **40** (circa 20 cicli
   pausa/riattiva). Il limite di 8 veniva dai controlli per posizione delle Rules; da quando `status_changes` è una stringa compatta

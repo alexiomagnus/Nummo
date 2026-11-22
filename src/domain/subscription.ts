@@ -14,8 +14,10 @@ export const statusLabels: Record<SubscriptionStatus, string> = { active: 'Attiv
 
 // Mirrored by firestore.rules. 8 until 22 November (when the Rules checked each entry); since the field is one compact
 // string checked by a single regex, the count no longer weighs on the expression budget: 40 (about 20 pause/resume
-// cycles; user's request after «Troppe variazioni di stato»).
-export const maxStatusChanges = 40;
+// cycles; user's request after «Troppe variazioni di stato»), then 1000 the same day (about 500 cycles, a bound no real
+// subscription reaches; user's request). The Rules check the shape with a regex and the count with `split`: a counted
+// repetition of 1000 around the date's `{4}` is refused by RE2 (nested counts above 1000), whatever the emulator accepts.
+export const maxStatusChanges = 1000;
 
 function isStatus(value: unknown): value is SubscriptionStatus {
   return typeof value === 'string' && (subscriptionStatuses as readonly string[]).includes(value);

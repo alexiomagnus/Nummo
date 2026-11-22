@@ -84,6 +84,48 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Revisione dei limiti degli abbonamenti (Rules da pubblicare) — 22 novembre 2026
+
+- Su richiesta (audit dei limiti; decisione e motivazioni in `docs/architecture.md`, «Revisione dei limiti degli abbonamenti»):
+  `maxCalendarChanges` 4 → **100**, `maxSkippedPayments` 60 → **1000**, `maxOccurrences` 1000 → **5000** (numeri 0–4999, Rules a 4 cifre per
+  prezzi, cambi di frequenza e pagamenti eliminati), `maxStatusChanges` **1000**; `maxPriceChanges` **8** e `maxPromoAfter` **999** invariati.
+  Limiti generali analizzati e **non** cambiati.
+- **Criticità trovata e corretta prima della pubblicazione:** `{0,999}` attorno a `[0-9]{4}` (stati) supera il margine di RE2 sulle
+  ripetizioni annidate (prodotto > 1000); l'emulatore (RE2J, `com/google/re2j` nel jar) lo accettava. Ora stati e pagamenti eliminati:
+  forma con `*`, numero con `split(…).size() <= 1000`.
+- Prestazioni: `paidChecker` in `history.ts` (Set + cursore) al posto di `statusAt`/`includes` per occorrenza: caso peggiore (settimanale dal
+  2000, 1000 stati, 1000 pagamenti eliminati, 100 cambi) da ~52 a ~16 ms per serie al 2099, ~6 ms a oggi. Messaggio «Troppi cambi di
+  frequenza» senza «quattro» (IT/EN). Commento superato in `funds.ts` corretto.
+- **Test:** unitari per massimi, superamenti, malformati, lunghezze massime (151, 1799, 4999, 20999), 5000 occorrenze, equivalenza con il
+  calcolo semplice su cronologie lunghe, dati storici. `npm run check` OK (**564/564**, build demo). `test:emulator` **24/24** su porte
+  proprie (39199/39380, config `.nummo-limits-check.json` rimossa; runner hybrid 36786 non toccato): caso peggiore con tutti i massimi
+  (~28,7 KB) accettato in creazione e modifica; superamenti rifiutati (101 cambi, 1001 numeri brevi sotto i 4999 caratteri, indici 5000).
+  `test:hybrid` **9/9**.
+- **Prima della pubblicazione:** compilare le Rules sul server (la pubblicazione stessa, o una prova senza rilascio se autorizzata), poi
+  Rules **prima** di Hosting; chi ha il proprio Firebase deve ricopiarle; schede vecchie vedono come non valide le serie oltre i vecchi
+  limiti finché non ricaricano. Non committato, non pubblicato.
+
+## Cambi di stato fino a 1000 (Rules da pubblicare) — 22 novembre 2026
+
+- Su richiesta: `maxStatusChanges` 40 → **1000** (`domain/subscription.ts`), `firestore.rules` e `public/firestore.rules` (identiche prima e
+  dopo, `cmp`) `statusChanges`: `size() <= 20999`, regex `{0,999}` (**sostituita** nella revisione dei limiti qui sopra da `(;voce)*` +
+  `split(';').size() <= 1000`, per RE2). Gli altri limiti degli abbonamenti invariati in questa fase.
+- **Dove vale il limite (verificato):** un solo valore nel client, `maxStatusChanges`, usato da `parseStatusChanges` (letture Firestore dopo
+  `decodeStatusChanges`, record IndexedDB, richieste di scrittura `parseExpenseRequest`, backup di ogni versione tramite `parseExpenseRecord`)
+  e da `statusChangeProblem`/`setStatus` (`StatusDialog`, `Workspace`: messaggio «Troppe variazioni…» invariato); nelle Rules i due numeri
+  della funzione `statusChanges`. Nessun'altra copia (README, guida, `docs/testing/` non lo citano).
+- **Test:** `tests/subscription.test.ts` aggiornato (1000 ammessi, il 1001° rifiutato con `too-many`, cambio nello stesso giorno con la serie
+  piena ammesso) e test nuovo: forma Firestore di 1000 stati lunga 20999 e reversibile, 1001 rifiutati in ogni forma (array, stringa, record,
+  richiesta, backup v11 e v9), dati storici (campo assente, 1, 8, 40 stati) validi, documenti non validi rifiutati anche a 1000 voci (date
+  non crescenti o ripetute, stato sconosciuto, chiavi in più, data impossibile, stringhe malformate). Emulatori: storie dal 2000 (tutte
+  passate), 1000 voci brevi accettate, 1001 voci brevi (sotto i 20999 caratteri) rifiutate dalla sola regex.
+- **Verifica:** `npm run check` OK (**561/561**, build demo). `test:emulator` **24/24** su porte proprie (39199/39380, config temporanea
+  `.nummo-status1000-check.json` rimossa; runner hybrid 36786 non toccato): caso peggiore (8 prezzi, 1000 stati della lunghezza massima =
+  20999 caratteri, prova, 4 cambi di frequenza, 60 pagamenti eliminati, fondo, esercente) accettato in creazione e modifica; 1001 rifiutati.
+  **Non verificato:** compilazione delle Rules sul server di produzione (l'emulatore usa lo stesso linguaggio, ma la prova reale è la
+  pubblicazione). Non pubblicato, non committato: alla pubblicazione Rules **prima** di Hosting; chi ha il proprio Firebase deve ricopiarle;
+  schede vecchie non ricaricate vedrebbero come non valida una serie con più di 40 cambi.
+
 ## Indietro che usciva dopo uno o due passi, contorno di «Colore» come l'anello — 22 novembre 2026
 
 - **Indietro su Android (segnalazione: «mi porta indietro di uno/due passaggi e poi mi fa uscire dall'app»).** Causa: l'intervento di

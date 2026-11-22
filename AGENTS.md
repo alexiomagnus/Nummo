@@ -209,22 +209,23 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
 - Stati degli abbonamenti: pausa e annullamento valgono da oggi o, per correggere una dimenticanza, da una data passata scelta
   in `StatusDialog` (mai prima dell'ultimo cambio né dell'inizio, mai nel futuro; `setStatus(changes, status, data)`):
   valgono per le occorrenze successive alla data, e i pagamenti dopo la data smettono di contare (anteprima con
-  `paymentsRemoved` prima del salvataggio, nessuna cancellazione di documenti). La riattivazione vale sempre da oggi. In Firestore `status_changes` è una stringa compatta e solo se non vuoto (una sola regex nelle Rules, `size() <= 839`); nel backup è un array. Al massimo **40** cambi (`maxStatusChanges`; 8 fino al 22 novembre, alzato su richiesta: con la regex il numero non pesa sul budget); `statusChangeProblem` distingue «troppi cambi» da «data prima dell'ultimo cambio» per il messaggio.
+  `paymentsRemoved` prima del salvataggio, nessuna cancellazione di documenti). La riattivazione vale sempre da oggi. In Firestore `status_changes` è una stringa compatta e solo se non vuoto (nelle Rules `size() <= 20999`, forma con una regex `(;voce)*` e numero con `split(';').size() <= 1000`: RE2 rifiuta ripetizioni contate annidate oltre 1000, che l'emulatore con RE2J accetta); nel backup è un array. Al massimo **1000** cambi (`maxStatusChanges`; 8, poi 40, fino al 22 novembre, alzato su richiesta: con la regex il numero non pesa sul budget; stessa regola per i pagamenti eliminati; nelle regex delle Rules il prodotto delle ripetizioni contate annidate resta sotto 1000); `statusChangeProblem` distingue «troppi cambi» da «data prima dell'ultimo cambio» per il messaggio.
   Rimisurare con l'emulatore il budget di espressioni delle Rules a ogni nuovo controllo sulle spese.
 - Pagamenti eliminati (16 novembre): dallo «Storico dei pagamenti» (pulsante tonale nei dettagli dell'abbonamento → `PaymentsDialog`,
   mai l'elenco in riga) si toglie un singolo pagamento con `DeleteAction`. Si salva il numero dell'occorrenza (che non cambia mai) in
-  `skipped_payments` (`domain/skippedPayments.ts`, max 60, crescente, solo per le serie): `expandOccurrences`/`forecastOccurrences` lo saltano,
+  `skipped_payments` (`domain/skippedPayments.ts`, max 1000 (60 fino al 22 novembre), numeri 0–4999, crescente, solo per le serie): `expandOccurrences`/`forecastOccurrences` lo saltano,
   gli altri pagamenti restano con data e prezzo. Firestore: stringa compatta «3,7,12» solo se non vuota (`deleteField` quando torna vuota o la
   spesa diventa singola), Rules con una regex; locale: array, rimosso se assente nell'aggiornamento; backup **v9** come array (file < 9 con il
-  campo rifiutati). `dataOf` e l'editor lo conservano. Budget Rules rimisurato con il caso peggiore (8 prezzi, 40 stati della lunghezza massima, prova, 4 cambi, 60 numeri; 22 novembre).
+  campo rifiutati). `dataOf` e l'editor lo conservano. Budget Rules rimisurato con il caso peggiore (8 prezzi con indice a 4 cifre e importo massimo, 1000 stati della lunghezza massima, prova, 100 cambi di frequenza, 1000 numeri di 4 cifre; circa 29 KB; 22 novembre).
 - Prove gratuite: `expense_date` è l'inizio, `first_payment_date` (solo serie, documento schema 2) l'inizio del calendario
   pagato (`trial.ts`); importi sempre positivi, nessuna occorrenza durante la prova. Stato «In prova gratuita» calcolato,
   mai salvato. Indice 0 = primo addebito, soggetto a pause/annullamenti per le prove; stato cambiato oggi vale da domani.
   Prima data modificabile solo finché futura; prova salvata non rimovibile né aggiungibile retroattivamente a serie ordinarie.
   Schema 2: prezzi compatti in Firestore (`pricing.ts`), array nel dominio/backup v5; schema 1 e record esistenti invariati.
   I vecchi client rifiutano lo schema 2 invece di conteggiare pagamenti inesistenti: aggiornamento client necessario.
+- Numeri di occorrenza 0–4999 (`maxOccurrences` 5000, 1000 fino al 22 novembre: una serie settimanale iniziata nel 2005 si era già fermata): prezzi, cambi di frequenza e pagamenti eliminati li usano, Rules a 4 cifre (`([1-9][0-9]{0,2}|[1-4][0-9]{3})`, prezzi in lista `<= 4999`); le occorrenze si calcolano solo fino al giorno chiesto, stati e pagamenti eliminati in tempo lineare (`paidChecker` di `history.ts`). «Prezzo promozionale dopo n rinnovi» resta 1–999 (`maxPromoAfter`, campo a 3 cifre).
 - Cambio di frequenza (#9): il numero di occorrenza non cambia mai (i prezzi lo usano), cambiano solo le date dalla modifica in
-  poi: `calendar_changes` (indice, nuova data di partenza, frequenza; massimo 4) riavvia il calendario dall'occorrenza successiva
+  poi: `calendar_changes` (indice, nuova data di partenza, frequenza; massimo 100, 4 fino al 22 novembre) riavvia il calendario dall'occorrenza successiva
   a oggi (`recurrence.ts`: `scheduleDates`/`scheduleDateAt`/`recurrenceAt`; mai `occurrenceDates` direttamente per le serie).
   `recurrence` resta la frequenza di base; `Occurrence.recurrence` e `SubscriptionSummary.frequency` danno quella in vigore.
   Schema 3 (prezzi compatti, prova facoltativa); Firestore: una stringa compatta e solo se non vuota, nel backup (v6) un array.

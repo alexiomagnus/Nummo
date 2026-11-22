@@ -67,15 +67,19 @@ test('setStatus: stesso stato invariato, doppio cambio nello stesso giorno sosti
   assert.deepEqual(setStatus([paused('2026-03-01')], 'active', '2026-03-01'), []);
   assert.deepEqual(setStatus([paused('2026-03-01')], 'cancelled', '2026-03-01'), [cancelled('2026-03-01')]);
   assert.equal(setStatus([paused('2026-03-02')], 'active', '2026-03-01'), null);
-  // 40 changes on different days (8 until 22 November): the next one is refused, and the reason says so.
-  const day = (n: number) => new Date(Date.UTC(2026, 0, 1 + n)).toISOString().slice(0, 10);
+  // 1000 changes on different days (8, then 40, until 22 November): the next one is refused, and the reason says so.
+  const day = (n: number) => new Date(Date.UTC(2020, 0, 1 + n)).toISOString().slice(0, 10);
   const full = Array.from({ length: maxStatusChanges }, (_, i) => (i % 2 ? active : paused)(day(i)));
-  assert.equal(maxStatusChanges, 40);
-  assert.equal(setStatus(full, 'cancelled', day(60)), null);
-  assert.equal(statusChangeProblem(full, 'cancelled', day(60)), 'too-many');
-  assert.equal(statusChangeProblem(full.slice(0, 39), 'cancelled', day(60)), null, 'il quarantesimo è ammesso');
+  const after = day(maxStatusChanges + 10);
+  assert.equal(maxStatusChanges, 1000);
+  assert.equal(setStatus(full, 'cancelled', after), null);
+  assert.equal(statusChangeProblem(full, 'cancelled', after), 'too-many');
+  assert.equal(statusChangeProblem(full.slice(0, maxStatusChanges - 1), 'cancelled', after), null, 'il millesimo è ammesso');
+  assert.equal(setStatus(full.slice(0, maxStatusChanges - 1), 'cancelled', after)!.length, maxStatusChanges);
+  // Full, a change on the day of the last one replaces it (no new entry): still allowed.
+  assert.equal(setStatus(full, 'cancelled', day(maxStatusChanges - 1))!.length, maxStatusChanges);
   assert.deepEqual(parseStatusChanges(full), full);
-  assert.equal(parseStatusChanges([...full, cancelled(day(60))]), null);
+  assert.equal(parseStatusChanges([...full, cancelled(after)]), null);
   assert.equal(statusChangeProblem([paused('2026-03-02')], 'active', '2026-03-01'), 'before-last', 'data prima dell’ultimo cambio');
   assert.equal(statusChangeProblem([paused('2026-03-02')], 'active', '2026-03-05'), null);
 });
@@ -194,8 +198,9 @@ test('pausa datata: mai prima dell’ultima variazione, due variazioni nello ste
   // From a pause to a cancellation the payments between the two dates were already skipped: nothing else is removed.
   const e = entry({ status_changes: [paused('2026-03-10')] });
   assert.deepEqual(paymentsRemoved(e, setStatus(e.status_changes!, 'cancelled', '2026-04-01')!, '2026-05-20'), []);
-  const full = Array.from({ length: maxStatusChanges }, (_, i) => (i % 2 ? active : paused)(new Date(Date.UTC(2026, 0, 10 + i)).toISOString().slice(0, 10)));
+  const full = Array.from({ length: maxStatusChanges }, (_, i) => (i % 2 ? active : paused)(new Date(Date.UTC(2020, 0, 10 + i)).toISOString().slice(0, 10)));
   assert.equal(setStatus(full, 'paused', '2026-03-01'), null);
+  assert.equal(statusChangeProblem(full, 'paused', '2026-03-01'), 'too-many');
 });
 
 test('filtro per fondo: tutti, senza fondo o un fondo; un fondo scomparso vale «tutti»', () => {
@@ -213,4 +218,44 @@ test('filtro per fondo: tutti, senza fondo o un fondo; un fondo scomparso vale �
   assert.deepEqual(new Set(expandOccurrences([series], '2026-03-20').map((item) => item.fund_id)), new Set(['f1']));
   assert.deepEqual(new Set(forecastOccurrences([series], '2026-03-20', '2026-06-01').map((item) => item.fund_id)), new Set(['f1']));
   assert.deepEqual(expandOccurrences([entry()], '2026-01-10').map((item) => item.fund_id), [null]);
+});
+
+test('cambi di stato: 1000 letti e scritti in ogni forma, 1001 rifiutati; storici e non validi', () => {
+  const day = (n: number) => new Date(Date.UTC(2000, 0, 1 + n)).toISOString().slice(0, 10);
+  // Longest entries («cancelled») alternated with pauses would repeat a status: cancelled/active alternate here.
+  const longest = (count: number) => Array.from({ length: count }, (_, i): StatusChange => ({ date: day(i), status: i % 2 ? 'active' : 'cancelled' }));
+  const full = longest(maxStatusChanges);
+  // Firestore form: the string round-trips; its length is the bound of the Rules (20999 with the longest status on each entry).
+  const allCancelled = Array.from({ length: maxStatusChanges }, (_, i): StatusChange => ({ date: day(i), status: 'cancelled' }));
+  assert.equal(encodeStatusChanges(allCancelled).length, 20999);
+  assert.deepEqual(parseStatusChanges(decodeStatusChanges(encodeStatusChanges(full))), full);
+  assert.equal(parseStatusChanges(decodeStatusChanges(encodeStatusChanges(longest(maxStatusChanges + 1)))), null);
+  // Historical data: absent field, 8 changes (the limit until 22 November), 40 (the limit afterwards) stay valid.
+  assert.deepEqual(parseStatusChanges(undefined), []);
+  for (const count of [1, 8, 40]) assert.deepEqual(parseStatusChanges(longest(count)), longest(count));
+  // Invalid documents stay invalid at any size: unsorted or repeated days, unknown status, extra keys, malformed strings.
+  const swapped = [...full]; [swapped[500], swapped[501]] = [swapped[501]!, swapped[500]!];
+  for (const invalid of [swapped, [...full.slice(0, 999), full[998]!], [...full.slice(0, 999), { date: day(2000), status: 'stopped' }],
+    [...full.slice(0, 999), { date: day(2000), status: 'paused', note: 'x' }], [...full.slice(0, 999), { date: '2000-02-30', status: 'paused' }], null, 'x']) {
+    assert.equal(parseStatusChanges(invalid), null);
+  }
+  for (const stored of ['', `${encodeStatusChanges(full)};`, encodeStatusChanges(full).replace('cancelled', 'stopped'), 42]) {
+    const decoded = decodeStatusChanges(stored);
+    assert.ok(decoded === null || parseStatusChanges(decoded) === null);
+  }
+  // Record (IndexedDB and decoded Firestore), write request and backup (v11 and an older version) follow the same bound.
+  const record = { id: '3f1c2b9e-8d4a-4f6b-9c1e-2a7d5e8f0b13', amount_minor: 999, currency: 'EUR' as const, description: 'Streaming', category_id: null,
+    expense_date: '2000-01-01', recurrence: 'monthly' as const, price_changes: [], status_changes: full, fund_id: null, list_id: null, list_items: [],
+    source: 'web_app' as const, schema_version: 1 as const, created_at: '2026-01-05T10:00:00.000Z' };
+  const over = { ...record, status_changes: longest(maxStatusChanges + 1) };
+  assert.equal(parseExpenseRecord(record)?.status_changes.length, maxStatusChanges);
+  assert.equal(parseExpenseRecord(over), null);
+  const { id, created_at: _, ...data } = record;
+  const now = new Date('2026-11-22T12:00:00Z');
+  assert.ok(parseExpenseRequest({ ...data, expense_id: id }, now));
+  assert.equal(parseExpenseRequest({ ...data, expense_id: id, status_changes: over.status_changes }, now), null);
+  const file = JSON.parse(makeBackup({ expenses: [record], categories: [] }));
+  assert.equal(parseBackup(file).expenses[0]!.status_changes.length, maxStatusChanges);
+  assert.throws(() => parseBackup({ ...file, expenses: [over] }));
+  assert.equal(parseBackup({ ...file, version: 9 }).expenses[0]!.status_changes.length, maxStatusChanges);
 });

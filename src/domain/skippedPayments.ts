@@ -3,7 +3,8 @@ import { maxOccurrences } from './recurrence.ts';
 // Payments of a subscription removed by hand (for example a renewal charged because the user forgot to pause or cancel it).
 // Payments are computed, never stored (see history.ts), so a removal is the number of the occurrence, which never changes
 // (prices and frequency switches use the same numbers). Only series have them; absent or empty = none.
-export const maxSkippedPayments = 60;
+// Mirrored by firestore.rules (one regex; 60 until 22 November).
+export const maxSkippedPayments = 1000;
 
 // Strictly increasing occurrence numbers within the calendar's range, at most `maxSkippedPayments`.
 export function parseSkippedPayments(value: unknown): number[] | null {

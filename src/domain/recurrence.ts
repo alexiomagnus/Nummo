@@ -8,8 +8,10 @@ export function isRecurrence(value: unknown): value is Recurrence {
   return typeof value === 'string' && (recurrences as readonly string[]).includes(value);
 }
 
-// Safety net against corrupted dates: ~19 years of weekly occurrences.
-export const maxOccurrences = 1000;
+// Numbers of occurrence 0..4999 (prices, frequency switches and removed payments refer to them; firestore.rules mirror the
+// 4-digit range) and safety net against corrupted dates: ~96 years of weekly occurrences (1000, ~19 years, until 22 November:
+// a weekly series started in 2005 had already stopped). Occurrences are computed up to the day asked, never all of them.
+export const maxOccurrences = 5000;
 
 function daysInMonth(year: number, monthIndex: number): number {
   return new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
@@ -45,8 +47,9 @@ export function occurrenceDates(start: string, recurrence: Recurrence, until: st
 // switch on: from occurrence `index` the calendar restarts on `start` with the new `recurrence`. Occurrences before
 // `index` keep the dates they had, so a payment already due is never moved. No changes = the original calendar.
 export type CalendarChange = Readonly<{ index: number; start: string; recurrence: Recurrence }>;
-// Mirrored by firestore.rules (one regex, up to four entries: the whole expense must stay in its expression budget).
-export const maxCalendarChanges = 4;
+// Mirrored by firestore.rules: one regex whatever the number of entries, so the count does not weigh on the expression
+// budget (4 until 22 November).
+export const maxCalendarChanges = 100;
 
 // Date of occurrence `n` of a series that started on `start` with `recurrence` and then followed `changes`
 // (sorted by index; the last one with index ≤ n applies).
@@ -84,7 +87,7 @@ export function encodeCalendarChanges(changes: readonly CalendarChange[]): strin
 // Inverse for a stored value; anything but a well-formed non-empty string → null (record invalid).
 export function decodeCalendarChanges(value: unknown): unknown {
   if (value === undefined) return undefined;
-  if (typeof value !== 'string' || !/^[1-9][0-9]{0,2}:[0-9]{4}-[0-9]{2}-[0-9]{2}:[wmy](;[1-9][0-9]{0,2}:[0-9]{4}-[0-9]{2}-[0-9]{2}:[wmy]){0,3}$/.test(value)) return null;
+  if (typeof value !== 'string' || !/^[1-9][0-9]{0,3}:[0-9]{4}-[0-9]{2}-[0-9]{2}:[wmy](;[1-9][0-9]{0,3}:[0-9]{4}-[0-9]{2}-[0-9]{2}:[wmy])*$/.test(value)) return null;
   return value.split(';').map((part) => { const [index, start, code] = part.split(':'); return { index: Number(index), start, recurrence: recurrenceByCode[code!] }; });
 }
 

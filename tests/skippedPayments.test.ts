@@ -19,15 +19,25 @@ const record = (over: Partial<ExpenseRecord> = {}): ExpenseRecord => ({
 test('pagamenti eliminati: validazione, inserimento ordinato senza doppioni, limite, codifica compatta', () => {
   assert.deepEqual(parseSkippedPayments(undefined), []);
   assert.deepEqual(parseSkippedPayments([0, 3, 7]), [0, 3, 7]);
-  for (const invalid of [[3, 3], [7, 3], [-1], [1.5], ['2'], [1000], 'x', Array.from({ length: maxSkippedPayments + 1 }, (_, i) => i)]) {
+  for (const invalid of [[3, 3], [7, 3], [-1], [1.5], ['2'], [5000], [null], 'x', null, Array.from({ length: maxSkippedPayments + 1 }, (_, i) => i)]) {
     assert.equal(parseSkippedPayments(invalid), null, JSON.stringify(invalid).slice(0, 40));
   }
   assert.deepEqual(skipPayment([2, 9], 5), [2, 5, 9]);
   assert.deepEqual(skipPayment([2, 9], 9), [2, 9]);
-  assert.equal(skipPayment(Array.from({ length: maxSkippedPayments }, (_, i) => i), 999), null);
+  // 1000 removed payments (60 until 22 November) with numbers up to 4999; the 1001st is refused.
+  assert.equal(maxSkippedPayments, 1000);
+  const full = Array.from({ length: maxSkippedPayments }, (_, i) => 3999 + i);
+  assert.deepEqual(parseSkippedPayments(full), full);
+  assert.equal(skipPayment(full, 0), null);
+  assert.deepEqual(skipPayment(full, 4000), full, 'già eliminato: nulla cambia');
+  assert.equal(skipPayment(full.slice(1), 0)?.length, maxSkippedPayments);
+  // Firestore form at its longest: 1000 numbers of 4 digits = the 4999 characters the Rules allow, and back.
+  assert.equal(encodeSkippedPayments(full).length, 4999);
+  assert.deepEqual(parseSkippedPayments(decodeSkippedPayments(encodeSkippedPayments(full))), full);
+  assert.equal(parseSkippedPayments(decodeSkippedPayments(encodeSkippedPayments([...full, 4999 + 1]))), null);
   assert.equal(encodeSkippedPayments([1, 4, 12]), '1,4,12');
   assert.deepEqual(decodeSkippedPayments('1,4,12'), [1, 4, 12]);
-  for (const stored of ['', '1,', ',1', '1;4', 'a', 4]) assert.equal(decodeSkippedPayments(stored), null);
+  for (const stored of ['', '1,', ',1', '1;4', 'a', 4, '-1', '1,,2', '12345']) assert.equal(decodeSkippedPayments(stored), null);
 });
 
 test('storico: un pagamento eliminato non conta più, gli altri restano con data e prezzo; il numero dell’occorrenza è esposto', () => {

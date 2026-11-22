@@ -20,7 +20,7 @@ export const fundPolicy = {
   // Balances and movements may exceed a single expense (savings): up to 9.999.999,99 €.
   maxMoneyMinor: 999_999_999,
   // Recharges and budgets: 99.999,99 €, the expense ceiling until 22 November. Kept when a single expense went up to
-  // 999.999,99 €: their compact strings in Firestore have length limits sized for 7 digits (`firestore.rules`).
+  // 999.999.999,99 €: their compact strings in Firestore have length limits sized for 7 digits (`firestore.rules`).
   maxMonthlyMinor: 9_999_999,
   maxNoteLength: 100,
   // Schedule entries per fund (Rules check them with one regex each).

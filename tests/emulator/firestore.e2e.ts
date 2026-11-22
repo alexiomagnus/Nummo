@@ -12,11 +12,16 @@ import { makeBackup, parseBackup } from '../../src/domain/backup.ts';
 import { todayInRome } from '../../src/domain/policy.ts';
 import { dataOf } from '../../src/domain/expense.ts';
 import { maxStatusChanges } from '../../src/domain/subscription.ts';
+import { maxCalendarChanges } from '../../src/domain/recurrence.ts';
+import { maxSkippedPayments } from '../../src/domain/skippedPayments.ts';
 
-// Status history of `count` entries of the longest kind («YYYY-MM-DD:cancelled»), on increasing days: with 40, exactly the
-// 839 characters the Rules accept (size and regex both at their limit).
-const longestStatuses = (count: number) => Array.from({ length: count }, (_, i) =>
-  `${new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10)}:cancelled`).join(';');
+// Status history of `count` entries of the longest kind («YYYY-MM-DD:cancelled»), on increasing past days: with 1000,
+// exactly the 20999 characters the Rules accept (size and regex both at their limit).
+const statusHistory = (count: number, status: string) => Array.from({ length: count }, (_, i) =>
+  `${new Date(Date.UTC(2000, 0, 1 + i)).toISOString().slice(0, 10)}:${status}`).join(';');
+const longestStatuses = (count: number) => statusHistory(count, 'cancelled');
+// The shortest kind («YYYY-MM-DD:active»): 1001 of them stay under 20999 characters, so only the regex count refuses them.
+const shortestStatuses = (count: number) => statusHistory(count, 'active');
 await import('../../scripts/seed-demo.ts');
 const projectId = 'demo-nummo';
 const suffix = randomUUID().slice(0, 8);
@@ -118,13 +123,17 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         await denied(setDoc(ref(randomUUID()), { ...valid, price_changes: [missing] }));
       }
       await denied(setDoc(ref(randomUUID()), { ...valid, price_changes: [{ ...change, extra: true }] }));
-      for (const patch of [{ price_changes: [{ ...change, index: 0 }] }, { price_changes: [{ ...change, index: 1000 }] }, { price_changes: [{ ...change, amount_minor: 0 }] },
+      for (const patch of [{ price_changes: [{ ...change, index: 0 }] }, { price_changes: [{ ...change, index: 5000 }] }, { price_changes: [{ ...change, amount_minor: 0 }] },
         { price_changes: [{ ...change, amount_minor: 1.5 }] }, { price_changes: [{ ...change, once: 'si' }] }, { price_changes: [{ ...change, extra: 1 }] },
         { price_changes: [{ index: 2, amount_minor: 5 }] }, { price_changes: Array.from({ length: 9 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) },
         { price_changes: 'x' }, { price_changes: [1] }, { recurrence: null }]) {
         await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
       }
       await denied(setDoc(ref(randomUUID()), withoutField));
+      // Occurrence numbers up to 4999 (999 until 22 November), in the list form of schema 1 too.
+      const highIndex = randomUUID();
+      await setDoc(ref(highIndex), { ...valid, price_changes: [{ ...change, index: 4999 }] });
+      await deleteDoc(ref(highIndex));
       await setDoc(ref(randomUUID()), { ...valid, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
       await owner.store.createExpense({ expense_id, ...series });
       const saved = (await owner.store.exportSnapshot()).expenses.find((r) => r.id === expense_id)!;
@@ -278,7 +287,8 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await setDoc(ref(randomUUID()), raw); // schema 3 without switches or trial is valid too
       for (const patch of [{ calendar_changes: '' }, { calendar_changes: '3:2026-12-01:x' }, { calendar_changes: '0:2026-12-01:y' }, { calendar_changes: '3:2026-12-1:y' },
         { calendar_changes: '3:2026-12-01:y;' }, { calendar_changes: [{ index: 3, start: '2026-12-01', recurrence: 'yearly' }] }, { calendar_changes: 7 },
-        { calendar_changes: Array.from({ length: 5 }, (_, i) => `${i + 1}:2026-12-01:y`).join(';') },
+        { calendar_changes: Array.from({ length: 101 }, (_, i) => `${i + 1}:2026-12-01:y`).join(';') }, { calendar_changes: '5000:2026-12-01:y' },
+        { calendar_changes: '10000:2026-12-01:y' },
         { calendar_changes: '3:2026-12-01:y', price_changes: [] }, { calendar_changes: '3:2026-12-01:y', recurrence: null },
         { calendar_changes: '3:2026-12-01:y', schema_version: 1 }, { calendar_changes: '3:2026-12-01:y', schema_version: 2 },
         { calendar_changes: '3:2026-12-01:y', schema_version: 4 }, { schema_version: 3, recurrence: null }, { schema_version: 3, first_payment_date: '2027-02-30' }]) {
@@ -298,20 +308,31 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.equal(afterTrial.first_payment_date, '2099-12-09');
       assert.equal(afterTrial.schema_version, 3);
       await denied(updateDoc(ref(expense_id), { first_payment_date: '2099-12-09', updated_at: serverTimestamp(), revision: saved.revision + 1 }));
-      // The worst supported combination (8 prices, 40 statuses of the longest kind, fund, trial, 4 switches) stays writable.
+      // The worst supported combination stays writable: 8 prices with 4-digit indexes and the largest amount (151 characters),
+      // 1000 statuses of the longest kind (20999), 100 switches with 4-digit indexes (1799), 1000 removed payments of 4 digits
+      // (4999), fund, trial and the longest merchant ID.
+      assert.equal(longestStatuses(maxStatusChanges).length, 20999);
+      const switches = (base: number) => Array.from({ length: maxCalendarChanges }, (_, i) => `${base + i}:2099-12-31:${'wmy'[i % 3]}`).join(';');
+      assert.equal(switches(4900).length, 1799);
+      const longestSkipped = Array.from({ length: maxSkippedPayments }, (_, i) => 3999 + i).join(',');
+      assert.equal(longestSkipped.length, 4999);
+      const longestPrices = encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: 4992 + i, amount_minor: 99999999999, once: true })));
+      assert.equal(longestPrices.length, 151);
       const worstId = randomUUID();
       const worst = { ...raw, expense_date: '2026-01-01', first_payment_date: '2099-12-09', fund_id: randomUUID(),
         status_changes: longestStatuses(maxStatusChanges),
-        price_changes: encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false }))),
-        calendar_changes: '996:2099-12-31:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:w',
-        // Plus the longest list of removed payments (60 numbers of 4 digits) and the longest merchant ID.
-        skipped_payments: Array.from({ length: 60 }, (_, i) => 9000 + i).join(','), merchant_id: 'm-' + '%25'.repeat(60) };
+        price_changes: longestPrices, calendar_changes: switches(4900),
+        skipped_payments: longestSkipped, merchant_id: 'm-' + '%25'.repeat(60) };
       t.diagnostic('frequency budget: create');
       await setDoc(ref(worstId), worst);
       t.diagnostic('frequency budget: update description');
       await updateDoc(ref(worstId), { description: 'TEST budget frequenza', updated_at: serverTimestamp(), revision: 2 });
       t.diagnostic('frequency budget: update calendar');
-      await updateDoc(ref(worstId), { calendar_changes: '995:2099-12-30:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:m', updated_at: serverTimestamp(), revision: 3 });
+      await updateDoc(ref(worstId), { calendar_changes: switches(4899).replace('4899:', '4800:'), updated_at: serverTimestamp(), revision: 3 });
+      // Document size in the worst case: far below Firestore's 1 MiB.
+      const worstSize = JSON.stringify((await getDocFromServer(ref(worstId))).data()).length;
+      t.diagnostic(`worst expense: ~${worstSize} bytes as JSON`);
+      assert.ok(worstSize < 40_000);
       for (const id of [expense_id, trialId, worstId]) await deleteDoc(ref(id));
     });
     await t.test('abbonamenti: stati validati dalle regole, campo assente compatibile, storico invariato', async () => {
@@ -323,10 +344,15 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const longest = longestStatuses(maxStatusChanges);
       for (const patch of [{ status_changes: '2026-03-10:stopped' }, { status_changes: '10/03/2026:paused' }, { status_changes: '' },
         { status_changes: '2026-03-10:paused;' }, { status_changes: [{ date: '2026-03-10', status: 'paused' }] }, { status_changes: `${longest};2099-12-31:paused` }, { status_changes: longestStatuses(maxStatusChanges + 1) },
+        { status_changes: shortestStatuses(maxStatusChanges + 1) }, { status_changes: `${shortestStatuses(maxStatusChanges)};2099-12-31:x` },
         { recurrence: null, price_changes: [], status_changes: '2026-03-10:paused' }]) {
         await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
       }
-      // Worst case for the expression budget: 40 statuses together with eight price changes.
+      assert.ok(shortestStatuses(maxStatusChanges + 1).length < 20999, '1001 voci brevi: solo il conteggio della regex le rifiuta');
+      const shortest = randomUUID();
+      await setDoc(ref(shortest), { ...valid, status_changes: shortestStatuses(maxStatusChanges) });
+      await deleteDoc(ref(shortest));
+      // Worst case for the expression budget: 1000 statuses together with eight price changes.
       const { status_changes: _, ...legacy } = valid;
       const legacyWorstId = randomUUID();
       await setDoc(ref(legacyWorstId), { ...legacy, fund_id: randomUUID(), status_changes: longest, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
@@ -359,8 +385,14 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const { fund_id: _fund, list_id: _list, list_items: _items, status_changes: _status, ...storedSeries } = series;
       const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       await setDoc(ref(randomUUID()), { ...valid, skipped_payments: '0,3,12' });
+      assert.ok(Array.from({ length: maxSkippedPayments + 1 }, (_, i) => i).join(',').length < 4999);
+      const thousand = randomUUID();
+      await setDoc(ref(thousand), { ...valid, skipped_payments: Array.from({ length: maxSkippedPayments }, (_, i) => i).join(',') });
+      await deleteDoc(ref(thousand));
       for (const patch of [{ skipped_payments: '' }, { skipped_payments: '1,' }, { skipped_payments: 'a' }, { skipped_payments: '12345' }, { skipped_payments: [1, 2] },
-        { skipped_payments: Array.from({ length: 61 }, (_, i) => i).join(',') }, { recurrence: null, price_changes: [], skipped_payments: '0' }]) {
+        // 1001 short numbers stay under the 4999 characters: only the count (split) refuses them. 5000 is out of range.
+        { skipped_payments: Array.from({ length: maxSkippedPayments + 1 }, (_, i) => i).join(',') }, { skipped_payments: '5000' }, { skipped_payments: '3,9999' },
+        { recurrence: null, price_changes: [], skipped_payments: '0' }]) {
         await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
       }
       await owner.store.createExpense({ expense_id, ...series });
@@ -480,7 +512,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         { date: '2099-01-01' }, { note: ' x' }, { extra: true }]) {
         await denied(setDoc(movementRef(randomUUID()), { ...rawMovement, ...patch }));
       }
-      // Expenses: fund_id optional (absent = no fund), uuid when present; worst case 8 prices + 40 statuses + fund_id fits the Rules budget.
+      // Expenses: fund_id optional (absent = no fund), uuid when present; worst case 8 prices + 1000 statuses + fund_id fits the Rules budget.
       const { expense_id: _e, status_changes: _s, fund_id: _f, list_id: _l, list_items: _li, ...base } = expense();
       const valid = { ...base, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       await denied(setDoc(ref(randomUUID()), { ...valid, fund_id: 'x' }));

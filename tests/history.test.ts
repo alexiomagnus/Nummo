@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { occurrenceDates } from '../src/domain/recurrence.ts';
+import { maxOccurrences, occurrenceDates } from '../src/domain/recurrence.ts';
 import {
-  breakdown, categoryColorSlot, categoryColorSlots, bucketsFor, expandOccurrences, searchAndSort, type ExpenseEntry,
+  breakdown, categoryColorSlot, categoryColorSlots, bucketsFor, expandOccurrences, forecastOccurrences, searchAndSort, subscriptionSummary, type ExpenseEntry,
 } from '../src/domain/history.ts';
+import { nextRenewal, priceAt } from '../src/domain/pricing.ts';
+import { statusAt, type StatusChange } from '../src/domain/subscription.ts';
 
 const entry = (over: Partial<ExpenseEntry>): ExpenseEntry => ({
   id: 'x', amount_minor: 100, description: 'Spesa', category_id: null, expense_date: '2026-11-02',
@@ -140,4 +142,42 @@ test('colori: oltre 12 categorie le 12 con più spesa nell’archivio restano di
   assert.equal(new Set(top.map((id) => slots.get(id))).size, 12);
   assert.deepEqual(categoryColorSlots(ids.slice(0, 12), weights), categoryColorSlots(ids.slice(0, 12)));
   assert.deepEqual([...categoryColorSlots([...ids].reverse(), weights)].sort(), [...slots].sort());
+});
+
+test('occorrenze: fino a 5000 per serie (1000 fino al 22 novembre), calcolate solo fino al giorno chiesto', () => {
+  assert.equal(maxOccurrences, 5000);
+  const weekly = entry({ recurrence: 'weekly', expense_date: '2000-01-01' });
+  // Today: only the occurrences up to today exist (about 1400), not the whole range.
+  const now = expandOccurrences([weekly], '2026-11-22');
+  assert.equal(now.length, occurrenceDates('2000-01-01', 'weekly', '2026-11-22').length);
+  assert.ok(now.length > 1000 && now.length < 1500, String(now.length));
+  assert.equal(now[now.length - 1]!.date, '2026-11-21');
+  // At the end of the range of dates: exactly 5000 (numbers 0..4999), then the series stops (safety net).
+  const all = expandOccurrences([weekly], '2099-12-31');
+  assert.equal(all.length, maxOccurrences);
+  assert.deepEqual([all[0]!.index, all[all.length - 1]!.index], [0, 4999]);
+  assert.equal(nextRenewal('2000-01-01', 'weekly', '2099-12-31'), null);
+  assert.deepEqual(nextRenewal('2000-01-01', 'weekly', '2026-11-22'), { index: now.length, date: '2026-11-28' });
+  // Before 22 November a weekly series started in 2000 stopped in 2019: monthly and yearly series never reach the limit.
+  assert.equal(expandOccurrences([{ ...weekly, recurrence: 'monthly' }], '2099-12-31').length, 1200);
+});
+
+test('occorrenze: stati e pagamenti eliminati con cronologie lunghe danno lo stesso risultato del calcolo semplice', () => {
+  const day = (n: number) => new Date(Date.UTC(2000, 0, 1 + n)).toISOString().slice(0, 10);
+  const status_changes: StatusChange[] = Array.from({ length: 1000 }, (_, i) => ({ date: day(3 + i * 9), status: i % 3 === 0 ? 'paused' : i % 3 === 1 ? 'active' : 'cancelled' }));
+  const skipped_payments = Array.from({ length: 1000 }, (_, i) => i * 3 + 1);
+  const series = entry({ recurrence: 'weekly', expense_date: '2000-01-01', status_changes, skipped_payments,
+    price_changes: Array.from({ length: 8 }, (_, i) => ({ index: 600 * (i + 1), amount_minor: 200 + i, once: i % 2 === 1 })) });
+  // Reference: the definition, one occurrence at a time (status in force strictly before the date, removed numbers).
+  const expected = occurrenceDates('2000-01-01', 'weekly', '2099-12-31').flatMap((date, index) =>
+    !skipped_payments.includes(index) && (index === 0 || statusAt(status_changes, date) === 'active')
+      ? [{ date, index, amount_minor: priceAt(100, series.price_changes!, index) }] : []);
+  const pick = (list: { date: string; index: number; amount_minor: number }[]) => list.map(({ date, index, amount_minor }) => ({ date, index, amount_minor }));
+  assert.deepEqual(pick(expandOccurrences([series], '2099-12-31')), expected);
+  const cut = '2040-06-30';
+  assert.deepEqual(pick([...expandOccurrences([series], cut), ...forecastOccurrences([series], cut, '2099-12-31')]), expected);
+  // Linear in the length of the history: the worst series stays well below a frame budget of work per call.
+  const started = performance.now();
+  subscriptionSummary(series, '2026-11-22');
+  assert.ok(performance.now() - started < 250);
 });

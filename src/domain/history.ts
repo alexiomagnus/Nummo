@@ -36,9 +36,24 @@ function toOccurrence(entry: ExpenseEntry, date: string, index: number): Occurre
 
 // A legacy series has already paid occurrence 0 at creation. A trial has not: its first billing slot also obeys status changes.
 // A payment removed by hand (`skipped_payments`) never counts.
-function paid(entry: ExpenseEntry, date: string, index: number): boolean {
-  if (entry.skipped_payments?.includes(index)) return false;
-  return (index === 0 && !entry.first_payment_date) || statusAt(entry.status_changes ?? [], date) === 'active';
+// Same answer as `statusAt` for each occurrence, in linear time over the whole series (22 November: up to 5000 occurrences,
+// 1000 status changes and 1000 removed payments, a quadratic scan cost ~50 ms per series). The schedule dates are increasing
+// (a frequency switch restarts after the previous occurrence), so the status cursor only moves forward; a date going back
+// (never produced by the calendar) falls back to the plain scan.
+function paidChecker(entry: ExpenseEntry): (date: string, index: number) => boolean {
+  const skipped = new Set(entry.skipped_payments ?? []);
+  const changes = entry.status_changes ?? [];
+  let next = 0;
+  let status: SubscriptionStatus = 'active';
+  let last = '';
+  return (date, index) => {
+    if (skipped.has(index)) return false;
+    if (index === 0 && !entry.first_payment_date) return true;
+    if (date < last) return statusAt(changes, date) === 'active';
+    last = date;
+    while (next < changes.length && changes[next]!.date < date) status = changes[next++]!.status;
+    return status === 'active';
+  };
 }
 
 // A recurring expense counts once per paid occurrence up to today, at the price it had on that occurrence;
@@ -46,7 +61,8 @@ function paid(entry: ExpenseEntry, date: string, index: number): boolean {
 export function expandOccurrences(entries: readonly ExpenseEntry[], today: string): Occurrence[] {
   return entries.flatMap((entry) => {
     const dates = entry.recurrence ? scheduleDates(paymentStart(entry), entry.recurrence, entry.calendar_changes ?? [], today) : [entry.expense_date];
-    return dates.flatMap((date, index) => (date <= today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
+    const paid = paidChecker(entry);
+    return dates.flatMap((date, index) => (date <= today && paid(date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
 
@@ -55,7 +71,8 @@ export function forecastOccurrences(entries: readonly ExpenseEntry[], today: str
   return entries.flatMap((entry) => {
     if (!entry.recurrence) return [];
     const dates = scheduleDates(paymentStart(entry), entry.recurrence, entry.calendar_changes ?? [], until);
-    return dates.flatMap((date, index) => (date > today && paid(entry, date, index) ? [toOccurrence(entry, date, index)] : []));
+    const paid = paidChecker(entry);
+    return dates.flatMap((date, index) => (date > today && paid(date, index) ? [toOccurrence(entry, date, index)] : []));
   });
 }
 

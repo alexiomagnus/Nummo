@@ -187,7 +187,7 @@ export function applyFrequencyChange(previous: Pick<ExpenseData, 'expense_date' 
   if (!isValidDate(edit.firstDate) || edit.firstDate <= today || edit.firstDate > '2099-12-31') return { ok: false, error: 'La data del primo rinnovo con la nuova frequenza deve essere successiva a oggi.' };
   const changes = switchFrequency(calendar, next.index, edit.recurrence, edit.firstDate);
   return changes ? { ok: true, recurrence: previous.recurrence, calendar_changes: changes, schema_version: 3 }
-    : { ok: false, error: 'Troppi cambi di frequenza: il limite è quattro per abbonamento.' };
+    : { ok: false, error: 'Troppi cambi di frequenza per questo abbonamento: per continuare creane uno nuovo.' };
 }
 
 // Price shown when opening a series for editing: the next renewal's, or the base for one-off expenses.
