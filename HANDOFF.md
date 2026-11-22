@@ -39,8 +39,10 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **App Android 0.2.0 (22 novembre, non committata):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata
-  in `nummo-6b6e2`; servono Hosting pubblicato e nuova installazione. Sezione «App Android 0.2.0» qui sotto.
+- **App Android 0.2.0 (22 novembre):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata in
+  `nummo-6b6e2`. Committata in `0f340bf`, inviata, Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle
+  online `index-9fe2b72e…` identico a `dist/`, SHA-256), Rules invariate; release 0.2.0 installata sul Pixel 8 via adb sopra la 0.1.0.
+  Da provare sul telefono: accesso Google reale, uscita e nuovo accesso. Sezione «App Android 0.2.0» qui sotto.
 - **App Android (22 novembre):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte, committate in `759792c`,
   inviate e pubblicate su Hosting su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online `index-18586346…` identico a
   `dist/` (SHA-256) e con il ponte; porta online anche i 500 prodotti per lista di `48361b9`, Rules già pubblicate). Rules invariate.
@@ -129,8 +131,8 @@ rilasci».
   flusso di Play Services (senza account: «aggiungi un account»), Indietro → `TYPE_USER_CANCELED` → nessun messaggio, pagina ancora
   sull'accesso e visibile. **Non verificato:** accesso reale con un account Google (serve il telefono con la release e l'Hosting
   pubblicato), uscita e nuovo accesso, blocco dell'app in Avanzata.
-- Prima di provarla sul telefono: pubblicare l'Hosting (l'app carica il sito online) e installare la nuova release sopra la 0.1.0
-  (stessa chiave: i dati della Standard restano).
+- Committata in `0f340bf`, inviata e pubblicata su Hosting (bundle `index-9fe2b72e…`); release 0.2.0 installata sul Pixel 8 via adb
+  sopra la 0.1.0 (stessa chiave: i dati della Standard restano).
 
 ## App Android (WebView con ponte nativo), fase 1 solo Standard — 22 novembre 2026
 
