@@ -117,11 +117,7 @@ test('preferenze: vibrazione accesa di base, solo booleani, scelta conservata', 
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
 });
 
-test('preferenze: anello colorato dell’avatar spento di base, solo booleani, scelta conservata', () => {
-  assert.equal(defaultPreferences.avatarRing, false);
-  assert.equal(parsePreferences('{}').avatarRing, false);
-  for (const bad of ['"true"', '1', 'null']) assert.equal(parsePreferences(`{"avatarRing":${bad}}`).avatarRing, false);
-  assert.equal(parsePreferences('{"avatarRing":true}').avatarRing, true);
-  const saved = { ...defaultPreferences, avatarRing: true };
-  assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+test('preferenze: l’anello dell’avatar non è più una preferenza, un valore salvato si ignora', () => {
+  assert.equal('avatarRing' in defaultPreferences, false);
+  assert.equal('avatarRing' in parsePreferences('{"avatarRing":true}'), false);
 });

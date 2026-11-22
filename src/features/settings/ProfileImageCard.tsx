@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
 import { HelperText, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { SwitchRow } from '../../components/SwitchRow';
 import { Card } from '../../components/Card';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -56,15 +55,19 @@ export function ProfileAvatar({ image, size, googlePhoto = null }: { image: Prof
 // Where the picture is kept (`local` or the UID) and, in the Advanced mode, the account's Google photo.
 export type ProfileScope = Readonly<{ scope: string; googlePhoto: string | null }>;
 
+// Scope of the Standard mode's picture; any other scope is an Advanced mode account. The ring in the main colour around the
+// account picture marks the Advanced mode by itself, never the Standard one (user's choice, 22 November: before, a switch).
+export const localProfileScope = 'local';
+
 // The picture of the Standard mode's account button.
 export function StandardAvatar() {
-  return <ProfileAvatar image={useProfileImage('local')} size={accountAvatarSize} />;
+  return <ProfileAvatar image={useProfileImage(localProfileScope)} size={accountAvatarSize} />;
 }
 
 // Settings card, both modes (the Advanced one since 22 November, on request): there «nothing chosen» is the Google photo.
-// Every choice applies at once. `ring`/`onRingChange`: «Anello colorato», the ring of the account button (a display
-// preference in `nummo.preferences.v1`, shared by every account), also drawn around the preview.
-export function ProfileImageCard({ scope, googlePhoto, ring, onRingChange }: ProfileScope & { ring: boolean; onRingChange: (ring: boolean) => void }) {
+// Every choice applies at once. The preview has the ring of the account button in the Advanced mode (any scope but `local`).
+export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
+  const ring = scope !== localProfileScope;
   const { t } = useI18n();
   const { colors } = useTheme();
   const image = useProfileImage(scope);
@@ -108,8 +111,6 @@ export function ProfileImageCard({ scope, googlePhoto, ring, onRingChange }: Pro
         </Button>
       </View>
       {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
-      <SwitchRow label={t("Anello colorato")} supporting={t("Un cerchio nel colore principale attorno all’immagine del profilo.")}
-        value={ring} onChange={onRingChange} />
       <input ref={input} type="file" accept="image/*" hidden
         onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ''; }} />
     </Card>

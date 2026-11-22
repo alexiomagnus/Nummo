@@ -145,7 +145,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
     <SameWidthGroup>
     <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
       <PageHeader title={t("Impostazioni")} action={<DoneButton onPress={onDone} />} />
-      {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} ring={preferences.avatarRing} onRingChange={(avatarRing) => onChange({ avatarRing })} />}
+      {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} />}
       <View style={[styles.grid, wide && styles.columns]}>
         {/* Lingua, Carattere and Tema first (left column on desktop), then Colore. */}
         {general}

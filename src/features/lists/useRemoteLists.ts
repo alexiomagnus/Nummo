@@ -52,6 +52,13 @@ export function useRemoteLists(backend: DataStore) {
     updateList,
     reopenList: (list: SyncedList) => run(() => backend.reopenList(list)),
     removeList: (list: SyncedList) => run(() => backend.removeList(list, itemsFor(list.id))),
+    // «Elimina le liste archiviate» (22 November): the same deletion, one list (with its products) at a time; the SDK queues
+    // and retries each. Stops at the first refusal. Returns how many were removed.
+    removeLists: (some: readonly SyncedList[]) => {
+      let removed = 0;
+      for (const list of some) { if (!run(() => backend.removeList(list, itemsFor(list.id)))) break; removed++; }
+      return removed;
+    },
     addItem: (listId: string, name: string) => run(() => backend.addListItem(listId, name, nextPosition(itemsFor(listId)))),
     updateItem: (item: SyncedListItem, change: Partial<Pick<SyncedListItem, 'name' | 'checked'>>) => run(() => backend.updateListItem(item, change)),
     removeItem: (item: SyncedListItem) => run(() => backend.removeListItem(item)),

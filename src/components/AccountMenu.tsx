@@ -9,8 +9,8 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
 // `avatar`: the picture chosen in Settings, drawn instead of the person glyph and the Google photo; with it the menu says
-// nothing about the Google photo (loading, missing, «Riprova foto»). `ring`: a ring in the main colour around the picture
-// (Settings, «Anello colorato»; 22 November).
+// nothing about the Google photo (loading, missing, «Riprova foto»). `ring`: a ring in the main colour around the picture,
+// the mark of the Advanced mode (22 November; never in the Standard mode).
 type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: boolean; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.

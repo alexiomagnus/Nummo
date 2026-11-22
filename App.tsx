@@ -180,7 +180,7 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
   const [backupRequest, setBackupRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
-  const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar />} ring={preferences.avatarRing} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
+  const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar />} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
     onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
   return (
     <>
@@ -238,7 +238,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const advancedSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) =>
     renderSettings(onDone, archiveSections, onResetArchive, session.status === 'signed-in' ? { scope: session.user.uid, googlePhoto: session.user.photoURL } : undefined);
   const account = session.status === 'signed-in'
-    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} ring={preferences.avatarRing} busy={session.busy} onSignOut={signOut}
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} ring busy={session.busy} onSignOut={signOut}
       avatar={chosenAvatar.kind === 'none' ? undefined : <ProfileAvatar image={chosenAvatar} size={accountAvatarSize} />} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)}
       onOpenBackup={openBackup} /> : null;

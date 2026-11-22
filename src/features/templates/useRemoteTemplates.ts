@@ -26,6 +26,13 @@ export function useRemoteTemplates(backend: DataStore) {
   const create = useCallback((data: TemplateData) => run(() => backend.saveTemplate(crypto.randomUUID(), data)), [backend, run]);
   const update = useCallback((template: SyncedTemplate, data: TemplateData) => run(() => backend.saveTemplate(template.id, data, template)), [backend, run]);
   const remove = useCallback((template: SyncedTemplate) => run(() => backend.removeTemplate(template)), [backend, run]);
-  return { templates, ready, error: visibleError(errors), sync, create, update, remove, clearError: () => setErrors(actionCleared) };
+  // «Elimina tutti i template» (22 November): the same deletion for each, queued by the SDK; stops at the first refusal and
+  // returns how many were removed.
+  const removeAll = useCallback((some: readonly SyncedTemplate[]) => {
+    let removed = 0;
+    for (const template of some) { if (!run(() => backend.removeTemplate(template))) break; removed++; }
+    return removed;
+  }, [backend, run]);
+  return { templates, ready, error: visibleError(errors), sync, create, update, remove, removeAll, clearError: () => setErrors(actionCleared) };
 }
 export type RemoteTemplates = ReturnType<typeof useRemoteTemplates>;

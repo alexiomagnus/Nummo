@@ -4,7 +4,7 @@ import { ActivityIndicator, HelperText, IconButton, Text, TextInput, useTheme } 
 import { useBackLayer } from '../../components/BackNavigation';
 import { Button, compactIconPadding } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
-import { DeleteAction } from '../../components/DeleteAction';
+import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
 import { PageHeader } from '../../components/PageHeader';
 import { Reveal } from '../../components/Reveal';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
@@ -54,6 +54,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
   const [openId, setOpenId] = useState<string | null>(null);
   const [editing, setEditing] = useState<SyncedList | 'new' | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [confirmArchived, setConfirmArchived] = useState(false);
   // Back on an open list returns to the overview, as «Torna alle liste» does.
   useBackLayer(openId !== null, backLevels.detail, () => setOpenId(null), openId);
   const expenseIds = useMemo(() => new Set(expenses.map((e) => e.id)), [expenses]);
@@ -138,7 +139,22 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
           icon={({ size, color }) => <SvgIcon shape={showArchived ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>
           {t("Liste archiviate ({p0})", { p0: archived.length })}</Button>
         {showArchived && <Reveal role="list" accessibilityLabel={t("Liste archiviate")} style={styles.list}>{archived.map(card)}</Reveal>}
+        {/* All the archived lists at once (user's request, 22 November); their expenses stay in Spese with the products. */}
+        {showArchived && <Button mode="outlined" textColor={colors.error} style={[styles.start, { borderColor: colors.error }]}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />} onPress={() => setConfirmArchived(true)}>
+          {t("Elimina le liste archiviate")}</Button>}
       </View>}
+      <DeleteDialog visible={confirmArchived} name={t("le liste archiviate")}
+        title={archived.length === 1 ? t("Eliminare 1 lista archiviata?") : t("Eliminare {p0} liste archiviate?", { p0: archived.length })}
+        description={t("Le spese già registrate restano nella sezione Spese con i loro prodotti. L’operazione non può essere annullata.")}
+        onDismiss={() => setConfirmArchived(false)}
+        onConfirm={() => {
+          const all = archived.length;
+          const removed = remote.removeLists(archived);
+          if (removed > 0) notify(removed === 1 ? t("1 lista eliminata.") : t("{p0} liste eliminate.", { p0: removed }));
+          if (removed === all) setShowArchived(false);
+          return true;
+        }} />
       {editor}
     </View>
   );

@@ -71,6 +71,29 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## «Elimina tutti i template» — 22 novembre 2026
+
+- Su richiesta: nella pagina Templates, sotto l'elenco «I tuoi template (n)», «Elimina tutti i template» (contorno ed etichetta in `error`,
+  solo con almeno un template; in grigio con i template spenti, come il resto della pagina). Conferma «Eliminare n template?» («Le spese già
+  salvate non cambiano…»), poi `removeAll` in `useRemoteTemplates`: la `removeTemplate` di sempre per ognuno (scritture semplici accodate,
+  nessun cambio a `DataStore`/Rules), si ferma al primo rifiuto e dice quanti ne ha eliminati.
+- **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900) con un backup v11 costruito per la prova (due template):
+  «I tuoi template (2)» → pulsante → «Eliminare 2 template?» → «Nessun template.», pulsante sparito. Nessun errore JS. **Non provati:** Avanzata,
+  smartphone. Non committato, non pubblicato. (Manca ancora in `docs/testing/` un file di collaudo v11 con template.)
+
+## «Elimina le liste archiviate», anello dell'avatar automatico in Avanzata — 22 novembre 2026
+
+- **Liste** (su richiesta): con la sezione «Liste archiviate (n)» aperta, sotto le schede, «Elimina le liste archiviate» (contorno ed etichetta
+  in `error`). Conferma «Eliminare n liste archiviate?» («Le spese già registrate restano nella sezione Spese con i loro prodotti…»), poi
+  `removeLists` in `useRemoteLists`: la `removeList` di sempre per ogni lista (lista + prodotti; scritture semplici accodate dall'SDK, nessun
+  cambio a `DataStore`/Rules), si ferma al primo rifiuto e dice quante ne ha eliminate. Le liste attive non si toccano.
+- **Anello dell'avatar** (scelta dell'utente): tolti l'interruttore «Anello colorato» e la preferenza `avatarRing` (un valore salvato si ignora,
+  test in `tests/preferences.test.ts`); l'anello `primary` compare da solo in Avanzata da collegati (pulsante dell'account e anteprima nelle
+  Impostazioni), mai in Standard.
+- **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900) dopo l'import di `nummo-utente-medio.json`: «Liste
+  archiviate (1)» → pulsante → «Eliminare 1 lista archiviata?» → eliminata, sezione sparita, lista attiva intatta; nessun anello in Standard.
+  Nessun errore JS. **Non provati:** anello in Avanzata (serve l'accesso con l'emulatore), smartphone. Non committato, non pubblicato.
+
 ## «Cambia modalità» nel colore principale, nota sotto «Elimina tutte le spese» tolta — 22 novembre 2026
 
 - Su richiesta (screenshot): «Cambia modalità» di Archiviazione e backup pieno nel colore principale (`contained`, entrambe le modalità;

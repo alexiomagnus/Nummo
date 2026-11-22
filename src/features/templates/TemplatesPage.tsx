@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
+import { DeleteDialog } from '../../components/DeleteAction';
+import { useSnackbar } from '../../components/SnackbarHost';
 import { Card } from '../../components/Card';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -41,6 +43,8 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
   const haptic = useHaptics();
   const muted = { color: colors.onSurfaceVariant };
   const [editing, setEditing] = useState<SyncedTemplate | null>(null);
+  const [confirmAll, setConfirmAll] = useState(false);
+  const notify = useSnackbar();
   const form = useTemplateForm({ categories, fundChoices, merchants, onSubmit: remote.create });
   const labels = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const full = remote.templates.length >= templatePolicy.maxTemplates;
@@ -75,8 +79,21 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
                   <View aria-hidden style={[styles.edit, { borderColor: colors.outline }]}><SvgIcon shape={iconShapes.pencil} size={28} color={colors.onSurfaceVariant} /></View>
                 </View>} />;
             })}</View>}
+          {/* Every template at once (user's request, 22 November); Nuova spesa and the saved expenses are not touched. */}
+          {remote.templates.length > 0 && <Button mode="outlined" textColor={colors.error} disabled={!remote.ready || !enabled}
+            style={[styles.removeAll, { borderColor: colors.error }]} onPress={() => setConfirmAll(true)}
+            icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</Button>}
         </Card>
       </View>
+      <DeleteDialog visible={confirmAll} name={t("tutti i template")}
+        title={remote.templates.length === 1 ? t("Eliminare 1 template?") : t("Eliminare {p0} template?", { p0: remote.templates.length })}
+        description={t("Le spese già salvate non cambiano. L’operazione non può essere annullata.")}
+        onDismiss={() => setConfirmAll(false)}
+        onConfirm={() => {
+          const removed = remote.removeAll(remote.templates);
+          if (removed > 0) notify(removed === 1 ? t("1 template eliminato.") : t("{p0} template eliminati.", { p0: removed }));
+          return true;
+        }} />
       {editing && <TemplateEditor template={editing} categories={categories} fundChoices={fundChoices} merchants={merchants} error={remote.error}
         onSave={(data) => remote.update(editing, data)} onDelete={() => remote.remove(editing)} close={() => setEditing(null)} />}
     </View>
@@ -93,5 +110,6 @@ const styles = StyleSheet.create({
   createContent: { minHeight: layout.controlHeight },
   createLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  removeAll: { alignSelf: 'flex-start', marginTop: spacing.sm },
   edit: { width: 44, height: 44, borderRadius: radius.button, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
 });
