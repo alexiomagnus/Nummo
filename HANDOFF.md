@@ -8,7 +8,8 @@ rilasci».
 
 - **Produzione (progetto `nummo-6b6e2`).** **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
   richiesta il 22 novembre (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», «Deploy complete!»);
-  **Hosting non ripubblicato** (online ancora `17ebce0`: limite di 100 prodotti nell'app). Prima, **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
+  **Hosting** poi pubblicato con `759792c` (app Android, vedi sotto): online `index-18586346…`, che comprende i 500 prodotti; verificato
+  il 22 novembre ricompilando da `HEAD` pulito (`7b7ad76`) con `npm run build:cloud`: stesso bundle, stesso SHA-256 di quello online. Prima, **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
   22 novembre, nell'ordine: Rules («compiled successfully», «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle
   online `index-040a3433…` identico a `dist/` (SHA-256), `firestore.rules` pubblico identico. Chi ha il proprio Firebase deve ricopiare le
   Rules. Prima, **Rules e Hosting** da `f4691aa` (limiti degli abbonamenti: 1000 cambi di stato, 100 cambi di
@@ -43,10 +44,9 @@ rilasci».
   `dist/` (SHA-256) e con il ponte; porta online anche i 500 prodotti per lista di `48361b9`, Rules già pubblicate). Rules invariate.
   Da fare dall'utente: installare `android/app/build/outputs/apk/release/app-release.apk` sul Pixel 8 e copiare altrove la chiave di firma.
   Dettagli nella sezione «App Android» qui sotto.
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting no.
-  **Albero di lavoro non pulito:** lavoro Android non mio e non committato (`android/`, `src/services/androidApp.ts`,
-  `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
-  `haptics`, due chiavi in `src/i18n/en.ts`). Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `759792c` (app Android, altra sessione):
+  inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
+  `759792c`. `npm run check` OK su `7b7ad76` (**571/571**). Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
   Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
   Prima `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
   quello di «Colore dell'anello»): inviato e pubblicato su Hosting. Prima `f57b1b9` (pagina Esercenti, cambi di stato
@@ -134,8 +134,7 @@ rilasci».
   La release sull'emulatore apre il sito di produzione, che **non ha ancora** il codice del ponte: lì barre scure e Avanzata attiva finché
   non si pubblica l'Hosting. **Non provati:** telefono reale (sensazione della vibrazione, impronta reale), blocco attivato dall'interfaccia
   delle Impostazioni con il PIN di Nummo (provato il ponte, non il percorso completo), fotocamera e «Carica una foto» nell'app, CSV.
-- **Per usarla:** pubblicare l'Hosting (autorizzazione; nota: online c'è ancora `17ebce0`, l'Hosting di `48361b9` porta anche i 500
-  prodotti per lista, con Rules già pubblicate), poi installare `android/app/build/outputs/apk/release/app-release.apk` sul Pixel 8
+- **Per usarla:** (Hosting già pubblicato, con i 500 prodotti per lista) installare `android/app/build/outputs/apk/release/app-release.apk` sul Pixel 8
   (`adb install` o file) e spostare i dati con backup e ripristino (archivio separato da Chrome). Committato in `759792c`, inviato e
   pubblicato su Hosting (bundle `index-18586346…`, identico a `dist/`).
 
@@ -154,8 +153,7 @@ rilasci».
 - **Verifica:** `npm run check` OK (**571/571**, build demo: il conteggio comprende test di un lavoro parallelo, vedi sotto); `test:emulator`
   **24/24** su porte proprie (config `.nummo-lists-check.json` rimossa; runner hybrid 36786 non toccato). Committato in `48361b9` (solo i
   file della fase; l'indice verificato da solo: typecheck OK, **566/566**), inviato; **Rules pubblicate**, **Hosting no** (su richiesta:
-  il lavoro Android nell'albero di lavoro finirebbe nella build). Finché Hosting non è ripubblicato l'app online si ferma ancora a 100
-  prodotti: le Rules nuove sono solo più permissive, nessun problema di compatibilità.
+  il lavoro Android nell'albero di lavoro finirebbe nella build); Hosting pubblicato poi con `759792c` (bundle `index-18586346…`).
 - **Attenzione:** nell'albero di lavoro c'è un lavoro parallelo non mio (app Android: `android/`, `src/services/androidApp.ts`,
   `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
   `haptics` e due chiavi in `src/i18n/en.ts`). Un commit di questa fase va limitato ai file della fase (in `en.ts` solo la riga dei 500
