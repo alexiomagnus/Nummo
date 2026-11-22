@@ -6,7 +6,9 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `a13e54c` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `3994330` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+  «Deploy complete!», bundle online `index-bac866b2…` identico a `dist/` (SHA-256; per qualche secondo il CDN serviva ancora il precedente).
+  Rules invariate (quelle di `17632af`). Prima, **Hosting** da `a13e54c` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
   «Deploy complete!», bundle online `index-04eef827…` identico a `dist/` (SHA-256; per qualche secondo dopo il rilascio il CDN serviva
   ancora l'HTML precedente). Rules invariate (quelle di `17632af`). Prima, **Hosting** da `49a7c58` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
   «Deploy complete!», bundle online `index-fe24bc41…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
@@ -20,7 +22,7 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato su Hosting. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato su Hosting. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
   (template senza data), `9929c8f`
   (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
@@ -44,7 +46,7 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** `npm run check` OK su `a13e54c` (typecheck, **550/550**, build demo).
+- **Verifiche (22 novembre, ultime).** `npm run check` OK su `3994330` (typecheck, **550/550**, build demo).
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
@@ -79,7 +81,7 @@ rilasci».
   nessun cambio a `DataStore`/Rules), si ferma al primo rifiuto e dice quanti ne ha eliminati.
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900) con un backup v11 costruito per la prova (due template):
   «I tuoi template (2)» → pulsante → «Eliminare 2 template?» → «Nessun template.», pulsante sparito. Nessun errore JS. **Non provati:** Avanzata,
-  smartphone. Non committato, non pubblicato. (Manca ancora in `docs/testing/` un file di collaudo v11 con template.)
+  smartphone. Committato in `3994330`, inviato e pubblicato su Hosting. (Manca ancora in `docs/testing/` un file di collaudo v11 con template.)
 
 ## «Elimina le liste archiviate», anello dell'avatar automatico in Avanzata — 22 novembre 2026
 
@@ -92,7 +94,7 @@ rilasci».
   Impostazioni), mai in Standard.
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900) dopo l'import di `nummo-utente-medio.json`: «Liste
   archiviate (1)» → pulsante → «Eliminare 1 lista archiviata?» → eliminata, sezione sparita, lista attiva intatta; nessun anello in Standard.
-  Nessun errore JS. **Non provati:** anello in Avanzata (serve l'accesso con l'emulatore), smartphone. Non committato, non pubblicato.
+  Nessun errore JS. **Non provati:** anello in Avanzata (serve l'accesso con l'emulatore), smartphone. Committato in `3994330`, inviato e pubblicato su Hosting.
 
 ## «Cambia modalità» nel colore principale, nota sotto «Elimina tutte le spese» tolta — 22 novembre 2026
 
