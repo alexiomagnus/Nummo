@@ -82,11 +82,13 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       // Raw documents in the stored shape: no `status_changes` unless a series has one (see firestoreStore).
       const { expense_id, status_changes: _, fund_id: _fund, list_id: _list, list_items: _items, ...data } = expense();
       const valid = { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
-      for (const patch of [{ amount_minor: 1.5 }, { amount_minor: 0 }, { amount_minor: 10000000 }, { currency: 'USD' },
+      for (const patch of [{ amount_minor: 1.5 }, { amount_minor: 0 }, { amount_minor: 100000000000 }, { currency: 'USD' },
         { expense_date: '2025-02-30' }, { expense_date: '2099-01-01' }, { category_id: 'invalid' }, { recurrence: 'daily' },
         { description: '' }, { admin: true }, { revision: 2 }, { created_at: 'date' }, { updated_at: Timestamp.fromMillis(1) }]) {
         await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
       }
+      // The largest amount (999.999.999,99 € since 22 November) is accepted.
+      await setDoc(ref(randomUUID()), { ...valid, amount_minor: 99999999999 });
       for (const key of Object.keys(valid)) {
         const missing = { ...valid } as Record<string, unknown>;
         delete missing[key];
@@ -151,7 +153,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       for (const patch of [{ recurrence: null }, { amount_minor: 0 }, { schema_version: 1 },
         { first_payment_date: null }, { first_payment_date: base.expense_date }, { first_payment_date: '2027-02-30' },
         { first_payment_date: '2100-01-01' }, { price_changes: [] }, { price_changes: '0:100:0' },
-        { price_changes: '1:0:0' }, { price_changes: '1:10000000:0' }, { price_changes: '1:100:true' },
+        { price_changes: '1:0:0' }, { price_changes: '1:100000000000:0' }, { price_changes: '1:100:true' },
         { price_changes: Array.from({ length: 9 }, (_, i) => `${i + 1}:100:0`).join(';') }]) await denied(setDoc(ref(randomUUID()), { ...raw, ...patch }));
       await denied(updateDoc(ref(expense_id), { first_payment_date: base.expense_date, updated_at: serverTimestamp(), revision: saved.revision + 1 }));
       const pastId = randomUUID();
@@ -537,7 +539,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await denied(getDocsFromServer(collection(intruder.db, 'users', uid, 'listItems')));
       await denied(setDoc(doc(intruder.db, 'users', uid, 'listItems', randomUUID()), { list_id: listId, name: 'x', checked: false, position: 0 }));
       const rawList = { name: 'Lista', category_id: null, total_minor: null, expense_id: null, created_at: serverTimestamp(), updated_at: serverTimestamp() };
-      for (const patch of [{ name: '' }, { name: ' x' }, { name: 'x'.repeat(41) }, { total_minor: 0 }, { total_minor: 1.5 }, { total_minor: 10000000 },
+      for (const patch of [{ name: '' }, { name: ' x' }, { name: 'x'.repeat(41) }, { total_minor: 0 }, { total_minor: 1.5 }, { total_minor: 100000000000 },
         { expense_id: 'x' }, { category_id: 'x' }, { extra: true }, { updated_at: Timestamp.fromMillis(1) }]) {
         await denied(setDoc(listRef(randomUUID()), { ...rawList, ...patch }));
       }
@@ -688,7 +690,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       await denied(getDocsFromServer(collection(intruder.db, 'users', uid, 'templates')));
       await denied(setDoc(doc(intruder.db, 'users', uid, 'templates', randomUUID()), { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp() }));
       const raw = { ...data, created_at: serverTimestamp(), updated_at: serverTimestamp() };
-      for (const patch of [{ description: '' }, { description: ' x' }, { description: 'x'.repeat(101) }, { amount_minor: 0 }, { amount_minor: 1.5 }, { amount_minor: 10000000 },
+      for (const patch of [{ description: '' }, { description: ' x' }, { description: 'x'.repeat(101) }, { amount_minor: 0 }, { amount_minor: 1.5 }, { amount_minor: 100000000000 },
         { date: '2026-02-30' }, { date: '1999-12-31' }, { date: '2100-01-01' }, { date: 'ieri' }, { category_id: 'x' }, { category_id: null }, { fund_id: 'x' },
         { merchant: '' }, { merchant: ' Bar' }, { merchant: 'Bar  Roma' }, { merchant: 'x'.repeat(61) }, { merchant: 5 },
         { extra: true }, { updated_at: Timestamp.fromMillis(1) }]) {

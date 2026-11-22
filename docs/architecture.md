@@ -293,7 +293,7 @@ all'import (`warmUpServices`). Motivazioni e limiti (prova solo emulata, popup r
 | `users/{uid}/categories/{uuid}` | `label`, `icon` oppure null, `name_key`, `revision`, `updated_at` Timestamp |
 | `users/{uid}/categoryNames/{name_key}` | `{ category_id: uuid }`, indice di unicità aggiornato nella stessa transazione |
 
-Una spesa contiene `amount_minor` intero positivo ≤ 9.999.999, `currency=EUR`,
+Una spesa contiene `amount_minor` intero positivo ≤ 99.999.999.999 (999.999.999,99 €, dal 22 novembre 2026; prima ≤ 9.999.999), `currency=EUR`,
 `description` obbligatoria ≤100 caratteri, `category_id` UUID o null,
 `expense_date` come data civile ISO `YYYY-MM-DD` dal 2000 a oggi a Roma,
 `recurrence` null/weekly/monthly/yearly, `source=web_app`, `schema_version=1`.

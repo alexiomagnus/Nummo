@@ -218,6 +218,29 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli — 22 novembre 2026
+
+- **Importo.** Su richiesta (prima 999.999,99, poi «9 cifre intere + 2 decimali»): massimo di una spesa da 99.999,99 a **999.999.999,99 €**
+  (`maxAmountMinor` 99_999_999_999, molto sotto `Number.MAX_SAFE_INTEGER` anche sommando). Vale per spese, prezzi delle serie, totale di
+  una lista e importo dei template. Il campo si ferma a 9 cifre intere e 2 decimali (`amountInputFits` e `parseAmountMinor` ricavati dal
+  limite). Prezzi compatti (`pricing.ts` e Rules) fino a 11 cifre, stringa fino a **143** caratteri (8 prezzi al massimo; prima 111). La
+  lettura della risposta AI accetta fino a 12 cifre intere, così un importo enorme è «fuori limite», non «non letto». **Non cambiati:**
+  ricariche e budget dei fondi (99.999,99, `maxMonthlyMinor` ora fisso: con più cifre `budgets` supererebbe i 400 caratteri delle Rules),
+  saldi e movimenti (9.999.999,99). Nessun nuovo `backupVersion`.
+- **Rules** (radice e `public/`, identiche): `<= 99999999999` per prezzi, spese, totale delle liste e template; regex dei prezzi `{0,10}`, 143.
+- **Campo su smartphone:** «99999,99» (il vecchio massimo) a 24 px usciva già di 7 dp dal campo a metà riga a 360 px. Ora `amountSize`:
+  28 px fino a 6 caratteri, poi al massimo 24 e più piccolo secondo cifre (0,6 em) e separatore (0,3 em), misurati: «999999999,99» 14 px,
+  «123456789» 18, «1234,56» 24; tutti entrano a 320, 360, 390, 412 px (1280: 28 px); «1234567890» si ferma a «123456789». Una spesa da
+  999.999.999,99 € a 360 px: salvata, riga di Spese leggibile; nella scheda «Totale» «1 spesa» va a capo e il separatore sottile resta a fine
+  riga (solo con importi enormi su schermi stretti; non corretto).
+- **Barra dei menu** (screenshot dell'utente, menu Categoria su desktop): la barra arrivava negli angoli arrotondati ed era tagliata.
+  `AnchoredMenu` marca lo scroller (`data-menu-scroll`) e `GlobalStyle` ne accorcia il binario di `radius.control` (20) sopra e sotto, come
+  `data-panel-scroll`. Chromium 1280 px: barra sotto l'angolo in alto e sopra quello in basso, in cima e in fondo alla lista.
+- **Verifica:** `npm run check` OK, `test:emulator` **22/22** su porte proprie (39199/39380, config temporanea rimossa, runner hybrid 36786
+  non toccato), con 999.999.999,99 € accettato e 1.000.000.000,00 rifiutato. Nessun errore JS.
+- **Pubblicazione, nell'ordine:** prima le **Rules** (`firebase deploy --only firestore:rules --project nummo-6b6e2`), poi Hosting; chi ha
+  collegato il proprio Firebase deve ricopiare le Rules. Non committato, non pubblicato.
+
 ## Avatar «Pietre» al posto di «Onde» — 22 novembre 2026
 
 - Su richiesta («rigenera quest'ultima icona»): «Onde» (`waves`) sostituito da **Pietre** (rosa, id `stones`): tre ciottoli ellittici

@@ -118,10 +118,14 @@ test('prova: backup (v5+), round trip, conflitti e lettori storici senza migrazi
 
 test('prova: codec prezzi Firestore schema 2 rigoroso, backup ancora leggibile come array', async () => {
   const { encodeTrialPrices, decodeTrialPrices } = await import('../src/domain/pricing.ts');
-  const prices = [{ index: 1, amount_minor: 1099, once: false }, { index: 8, amount_minor: 9999999, once: true }];
+  const prices = [{ index: 1, amount_minor: 1099, once: false }, { index: 8, amount_minor: 99999999999, once: true }];
   assert.deepEqual(decodeTrialPrices(encodeTrialPrices(prices)), prices);
+  // Eight prices at the largest amount fit the 143 characters the Rules allow.
+  const largest = Array.from({ length: 8 }, (_, n) => ({ index: 992 + n, amount_minor: 99999999999, once: true }));
+  assert.equal(encodeTrialPrices(largest).length, 143);
+  assert.deepEqual(decodeTrialPrices(encodeTrialPrices(largest)), largest);
   assert.deepEqual(decodeTrialPrices(''), []);
-  for (const value of [null, [], '0:100:0', '1:0:0', '1:10000000:0', '1:100:true', '1:100:0;', '1:100:0;1:200:0', Array.from({ length: 9 }, (_, i) => `${i + 1}:100:0`).join(';')]) {
+  for (const value of [null, [], '0:100:0', '1:0:0', '1:100000000000:0', '1:100:true', '1:100:0;', '1:100:0;1:200:0', Array.from({ length: 9 }, (_, i) => `${i + 1}:100:0`).join(';')]) {
     assert.equal(decodeTrialPrices(value), null);
   }
 });

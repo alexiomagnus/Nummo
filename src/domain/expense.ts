@@ -66,19 +66,23 @@ export function newDraft(): ExpenseDraft {
 }
 
 // Parse digit strings, never multiply a floating-point monetary value.
+// Whole digits of the largest amount (9 for 999.999.999,99 €): the field and the parser follow `maxAmountMinor`.
+const amountWholeDigits = String(Math.floor(expensePolicy.maxAmountMinor / 100)).length;
+const amountPattern = new RegExp(`^(\\d{1,${amountWholeDigits}})(?:[,.](\\d{1,2}))?$`);
+
 export function parseAmountMinor(input: string): number | null {
-  const match = /^(\d{1,5})(?:[,.](\d{1,2}))?$/.exec(input.trim());
+  const match = amountPattern.exec(input.trim());
   if (!match) return null;
   const amount = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));
   return amount > 0 && amount <= expensePolicy.maxAmountMinor ? amount : null;
 }
 
-// What the amount field still accepts while typing: at most 5 digits before the decimal separator and 2 after it, as many as
-// the largest amount (99.999,99 €, `maxAmountMinor`). A key that would go past them is ignored, so the field stops there
+// What the amount field still accepts while typing: at most 9 digits before the decimal separator and 2 after it, as many as
+// the largest amount (999.999.999,99 €, `maxAmountMinor`; 5 digits until 22 November). A key that would go past them is ignored, so the field stops there
 // (user's request, 22 November). Other characters are left to the validation, as before.
 export function amountInputFits(input: string): boolean {
   const [whole = '', ...rest] = input.split(/[,.]/);
-  return whole.replace(/\D/g, '').length <= 5 && rest.join('').replace(/\D/g, '').length <= 2;
+  return whole.replace(/\D/g, '').length <= amountWholeDigits && rest.join('').replace(/\D/g, '').length <= 2;
 }
 
 // Lives in policy.ts so trial.ts can use it without importing this module (no require cycle).

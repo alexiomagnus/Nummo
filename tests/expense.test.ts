@@ -7,10 +7,10 @@ const now = new Date('2026-11-02T12:00:00Z');
 const categories = [{ id: 'groceries', label: 'Alimentari', icon: null }];
 const draft = { amount: '12,30', description: 'Pane', categoryId: 'groceries', date: '2026-11-02', repeat: false, recurrence: '' as const, promo: false, promoAmount: '', promoAfter: '', fundId: '', trial: false, firstPaymentDate: '' };
 
-for (const [input, expected] of [['0,01', 1], ['12,3', 1230], ['12.30', 1230], ['99999,99', 9999999], [' 42 ', 4200]] as const) {
+for (const [input, expected] of [['0,01', 1], ['12,3', 1230], ['12.30', 1230], ['99999,99', 9999999], ['999999999,99', 99999999999], [' 42 ', 4200]] as const) {
   test(`importo esatto: ${input}`, () => assert.equal(parseAmountMinor(input), expected));
 }
-for (const input of ['', '0', '-1', '1,001', '1.000,00', '1e3', '100000', 'Infinity', '1,', '1 00', '0.009', '12abc']) {
+for (const input of ['', '0', '-1', '1,001', '1.000,00', '1e3', '1000000000', 'Infinity', '1,', '1 00', '0.009', '12abc']) {
   test(`importo rifiutato senza arrotondamento: ${input}`, () => assert.equal(parseAmountMinor(input), null));
 }
 test('normalizza il modulo in centesimi e conserva il nome come testo', () => {
@@ -85,9 +85,11 @@ test('descrizione: la scrittura si ferma a 100 caratteri, emoji contate come uno
   assert.equal(clipToLength('d'.repeat(100), max), 'd'.repeat(100));
 });
 
-test('importo: il campo si ferma a 5 cifre intere e 2 decimali, come l’importo massimo', () => {
-  for (const ok of ['', '1', '12345', '12345,', '12345,6', '12345,67', '0.5', '99999.99', 'abc']) assert.equal(amountInputFits(ok), true, ok);
-  for (const over of ['123456', '12345,678', '1,234', '123456,7']) assert.equal(amountInputFits(over), false, over);
+test('importo: il campo si ferma a 9 cifre intere e 2 decimali, come l’importo massimo', () => {
+  for (const ok of ['', '1', '12345', '123456789', '123456789,', '123456789,1', '123456789,12', '0.5', '999999999.99', 'abc']) assert.equal(amountInputFits(ok), true, ok);
+  for (const over of ['1234567890', '123456789,123', '1,234', '1234567890,1']) assert.equal(amountInputFits(over), false, over);
   // Everything the field still accepts stays within the largest amount the validation allows.
-  assert.equal(parseAmountMinor('99999,99'), expensePolicy.maxAmountMinor);
+  assert.equal(parseAmountMinor('999999999,99'), expensePolicy.maxAmountMinor);
+  assert.equal(parseAmountMinor('1000000000'), null);
+  assert.ok(Number.isSafeInteger(expensePolicy.maxAmountMinor * 10_000)); // sums of many of them stay exact
 });

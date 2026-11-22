@@ -61,7 +61,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
             <TextInput outlineStyle={inputOutline} label={t("Importo")} value={values.amount} onChangeText={(value) => { if (amountInputFits(value)) onChange('amount', value); }}
               mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'} error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
               onBlur={() => onBlur('amount')} accessibilityLabel={t("Importo in euro, obbligatorio")}
-              contentStyle={[styles.amountText, compact && styles.amountTextCompact, compact && values.amount.length >= 7 && styles.amountTextLong]} left={leadingIcon(iconShapes.euro)} />
+              contentStyle={[styles.amountText, compact && styles.amountTextCompact, compact && amountSize(values.amount)]} left={leadingIcon(iconShapes.euro)} />
           </View>
           <View style={[styles.date, compact && styles.dateCompact]}>
             <DateField value={values.date} disabled={disabled} error={Boolean(errors.date)} onChange={(date) => onChange('date', date)} />
@@ -108,6 +108,15 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
   );
 }
 
+// Phones: the amount shrinks so that the largest one («999999999,99») fits half of a 360 px row: 98 dp of text, tabular
+// digits about 0.6 em wide and the separator about 0.3 em (measured on 22 November). 28 px up to 6 characters
+// (`amountText`), then at most 24: «1234,56» 24, «123456789» 18, «999999999,99» 14.
+function amountSize(amount: string) {
+  if (amount.length < 7) return null;
+  const digits = amount.replace(/\D/g, '').length;
+  return { fontSize: Math.min(24, Math.floor(98 / (digits * 0.6 + (amount.length - digits) * 0.3))) };
+}
+
 const styles = StyleSheet.create({
   layout: { gap: spacing.lg },
   denseLayout: { gap: spacing.md },
@@ -135,8 +144,6 @@ const styles = StyleSheet.create({
   // No trailing icon: Paper's 16 dp after the value would only cut it sooner on phones. Paper's own `paddingHorizontal`
   // is overridden only by the same shorthand on RN Web (paddingRight/paddingEnd were ignored); its paddingLeft 0 stays.
   amountTextCompact: { paddingHorizontal: spacing.xs },
-  // Phones, thousands («1234,56», 7 characters): 24 px, so that the value fits half of a 360 px row (28 px needed 8 dp more).
-  amountTextLong: { fontSize: 24 },
   // The counter row under the description would add its whole height to the gap before the next field (Esercente):
   // 8 dp of it overlap that gap (user's request, 17 November).
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs, marginBottom: -spacing.sm },

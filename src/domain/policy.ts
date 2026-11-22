@@ -2,7 +2,9 @@ export const expensePolicy = {
   currency: 'EUR',
   decimals: 2,
   timeZone: 'Europe/Rome',
-  maxAmountMinor: 9_999_999,
+  // 999.999.999,99 € since 22 November (user's request, for completeness: 9 whole digits and 2 decimals); 99.999,99 € before.
+  // Far below Number.MAX_SAFE_INTEGER, also when many are added up.
+  maxAmountMinor: 99_999_999_999,
   maxDescriptionLength: 100,
   minDate: '2000-01-01',
 } as const;

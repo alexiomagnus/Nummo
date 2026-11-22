@@ -52,6 +52,12 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
         [data-panel-scroll]::-webkit-scrollbar-button { display: none; }
         [data-panel-scroll]::-webkit-scrollbar-track { background: transparent; margin-block: ${radius.dialog}px; }
         [data-panel-scroll]::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; border: 2px solid transparent; border-radius: 5px; }
+        /* Anchored menus (Overlay.tsx): same bar, a menu corner radius (at most radius.control) short of both ends. */
+        [data-menu-scroll] { scrollbar-width: auto; scrollbar-color: auto; }
+        [data-menu-scroll]::-webkit-scrollbar { width: 10px; }
+        [data-menu-scroll]::-webkit-scrollbar-button { display: none; }
+        [data-menu-scroll]::-webkit-scrollbar-track { background: transparent; margin-block: ${radius.control}px; }
+        [data-menu-scroll]::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; border: 2px solid transparent; border-radius: 5px; }
       }
       :focus { outline: none; }
       :focus-visible { outline: 3px solid ${colors.primary}; outline-offset: 2px; }

@@ -133,6 +133,9 @@ const menuExit = transitions([['opacity', motion.fade, motion.exitEasing]]);
 
 // Material 3 menu anchored to its trigger: below it, or above when the room below is too small, always inside the
 // viewport and safe area, with its own scroll. Opens with a short fade and a 4 dp slide/scale from the trigger side.
+// RN Web's `dataSet` (a `data-` attribute) is missing from the React Native types: spread, as AppShell does.
+const menuScrollMark = { dataSet: { menuScroll: 'true' } } as object;
+
 export function AnchoredMenu({ visible, onDismiss, anchor, width, align = 'start', maxHeight = MENU_MAX_HEIGHT, label, contentStyle, children }: MenuProps) {
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -166,7 +169,9 @@ export function AnchoredMenu({ visible, onDismiss, anchor, width, align = 'start
           style={[{ opacity: shown ? 1 : 0, transform: [{ translateY: shown ? 0 : offset }, { scale: shown ? 1 : 0.96 }],
             transformOrigin: below ? 'top' : 'bottom' } as ViewStyle, shown ? menuEnter : menuExit]}>
           <Surface elevation={2} style={[styles.menu, { backgroundColor: colors.elevation.level2, maxHeight: place.maxHeight }, contentStyle]}>
-            <ScrollView style={{ maxHeight: Math.max(0, place.maxHeight) }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
+            {/* `menuScroll`: GlobalStyle stops the scrollbar track a corner radius short of both ends (user's request, 22 November:
+                the rounded corners cut the bar). */}
+            <ScrollView style={{ maxHeight: Math.max(0, place.maxHeight) }} keyboardShouldPersistTaps="handled" {...menuScrollMark}>{children}</ScrollView>
           </Surface>
         </View>
       </View>

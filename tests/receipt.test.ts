@@ -58,7 +58,7 @@ test('AI: risposte non valide rifiutate; campi sbagliati o impossibili restano m
   assert.equal(emptyProposal(parseAiReceipt(answer({ merchant: 'Negozio' }), categories, today)), false);
   const future = parseAiReceipt(answer({ date: '2027-01-01', total: '-5.00' }), categories, today);
   assert.deepEqual([future.date, future.amountMinor], ['', null]);
-  const huge = parseAiReceipt(answer({ total: '999999.99' }), categories, today);
+  const huge = parseAiReceipt(answer({ total: '1000000000.00' }), categories, today);
   assert.equal(huge.amountMinor, null);
   assert.ok(huge.notes.includes(receiptNotes.amountRange));
   const dollars = parseAiReceipt(answer({ total: '10.00', currency: 'usd' }), categories, today);

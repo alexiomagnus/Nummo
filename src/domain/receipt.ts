@@ -52,7 +52,8 @@ export const aiResponseError = 'La risposta dell’AI non è valida.';
 // An amount of the model's answer in cents: a decimal string («24.75», «24,75») or a JSON number. Never guessed.
 function aiAmount(value: unknown): number | null {
   const text = typeof value === 'number' && Number.isFinite(value) ? value.toFixed(2) : typeof value === 'string' ? value.trim().replace(/\s?(€|eur|euro)$/i, '') : '';
-  const match = /^(\d{1,7})(?:[.,](\d{1,2}))?$/.exec(text);
+  // Up to 12 whole digits: anything past the largest amount is then reported as out of range (`amountRange`), not as unread.
+  const match = /^(\d{1,12})(?:[.,](\d{1,2}))?$/.exec(text);
   return match ? Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0')) : null;
 }
 
