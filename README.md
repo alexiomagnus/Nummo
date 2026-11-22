@@ -316,6 +316,10 @@ cd android
 
 L'app mostra sempre il sito pubblicato: le novità dell'interfaccia arrivano con `npm run deploy:hosting`, senza reinstallarla.
 
+Gli APK firmati sono nelle **Releases** di GitHub, una per versione dell'app, con tag `android-v<versione>` sul commit da cui sono
+compilati (APK e il suo SHA-256): `gh release create android-v0.3.2 nummo-0.3.2.apk nummo-0.3.2.apk.sha256 --verify-tag`. Il
+repository è privato: per scaricarli serve l'accesso a GitHub. I rilasci del sito non hanno tag.
+
 ## Sicurezza e responsabilità
 
 - **Standard**: i dati non lasciano il dispositivo, salvo i file di backup che esporti tu. Chiunque usi quel browser li vede: non c'è accesso.

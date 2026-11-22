@@ -57,7 +57,10 @@ rilasci».
   anche in Non disturbare**. Ancora da provare sul telefono: blocco con impronta, fotocamera/«Carica una foto», backup e ripristino nell'app.
   Da fare dall'utente: copiare altrove la chiave di firma (`android/nummo-release.jks`, `android/keystore.properties`).
   Dettagli nella sezione «App Android» qui sotto.
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
+- **Release dell'app Android (GitHub, su richiesta, 22 novembre):** `android-v0.3.1` (tag annotato su `fa06adb`, inviato) con
+  `nummo-0.3.1.apk` (SHA-256 `a04f6f3d…18ea`, confermato da GitHub; certificato `00b1c85c…0fcf`) e il file `.sha256`; repository privato.
+  Versioni precedenti (0.1.0–0.3.0) senza release: i loro APK sono stati sovrascritti dalle build successive.
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`, un tag (`android-v0.3.1`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
   inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
   pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
   sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
