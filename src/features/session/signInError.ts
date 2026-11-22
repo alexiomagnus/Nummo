@@ -4,6 +4,7 @@ const messages: Readonly<Record<string, string>> = {
   'auth/operation-not-allowed': 'L’accesso con Google non è abilitato nel progetto Firebase.',
   'auth/network-request-failed': 'Connessione assente: accesso non riuscito.',
   'auth/invalid-api-key': 'Configurazione Firebase non valida (apiKey).',
+  'auth/app-no-google-account': 'Nessun account Google su questo telefono: aggiungine uno nelle impostazioni di Android e riprova.',
 };
 
 // Show only a bounded SDK code, never the raw error message/customData (which may

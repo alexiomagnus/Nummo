@@ -16,6 +16,7 @@ import { SettingsPage } from './src/features/settings/SettingsPage';
 import { usePreferences } from './src/features/settings/usePreferences';
 import { AccessDenied } from './src/features/session/AccessDenied';
 import { FirebaseConnect, OwnerSetup } from './src/features/session/FirebaseSetup';
+import { inAndroidApp } from './src/services/androidApp';
 import { switchFirebase } from './src/features/session/firebaseConnection';
 import { SignIn, leaveGuide } from './src/features/session/SignIn';
 import { useSession } from './src/features/session/useSession';
@@ -209,6 +210,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const [settingsOpen, setSettingsOpen] = useState(false);
   // «Collega il tuo Firebase» replaces the sign-in screen (or the private-Nummo screen) until «Annulla».
   const [connectOpen, setConnectOpen] = useState(false);
+  // Nummo's Android app signs in only to the project it is registered with: no «Collega il tuo Firebase» there.
+  const connectTarget = inAndroidApp() ? null : customFirebaseTarget;
   // Back closes them as «Fatto» and «Annulla» do (Settings first when both are open: it was opened last).
   useBackLayer(settingsOpen, backLevels.page, () => setSettingsOpen(false));
   useBackLayer(connectOpen, backLevels.page, () => setConnectOpen(false));
@@ -285,8 +288,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       ) : null}
       {denied ? (
         <AppShell actions={themeToggle} brand={{ label: t("accesso"), onPress: leaveGuide }}>
-          {connectOpen && customFirebaseTarget
-            ? <FirebaseConnect target={customFirebaseTarget} connected={customFirebaseConfig} site={siteFirebase} signedIn
+          {connectOpen && connectTarget
+            ? <FirebaseConnect target={connectTarget} connected={customFirebaseConfig} site={siteFirebase} signedIn
               onCancel={() => setConnectOpen(false)} />
             // A project connected from this browser: the owner is still to be set (or the Rules to be published).
             : customFirebaseConfig
@@ -295,7 +298,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
                 onChangeProject={() => setConnectOpen(true)} onSignOut={signOut} />
               : <AccessDenied email={session.user.email} busy={session.busy} error={session.error}
                 onSignOut={signOut} onUseStandard={() => { session.signOut(); onChangeMode('standard'); }}
-                onConnect={customFirebaseTarget ? () => setConnectOpen(true) : undefined} />}
+                onConnect={connectTarget ? () => setConnectOpen(true) : undefined} />}
         </AppShell>
       ) : null}
       {signedIn && !denied ? (
@@ -316,15 +319,15 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
               <Text variant="bodyMedium">
                 {t("Mancano: ")}{firebaseConfigProblems.join(', ')}{t(". Copia `.env.example` in `.env.local`, compila i valori e riavvia Expo.")}</Text>
               <View style={styles.start}><Button mode="outlined" onPress={() => onChangeMode(null)}>{t("Scegli un’altra modalità")}</Button></View>
-              {customFirebaseTarget && <View style={styles.start}><Button mode="text" onPress={() => setConnectOpen(true)}>{t("Collega il tuo Firebase")}</Button></View>}
+              {connectTarget && <View style={styles.start}><Button mode="text" onPress={() => setConnectOpen(true)}>{t("Collega il tuo Firebase")}</Button></View>}
             </Card>
           )}
           {settingsOpen && renderSettings(() => setSettingsOpen(false))}
-          {!settingsOpen && connectOpen && customFirebaseTarget && <FirebaseConnect target={customFirebaseTarget} connected={customFirebaseConfig}
+          {!settingsOpen && connectOpen && connectTarget && <FirebaseConnect target={connectTarget} connected={customFirebaseConfig}
             site={siteFirebase} signedIn={false} onCancel={() => setConnectOpen(false)} />}
           {!settingsOpen && !connectOpen && session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
           {!settingsOpen && !connectOpen && session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} onChangeMode={() => onChangeMode(null)}
-            firebase={customFirebaseTarget ? { connected: customFirebaseConfig?.projectId ?? null, onOpen: () => setConnectOpen(true) } : undefined} />}
+            firebase={connectTarget ? { connected: customFirebaseConfig?.projectId ?? null, onOpen: () => setConnectOpen(true) } : undefined} />}
         </AppShell>
       ) : null}
     </>

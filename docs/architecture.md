@@ -1433,3 +1433,18 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   di Android (`allowBackup=false`); la chiave di firma è personale e va conservata (senza, l'app non si aggiorna e va reinstallata,
   perdendo i dati non salvati in un backup); le novità web arrivano all'app con `deploy:hosting`, l'APK si ricostruisce solo quando
   cambia il contenitore.
+
+## App Android: Avanzata con l'accesso Google nativo (versione 0.2.0) — 22 novembre 2026
+
+- **Su richiesta.** Nella WebView Google rifiuta la pagina di accesso, quindi `signInWithPopup` non si può usare. L'app chiede l'account
+  a Credential Manager («Accedi con Google» di sistema, `GetSignInWithGoogleOption` con il client web del progetto) e passa l'ID
+  token alla pagina, che entra in Firebase con `signInWithCredential(GoogleAuthProvider.credential(token))`: sessione, Rules,
+  proprietario (`config/owner`) e dati sono quelli del browser. Nessun token salvato dall'app.
+- **Configurazione cloud** (autorizzata dall'utente il 22 novembre): app Android `app.nummo.android` registrata in `nummo-6b6e2`
+  con SHA-1 e SHA-256 del certificato di firma (`firebase apps:create ANDROID`, `apps:android:sha:create`), da cui il client OAuth
+  Android creato da Firebase. Nessuna modifica a Rules o dati.
+- **Librerie** (autorizzate dall'utente): `androidx.credentials` 1.6.0, `credentials-play-services-auth` 1.6.0, `googleid` 1.2.1;
+  Kotlin 2.4.0 (googleid non si compila con il Kotlin 2.2 integrato in AGP 9.1). APK da circa 2 a 9 MB.
+- **Limiti:** solo il progetto per cui l'app è registrata (un client OAuth Android con questo pacchetto e questa firma esiste in un
+  solo progetto), quindi nell'app niente «Collega il tuo Firebase»; i metodi di accesso del ponte sono facoltativi, così l'app 0.1.0
+  resta riconosciuta (Standard soltanto, con l'invito ad aggiornarla). Notifiche nell'app: fase successiva.

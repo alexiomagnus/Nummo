@@ -2,7 +2,8 @@ import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { useI18n } from '../../i18n/I18nProvider';
-import { inAndroidApp } from '../../services/androidApp';
+import { androidGoogleSignIn, inAndroidApp } from '../../services/androidApp';
+import { activeFirebaseConfig } from '../../services/backendConfig';
 import type { StorageMode } from '../../services/storageMode';
 import { radius, spacing } from '../../theme/tokens';
 import { Guide } from '../session/Guide';
@@ -16,18 +17,20 @@ const options: readonly Option[] = [
     text: 'Collega un progetto Firebase tuo, accedi con Google e sincronizza i dati tra i tuoi dispositivi.' },
 ];
 
-export const appOnlyStandard = "Nell'app Android per ora c'è solo la modalità Standard. Per l'Avanzata usa Nummo nel browser.";
+// An Android app without Google sign-in for this project (version 0.1.0): Advanced stays in the browser.
+export const appWithoutAdvanced = (): boolean => inAndroidApp() && !androidGoogleSignIn(activeFirebaseConfig.projectId);
+export const appOnlyStandard = "Questa versione dell'app Android offre solo la modalità Standard: aggiornala o usa Nummo nel browser.";
 
 // First screen, before any sign-in: where the data will live. Standard opens the app at once, with no account;
 // Advanced continues to the Firebase sign-in, where a project of the user's own can be connected. The choice is remembered
 // and can be changed from «Archiviazione e backup».
-// Android app (first phase, 22 November): Standard only. Google sign-in does not work inside a WebView and push
-// notifications are not there either, so Advanced stays in the browser for now; the card says so instead of failing.
+// Android app: Advanced needs the app's native Google sign-in (version 0.2.0, 22 November; Google refuses its sign-in page
+// inside a WebView). An older app offers Standard only, and the card says so instead of failing.
 export function ModeChoice({ onChoose }: { onChoose: (mode: StorageMode) => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const { guide, openGuide, closeGuide } = useGuide();
-  const androidApp = inAndroidApp();
+  const androidApp = appWithoutAdvanced();
   if (guide) return <Guide onBack={closeGuide} />;
   return (
     <View style={styles.wrap}>

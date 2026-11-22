@@ -1,15 +1,20 @@
 import { initializeApp } from 'firebase/app';
 import {
   browserLocalPersistence, browserPopupRedirectResolver, connectAuthEmulator, GoogleAuthProvider, initializeAuth,
-  onAuthStateChanged, signInWithPopup, signOut, type Auth, type User,
+  onAuthStateChanged, signInWithCredential, signInWithPopup, signOut, type Auth, type User,
 } from 'firebase/auth';
 import {
   clearIndexedDbPersistence, connectFirestoreEmulator, initializeFirestore, memoryLocalCache, persistentLocalCache,
   persistentMultipleTabManager, terminate, waitForPendingWrites, type Firestore,
 } from 'firebase/firestore';
+import { androidGoogleSignIn, googleSignInOnDevice, type AndroidOutcome } from './androidApp';
 import { activeFirebaseConfig, authEmulator, firestoreEmulator, persistentCache } from './backendConfig';
 import { readSessionHint } from './sessionHint';
 import { profilePhotoURL } from './sessionProfile';
+
+// Nummo's Android app signs in with Google natively (a WebView cannot show Google's sign-in page), only for the project
+// it is registered with; everywhere else the popup, as always.
+const appSignIn = () => androidGoogleSignIn(activeFirebaseConfig.projectId);
 
 let services: { auth: Auth; db: Firestore; persistent: boolean } | undefined;
 function getServices() {
@@ -18,7 +23,8 @@ function getServices() {
   // On mobile browsers a popup resolver given here is initialised eagerly (Google's gapi script and an iframe) and the
   // saved session is restored only afterwards. Restoring needs none of it, so when the last visit ended signed in the
   // resolver is only supplied at sign-in (below), where the SDK initialises it on demand.
-  const auth = initializeAuth(app, readSessionHint() === null
+  // The app never uses the popup: no resolver (and none of its Google scripts and frames) there.
+  const auth = initializeAuth(app, readSessionHint() === null && !appSignIn()
     ? { persistence: browserLocalPersistence, popupRedirectResolver: browserPopupRedirectResolver }
     : { persistence: browserLocalPersistence });
   const persistent = persistentCache && typeof indexedDB !== 'undefined';
@@ -44,7 +50,19 @@ const toSessionUser = (user: User | null): SessionUser | null => user && {
 export function watchSession(listener: (user: SessionUser | null) => void): () => void {
   return onAuthStateChanged(getServices().auth, (user) => listener(toSessionUser(user)));
 }
+// Outcomes of the app's sign-in as `auth/...` codes for `signInError`: a dismissed sheet is silent, like a closed popup.
+const appSignInCodes: Record<Exclude<AndroidOutcome, 'ok'>, string> = {
+  cancelled: 'auth/popup-closed-by-user', unavailable: 'auth/app-no-google-account', error: 'auth/app-sign-in-failed',
+};
+
 export async function signInWithGoogle(): Promise<void> {
+  const app = appSignIn();
+  if (app) {
+    const result = await googleSignInOnDevice(app);
+    if (result.outcome !== 'ok') throw Object.assign(new Error('Accesso dall\'app non riuscito.'), { code: appSignInCodes[result.outcome] });
+    await signInWithCredential(getServices().auth, GoogleAuthProvider.credential(result.idToken));
+    return;
+  }
   await signInWithPopup(getServices().auth, new GoogleAuthProvider(), browserPopupRedirectResolver);
 }
 // Signs out after the pending writes. With the on-disk cache (EXPO_PUBLIC_FIRESTORE_CACHE=persistent) it then stops
@@ -61,6 +79,8 @@ export async function signOutUser(): Promise<boolean> {
       new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Scritture in attesa: riconnettiti prima di uscire.')), 5000); }),
     ]);
     await signOut(auth);
+    // The app: forget the chosen account too, so the next sign-in offers the choice again.
+    try { appSignIn()?.googleSignOut(); } catch { /* app gone */ }
   } finally { clearTimeout(timer); }
   if (!persistent) return false;
   await terminate(db);

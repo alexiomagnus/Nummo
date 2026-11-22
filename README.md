@@ -284,8 +284,9 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 
 `android/` contiene un'app Android che apre il sito pubblicato in una WebView. Esiste per due cose che una pagina in Chrome non
 può fare: la vibrazione come nelle app native, che funziona anche in silenzioso e in Non disturbare, e le barre di sistema del
-colore dell'app. Per ora offre solo la modalità **Standard**; per l'Avanzata si usa il browser. I suoi dati sono separati da quelli
-di Chrome: per spostarli, esporta un backup dal browser e ripristinalo nell'app.
+colore dell'app. Dalla versione 0.2.0 offre anche l'**Avanzata**, con l'accesso Google del telefono, ma solo per il progetto Firebase
+per cui è configurata (niente «Collega il tuo Firebase» nell'app) e ancora senza notifiche. I dati della Standard sono separati da
+quelli di Chrome: per spostarli, esporta un backup dal browser e ripristinalo nell'app.
 
 Serve l'SDK Android (`sdkmanager`: platform 36, build-tools) e un JDK 17 o più recente. In `android/local.properties`, personale e
 ignorato da Git:
@@ -293,7 +294,13 @@ ignorato da Git:
 ```properties
 sdk.dir=/percorso/Android/Sdk
 nummo.url=https://ID_PROGETTO.web.app/
+# Avanzata: client web OAuth del progetto (client_type 3 di `firebase apps:sdkconfig ANDROID ID_APP`)
+nummo.firebaseProject=ID_PROGETTO
+nummo.googleClientId=…apps.googleusercontent.com
 ```
+
+Per l'accesso Google registra nel progetto Firebase un'app Android con il pacchetto `app.nummo.android` e le impronte SHA-1 e
+SHA-256 della tua chiave di firma (`firebase apps:create ANDROID`, poi `firebase apps:android:sha:create`).
 
 Per la release serve una chiave di firma tua, anche questa ignorata da Git (`android/keystore.properties` con `storeFile`,
 `storePassword`, `keyAlias`, `keyPassword`). **Conservane una copia:** senza la stessa chiave l'app non si aggiorna e va

@@ -38,9 +38,9 @@ class MainActivity : Activity() {
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private var cameraRequest: PermissionRequest? = null
     private var pendingFile: ByteArray? = null
-    // A picker, a permission dialog or a save sheet of the app itself is in front: the page stays «visible», as a dialog
-    // of its own would (otherwise the app lock set to «Subito» would lock on the way back from choosing a photo).
-    private var awayForResult = false
+    // A picker, a permission dialog, a save sheet or the Google account sheet of the app itself is in front: the page stays
+    // «visible», as a dialog of its own would (otherwise the app lock set to «Subito» would lock on the way back).
+    var awayForResult = false
     private var backCallback: OnBackInvokedCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -190,10 +190,11 @@ class MainActivity : Activity() {
         }.start()
     }
 
-    // Answer to a request of the page (NummoBridge.authenticate).
-    fun deliver(id: String, outcome: String) {
+    // Answer to a request of the page (NummoBridge.authenticate, googleSignIn), with an optional value (the ID token).
+    fun deliver(id: String, outcome: String, value: String? = null) {
+        val extra = if (value == null) "" else ", ${JSONObject.quote(value)}"
         webView.evaluateJavascript(
-            "window.nummoAndroidResult && window.nummoAndroidResult(${JSONObject.quote(id)}, ${JSONObject.quote(outcome)})", null)
+            "window.nummoAndroidResult && window.nummoAndroidResult(${JSONObject.quote(id)}, ${JSONObject.quote(outcome)}$extra)", null)
     }
 
     @Deprecated("Activity result API of the platform")

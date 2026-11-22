@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { androidBridge, authenticateOnDevice, inAndroidApp, systemBarsColor, type AndroidBridge } from '../src/services/androidApp.ts';
+import { androidBridge, androidGoogleSignIn, authenticateOnDevice, googleSignInOnDevice, inAndroidApp, systemBarsColor, type AndroidBridge } from '../src/services/androidApp.ts';
+import { signInError } from '../src/features/session/signInError.ts';
 import { createHaptics, hapticGap, hasHaptics } from '../src/theme/haptics.ts';
 import { applyDocumentTheme } from '../src/theme/bootTheme.ts';
 import { english } from '../src/i18n/en.ts';
@@ -96,7 +97,43 @@ test('app Android: sblocco del dispositivo, una risposta per richiesta, annullab
 
 test('app Android: testi della vibrazione e della sola modalità Standard tradotti', () => {
   for (const key of ["Una breve vibrazione quando interagisci con l'app. Segue le impostazioni di vibrazione di Android.",
-    "Nell'app Android per ora c'è solo la modalità Standard. Per l'Avanzata usa Nummo nel browser."]) {
+    "Questa versione dell'app Android offre solo la modalità Standard: aggiornala o usa Nummo nel browser.",
+    "Nessun account Google su questo telefono: aggiungine uno nelle impostazioni di Android e riprova."]) {
     assert.ok(Object.hasOwn(english, key), key);
   }
+});
+
+test('app Android: accesso Google solo con un\'app che lo offre e per il suo progetto', () => {
+  const { bridge } = fakeBridge();
+  assert.equal(androidGoogleSignIn('nummo-6b6e2', { NummoAndroid: bridge }), undefined, 'app 0.1.0: niente accesso, ma resta l\'app');
+  assert.equal(inAndroidApp({ NummoAndroid: bridge }), true);
+  const full = { ...bridge, googleProject: () => 'nummo-6b6e2', googleSignIn: () => {}, googleSignOut: () => {} };
+  assert.equal(androidGoogleSignIn('nummo-6b6e2', { NummoAndroid: full }), full);
+  assert.equal(androidGoogleSignIn('altro-progetto', { NummoAndroid: full }), undefined, 'Firebase collegato: nessun client OAuth dell\'app');
+  assert.equal(androidGoogleSignIn('', { NummoAndroid: { ...full, googleProject: () => '' } }), undefined);
+  assert.equal(androidGoogleSignIn('nummo-6b6e2', { NummoAndroid: { ...full, googleProject: () => { throw new Error('x'); } } }), undefined);
+  assert.equal(androidGoogleSignIn('nummo-6b6e2', {}), undefined);
+});
+
+test('app Android: token Google solo se ha la forma di un JWT, esiti tradotti in codici di accesso', async () => {
+  const scope: { nummoAndroidResult?: (id: string, outcome: string, value?: unknown) => void } = {};
+  const ids: string[] = [];
+  const bridge = { googleProject: () => 'p', googleSignIn: (id: string) => { ids.push(id); }, googleSignOut: () => {} };
+  const ask = async (outcome: string, value?: unknown) => {
+    const result = googleSignInOnDevice(bridge, scope);
+    scope.nummoAndroidResult!(ids.at(-1)!, outcome, value);
+    return result;
+  };
+  assert.deepEqual(await ask('ok', 'aaa.bbb.ccc'), { outcome: 'ok', idToken: 'aaa.bbb.ccc' });
+  assert.deepEqual(await ask('ok', 'non un token'), { outcome: 'error' });
+  assert.deepEqual(await ask('ok', undefined), { outcome: 'error' });
+  assert.deepEqual(await ask('ok', `a.${'b'.repeat(9000)}.c`), { outcome: 'error' });
+  assert.deepEqual(await ask('cancelled'), { outcome: 'cancelled' });
+  assert.deepEqual(await ask('unavailable'), { outcome: 'unavailable' });
+  const throwing = { ...bridge, googleSignIn: () => { throw new Error('gone'); } };
+  assert.deepEqual(await googleSignInOnDevice(throwing, scope), { outcome: 'error' });
+  // The codes firebase.ts uses for them: a dismissed sheet is silent, no account says what to do.
+  assert.equal(signInError('auth/popup-closed-by-user'), null);
+  assert.match(signInError('auth/app-no-google-account')!, /Nessun account Google/);
+  assert.equal(signInError('auth/app-sign-in-failed'), 'Accesso non riuscito (auth/app-sign-in-failed). Riprova.');
 });

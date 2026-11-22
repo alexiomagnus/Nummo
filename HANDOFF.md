@@ -39,6 +39,8 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
+- **App Android 0.2.0 (22 novembre, non committata):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata
+  in `nummo-6b6e2`; servono Hosting pubblicato e nuova installazione. Sezione «App Android 0.2.0» qui sotto.
 - **App Android (22 novembre):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte, committate in `759792c`,
   inviate e pubblicate su Hosting su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online `index-18586346…` identico a
   `dist/` (SHA-256) e con il ponte; porta online anche i 500 prodotti per lista di `48361b9`, Rules già pubblicate). Rules invariate.
@@ -105,6 +107,30 @@ rilasci».
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## App Android 0.2.0: Avanzata con l'accesso Google nativo — 22 novembre 2026
+
+- **Su richiesta** (dopo la conferma dell'utente che impronta, scansione dello scontrino e backup funzionano nell'app 0.1.0). Con
+  autorizzazione esplicita: app Android `app.nummo.android` registrata in `nummo-6b6e2` (`firebase apps:create ANDROID`, ID
+  `1:299139807907:android:cb257e7956800c4fc2dd16`) con SHA-1 `ee7171ef…a468` e SHA-256 `00b1c85c…0fcf` del certificato di firma;
+  `apps:sdkconfig` mostra il client OAuth Android (tipo 1, con quello SHA-1) e il client web (tipo 3), messo in `android/local.properties`
+  (`nummo.googleClientId`, anche `nummo.debugGoogleClientId`) con `nummo.firebaseProject=nummo-6b6e2`. Rules e dati non toccati.
+  Librerie autorizzate: `androidx.credentials` 1.6.0, `credentials-play-services-auth` 1.6.0, `googleid` 1.2.1; Kotlin 2.4.0
+  (googleid 1.2.1 non si compila con il 2.2 integrato in AGP 9.1). Versione 0.2.0 (versionCode 2); APK release circa 9 MB.
+- **Fatto:** `GoogleSignIn.kt` (Credential Manager, `GetSignInWithGoogleOption`, token alla pagina; uscita con
+  `clearCredentialStateAsync`; nel log solo il tipo di errore). Ponte: `googleProject`/`googleSignIn`/`googleSignOut`, **facoltativi** (l'app
+  0.1.0 resta riconosciuta). Web: `androidGoogleSignIn(projectId)` e `googleSignInOnDevice` in `androidApp.ts` (token accettato solo con
+  la forma di un JWT ≤ 8192), `firebase.ts` (`signInWithCredential`, nessun resolver del popup nell'app, `googleSignOut` dopo l'uscita),
+  `signInError` («Nessun account Google su questo telefono…»), `ModeChoice`/`StandardStorage` (`appWithoutAdvanced`: Avanzata
+  disattivata solo per un'app senza accesso, testo «Questa versione dell'app Android offre solo la modalità Standard: aggiornala o usa
+  Nummo nel browser.»), `App.tsx` (`connectTarget`: niente «Collega il tuo Firebase» nell'app). Nel browser nulla cambia.
+- **Verifica:** `npm run check` OK (**573/573**, 2 test nuovi). `assembleDebug assembleRelease` OK. Emulatore Pixel 8 (Android 15)
+  con l'app debug su `dist-demo` (progetto `demo-nummo`): Avanzata attiva nella scelta della modalità, «Accedi con Google» apre il
+  flusso di Play Services (senza account: «aggiungi un account»), Indietro → `TYPE_USER_CANCELED` → nessun messaggio, pagina ancora
+  sull'accesso e visibile. **Non verificato:** accesso reale con un account Google (serve il telefono con la release e l'Hosting
+  pubblicato), uscita e nuovo accesso, blocco dell'app in Avanzata.
+- Prima di provarla sul telefono: pubblicare l'Hosting (l'app carica il sito online) e installare la nuova release sopra la 0.1.0
+  (stessa chiave: i dati della Standard restano).
 
 ## App Android (WebView con ponte nativo), fase 1 solo Standard — 22 novembre 2026
 

@@ -15,6 +15,7 @@ class NummoBridge(private val activity: MainActivity) {
     var authenticating = false
         private set
     private val prompts = HashMap<String, CancellationSignal>()
+    private val google = GoogleSignIn(activity)
 
     // Android's touch feedback, as native controls use it: it follows the system's touch-feedback setting and keeps
     // working on silent and in Do Not Disturb (navigator.vibrate in Chrome does not). `tap` a click, `tick` a light tick.
@@ -59,6 +60,21 @@ class NummoBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun cancelAuthentication(id: String) {
         activity.runOnUiThread { prompts.remove(id)?.cancel() }
+    }
+
+    // Google sign-in (GoogleSignIn.kt): the project the app is registered with ("" without a client ID: Standard only),
+    // the token through `window.nummoAndroidResult(id, outcome, idToken)`, and the account forgotten after «Esci».
+    @JavascriptInterface
+    fun googleProject(): String = google.project
+
+    @JavascriptInterface
+    fun googleSignIn(id: String) {
+        activity.runOnUiThread { google.signIn(id) }
+    }
+
+    @JavascriptInterface
+    fun googleSignOut() {
+        activity.runOnUiThread { google.signOut() }
     }
 
     private fun start(id: String) {
