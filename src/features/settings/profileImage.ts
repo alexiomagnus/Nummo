@@ -1,18 +1,15 @@
-import type { CategoryIcon } from '../../domain/category.ts';
+import { profileAvatars, type ProfileAvatarId } from './profileAvatars.ts';
 
 // Picture of the account button in the Standard mode (no Google account, hence no Google photo): nothing (the person
-// glyph), one of the preset icons, or a photo chosen by the user. Presentation only, kept in this browser under
+// glyph), one of the preset avatars, or a photo chosen by the user. Presentation only, kept in this browser under
 // `nummo.profile.v1`: never in the archive, in a backup or sent anywhere. Validated at every read.
 export const profileImageKey = 'nummo.profile.v1';
 
-// Preset icons: category drawings, so they follow the chosen icon style (minimal, colourful, pixel). Only active icons
-// with all three drawings (`tests/profileImage.test.ts`).
-export const avatarIcons = ['paw', 'coffee', 'gamepad', 'music', 'cake', 'camera', 'sparkles', 'piggy', 'cloud', 'bike', 'laptop', 'film'] as const satisfies readonly CategoryIcon[];
-export type AvatarIcon = (typeof avatarIcons)[number];
-
+// Preset pictures: the five abstract avatars of `profileAvatars.ts` (22 November, user's request). They replaced the
+// category icons offered the same day (`kind: 'icon'`), which now read as no picture.
 export type ProfileImage =
   | { kind: 'none' }
-  | { kind: 'icon'; icon: AvatarIcon }
+  | { kind: 'avatar'; avatar: ProfileAvatarId }
   // A small square JPEG (`prepareAvatar` in features/receipts/image.ts) as a data URL.
   | { kind: 'photo'; photo: string };
 
@@ -31,7 +28,7 @@ export function parseProfileImage(raw: string | null): ProfileImage {
   try { value = JSON.parse(raw); } catch { return noProfileImage; }
   if (typeof value !== 'object' || value === null) return noProfileImage;
   const record = value as Record<string, unknown>;
-  if (record.kind === 'icon' && (avatarIcons as readonly unknown[]).includes(record.icon)) return { kind: 'icon', icon: record.icon as AvatarIcon };
+  if (record.kind === 'avatar' && (profileAvatars as readonly unknown[]).includes(record.avatar)) return { kind: 'avatar', avatar: record.avatar as ProfileAvatarId };
   if (record.kind === 'photo' && isPhotoDataUrl(record.photo)) return { kind: 'photo', photo: record.photo };
   return noProfileImage;
 }

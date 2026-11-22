@@ -218,6 +218,64 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Avatar «Pietre» al posto di «Onde» — 22 novembre 2026
+
+- Su richiesta («rigenera quest'ultima icona»): «Onde» (`waves`) sostituito da **Pietre** (rosa, id `stones`): tre ciottoli ellittici
+  impilati, più stretti verso l'alto e appena inclinati, base/accento/base con 3 di spazio tra l'uno e l'altro. `waves` salvato →
+  «Nessuna immagine». EN «Stones». Typecheck, `npm test` **542/542**, build demo; Chromium headless 390×844 scuro e chiaro: selezione,
+  salvataggio e pulsante in alto corretti, nessun errore JS. Non committato.
+
+## Avatar «Onde» al posto di «Sorriso» — 22 novembre 2026
+
+- Su richiesta («abbandona l'idea della faccia»): «Sorriso» (`smile`) sostituito da **Onde** (rosa, id `waves`): due onde corte a tratto
+  tondo, sfalsate (base sopra a sinistra, accento sotto a destra: uguali e allineate sembravano il segno dell'Acquario). Nessuna faccia nel set. `smile` salvato → «Nessuna immagine». EN «Waves». Typecheck, `npm test` **542/542**, build demo; Chromium headless 390×844 scuro
+  e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Non committato.
+
+## Avatar «Girandola» e «Sorriso» al posto di «Moduli» e «Prisma» — 22 novembre 2026
+
+- Su richiesta (screenshot dei due avatar, «cerca di creare una faccia in almeno una delle due»): **Sorriso** (rosa, id `smile`) è una faccia
+  geometrica, testa tonda in base con occhi a pillola e sorriso ritagliati sullo sfondo, più un pallino d'accento; **Girandola** (blu, id
+  `pinwheel`) quattro mezzi dischi che girano attorno al centro, alternati base/accento. Gli id `modules`/`prism` salvati si leggono come
+  «Nessuna immagine» (mai pubblicati). Nomi EN Pinwheel/Smile, chiavi vecchie tolte da `en.ts`. Typecheck, `npm test` **542/542**, build
+  demo; Chromium headless 390×844 scuro e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Non committato.
+
+## Cinque avatar astratti al posto delle icone del profilo — 22 novembre 2026
+
+- **Su richiesta:** le icone di categoria non sono più scelte per l'immagine del profilo (Standard); al loro posto cinque avatar disegnati
+  per Nummo in `src/features/settings/profileAvatars.ts` (puro, nessuna dipendenza): **Orbite** (due cerchi in diagonale, lente
+  ritagliata; viola), **Goccia** (goccia con un angolo vivo e un satellite; teal), **Arco** (due archi annidati sopra una barra, l'arco del
+  logo scomposto; arancio), **Moduli** (2×2: quarto di cerchio, quadrati, cerchio; blu), **Prisma** (rombo diviso in due metà staccate;
+  rosa). SVG 100×100 a sfondo pieno, forme entro ~36 dal centro (intere nel cerchio, leggibili a 36 px). Colori **solo** dalla palette
+  delle icone (`iconRamp`): chiaro = sfondo tinta, forma base, accento inchiostro; scuro = sfondo inchiostro, forma base, accento tinta.
+- **Integrazione:** `ProfileImage` `{ kind: 'avatar', avatar }` in `nummo.profile.v1` (validato; il vecchio `{ kind: 'icon' }` si legge
+  come «Nessuna immagine»: funzione mai pubblicata). `ProfileAvatar` disegna l'SVG come `Image` data URI secondo il tema; al cambio la
+  nuova immagine entra con dissolvenza e scala 92 % → 100 % (`motion.medium`, solo dopo una scelta, mai al primo disegno; movimento
+  ridotto rispettato da `GlobalStyle`); anello di selezione con `fillTransition`. Nomi IT/EN («Avatar {p0}», Orbits/Drop/Arch/Modules/Prism).
+- **Test:** `tests/profileImage.test.ts` (cinque avatar con tinte e nomi distinti, SVG ben formato senza script/link, solo i tre colori dei
+  ruoli, contrasto base/sfondo ≥ 3 e accento/sfondo ≥ 4,5 in entrambi i temi, salvataggio e rilettura di ciascuno), `tests/i18n.test.ts`
+  (nomi tradotti). `npm test` **542/542**, typecheck OK, build demo OK.
+- **Browser:** Chromium headless su `dist-demo`, Standard: 390×844 scuro e chiaro e 1280×900 chiaro; i cinque avatar cliccati uno per uno:
+  `aria-checked` sul solo scelto, `nummo.profile.v1` aggiornato, pulsante in alto aggiornato; avatar salvato mostrato dopo il
+  ricaricamento. Nessun errore JS. Ritoccati dopo la prima prova Goccia (più grande) e Prisma (metà più staccate). **Non provato** su
+  Android reale. Non committato, non pubblicato.
+
+## Immagine del profilo: stesse misure del pulsante, tre icone tolte dalla scelta — 22 novembre 2026
+
+- **Causa** (screenshot dell'utente: icone della scelta diverse da quella in alto a destra): le icone pixel si agganciano a multipli di 12
+  (`snapPixelSize`), quindi nel pulsante (cerchio 36) e nella scelta (cerchio 44) la zampa era larga 24 in entrambi: piena nel pulsante,
+  piccola e diversa nella scelta; nell'anteprima (64) 36. **Correzione:** `accountAvatarSize` (36) in `ProfileImageCard.tsx`, usata dal
+  pulsante (`StandardAvatar` senza prop) e da ogni scelta (bersaglio 48 con l'anello); anteprima a 72, il doppio esatto, con le stesse
+  proporzioni in tutti e tre gli stili.
+- **Scelte:** su richiesta tolte nota (`music`), torta (`cake`) e fotocamera (`camera`) da `avatarIcons` (ora 9); restano icone di categoria.
+  Un valore salvato con una di queste si legge come «Nessuna immagine» (la funzione non è ancora pubblicata). Nuovo test in
+  `tests/profileImage.test.ts`. `AGENTS.md`.
+- **Verifica:** typecheck OK, `npm test` **541/541** sull'albero condiviso con l'altra sessione (blocco dell'app, non committato). Chromium
+  headless su `dist-demo`, Standard, tema scuro, 390×844: stile pixel e minimale, zampa nel pulsante e nella scelta della stessa misura
+  (20 px), nove icone in due righe. Nessun errore JS. Non provato sul telefono. Non committato, non pubblicato.
+- **Testo tolto:** su richiesta, niente più «Compare sul pulsante del menu, in alto a destra. Resta solo su questo dispositivo e non entra
+  nel backup.» sotto l'anteprima (chiave tolta da `en.ts`); la scheda ha solo anteprima, scelte e «Carica una foto». Typecheck e
+  `npm test` **541/541**.
+
 ## Blocco dell'app con impronta o viso — 22 novembre 2026
 
 - Su richiesta, con le scelte dell'utente: recupero con Google in Avanzata e «Non riesco a sbloccare» con conferma in Standard; blocco

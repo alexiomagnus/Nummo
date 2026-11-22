@@ -8,6 +8,7 @@ import { dateTimeFormat, formatCivilDate, formatCurrency, numberFormat, translat
 import { seriesLabel } from '../src/features/dashboard/seriesLabel.ts';
 import { otherCategoriesKey, uncategorizedKey, periodLabels, sortLabels } from '../src/domain/history.ts';
 import { categoryIconLabels, defaultCategories, categoryNameError } from '../src/domain/category.ts';
+import { profileAvatarLabels } from '../src/features/settings/profileAvatars.ts';
 import { iconStyleText } from '../src/components/categoryIconSets.ts';
 import { recurrenceLabels } from '../src/domain/recurrence.ts';
 import { statusLabels } from '../src/domain/subscription.ts';
@@ -88,7 +89,7 @@ test('catalogo: parametri corrispondenti, opzioni e testi statici UI coperti', (
     assert.deepEqual(placeholders(source), placeholders(target), source);
   }
   for (const label of [...Object.values(periodLabels), ...Object.values(sortLabels), ...Object.values(recurrenceLabels), ...Object.values(statusLabels),
-    ...Object.values(categoryIconLabels), ...Object.values(iconStyleText).map((text) => text.label), ...defaultCategories.map((category) => category.label)]) {
+    ...Object.values(categoryIconLabels), ...Object.values(profileAvatarLabels), ...Object.values(iconStyleText).map((text) => text.label), ...defaultCategories.map((category) => category.label)]) {
     assert.ok(Object.hasOwn(english, label), `Traduzione mancante: ${label}`);
   }
   const files = (directory: string): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>

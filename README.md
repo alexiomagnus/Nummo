@@ -128,7 +128,7 @@ Due strade:
 - **Impostazioni → Blocco dell'app**: Nummo chiede impronta, viso o il PIN del dispositivo all'apertura e quando ci torni dopo il tempo scelto
   (subito, 1, 5 o 15 minuti). Nasconde i dati sullo schermo, non li cifra. Se non riesci a sbloccare: in Avanzata esci e riaccedi con Google, in
   Standard puoi disattivare il blocco dopo una conferma.
-- Modalità Standard: **Impostazioni → Immagine del profilo** per il pulsante del menu, con una delle icone proposte o una tua foto (resta solo
+- Modalità Standard: **Impostazioni → Immagine del profilo** per il pulsante del menu, con uno dei cinque avatar proposti o una tua foto (resta solo
   sul dispositivo, non entra nel backup).
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata

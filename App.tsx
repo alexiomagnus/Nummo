@@ -176,7 +176,7 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
   const [backupRequest, setBackupRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
-  const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar size={36} />} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
+  const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar />} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
     onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
   return (
     <>

@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { activeCategoryIcons, retiredCategoryIcons } from '../src/domain/category.ts';
-import { categoryGlyphs } from '../src/components/categoryGlyphs.ts';
-import { categoryColorGlyphs } from '../src/components/categoryColorGlyphs.ts';
-import { categoryPixelGlyphs } from '../src/components/categoryPixelGlyphs.ts';
-import { avatarIcons, maxPhotoLength, noProfileImage, parseProfileImage, serializeProfileImage } from '../src/features/settings/profileImage.ts';
+import { maxPhotoLength, noProfileImage, parseProfileImage, serializeProfileImage } from '../src/features/settings/profileImage.ts';
+import { profileAvatarHue, profileAvatarLabels, profileAvatarRoles, profileAvatars, profileAvatarSvg } from '../src/features/settings/profileAvatars.ts';
 
 const photo = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwc=';
 
@@ -12,13 +9,14 @@ test('immagine del profilo: assente, corrotta o sconosciuta → nessuna', () => 
   assert.deepEqual(parseProfileImage(null), noProfileImage);
   assert.deepEqual(parseProfileImage('{non json'), noProfileImage);
   assert.deepEqual(parseProfileImage('[]'), noProfileImage);
-  assert.deepEqual(parseProfileImage('{"kind":"icon","icon":"tag"}'), noProfileImage);
-  assert.deepEqual(parseProfileImage('{"kind":"icon","icon":"sofa"}'), noProfileImage);
+  assert.deepEqual(parseProfileImage('{"kind":"avatar","avatar":"tag"}'), noProfileImage);
+  // The category icons offered before the avatars (22 November) read as no picture.
+  assert.deepEqual(parseProfileImage('{"kind":"icon","icon":"paw"}'), noProfileImage);
   assert.deepEqual(parseProfileImage('{"kind":"wallpaper"}'), noProfileImage);
 });
 
 test('immagine del profilo: icona e foto valide lette e riscritte uguali', () => {
-  for (const image of [{ kind: 'icon', icon: 'paw' }, { kind: 'photo', photo }] as const) {
+  for (const image of [{ kind: 'avatar', avatar: 'orbits' }, { kind: 'photo', photo }] as const) {
     assert.deepEqual(parseProfileImage(serializeProfileImage(image)), image);
   }
   assert.equal(serializeProfileImage(noProfileImage), null);
@@ -30,11 +28,48 @@ test('immagine del profilo: solo data URL di immagini base64 entro il limite', (
   for (const value of bad) assert.deepEqual(parseProfileImage(JSON.stringify({ kind: 'photo', photo: value })), noProfileImage, value);
 });
 
-test('immagine del profilo: icone attive, non ritirate, con i tre disegni, senza ripetizioni', () => {
-  assert.equal(new Set(avatarIcons).size, avatarIcons.length);
-  for (const icon of avatarIcons) {
-    assert.ok((activeCategoryIcons as readonly string[]).includes(icon), icon);
-    assert.ok(!retiredCategoryIcons.includes(icon), icon);
-    for (const drawings of [categoryGlyphs, categoryColorGlyphs, categoryPixelGlyphs]) assert.ok(Object.hasOwn(drawings, icon), icon);
+function luminance(color: string): number {
+  const channel = (index: number) => {
+    const value = parseInt(color.slice(index, index + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+function contrast(a: string, b: string): number {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light! + 0.05) / (dark! + 0.05);
+}
+
+test('avatar: cinque, ognuno con nome, tinta propria e disegno valido', () => {
+  assert.equal(profileAvatars.length, 5);
+  assert.equal(new Set(profileAvatars.map(profileAvatarHue)).size, 5);
+  assert.equal(new Set(Object.values(profileAvatarLabels)).size, 5);
+  for (const avatar of profileAvatars) {
+    for (const dark of [false, true]) {
+      const svg = profileAvatarSvg(avatar, dark);
+      assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#[0-9A-F]{6}"\/>/, avatar);
+      assert.ok(svg.endsWith('</svg>'), avatar);
+      // Only colours of the palette: every fill and stroke is one of the three roles.
+      const roles = Object.values(profileAvatarRoles(avatar, dark));
+      for (const [, color] of svg.matchAll(/(?:fill|stroke)="(#[0-9A-Fa-f]{6})"/g)) assert.ok(roles.includes(color!), `${avatar} ${color}`);
+      assert.ok(!/<(?:script|image|foreignObject)|href=|on\w+=/i.test(svg), avatar);
+    }
+  }
+});
+
+test('avatar: forma principale e accento leggibili sullo sfondo, in tema chiaro e scuro', () => {
+  for (const avatar of profileAvatars) {
+    for (const dark of [false, true]) {
+      const { bg, main, accent } = profileAvatarRoles(avatar, dark);
+      assert.ok(contrast(main, bg) >= 3, `${avatar} ${dark} main ${contrast(main, bg).toFixed(2)}`);
+      assert.ok(contrast(accent, bg) >= 4.5, `${avatar} ${dark} accent ${contrast(accent, bg).toFixed(2)}`);
+    }
+  }
+});
+
+test('avatar: scelta salvata e riletta uguale per ognuno dei cinque', () => {
+  for (const avatar of profileAvatars) {
+    const image = { kind: 'avatar', avatar } as const;
+    assert.deepEqual(parseProfileImage(serializeProfileImage(image)), image);
   }
 });

@@ -1,35 +1,55 @@
 import { useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { HelperText, Text, useTheme } from 'react-native-paper';
+import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
+import { HelperText, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { allCategoryIconLabels } from '../../domain/category';
 import { useI18n } from '../../i18n/I18nProvider';
-import { radius, spacing } from '../../theme/tokens';
+import { fillTransition } from '../../theme/motion';
+import { motion, radius, spacing } from '../../theme/tokens';
 import { prepareAvatar } from '../receipts/image';
-import { avatarIcons, maxPhotoLength, noProfileImage, type ProfileImage } from './profileImage';
+import { profileAvatarLabels, profileAvatars, profileAvatarSvg } from './profileAvatars';
+import { maxPhotoLength, noProfileImage, type ProfileImage } from './profileImage';
 import { saveProfileImage, useProfileImage } from './useProfileImage';
 
-// The round picture of the account button: the person glyph, a preset icon (in the chosen icon style) or the photo.
-// Decorative: the button and the choices carry their own labels.
+// Size of the account button's picture, and of every choice in the card, so that a choice looks exactly like the button
+// (user's report, 22 November); the preview is twice as large.
+export const accountAvatarSize = 36;
+
+// A discreet change of picture: the new one fades in from 92 %. Only after a change, never at the first paint (the
+// header would blink at every start); `prefers-reduced-motion` reduces it to ~0 (GlobalStyle).
+const changeAnimation = {
+  animationKeyframes: { from: { opacity: 0, transform: 'scale(0.92)' }, to: { opacity: 1, transform: 'scale(1)' } },
+  animationDuration: `${motion.medium}ms`,
+  animationTimingFunction: `cubic-bezier(${motion.enter.join(', ')})`,
+  animationFillMode: 'both',
+} as ViewStyle;
+const imageKey = (image: ProfileImage) =>
+  image.kind === 'avatar' ? `avatar:${image.avatar}` : image.kind === 'photo' ? `photo:${image.photo.length}:${image.photo.slice(-24)}` : 'none';
+
+// The round picture of the account button: the person glyph, one of the five avatars (light or dark drawing) or the
+// photo. Decorative: the button and the choices carry their own labels.
 export function ProfileAvatar({ image, size }: { image: ProfileImage; size: number }) {
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
+  const key = imageKey(image);
+  const first = useRef(key);
   return (
     <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.primaryContainer }]} aria-hidden>
-      {image.kind === 'icon' ? <CategoryGlyph icon={image.icon} size={Math.round(size * 0.62)} color={colors.onPrimaryContainer} />
-        : image.kind === 'photo' ? <img src={image.photo} alt="" draggable={false} width={size} height={size}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          : <SvgIcon shape={iconShapes.user} size={Math.round(size * 0.61)} color={colors.onPrimaryContainer} />}
+      <View key={key} style={[styles.fill, key !== first.current && changeAnimation]}>
+        {image.kind === 'avatar' ? <Image accessible={false} style={styles.picture}
+          source={{ uri: `data:image/svg+xml,${encodeURIComponent(profileAvatarSvg(image.avatar, dark))}` }} />
+          : image.kind === 'photo' ? <img src={image.photo} alt="" draggable={false} width={size} height={size}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            : <SvgIcon shape={iconShapes.user} size={Math.round(size * 0.61)} color={colors.onPrimaryContainer} />}
+      </View>
     </View>
   );
 }
 
 // The account button of the Standard mode, with the picture chosen here.
-export function StandardAvatar({ size }: { size: number }) {
-  return <ProfileAvatar image={useProfileImage()} size={size} />;
+export function StandardAvatar() {
+  return <ProfileAvatar image={useProfileImage()} size={accountAvatarSize} />;
 }
 
 // Settings card, Standard mode only (the Advanced mode shows the Google photo). Every choice applies at once.
@@ -53,22 +73,20 @@ export function ProfileImageCard() {
   const option = (key: string, label: string, selected: boolean, shown: ProfileImage, onPress: () => void) => (
     <StateLayerPressable key={key} layerColor={colors.onSurface} radius={radius.pill} accessibilityRole="radio" aria-checked={selected}
       accessibilityLabel={`${label}${selected ? t(", selezionata") : ''}`} {...({ title: label } as object)} onPress={onPress}
-      style={[styles.option, { borderColor: selected ? colors.primary : 'transparent' }]}>
-      <ProfileAvatar image={shown} size={44} />
+      style={[styles.option, fillTransition, { borderColor: selected ? colors.primary : 'transparent' }]}>
+      <ProfileAvatar image={shown} size={accountAvatarSize} />
     </StateLayerPressable>
   );
   return (
     <Card title={t("Immagine del profilo")} style={styles.card}>
       <View style={styles.current}>
-        <ProfileAvatar image={image} size={64} />
-        <Text variant="bodyMedium" style={[styles.note, { color: colors.onSurfaceVariant }]}>
-          {t("Compare sul pulsante del menu, in alto a destra. Resta solo su questo dispositivo e non entra nel backup.")}</Text>
+        <ProfileAvatar image={image} size={accountAvatarSize * 2} />
       </View>
       <View style={styles.options} role="radiogroup" aria-label={t("Immagine del profilo")}>
         {option('none', t("Nessuna immagine"), image.kind === 'none', noProfileImage, () => choose(noProfileImage))}
         {image.kind === 'photo' && option('photo', t("La tua foto"), true, image, () => {})}
-        {avatarIcons.map((icon) => option(icon, t("Icona {p0}{p1}", { p0: t(allCategoryIconLabels[icon]), p1: '' }),
-          image.kind === 'icon' && image.icon === icon, { kind: 'icon', icon }, () => choose({ kind: 'icon', icon })))}
+        {profileAvatars.map((avatar) => option(avatar, t("Avatar {p0}", { p0: t(profileAvatarLabels[avatar]) }),
+          image.kind === 'avatar' && image.avatar === avatar, { kind: 'avatar', avatar }, () => choose({ kind: 'avatar', avatar })))}
       </View>
       <View style={styles.actions}>
         <Button mode="outlined" loading={busy} disabled={busy} onPress={() => input.current?.click()}
@@ -85,11 +103,12 @@ export function ProfileImageCard() {
 
 const styles = StyleSheet.create({
   card: { width: '100%' },
-  avatar: { overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  avatar: { overflow: 'hidden' },
+  fill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  picture: { width: '100%', height: '100%' },
   current: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  note: { flex: 1, minWidth: 0 },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  option: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: radius.pill },
+  option: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: radius.pill },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   helper: { paddingHorizontal: 0 },
 });
