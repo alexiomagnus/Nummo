@@ -76,10 +76,13 @@ export function normalizeCategoryName(name: string): string {
   return name.normalize('NFC').trim().replace(/\s+/gu, ' ');
 }
 
+// Longest category name (mirrored by firestore.rules); the fields stop accepting characters at this length.
+export const maxCategoryNameLength = 40;
+
 export function categoryNameError(name: string, categories: readonly Category[]): string | null {
   const label = normalizeCategoryName(name);
   if (!label) return 'Inserisci il nome della categoria.';
-  if (Array.from(label).length > 40) return 'Usa al massimo 40 caratteri.';
+  if (Array.from(label).length > maxCategoryNameLength) return 'Usa al massimo 40 caratteri.';
   if (categories.some((category) => category.label.toLocaleLowerCase('it') === label.toLocaleLowerCase('it'))) {
     return 'Esiste già una categoria con questo nome.';
   }

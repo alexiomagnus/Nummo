@@ -84,7 +84,7 @@ export function DeleteAction({ name, title, description, onDelete, labeled: labe
       // In the edit dialogs (phones) the trash is outlined like «Annulla» beside it (same 48 dp height and radius), the outline in
       // the icon's own error red (user's request, 21 November).
       : <IconButton disabled={disabled} icon={icon} mode={danger ? 'outlined' : undefined} iconColor={danger ? colors.error : undefined}
-        style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: danger ? radius.button : 8, ...(danger ? { borderColor: colors.error } : {}) }} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request} />}
+        style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: danger ? radius.button : 4, ...(danger ? { borderColor: colors.error } : {}) }} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request} />}
     <DeleteDialog visible={open} name={name} title={title} description={description} onDismiss={dismiss} onConfirm={() => action.current()} />
   </>;
 }

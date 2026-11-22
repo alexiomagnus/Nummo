@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import type { Category } from '../../domain/category';
 import { clipToLength, expensePolicy } from '../../domain/policy';
+import { amountInputFits } from '../../domain/expense';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DateField } from '../../components/DateField';
 import { SelectField } from '../../components/SelectField';
@@ -57,7 +58,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       <View>
         <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
           <View style={[styles.amount, compact && styles.amountCompact]}>
-            <TextInput outlineStyle={inputOutline} label={t("Importo")} value={values.amount} onChangeText={(value) => onChange('amount', value)}
+            <TextInput outlineStyle={inputOutline} label={t("Importo")} value={values.amount} onChangeText={(value) => { if (amountInputFits(value)) onChange('amount', value); }}
               mode="outlined" inputMode="decimal" placeholder={locale === 'it-IT' ? '0,00' : '0.00'} error={Boolean(errors.amount)} readOnly={disabled} aria-disabled={disabled}
               onBlur={() => onBlur('amount')} accessibilityLabel={t("Importo in euro, obbligatorio")}
               contentStyle={[styles.amountText, compact && styles.amountTextCompact, compact && values.amount.length >= 7 && styles.amountTextLong]} left={leadingIcon(iconShapes.euro)} />

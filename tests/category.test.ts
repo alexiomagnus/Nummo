@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { categoryIcons, categoryNameError } from '../src/domain/category.ts';
+import { categoryIcons, categoryNameError, maxCategoryNameLength } from '../src/domain/category.ts';
 import { categoryGlyphs } from '../src/components/categoryGlyphs.ts';
 
 test('nomi vuoti o troppo lunghi sono rifiutati', () => {
@@ -29,4 +29,10 @@ test('archivio Firestore: una categoria con un’icona eliminata prima del 14 no
   const base = { id: '7f3c2a10-1b2c-4d5e-8f90-123456789abc', label: 'Trasporti', name_key: categoryNameKey('Trasporti'), updated_at: '2026-11-08T10:00:00.000Z', revision: 1 };
   for (const icon of ['bus', 'car', 'tree', 'star', 'pill']) assert.equal(parseSyncedCategory({ ...base, icon })?.icon, icon);
   assert.equal(parseSyncedCategory({ ...base, icon: 'rocket' }), null);
+});
+
+test('categorie: il limite del nome è lo stesso per la validazione e per il campo', () => {
+  assert.equal(maxCategoryNameLength, 40);
+  assert.equal(categoryNameError('a'.repeat(maxCategoryNameLength), []), null);
+  assert.ok(categoryNameError('a'.repeat(maxCategoryNameLength + 1), []));
 });

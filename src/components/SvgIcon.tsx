@@ -62,5 +62,8 @@ export const iconShapes = {
   shieldCheck: '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6l-7-3Z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
   shieldOff: '<path d="M8 4.7 12 3l7 3v5.5c0 1.8-.5 3.5-1.5 5M16 19a12 12 0 0 1-4 2c-4.1-1.6-7-5.3-7-9.5V7M3 3l18 18"/>',
   template: '<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/>',
+  // Enlarge / reduce a photo (receipt scan): four corners pointing out / in.
+  expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  shrink: '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
   copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
 } as const;

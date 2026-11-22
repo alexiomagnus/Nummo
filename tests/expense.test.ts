@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newDraft, parseAmountMinor, validateDraft } from '../src/domain/expense.ts';
-import { todayInRome } from '../src/domain/policy.ts';
+import { amountInputFits, newDraft, parseAmountMinor, validateDraft } from '../src/domain/expense.ts';
+import { expensePolicy, todayInRome } from '../src/domain/policy.ts';
 
 const now = new Date('2026-11-02T12:00:00Z');
 const categories = [{ id: 'groceries', label: 'Alimentari', icon: null }];
@@ -83,4 +83,11 @@ test('descrizione: la scrittura si ferma a 100 caratteri, emoji contate come uno
   const emoji = '🛒'.repeat(120);
   assert.equal(Array.from(clipToLength(emoji, max)).length, 100);
   assert.equal(clipToLength('d'.repeat(100), max), 'd'.repeat(100));
+});
+
+test('importo: il campo si ferma a 5 cifre intere e 2 decimali, come l’importo massimo', () => {
+  for (const ok of ['', '1', '12345', '12345,', '12345,6', '12345,67', '0.5', '99999.99', 'abc']) assert.equal(amountInputFits(ok), true, ok);
+  for (const over of ['123456', '12345,678', '1,234', '123456,7']) assert.equal(amountInputFits(over), false, over);
+  // Everything the field still accepts stays within the largest amount the validation allows.
+  assert.equal(parseAmountMinor('99999,99'), expensePolicy.maxAmountMinor);
 });

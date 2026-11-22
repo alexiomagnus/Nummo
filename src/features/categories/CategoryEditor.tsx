@@ -3,7 +3,8 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { HelperText, Portal, Text, TextInput } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
-import { categoryNameError, type Category, type CategoryIcon } from '../../domain/category';
+import { categoryNameError, maxCategoryNameLength, type Category, type CategoryIcon } from '../../domain/category';
+import { clipToLength } from '../../domain/policy';
 import { useI18n } from '../../i18n/I18nProvider';
 import { inputOutline, spacing } from '../../theme/tokens';
 import { IconPicker } from './IconPicker';
@@ -45,7 +46,7 @@ export function CategoryEditor({ record, categories, ready, error, onSave, close
           <TextInput outlineStyle={inputOutline} mode="outlined" label={t('Nome')} value={name}
             accessibilityLabel={record ? t('Nuovo nome per {p0}', { p0: record.label }) : t('Nome della nuova categoria, obbligatorio')}
             readOnly={blocked} aria-disabled={blocked} error={Boolean(validationError)}
-            onChangeText={(next) => { setName(next); setValidationError(null); }} onSubmitEditing={() => void save()} />
+            onChangeText={(next) => { setName(clipToLength(next, maxCategoryNameLength)); setValidationError(null); }} onSubmitEditing={() => void save()} />
           {validationError && <HelperText type="error" accessibilityRole="alert">{t(validationError)}</HelperText>}
           <Text variant="labelLarge">{t('Icona')}</Text>
           <IconPicker value={icon} onChange={setIcon} disabled={blocked} />

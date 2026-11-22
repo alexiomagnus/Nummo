@@ -239,6 +239,23 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   nessuna guardia rimasta; Indietro da Nuova spesa esce dalla pagina. Nessun errore JS. **Non provati:** WebAPK sul Pixel 8 (il vero tasto
   Indietro di sistema e il gesto), iOS Safari (scorrimento indietro), foto reale dalla galleria del telefono. Non committato, non pubblicato.
 
+## Scansione più ordinata, importo con limite, Categorie su smartphone — 22 novembre 2026
+
+- **Dialogo di scansione, prima della lettura** (screenshot da telefono: «Ingrandisci la foto» staccato, due pulsanti con contorno a metà e
+  «Annulla»/«Scansiona» più stretti a destra): «Ingrandisci/Riduci la foto» diventa un'icona 40×40 sull'angolo della foto (nuove icone
+  `expand`/`shrink`); «Scatta foto»/«Cambia foto» tonali; le due righe di pulsanti in metà uguali, a 12 di distanza, a ogni dimensione
+  (smartphone 148/147, desktop 249/248). La revisione («Controlla i dati») è invariata.
+- **Importo:** `amountInputFits` (dominio): il campo ignora il tasto che porterebbe oltre 5 cifre intere o 2 decimali (massimo
+  99.999,99 €). Vale per Nuova spesa, modifica, template, revisione dello scontrino e registrazione delle liste (`ExpenseFields`).
+- **Selettore della data:** «Annulla» e «OK» larghi entrambi 88 (16 ai lati dell'etichetta).
+- **Categorie:** `maxCategoryNameLength` (40, come le Rules) nel dominio; il nome nuovo e quello in modifica si fermano lì (`clipToLength`).
+  Su smartphone il nome a tutta larghezza e «Icona»/«Aggiungi» sotto, a metà. Alone del mouse di matita e cestino con angoli da 4 invece
+  di 8 (`listRowStyles.iconButton` e `DeleteAction` senza contorno: vale per tutti i cestini senza contorno).
+- **Verifica:** `npm run check` OK (**535/535**, due test nuovi). Chromium headless su `dist-demo`, Standard, 390×844 e 1280×900: importo
+  «1234567,891» → «12345,89», «12,345» → «12,34», «99999.99» intero; date picker 88/88; dialogo di scansione con una foto caricata
+  (OpenAI con chiave finta, nessuna richiesta inviata), icona di ingrandimento funzionante; nome di categoria fermo a 40; schermate
+  controllate; alone squadrato visto prima della modifica (raggio 8). Nessun errore JS. Non provato sul telefono. Non committato.
+
 ## Riepilogo del passaggio più breve, «Annulla»/«OK» della data più stretti — 22 novembre 2026
 
 - **Passaggio dei dati** (Avanzata, «Dati della modalità Standard»; screenshot con «Riepilogo del passaggio», «Da questo progetto Firebase

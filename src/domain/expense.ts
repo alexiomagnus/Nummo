@@ -73,6 +73,14 @@ export function parseAmountMinor(input: string): number | null {
   return amount > 0 && amount <= expensePolicy.maxAmountMinor ? amount : null;
 }
 
+// What the amount field still accepts while typing: at most 5 digits before the decimal separator and 2 after it, as many as
+// the largest amount (99.999,99 €, `maxAmountMinor`). A key that would go past them is ignored, so the field stops there
+// (user's request, 22 November). Other characters are left to the validation, as before.
+export function amountInputFits(input: string): boolean {
+  const [whole = '', ...rest] = input.split(/[,.]/);
+  return whole.replace(/\D/g, '').length <= 5 && rest.join('').replace(/\D/g, '').length <= 2;
+}
+
 // Lives in policy.ts so trial.ts can use it without importing this module (no require cycle).
 export { isValidDate };
 

@@ -5,7 +5,8 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
-import { categoryNameError, type Category, type CategoryIcon } from '../../domain/category';
+import { categoryNameError, maxCategoryNameLength, type Category, type CategoryIcon } from '../../domain/category';
+import { clipToLength } from '../../domain/policy';
 import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
@@ -55,21 +56,24 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
   };
 
   const shown = filter ? categories.filter((category) => searchKey(category.label).includes(searchKey(filter))) : categories;
-  // Creation: one row (name, icon, add); the icon grid opens only on demand.
+  // Creation: name, icon, add on one row; on phones the name takes the whole first row and «Icona» and «Aggiungi» share the
+  // next one in halves (user's request, 22 November: the name field was too narrow). The icon grid opens only on demand.
   const createForm = (
     <View style={styles.createPanel}>
       <View style={[styles.createRow, compact && styles.createRowCompact]}>
         <View style={[styles.nameField, compact && styles.nameFieldCompact]}>
           <TextInput outlineStyle={inputOutline} label={t("Nuova categoria")} accessibilityLabel={t("Nome della nuova categoria, obbligatorio")} mode="outlined" value={name}
-            onChangeText={(value) => { setName(value); setNameError(null); }}
+            onChangeText={(value) => { setName(clipToLength(value, maxCategoryNameLength)); setNameError(null); }}
             onSubmitEditing={create} error={Boolean(nameError)} disabled={!ready}
             left={icon ? decorativeIcon(() => <CategoryGlyph icon={icon} size={24} />) : undefined} />
           {nameError && <HelperText type="error" accessibilityRole="alert">{t(nameError)}</HelperText>}
         </View>
-        <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}
-          icon={({ size, color }) => <SvgIcon shape={choosingIcon ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
-          accessibilityLabel={t("Icona della categoria, facoltativa")} style={styles.create} contentStyle={styles.createContent}>{t("Icona")}</Button>
-        <Button mode="contained" style={styles.create} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>
+        <View style={styles.createButtons}>
+          <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}
+            icon={({ size, color }) => <SvgIcon shape={choosingIcon ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
+            accessibilityLabel={t("Icona della categoria, facoltativa")} style={[styles.create, compact && styles.createCompact]} contentStyle={styles.createContent}>{t("Icona")}</Button>
+          <Button mode="contained" style={[styles.create, compact && styles.createCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>
+        </View>
       </View>
       {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={!ready} />}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
@@ -121,10 +125,12 @@ const styles = StyleSheet.create({
   root: { gap: spacing.lg },
   createPanel: { gap: spacing.md },
   createRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: spacing.md },
-  // Phones: name, icon and add share one row instead of wrapping the add button onto its own line.
-  createRowCompact: { flexWrap: 'nowrap', gap: spacing.sm },
-  nameFieldCompact: { flexBasis: 0, minWidth: 120 },
+  // Phones: the name alone on the first row, at full width; «Icona» and «Aggiungi» below, in equal halves.
+  createRowCompact: { flexDirection: 'column', alignItems: 'stretch', flexWrap: 'nowrap' },
+  nameFieldCompact: { flexGrow: 0, flexBasis: 'auto' },
   nameField: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
+  createButtons: { flexDirection: 'row', gap: spacing.md },
+  createCompact: { flex: 1, marginTop: 0 },
   // Paper's outlined field is 56 dp with 6 dp reserved above its box: buttons take the same 50 dp box and offset.
   create: { marginTop: 6, height: layout.fieldBoxHeight },
   createContent: { height: '100%' },

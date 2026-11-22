@@ -91,7 +91,8 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
 
 export const listRowStyles = StyleSheet.create({
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
-  iconButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
+  // Corner 4: the hover/press layer reads as a square (user's request, 22 November: it was too rounded at 8). Same in DeleteAction.
+  iconButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 4 },
 });
 
 const rowHeight = 56;

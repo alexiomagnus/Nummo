@@ -5,6 +5,7 @@ import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, compactIconPadding, CancelButton, ConfirmButton, dialogActionPair, dialogActionsRow } from '../../components/Button';
 import { SwitchRow } from '../../components/SwitchRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { StateLayerPressable } from '../../components/StateLayerPressable';
 import type { Category } from '../../domain/category';
 import type { RankedMerchant } from '../../domain/merchant';
 import { todayInRome } from '../../domain/policy';
@@ -166,6 +167,13 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     // Review on a wide window: the photo takes the height of the form beside it (no fixed height, no empty space under the fields).
     <View style={[styles.picture, { backgroundColor: colors.surfaceVariant }, zoomed ? { height: 640 } : wide && stage === 'review' ? styles.pictureFill : { height: 240 }]}>
       <Image source={{ uri: preview }} resizeMode="contain" style={StyleSheet.absoluteFill} accessibilityLabel={t("Foto dello scontrino")} />
+      {/* Before the scan: enlarge/reduce as an icon on the photo's corner, not a loose line of text between photo and buttons
+          (user's request, 22 November: the panel looked confused). The review keeps its text button beside the fields. */}
+      {stage === 'ready' && <StateLayerPressable layerColor={colors.onSurface} radius={radius.button} onPress={() => setZoomed((value) => !value)}
+        accessibilityRole="button" accessibilityLabel={zoomed ? t("Riduci la foto") : t("Ingrandisci la foto")}
+        style={[styles.zoomIcon, { backgroundColor: colors.surface }]}>
+        <SvgIcon shape={zoomed ? iconShapes.shrink : iconShapes.expand} size={22} color={colors.onSurface} />
+      </StateLayerPressable>}
     </View>
   ) : null;
   const zoom = <Button compact onPress={() => setZoomed((value) => !value)}>{zoomed ? t("Riduci la foto") : t("Ingrandisci la foto")}</Button>;
@@ -174,14 +182,15 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     <input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={(event) => { void choose(event.target.files?.[0]); event.target.value = ''; }} />
     <input ref={gallery} type="file" accept="image/*" hidden onChange={(event) => { void choose(event.target.files?.[0]); event.target.value = ''; }} />
   </>;
-  // Always one row: on phones the two buttons share it in equal halves, compact, with short labels (the full ones
-  // did not fit half of a 390 px screen) and the full name for screen readers.
-  const sourceButtons = (mode: 'contained-tonal' | 'outlined') => <View style={[styles.sources, !wide && styles.sourcesPhone]}>
+  // Always one row, the two buttons in equal halves (on phones compact, with short labels: the full ones did not fit half
+  // of a 390 px screen; the full name for screen readers), 12 apart as «Annulla» and «Scansiona» under them, so the two
+  // rows make two equal columns at every size.
+  const sourceButtons = (mode: 'contained-tonal' | 'outlined') => <View style={styles.sources}>
     <Button mode={mode} disabled={preparing} icon={({ size, color }) => <SvgIcon shape={iconShapes.camera} size={size} color={color} />}
-      compact={!wide} style={!wide && styles.source} contentStyle={!wide && compactIconPadding.snug.content} labelStyle={!wide && compactIconPadding.snug.label}
+      compact={!wide} style={styles.source} contentStyle={!wide && compactIconPadding.snug.content} labelStyle={!wide && compactIconPadding.snug.label}
       accessibilityLabel={t("Scatta una foto")} onPress={() => void openCamera()}>{wide ? t("Scatta una foto") : t("Scatta foto")}</Button>
     <Button mode={mode} disabled={preparing} loading={preparing} icon={({ size, color }) => <SvgIcon shape={iconShapes.image} size={size} color={color} />}
-      compact={!wide} style={!wide && styles.source} contentStyle={!wide && compactIconPadding.snug.content} labelStyle={!wide && compactIconPadding.snug.label}
+      compact={!wide} style={styles.source} contentStyle={!wide && compactIconPadding.snug.content} labelStyle={!wide && compactIconPadding.snug.label}
       accessibilityLabel={image ? t("Cambia immagine") : t("Scegli un’immagine")}
       onPress={() => gallery.current?.click()}>{wide ? (image ? t("Cambia immagine") : t("Scegli un’immagine")) : (image ? t("Cambia foto") : t("Carica foto"))}</Button>
   </View>;
@@ -210,17 +219,18 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       <ConfirmButton key="shoot" disabled={!cameraReady} onPress={() => void shoot()}>{t("Scatta")}</ConfirmButton>,
     ];
   } else if (stage === 'ready') {
+    // Photo (with its zoom icon), then the tonal photo buttons, then «Annulla»/«Scansiona»: every row in two equal halves,
+    // so the buttons line up; tonal, not outlined, so they do not look like «Annulla» (user's request, 22 November).
     body = <>
       {picture}
-      <View style={styles.row}>{zoom}</View>
       {/* Service, model or key still missing: said here, the scan waits for Settings. */}
       {setupProblem && <HelperText type="info" style={{ paddingHorizontal: 0 }}>{t(setupProblem)}</HelperText>}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
-      {sourceButtons('outlined')}
+      {sourceButtons('contained-tonal')}
     </>;
     actions = [
-      <CancelButton key="cancel" onPress={onClose}>{t("Annulla")}</CancelButton>,
-      <ConfirmButton key="scan" disabled={preparing || !aiReady} onPress={start}>{failed ? t("Riprova") : t("Scansiona")}</ConfirmButton>,
+      <CancelButton key="cancel" onPress={onClose} style={styles.equal}>{t("Annulla")}</CancelButton>,
+      <ConfirmButton key="scan" disabled={preparing || !aiReady} onPress={start} style={styles.equal}>{failed ? t("Riprova") : t("Scansiona")}</ConfirmButton>,
     ];
   } else if (stage === 'consent') {
     body = <>
@@ -312,10 +322,11 @@ const styles = StyleSheet.create({
   pairEnd: { marginLeft: 0 },
   block: { gap: spacing.md },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: -spacing.sm },
-  sources: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  sourcesPhone: { flexWrap: 'nowrap' },
+  // The two photo buttons in equal halves at every size, 12 apart like the dialog actions under them (22 November).
+  sources: { flexDirection: 'row', flexWrap: 'nowrap', gap: spacing.md },
   source: { flex: 1, minWidth: 0 },
   picture: { width: '100%', borderRadius: radius.card, overflow: 'hidden' },
+  zoomIcon: { position: 'absolute', top: spacing.sm, right: spacing.sm, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', opacity: 0.92 },
   pictureFill: { flex: 1, minHeight: 240 },
   camera: { height: 360 },
   progress: { height: 6, borderRadius: radius.pill },
