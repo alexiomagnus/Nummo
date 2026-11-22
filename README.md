@@ -59,7 +59,8 @@ dentro l'app.
   sistema», che chiede il permesso del browser. Richiedono un piccolo servizio di invio (consigliato Cloudflare Workers,
   piano gratuito) e le variabili `EXPO_PUBLIC_NUMMO_PUSH_URL`/`EXPO_PUBLIC_NUMMO_PUSH_KEY`: configurazione, privacy,
   compatibilità (iPhone solo con Nummo nella schermata Home) e prove in [docs/notifiche-push.md](docs/notifiche-push.md).
-  Il servizio riceve solo gli orari dei promemoria, mai importi o descrizioni. I pulsanti di prova («Invia notifica di prova»,
+  Il servizio riceve solo gli orari dei promemoria, mai importi o descrizioni. Nell'app Android (0.3.0) le stesse notifiche
+  le programma l'app sul telefono, senza servizio di invio. I pulsanti di prova («Invia notifica di prova»,
   «Prova con Nummo chiusa») sono nascosti dal 21 novembre 2026; per il debugging si riattivano con `pushTests` in
   `src/features/notifications/NotificationsPage.tsx`.
 - Senza notifiche di sistema (spente, browser che non le supporta, installazione senza servizio) non arriva alcun
@@ -285,7 +286,8 @@ Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs
 `android/` contiene un'app Android che apre il sito pubblicato in una WebView. Esiste per due cose che una pagina in Chrome non
 può fare: la vibrazione come nelle app native, che funziona anche in silenzioso e in Non disturbare, e le barre di sistema del
 colore dell'app. Dalla versione 0.2.0 offre anche l'**Avanzata**, con l'accesso Google del telefono, ma solo per il progetto Firebase
-per cui è configurata (niente «Collega il tuo Firebase» nell'app) e ancora senza notifiche. I dati della Standard sono separati da
+per cui è configurata (niente «Collega il tuo Firebase» nell'app). Dalla 0.3.0 ha anche le **notifiche**: le stesse della pagina
+Notifiche, mostrate dall'app stessa all'orario scelto, anche ad app chiusa e senza il servizio di invio. I dati della Standard sono separati da
 quelli di Chrome: per spostarli, esporta un backup dal browser e ripristinalo nell'app.
 
 Serve l'SDK Android (`sdkmanager`: platform 36, build-tools) e un JDK 17 o più recente. In `android/local.properties`, personale e

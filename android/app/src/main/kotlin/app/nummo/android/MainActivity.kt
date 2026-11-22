@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -42,6 +43,7 @@ class MainActivity : Activity() {
     // «visible», as a dialog of its own would (otherwise the app lock set to «Subito» would lock on the way back).
     var awayForResult = false
     private var backCallback: OnBackInvokedCallback? = null
+    private var notificationRequest: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +73,7 @@ class MainActivity : Activity() {
         applyBars(saved.getInt("color", getColor(R.color.start_background)), saved.getBoolean("dark", true))
         bridge = NummoBridge(this)
         configure(webView)
-        if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) webView.loadUrl(home.toString())
+        if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) webView.loadUrl(startUrl(intent))
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -139,6 +141,61 @@ class MainActivity : Activity() {
                 if (cameraRequest == request) cameraRequest = null
             }
         }
+    }
+
+    // A notification tapped with the app closed: the page starts on that reminder (`?notifica=…&dal=…&al=…`, read by
+    // src/services/pushNotifications.ts as for the service worker's new window).
+    private fun startUrl(intent: Intent?): String {
+        val kind = intent?.getStringExtra("notifica") ?: return home.toString()
+        val builder = home.buildUpon().appendQueryParameter("notifica", kind)
+        val from = intent.getStringExtra("dal")
+        val to = intent.getStringExtra("al")
+        if (from != null && to != null) builder.appendQueryParameter("dal", from).appendQueryParameter("al", to)
+        return builder.build().toString()
+    }
+
+    // …and with the app open: the page is told directly (as the service worker's message to an open window).
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val kind = intent.getStringExtra("notifica") ?: return
+        val args = listOf(kind, intent.getStringExtra("dal"), intent.getStringExtra("al"))
+            .joinToString(", ") { if (it == null) "null" else JSONObject.quote(it) }
+        webView.evaluateJavascript("window.nummoNotificationOpened && window.nummoNotificationOpened($args)", null)
+    }
+
+    fun notificationStatus(): String {
+        val enabled = Reminders.enabled(this)
+        val permitted = Reminders.permitted(this)
+        val granted = Reminders.granted(this)
+        // Refused for good: asked before, not granted, and Android would not show its dialog again.
+        val refused = Reminders.needsPermission() && !granted &&
+            getSharedPreferences(barsPreferences, MODE_PRIVATE).getBoolean("notificationsAsked", false) &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+        return when {
+            enabled && permitted -> "active"
+            enabled || refused || (granted && !permitted) -> "denied"
+            else -> "off"
+        }
+    }
+
+    fun requestNotifications(id: String) {
+        if (Reminders.granted(this)) {
+            Reminders.setEnabled(this, true)
+            deliver(id, if (Reminders.permitted(this)) "ok" else "unavailable")
+            return
+        }
+        notificationRequest?.let { deliver(it, "cancelled") }
+        notificationRequest = id
+        getSharedPreferences(barsPreferences, MODE_PRIVATE).edit().putBoolean("notificationsAsked", true).apply()
+        awayForResult = true
+        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), requestNotifications)
+    }
+
+    fun openNotificationSettings() {
+        try {
+            startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName))
+        } catch (_: ActivityNotFoundException) { /* no settings screen: nothing to open */ }
     }
 
     private fun isOurs(uri: Uri): Boolean = uri.scheme == home.scheme && uri.host == home.host && uri.port == home.port
@@ -216,6 +273,19 @@ class MainActivity : Activity() {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == requestNotifications) {
+            awayForResult = false
+            val id = notificationRequest ?: return
+            notificationRequest = null
+            val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+            if (granted) Reminders.setEnabled(this, true)
+            deliver(id, when {
+                granted -> "ok"
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> "cancelled"
+                else -> "unavailable"
+            })
+            return
+        }
         if (requestCode != requestCamera) return super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         awayForResult = false
         val request = cameraRequest ?: return
@@ -271,6 +341,7 @@ class MainActivity : Activity() {
         const val requestFile = 1
         const val requestSave = 2
         const val requestCamera = 3
+        const val requestNotifications = 4
         const val barsPreferences = "systemBars"
     }
 }

@@ -6,7 +6,8 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `0f340bf` (app Android 0.2.0, bundle `index-9fe2b72e…`, voce sotto).
+  Ultime **Rules**: `48361b9`. In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
   richiesta il 22 novembre (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», «Deploy complete!»);
   **Hosting** poi pubblicato con `759792c` (app Android, vedi sotto): online `index-18586346…`, che comprende i 500 prodotti; verificato
   il 22 novembre ricompilando da `HEAD` pulito (`7b7ad76`) con `npm run build:cloud`: stesso bundle, stesso SHA-256 di quello online. Prima, **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
@@ -39,6 +40,8 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
+- **App Android 0.3.0 (22 novembre, non committata):** notifiche come notifiche locali dell'app, provate sull'emulatore
+  Android 17; da committare, pubblicare (Hosting) e provare sul Pixel 8. Sezione «App Android 0.3.0» qui sotto.
 - **App Android 0.2.0 (22 novembre):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata in
   `nummo-6b6e2`. Committata in `0f340bf`, inviata, Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle
   online `index-9fe2b72e…` identico a `dist/`, SHA-256), Rules invariate; release 0.2.0 installata sul Pixel 8 via adb sopra la 0.1.0.
@@ -50,8 +53,9 @@ rilasci».
   anche in Non disturbare**. Ancora da provare sul telefono: blocco con impronta, fotocamera/«Carica una foto», backup e ripristino nell'app.
   Da fare dall'utente: copiare altrove la chiave di firma (`android/nummo-release.jks`, `android/keystore.properties`).
   Dettagli nella sezione «App Android» qui sotto.
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `759792c` (app Android, altra sessione):
-  inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
+- **Git.** `main` = `origin/main`, solo il ramo `main`. **Albero non pulito:** notifiche dell'app Android 0.3.0 non committate (sezione
+  qui sotto). Ultimo commit di codice `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
+  sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
   `759792c`. `npm run check` OK su `7b7ad76` (**571/571**). Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
   Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
   Prima `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
@@ -101,14 +105,54 @@ rilasci».
   (su iOS probabilmente non si apre). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
   separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser.
-- **Ambiente.** Runner hybrid dell'utente **attivo**: PID 36786 (`node scripts/dev-hybrid.ts --clear`, dal 21 novembre alle 22:59, progetto
-  `nummo-6b6e2`) con `.firebase/hybrid.lock` e `.nummo-hybrid-36786.json`: non toccarli finché il processo esiste; se si ferma senza pulizia,
-  ispezionare come per i `stale-*` (processo, porte 8180/9099/4000/4400/8081, `emulator-data/`), poi solo su richiesta rinominare il lock.
+- **Ambiente.** Nessun runner hybrid attivo (22 novembre, 18:30): il PID 36786 non c'è più; restano `.firebase/hybrid.lock` e
+  `.nummo-hybrid-291668.json` di un runner del 22 novembre alle 17:12 (PID 291668, **non in esecuzione**, porte 8180/9099/4000/4400/8081
+  libere): residui di un arresto senza pulizia, non toccati. Prima di ripartire ispezionarli come per i `stale-*` (`emulator-data/`,
+  staging), poi solo su richiesta rinominare il lock e togliere la config. AVD `Pixel_8` dell'emulatore: ha un PIN di blocco schermo
+  sconosciuto (messo in una prova precedente; utente bloccato dopo l'avvio, app non avviabili): per le prove usare `Medium_Phone_API_37.0`
+  (Android 17, senza blocco) o ricrearlo solo su richiesta.
   Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
 - **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## App Android 0.3.0: notifiche nell'app — 22 novembre 2026
+
+- **Su richiesta** (ripresa di un lavoro lasciato non committato e non documentato in un'altra sessione). Nella WebView non c'è Web Push:
+  l'app programma i promemoria della pagina (backup, riepilogo, rinnovi: gli stessi `PushJob` del servizio push) con gli allarmi di
+  Android e li mostra come notifiche locali con i testi di `sw.js`. Versione 0.3.0 (versionCode 3). Nessuna dipendenza, servizio o dato
+  cloud nuovo; Rules e `DataStore` invariati. Decisione in `docs/architecture.md`.
+- **Fatto:** `android/.../Reminders.kt` (`Reminders`, `ReminderReceiver`, `ReminderRestore`), icona `ic_notification` (l'«Arco»), canale
+  «Promemoria», permessi `POST_NOTIFICATIONS`, `USE_EXACT_ALARM`, `SCHEDULE_EXACT_ALARM` (≤ 32), `RECEIVE_BOOT_COMPLETED`; ponte
+  `notificationStatus`/`requestNotifications`/`scheduleNotifications`/`disableNotifications`/`testNotification`/`takeSnoozes`/
+  `openNotificationSettings` (facoltativi: la 0.2.0 resta riconosciuta); `MainActivity`: richiesta del permesso, «Apri le impostazioni»,
+  tocco sulla notifica (`?notifica=…` a freddo, `nummoNotificationOpened` ad app aperta). Web: `androidNotifications` e
+  `requestNotificationsOnDevice` in `androidApp.ts`, un ramo per l'app in ogni funzione di `pushNotifications.ts` (`pushSupport` =
+  `supported` nell'app anche senza servizio push configurato), stato `denied` con «Apri le impostazioni» in `NotificationsPage` (2 testi
+  in `en.ts`), 1 test in `tests/androidApp.test.ts`.
+- **Corretto in questa sessione** rispetto al lavoro trovato: Android 11–12 (minSdk 30) senza il permesso runtime (prima le notifiche
+  non si sarebbero mai attivate: `checkSelfPermission(POST_NOTIFICATIONS)` lì è sempre negato); `canScheduleExactAlarms` solo da Android 12
+  (su 11 l'app sarebbe andata in crash); voci validate come nel servizio (chiavi `summary:<to>`/`renewal:<from>`, `from ≤ to`, ≤ 400
+  giorni); spegnendo si dimentica anche ciò che è stato mostrato (come `forget` del servizio); `setIntent` in `onNewIntent`; `ReminderRestore`
+  controlla l'azione (avviso di lint).
+- **Verifica:** `npm run check` OK (**574/574**, build demo) prima delle modifiche Kotlin (il web non è cambiato dopo). `./gradlew
+  assembleDebug assembleRelease` OK (release 0.3.0 firmata, `apksigner verify`, non installata); `lintDebug` senza problemi nel codice nuovo (restano 3 errori preesistenti: `onBackPressed` (GestureBackNavigation),
+  `windowSplashScreenBackground` con API 31, `app_name` non tradotto; da qui `lintDebug` fallisce, `assemble*` no). Emulatore
+  `Medium_Phone_API_37.0` (Android 17), app debug su `dist-demo` (Standard), guidata con DevTools della WebView e `uiautomator`:
+  - permesso: primo rifiuto → «Spente», secondo → «bloccate nelle impostazioni di Android» con «Apri le impostazioni», che apre la pagina
+    delle notifiche dell'app; consentite lì e tornati, «Attiva» senza dialogo → «Attive»; allarme esatto (`policy_permission`) alle 9:00;
+  - backup, riepilogo e rinnovo arrivano con l'app in secondo piano e **a processo chiuso**, testi uguali a `sw.js` (IT ed EN);
+  - tocco: riepilogo → Notifiche con il riepilogo del periodo (anche a freddo, parametri tolti dall'indirizzo), rinnovo → Spese/Abbonamenti;
+  - riepilogo già mostrato non riprogrammato; voci malformate scartate; «Ricordamelo tra 3 giorni» chiude la notifica, sposta il backup
+    di 3 giorni e la pagina, al riavvio, registra `backupSnoozedUntil`;
+  - riavvio dell'emulatore: allarme riprogrammato (`ReminderRestore` da `BOOT_COMPLETED`); «Disattiva» toglie allarmi e stato, «Attiva» li
+    rimette.
+- **Non verificato:** Pixel 8 reale (consegna puntuale in Doze dopo ore, Non disturbare), Android 11–12 (nessuna immagine di sistema
+  installata), Avanzata nell'app con le notifiche. Il sito pubblicato **non** ha ancora
+  il codice web: finché non si pubblica l'Hosting, la release 0.3.0 mostra le notifiche come non disponibili.
+- **Noto, non corretto (anche in `sw.js`):** «Il riepilogo dal 8 novembre…» invece di «dall'8» (anche «dall'1», «dall'11»).
+- **Da fare:** commit (su richiesta), Hosting (su richiesta), installazione sul Pixel 8 e prova reale.
 
 ## App Android 0.2.0: Avanzata con l'accesso Google nativo — 22 novembre 2026
 

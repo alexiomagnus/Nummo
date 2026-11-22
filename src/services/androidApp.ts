@@ -25,8 +25,22 @@ export type AndroidGoogleSignIn = {
   googleSignOut(): void;
 };
 
+// Optional too (version 0.3.0): system notifications as local Android notifications (no Web Push in a WebView). The page
+// sends the same reminder times as to the push service; the app shows them with the service worker's words.
+export type AndroidNotifications = {
+  notificationStatus(): string;
+  requestNotifications(id: string): void;
+  scheduleNotifications(lang: string, jobs: string): boolean;
+  disableNotifications(): void;
+  testNotification(lang: string, delaySeconds: number): void;
+  takeSnoozes(): string;
+  openNotificationSettings(): void;
+};
+
 const methods = ['haptic', 'setSystemBars', 'saveFile', 'canAuthenticate', 'authenticate', 'cancelAuthentication'] as const;
 const signInMethods = ['googleProject', 'googleSignIn', 'googleSignOut'] as const;
+const notificationMethods = ['notificationStatus', 'requestNotifications', 'scheduleNotifications', 'disableNotifications',
+  'testNotification', 'takeSnoozes', 'openNotificationSettings'] as const;
 
 type Scope = { NummoAndroid?: unknown; nummoAndroidResult?: (id: string, outcome: string, value?: unknown) => void };
 
@@ -51,6 +65,13 @@ export function androidGoogleSignIn(projectId: string, scope: unknown = globalTh
   if (!signInMethods.every((name) => typeof record[name] === 'function')) return undefined;
   const full = bridge as AndroidBridge & AndroidGoogleSignIn;
   try { return projectId !== '' && full.googleProject() === projectId ? full : undefined; } catch { return undefined; }
+}
+
+export function androidNotifications(scope: unknown = globalThis): (AndroidBridge & AndroidNotifications) | undefined {
+  const bridge = androidBridge(scope);
+  if (!bridge) return undefined;
+  const record = bridge as unknown as Record<string, unknown>;
+  return notificationMethods.every((name) => typeof record[name] === 'function') ? bridge as AndroidBridge & AndroidNotifications : undefined;
 }
 
 // Bar colours: only a plain `#RRGGBB` reaches the app (the theme's backgrounds always are).
@@ -107,5 +128,17 @@ export function googleSignInOnDevice(bridge: AndroidGoogleSignIn, scope: unknown
       resolve(token ? { outcome, idToken: token } : { outcome: 'error' });
     });
     try { bridge.googleSignIn(id); } catch { pending.delete(id); resolve({ outcome: 'error' }); }
+  });
+}
+
+// The notification permission (Android 13+) asked by the app: ok = granted and turned on, cancelled = refused this
+// time, unavailable = refused for good (only Android's settings can allow it now).
+export function requestNotificationsOnDevice(bridge: AndroidNotifications, scope: unknown = globalThis): Promise<AndroidOutcome> {
+  listen(scope);
+  counter += 1;
+  const id = `notifications-${counter}`;
+  return new Promise((resolve) => {
+    pending.set(id, (outcome) => resolve(outcome));
+    try { bridge.requestNotifications(id); } catch { pending.delete(id); resolve('error'); }
   });
 }

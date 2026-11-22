@@ -13,6 +13,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { formatHour, type TimeFormat } from '../../domain/timeFormat';
 import { autoTimeZone, timeZoneCity } from '../../domain/timeZones';
 import { deviceTimeZone } from '../../domain/pushSchedule';
+import { androidNotifications } from '../../services/androidApp';
 import type { OpenedNotification } from '../../services/pushNotifications';
 import { layout, spacing } from '../../theme/tokens';
 import type { Notifications } from './useNotifications';
@@ -46,7 +47,16 @@ function SystemNotifications({ push }: { push: PushState }) {
   else if (support === 'needs-install') body = line(t("Su iPhone e iPad le notifiche arrivano solo se aggiungi Nummo alla schermata Home: tocca Condividi, poi «Aggiungi alla schermata Home», e apri Nummo da lì."));
   else if (support === 'unconfigured') body = line(t("Le notifiche di sistema non sono configurate in questa installazione di Nummo."));
   else if (status === null) body = line(t("Controllo in corso…"));
-  else if (status === 'denied') body = line(t("Le notifiche sono bloccate per questo sito. Per attivarle consenti le notifiche nelle impostazioni del browser, poi torna qui."));
+  else if (status === 'denied') {
+    // Android app: blocked in Android's settings, which the app can open (services/androidApp.ts).
+    const android = androidNotifications();
+    body = android ? <>
+      {line(t("Le notifiche di Nummo sono bloccate nelle impostazioni di Android. Consentile lì, poi torna qui."))}
+      <View style={styles.actions}>
+        <Button mode="contained-tonal" icon={icon(iconShapes.bell)} onPress={() => android.openNotificationSettings()}>{t("Apri le impostazioni")}</Button>
+      </View>
+    </> : line(t("Le notifiche sono bloccate per questo sito. Per attivarle consenti le notifiche nelle impostazioni del browser, poi torna qui."));
+  }
   else if (status === 'off') body = <>
     {line(t("Spente su questo dispositivo. Attivale per ricevere promemoria e riepiloghi."))}
     {failure === 'browser' && line(t("Il browser non è riuscito a iscriversi al proprio servizio di notifiche. Riprova più tardi o con un altro browser."), true)}

@@ -208,6 +208,8 @@ export const english: Readonly<Record<string, string>> = {
   "L’accesso con Google non è abilitato nel progetto Firebase.": "Google sign-in is not enabled in the Firebase project.",
   "Connessione assente: accesso non riuscito.": "No connection: sign-in failed.",
   "Configurazione Firebase non valida (apiKey).": "Invalid Firebase configuration (apiKey).",
+  "Le notifiche di Nummo sono bloccate nelle impostazioni di Android. Consentile lì, poi torna qui.": "Nummo notifications are blocked in Android settings. Allow them there, then come back here.",
+  "Apri le impostazioni": "Open settings",
   "Nessun account Google su questo telefono: aggiungine uno nelle impostazioni di Android e riprova.": "No Google account on this phone: add one in Android settings and try again.",
   "Configurazione Firebase non valida.": "Invalid Firebase configuration.",
   "Accesso non riuscito ({p0}). Riprova.": "Sign-in failed ({p0}). Try again.",

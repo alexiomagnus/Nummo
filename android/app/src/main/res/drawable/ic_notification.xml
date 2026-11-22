@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Small icon of the notifications: the «Arco» logo alone (public/icons/icon.svg, 48 units from 8 to 56) filling 2..22
+     of 24 dp; Android tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group android:translateX="-1.3333" android:translateY="-1.3333" android:scaleX="0.41667" android:scaleY="0.41667">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M8,15A7,7 0,0 1,22 15L22,49A7,7 0,0 1,8 49Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M30,8C45,8 56,19 56,34V49A7,7 0,0 1,42 49V34C42,27 37,22 30,22Z" />
+    </group>
+</vector>

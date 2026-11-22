@@ -3,6 +3,13 @@
 // times computed by `domain/pushSchedule.ts`. Configured at build time; without configuration the feature is
 // reported as unavailable and nothing is registered.
 import type { PushJob } from '../domain/pushSchedule';
+import { androidNotifications, requestNotificationsOnDevice } from './androidApp.ts';
+
+// Nummo's Android app (`android/`, version 0.3.0): no Web Push in a WebView, so every function below has an app branch
+// that hands the same times to the app (local notifications, Reminders.kt) instead of the push service. Without the
+// app's notification methods (browsers, older apps) the browser path runs unchanged.
+const app = () => androidNotifications();
+const appStatus = (value: string): PushStatus => (value === 'active' || value === 'denied' ? value : 'off');
 
 // Literal accesses: Expo inlines them at build time.
 const rawUrl = process.env.EXPO_PUBLIC_NUMMO_PUSH_URL?.trim() ?? '';
@@ -22,6 +29,7 @@ export function isAppleMobile(nav: Navigator | undefined): boolean {
 }
 export function pushSupport(env: Env = {}, configured = pushConfig !== null): PushSupport {
   const { win, nav } = browser(env);
+  if (androidNotifications(win)) return 'supported';
   if (!win || !nav) return 'unsupported';
   const capable = 'serviceWorker' in nav && 'PushManager' in win && 'Notification' in win && win.isSecureContext;
   if (!capable) {
@@ -62,6 +70,8 @@ async function call(method: 'PUT' | 'POST' | 'DELETE', path: string, body: Recor
 
 // The current state on this device. `active` = permission granted and a subscription with the configured key.
 export async function pushStatus(): Promise<PushStatus> {
+  const android = app();
+  if (android) return appStatus(android.notificationStatus());
   if (Notification.permission === 'denied') return 'denied';
   if (Notification.permission !== 'granted') return 'off';
   const existing = await navigator.serviceWorker.getRegistration('/');
@@ -71,6 +81,12 @@ export async function pushStatus(): Promise<PushStatus> {
 
 // Must run inside a user gesture: asks the permission (once) and subscribes this browser.
 export async function enablePush(lang: string, jobs: readonly PushJob[]): Promise<PushStatus> {
+  const android = app();
+  if (android) {
+    const outcome = await requestNotificationsOnDevice(android);
+    if (outcome !== 'ok') return outcome === 'unavailable' ? 'denied' : 'off';
+    return android.scheduleNotifications(lang, JSON.stringify(jobs)) ? 'active' : appStatus(android.notificationStatus());
+  }
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return permission === 'denied' ? 'denied' : 'off';
   const reg = await register();
@@ -94,6 +110,8 @@ export async function enablePush(lang: string, jobs: readonly PushJob[]): Promis
 
 // Turns system notifications off on this device: the service forgets it, then the browser drops the subscription.
 export async function disablePush(): Promise<void> {
+  const android = app();
+  if (android) { android.disableNotifications(); return; }
   const reg = await navigator.serviceWorker.getRegistration('/');
   const subscription = await reg?.pushManager.getSubscription();
   if (!subscription) return;
@@ -103,6 +121,8 @@ export async function disablePush(): Promise<void> {
 // Sends the reminder times computed now (an empty list cancels them). Re-registers the service worker, so a new
 // version of sw.js is picked up.
 export async function syncPush(lang: string, jobs: readonly PushJob[]): Promise<boolean> {
+  const android = app();
+  if (android) return android.scheduleNotifications(lang, JSON.stringify(jobs));
   const reg = await register();
   const subscription = await reg.pushManager.getSubscription();
   if (!subscription) return false;
@@ -112,11 +132,15 @@ export async function syncPush(lang: string, jobs: readonly PushJob[]): Promise<
 
 // Visual test: a real system notification shown by the service worker, without the push service.
 export async function showLocalTest(lang: string): Promise<void> {
+  const android = app();
+  if (android) { android.testNotification(lang, 0); return; }
   const reg = await register();
   (reg.active ?? reg.waiting ?? reg.installing)?.postMessage({ type: 'nummo-local-test', lang });
 }
 // Delivery test: the push service sends a real push now (0) or after a delay, so the app can be closed meanwhile.
 export async function requestPushTest(lang: string, delaySeconds: number): Promise<'ok' | 'rate' | 'gone' | 'error'> {
+  const android = app();
+  if (android) { android.testNotification(lang, delaySeconds); return 'ok'; }
   const reg = await register();
   const subscription = await reg.pushManager.getSubscription();
   if (!subscription) return 'gone';
@@ -126,6 +150,13 @@ export async function requestPushTest(lang: string, delaySeconds: number): Promi
 
 // Postponements chosen on a notification while the app was closed (written by sw.js), read once and cleared.
 export function takeSnoozes(): Promise<string[]> {
+  const android = app();
+  if (android) {
+    try {
+      const value = JSON.parse(android.takeSnoozes()) as unknown;
+      return Promise.resolve(Array.isArray(value) ? value.filter((at): at is string => typeof at === 'string' && !Number.isNaN(Date.parse(at))) : []);
+    } catch { return Promise.resolve([]); }
+  }
   return new Promise((resolve) => {
     if (typeof indexedDB === 'undefined') { resolve([]); return; }
     const open = indexedDB.open('nummo-push', 1);
@@ -161,14 +192,19 @@ if (typeof window !== 'undefined') {
     const search = query.toString();
     window.history.replaceState(window.history.state, '', `${window.location.pathname}${search ? `?${search}` : ''}${window.location.hash}`);
   }
-  navigator.serviceWorker?.addEventListener('message', (event: MessageEvent) => {
-    const data = event.data as Record<string, unknown> | null;
-    if (data?.type !== 'nummo-notification') return;
-    const opened = parseOpened(data.kind, data.from, data.to);
+  const deliver = (opened: OpenedNotification | null) => {
     if (!opened) return;
     if (listeners.size === 0) pending = opened;
     listeners.forEach((listener) => listener(opened));
+  };
+  navigator.serviceWorker?.addEventListener('message', (event: MessageEvent) => {
+    const data = event.data as Record<string, unknown> | null;
+    if (data?.type !== 'nummo-notification') return;
+    deliver(parseOpened(data.kind, data.from, data.to));
   });
+  // The Android app, for a notification tapped while Nummo is open (MainActivity.onNewIntent).
+  (window as unknown as { nummoNotificationOpened?: (kind: unknown, from: unknown, to: unknown) => void })
+    .nummoNotificationOpened = (kind, from, to) => deliver(parseOpened(kind, from, to));
 }
 // The workspace listens while mounted; a notification tapped before it is ready is delivered at subscription.
 export function onNotificationOpened(listener: (opened: OpenedNotification) => void): () => void {

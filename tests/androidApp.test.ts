@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { androidBridge, androidGoogleSignIn, authenticateOnDevice, googleSignInOnDevice, inAndroidApp, systemBarsColor, type AndroidBridge } from '../src/services/androidApp.ts';
+import { androidBridge, androidGoogleSignIn, androidNotifications, authenticateOnDevice, googleSignInOnDevice, inAndroidApp, requestNotificationsOnDevice, systemBarsColor, type AndroidBridge } from '../src/services/androidApp.ts';
+import { pushSupport } from '../src/services/pushNotifications.ts';
 import { signInError } from '../src/features/session/signInError.ts';
 import { createHaptics, hapticGap, hasHaptics } from '../src/theme/haptics.ts';
 import { applyDocumentTheme } from '../src/theme/bootTheme.ts';
@@ -136,4 +137,23 @@ test('app Android: token Google solo se ha la forma di un JWT, esiti tradotti in
   assert.equal(signInError('auth/popup-closed-by-user'), null);
   assert.match(signInError('auth/app-no-google-account')!, /Nessun account Google/);
   assert.equal(signInError('auth/app-sign-in-failed'), 'Accesso non riuscito (auth/app-sign-in-failed). Riprova.');
+});
+
+test('app Android: notifiche di sistema dall\'app (0.3.0), senza servizio push né service worker', async () => {
+  const { bridge } = fakeBridge();
+  const asked: string[] = [];
+  const notifications = { ...bridge, notificationStatus: () => 'off', requestNotifications: (id: string) => { asked.push(id); },
+    scheduleNotifications: () => true, disableNotifications: () => {}, testNotification: () => {}, takeSnoozes: () => '[]', openNotificationSettings: () => {} };
+  assert.equal(androidNotifications({ NummoAndroid: bridge }), undefined, 'app più vecchia: notifiche come nel browser (assenti)');
+  assert.equal(androidNotifications({ NummoAndroid: notifications }), notifications);
+  // Supported in the app even where the browser has no Web Push and no push service is configured.
+  const win = { NummoAndroid: notifications } as unknown as Window & typeof globalThis;
+  assert.equal(pushSupport({ window: win, navigator: {} as Navigator }, false), 'supported');
+  assert.equal(pushSupport({ window: {} as Window & typeof globalThis, navigator: { userAgent: '' } as Navigator }, false), 'unsupported');
+  const scope: { nummoAndroidResult?: (id: string, outcome: string) => void } = {};
+  for (const outcome of ['ok', 'cancelled', 'unavailable'] as const) {
+    const result = requestNotificationsOnDevice(notifications, scope);
+    scope.nummoAndroidResult!(asked.at(-1)!, outcome);
+    assert.equal(await result, outcome);
+  }
 });

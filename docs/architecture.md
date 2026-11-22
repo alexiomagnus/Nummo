@@ -1448,3 +1448,22 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
 - **Limiti:** solo il progetto per cui l'app è registrata (un client OAuth Android con questo pacchetto e questa firma esiste in un
   solo progetto), quindi nell'app niente «Collega il tuo Firebase»; i metodi di accesso del ponte sono facoltativi, così l'app 0.1.0
   resta riconosciuta (Standard soltanto, con l'invito ad aggiornarla). Notifiche nell'app: fase successiva.
+
+## App Android: notifiche locali (versione 0.3.0) — 22 novembre 2026
+
+- **Su richiesta.** Nella WebView non c'è Web Push. L'app riceve dalla pagina gli stessi `PushJob` che il browser manda al servizio push
+  (`pushJobs`, calcolati sul dispositivo: solo tipo, orario, date) e li programma con gli allarmi di Android (`Reminders.kt`); all'ora
+  dell'allarme mostra una notifica locale con i testi di `public/sw.js`, nella lingua inviata dalla pagina.
+- **Stesse regole del servizio** (`push-service/service.ts`): voci validate come in `parseJobs` (chiavi legate al periodo o alla data,
+  al massimo 400 giorni avanti; le malformate si scartano una per una), un riepilogo o un rinnovo già mostrati non tornano, il backup si
+  ripete ogni 7/14/30 giorni, «Ricordamelo tra 3 giorni» lo sposta di tre giorni e lascia il rinvio alla pagina (`takeSnoozes`), che lo
+  registra nello stato dell'archivio come quello scritto da `sw.js`. Spente, l'app dimentica anche ciò che ha mostrato.
+- **Puntualità:** allarmi esatti con `USE_EXACT_ALARM` (Android 13+; `SCHEDULE_EXACT_ALARM` fino al 12) e `setExactAndAllowWhileIdle`,
+  inesatti solo se il permesso viene tolto; riprogrammati da `ReminderRestore` dopo riavvio, aggiornamento dell'app e cambio di ora o
+  fuso. `USE_EXACT_ALARM` è ammesso sul Play Store solo per sveglie e calendari: l'app non è distribuita lì (APK firmato installato a mano).
+- **Permesso:** `POST_NOTIFICATIONS` da un gesto in Notifiche, solo da Android 13 (prima conta solo l'interruttore di Android); un rifiuto
+  definitivo o le notifiche spente nelle impostazioni di Android danno lo stato `denied`, con «Apri le impostazioni».
+- **Scartate:** un servizio push per l'app (FCM: SDK e dipendenze nuove, server che conosce il dispositivo); `WorkManager` (nessuna
+  garanzia d'orario, libreria in più).
+- **Limiti:** gli orari si aggiornano solo quando la pagina è aperta (come nel browser, dove li riceve il servizio); un'app 0.2.0 senza i
+  metodi resta senza notifiche: la pagina le dà per non disponibili, come in un browser senza Web Push.

@@ -77,6 +77,39 @@ class NummoBridge(private val activity: MainActivity) {
         activity.runOnUiThread { google.signOut() }
     }
 
+    // System notifications (Reminders.kt): the page's reminder times scheduled as local notifications.
+    // Status: active, off or denied (blocked in Android's settings, or the permission refused for good).
+    @JavascriptInterface
+    fun notificationStatus(): String = activity.notificationStatus()
+
+    // Asks the permission (Android 13+) and turns them on: ok, cancelled (refused this time) or unavailable (refused for good).
+    @JavascriptInterface
+    fun requestNotifications(id: String) {
+        activity.runOnUiThread { activity.requestNotifications(id) }
+    }
+
+    @JavascriptInterface
+    fun scheduleNotifications(lang: String, jobs: String): Boolean {
+        if (!Reminders.enabled(activity) || !Reminders.permitted(activity)) return false
+        Reminders.replace(activity, lang, Reminders.parse(jobs))
+        return true
+    }
+
+    @JavascriptInterface
+    fun disableNotifications() = Reminders.setEnabled(activity, false)
+
+    @JavascriptInterface
+    fun testNotification(lang: String, delaySeconds: Int) = Reminders.test(activity, lang, delaySeconds.coerceIn(0, 600))
+
+    // «Ricordamelo tra 3 giorni» pressed on a notification: the times, read once (JSON array of ISO instants).
+    @JavascriptInterface
+    fun takeSnoozes(): String = Reminders.snoozes(activity)
+
+    @JavascriptInterface
+    fun openNotificationSettings() {
+        activity.runOnUiThread { activity.openNotificationSettings() }
+    }
+
     private fun start(id: String) {
         val signal = CancellationSignal()
         prompts[id] = signal
