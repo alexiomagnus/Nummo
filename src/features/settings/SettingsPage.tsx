@@ -24,6 +24,7 @@ import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 import { resetReceiptAi } from '../receipts/aiSettings';
 import { hasHaptics } from '../../theme/haptics';
 import { useSizeClass } from '../../theme/useSizeClass';
+import { SameWidthGroup, useSameWidth } from '../../components/SameWidth';
 import { ProfileImageCard, type ProfileScope } from './ProfileImageCard';
 import { AppLockCard } from '../lock/AppLock';
 import { resetAppLockDelay } from '../lock/appLockStore';
@@ -140,6 +141,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
     </View>
   );
   return (
+    // From medium «Ripristina predefiniti» and the AI card's actions share one width (user's request, 22 November).
+    <SameWidthGroup>
     <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
       <PageHeader title={t("Impostazioni")} action={<DoneButton onPress={onDone} />} />
       {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} ring={preferences.avatarRing} onRingChange={(avatarRing) => onChange({ avatarRing })} />}
@@ -184,11 +187,22 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
       </View>
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}
-      <Button mode="outlined" textColor={colors.secondary} style={[styles.reset, phone && styles.resetPhone]} onPress={resetAll}
-        icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
-        {t("Ripristina predefiniti")}
-      </Button>
+      <ResetAllButton phone={phone} onPress={resetAll} />
     </View>
+    </SameWidthGroup>
+  );
+}
+
+// Inside the page's `SameWidthGroup`, so it measures with the AI card's actions.
+function ResetAllButton({ phone, onPress }: { phone: boolean; onPress: () => void }) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const sameWidth = useSameWidth();
+  return (
+    <Button mode="outlined" textColor={colors.secondary} style={[styles.reset, phone && styles.resetPhone, sameWidth.style]} onLayout={sameWidth.onLayout} onPress={onPress}
+      icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
+      {t("Ripristina predefiniti")}
+    </Button>
   );
 }
 

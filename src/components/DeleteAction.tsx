@@ -20,16 +20,21 @@ type DialogProps = {
   onConfirm: () => boolean | Promise<boolean>;
   // Extra content under the description (e.g. the offer of a backup before deleting).
   children?: ReactNode;
+  // The deletion is not allowed: `blocked` says why, and «Chiudi» is the only action (a category still in use).
+  blocked?: string;
 };
 
 // Confirmation for every irreversible deletion (M3 basic dialog): small error-coloured icon,
 // left-aligned title and consequences, actions at the bottom right (full width on phones).
 // Escape cancels; the safe action («Annulla») takes the initial focus.
-export function DeleteDialog({ visible, name, title, description, confirmLabel, onDismiss, onConfirm, children }: DialogProps) {
+export function DeleteDialog({ visible, name, title, description, confirmLabel, onDismiss, onConfirm, children, blocked }: DialogProps) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const [busy, setBusy] = useState(false);
+  // With extra content (the backup offered before deleting, full width), «Annulla» and the confirmation share the whole row in
+  // equal halves from medium too, lined up with it (user's request, 22 November); phones stack them at full width anyway.
+  const halves = children && !compact ? styles.half : undefined;
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={() => { if (!busy) onDismiss(); }} style={{ maxWidth: 400 }}>
@@ -40,15 +45,18 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
                 <SvgIcon shape={iconShapes.trash} size={24} color={colors.error} />
                 <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>{title ?? t("Eliminare {p0}?", { p0: name })}</Text>
               </View>
-              {(description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? t("L’operazione non può essere annullata.")}</Text>}
+              {blocked ? <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{blocked}</Text>
+                : (description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? t("L’operazione non può essere annullata.")}</Text>}
               {children && <View style={styles.extra}>{children}</View>}
             </ScrollView>
           </Dialog.ScrollArea>
           <View style={[styles.actions, compact && styles.actionsCompact]}>
-            <CancelButton disabled={busy} onPress={onDismiss}>{t("Annulla")}</CancelButton>
-            <ConfirmButton buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy}
+            {blocked ? <CancelButton onPress={onDismiss}>{t("Chiudi")}</CancelButton> : <>
+            <CancelButton disabled={busy} onPress={onDismiss} style={halves}>{t("Annulla")}</CancelButton>
+            <ConfirmButton buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy} style={halves}
               accessibilityLabel={confirmLabel ?? t("Conferma eliminazione di {p0}", { p0: name })}
               onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{confirmLabel ?? t("Elimina")}</ConfirmButton>
+            </>}
           </View>
         </View>
       </Dialog>
@@ -65,13 +73,14 @@ const styles = StyleSheet.create({
   extra: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, alignItems: 'stretch' },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
+  half: { flex: 1, minWidth: 0 },
 });
 
 // Trash icon first, explicit confirmation dialog second. The action seen when the dialog
 // was opened is the one confirmed, even if the parent re-renders with newer data meanwhile.
 // `labeled="wide"`: «Elimina» with its label from medium, only the outlined trash icon (error colour, 48×48) on phones, where the
 // label next to «Annulla»/«Salva» did not fit and the row wrapped, leaving Elimina alone on a line (user's choice, 21 November).
-export function DeleteAction({ name, title, description, onDelete, labeled: labeledProp, mode = 'text', disabled, onOpenChange }: { name: string; title?: string; description?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean | 'wide'; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
+export function DeleteAction({ name, title, description, blocked, onDelete, labeled: labeledProp, mode = 'text', disabled, onOpenChange }: { name: string; title?: string; description?: string; blocked?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean | 'wide'; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { t } = useI18n();
   const phone = useSizeClass() === 'compact';
   const labeled = labeledProp === 'wide' ? !phone : labeledProp;
@@ -89,6 +98,6 @@ export function DeleteAction({ name, title, description, onDelete, labeled: labe
       // the icon's own error red (user's request, 21 November).
       : <IconButton disabled={disabled} icon={icon} mode={danger ? 'outlined' : undefined} iconColor={danger ? colors.error : undefined}
         style={{ margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: danger ? radius.button : 4, ...(danger ? { borderColor: colors.error } : {}) }} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request} />}
-    <DeleteDialog visible={open} name={name} title={title} description={description} onDismiss={dismiss} onConfirm={() => action.current()} />
+    <DeleteDialog visible={open} name={name} title={title} description={description} blocked={blocked} onDismiss={dismiss} onConfirm={() => action.current()} />
   </>;
 }

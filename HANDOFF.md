@@ -6,7 +6,9 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `67f4a29` (template senza data) pubblicato su richiesta il 22 novembre (sera):
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `49a7c58` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+  «Deploy complete!», bundle online `index-fe24bc41…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
+  Prima, **Hosting** da `67f4a29` (template senza data) pubblicato su richiesta il 22 novembre (sera):
   «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256; la prima lettura subito dopo il rilascio dava ancora l'HTML
   precedente, poi quello nuovo). Rules invariate dal `17632af` (nessuna differenza; `firestore.rules` pubblico identico): non ripubblicate.
   Prima, **Hosting** da `9929c8f` pubblicato su richiesta il 22 novembre (sera) con
@@ -16,7 +18,7 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato, **non pubblicato** su Hosting. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato su Hosting. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
   (template senza data), `9929c8f`
   (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
@@ -67,6 +69,48 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## «Cambia modalità» nel colore principale, nota sotto «Elimina tutte le spese» tolta — 22 novembre 2026
+
+- Su richiesta (screenshot): «Cambia modalità» di Archiviazione e backup pieno nel colore principale (`contained`, entrambe le modalità;
+  «Scollega progetto» resta con contorno); tolta la nota «* Categorie, fondi, liste, template ed esercenti restano.» (e la traduzione).
+- **Verifica:** `npm run check` OK (vedi rilascio). Committato, inviato e pubblicato insieme alle sezioni precedenti non ancora committate.
+
+## «Cambia modalità» largo come due pulsanti su desktop — 22 novembre 2026
+
+- Su richiesta (screenshot): da medium «Cambia modalità», solo nella sua riga, è largo come due pulsanti della pagina più lo spazio tra loro
+  (`doubleWidth` in `components/SameWidth.tsx`; non si misura, quindi la larghezza comune resta quella di un'etichetta). In Avanzata, accanto a
+  «Scollega progetto», ognuno resta largo uno. Smartphone invariato.
+- **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): «Cambia modalità» 281+476, sotto 281+233 e 524+233 (stessi bordi);
+  a 390 tutti 364. Avanzata non provata nel browser. Non committato, non pubblicato.
+
+## Impostazioni su desktop: «Dimentica la chiave», «Revoca il consenso» e «Ripristina predefiniti» della stessa larghezza — 22 novembre 2026
+
+- Su richiesta (screenshot): da medium i tre pulsanti hanno la stessa larghezza, quella dell'etichetta più lunga, senza occupare la riga
+  (`SameWidthGroup` attorno a `SettingsPage`, `useSameWidth` nella scheda AI e in `ResetAllButton`). Smartphone invariato (metà riga e tutta la riga).
+- **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): 281..480, 490..689, 281..480 (199 ciascuno). Non committato, non pubblicato.
+
+## Dialoghi di eliminazione con backup: «Annulla» ed «Elimina» a metà riga su desktop — 22 novembre 2026
+
+- Su richiesta (screenshot): in «Eliminare tutte le spese?» (e «Sostituire tutti i dati?», stesso dialogo) da medium «Annulla» e la conferma
+  occupano tutta la riga, a metà ciascuno, allineati a «Scarica backup (JSON)» (`half` in `DeleteDialog`, solo quando c'è contenuto extra:
+  gli altri dialoghi di eliminazione restano a destra). Su smartphone invariati (impilati a tutta larghezza).
+- **Verifica:** `npm run check` OK. Chromium headless (Standard): a 1280×900 backup 465+350, Annulla 466+168, Elimina tutte 647+168; a 390×844
+  tutti ~308 impilati. Non committato, non pubblicato.
+
+## Categorie in uso non eliminabili — 22 novembre 2026
+
+- Su richiesta (dopo l'analisi: prima l'eliminazione lasciava spese e abbonamenti con un riferimento a una categoria inesistente, mostrati come
+  «Senza categoria» e non salvabili in modifica senza sceglierne un'altra): una categoria usata da spese o abbonamenti **non si elimina**.
+  Il cestino apre un dialogo «La categoria … è in uso» con «La usano 19 spese e 1 abbonamento. Per eliminarla, cambia prima la loro
+  categoria, oppure rinominala con la matita.» (singolare «La usa 1 spesa…») e solo «Chiudi». Le categorie non usate si eliminano come prima.
+- Conteggio puro `categoryUsage` (`domain/category.ts`, test in `tests/seedDefaults.test.ts`); liste e template non contano. `DeleteDialog`/
+  `DeleteAction` con `blocked`. Cestino disattivato finché le spese non sono caricate; `Workspace` ricontrolla alla conferma sui dati più
+  recenti. Solo nell'app: le Rules non lo impediscono (scelta concordata). Scartato lo spostamento in blocco su un'altra categoria (troppo complesso).
+- **Verifica:** `npm run check` OK (**550/550**). Chromium headless su `dist-demo` (Standard, 1280×900) dopo l'import di `nummo-utente-medio.json`:
+  le dieci categorie «Medio · …» bloccate con i conteggi giusti (es. 53 spese; 8 spese e 2 abbonamenti; 5 abbonamenti), le cinque predefinite
+  inutilizzate con il dialogo di sempre; «Tecnologia» eliminata davvero (15 → 14). Nessun errore JS. **Non provati:** Avanzata, smartphone,
+  la frase al singolare. Non committato, non pubblicato.
+
 ## «Ripristina le categorie predefinite», « | » negli abbonamenti, «Cambia modalità» con contorno — 22 novembre 2026
 
 - Su richiesta (screenshot dell'utente):
@@ -83,7 +127,7 @@ rilasci».
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard): a 1280×900 i cinque pulsanti della pagina larghi 233, a 390×844
   tutti 364 (tutta la riga); Categorie con 5 categorie: pulsante presente, «ci sono già». Nessun errore JS. **Non provati nel browser:** ripristino
   con una predefinita mancante (solo test di dominio), riga di un abbonamento (archivio demo senza abbonamenti), pulsanti dell'Avanzata.
-  Committato in `49a7c58` e inviato; non pubblicato.
+  Committato in `49a7c58`, inviato e pubblicato su Hosting.
 
 ## Pulsanti della scheda AI su smartphone, backup proposto prima di eliminare — 22 novembre 2026
 
@@ -96,7 +140,7 @@ rilasci».
 - **Verifica:** `npm run check` OK (**548/548**). Chromium headless su `dist-demo` (Standard, 390×844 touch): pulsanti AI 13..190 e 200..377,
   «Ripristina predefiniti» 13..377; etichette intere a 360 e 320 px; dialogo di eliminazione: un solo download (`nummo-backup.json`) dal
   pulsante del dialogo, nessun download alla conferma, pulsante di nuovo «Scarica backup (JSON)» alla riapertura. Nessun errore JS.
-  **Non provato nel browser:** il dialogo «Sostituisci tutti i dati». Committato in `49a7c58` e inviato; non pubblicato.
+  **Non provato nel browser:** il dialogo «Sostituisci tutti i dati». Committato in `49a7c58`, inviato e pubblicato su Hosting.
 
 ## Sezione «Passa alla modalità Standard» tolta, zoom a icona nella revisione, «Nuova lista», anello dell'avatar, «Salva» fermo — 22 novembre 2026
 
@@ -116,7 +160,7 @@ rilasci».
 - **Verifica:** `npm run check` OK (**548/548**). Chromium headless su `dist-demo` (Standard, 390×844 touch): «Salva» 556..612 prima e dopo aver
   scritto «g», contatore tra Descrizione ed Esercente; «Nuova lista» intero a 390/360/320 senza scorrimento orizzontale; anello acceso →
   preferenza salvata, anello sul pulsante dopo il ricaricamento e sull'anteprima. Nessun errore JS. **Non provati nel browser:** `ModeTransfer`
-  (solo Avanzata) e la revisione dello scontrino (serve l'AI): solo typecheck. Committato in `49a7c58` e inviato; non pubblicato.
+  (solo Avanzata) e la revisione dello scontrino (serve l'AI): solo typecheck. Committato in `49a7c58`, inviato e pubblicato su Hosting.
 
 ## Templates senza data — 22 novembre 2026
 

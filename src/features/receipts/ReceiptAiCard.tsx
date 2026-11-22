@@ -10,6 +10,7 @@ import { aiProviderLabels, aiProviders, recommendedModel } from '../../domain/re
 import { useI18n } from '../../i18n/I18nProvider';
 import { inputOutline, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
+import { useSameWidth } from '../../components/SameWidth';
 import { useReceiptAi } from './aiSettings';
 import { useAiModels } from './useAiModels';
 
@@ -27,6 +28,8 @@ export function ReceiptAiCard() {
   const { colors } = useTheme();
   const ai = useReceiptAi();
   const compact = useSizeClass() === 'compact';
+  // From medium: as wide as each other and as «Ripristina predefiniti» (the Settings page's `SameWidthGroup`), never the whole row.
+  const sameWidth = useSameWidth();
   const { enabled, provider, model } = ai.settings;
   const list = useAiModels(ai.settings, enabled ? ai.apiKey : '');
   // With no model chosen yet, a fresh list proposes a small one that reads pictures; a name already written is kept.
@@ -69,8 +72,8 @@ export function ReceiptAiCard() {
               A little more room after the fields (user's request, 17 November): the actions do not read as part of Modello. */}
           {/* Phones: the two actions share the whole row in equal halves (one alone takes it all; user's request, 22 November). */}
           {(ai.apiKey !== '' || ai.consented) && <View style={{ flexDirection: 'row', flexWrap: compact ? 'nowrap' : 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
-            {ai.apiKey !== '' && <Button mode="outlined" style={compact && phoneHalf} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.setApiKey('')}>{t("Dimentica la chiave")}</Button>}
-            {ai.consented && <Button mode="outlined" style={compact && phoneHalf} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.change({ consent: '' })}>{t("Revoca il consenso")}</Button>}
+            {ai.apiKey !== '' && <Button mode="outlined" style={compact ? phoneHalf : sameWidth.style} onLayout={sameWidth.onLayout} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.setApiKey('')}>{t("Dimentica la chiave")}</Button>}
+            {ai.consented && <Button mode="outlined" style={compact ? phoneHalf : sameWidth.style} onLayout={sameWidth.onLayout} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.change({ consent: '' })}>{t("Revoca il consenso")}</Button>}
           </View>}
         </View>}
       </View>

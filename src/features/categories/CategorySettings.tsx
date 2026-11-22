@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
-import { categoryNameError, maxCategoryNameLength, type Category, type CategoryIcon } from '../../domain/category';
+import { categoryNameError, maxCategoryNameLength, type Category, type CategoryIcon, type CategoryUsage } from '../../domain/category';
 import { clipToLength, searchPolicy } from '../../domain/policy';
 import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
@@ -21,8 +21,10 @@ type Props = {
   error: string | null;
   ready: boolean;
   notify: (message: string) => void;
-  // Present only while there are no categories: adds the predefined set.
+  // «Ripristina le categorie predefinite»: adds back the defaults missing by name.
   onAddDefaults?: () => void;
+  // Expenses and subscriptions per category; null while they are not loaded (deleting waits: a used category is never deleted).
+  usage: ReadonlyMap<string, CategoryUsage> | null;
   canAddDefaults: boolean;
   // Resolves with the new category's ID (null when it was not saved).
   onCreate: (name: string, icon: CategoryIcon | null) => Promise<string | null>;
@@ -30,7 +32,7 @@ type Props = {
   onUpdate: (id: string, name: string, icon: CategoryIcon | null, expected: Category) => boolean | Promise<boolean>;
 };
 
-export function CategorySettings({ categories, error, ready, notify, onAddDefaults, canAddDefaults, onCreate, onDelete, onUpdate }: Props) {
+export function CategorySettings({ categories, error, ready, notify, onAddDefaults, canAddDefaults, usage, onCreate, onDelete, onUpdate }: Props) {
   const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -38,6 +40,19 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
   const [busy, setBusy] = useState(false);
   ready = ready && !busy;
   const [name, setName] = useState('');
+  // A category used by expenses or subscriptions is not deleted (22 November, user's choice): the dialog says why, «Chiudi» only.
+  const inUse = (id: string) => { const used = usage?.get(id); return Boolean(used && used.expenses + used.subscriptions > 0); };
+  const blockedText = (id: string) => {
+    const used = usage?.get(id) ?? { expenses: 0, subscriptions: 0 };
+    const parts = [
+      used.expenses > 0 ? (used.expenses === 1 ? t("1 spesa") : t("{p0} spese", { p0: used.expenses })) : '',
+      used.subscriptions > 0 ? (used.subscriptions === 1 ? t("1 abbonamento") : t("{p0} abbonamenti", { p0: used.subscriptions })) : '',
+    ].filter(Boolean);
+    const users = parts.length === 2 ? t("{p0} e {p1}", { p0: parts[0] ?? "", p1: parts[1] ?? "" }) : parts[0] ?? '';
+    return used.expenses + used.subscriptions === 1
+      ? t("La usa {p0}. Per eliminarla, cambiane prima la categoria, oppure rinominala con la matita.", { p0: users })
+      : t("La usano {p0}. Per eliminarla, cambia prima la loro categoria, oppure rinominala con la matita.", { p0: users });
+  };
   const [icon, setIcon] = useState<CategoryIcon | null>(null);
   const [choosingIcon, setChoosingIcon] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -103,7 +118,9 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
                   <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
                     disabled={!ready} selected={isEditing} aria-haspopup="dialog" aria-expanded={isEditing} accessibilityLabel={t("Modifica {p0}", { p0: category.label })}
                     onPress={() => setEditing(category)} />
-                  <DeleteAction name={category.label} title={t("Eliminare la categoria {p0}?", { p0: category.label })} description={t("L’operazione non può essere annullata.")}
+                  <DeleteAction name={category.label} disabled={usage === null} description={t("L’operazione non può essere annullata.")}
+                    title={inUse(category.id) ? t("La categoria {p0} è in uso", { p0: category.label }) : t("Eliminare la categoria {p0}?", { p0: category.label })}
+                    blocked={inUse(category.id) ? blockedText(category.id) : undefined}
                     onDelete={() => onDelete(category.id)} />
                 </>} />
             );

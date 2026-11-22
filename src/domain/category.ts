@@ -99,6 +99,20 @@ export const defaultCategories: readonly { label: string; icon: CategoryIcon }[]
   { label: 'Trasporti', icon: 'train' },
 ];
 
+// How many expenses and subscriptions (recurring series) use each category: a category in use is not deleted (22 November,
+// user's choice): its records would keep pointing to nothing. Lists and templates already show a missing category, so they
+// do not count.
+export type CategoryUsage = Readonly<{ expenses: number; subscriptions: number }>;
+export function categoryUsage(records: readonly { category_id: string | null; recurrence: unknown }[]): Map<string, CategoryUsage> {
+  const usage = new Map<string, CategoryUsage>();
+  for (const record of records) {
+    if (!record.category_id) continue;
+    const current = usage.get(record.category_id) ?? { expenses: 0, subscriptions: 0 };
+    usage.set(record.category_id, record.recurrence ? { ...current, subscriptions: current.subscriptions + 1 } : { ...current, expenses: current.expenses + 1 });
+  }
+  return usage;
+}
+
 // «Ripristina le categorie predefinite»: the defaults (named in the current language by `translate`) whose name no category
 // has yet, compared like the unique names (case and spaces ignored). Existing categories are never changed or removed.
 export function missingDefaultCategories(existing: readonly { label: string }[], translate: (label: string) => string): { label: string; icon: CategoryIcon }[] {

@@ -4,7 +4,7 @@ import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, CancelButton, ConfirmButton } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { useSameWidth } from '../../components/SameWidth';
+import { doubleWidth, useSameWidth } from '../../components/SameWidth';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import type { ProtectionState } from '../../services/storageProtection';
@@ -71,9 +71,9 @@ export function StandardStorage({ protection, onChangeMode, style }: Common & { 
         <View style={styles.protectionText}><Text variant="bodyLarge">{t("Su questo dispositivo")}</Text></View>
       </View>
       {protection && <ProtectionStatus state={protection} />}
-      {/* Outlined and as wide as the other buttons of the page (user's request, 22 November): before, a text button. */}
+      {/* Filled in the main colour and as wide as two buttons of the page (user's requests, 22 November): before, a text button. */}
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
+        <Button mode="contained" style={doubleWidth(sameWidth, spacing.sm)} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
       </View>
       <ChangeModeDialog visible={changing} target="advanced" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('advanced')} />
     </Card>
@@ -99,7 +99,8 @@ export function AdvancedStorage({ project, cache, onChangeMode, style, connected
       </View>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
         {connected && onDisconnect && <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.logout)} onPress={() => setDisconnecting(true)}>{t("Scollega progetto")}</Button>}
-        <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
+        {/* Alone, as wide as the two buttons of the rows below; beside «Scollega progetto», one width each. */}
+        <Button mode="contained" {...(connected && onDisconnect ? sameWidth : { style: doubleWidth(sameWidth, spacing.sm) })} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
       </View>
       <ChangeModeDialog visible={changing} target="standard" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('standard')} />
       {onDisconnect && <DisconnectDialog visible={disconnecting} project={project} onDismiss={() => setDisconnecting(false)} onConfirm={onDisconnect} />}

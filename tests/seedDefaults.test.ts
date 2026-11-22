@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { defaultCategories, isCategoryIcon, missingDefaultCategories } from '../src/domain/category.ts';
+import { categoryUsage, defaultCategories, isCategoryIcon, missingDefaultCategories } from '../src/domain/category.ts';
 import { shouldSeedDefaultCategories } from '../src/features/workspace/seedDefaults.ts';
 
 const part = { ready: true, count: 0, fromCache: false, pending: false };
@@ -34,4 +34,15 @@ test('ripristina le categorie predefinite: solo quelle che mancano per nome, nel
   const english: Record<string, string> = { Alimentari: 'Groceries', Intrattenimento: 'Entertainment', Shopping: 'Shopping', Tecnologia: 'Technology', Trasporti: 'Transport' };
   assert.deepEqual(missingDefaultCategories([{ label: 'Groceries' }], (label) => english[label] ?? label).map((c) => [c.label, c.icon]),
     [['Entertainment', 'popcorn'], ['Shopping', 'shirt'], ['Technology', 'laptop'], ['Transport', 'train']]);
+});
+
+test('categoria in uso: spese e abbonamenti contati per categoria, senza categoria ignorate', () => {
+  const usage = categoryUsage([
+    { category_id: 'a', recurrence: null }, { category_id: 'a', recurrence: null }, { category_id: 'a', recurrence: 'monthly' },
+    { category_id: 'b', recurrence: 'yearly' }, { category_id: null, recurrence: null },
+  ]);
+  assert.deepEqual(usage.get('a'), { expenses: 2, subscriptions: 1 });
+  assert.deepEqual(usage.get('b'), { expenses: 0, subscriptions: 1 });
+  assert.equal(usage.get('c'), undefined);
+  assert.equal(usage.size, 2);
 });

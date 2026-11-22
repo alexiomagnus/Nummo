@@ -185,7 +185,6 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         <Button {...fileAction} mode="outlined" icon={icon(iconShapes.trash)} textColor={theme.colors.error} style={[sameWidth, { borderColor: theme.colors.error }]}
           disabled={!enabled || busy} onPress={() => { setSavedBefore(false); setConfirmWipe(true); }}>{t("Elimina tutte le spese")}</Button>
       </View>
-      <Text variant="bodySmall" style={[hint, styles.footnote]}>{t("* Categorie, fondi, liste, template ed esercenti restano.")}</Text>
     </View>
     {preview && <View ref={previewRef}>
       <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => setPreview(null)}

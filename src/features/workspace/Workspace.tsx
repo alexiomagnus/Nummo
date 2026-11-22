@@ -22,7 +22,7 @@ import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
 import type { Category } from '../../domain/category';
-import { missingDefaultCategories } from '../../domain/category';
+import { categoryUsage, missingDefaultCategories } from '../../domain/category';
 import { CategorySettings } from '../categories/CategorySettings';
 import { useRemoteCategories } from '../categories/useRemoteCategories';
 import type { DashboardPreferences } from '../settings/preferences';
@@ -302,6 +302,18 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     return saved;
   };
   const heading = t(headings[section]);
+  // Expenses and subscriptions per category, once they are loaded: a category in use is not deleted (22 November).
+  const usedCategories = useMemo(() => store.ready ? categoryUsage(store.expenses) : null, [store.ready, store.expenses]);
+  // Checked again at the confirmation, on the latest data (the dialog keeps the action seen when it opened, so a ref): an
+  // expense may have taken the category while the dialog was open.
+  const latestUsage = useRef(usedCategories);
+  latestUsage.current = usedCategories;
+  const removeCategory = (id: string) => {
+    const usage = latestUsage.current;
+    const used = usage?.get(id);
+    if (!usage || (used && used.expenses + used.subscriptions > 0)) { notify("La categoria è in uso: non è stata eliminata."); return false; }
+    return categoryState.deleteCategory(id);
+  };
   // Seeding and «Ripristina le categorie predefinite»: only the defaults missing by name are added, the rest is never touched.
   const addDefaults = async () => {
     const missing = missingDefaultCategories(categoryState.categories, t);
@@ -422,7 +434,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       onToggle={(templatesEnabled) => onChangeDashboardPreferences({ templatesEnabled })} />}
     {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
-        onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}
+        usage={usedCategories} onCreate={categoryState.createCategory} onDelete={removeCategory} onUpdate={categoryState.updateCategory}
         notify={notify}
         onAddDefaults={() => { void addDefaults(); }} canAddDefaults={synchronized && categoryState.ready} />
     </>}

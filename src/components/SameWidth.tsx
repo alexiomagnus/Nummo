@@ -25,6 +25,12 @@ export function SameWidthGroup({ children }: { children: ReactNode }) {
   return <SameWidthContext.Provider value={useGroup()}>{children}</SameWidthContext.Provider>;
 }
 
+// A button alone on its row as wide as two of the group (`gap` between them), from medium; it does not measure itself, so the
+// group's width stays that of one label (22 November, user's request: «Cambia modalità» spans the two transfer buttons below).
+export function doubleWidth(single: { style?: { minWidth: number } | null }, gap: number): { minWidth: number } | null {
+  return single.style ? { minWidth: single.style.minWidth * 2 + gap } : null;
+}
+
 // Props for a button of the group (`style` with the shared minimum width, `onLayout` to measure it). Outside a group,
 // the buttons of the calling component share a width among themselves.
 export function useSameWidth(): { style?: { minWidth: number } | null; onLayout?: (event: { nativeEvent: { layout: { width: number } } }) => void } {
