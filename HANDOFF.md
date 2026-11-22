@@ -6,7 +6,8 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `2b1e8fb` (notifiche dell'app Android 0.3.0), pubblicato su richiesta il
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `fa06adb` (articolo eliso nei testi delle notifiche, bundle `index-053e3738…`). Prima `2b1e8fb`
+  (notifiche dell'app Android 0.3.0), pubblicato su richiesta il
   22 novembre con `npm run deploy:hosting` («Deploy complete!»), bundle online `index-4a671be6…` identico a `dist/` (SHA-256), con il
   ramo per l'app. Prima `0f340bf` (app Android 0.2.0, bundle `index-9fe2b72e…`, voce sotto).
   Ultime **Rules**: `48361b9`. In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
@@ -159,6 +160,9 @@ rilasci».
   al {p1}», «Dal {p0} all’{p1}», «Dall’{p0} all’{p1}», in inglese sempre «From {p0} to {p1}»). App 0.3.1 (versionCode 4). Test in
   `tests/serviceWorker.test.ts`; `npm run check` OK (**575/575**); riquadro provato in Chromium headless sulla demo (quattro forme in
   italiano, inglese invariato); `assembleRelease` OK; testo di `Reminders.kt` non visto su un dispositivo.
+  Committato in `fa06adb` (non inviato); Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online
+  `index-053e3738…` e `sw.js` identici ai locali); release 0.3.1 installata sul Pixel 8 con `adb install -r` sopra la 0.3.0
+  (`POST_NOTIFICATIONS` ancora da concedere con «Attiva»).
 - Committata in `2b1e8fb` (non inviata); Hosting pubblicato su richiesta (bundle `index-4a671be6…`, identico a `dist/`); release 0.3.0
   installata sul Pixel 8 con `adb install -r` sopra la 0.2.0.
 - **Prova sul Pixel 8 (22 novembre, 18:29, su richiesta)** con l'app di **debug** (`app.nummo.android.debug`, dati propri, demo
