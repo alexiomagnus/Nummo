@@ -2,6 +2,7 @@
 // Written by GlobalStyle from the user's real theme, so the first frame already has the final background
 // instead of the default mint scheme. Both schemes are stored: with the «system» theme the script picks
 // by the device's current preference, which can differ from the one at write time.
+import { androidBridge, systemBarsColor } from '../services/androidApp.ts';
 import { buildScheme, type Accent, type ColorMode } from './palette.ts';
 
 export const bootThemeKey = 'nummo.boot-theme.v1';
@@ -21,6 +22,11 @@ export function applyDocumentTheme(doc: Document, background: string, dark: bool
   tags.slice(1).forEach((tag) => tag.remove());
   meta.removeAttribute('media');
   meta.content = background;
+  // Android app: the status and navigation bars take the same colour, with icons readable on it (in Chrome they keep the
+  // manifest's fixed colour). Never an error for the page.
+  const bridge = androidBridge(doc.defaultView);
+  const color = systemBarsColor(background);
+  if (bridge && color) try { bridge.setSystemBars(color, dark); } catch { /* app gone */ }
 }
 
 export function makeBootTheme(preferences: { theme: BootTheme['mode']; accent: Accent; colorMode: ColorMode }): BootTheme {

@@ -1,0 +1,275 @@
+package app.nummo.android
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.view.ViewGroup
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.webkit.PermissionRequest
+import android.webkit.RenderProcessGoneDetail
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.FrameLayout
+import android.widget.Toast
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
+import org.json.JSONObject
+
+// Nummo's Android app: the published site in a WebView, with a small native bridge (NummoBridge) for what a page cannot
+// do in Chrome: haptics through Android's touch feedback, the system bars in the page's colour, saving files and the
+// device's unlock. Only the site's own origin is loaded here; every other link opens outside the app.
+class MainActivity : Activity() {
+    lateinit var webView: WebView
+        private set
+    private lateinit var root: FrameLayout
+    private lateinit var bridge: NummoBridge
+    private val home: Uri = Uri.parse(BuildConfig.NUMMO_URL)
+    private var fileCallback: ValueCallback<Array<Uri>>? = null
+    private var cameraRequest: PermissionRequest? = null
+    private var pendingFile: ByteArray? = null
+    // A picker, a permission dialog or a save sheet of the app itself is in front: the page stays «visible», as a dialog
+    // of its own would (otherwise the app lock set to «Subito» would lock on the way back from choosing a photo).
+    private var awayForResult = false
+    private var backCallback: OnBackInvokedCallback? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
+        // Edge to edge on every version (Android 15+ imposes it): the bars are transparent over the root view, whose
+        // background is the page's colour, and the WebView sits inside the bars (and above the keyboard) as padding.
+        // Deprecated from Android 15 (where edge to edge is the rule), still needed on Android 11–14.
+        @Suppress("DEPRECATION")
+        run {
+            window.setDecorFitsSystemWindows(false)
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.TRANSPARENT
+            window.isStatusBarContrastEnforced = false
+        }
+        window.isNavigationBarContrastEnforced = false
+        root = FrameLayout(this)
+        webView = WebView(this)
+        root.addView(webView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        setContentView(root)
+        root.setOnApplyWindowInsetsListener { view, insets ->
+            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            val keyboard = insets.getInsets(WindowInsets.Type.ime())
+            view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, keyboard.bottom))
+            WindowInsets.CONSUMED
+        }
+        val saved = getSharedPreferences(barsPreferences, MODE_PRIVATE)
+        applyBars(saved.getInt("color", getColor(R.color.start_background)), saved.getBoolean("dark", true))
+        bridge = NummoBridge(this)
+        configure(webView)
+        if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) webView.loadUrl(home.toString())
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun configure(view: WebView) {
+        view.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            allowFileAccess = false
+            allowContentAccess = false
+            setSupportMultipleWindows(false)
+            javaScriptCanOpenWindowsAutomatically = false
+        }
+        view.isHapticFeedbackEnabled = true
+        view.addJavascriptInterface(bridge, "NummoAndroid")
+        view.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                if (isOurs(request.url)) return false
+                openOutside(request.url)
+                return true
+            }
+
+            // Also for the page's own history entries (pushState, back, forward): Back is the app's while it can go back.
+            override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) = updateBack()
+
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                root.removeView(view)
+                view.destroy()
+                recreate()
+                return true
+            }
+        }
+        view.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
+                fileCallback?.onReceiveValue(null)
+                fileCallback = callback
+                return try {
+                    awayForResult = true
+                    startActivityForResult(params.createIntent(), requestFile)
+                    true
+                } catch (_: ActivityNotFoundException) {
+                    awayForResult = false
+                    fileCallback = null
+                    false
+                }
+            }
+
+            // Only the camera, only for the site: the receipt photo of the scan dialog.
+            override fun onPermissionRequest(request: PermissionRequest) {
+                val video = PermissionRequest.RESOURCE_VIDEO_CAPTURE
+                if (!isOurs(request.origin) || request.resources.any { it != video }) {
+                    request.deny()
+                    return
+                }
+                if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    request.grant(arrayOf(video))
+                    return
+                }
+                cameraRequest?.deny()
+                cameraRequest = request
+                awayForResult = true
+                requestPermissions(arrayOf(Manifest.permission.CAMERA), requestCamera)
+            }
+
+            override fun onPermissionRequestCanceled(request: PermissionRequest) {
+                if (cameraRequest == request) cameraRequest = null
+            }
+        }
+    }
+
+    private fun isOurs(uri: Uri): Boolean = uri.scheme == home.scheme && uri.host == home.host && uri.port == home.port
+
+    private fun openOutside(uri: Uri) {
+        if (uri.scheme !in setOf("http", "https", "mailto", "tel")) return
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.no_app_for_link, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Status and navigation bars: the page's background behind them, icons dark on a light colour and light on a dark one.
+    fun applyBars(color: Int, dark: Boolean) {
+        root.setBackgroundColor(color)
+        val light = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+        window.insetsController?.setSystemBarsAppearance(if (dark) 0 else light, light)
+    }
+
+    // The next start paints the last colour before the page loads.
+    fun saveBars(color: Int, dark: Boolean) {
+        getSharedPreferences(barsPreferences, MODE_PRIVATE).edit().putInt("color", color).putBoolean("dark", dark).apply()
+    }
+
+    // «Save as» sheet of the system (local folders, Drive…); the content is written once a place is chosen.
+    fun saveFile(name: String, mime: String, bytes: ByteArray) {
+        pendingFile = bytes
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+            .addCategory(Intent.CATEGORY_OPENABLE)
+            .setType(mime)
+            .putExtra(Intent.EXTRA_TITLE, name)
+        try {
+            awayForResult = true
+            startActivityForResult(intent, requestSave)
+        } catch (_: ActivityNotFoundException) {
+            awayForResult = false
+            pendingFile = null
+            Toast.makeText(this, R.string.file_not_saved, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun writeFile(uri: Uri, bytes: ByteArray) {
+        Thread {
+            val saved = runCatching { contentResolver.openOutputStream(uri, "wt")!!.use { it.write(bytes) } }.isSuccess
+            runOnUiThread {
+                Toast.makeText(this, if (saved) R.string.file_saved else R.string.file_not_saved, Toast.LENGTH_SHORT).show()
+            }
+        }.start()
+    }
+
+    // Answer to a request of the page (NummoBridge.authenticate).
+    fun deliver(id: String, outcome: String) {
+        webView.evaluateJavascript(
+            "window.nummoAndroidResult && window.nummoAndroidResult(${JSONObject.quote(id)}, ${JSONObject.quote(outcome)})", null)
+    }
+
+    @Deprecated("Activity result API of the platform")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        awayForResult = false
+        when (requestCode) {
+            requestFile -> {
+                fileCallback?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data))
+                fileCallback = null
+            }
+            requestSave -> {
+                val bytes = pendingFile
+                pendingFile = null
+                val uri = data?.data
+                if (resultCode == RESULT_OK && uri != null && bytes != null) writeFile(uri, bytes)
+            }
+            else -> @Suppress("DEPRECATION") super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode != requestCamera) return super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        awayForResult = false
+        val request = cameraRequest ?: return
+        cameraRequest = null
+        if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) request.grant(arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE))
+        else request.deny()
+    }
+
+    // Back: the page's history while there is one (its guard entry closes what is open: theme/backStack.ts), then the
+    // system's own (leaves the app, with the predictive animation). Android 13+ asks for a callback registered only while
+    // the app wants Back.
+    private fun updateBack() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val wanted = webView.canGoBack()
+        val current = backCallback
+        if (wanted && current == null) {
+            val callback = OnBackInvokedCallback { if (webView.canGoBack()) webView.goBack() else moveTaskToBack(true) }
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, callback)
+            backCallback = callback
+        } else if (!wanted && current != null) {
+            onBackInvokedDispatcher.unregisterOnBackInvokedCallback(current)
+            backCallback = null
+        }
+    }
+
+    @Deprecated("Android 12 and earlier; Android 13+ uses updateBack")
+    override fun onBackPressed() {
+        if (webView.canGoBack()) webView.goBack() else @Suppress("DEPRECATION") super.onBackPressed()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (!awayForResult && !bridge.authenticating) webView.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        webView.onResume()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        webView.saveState(outState)
+    }
+
+    override fun onDestroy() {
+        root.removeView(webView)
+        webView.destroy()
+        super.onDestroy()
+    }
+
+    private companion object {
+        const val requestFile = 1
+        const val requestSave = 2
+        const val requestCamera = 3
+        const val barsPreferences = "systemBars"
+    }
+}

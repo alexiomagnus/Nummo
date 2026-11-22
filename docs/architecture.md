@@ -1412,3 +1412,24 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   pausa, limite 60). Backup invariato (v11): un client precedente rifiuterebbe una serie con più di 8 cambi, come ogni dato più recente.
 - Messaggio separato quando la data scelta precede l'ultimo cambio (`statusChangeProblem`), prima mostrato come «troppe variazioni».
 - Rules da pubblicare con autorizzazione; chi usa il proprio Firebase deve ricopiarle.
+
+## App Android: contenitore WebView con ponte nativo — 22 novembre 2026
+
+- **Problema** (segnalazione dell'utente): nell'app installata da Chrome la vibrazione tace con il telefono in silenzioso o in Non
+  disturbare, mentre le app native vibrano; la barra di navigazione resta del `theme_color` fisso del manifest (`#121212`).
+- **Causa verificata** nel sorgente di Chrome (`VibrationManagerAndroid.java`, letto il 22 novembre): `navigator.vibrate` arriva a
+  `Vibrator.vibrate(long)` solo se `getRingerMode() != RINGER_MODE_SILENT`, senza attributi di feedback tattile; le app native usano
+  `View.performHapticFeedback` (uso TOUCH), che Android riproduce anche in silenzioso e in Non disturbare. Una pagina non ha accesso a
+  quel canale; expo-haptics sul web usa a sua volta `navigator.vibrate`, `performAndroidHapticsAsync` esiste solo nelle app native.
+- **Scelte scartate:** TWA (la vibrazione passa ancora da Chrome; barra con colori fissi), build nativa React Native (il codice usa
+  ovunque DOM, IndexedDB, WebAuthn, service worker: quasi una riscrittura), Capacitor (stesso principio, più dipendenze).
+- **Decisione** (scelta dell'utente): progetto `android/` con un'Activity Kotlin e una WebView sul sito pubblicato, sole API di
+  piattaforma, ponte `window.NummoAndroid` per vibrazione, colore delle barre, salvataggio dei file e sblocco del dispositivo
+  (`BiometricPrompt`). Lato web un solo modulo (`services/androidApp.ts`); senza ponte ogni percorso resta quello del browser.
+- **Fase 1: solo Standard.** Nella WebView Google blocca l'accesso (Avanzata) e non c'è Web Push (notifiche); WebAuthn sostituito da
+  `BiometricPrompt`. L'Avanzata è visibile ma disattivata, con una riga che rimanda al browser. Avanzata (accesso Google nativo) e
+  notifiche native sono fasi successive, solo su richiesta.
+- **Conseguenze:** l'archivio Standard dell'app è separato da quello di Chrome (backup e ripristino per spostarlo); niente backup cloud
+  di Android (`allowBackup=false`); la chiave di firma è personale e va conservata (senza, l'app non si aggiorna e va reinstallata,
+  perdendo i dati non salvati in un backup); le novità web arrivano all'app con `deploy:hosting`, l'APK si ricostruisce solo quando
+  cambia il contenitore.

@@ -7,10 +7,12 @@ import { Card } from '../../components/Card';
 import { doubleWidth, useSameWidth } from '../../components/SameWidth';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
+import { inAndroidApp } from '../../services/androidApp';
 import type { ProtectionState } from '../../services/storageProtection';
 import type { StorageMode } from '../../services/storageMode';
 import { spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
+import { appOnlyStandard } from './ModeChoice';
 
 const icon = (shape: string) => ({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape} size={size} color={color} />;
 
@@ -71,10 +73,13 @@ export function StandardStorage({ protection, onChangeMode, style }: Common & { 
         <View style={styles.protectionText}><Text variant="bodyLarge">{t("Su questo dispositivo")}</Text></View>
       </View>
       {protection && <ProtectionStatus state={protection} />}
-      {/* Filled in the main colour and as wide as two buttons of the page (user's requests, 22 November): before, a text button. */}
-      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button mode="contained" style={doubleWidth(sameWidth, spacing.sm)} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
-      </View>
+      {/* Filled in the main colour and as wide as two buttons of the page (user's requests, 22 November): before, a text button.
+          Android app: Standard only for now (ModeChoice), so a line instead of the button. */}
+      {inAndroidApp()
+        ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t(appOnlyStandard)}</Text>
+        : <View style={[styles.buttons, compact && styles.buttonsCompact]}>
+          <Button mode="contained" style={doubleWidth(sameWidth, spacing.sm)} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
+        </View>}
       <ChangeModeDialog visible={changing} target="advanced" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('advanced')} />
     </Card>
   );

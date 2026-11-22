@@ -1,0 +1,10 @@
+# Generated
+.gradle/
+.kotlin/
+build/
+app/build/
+# Personal: SDK path and site addresses (local.properties), release signing key and its passwords: never versioned.
+local.properties
+keystore.properties
+*.jks
+*.keystore

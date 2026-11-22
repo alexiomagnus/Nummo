@@ -11,6 +11,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { radius, spacing } from '../../theme/tokens';
 import { useReducedMotion, useSizeClass } from '../../theme/useSizeClass';
 import { conflictPreview, exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
+import { androidBridge } from '../../services/androidApp';
 import type { DataStore } from '../../services/dataStore';
 import { message } from '../expenses/useRemoteExpenses';
 const maxFileBytes = 5_000_000;
@@ -72,7 +73,10 @@ export function ImportPreview({ source, plan: merge, busy, enabled, onMerge, onC
     </View>
   </View>;
 }
+// In the Android app (no downloads in a WebView) the system's «save as» sheet picks where the file goes, Drive included.
 export function download(name: string, content: string, type: string) {
+  const bridge = androidBridge();
+  if (bridge) { bridge.saveFile(name, type, content); return; }
   const url = URL.createObjectURL(new Blob([content], { type }));
   const a = document.createElement('a'); a.href = url; a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);

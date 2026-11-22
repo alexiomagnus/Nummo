@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nummo</string>
+    <string name="unlock_title">Unlock Nummo</string>
+    <string name="file_saved">File saved</string>
+    <string name="file_not_saved">The file could not be saved</string>
+    <string name="no_app_for_link">No app can open this link</string>
+</resources>

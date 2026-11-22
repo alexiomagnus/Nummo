@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DayNight: the WebView's prefers-color-scheme follows the system (Nummo's «Sistema» theme). The bars are drawn by
+         MainActivity with the page's own background colour. -->
+    <style name="Theme.Nummo" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowBackground">@color/start_background</item>
+        <item name="android:windowSplashScreenBackground">@color/start_background</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+    </style>
+</resources>

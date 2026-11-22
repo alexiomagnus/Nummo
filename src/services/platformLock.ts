@@ -1,14 +1,19 @@
 import { fromBase64Url, toBase64Url, userVerified } from '../domain/appLock';
+import { androidBridge, authenticateOnDevice } from './androidApp';
 
 // The device's own screen lock (fingerprint, face, PIN) through WebAuthn with the platform authenticator. No server:
 // the browser itself checks the user, and the flags of its answer say whether it did (`userVerified`). The signature is
 // not verified, since there is no secret here to protect it with (see `domain/appLock.ts`: a screen, not encryption).
+// In Nummo's Android app (no WebAuthn in a WebView) the app asks the device itself (`BiometricPrompt`: fingerprint, face or
+// the screen-lock PIN), the same kind of screen; the credential ID is then only a random name kept for the settings.
 
 export type LockOutcome = 'ok' | 'cancelled' | 'unavailable' | 'error';
 
 const timeout = 60_000;
 
 export async function platformLockAvailable(): Promise<boolean> {
+  const bridge = androidBridge();
+  if (bridge) try { return bridge.canAuthenticate() === true; } catch { return false; }
   try {
     const api = globalThis.PublicKeyCredential;
     return !!api && !!navigator.credentials && await api.isUserVerifyingPlatformAuthenticatorAvailable();
@@ -31,6 +36,11 @@ function outcomeOf(reason: unknown): LockOutcome {
 // Creates the credential that the lock will ask for; the device verifies the user while creating it. Turning the lock on
 // again first tries the previous credential (`AppLockCard`), so the device's passkey list does not fill up.
 export async function createLockCredential(name: string): Promise<{ outcome: 'ok'; credentialId: string } | { outcome: Exclude<LockOutcome, 'ok'> }> {
+  const bridge = androidBridge();
+  if (bridge) {
+    const outcome = await authenticateOnDevice(bridge);
+    return outcome === 'ok' ? { outcome, credentialId: toBase64Url(random(16)) } : { outcome };
+  }
   try {
     const credential = await navigator.credentials.create({ publicKey: {
       rp: { name: 'Nummo' },
@@ -51,6 +61,8 @@ export async function createLockCredential(name: string): Promise<{ outcome: 'ok
 
 // Asks the device to verify the user with the credential of the lock.
 export async function verifyLockCredential(credentialId: string, signal?: AbortSignal): Promise<LockOutcome> {
+  const bridge = androidBridge();
+  if (bridge) return authenticateOnDevice(bridge, signal);
   try {
     const credential = await navigator.credentials.get({ signal, publicKey: {
       challenge: random(32),

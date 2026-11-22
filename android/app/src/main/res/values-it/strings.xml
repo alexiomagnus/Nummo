@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unlock_title">Sblocca Nummo</string>
+    <string name="file_saved">File salvato</string>
+    <string name="file_not_saved">Impossibile salvare il file</string>
+    <string name="no_app_for_link">Nessuna app può aprire questo link</string>
+</resources>

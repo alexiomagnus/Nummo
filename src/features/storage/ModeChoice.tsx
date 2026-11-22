@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { useI18n } from '../../i18n/I18nProvider';
+import { inAndroidApp } from '../../services/androidApp';
 import type { StorageMode } from '../../services/storageMode';
 import { radius, spacing } from '../../theme/tokens';
 import { Guide } from '../session/Guide';
@@ -15,13 +16,18 @@ const options: readonly Option[] = [
     text: 'Collega un progetto Firebase tuo, accedi con Google e sincronizza i dati tra i tuoi dispositivi.' },
 ];
 
+export const appOnlyStandard = "Nell'app Android per ora c'è solo la modalità Standard. Per l'Avanzata usa Nummo nel browser.";
+
 // First screen, before any sign-in: where the data will live. Standard opens the app at once, with no account;
 // Advanced continues to the Firebase sign-in, where a project of the user's own can be connected. The choice is remembered
 // and can be changed from «Archiviazione e backup».
+// Android app (first phase, 22 November): Standard only. Google sign-in does not work inside a WebView and push
+// notifications are not there either, so Advanced stays in the browser for now; the card says so instead of failing.
 export function ModeChoice({ onChoose }: { onChoose: (mode: StorageMode) => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const { guide, openGuide, closeGuide } = useGuide();
+  const androidApp = inAndroidApp();
   if (guide) return <Guide onBack={closeGuide} />;
   return (
     <View style={styles.wrap}>
@@ -42,7 +48,8 @@ export function ModeChoice({ onChoose }: { onChoose: (mode: StorageMode) => void
                 </View>}
               </View>
               <Text variant="bodyLarge" style={[styles.text, { color: primary ? colors.onPrimaryContainer : colors.onSurfaceVariant }]}>{t(option.text)}</Text>
-              <Button mode={primary ? 'contained' : 'outlined'} onPress={() => onChoose(option.mode)} style={styles.action}>{t(option.action)}</Button>
+              {androidApp && !primary && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t(appOnlyStandard)}</Text>}
+              <Button mode={primary ? 'contained' : 'outlined'} disabled={androidApp && !primary} onPress={() => onChoose(option.mode)} style={styles.action}>{t(option.action)}</Button>
             </View>
           );
         })}

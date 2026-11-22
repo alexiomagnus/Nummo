@@ -38,6 +38,8 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
+- **App Android (22 novembre, non committata):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte; serve
+  l'Hosting pubblicato perché l'app installata ne veda gli effetti. Dettagli nella sezione «App Android» qui sotto.
 - **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting no.
   **Albero di lavoro non pulito:** lavoro Android non mio e non committato (`android/`, `src/services/androidApp.ts`,
   `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
@@ -98,6 +100,40 @@ rilasci».
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## App Android (WebView con ponte nativo), fase 1 solo Standard — 22 novembre 2026
+
+- **Su richiesta** (vibrazione assente in silenzioso/Non disturbare, barra di navigazione nera nell'app installata): analisi, poi scelta
+  dell'utente tra le alternative (WebView in Kotlin; fase 1 solo Standard; SDK e chiave locale). Causa ricontrollata nel sorgente attuale
+  di Chrome (`VibrationManagerAndroid.java`: `vibrate` solo se la suoneria non è `RINGER_MODE_SILENT`, `Vibrator.vibrate(long)` senza
+  attributi): non correggibile da una pagina né con expo-haptics. Decisione in `docs/architecture.md`.
+- **Fatto:** `android/` (Activity Kotlin, WebView sul sito pubblicato, sole API di piattaforma, minSdk 30, target 36, AGP 9.1, Gradle
+  9.3.1 wrapper) con `NummoBridge`: `haptic` → `performHapticFeedback` (`tap` VIRTUAL_KEY, `tick` CLOCK_TICK), `setSystemBars`, `saveFile`
+  (foglio «Salva come»), `canAuthenticate`/`authenticate`/`cancelAuthentication` (`BiometricPrompt`, biometria o PIN del dispositivo).
+  Web: `services/androidApp.ts` (unico punto che conosce il ponte) usato da `haptics.ts`, `bootTheme.applyDocumentTheme`,
+  `BackupActions.download`, `platformLock.ts`; nell'app l'Avanzata è disattivata con una riga che rimanda al browser (`ModeChoice`) e
+  «Cambia modalità» è sostituito dalla stessa riga (`StandardStorage`); riga sotto «Vibrazione» diversa nell'app. Nel browser nulla cambia.
+  Icona adattiva vettoriale dall'«Arco» (con livello monocromatico). Chiave di firma RSA 4096 creata in `android/nummo-release.jks`, password
+  in `android/keystore.properties`, `android/local.properties` con `nummo.url=https://nummo-6b6e2.web.app/`: tutti ignorati da Git.
+  **Da conservare altrove** (senza la chiave l'app non si aggiorna). Certificato SHA-256 `00b1c85c…6b0fcf`.
+- **Verifica:** `npm run check` OK (**571/571**, 5 test nuovi in `tests/androidApp.test.ts`). `./gradlew assembleDebug assembleRelease`
+  senza avvisi; release firmata (`apksigner verify`). Emulatore Pixel 8 (Android 15; WebView 124, poi 157 aggiornata dal Play Store durante
+  la prova) con l'app debug su `dist-demo` locale (`adb reverse`):
+  - suoneria **SILENT** e Non disturbare attivo (`zen_mode=2`): `dumpsys vibrator_manager` registra ogni vibrazione dell'app come
+    «finished», `usage: TOUCH`, `View#performHapticFeedback`, `Prebaked=CLICK` per i tocchi reali su Spese/Analisi/Fondi e `TEXTURE_TICK`
+    per `tick`;
+  - barre di stato e navigazione col colore della pagina, icone scure nel tema chiaro e chiare nello scuro (screenshot);
+  - Indietro: Fondi → Analisi → Spese → Nuova spesa → launcher; Home e ritorno: `visibilitychange` hidden/visible (blocco «Subito» ok);
+  - sblocco: con un PIN di prova sull'emulatore `canAuthenticate` true, PIN → `ok`, annullamento → `cancelled`, pagina visibile dopo;
+  - `saveFile`: foglio di sistema, file in Download con byte esatti (BOM, UTF-8);
+  - tastiera: viewport 840 → 527 px, campo in vista, barra mobile nascosta;
+  - Avanzata disattivata con la riga di spiegazione.
+  La release sull'emulatore apre il sito di produzione, che **non ha ancora** il codice del ponte: lì barre scure e Avanzata attiva finché
+  non si pubblica l'Hosting. **Non provati:** telefono reale (sensazione della vibrazione, impronta reale), blocco attivato dall'interfaccia
+  delle Impostazioni con il PIN di Nummo (provato il ponte, non il percorso completo), fotocamera e «Carica una foto» nell'app, CSV.
+- **Per usarla:** pubblicare l'Hosting (autorizzazione; nota: online c'è ancora `17ebce0`, l'Hosting di `48361b9` porta anche i 500
+  prodotti per lista, con Rules già pubblicate), poi installare `android/app/build/outputs/apk/release/app-release.apk` sul Pixel 8
+  (`adb install` o file) e spostare i dati con backup e ripristino (archivio separato da Chrome). Non committato.
 
 ## Prodotti per lista fino a 500 (Rules da pubblicare) — 22 novembre 2026
 

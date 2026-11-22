@@ -280,6 +280,33 @@ senza `--only`.
 
 Architettura e convenzioni: [AGENTS.md](AGENTS.md) e [docs/architecture.md](docs/architecture.md).
 
+## App Android
+
+`android/` contiene un'app Android che apre il sito pubblicato in una WebView. Esiste per due cose che una pagina in Chrome non
+può fare: la vibrazione come nelle app native, che funziona anche in silenzioso e in Non disturbare, e le barre di sistema del
+colore dell'app. Per ora offre solo la modalità **Standard**; per l'Avanzata si usa il browser. I suoi dati sono separati da quelli
+di Chrome: per spostarli, esporta un backup dal browser e ripristinalo nell'app.
+
+Serve l'SDK Android (`sdkmanager`: platform 36, build-tools) e un JDK 17 o più recente. In `android/local.properties`, personale e
+ignorato da Git:
+
+```properties
+sdk.dir=/percorso/Android/Sdk
+nummo.url=https://ID_PROGETTO.web.app/
+```
+
+Per la release serve una chiave di firma tua, anche questa ignorata da Git (`android/keystore.properties` con `storeFile`,
+`storePassword`, `keyAlias`, `keyPassword`). **Conservane una copia:** senza la stessa chiave l'app non si aggiorna e va
+disinstallata, perdendo i dati non salvati in un backup.
+
+```bash
+cd android
+./gradlew assembleRelease   # app/build/outputs/apk/release/app-release.apk, da installare sul telefono
+./gradlew assembleDebug     # prova sull'export locale: npm run build:demo, servire dist-demo su 127.0.0.1:8095, adb reverse tcp:8095 tcp:8095
+```
+
+L'app mostra sempre il sito pubblicato: le novità dell'interfaccia arrivano con `npm run deploy:hosting`, senza reinstallarla.
+
 ## Sicurezza e responsabilità
 
 - **Standard**: i dati non lasciano il dispositivo, salvo i file di backup che esporti tu. Chiunque usi quel browser li vede: non c'è accesso.

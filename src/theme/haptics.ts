@@ -1,3 +1,6 @@
+import type { AndroidBridge } from '../services/androidApp.ts';
+import { androidBridge } from '../services/androidApp.ts';
+
 // Haptic feedback on the web: the Vibration API is the only one a page can use (Chrome/Edge/Samsung Internet on Android).
 // Chrome on Android gives nothing while the phone is on silent (VibrationManagerAndroid.java: vibrates only if
 // getRingerMode() != RINGER_MODE_SILENT) or in Do Not Disturb (found by the user on the Pixel 8, 22 November), with no error
@@ -11,6 +14,10 @@
 // and expo-haptics' `performAndroidHapticsAsync`, which exist only in native apps): the browser turns every request into
 // a plain one-shot vibration of the given length. Expo-haptics on the web does the same with 35–60 ms pulses, longer than
 // these. So crispness depends on what is left to the page: pulses as short as still felt, never chained into a buzz.
+//
+// Inside Nummo's Android app (`services/androidApp.ts`) the bridge does reach them: `tap` and `tick` become the native
+// touch feedback (a click and a tick, `performHapticFeedback`), which follows Android's touch-feedback setting and keeps
+// working on silent and in Do Not Disturb. The same single gate applies; the durations below are then unused.
 
 // `tap`: a press that moves somewhere (a destination of the navigation bar, «Nuova spesa», the release of a drag on the
 // pill). `tick`: a lighter mark for a selection (chart parts, a destination crossed while dragging).
@@ -37,11 +44,13 @@ const browserMedia: MediaQuery | undefined = typeof matchMedia === 'function' ? 
 
 // Whether this device gets haptics at all (and the «Vibrazione» switch is shown): the API exists and the primary pointer
 // is a finger. Desktop (mouse, touchpad) never, even with a touchscreen as a second pointer.
+// In the Android app always (a phone, with the native touch feedback).
 export function hasHaptics(
   nav: VibratingNavigator | undefined = typeof navigator === 'undefined' ? undefined : navigator,
   media: MediaQuery | undefined = browserMedia,
+  bridge: Pick<AndroidBridge, 'haptic'> | undefined = androidBridge(),
 ): boolean {
-  return canVibrate(nav) && media?.('(pointer: coarse)').matches === true;
+  return bridge !== undefined || (canVibrate(nav) && media?.('(pointer: coarse)').matches === true);
 }
 
 export type Haptics = (kind: HapticKind, enabled: boolean) => boolean;
@@ -53,15 +62,19 @@ export function createHaptics(
   nav: VibratingNavigator | undefined = typeof navigator === 'undefined' ? undefined : navigator,
   now: () => number = () => (typeof performance === 'undefined' ? Date.now() : performance.now()),
   media: MediaQuery | undefined = browserMedia,
+  bridge: Pick<AndroidBridge, 'haptic'> | undefined = androidBridge(),
 ): Haptics {
   let last = Number.NEGATIVE_INFINITY;
-  const available = hasHaptics(nav, media);
+  const available = hasHaptics(nav, media, bridge);
   return (kind, enabled) => {
-    if (!enabled || !available || !canVibrate(nav)) return false;
+    if (!enabled || !available) return false;
+    if (!bridge && !canVibrate(nav)) return false;
     const time = now();
     if (time - last < hapticGap) return false;
     let accepted = false;
-    try { accepted = nav.vibrate(hapticPatterns[kind]); } catch { accepted = false; }
+    try {
+      if (bridge) { bridge.haptic(kind); accepted = true; } else if (canVibrate(nav)) accepted = nav.vibrate(hapticPatterns[kind]);
+    } catch { accepted = false; }
     if (accepted) last = time;
     return accepted;
   };
