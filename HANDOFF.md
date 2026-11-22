@@ -16,7 +16,7 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Commit di codice del 22 novembre, tutti pubblicati: `67f4a29`
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato, **non pubblicato** su Hosting. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
   (template senza data), `9929c8f`
   (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
@@ -40,7 +40,7 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** `npm run check` OK sulle modifiche non committate (typecheck, **548/548**, build demo).
+- **Verifiche (22 novembre, ultime).** `npm run check` OK su `49a7c58` (typecheck, **549/549**, build demo).
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
@@ -83,7 +83,7 @@ rilasci».
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard): a 1280×900 i cinque pulsanti della pagina larghi 233, a 390×844
   tutti 364 (tutta la riga); Categorie con 5 categorie: pulsante presente, «ci sono già». Nessun errore JS. **Non provati nel browser:** ripristino
   con una predefinita mancante (solo test di dominio), riga di un abbonamento (archivio demo senza abbonamenti), pulsanti dell'Avanzata.
-  Non committato, non pubblicato.
+  Committato in `49a7c58` e inviato; non pubblicato.
 
 ## Pulsanti della scheda AI su smartphone, backup proposto prima di eliminare — 22 novembre 2026
 
@@ -96,7 +96,7 @@ rilasci».
 - **Verifica:** `npm run check` OK (**548/548**). Chromium headless su `dist-demo` (Standard, 390×844 touch): pulsanti AI 13..190 e 200..377,
   «Ripristina predefiniti» 13..377; etichette intere a 360 e 320 px; dialogo di eliminazione: un solo download (`nummo-backup.json`) dal
   pulsante del dialogo, nessun download alla conferma, pulsante di nuovo «Scarica backup (JSON)» alla riapertura. Nessun errore JS.
-  **Non provato nel browser:** il dialogo «Sostituisci tutti i dati». Non committato, non pubblicato.
+  **Non provato nel browser:** il dialogo «Sostituisci tutti i dati». Committato in `49a7c58` e inviato; non pubblicato.
 
 ## Sezione «Passa alla modalità Standard» tolta, zoom a icona nella revisione, «Nuova lista», anello dell'avatar, «Salva» fermo — 22 novembre 2026
 
@@ -116,7 +116,7 @@ rilasci».
 - **Verifica:** `npm run check` OK (**548/548**). Chromium headless su `dist-demo` (Standard, 390×844 touch): «Salva» 556..612 prima e dopo aver
   scritto «g», contatore tra Descrizione ed Esercente; «Nuova lista» intero a 390/360/320 senza scorrimento orizzontale; anello acceso →
   preferenza salvata, anello sul pulsante dopo il ricaricamento e sull'anteprima. Nessun errore JS. **Non provati nel browser:** `ModeTransfer`
-  (solo Avanzata) e la revisione dello scontrino (serve l'AI): solo typecheck. Non committato, non pubblicato.
+  (solo Avanzata) e la revisione dello scontrino (serve l'AI): solo typecheck. Committato in `49a7c58` e inviato; non pubblicato.
 
 ## Templates senza data — 22 novembre 2026
 
