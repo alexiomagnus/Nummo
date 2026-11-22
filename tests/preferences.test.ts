@@ -121,3 +121,9 @@ test('preferenze: l’anello dell’avatar non è più una preferenza, un valore
   assert.equal('avatarRing' in defaultPreferences, false);
   assert.equal('avatarRing' in parsePreferences('{"avatarRing":true}'), false);
 });
+
+test('preferenze: «Palette» predefinita dal 22 novembre, una scelta salvata resta', () => {
+  assert.equal(defaultPreferences.colorMode, 'palette');
+  assert.equal(parsePreferences('{}').colorMode, 'palette');
+  assert.equal(parsePreferences('{"colorMode":"mono"}').colorMode, 'mono');
+});

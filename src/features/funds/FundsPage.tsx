@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
@@ -55,6 +55,26 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
   const { funds, movements } = remote;
   const sources = useMemo(() => ({ funds, movements, expenses }), [funds, movements, expenses]);
+  // A fund with expenses (subscriptions too) or movements is never deleted (it is archived): the delete dialog says why, with
+  // «Chiudi» only (22 November, user's request). Checked again at the confirmation on the latest data (the dialog keeps the
+  // action seen when it opened, so a ref).
+  const usageText = (fundId: string, archived = false): string | undefined => {
+    const spent = expenses.filter((e) => e.fund_id === fundId).length;
+    const moved = movements.filter((m) => m.to_fund_id === fundId || m.from_fund_id === fundId).length;
+    if (spent + moved === 0) return undefined;
+    const parts = [spent ? (spent === 1 ? t("1 spesa") : t("{p0} spese", { p0: spent })) : '', moved ? (moved === 1 ? t("1 movimento") : t("{p0} movimenti", { p0: moved })) : ''].filter(Boolean);
+    const users = parts.length === 2 ? t("{p0} e {p1}", { p0: parts[0] ?? '', p1: parts[1] ?? '' }) : parts[0] ?? '';
+    return archived ? t("Lo usano {p0}, quindi non si può eliminare: resta archiviato.", { p0: users })
+      : t("Lo usano {p0}, quindi non si può eliminare. Se non ti serve più, archivialo dalla sua scheda.", { p0: users });
+  };
+  const latestSources = useRef(sources);
+  latestSources.current = sources;
+  const removeIfUnused = async (fund: SyncedFund) => {
+    if (fundInUse(fund.id, latestSources.current)) { notify("Il fondo è in uso: non è stato eliminato."); return false; }
+    const done = await remote.removeFund(fund);
+    if (done) notify("Fondo eliminato.");
+    return done;
+  };
   const overview = useMemo(() => monthOverview(sources, month, today), [sources, month, today]);
   const active = overview.funds.filter((item) => !item.fund.archived);
   const archived = overview.funds.filter((item) => item.fund.archived);
@@ -146,10 +166,8 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       <View role="list" accessibilityLabel={t("Fondi")} style={styles.list}>
         {active.map((item) => <FundCard key={item.fund.id} item={item} open={open.has(item.fund.id)} onToggle={() => toggle(item.fund.id)}
           isDefault={item.fund.id === defaultFundId} canWrite={canWrite} tracksBalance={balanceFunds.has(item.fund.id)}
-          inUse={fundInUse(item.fund.id, sources)}
           onEdit={() => setEditing(item.fund as SyncedFund)}
           onArchive={() => void archive(item.fund as SyncedFund, true)}
-          onDelete={async () => { const done = await remote.removeFund(item.fund as SyncedFund); if (done) notify("Fondo eliminato."); return done; }}
           onAdd={() => setMoving({ kind: 'income', to: item.fund.id })} />)}
       </View>
 
@@ -169,6 +187,11 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
               </View>
               <View style={styles.cardActions}>
                 <Button mode="text" disabled={!canWrite} onPress={() => void archive(item.fund as SyncedFund, false)}>{t("Ripristina")}</Button>
+                {/* Archived funds have no edit dialog: «Elimina» stays on the card; a fund in use says why it cannot go (22 November). */}
+                <DeleteAction labeled disabled={!canWrite} name={item.fund.name} blocked={usageText(item.fund.id, true)}
+                  title={usageText(item.fund.id) ? t("Il fondo {p0} è in uso", { p0: item.fund.name }) : t("Eliminare il fondo {p0}?", { p0: item.fund.name })}
+                  description={t("Il fondo non ha spese collegate. L’operazione non può essere annullata.")}
+                  onDelete={() => removeIfUnused(item.fund as SyncedFund)} />
               </View>
             </View>
           ))}
@@ -180,7 +203,8 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           const saved = editing === 'new' ? await remote.createFund(data) : await remote.updateFund(editing, data);
           if (saved) notify(editing === 'new' ? "Fondo creato." : "Fondo aggiornato.");
           return saved;
-        }} close={() => { setEditing(null); remote.clearError(); }} />}
+        }} close={() => { setEditing(null); remote.clearError(); }}
+        remove={editing === 'new' ? undefined : { blocked: usageText(editing.id), onDelete: () => removeIfUnused(editing) }} />}
       {moving && <MovementDialog funds={movableFunds} balances={balances} kind={moving.kind} to={moving.to} ready={canWrite} error={remote.error}
         onCreate={async (id, data) => {
           const saved = await remote.createMovement(id, data);
@@ -201,11 +225,11 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
 type CardProps = {
   // Fund that keeps a balance: offers «Aggiungi denaro».
   tracksBalance: boolean;
-  item: FundMonth; open: boolean; isDefault: boolean; canWrite: boolean; inUse: boolean;
-  onToggle: () => void; onEdit: () => void; onArchive: () => void; onAdd: () => void; onDelete: () => Promise<boolean>;
+  item: FundMonth; open: boolean; isDefault: boolean; canWrite: boolean;
+  onToggle: () => void; onEdit: () => void; onArchive: () => void; onAdd: () => void;
 };
 
-function FundCard({ tracksBalance, item, open, isDefault, canWrite, inUse, onToggle, onEdit, onArchive, onAdd, onDelete }: CardProps) {
+function FundCard({ tracksBalance, item, open, isDefault, canWrite, onToggle, onEdit, onArchive, onAdd }: CardProps) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
   const { fund } = item;
@@ -272,8 +296,6 @@ function FundCard({ tracksBalance, item, open, isDefault, canWrite, inUse, onTog
         <View style={styles.cardActions}>
           <Button mode="text" disabled={!canWrite} onPress={onArchive}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.archive} size={size} color={color} />}>{t("Archivia")}</Button>
-          {!inUse && <DeleteAction labeled disabled={!canWrite} name={fund.name} title={t("Eliminare il fondo {p0}?", { p0: fund.name })}
-            description={t("Il fondo non ha spese collegate. L’operazione non può essere annullata.")} onDelete={onDelete} />}
         </View>
       </Reveal>}
     </View>

@@ -93,7 +93,10 @@ export function DeleteAction({ name, title, description, blocked, onDelete, labe
   const icon = ({ size, color }: { size: number; color: string }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />;
   return <>
     {labeled
-      ? <Button mode={mode} disabled={disabled} icon={icon} textColor={colors.error} accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</Button>
+      // In the edit dialogs from medium «Elimina» is outlined too, its outline in error red like the label (user's request, 22
+      // November): it reads as a button beside «Annulla», not as loose text; same height as the other actions.
+      ? <Button mode={danger ? 'outlined' : mode} disabled={disabled} icon={icon} textColor={colors.error} style={danger ? { borderColor: colors.error } : undefined}
+        accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</Button>
       // In the edit dialogs (phones) the trash is outlined like «Annulla» beside it (same 48 dp height and radius), the outline in
       // the icon's own error red (user's request, 21 November).
       : <IconButton disabled={disabled} icon={icon} mode={danger ? 'outlined' : undefined} iconColor={danger ? colors.error : undefined}

@@ -12,7 +12,7 @@ import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { decorativeIcon, leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { inputOutline, layout, spacing } from '../../theme/tokens';
+import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 import { IconPicker } from './IconPicker';
 import { CategoryEditor } from './CategoryEditor';
 
@@ -127,7 +127,8 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
           })}
         </View>
         {/* Always offered, with or without categories (user's request, 22 November): it adds back only the defaults missing by name. */}
-        {onAddDefaults && <View style={compact ? undefined : styles.start}><Button mode="outlined" disabled={!canAddDefaults} onPress={onAddDefaults}
+        {/* Same look as «Ripristina predefiniti» of Settings (user's request, 22 November): pill, label in `secondary`. */}
+        {onAddDefaults && <View style={compact ? undefined : styles.start}><Button mode="outlined" textColor={theme.colors.secondary} style={styles.restore} disabled={!canAddDefaults} onPress={onAddDefaults}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>{t("Ripristina le categorie predefinite")}</Button></View>}
         {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
         {editing && <CategoryEditor record={editing} categories={categories} ready={ready} error={error}
@@ -155,4 +156,5 @@ const styles = StyleSheet.create({
   createContent: { height: '100%' },
   empty: { gap: spacing.sm },
   start: { alignSelf: 'flex-start', marginTop: spacing.sm },
+  restore: { borderRadius: radius.pill },
 });

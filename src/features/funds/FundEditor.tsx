@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'rea
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
+import { Button, CancelButton, ConfirmButton, dialogActionPair, dialogActionsRow } from '../../components/Button';
+import { DeleteAction } from '../../components/DeleteAction';
 import { leadingIcon } from '../../components/FieldIcon';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -25,6 +26,9 @@ type Props = {
   error: string | null;
   onSave: (data: FundData) => Promise<boolean>;
   close: () => void;
+  // Editing an existing fund: «Elimina» on the row of the actions (22 November, user's request: before, in the card). `blocked`
+  // says why a fund in use cannot be deleted (the dialog then offers only «Chiudi»).
+  remove?: { blocked?: string; onDelete: () => Promise<boolean> };
 };
 type Errors = Partial<Record<'name' | 'budgetAmount' | 'initial' | 'rechargeAmount' | 'rechargeDay' | 'form', string>>;
 
@@ -33,9 +37,10 @@ const amountText = (minor: number) => `${Math.floor(minor / 100)},${String(minor
 // Create or edit a fund: name, colour, icon, an optional initial balance, an optional monthly recharge and an optional monthly
 // budget. Fields the form does not show (start date, per-month budget exceptions) are written back exactly as they were.
 // Budget and recharge change from now on only (fundFromForm); past recharges are never deleted.
-export function FundEditor({ record, funds, ready, error, onSave, close }: Props) {
+export function FundEditor({ record, funds, ready, error, onSave, close, remove }: Props) {
   const { t } = useI18n();
   const { colors, dark } = useTheme();
+  const [deleting, setDeleting] = useState(false);
   const today = todayInRome();
   const recurring = record ? budgetFor({ ...record, budget_exceptions: [] }, monthOf(today)) : null;
   const [name, setName] = useState(record?.name ?? '');
@@ -154,10 +159,20 @@ export function FundEditor({ record, funds, ready, error, onSave, close }: Props
           {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
         </ScrollView>
       </Dialog.ScrollArea>
-      <Dialog.Actions style={dialogActionsRow}>
+      {/* Buttons (or Views) as direct children of Dialog.Actions (it clones each one): never a Fragment. */}
+      {record && remove ? <Dialog.Actions style={dialogActionsRow}>
+        <View style={styles.remove}><DeleteAction labeled="wide" disabled={busy || !ready} name={record.name} onOpenChange={setDeleting}
+          title={remove.blocked ? t("Il fondo {p0} è in uso", { p0: record.name }) : t("Eliminare il fondo {p0}?", { p0: record.name })}
+          description={t("Il fondo non ha spese collegate. L’operazione non può essere annullata.")} blocked={remove.blocked}
+          onDelete={async () => { const removed = await remove.onDelete(); if (removed) close(); return removed; }} /></View>
+        <View style={dialogActionPair}>
+          <CancelButton narrowOnPhone disabled={busy || deleting} onPress={close}>{t("Annulla")}</CancelButton>
+          <ConfirmButton narrowOnPhone disabled={blocked || deleting} loading={busy} onPress={() => void save()}>{t("Salva")}</ConfirmButton>
+        </View>
+      </Dialog.Actions> : <Dialog.Actions style={dialogActionsRow}>
         <CancelButton disabled={busy} onPress={close}>{t("Annulla")}</CancelButton>
         <ConfirmButton disabled={blocked} loading={busy} onPress={() => void save()}>{record ? t("Salva") : t("Crea")}</ConfirmButton>
-      </Dialog.Actions>
+      </Dialog.Actions>}
     </Dialog>
   </Portal>;
 }
@@ -184,6 +199,8 @@ function useRevealOnEnable(on: boolean, reduced: boolean) {
 }
 
 const styles = StyleSheet.create({
+  // As in the other edit dialogs: natural width, so on a narrow phone the row wraps with Elimina above.
+  remove: { flexGrow: 1, alignItems: 'flex-start', marginRight: 0 },
   area: { minHeight: 0, paddingHorizontal: spacing.xl },
   content: { paddingVertical: spacing.sm, gap: spacing.xl },
   section: { gap: spacing.sm },

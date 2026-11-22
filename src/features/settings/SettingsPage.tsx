@@ -24,7 +24,7 @@ import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 import { resetReceiptAi } from '../receipts/aiSettings';
 import { hasHaptics } from '../../theme/haptics';
 import { useSizeClass } from '../../theme/useSizeClass';
-import { SameWidthGroup, useSameWidth } from '../../components/SameWidth';
+import { SameWidthGroup, doubleWidth, useSameWidth } from '../../components/SameWidth';
 import { ProfileImageCard, type ProfileScope } from './ProfileImageCard';
 import { AppLockCard } from '../lock/AppLock';
 import { resetAppLockDelay } from '../lock/appLockStore';
@@ -55,7 +55,8 @@ const themeOptions: { value: ThemeChoice; label: string }[] = [
   { value: 'system', label: 'Sistema' }, { value: 'light', label: 'Chiaro' }, { value: 'dark', label: 'Scuro' },
 ];
 const modeOptions: { value: ColorMode; label: string }[] = [
-  { value: 'mono', label: 'Monocolore' }, { value: 'palette', label: 'Palette' },
+  // «Palette» first: it is the default (22 November).
+  { value: 'palette', label: 'Palette' }, { value: 'mono', label: 'Monocolore' },
 ];
 const fontOptions: { value: FontChoice; label: string }[] = [
   { value: 'google', label: 'Google Sans' }, { value: 'system', label: 'Sistema' },
@@ -193,13 +194,14 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   );
 }
 
-// Inside the page's `SameWidthGroup`, so it measures with the AI card's actions.
+// Inside the page's `SameWidthGroup`: from medium as wide as the AI card's two actions together (user's request, 22 November);
+// it does not measure itself. Without those actions on screen, its own width.
 function ResetAllButton({ phone, onPress }: { phone: boolean; onPress: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const sameWidth = useSameWidth();
   return (
-    <Button mode="outlined" textColor={colors.secondary} style={[styles.reset, phone && styles.resetPhone, sameWidth.style]} onLayout={sameWidth.onLayout} onPress={onPress}
+    <Button mode="outlined" textColor={colors.secondary} style={[styles.reset, phone && styles.resetPhone, doubleWidth(sameWidth, spacing.sm)]} onPress={onPress}
       icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
       {t("Ripristina predefiniti")}
     </Button>

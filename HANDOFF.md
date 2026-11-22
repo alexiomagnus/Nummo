@@ -73,6 +73,45 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## «Elimina» dei dialoghi di modifica con contorno rosso — 22 novembre 2026
+
+- Su richiesta (screenshot): da medium «Elimina» dei dialoghi di modifica (`DeleteAction labeled="wide"`: spesa, template, prodotto, fondo) è
+  con contorno, contorno ed etichetta in `error`, alto 48 come «Annulla» e «Salva». Su smartphone resta il solo cestino con contorno.
+- **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): «Modifica fondo» con Elimina, Annulla e Salva alti 48. Nessun errore
+  JS. Non committato, non pubblicato.
+
+## «Elimina» del fondo nel dialogo di modifica, anche per i fondi usati (con il motivo) — 22 novembre 2026
+
+- Su richiesta: «Elimina» tolto dalla scheda espansa del fondo e messo nel dialogo «Modifica fondo», sulla riga di Annulla/Salva come nei
+  dialoghi di spesa, template e prodotto (`DeleteAction labeled="wide"`). Sempre presente: per un fondo con spese (anche abbonamenti) o movimenti
+  il dialogo è «Il fondo … è in uso» / «Lo usano 15 spese, quindi non si può eliminare. Se non ti serve più, archivialo dalla sua scheda.» con
+  solo «Chiudi». I fondi archiviati (senza dialogo di modifica) hanno «Elimina» sulla scheda, con la stessa regola («…: resta archiviato.»).
+  Alla conferma `FundsPage` ricontrolla con i dati più recenti (`fundInUse`). Nessun cambio a `DataStore`/Rules.
+- **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900) con un backup di prova: nessun «Elimina» sulle schede
+  attive; «Medio · Auto» → bloccato («15 spese»); «Prova attivo» non usato → eliminato, dialogo chiuso; archiviato non usato → conferma normale.
+  Nessun errore JS. **Non provati:** smartphone (solo cestino a sinistra, come negli altri dialoghi), Avanzata. Non committato, non pubblicato.
+
+## «Palette» predefinita, fondi archiviati non usati eliminabili — 22 novembre 2026
+
+- **Colore** (su richiesta): modalità colore predefinita «Palette» (prima «Monocolore»), e nelle Impostazioni «Palette» viene per prima. Vale
+  per chi non ha mai salvato una scelta: le preferenze si salvano intere, quindi chi ha già cambiato qualunque impostazione resta su
+  «Monocolore» finché non sceglie «Palette». Colori statici del primo avvio (`index.html`, `offline.html`, Menta monocolore) invariati: la
+  differenza con Menta palette è minima (#F5FBF5 / #F5FAF8) e `GlobalStyle` la sostituisce subito. Test in `tests/preferences.test.ts`.
+  Nota: con «Palette» i sei campioni del colore non stanno su una riga nella colonna destra a 1280 px (Grafite va a capo); già così prima.
+- **Fondi** (domanda dell'utente): un fondo attivo senza spese né movimenti era già eliminabile («Elimina» nella scheda espansa); ora anche un
+  fondo **archiviato** non usato ha «Elimina» accanto a «Ripristina», con la stessa conferma e `removeFund` (transazione con revisione).
+- **Verifica:** `npm run check` OK (**551/551**). Chromium headless su `dist-demo` (Standard, 1280×900, profilo nuovo): «Palette|Monocolore»,
+  «Palette» selezionata; con un backup di prova con un fondo archiviato inutilizzato: «Elimina Prova archiviato» → conferma → eliminato, sezione
+  degli archiviati sparita. Nessun errore JS. Non committato, non pubblicato.
+
+## «Ripristina le categorie predefinite» come «Ripristina predefiniti», che su desktop è largo due pulsanti — 22 novembre 2026
+
+- Su richiesta (screenshot): «Ripristina le categorie predefinite» con lo stesso aspetto di «Ripristina predefiniti» (pillola, etichetta e
+  icona in `secondary`). Nelle Impostazioni, da medium, «Ripristina predefiniti» è largo quanto «Dimentica la chiave» e «Revoca il consenso»
+  insieme (`doubleWidth`, non si misura; senza quei due pulsanti, larghezza propria). Smartphone invariato.
+- **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): 281..456, 466..641, «Ripristina predefiniti» 281..641; Categorie
+  con la pillola. Nessun errore JS. Non committato, non pubblicato.
+
 ## «Elimina tutti i template» — 22 novembre 2026
 
 - Su richiesta: nella pagina Templates, sotto l'elenco «I tuoi template (n)», «Elimina tutti i template» (contorno ed etichetta in `error`,
