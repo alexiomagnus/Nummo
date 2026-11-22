@@ -6,7 +6,7 @@ import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
 import { categoryNameError, maxCategoryNameLength, type Category, type CategoryIcon } from '../../domain/category';
-import { clipToLength } from '../../domain/policy';
+import { clipToLength, searchPolicy } from '../../domain/policy';
 import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
@@ -84,7 +84,7 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
       <View style={styles.root}>
         {createForm}
         {categories.length > 8 && (
-          <TextInput outlineStyle={inputOutline} label={t("Cerca categoria")} accessibilityLabel={t("Cerca categoria")} mode="outlined" value={filter} onChangeText={(value) => setFilter(clipToLength(value, maxCategoryNameLength))} autoCorrect={false}
+          <TextInput outlineStyle={inputOutline} label={t("Cerca categoria")} accessibilityLabel={t("Cerca categoria")} mode="outlined" value={filter} onChangeText={(value) => setFilter(clipToLength(value, searchPolicy.maxQueryLength))} autoCorrect={false}
             left={leadingIcon(iconShapes.search)}
             right={filter ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => setFilter('')}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />

@@ -186,3 +186,11 @@ test('CSV: colonna «Esercente» in fondo, vuota senza esercente', () => {
   assert.ok(lines[1]!.endsWith(';"Amazon"'));
   assert.ok(lines[2]!.endsWith(';""'));
 });
+
+test('esercente e ricerche: il campo accetta 30 caratteri, i nomi salvati fino a 60 restano validi', async () => {
+  const { merchantPolicy } = await import('../src/domain/merchant.ts');
+  const { searchPolicy } = await import('../src/domain/policy.ts');
+  assert.equal(merchantPolicy.maxTypedLength, 30);
+  assert.equal(searchPolicy.maxQueryLength, 30);
+  assert.ok(merchantPolicy.maxTypedLength <= merchantPolicy.maxNameLength);
+});

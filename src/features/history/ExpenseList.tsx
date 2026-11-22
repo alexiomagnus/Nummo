@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import type { Category } from '../../domain/category';
-import { clipToLength, expensePolicy } from '../../domain/policy';
+import { clipToLength, searchPolicy } from '../../domain/policy';
 import type { Fund } from '../../domain/funds';
 import { searchAndSort, sortLabels, sortOptions, type Occurrence, type SortOption } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
@@ -95,7 +95,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, me
     <>
       <View style={[styles.toolbar, compact && styles.toolbarCompact]}>
         <TextInput outlineStyle={inputOutline} label={t("Cerca per nome, mese o anno")} accessibilityLabel={t("Cerca per nome, mese o anno")} mode="outlined" value={query}
-          onChangeText={(value) => { setQuery(clipToLength(value, expensePolicy.maxDescriptionLength)); setVisibleCount(pageSize); }} autoCorrect={false} style={compact ? styles.searchCompact : styles.search}
+          onChangeText={(value) => { setQuery(clipToLength(value, searchPolicy.maxQueryLength)); setVisibleCount(pageSize); }} autoCorrect={false} style={compact ? styles.searchCompact : styles.search}
           left={leadingIcon(iconShapes.search)}
           right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => { setQuery(''); setVisibleCount(pageSize); }}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />

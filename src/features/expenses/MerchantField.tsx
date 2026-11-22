@@ -61,7 +61,7 @@ export function MerchantField({ value, merchants, error, disabled, onChange }: P
     <View>
       <TextInput outlineStyle={inputOutline} label={t("Esercente")} value={value} mode="outlined" error={Boolean(error)}
         placeholder={t("Facoltativo, es. Supermercato")} left={leadingIcon(iconShapes.store)}
-        onChangeText={(text) => { onChange(clipToLength(text, merchantPolicy.maxNameLength)); setDismissed(false); }}
+        onChangeText={(text) => { onChange(clipToLength(text, merchantPolicy.maxTypedLength)); setDismissed(false); }}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onKeyPress={onKeyPress}
         readOnly={disabled} aria-disabled={disabled} autoCapitalize="words" autoCorrect={false} autoComplete="off"
         accessibilityLabel={t("Esercente, facoltativo")}

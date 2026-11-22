@@ -9,7 +9,7 @@ import { fadeTransition } from '../../theme/motion';
 import { leadingIcon } from '../../components/FieldIcon';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
-import { clipToLength, expensePolicy } from '../../domain/policy';
+import { clipToLength, searchPolicy } from '../../domain/policy';
 import type { Fund } from '../../domain/funds';
 import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
 import { searchSubscriptions, type SubscriptionSummary } from '../../domain/history';
@@ -96,7 +96,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, funds, 
   return (
     <View style={styles.root}>
       <TextInput outlineStyle={inputOutline} label={t("Cerca per nome")} accessibilityLabel={t("Cerca per nome")} mode="outlined" value={query}
-        onChangeText={(value) => setQuery(clipToLength(value, expensePolicy.maxDescriptionLength))} autoCorrect={false} left={leadingIcon(iconShapes.search)}
+        onChangeText={(value) => setQuery(clipToLength(value, searchPolicy.maxQueryLength))} autoCorrect={false} left={leadingIcon(iconShapes.search)}
         right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => setQuery('')}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}

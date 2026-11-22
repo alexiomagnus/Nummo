@@ -9,6 +9,10 @@ export const expensePolicy = {
   minDate: '2000-01-01',
 } as const;
 
+// Search fields (Categorie, Spese, Abbonamenti): 30 characters are enough for any word or name to look for (user's request,
+// 22 November; before, as long as what they search).
+export const searchPolicy = { maxQueryLength: 30 } as const;
+
 // Typing or pasting stops at `max` characters, counted as the length check counts them (code points: an emoji is one).
 export function clipToLength(text: string, max: number): string {
   const chars = Array.from(text);

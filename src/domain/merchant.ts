@@ -13,7 +13,9 @@ import { isValidDate } from './policy.ts';
 export type Merchant = Readonly<{ id: string; name: string }>;
 
 export const merchantPolicy = {
+  // Saved names (and backups) up to 60, still valid; the field accepts 30 since 22 November (user's request).
   maxNameLength: 60,
+  maxTypedLength: 30,
   // Suggestions shown while typing.
   maxSuggestions: 5,
   // A use counts half after this many days: recent habits win over old ones without forgetting them.

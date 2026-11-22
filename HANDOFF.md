@@ -218,6 +218,16 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Ricerche ed Esercente a 30 caratteri — 22 novembre 2026
+
+- Su richiesta («hanno ancora troppi caratteri accettati»; scelta dell'utente: 30): «Cerca categoria», «Cerca per nome, mese o anno» e
+  «Cerca per nome» si fermano a 30 (`searchPolicy.maxQueryLength` in `policy.ts`; prima 40/100/100); il campo Esercente (Nuova spesa,
+  modifica, template) a 30 (`merchantPolicy.maxTypedLength`; prima 60). La validazione degli esercenti resta a 60 (`maxNameLength`, Rules
+  invariate): esercenti salvati e backup con nomi più lunghi restano validi; la scansione dello scontrino può ancora proporre un nome fino
+  a 60. Nuovo test in `tests/merchant.test.ts`.
+- **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900): Esercente 80 → 30, ricerca di Spese 80 → 30;
+  nessun errore JS. Non committato, non pubblicato.
+
 ## Limiti nei campi di ricerca e delle liste, immagine del profilo in Avanzata — 22 novembre 2026
 
 - **Limiti** (screenshot dell'utente): «Cerca categoria» 40 (come il nome), «Cerca per nome, mese o anno» (Spese) e «Cerca per nome»
