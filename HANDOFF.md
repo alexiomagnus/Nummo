@@ -6,7 +6,9 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `0f340bf` (app Android 0.2.0, bundle `index-9fe2b72e…`, voce sotto).
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `2b1e8fb` (notifiche dell'app Android 0.3.0), pubblicato su richiesta il
+  22 novembre con `npm run deploy:hosting` («Deploy complete!»), bundle online `index-4a671be6…` identico a `dist/` (SHA-256), con il
+  ramo per l'app. Prima `0f340bf` (app Android 0.2.0, bundle `index-9fe2b72e…`, voce sotto).
   Ultime **Rules**: `48361b9`. In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
   richiesta il 22 novembre (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», «Deploy complete!»);
   **Hosting** poi pubblicato con `759792c` (app Android, vedi sotto): online `index-18586346…`, che comprende i 500 prodotti; verificato
@@ -40,8 +42,9 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **App Android 0.3.0 (22 novembre, non committata):** notifiche come notifiche locali dell'app, provate sull'emulatore
-  Android 17; da committare, pubblicare (Hosting) e provare sul Pixel 8. Sezione «App Android 0.3.0» qui sotto.
+- **App Android 0.3.0 (22 novembre):** notifiche come notifiche locali dell'app, provate sull'emulatore Android 17; committata in
+  `2b1e8fb`, Hosting pubblicato, release installata sul Pixel 8 via adb sopra la 0.2.0 (stessa chiave, `USE_EXACT_ALARM` concesso,
+  `POST_NOTIFICATIONS` da chiedere con «Attiva»). Da provare sul telefono. Sezione «App Android 0.3.0» qui sotto.
 - **App Android 0.2.0 (22 novembre):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata in
   `nummo-6b6e2`. Committata in `0f340bf`, inviata, Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle
   online `index-9fe2b72e…` identico a `dist/`, SHA-256), Rules invariate; release 0.2.0 installata sul Pixel 8 via adb sopra la 0.1.0.
@@ -53,8 +56,8 @@ rilasci».
   anche in Non disturbare**. Ancora da provare sul telefono: blocco con impronta, fotocamera/«Carica una foto», backup e ripristino nell'app.
   Da fare dall'utente: copiare altrove la chiave di firma (`android/nummo-release.jks`, `android/keystore.properties`).
   Dettagli nella sezione «App Android» qui sotto.
-- **Git.** `main` = `origin/main`, solo il ramo `main`. **Albero non pulito:** notifiche dell'app Android 0.3.0 non committate (sezione
-  qui sotto). Ultimo commit di codice `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
+- **Git.** `main` = `origin/main`, solo il ramo `main`. Ultimo commit di codice `2b1e8fb` (notifiche dell'app Android 0.3.0): pubblicato su
+  Hosting, **non inviato** (`git push` su richiesta). Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
   sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
   `759792c`. `npm run check` OK su `7b7ad76` (**571/571**). Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
   Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
@@ -149,10 +152,11 @@ rilasci».
   - riavvio dell'emulatore: allarme riprogrammato (`ReminderRestore` da `BOOT_COMPLETED`); «Disattiva» toglie allarmi e stato, «Attiva» li
     rimette.
 - **Non verificato:** Pixel 8 reale (consegna puntuale in Doze dopo ore, Non disturbare), Android 11–12 (nessuna immagine di sistema
-  installata), Avanzata nell'app con le notifiche. Il sito pubblicato **non** ha ancora
-  il codice web: finché non si pubblica l'Hosting, la release 0.3.0 mostra le notifiche come non disponibili.
+  installata), Avanzata nell'app con le notifiche. 
 - **Noto, non corretto (anche in `sw.js`):** «Il riepilogo dal 8 novembre…» invece di «dall'8» (anche «dall'1», «dall'11»).
-- **Da fare:** commit (su richiesta), Hosting (su richiesta), installazione sul Pixel 8 e prova reale.
+- Committata in `2b1e8fb` (non inviata); Hosting pubblicato su richiesta (bundle `index-4a671be6…`, identico a `dist/`); release 0.3.0
+  installata sul Pixel 8 con `adb install -r` sopra la 0.2.0. **Da provare sul telefono:** Notifiche → «Attiva notifiche di sistema»
+  (dialogo di Android), arrivo all'orario scelto dopo ore a schermo spento, in Non disturbare, tocco sulla notifica.
 
 ## App Android 0.2.0: Avanzata con l'accesso Google nativo — 22 novembre 2026
 
