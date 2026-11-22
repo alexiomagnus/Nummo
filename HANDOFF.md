@@ -42,7 +42,9 @@ rilasci».
 - **App Android (22 novembre):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte, committate in `759792c`,
   inviate e pubblicate su Hosting su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online `index-18586346…` identico a
   `dist/` (SHA-256) e con il ponte; porta online anche i 500 prodotti per lista di `48361b9`, Rules già pubblicate). Rules invariate.
-  Da fare dall'utente: installare `android/app/build/outputs/apk/release/app-release.apk` sul Pixel 8 e copiare altrove la chiave di firma.
+  Installata sul Pixel 8 dell'utente via adb il 22 novembre (Android 17, WebView 157): **verificato dall'utente che la vibrazione funziona
+  anche in Non disturbare**. Ancora da provare sul telefono: blocco con impronta, fotocamera/«Carica una foto», backup e ripristino nell'app.
+  Da fare dall'utente: copiare altrove la chiave di firma (`android/nummo-release.jks`, `android/keystore.properties`).
   Dettagli nella sezione «App Android» qui sotto.
 - **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `759792c` (app Android, altra sessione):
   inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
