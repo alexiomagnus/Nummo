@@ -6,7 +6,9 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
+- **Produzione (progetto `nummo-6b6e2`).** **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
+  richiesta il 22 novembre (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», «Deploy complete!»);
+  **Hosting non ripubblicato** (online ancora `17ebce0`: limite di 100 prodotti nell'app). Prima, **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
   22 novembre, nell'ordine: Rules («compiled successfully», «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle
   online `index-040a3433…` identico a `dist/` (SHA-256), `firestore.rules` pubblico identico. Chi ha il proprio Firebase deve ricopiare le
   Rules. Prima, **Rules e Hosting** da `f4691aa` (limiti degli abbonamenti: 1000 cambi di stato, 100 cambi di
@@ -36,7 +38,10 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting no.
+  **Albero di lavoro non pulito:** lavoro Android non mio e non committato (`android/`, `src/services/androidApp.ts`,
+  `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
+  `haptics`, due chiavi in `src/i18n/en.ts`). Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
   Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
   Prima `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
   quello di «Colore dell'anello»): inviato e pubblicato su Hosting. Prima `f57b1b9` (pagina Esercenti, cambi di stato
@@ -107,7 +112,10 @@ rilasci».
   dati con 100 prodotti validi). Emulatori: spesa con `list_items` da 30499 accettata, 30500 rifiutata; lista da 500 prodotti creata ed
   eliminata dallo store (batch da 501).
 - **Verifica:** `npm run check` OK (**571/571**, build demo: il conteggio comprende test di un lavoro parallelo, vedi sotto); `test:emulator`
-  **24/24** su porte proprie (config `.nummo-lists-check.json` rimossa; runner hybrid 36786 non toccato). Non committato, non pubblicato.
+  **24/24** su porte proprie (config `.nummo-lists-check.json` rimossa; runner hybrid 36786 non toccato). Committato in `48361b9` (solo i
+  file della fase; l'indice verificato da solo: typecheck OK, **566/566**), inviato; **Rules pubblicate**, **Hosting no** (su richiesta:
+  il lavoro Android nell'albero di lavoro finirebbe nella build). Finché Hosting non è ripubblicato l'app online si ferma ancora a 100
+  prodotti: le Rules nuove sono solo più permissive, nessun problema di compatibilità.
 - **Attenzione:** nell'albero di lavoro c'è un lavoro parallelo non mio (app Android: `android/`, `src/services/androidApp.ts`,
   `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
   `haptics` e due chiavi in `src/i18n/en.ts`). Un commit di questa fase va limitato ai file della fase (in `en.ts` solo la riga dei 500
