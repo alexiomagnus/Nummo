@@ -120,8 +120,12 @@ rilasci».
 - **Ambiente.** Nessun runner hybrid attivo e nessun lock: su richiesta (22 novembre, sera), dopo l'ispezione, `.firebase/hybrid.lock`
   del runner 291668 (partito alle 17:12 e interrotto senza pulizia: config rimasta, sessione `hybrid-aR7NqG` con la sola config della CLI e
   nessun `export/`, quindi niente da recuperare) rinominato in `hybrid.lock.stale-291668` e `.nummo-hybrid-291668.json` rimosso.
-  `emulator-data/` è l'export promosso alle 17:11 dalla sessione 36786 (copia precedente in `hybrid-hRM9mM/previous`). Cartelle
-  `hybrid-*`, `recovery-*` e i `stale-*` più vecchi conservati. AVD `Pixel_8` dell'emulatore: ha un PIN di blocco schermo
+  `emulator-data/` è l'export promosso alle 17:11 dalla sessione 36786. Poi, su richiesta e dopo l'ispezione, `.firebase/` ripulita:
+  tolti i sei `hybrid.lock.stale-*`, le otto sessioni con la sola config della CLI, le otto copie vecchie dell'archivio locale (8–14
+  novembre) e le cartelle di recupero del 10–11 novembre (`recovery-7au5sZ`, `recovery-20261110-orphan-41530`,
+  `promote-20261111-recovery-41530`), superate da `emulator-data/`. Restano, per scelta dell'utente: `hybrid-hRM9mM/previous` (copia del
+  16 novembre, l'ultima precedente a `emulator-data/`), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
+  `hosting.*.cache` (della CLI). I riferimenti alle cartelle tolte nelle sezioni storiche sotto non valgono più. AVD `Pixel_8` dell'emulatore: ha un PIN di blocco schermo
   sconosciuto (messo in una prova precedente; utente bloccato dopo l'avvio, app non avviabili): per le prove usare `Medium_Phone_API_37.0`
   (Android 17, senza blocco) o ricrearlo solo su richiesta.
   Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
