@@ -117,10 +117,11 @@ rilasci».
   (su iOS probabilmente non si apre). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
   separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser.
-- **Ambiente.** Nessun runner hybrid attivo (22 novembre, 18:30): il PID 36786 non c'è più; restano `.firebase/hybrid.lock` e
-  `.nummo-hybrid-291668.json` di un runner del 22 novembre alle 17:12 (PID 291668, **non in esecuzione**, porte 8180/9099/4000/4400/8081
-  libere): residui di un arresto senza pulizia, non toccati. Prima di ripartire ispezionarli come per i `stale-*` (`emulator-data/`,
-  staging), poi solo su richiesta rinominare il lock e togliere la config. AVD `Pixel_8` dell'emulatore: ha un PIN di blocco schermo
+- **Ambiente.** Nessun runner hybrid attivo e nessun lock: su richiesta (22 novembre, sera), dopo l'ispezione, `.firebase/hybrid.lock`
+  del runner 291668 (partito alle 17:12 e interrotto senza pulizia: config rimasta, sessione `hybrid-aR7NqG` con la sola config della CLI e
+  nessun `export/`, quindi niente da recuperare) rinominato in `hybrid.lock.stale-291668` e `.nummo-hybrid-291668.json` rimosso.
+  `emulator-data/` è l'export promosso alle 17:11 dalla sessione 36786 (copia precedente in `hybrid-hRM9mM/previous`). Cartelle
+  `hybrid-*`, `recovery-*` e i `stale-*` più vecchi conservati. AVD `Pixel_8` dell'emulatore: ha un PIN di blocco schermo
   sconosciuto (messo in una prova precedente; utente bloccato dopo l'avvio, app non avviabili): per le prove usare `Medium_Phone_API_37.0`
   (Android 17, senza blocco) o ricrearlo solo su richiesta.
   Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
