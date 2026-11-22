@@ -1338,6 +1338,15 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   Archiviazione e backup (`nummo-backup.json`), che conta come backup per il promemoria. La scelta è dell'utente: eliminare senza backup è
   possibile. Le note precedenti su una «copia automatica» prima della sostituzione sono superate.
 
+## Piani dei fondi fino a 120 voci — 22 novembre 2026
+
+- Su richiesta: `fundPolicy.maxChanges` 24 → **120** (dieci anni di cambi mensili) per ricariche, budget ricorrenti, eccezioni e budget
+  generale (stessa `parseBudgets`, dati ancora nel backup). Rules (le due copie): quattro regex `{0,23}` → `{0,119}`, lunghezze esatte
+  2519 per le ricariche (120 × «YYYY-MM:9999999:31:a» + 119) e 1919 per budget, eccezioni e budget generale (120 × «YYYY-MM:9999999» +
+  119; prima 600 e 400 con margine). Margine RE2 sulle ripetizioni annidate rispettato (1000/119 = 8 ≥ 7). Nessun cambio di formato né di
+  `backupVersion`; un fondo oltre 24 voci è non valido per un client non aggiornato finché non ricarica, e per un Firebase personale con le
+  Rules vecchie.
+
 ## Revisione dei limiti degli abbonamenti — 22 novembre 2026
 
 - Su richiesta (audit dei limiti per un uso pluriennale): `maxCalendarChanges` 4 → **100**, `maxSkippedPayments` 60 → **1000**,
@@ -1361,7 +1370,8 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   personale con le Rules vecchie rifiuta quelle scritture finché non le ricopia. Pubblicazione: Rules prima di Hosting.
 - **Limiti generali analizzati e non cambiati** (scelta richiesta: nessuna modifica senza verifica): importo massimo, saldi e movimenti,
   ricariche e budget (99.999,99 €, Rules `[0-9]{1,7}`: coerenti), 24 voci di piano per fondo (si aggiunge una voce per mese in cui il
-  piano cambia: sono 2 anni di cambi mensili o 24 di annuali; alzabile fino a circa 140 senza superare il margine RE2), 100 prodotti per
+  piano cambia: sono 2 anni di cambi mensili o 24 di annuali; alzabile fino a circa 140 senza superare il margine RE2; **portate a 120**
+  subito dopo, vedi sotto), 100 prodotti per
   lista (le Rules non possono contare i documenti; alla registrazione `list_items` ≤ 6100 caratteri), 100 template, lunghezze dei testi
   (identiche tra client e Rules).
 

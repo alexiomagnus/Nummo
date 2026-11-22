@@ -23,8 +23,10 @@ export const fundPolicy = {
   // 999.999.999,99 €: their compact strings in Firestore have length limits sized for 7 digits (`firestore.rules`).
   maxMonthlyMinor: 9_999_999,
   maxNoteLength: 100,
-  // Schedule entries per fund (Rules check them with one regex each).
-  maxChanges: 24,
+  // Schedule entries per fund and per schedule (recharges, recurring budgets, exceptions; also the general budget): one entry
+  // per month in which the schedule changes. 24 until 22 November (two years of monthly changes), then 120 on request: ten
+  // years. Rules check each schedule with one regex, `{0,119}`: within RE2's margin on nested counts (1000/119 = 8 ≥ 7).
+  maxChanges: 120,
   colorSlots: 12,
 } as const;
 

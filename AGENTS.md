@@ -232,7 +232,8 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   Senza pagamenti maturati (prova in corso) cambia direttamente la frequenza di base. Un cambio non ancora in vigore si sostituisce.
   Le Rules verificano forma e che la versione non regredisca né il campo si accorci; la correttezza in avanti è del decoder.
 - Fondi (dati): saldo, ricarica, budget e speso restano grandezze distinte nel dominio (`src/domain/funds.ts`), ricariche **calcolate**
-  dal piano (mai scritte come documenti né in render/effect), `start_date` immutabile, piani in Firestore come stringhe compatte
+  dal piano (mai scritte come documenti né in render/effect), `start_date` immutabile, piani (al massimo 120 voci ciascuno, `fundPolicy.maxChanges`;
+  24 fino al 22 novembre) in Firestore come stringhe compatte
   (`recharges`, `budgets`, `budget_exceptions`), nel backup come array. Spese senza `fund_id` = «Senza fondo», assegnate solo su richiesta
   esplicita; un fondo con movimenti o spese si archivia, non si elimina. «Elimina» (22 novembre, su richiesta) sta nel dialogo «Modifica fondo» (`remove` di `FundEditor`, riga di Annulla/Salva come negli altri dialoghi di modifica) e, per i fondi archiviati, nella loro scheda; è sempre presente: per un fondo usato il dialogo dice «Lo usano n spese e n movimenti…» con solo «Chiudi» (`blocked`), e la conferma ricontrolla sui dati più recenti.
 - Fondi (interfaccia, 16 novembre): fondi e budget sempre facoltativi, nessun passaggio obbligato in Nuova spesa («Nessun fondo» di base,

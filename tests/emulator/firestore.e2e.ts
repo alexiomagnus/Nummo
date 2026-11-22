@@ -14,6 +14,7 @@ import { dataOf } from '../../src/domain/expense.ts';
 import { maxStatusChanges } from '../../src/domain/subscription.ts';
 import { maxCalendarChanges } from '../../src/domain/recurrence.ts';
 import { maxSkippedPayments } from '../../src/domain/skippedPayments.ts';
+import { fundPolicy } from '../../src/domain/funds.ts';
 
 // Status history of `count` entries of the longest kind («YYYY-MM-DD:cancelled»), on increasing past days: with 1000,
 // exactly the 20999 characters the Rules accept (size and regex both at their limit).
@@ -22,6 +23,10 @@ const statusHistory = (count: number, status: string) => Array.from({ length: co
 const longestStatuses = (count: number) => statusHistory(count, 'cancelled');
 // The shortest kind («YYYY-MM-DD:active»): 1001 of them stay under 20999 characters, so only the regex count refuses them.
 const shortestStatuses = (count: number) => statusHistory(count, 'active');
+// Fund schedules of `count` monthly entries of the longest kind, from 2016-01: with 120, exactly 2519 and 1919 characters.
+const scheduleMonth = (i: number) => `${2016 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`;
+const longestRecharges = (count: number) => Array.from({ length: count }, (_, i) => `${scheduleMonth(i)}:9999999:31:${i % 2 ? 'p' : 'a'}`).join(';');
+const longestBudgets = (count: number) => Array.from({ length: count }, (_, i) => `${scheduleMonth(i)}:9999999`).join(';');
 await import('../../scripts/seed-demo.ts');
 const projectId = 'demo-nummo';
 const suffix = randomUUID().slice(0, 8);
@@ -212,12 +217,17 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         [budgetRef, { budgets: '2026-11:x', revision: 1, updated_at: serverTimestamp() }],
         [budgetRef, { budgets: '2026-11:30000;', revision: 1, updated_at: serverTimestamp() }],
         [budgetRef, { budgets: '2026-11:123456789', revision: 1, updated_at: serverTimestamp() }],
-        [budgetRef, { budgets: Array.from({ length: 25 }, (_, i) => `2026-${String(i % 12 + 1).padStart(2, '0')}:100`).join(';'), revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: longestBudgets(fundPolicy.maxChanges + 1), revision: 1, updated_at: serverTimestamp() }],
+        [budgetRef, { budgets: Array.from({ length: fundPolicy.maxChanges + 1 }, (_, i) => `${scheduleMonth(i)}:1`).join(';'), revision: 1, updated_at: serverTimestamp() }],
         [budgetRef, { budgets: '', revision: 1, updated_at: Timestamp.fromDate(new Date('2020-01-01')) }],
       ] as const) await denied(setDoc(target, data));
       await denied(setDoc(doc(intruder.db, 'users', uid, 'settings', 'budget'), { budgets: '', revision: 1, updated_at: serverTimestamp() }));
       await denied(getDocFromServer(doc(intruder.db, 'users', uid, 'settings', 'budget')));
       await setDoc(budgetRef, { budgets: '', revision: 1, updated_at: serverTimestamp() }); // empty = no budget is valid
+      await deleteDoc(budgetRef);
+      // 120 entries of the longest kind (24 until 22 November): 1919 characters, accepted.
+      assert.equal(longestBudgets(fundPolicy.maxChanges).length, 1919);
+      await setDoc(budgetRef, { budgets: longestBudgets(fundPolicy.maxChanges), revision: 1, updated_at: serverTimestamp() });
       await deleteDoc(budgetRef);
       // Store: first save requires no document, later saves the revision seen; a stale one is a conflict.
       await owner.store.saveBudget(schedule, null);
@@ -480,10 +490,18 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         budgets: `${month}:25000`, budget_exceptions: '', archived: false, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       for (const patch of [{ name: '' }, { name: ' x' }, { color: 12 }, { initial_minor: -1 }, { initial_minor: 1.5 }, { start_date: '2099-01-01' },
         { recharges: '2026-01:0:1:x' }, { recharges: [] }, { budgets: '2026-01:1;' }, { icon: 'nope' }, { archived: 'no' }, { revision: 2 }, { extra: 1 },
-        { recharges: Array.from({ length: 25 }, (_, i) => `20${String(30 + i)}-01:1:1:a`).join(';') }]) {
+        { recharges: longestRecharges(fundPolicy.maxChanges + 1) }, { recharges: Array.from({ length: fundPolicy.maxChanges + 1 }, (_, i) => `${scheduleMonth(i)}:1:1:a`).join(';') },
+        { budgets: longestBudgets(fundPolicy.maxChanges + 1) }, { budget_exceptions: longestBudgets(fundPolicy.maxChanges + 1) }]) {
         await denied(setDoc(fundRef(randomUUID()), { ...stored, ...patch }));
       }
       for (const c of [intruder, anonymous]) await denied(setDoc(doc(c.db, 'users', uid, 'funds', randomUUID()), stored));
+      // The longest schedules (120 entries each: 2519 + 1919 + 1919 characters) are accepted, created and updated.
+      assert.equal(longestRecharges(fundPolicy.maxChanges).length, 2519);
+      const fullFund = randomUUID();
+      const longestSchedules = { recharges: longestRecharges(fundPolicy.maxChanges), budgets: longestBudgets(fundPolicy.maxChanges), budget_exceptions: longestBudgets(fundPolicy.maxChanges) };
+      await setDoc(fundRef(fullFund), { ...stored, ...longestSchedules });
+      await updateDoc(fundRef(fullFund), { name: `Pieno ${suffix}`, updated_at: serverTimestamp(), revision: 2 });
+      await deleteDoc(fundRef(fullFund));
       const id = randomUUID();
       await owner.store.saveFund(id, data);
       const raw = (await getDocFromServer(fundRef(id))).data()!;

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { backupVersion, makeBackup, parseBackup, planImport, validateBackupData } from '../src/domain/backup.ts';
 import { parseSyncedBudget } from '../src/domain/firestore.ts';
 import {
-  budgetFor, decodeBudgets, emptyFund, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, rechargeCredits, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
+  budgetFor, decodeBudgets, emptyFund, fundPolicy, encodeBudgets, fundFromForm, generalBudgetFor, generalBudgetMonth, hasBalanceData, monthOverview, rechargeCredits, parseBudgets, resolveFund, sameBudgets, setGeneralBudget,
   type Fund, type FundData,
 } from '../src/domain/funds.ts';
 
@@ -96,8 +96,9 @@ test('fondo con budget nascosto: conserva piano futuro ed eccezioni modificando 
 });
 
 test('fondo semplificato: troppe variazioni programmate → null, mai troncate', () => {
-  const months = Array.from({ length: 24 }, (_, i) => ({ month: `${2024 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`, amount_minor: 100 + i }));
-  const full: FundData = { ...emptyFund('Pieno', '2024-01-01', 0), budgets: months };
+  // 120 entries (24 until 22 November): ten years of monthly changes, then a new one is refused.
+  const months = Array.from({ length: fundPolicy.maxChanges }, (_, i) => ({ month: `${2016 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`, amount_minor: 100 + i }));
+  const full: FundData = { ...emptyFund('Pieno', '2016-01-01', 0), budgets: months };
   assert.equal(fundFromForm(full, { name: 'Pieno', icon: null, color: 0, budget: 999 }, today), null);
 });
 

@@ -90,6 +90,17 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Piani dei fondi fino a 120 voci (Rules da pubblicare) — 22 novembre 2026
+
+- Su richiesta: `fundPolicy.maxChanges` 24 → **120** (ricariche, budget ricorrenti, eccezioni, budget generale). Rules (identiche, `cmp`):
+  `{0,23}` → `{0,119}` nelle quattro regex, lunghezze 600 → 2519 (ricariche) e 400 → 1919 (budget, eccezioni, budget generale), esatte
+  per 120 voci della forma più lunga. Margine RE2 rispettato. Motivazioni in `docs/architecture.md`.
+- **Test:** `tests/funds.test.ts` (120 accettate e 121 rifiutate in array, stringa, record del fondo e backup; lunghezze 2519/1919; voci
+  malformate; dati con 24 voci validi; un piano pieno non accetta un nuovo mese) e `tests/generalBudget.test.ts` (120). Emulatori: fondo con
+  i tre piani al massimo creato e modificato, budget generale da 1919 caratteri accettato, 121 voci rifiutate (lunghe e brevi).
+- **Verifica:** `npm run check` OK (**565/565**, build demo); `test:emulator` **24/24** su porte proprie (config `.nummo-funds-check.json`
+  rimossa; runner hybrid 36786 non toccato). Non committato, non pubblicato.
+
 ## Revisione dei limiti degli abbonamenti (Rules da pubblicare) — 22 novembre 2026
 
 - Su richiesta (audit dei limiti; decisione e motivazioni in `docs/architecture.md`, «Revisione dei limiti degli abbonamenti»):

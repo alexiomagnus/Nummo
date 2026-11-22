@@ -4,7 +4,7 @@ import { backupVersion, makeBackup, parseBackup, planImport } from '../src/domai
 import type { ExpenseRecord } from '../src/domain/contract.ts';
 import { applyPriceEdit, dataOf, newDraft, validateDraft } from '../src/domain/expense.ts';
 import {
-  balanceAt, budgetFor, budgetState, decodeBudgets, decodeRecharges, dueDate, encodeBudgets, encodeRecharges, fundInUse, fundMonth,
+  balanceAt, budgetFor, budgetState, decodeBudgets, fundPolicy, parseBudgets, parseRecharges, decodeRecharges, dueDate, encodeBudgets, encodeRecharges, fundInUse, fundMonth,
   fundNameError, monthOverview, nextFundColor, parseFund, parseMoneyMinor, parseMovement, rechargeCredits, setBudgetException,
   setRecharge, setRecurringBudget, unassignedExpenses, type Fund, type Movement,
 } from '../src/domain/funds.ts';
@@ -273,4 +273,36 @@ test('fondi: testi di stato tradotti in inglese', async () => {
     assert.equal(translate('en', it), en);
     assert.equal(translate('it', it), it);
   }
+});
+
+test('piani dei fondi: 120 voci per piano (24 fino al 22 novembre), 121 rifiutate; stringhe più lunghe nei limiti delle Rules', () => {
+  assert.equal(fundPolicy.maxChanges, 120);
+  const month = (i: number) => `${2016 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`;
+  const recharges = (count: number) => Array.from({ length: count }, (_, i) => ({ month: month(i), amount_minor: fundPolicy.maxMonthlyMinor, day: 31, active: i % 2 === 0 }));
+  const budgets = (count: number) => Array.from({ length: count }, (_, i) => ({ month: month(i), amount_minor: fundPolicy.maxMonthlyMinor }));
+  // Longest stored forms: exactly the 2519 and 1919 characters the Rules allow.
+  assert.equal(encodeRecharges(recharges(120)).length, 2519);
+  assert.equal(encodeBudgets(budgets(120)).length, 1919);
+  assert.deepEqual(decodeRecharges(encodeRecharges(recharges(120))), recharges(120));
+  assert.deepEqual(decodeBudgets(encodeBudgets(budgets(120))), budgets(120));
+  assert.equal(decodeRecharges(encodeRecharges(recharges(121))), null);
+  assert.equal(decodeBudgets(encodeBudgets(budgets(121))), null);
+  assert.equal(parseRecharges(recharges(121)), null);
+  assert.equal(parseBudgets(budgets(121)), null);
+  // Malformed or out of range entries stay invalid whatever the length.
+  for (const bad of [[...budgets(119), { month: '2015-12', amount_minor: 1 }], [...budgets(119), { month: month(119), amount_minor: fundPolicy.maxMonthlyMinor + 1 }],
+    [...budgets(119), { month: month(119), amount_minor: -1 }], [...budgets(119), { month: '2026-13', amount_minor: 1 }], [...budgets(119), null]]) {
+    assert.equal(parseBudgets(bad), null);
+  }
+  // Fund record and backup follow the same bound; a full schedule takes no new month.
+  const full = fund(1, { start_date: '2016-01-01', recharges: recharges(120), budgets: budgets(120), budget_exceptions: budgets(120) });
+  assert.deepEqual(parseFund(full), full);
+  assert.equal(parseFund({ ...full, budgets: budgets(121) }), null);
+  const file = JSON.parse(makeBackup({ expenses: [], categories: [], funds: [full] }));
+  assert.deepEqual(parseBackup(file).funds[0], full);
+  assert.throws(() => parseBackup({ ...file, funds: [{ ...full, recharges: recharges(121) }] }));
+  assert.equal(setRecurringBudget(full, 500, '2026-11-22'), null);
+  assert.equal(setRecurringBudget({ ...full, budgets: budgets(119) }, 500, '2026-11-22')?.length, 120);
+  // Older data (up to 24 entries) stays valid.
+  assert.equal(parseBudgets(budgets(24))?.length, 24);
 });
