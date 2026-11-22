@@ -6,13 +6,15 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `17632af`, pubblicati su richiesta il 22 novembre nell'ordine: Rules
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `9929c8f` pubblicato su richiesta il 22 novembre (sera) con
+  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
+  Prima, **Rules e Hosting** da `17632af`, pubblicati su richiesta il 22 novembre nell'ordine: Rules
   (compilazione OK, «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), sito 200, bundle online identico a `dist/`
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Commit di codice del 22 novembre, tutti pubblicati con `17632af`:
-  `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Commit di codice del 22 novembre, tutti pubblicati: `9929c8f`
+  (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
   astratti; altra sessione), `a6c2b88` (blocco dell'app con impronta o viso), `ec8c5c3` (scansione più ordinata, categorie su smartphone;
   altra sessione), `b2f6d1e` (Indietro di Android, immagine del profilo in Standard), `c862fa9` (riepilogo del passaggio più breve, «Annulla»/
@@ -30,8 +32,9 @@ rilasci».
   - **Limiti di lunghezza**: ricerche ed Esercente 30, nome della lista 40, prodotto 60, «Totale spesa» come l'Importo.
   - Barra dei menu lontana dagli angoli arrotondati; vibrazione al cambio Spese/Abbonamenti; scansione dello scontrino più ordinata;
     riepilogo del passaggio dei dati più breve.
-- **Ultima sessione (22 novembre, sera), non committata:** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti
-  dal passaggio dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no.
+- **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
+  dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
+  `9929c8f`, inviato e pubblicato su Hosting.
 - **Verifiche (22 novembre, ultime).** `npm run check` OK su `17632af` (typecheck, **545/545**, build demo). `test:emulator` **22/22** sulle
   Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
@@ -39,7 +42,8 @@ rilasci».
   campi. Nessun errore JS.
 - **Da provare sul telefono (priorità):**
   1. App installata sul Pixel 8: Indietro e gesto Indietro di sistema; blocco con impronta/viso reali (richiesta automatica, «Sblocca»,
-     dove compare la passkey «Nummo» nel gestore delle password), recupero in Avanzata con «Esci»; foto del profilo dalla galleria.
+     dove compare la passkey «Nummo» nel gestore delle password), recupero in Avanzata con «Esci»; foto del profilo dalla galleria;
+     in Standard PIN di Nummo (accensione, «Non riesco a sbloccare», «Cambia il PIN») e «Elimina tutte le spese».
   2. In produzione (Avanzata): una spesa oltre 99.999,99 € accettata dal server; scelta di un avatar e ritorno alla foto Google.
   3. iPhone/Safari: Indietro a scorrimento, blocco (Safari può chiedere un tocco: c'è «Sblocca»).
   4. Rimasti dal 21 novembre: vibrazione 5/4 ms (senza Non disturbare), menu «immagine» al tocco prolungato, tastiera virtuale (campo in basso
@@ -79,7 +83,8 @@ rilasci».
   `nummo-utente-medio.json` (196 spese), «Elimina tutte le spese» → copia scaricata, 0 spese, 15 categorie e 3 fondi rimasti, «196 spese
   eliminate.»; «Cambia modalità» verde (primary) nello screenshot; PIN a 5 cifre rifiutato, lettere ignorate, blocco acceso con hash; dopo il
   ricaricamento, impronta rifiutata, PIN errato rifiutato, PIN giusto → sbloccato, blocco e PIN spenti. Nessun errore JS. **Non provati:**
-  eliminazione in Avanzata nel browser (solo emulatore), «Cambia il PIN», aspetto su smartphone. Non committato, non pubblicato.
+  eliminazione in Avanzata nel browser (solo emulatore), «Cambia il PIN», aspetto su smartphone. Committato in `9929c8f`, pubblicato su
+  Hosting il 22 novembre (sera).
 
 ## Ricerche ed Esercente a 30 caratteri — 22 novembre 2026
 
