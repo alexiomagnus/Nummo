@@ -6,7 +6,10 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `1e5c615` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `f57b1b9` pubblicati su richiesta il 22 novembre, nell'ordine: Rules
+  (`firebase deploy --only firestore:rules --project nummo-6b6e2`: compilazione OK, «Deploy complete!»; cambi di stato fino a 40), poi
+  `npm run deploy:hosting` («Deploy complete!»), bundle online `index-79ab0459…` identico a `dist/` (SHA-256), `firestore.rules` pubblico
+  identico. Chi ha collegato il proprio Firebase deve ricopiare le Rules (oltre 8 cambi di stato). Prima, **Hosting** da `1e5c615` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
   «Deploy complete!», bundle online `index-5c7ec78e…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
   Prima, **Hosting** da `3994330` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
   «Deploy complete!», bundle online `index-bac866b2…` identico a `dist/` (SHA-256; per qualche secondo il CDN serviva ancora il precedente).
@@ -24,7 +27,9 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `1e5c615` (Elimina del fondo nel dialogo di modifica, «Palette» predefinita, pulsanti «Ripristina» uniformi, contorno rosso di Elimina): inviato e pubblicato su Hosting. Prima `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `f57b1b9` (pagina Esercenti, cambi di stato
+  fino a 40, Indietro di un passo, colore dell'anello, barra inferiore senza lampeggi, storico dei pagamenti largo due pulsanti, vibrazione
+  sulla ricorrenza, «Annulla»/«OK» della data a 44, avvisi a 5 s): inviato e pubblicato con le Rules. Prima `1e5c615` (Elimina del fondo nel dialogo di modifica, «Palette» predefinita, pulsanti «Ripristina» uniformi, contorno rosso di Elimina): inviato e pubblicato su Hosting. Prima `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
   (template senza data), `9929c8f`
   (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
@@ -48,7 +53,8 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** `npm run check` OK su `1e5c615` (typecheck, **551/551**, build demo).
+- **Verifiche (22 novembre, ultime).** `npm run check` OK su `f57b1b9` (typecheck, **557/557**, build demo); `test:emulator` **24/24** su
+  `f57b1b9` (porte proprie 39199/39380). Prima `npm run check` OK su `1e5c615` (**551/551**);
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
@@ -104,8 +110,7 @@ rilasci».
   (39199/39380, config temporanea `.nummo-status-check.json` rimossa; runner hybrid 36786 non toccato): 40 stati di lunghezza massima
   (839 caratteri) accettati anche nel caso peggiore con 8 prezzi, prova, 4 cambi di frequenza, 60 pagamenti eliminati, fondo ed esercente;
   41 stati e 40 + uno rifiutati.
-- **Da fare:** pubblicare le Rules (solo con autorizzazione, prima o insieme a Hosting: con Hosting nuovo e Rules vecchie un 9° cambio
-  verrebbe rifiutato dal server con un errore). Finché non sono pubblicate in produzione il limite effettivo resta 8. Non committato.
+- **Pubblicato:** Rules e poi Hosting da `f57b1b9` (vedi «Stato corrente»): in produzione il limite è 40.
 
 ## Colore dell'anello in Avanzata, analisi del limite dei cambi di stato — 22 novembre 2026
 
@@ -127,7 +132,7 @@ rilasci».
   emulatori miei (39199/39380, config temporanea `.nummo-ring-check.json` rimossa, emulatori fermati; runner hybrid 36786 non toccato),
   accesso dal popup dell'emulatore come proprietario demo, 390×844 scuro: anello del pulsante = colore dell'app; sette campioni con i colori
   giusti; «Rosa» → pulsante e anteprima rosa, chiave `rose`; dopo il ricaricamento ancora rosa; tema chiaro → rosa dello schema chiaro;
-  «Ripristina predefiniti» → chiave tolta, colore dell'app. Nessun errore JS. Non provati: telefono reale, larghezza desktop. Non committato.
+  «Ripristina predefiniti» → chiave tolta, colore dell'app. Nessun errore JS. Non provati: telefono reale, larghezza desktop. Committato in `f57b1b9`, inviato e pubblicato (Rules e Hosting).
 
 ## Indietro di un passo alla volta, vibrazione sulla ricorrenza — 22 novembre 2026
 
@@ -144,7 +149,7 @@ rilasci».
   In attesa di una scelta (alzarlo richiede Rules e rimisura del budget).
 - **Verifica:** `npm run check` OK (**555/555**). Chromium headless su `dist-demo` (Standard, 390×844): Nuova spesa → Spese → Analisi →
   Fondi → Impostazioni → «Fatto» (Fondi) → Indietro: Analisi, Spese, Nuova spesa, poi uscita dalla pagina; cronologia del browser sempre
-  con una sola voce in più. Vibrazione non provata su telefono (solo la prop, come per Spese/Abbonamenti). Non committato.
+  con una sola voce in più. Vibrazione non provata su telefono (solo la prop, come per Spese/Abbonamenti). Committato in `f57b1b9`, inviato e pubblicato (Rules e Hosting).
 
 ## «Storico dei pagamenti» largo due pulsanti su smartphone — 22 novembre 2026
 
@@ -158,7 +163,7 @@ rilasci».
   non visti: causa da confermare (backup JSON, `status_changes` di quella serie). Nessuna modifica fatta in attesa della scelta.
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, `nummo-utente-medio.json` unito, «Affitto»): a 390 «Pausa»
   136,8 → «Modifica» 355,0, storico 137,0..355,0; a 412 144,2 → 377,0, storico 144,0..377,0; a 360 e 320 azioni su due righe, storico
-  25..325 e 25..285 come «Modifica». Nessun errore JS. Non committato.
+  25..325 e 25..285 come «Modifica». Nessun errore JS. Committato in `f57b1b9`, inviato e pubblicato (Rules e Hosting).
 
 ## Barra inferiore che lampeggiava allo scorrimento, avvisi a 5 secondi — 22 novembre 2026
 
@@ -176,7 +181,7 @@ rilasci».
   `scripts/check-keyboard.mjs` (anche `--steps 4 --switch`): barra nascosta al focus con spazio conservato, liberato al primo restringimento
   oltre la soglia, ricompare in un fotogramma alla chiusura; nessun errore JS né long task. **Da provare sul telefono:** scorrimento di
   Nuova spesa partendo da un campo, tocco su un campo (la barra deve sparire prima della tastiera), riapertura dopo Indietro, iPhone.
-  Non committato.
+  Committato in `f57b1b9`, inviato e pubblicato (Rules e Hosting).
 
 ## «Annulla»/«OK» della data più alti, avvisi a 4 secondi — 22 novembre 2026
 
@@ -186,7 +191,7 @@ rilasci».
   il 17 novembre; 4 s è il minimo indicato da Material 3). «Chiudi» li chiude prima, come sempre.
 - **Verifica:** `npm run check` OK (**551/551**). Chromium headless su `dist-demo` (Standard): selettore della data aperto da Nuova spesa a
   390×844 e 1280×900, «Annulla» e «OK» alti 44; nessun errore JS. Durata degli avvisi non cronometrata nel browser (costante `4e3` nel bundle).
-  Non committato.
+  Committato in `f57b1b9`, inviato e pubblicato (Rules e Hosting).
 
 ## Riallineamento documentale — 22 novembre 2026
 
