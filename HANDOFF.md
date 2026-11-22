@@ -218,6 +218,27 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Tasto «Indietro» che non esce dall'app, immagine del profilo in Standard — 22 novembre 2026
+
+- **Indietro (Android e browser).** Su richiesta: prima l'app non scriveva nulla nella cronologia (solo la guida `#guida`), quindi Indietro
+  chiudeva l'app installata o lasciava il sito. Ora pila unica pura `theme/backStack.ts` + `useBackLayer` (`components/BackNavigation.ts`):
+  una sola voce di guardia nella cronologia finché qualcosa è aperto (spiegazione e ordine in `AGENTS.md`). Collegati: tutti gli overlay
+  tramite `useEscape` (`AppDialog` non `dismissable` rifiuta), lista aperta (`ListsPage`), pagine del menu account e destinazioni
+  (`WorkspaceNavigation`: account → sezione di partenza, destinazioni → Nuova spesa), Impostazioni da disconnessi e «Collega il tuo Firebase»
+  (`App.tsx`). Da Nuova spesa Indietro esce (scelta dell'utente, niente «premi di nuovo»). `leaveGuide` conserva ora lo stato della voce.
+- **Immagine del profilo (solo Standard).** Su richiesta, icone e foto insieme: scheda «Immagine del profilo» in testa alle Impostazioni
+  (`ProfileImageCard`): «Nessuna immagine», 12 icone di categoria nello stile d'icona scelto, «Carica una foto»/«Cambia foto» (quadrato
+  centrale a 192 px JPEG, `prepareAvatar` in `receipts/image.ts`, nessun ritaglio manuale). Chiave `nummo.profile.v1`, validata
+  (`profileImage.ts`: solo data URL immagine base64 ≤ 200 000 caratteri), mai nel backup; mostrata nel pulsante del menu (`avatar` di
+  `AccountMenu`); «Ripristina predefiniti» la riporta a nessuna. Testi IT/EN. `AGENTS.md`, README.
+- **Verifica:** `npm run check` OK (**533/533**, nuovi `tests/backStack.test.ts` e `tests/profileImage.test.ts`) sull'albero condiviso con
+  l'altra sessione. Chromium headless su `dist-demo`, Standard, 390×844 touch, `history.back()` come Indietro: Spese → Analisi → Indietro =
+  Nuova spesa (una sola voce di guardia, `history.length` fermo); Liste → dialogo «Nuova lista» → Indietro chiude il dialogo (resta Liste)
+  → Indietro = Nuova spesa; menu account → Indietro lo chiude; Impostazioni dal menu → icona «zampa» salvata, foto 640×400 → JPEG
+  quadrato nel pulsante account (36 px) e «La tua foto» selezionata; Indietro = Nuova spesa; dopo il ricaricamento foto conservata e
+  nessuna guardia rimasta; Indietro da Nuova spesa esce dalla pagina. Nessun errore JS. **Non provati:** WebAPK sul Pixel 8 (il vero tasto
+  Indietro di sistema e il gesto), iOS Safari (scorrimento indietro), foto reale dalla galleria del telefono. Non committato, non pubblicato.
+
 ## Riepilogo del passaggio più breve, «Annulla»/«OK» della data più stretti — 22 novembre 2026
 
 - **Passaggio dei dati** (Avanzata, «Dati della modalità Standard»; screenshot con «Riepilogo del passaggio», «Da questo progetto Firebase

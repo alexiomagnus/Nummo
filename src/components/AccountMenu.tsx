@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { useRef, useState, type ComponentRef } from 'react';
+import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Menu, Text, useTheme } from 'react-native-paper';
 import { radius, spacing } from '../theme/tokens';
@@ -8,12 +8,13 @@ import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
-type Props = { email: string | null; photoURL: string | null; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
+// `avatar`: the picture chosen in Settings (Standard mode), drawn instead of the person glyph and the Google photo.
+type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
 // `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
-export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup }: Props) {
+export function AccountMenu({ email, photoURL, avatar, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -29,13 +30,13 @@ export function AccountMenu({ email, photoURL, busy, onSignOut, onOpenSettings, 
         <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} bleed={4} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={onSignOut ? `Account${email ? `: ${email}` : ''}` : t("Menu")}
           onPress={openMenu} style={styles.trigger}>
-          <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>
+          {avatar ?? <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>
             <SvgIcon shape={iconShapes.user} size={22} color={colors.onPrimaryContainer} />
             {photoURL && !photoFailed && <img key={photoAttempt} src={photoURL} alt="" aria-hidden draggable={false}
               width={36} height={36} referrerPolicy="no-referrer"
               onLoad={() => setPhotoLoaded(true)} onError={() => setPhotoFailed(true)}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: photoLoaded ? 1 : 0, transition: 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' }} />}
-          </View>
+          </View>}
         </StateLayerPressable>
       </View>
       <AnchoredMenu visible={open} onDismiss={() => setOpen(false)} anchor={anchor} align="end" label="Account" contentStyle={styles.menu}>

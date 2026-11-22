@@ -22,6 +22,9 @@ import { useSession } from './src/features/session/useSession';
 import { readSessionHint, writeSessionHint } from './src/services/sessionHint';
 import { DataWorkspace, RemoteWorkspace, StartupWorkspace, type StorageSlot } from './src/features/workspace/Workspace';
 import { ModeChoice } from './src/features/storage/ModeChoice';
+import { useBackLayer } from './src/components/BackNavigation';
+import { StandardAvatar } from './src/features/settings/ProfileImageCard';
+import { backLevels } from './src/theme/backStack';
 import { AdvancedStorage, StandardStorage } from './src/features/storage/StorageSection';
 import { ModeTransfer } from './src/features/storage/ModeTransfer';
 import { useStorageProtection } from './src/features/storage/useStorageProtection';
@@ -102,7 +105,7 @@ function Root(props: RootProps) {
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
   const renderSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
-    onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} onResetArchive={onResetArchive} />;
+    onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} onResetArchive={onResetArchive} profileImage={mode === 'standard'} />;
   const shared = { ...props, themeToggle, renderSettings, onChangeMode: changeMode };
   if (mode === 'advanced') return <AdvancedRoot {...shared} />;
   if (mode === 'standard') return <StandardRoot {...shared} />;
@@ -119,6 +122,7 @@ function SettingsButton({ onPress }: { onPress: () => void }) {
 function ChoiceRoot({ themeToggle, renderSettings, onChangeMode }: ModeProps) {
   const { t } = useI18n();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  useBackLayer(settingsOpen, backLevels.page, () => setSettingsOpen(false));
   return (
     <AppShell actions={<>{themeToggle}<SettingsButton onPress={() => setSettingsOpen(true)} /></>} brand={{ label: t("inizio"), onPress: leaveGuide }}>
       {settingsOpen ? renderSettings(() => setSettingsOpen(false)) : <ModeChoice onChoose={onChangeMode} />}
@@ -132,6 +136,7 @@ function StandardRoot(props: ModeProps) {
   const { themeToggle, renderSettings, onChangeMode } = props;
   const [opened, setOpened] = useState<{ store: LocalStore } | { error: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  useBackLayer(settingsOpen, backLevels.page, () => setSettingsOpen(false));
   useEffect(() => {
     let cancelled = false;
     let store: LocalStore | undefined;
@@ -168,7 +173,7 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
   const [backupRequest, setBackupRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
-  const menu = <AccountMenu email={null} photoURL={null} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
+  const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar size={36} />} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
     onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
   return (
     <>
@@ -194,6 +199,9 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const [settingsOpen, setSettingsOpen] = useState(false);
   // «Collega il tuo Firebase» replaces the sign-in screen (or the private-Nummo screen) until «Annulla».
   const [connectOpen, setConnectOpen] = useState(false);
+  // Back closes them as «Fatto» and «Annulla» do (Settings first when both are open: it was opened last).
+  useBackLayer(settingsOpen, backLevels.page, () => setSettingsOpen(false));
+  useBackLayer(connectOpen, backLevels.page, () => setConnectOpen(false));
   // Account menu pages (Settings, Notifications, Categories, import/export): each request (a counter) opens its page in the workspace.
   const [settingsRequest, setSettingsRequest] = useState(0);
   const [notificationsRequest, setNotificationsRequest] = useState(0);

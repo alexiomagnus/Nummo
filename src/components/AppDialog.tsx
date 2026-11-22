@@ -36,7 +36,10 @@ function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID,
   const animate = useOverlayMotion();
   const { mounted, shown } = usePresence(visible, motion.short, animate);
   const container = useRef<ComponentRef<typeof View>>(null);
-  useEscape(visible, () => { if (dismissable) onDismiss?.(); });
+  useEscape(visible, () => {
+    if (!dismissable || !onDismiss) return false;
+    onDismiss();
+  });
   useFocusHandoff(visible, shown, container, focusTextEntry);
   if (!mounted) return null;
   const maxHeight = `calc(var(--nummo-viewport-height, 100dvh) - ${insets.top + insets.bottom + spacing.lg * 2}px)` as DimensionValue;

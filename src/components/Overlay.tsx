@@ -7,6 +7,8 @@ import { transitions } from '../theme/motion';
 import { motion, radius, spacing } from '../theme/tokens';
 import { useReducedMotion } from '../theme/useSizeClass';
 import { initialFocusAllowed } from '../theme/viewport';
+import { backLevels } from '../theme/backStack';
+import { useBackLayer } from './BackNavigation';
 import { menuHorizontalBounds, menuVerticalPlacement, recentVelocity, sheetDragOutcome, sheetGestureOwner, type DragSample } from './menuGeometry';
 
 // Shared overlay layer for menus, bottom sheets and dialogs. Every surface stays opaque while it moves: entering, it
@@ -42,11 +44,14 @@ export function useOverlayMotion(): boolean {
   return !useReducedMotion();
 }
 
-// Portals may nest a selector or a confirmation above a dialog. Only the last opened overlay handles Escape.
+// Portals may nest a selector or a confirmation above a dialog. Only the last opened overlay handles Escape, and Back
+// (Android, browser) closes the same overlay first (`useBackLayer`). `onEscape` returns false when the overlay refuses
+// to close (a dialog busy with an operation): Back then stays in the app.
 const escapeStack: object[] = [];
-export function useEscape(active: boolean, onEscape: () => void) {
+export function useEscape(active: boolean, onEscape: () => boolean | void) {
   const latest = useRef(onEscape);
   latest.current = onEscape;
+  useBackLayer(active, backLevels.overlay, () => latest.current());
   useEffect(() => {
     if (!active || typeof document === 'undefined') return;
     const entry = {};

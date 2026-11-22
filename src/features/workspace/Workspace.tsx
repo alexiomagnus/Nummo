@@ -57,6 +57,8 @@ import { noPreferredCategories, readPreferredCategories, writePreferredCategorie
 import type { FundChoice } from '../funds/FundField';
 import { monthOf, monthOverview } from '../../domain/funds';
 import { ListsPage } from '../lists/ListsPage';
+import { useBackLayer } from '../../components/BackNavigation';
+import { backLevels } from '../../theme/backStack';
 import { useRemoteLists, type RemoteLists } from '../lists/useRemoteLists';
 import { TemplatesPage } from '../templates/TemplatesPage';
 import { useRemoteTemplates, type RemoteTemplates } from '../templates/useRemoteTemplates';
@@ -170,6 +172,9 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, back
     startTransition(() => setNavigation((previous) => previous.section === next ? previous : { section: next,
       returnTo: accountPages.has(next) && !accountPages.has(previous.section) ? previous.section : previous.returnTo }));
   }, []);
+  // Back (Android, browser): an account page returns where it was opened from, as «Fatto» does; any other destination
+  // returns to «Nuova spesa», the start (destinations do not pile up); on «Nuova spesa» Back leaves the app.
+  useBackLayer(section !== 'expense', backLevels.page, () => navigate(accountPages.has(section) ? returnTo : 'expense'), section);
   useRequest(categoriesRequest, () => navigate('categories'));
   useRequest(templatesRequest, () => navigate('templates'));
   useRequest(backupRequest, () => navigate('backup'));

@@ -123,6 +123,10 @@ Due strade:
   Spese e Abbonamenti, accesa di base e
   disattivabile in **Impostazioni → Funzionalità → Vibrazione**; solo su telefoni e tablet dove il browser lo permette (Chrome e simili su Android,
   non Safari/iOS né Firefox), mai su computer, dove l'interruttore non compare. Con il telefono in silenzioso o in Non disturbare Android non vibra.
+- Tasto **Indietro** di Android (e del browser): chiude il dialogo, il menu o la pagina aperta e torna a Nuova spesa; esce dall'app solo da
+  Nuova spesa senza nulla aperto.
+- Modalità Standard: **Impostazioni → Immagine del profilo** per il pulsante del menu, con una delle icone proposte o una tua foto (resta solo
+  sul dispositivo, non entra nel backup).
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.

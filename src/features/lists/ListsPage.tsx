@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { ActivityIndicator, HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
+import { useBackLayer } from '../../components/BackNavigation';
 import { Button, compactIconPadding } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction } from '../../components/DeleteAction';
@@ -15,6 +16,7 @@ import { parseAmountMinor, type ExpenseData } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listState, progress, type ListState } from '../../domain/shoppingList';
 import { useI18n } from '../../i18n/I18nProvider';
+import { backLevels } from '../../theme/backStack';
 import { transition } from '../../theme/motion';
 import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
@@ -51,6 +53,8 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
   const [openId, setOpenId] = useState<string | null>(null);
   const [editing, setEditing] = useState<SyncedList | 'new' | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  // Back on an open list returns to the overview, as «Torna alle liste» does.
+  useBackLayer(openId !== null, backLevels.detail, () => setOpenId(null), openId);
   const expenseIds = useMemo(() => new Set(expenses.map((e) => e.id)), [expenses]);
   const sorted = useMemo(() => [...remote.lists].sort((a, b) => b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id)), [remote.lists]);
   const active = sorted.filter((l) => l.expense_id === null);

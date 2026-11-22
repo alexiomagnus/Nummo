@@ -55,3 +55,30 @@ export function toBase64(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
+
+// Profile picture of the Standard mode (features/settings/profileImage.ts): the centred square of the photo, upright,
+// `side` px, as a JPEG data URL. No manual crop: a face is usually near the middle, and «Cambia foto» is one tap.
+// Lower qualities are tried if a detailed photo would exceed `maxLength`.
+export async function prepareAvatar(file: Blob, side = 192, maxLength = 200_000): Promise<string> {
+  if (file.type && !file.type.startsWith('image/')) throw new Error(imageErrors.format);
+  if (file.size > maxBytes) throw new Error(imageErrors.size);
+  const picture = await decode(file);
+  try {
+    if (picture.width < 1 || picture.height < 1) throw new Error(imageErrors.format);
+    const crop = Math.min(picture.width, picture.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = side;
+    canvas.height = side;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error(imageErrors.format);
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, side, side);
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(picture.source, (picture.width - crop) / 2, (picture.height - crop) / 2, crop, crop, 0, 0, side, side);
+    for (const quality of [0.85, 0.7, 0.5]) {
+      const url = canvas.toDataURL('image/jpeg', quality);
+      if (url.startsWith('data:image/jpeg') && url.length <= maxLength) { canvas.width = 0; canvas.height = 0; return url; }
+    }
+    throw new Error(imageErrors.format);
+  } finally { picture.close(); }
+}

@@ -1018,4 +1018,10 @@ export const english: Readonly<Record<string, string>> = {
   "Scegli il fondo, oppure Nessun fondo.": "Choose the fund, or No fund.",
   "Template per le spese": "Templates for expenses",
   "Se attivi i Template dal menu, puoi salvare spese già pronte (descrizione, importo, data, esercente, categoria e fondo) e sceglierle in Nuova spesa per compilare tutto in un attimo.": "If you turn on Templates from the menu, you can save ready-made expenses (description, amount, date, merchant, category and fund) and pick them in New expense to fill everything in at once.",
+  "Immagine del profilo": "Profile picture",
+  "Compare sul pulsante del menu, in alto a destra. Resta solo su questo dispositivo e non entra nel backup.": "It appears on the menu button, at the top right. It stays on this device only and is not part of the backup.",
+  "Nessuna immagine": "No picture",
+  "La tua foto": "Your photo",
+  "Carica una foto": "Upload a photo",
+  "Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.": "The browser did not save the picture: the storage for site data is full or blocked.",
 };

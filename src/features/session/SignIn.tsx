@@ -17,10 +17,11 @@ const guideHash = '#guida';
 const readGuide = () => typeof window !== 'undefined' && window.location.hash === guideHash;
 
 // Opened from the sign-in screen: go back in history. Opened by a direct link: just clear the fragment.
-// Also used by the brand in the top bar, outside this component, hence the synthetic popstate.
+// Also used by the brand in the top bar, outside this component, hence the synthetic popstate. The entry's state is kept:
+// it may be the guard of `theme/backStack.ts` (Settings opened over the guide).
 export function leaveGuide() {
   if ((window.history.state as { guide?: boolean } | null)?.guide) window.history.back();
-  else if (readGuide()) { window.history.replaceState(null, '', window.location.pathname + window.location.search); window.dispatchEvent(new PopStateEvent('popstate')); }
+  else if (readGuide()) { window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search); window.dispatchEvent(new PopStateEvent('popstate')); }
 }
 
 // The guide as a route of the signed-out screens (mode choice and sign-in).
