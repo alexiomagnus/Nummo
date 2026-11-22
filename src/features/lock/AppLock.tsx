@@ -194,7 +194,7 @@ export function AppLockCard() {
     <Card title={t("Blocco dell’app")} style={styles.card}>
       <SwitchRow label={t("Blocca con impronta o viso")} value={settings.enabled} disabled={busy || missing || available === null}
         supporting={missing ? t("Questo browser non offre impronta, viso o PIN del dispositivo alle app web.")
-          : t("All’apertura e quando torni nell’app chiede impronta, viso o il PIN del dispositivo. Nasconde i dati sullo schermo, non li cifra.")}
+          : t("All’apertura e quando torni nell’app chiede impronta, viso o il PIN del dispositivo.")}
         onChange={(on) => void toggle(on)} />
       {settings.enabled && <View style={styles.delay}>
         <Text variant="labelLarge" style={{ color: colors.onSurfaceVariant }}>{t("Blocca di nuovo quando torni dopo")}</Text>

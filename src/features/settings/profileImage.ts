@@ -1,9 +1,12 @@
 import { profileAvatars, type ProfileAvatarId } from './profileAvatars.ts';
 
-// Picture of the account button in the Standard mode (no Google account, hence no Google photo): nothing (the person
-// glyph), one of the preset avatars, or a photo chosen by the user. Presentation only, kept in this browser under
-// `nummo.profile.v1`: never in the archive, in a backup or sent anywhere. Validated at every read.
+// Picture of the account button: nothing (Standard: the person glyph; Advanced: the Google photo, or the person glyph
+// when there is none), one of the preset avatars, or a photo chosen by the user. Presentation only, kept in this browser
+// under `nummo.profile.v1` (Standard) or `nummo.profile.v1.<uid>` (Advanced, one per account, since 22 November): never in
+// the archive, in a backup or sent anywhere. Validated at every read.
 export const profileImageKey = 'nummo.profile.v1';
+// `scope`: `local` for the Standard mode (the key it has used from the start), the UID in the Advanced mode.
+export const profileImageKeyFor = (scope: string): string => scope === 'local' ? profileImageKey : `${profileImageKey}.${scope}`;
 
 // Preset pictures: the five abstract avatars of `profileAvatars.ts` (22 November, user's request). They replaced the
 // category icons offered the same day (`kind: 'icon'`), which now read as no picture.

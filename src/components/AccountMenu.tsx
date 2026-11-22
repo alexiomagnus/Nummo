@@ -8,7 +8,8 @@ import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
-// `avatar`: the picture chosen in Settings (Standard mode), drawn instead of the person glyph and the Google photo.
+// `avatar`: the picture chosen in Settings, drawn instead of the person glyph and the Google photo; with it the menu says
+// nothing about the Google photo (loading, missing, «Riprova foto»).
 type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
@@ -43,7 +44,7 @@ export function AccountMenu({ email, photoURL, avatar, busy, onSignOut, onOpenSe
       {onSignOut ? <View style={styles.info}>
         <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Account Google")}</Text>
         <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? t("Account senza e-mail")}</Text>
-        {(!photoURL || photoFailed || !photoLoaded) && <Text variant="bodySmall" accessibilityLiveRegion="polite" style={{ color: colors.onSurfaceVariant }}>
+        {!avatar && (!photoURL || photoFailed || !photoLoaded) && <Text variant="bodySmall" accessibilityLiveRegion="polite" style={{ color: colors.onSurfaceVariant }}>
           {!photoURL ? t('Nessuna foto profilo disponibile per questo account.')
             : photoFailed ? t('La foto profilo non si è caricata.') : t('Caricamento foto profilo…')}
         </Text>}
@@ -52,7 +53,7 @@ export function AccountMenu({ email, photoURL, avatar, busy, onSignOut, onOpenSe
         <Text variant="bodyMedium">{t("Dati su questo dispositivo")}</Text>
       </View>}
       <Divider />
-      {photoURL && photoFailed && <Menu.Item title={t('Riprova foto')} style={styles.item}
+      {!avatar && photoURL && photoFailed && <Menu.Item title={t('Riprova foto')} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.sync} size={size} color={color} />}
         onPress={() => { setPhotoLoaded(false); setPhotoFailed(false); setPhotoAttempt((attempt) => attempt + 1); }} />}
       <Menu.Item title={t("Impostazioni")} style={styles.item}

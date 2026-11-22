@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { maxPhotoLength, noProfileImage, parseProfileImage, serializeProfileImage } from '../src/features/settings/profileImage.ts';
+import { profileImageKeyFor, maxPhotoLength, noProfileImage, parseProfileImage, serializeProfileImage } from '../src/features/settings/profileImage.ts';
 import { profileAvatarHue, profileAvatarLabels, profileAvatarRoles, profileAvatars, profileAvatarSvg } from '../src/features/settings/profileAvatars.ts';
 
 const photo = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwc=';
@@ -72,4 +72,10 @@ test('avatar: scelta salvata e riletta uguale per ognuno dei cinque', () => {
     const image = { kind: 'avatar', avatar } as const;
     assert.deepEqual(parseProfileImage(serializeProfileImage(image)), image);
   }
+});
+
+test('immagine del profilo: una chiave per la Standard e una per account in Avanzata', () => {
+  assert.equal(profileImageKeyFor('local'), 'nummo.profile.v1');
+  assert.equal(profileImageKeyFor('uid-A'), 'nummo.profile.v1.uid-A');
+  assert.notEqual(profileImageKeyFor('uid-A'), profileImageKeyFor('uid-B'));
 });

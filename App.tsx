@@ -23,7 +23,8 @@ import { readSessionHint, writeSessionHint } from './src/services/sessionHint';
 import { DataWorkspace, RemoteWorkspace, StartupWorkspace, type StorageSlot } from './src/features/workspace/Workspace';
 import { ModeChoice } from './src/features/storage/ModeChoice';
 import { useBackLayer } from './src/components/BackNavigation';
-import { StandardAvatar } from './src/features/settings/ProfileImageCard';
+import { ProfileAvatar, StandardAvatar, accountAvatarSize, type ProfileScope } from './src/features/settings/ProfileImageCard';
+import { useProfileImage } from './src/features/settings/useProfileImage';
 import { AppLockScreen, useLockRecovery } from './src/features/lock/AppLock';
 import { disableAppLock } from './src/features/lock/appLockStore';
 import { backLevels } from './src/theme/backStack';
@@ -49,6 +50,7 @@ import { I18nProvider, useI18n } from './src/i18n/I18nProvider';
 
 const demo = backendMode === 'emulator';
 const configMissing = firebaseConfigProblems.length > 0;
+const localProfile: ProfileScope = { scope: 'local', googlePhoto: null };
 // The project built into the site, when complete (a project connected from this browser replaces it).
 const siteFirebase = missingFirebaseConfig.length === 0 ? firebaseWebConfig : null;
 // Standard (this device) or Advanced (Firebase): the saved choice, or Firebase for a browser that was already using it.
@@ -90,7 +92,8 @@ type RootProps = {
 // What the three screens below share: the theme button, the settings page and the mode switch.
 type ModeProps = RootProps & {
   themeToggle: ReactNode;
-  renderSettings: (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) => ReactNode;
+  // `profile`: the picture card's scope; omitted, the Standard mode has its own (`local`) and the other screens none.
+  renderSettings: (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void, profile?: ProfileScope) => ReactNode;
   onChangeMode: (mode: StorageMode | null) => void;
 };
 
@@ -107,8 +110,9 @@ function Root(props: RootProps) {
     <IconButton size={24} style={styles.touch} icon={({ size, color }) => <ThemeIcon dark={dark} size={size} color={color} />}
       onPress={onToggleTheme} accessibilityLabel={dark ? t("Attiva tema chiaro") : t("Attiva tema scuro")} />
   );
-  const renderSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
-    onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} onResetArchive={onResetArchive} profileImage={mode === 'standard'} />;
+  const renderSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void, profile?: ProfileScope) => <SettingsPage preferences={preferences} dark={dark} onChange={onChangePreferences}
+    onReset={onResetPreferences} onDone={onDone} archiveSections={archiveSections} onResetArchive={onResetArchive}
+    profile={profile ?? (mode === 'standard' ? localProfile : undefined)} />;
   const shared = { ...props, themeToggle, renderSettings, onChangeMode: changeMode };
   if (mode === 'advanced') return <AdvancedRoot {...shared} />;
   if (mode === 'standard') return <StandardRoot {...shared} />;
@@ -229,8 +233,13 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       connected={customFirebaseConfig !== null} onDisconnect={() => switchFirebase(null, true)} />
     <ModeTransfer style={styles.wide} backend={backend} enabled={enabled} shown={shown} onChangeMode={onChangeMode} />
   </>;
+  // The picture chosen for this account in Settings (since 22 November); nothing chosen: the Google photo, as before.
+  const chosenAvatar = useProfileImage(session.status === 'signed-in' ? session.user.uid : 'local');
+  const advancedSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) =>
+    renderSettings(onDone, archiveSections, onResetArchive, session.status === 'signed-in' ? { scope: session.user.uid, googlePhoto: session.user.photoURL } : undefined);
   const account = session.status === 'signed-in'
-    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={signOut} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} busy={session.busy} onSignOut={signOut}
+      avatar={chosenAvatar.kind === 'none' ? undefined : <ProfileAvatar image={chosenAvatar} size={accountAvatarSize} />} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)}
       onOpenBackup={openBackup} /> : null;
 
@@ -287,7 +296,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
             onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} backupRequest={backupRequest}
-            settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={renderSettings}
+            settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={advancedSettings}
             storage={storage()}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
             topActions={<>{themeToggle}{account}</>} />

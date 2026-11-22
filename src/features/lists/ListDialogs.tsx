@@ -7,6 +7,7 @@ import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction } from '../../components/DeleteAction';
 import { SelectField } from '../../components/SelectField';
 import type { Category } from '../../domain/category';
+import { clipToLength, listPolicy } from '../../domain/policy';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listNameError } from '../../domain/shoppingList';
 import { existingCategory } from '../categories/preferredCategories';
@@ -39,7 +40,7 @@ export function ListEditor({ record, categories, defaultCategoryId = '', onSave,
     <Dialog.Content style={styles.content}>
       <View>
         <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Nome della lista")} value={name} error={Boolean(error)}
-          onChangeText={(value) => { setName(value); setError(null); }} onSubmitEditing={save} accessibilityLabel={t("Nome della lista, obbligatorio")} />
+          onChangeText={(value) => { setName(clipToLength(value, listPolicy.maxNameLength)); setError(null); }} onSubmitEditing={save} accessibilityLabel={t("Nome della lista, obbligatorio")} />
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </View>
       <SelectField label={t("Categoria predefinita")} options={options} value={categoryId ?? ''} onChange={setCategoryId} />
@@ -68,7 +69,7 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
     <Dialog.Content style={styles.content}>
       <View>
         <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Prodotto")} value={name} error={Boolean(error)}
-          onChangeText={(value) => { setName(value); setError(null); }} onSubmitEditing={save} accessibilityLabel={t("Nome del prodotto, obbligatorio")} />
+          onChangeText={(value) => { setName(clipToLength(value, listPolicy.maxItemLength)); setError(null); }} onSubmitEditing={save} accessibilityLabel={t("Nome del prodotto, obbligatorio")} />
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </View>
     </Dialog.Content>

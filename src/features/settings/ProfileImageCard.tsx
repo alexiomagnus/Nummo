@@ -29,10 +29,13 @@ const imageKey = (image: ProfileImage) =>
   image.kind === 'avatar' ? `avatar:${image.avatar}` : image.kind === 'photo' ? `photo:${image.photo.length}:${image.photo.slice(-24)}` : 'none';
 
 // The round picture of the account button: the person glyph, one of the five avatars (light or dark drawing) or the
-// photo. Decorative: the button and the choices carry their own labels.
-export function ProfileAvatar({ image, size }: { image: ProfileImage; size: number }) {
+// photo. `googlePhoto` (Advanced mode): shown instead of the person glyph when nothing is chosen; if it does not load,
+// the person glyph again. Decorative: the button and the choices carry their own labels.
+export function ProfileAvatar({ image, size, googlePhoto = null }: { image: ProfileImage; size: number; googlePhoto?: string | null }) {
   const { colors, dark } = useTheme();
-  const key = imageKey(image);
+  const [failed, setFailed] = useState<string | null>(null);
+  const google = image.kind === 'none' && googlePhoto && failed !== googlePhoto ? googlePhoto : null;
+  const key = google ? `google:${google}` : imageKey(image);
   const first = useRef(key);
   return (
     <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.primaryContainer }]} aria-hidden>
@@ -41,27 +44,33 @@ export function ProfileAvatar({ image, size }: { image: ProfileImage; size: numb
           source={{ uri: `data:image/svg+xml,${encodeURIComponent(profileAvatarSvg(image.avatar, dark))}` }} />
           : image.kind === 'photo' ? <img src={image.photo} alt="" draggable={false} width={size} height={size}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            : google ? <img src={google} alt="" draggable={false} width={size} height={size} referrerPolicy="no-referrer"
+              onError={() => setFailed(google)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             : <SvgIcon shape={iconShapes.user} size={Math.round(size * 0.61)} color={colors.onPrimaryContainer} />}
       </View>
     </View>
   );
 }
 
-// The account button of the Standard mode, with the picture chosen here.
+// Where the picture is kept (`local` or the UID) and, in the Advanced mode, the account's Google photo.
+export type ProfileScope = Readonly<{ scope: string; googlePhoto: string | null }>;
+
+// The picture of the Standard mode's account button.
 export function StandardAvatar() {
-  return <ProfileAvatar image={useProfileImage()} size={accountAvatarSize} />;
+  return <ProfileAvatar image={useProfileImage('local')} size={accountAvatarSize} />;
 }
 
-// Settings card, Standard mode only (the Advanced mode shows the Google photo). Every choice applies at once.
-export function ProfileImageCard() {
+// Settings card, both modes (the Advanced one since 22 November, on request): there «nothing chosen» is the Google photo.
+// Every choice applies at once.
+export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const image = useProfileImage();
+  const image = useProfileImage(scope);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const choose = (next: ProfileImage) => {
-    setError(saveProfileImage(next) ? null : 'Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.');
+    setError(saveProfileImage(next, scope) ? null : 'Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.');
   };
   const upload = async (file: File | undefined) => {
     if (!file) return;
@@ -70,20 +79,20 @@ export function ProfileImageCard() {
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Formato non supportato: usa una foto JPEG, PNG o WebP.'); }
     finally { setBusy(false); }
   };
-  const option = (key: string, label: string, selected: boolean, shown: ProfileImage, onPress: () => void) => (
+  const option = (key: string, label: string, selected: boolean, shown: ProfileImage, onPress: () => void, photo: string | null = null) => (
     <StateLayerPressable key={key} layerColor={colors.onSurface} radius={radius.pill} accessibilityRole="radio" aria-checked={selected}
       accessibilityLabel={`${label}${selected ? t(", selezionata") : ''}`} {...({ title: label } as object)} onPress={onPress}
       style={[styles.option, fillTransition, { borderColor: selected ? colors.primary : 'transparent' }]}>
-      <ProfileAvatar image={shown} size={accountAvatarSize} />
+      <ProfileAvatar image={shown} size={accountAvatarSize} googlePhoto={photo} />
     </StateLayerPressable>
   );
   return (
     <Card title={t("Immagine del profilo")} style={styles.card}>
       <View style={styles.current}>
-        <ProfileAvatar image={image} size={accountAvatarSize * 2} />
+        <ProfileAvatar image={image} size={accountAvatarSize * 2} googlePhoto={googlePhoto} />
       </View>
       <View style={styles.options} role="radiogroup" aria-label={t("Immagine del profilo")}>
-        {option('none', t("Nessuna immagine"), image.kind === 'none', noProfileImage, () => choose(noProfileImage))}
+        {option('none', googlePhoto ? t("Foto di Google") : t("Nessuna immagine"), image.kind === 'none', noProfileImage, () => choose(noProfileImage), googlePhoto)}
         {image.kind === 'photo' && option('photo', t("La tua foto"), true, image, () => {})}
         {profileAvatars.map((avatar) => option(avatar, t("Avatar {p0}", { p0: t(profileAvatarLabels[avatar]) }),
           image.kind === 'avatar' && image.avatar === avatar, { kind: 'avatar', avatar }, () => choose({ kind: 'avatar', avatar })))}

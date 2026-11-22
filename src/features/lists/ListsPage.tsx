@@ -11,8 +11,9 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { leadingIcon } from '../../components/FieldIcon';
 import type { Category } from '../../domain/category';
+import { clipToLength, listPolicy } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
-import { parseAmountMinor, type ExpenseData } from '../../domain/expense';
+import { amountInputFits, parseAmountMinor, type ExpenseData } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listState, progress, type ListState } from '../../domain/shoppingList';
 import { useI18n } from '../../i18n/I18nProvider';
@@ -253,7 +254,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
       {editable && <View>
         <View style={styles.addRow}>
           <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Aggiungi prodotto")} value={name} style={styles.grow}
-            onChangeText={(value) => { setName(value); setNameError(null); }} onSubmitEditing={add} blurOnSubmit={false}
+            onChangeText={(value) => { setName(clipToLength(value, listPolicy.maxItemLength)); setNameError(null); }} onSubmitEditing={add} blurOnSubmit={false}
             error={Boolean(nameError)} accessibilityLabel={t("Nome del prodotto da aggiungere")} left={leadingIcon(iconShapes.plus)} />
           <Button mode="contained-tonal" style={styles.addButton} contentStyle={styles.addContent} onPress={add}>{t("Aggiungi")}</Button>
         </View>
@@ -316,7 +317,7 @@ const ListTotalField = memo(function ListTotalField({ value, error, onChange, on
   return <View style={styles.grow}>
     <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Totale spesa")} value={value} inputMode="decimal"
       placeholder="0,00" error={Boolean(error)} left={leadingIcon(iconShapes.euro)} accessibilityLabel={t("Totale spesa in euro, facoltativo")}
-      onChangeText={onChange} onBlur={onSave} onSubmitEditing={onSave} />
+      onChangeText={(next) => { if (amountInputFits(next)) onChange(next); }} onBlur={onSave} onSubmitEditing={onSave} />
     {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
   </View>;
 });

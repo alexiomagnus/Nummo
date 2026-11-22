@@ -84,7 +84,7 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
       <View style={styles.root}>
         {createForm}
         {categories.length > 8 && (
-          <TextInput outlineStyle={inputOutline} label={t("Cerca categoria")} accessibilityLabel={t("Cerca categoria")} mode="outlined" value={filter} onChangeText={setFilter} autoCorrect={false}
+          <TextInput outlineStyle={inputOutline} label={t("Cerca categoria")} accessibilityLabel={t("Cerca categoria")} mode="outlined" value={filter} onChangeText={(value) => setFilter(clipToLength(value, maxCategoryNameLength))} autoCorrect={false}
             left={leadingIcon(iconShapes.search)}
             right={filter ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => setFilter('')}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />

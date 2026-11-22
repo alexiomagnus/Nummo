@@ -218,6 +218,28 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Limiti nei campi di ricerca e delle liste, immagine del profilo in Avanzata — 22 novembre 2026
+
+- **Limiti** (screenshot dell'utente): «Cerca categoria» 40 (come il nome), «Cerca per nome, mese o anno» (Spese) e «Cerca per nome»
+  (Abbonamenti) 100 (come la Descrizione), «Nome della lista» 40, nome del prodotto (aggiunta e modifica) 60, tutti con `clipToLength` come
+  il nome delle categorie; «Totale spesa» della lista con `amountInputFits` come l'Importo. L'Esercente aveva già il limite di 60
+  (`MerchantField`), solo verificato.
+- **Immagine del profilo in Avanzata** (su richiesta): stessa scheda da collegati; la scelta di base è la foto Google («Foto di Google»,
+  nell'anteprima e nella prima scelta), l'omino se manca o non si carica (`ProfileAvatar` con `googlePhoto`, come già nel menu). Scelta
+  per account in `nummo.profile.v1.<uid>` (la Standard resta su `nummo.profile.v1`); `ProfileScope` (`scope`, `googlePhoto`) passato da
+  `App.tsx` a `SettingsPage`; il menu account riceve l'avatar solo se diverso dalla scelta di base e allora non mostra i messaggi sulla foto
+  Google né «Riprova foto». «Ripristina predefiniti» torna alla foto Google. Nuovo test delle chiavi, traduzione «Foto di Google».
+- **Verifica:** `npm run check` OK. Chromium headless su un export demo dedicato con emulatori miei (39199/39380, config temporanea
+  `.nummo-avatar-check.json` ed export rimossi, emulatori fermati; runner hybrid 36786 non toccato); foto Google data al proprietario demo
+  con l'API dell'emulatore Auth (immagine servita in locale), accesso dal popup dell'emulatore: pulsante con la foto Google; scheda con
+  6 scelte, «Foto di Google» selezionata e nell'anteprima; avatar «Orbite» → pulsante e `nummo.profile.v1.demo-owner`, menu senza messaggi
+  sulla foto; dopo il ricaricamento avatar conservato; «Foto di Google» → di nuovo la foto, chiave tolta. Limiti: ricerca di Spese 150 → 100,
+  Esercente 80 → 60, nome della lista 55 → 40. Nessun errore JS. **Non provati nel browser:** ricerca delle categorie (compare da 9
+  categorie), ricerca degli abbonamenti (archivio demo vuoto), foto Google che non si carica nella scheda. Non committato, non pubblicato.
+- **Blocco dell'app:** su richiesta tolta «Nasconde i dati sullo schermo, non li cifra.» dalla riga sotto l'interruttore (IT/EN); resta
+  «All’apertura e quando torni nell’app chiede impronta, viso o il PIN del dispositivo.». Typecheck e `npm test` OK. Il limite resta scritto
+  nel README e in `AGENTS.md`.
+
 ## Importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli — 22 novembre 2026
 
 - **Importo.** Su richiesta (prima 999.999,99, poi «9 cifre intere + 2 decimali»): massimo di una spesa da 99.999,99 a **999.999.999,99 €**

@@ -23,7 +23,7 @@ import { MenuSelect } from '../../components/MenuSelect';
 import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 import { resetReceiptAi } from '../receipts/aiSettings';
 import { hasHaptics } from '../../theme/haptics';
-import { ProfileImageCard } from './ProfileImageCard';
+import { ProfileImageCard, type ProfileScope } from './ProfileImageCard';
 import { AppLockCard } from '../lock/AppLock';
 import { resetAppLockDelay } from '../lock/appLockStore';
 import { noProfileImage } from './profileImage';
@@ -42,8 +42,9 @@ type Props = {
   archiveSections?: ReactNode;
   // Back to the defaults of what `archiveSections` shows (preferred categories and fund of the open archive).
   onResetArchive?: () => void;
-  // Standard mode: the picture of the account button (no Google photo there), first on the page.
-  profileImage?: boolean;
+  // The picture of the account button, first on the page: Standard (`local`), or Advanced signed in (the UID, with the
+  // Google photo as the picture when nothing is chosen). Absent: no card (signed out, mode choice).
+  profile?: ProfileScope;
 };
 
 const themeOptions: { value: ThemeChoice; label: string }[] = [
@@ -65,12 +66,12 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
 // Sections stack on phones (Lingua, Carattere, Formato dell'ora, Fuso orario, then Tema and Colore); when the page is wide enough, Lingua,
 // Carattere, Formato dell'ora and Fuso orario form the left column and Tema and Colore the right one, and the wider sections follow at full width.
-export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections, onResetArchive, profileImage = false }: Props) {
+export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections, onResetArchive, profile }: Props) {
   // «Ripristina predefiniti» brings back the defaults of everything on this page (user's request, 21 November): the
   // preferences, the receipt scan (off, no service), the profile picture of the Standard mode and, with an archive open,
   // its preferred categories and fund.
   // The app lock is the exception: only its delay goes back to the default, since turning it off asks for the fingerprint.
-  const resetAll = () => { onReset(); resetReceiptAi(); resetAppLockDelay(); if (profileImage) saveProfileImage(noProfileImage); onResetArchive?.(); };
+  const resetAll = () => { onReset(); resetReceiptAi(); resetAppLockDelay(); if (profile) saveProfileImage(noProfileImage, profile.scope); onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
@@ -137,7 +138,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   return (
     <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
       <PageHeader title={t("Impostazioni")} action={<DoneButton onPress={onDone} />} />
-      {profileImage && <ProfileImageCard />}
+      {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} />}
       <View style={[styles.grid, wide && styles.columns]}>
         {/* Lingua, Carattere and Tema first (left column on desktop), then Colore. */}
         {general}
