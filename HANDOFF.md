@@ -94,6 +94,25 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Prodotti per lista fino a 500 (Rules da pubblicare) — 22 novembre 2026
+
+- Su richiesta: `listPolicy.maxItems` 100 → **500**; Rules (identiche, `cmp`) `list_items` ≤ 30499 (prima 6100); messaggio «al massimo 500
+  prodotti» (IT/EN). Batch da 501 scritture per duplicare/eliminare una lista piena: ammesso da Firestore (nessun limite di scritture per
+  commit dal marzo 2023). Motivazioni e misure in `docs/architecture.md`.
+- **Prestazioni di Liste** (`ListsPage.tsx`): righe `ItemRow` memo con callback stabili e disegno progressivo (50 righe, poi blocchi da 100
+  in transizioni). Chromium headless 390×844, CPU 4×, lista da 500 importata da backup in Standard: apertura da un blocco di ~3,9 s a prime
+  righe in 0,76 s (resto a blocchi ≤ ~0,2 s), spunta da 1,6 s a 0,21 s; con 100 prodotti prime righe 0,65 s (prima 1,0 s), spunta 0,18 s
+  (prima 0,5 s). Fondo della lista e campo «Totale spesa» corretti, nessun errore JS. `ProductsDialog` (righe leggere, su richiesta) invariato.
+- **Test:** `tests/shoppingList.test.ts` (500 accettati e 501 rifiutati in lista, backup, spesa registrata; stringa da 30499; duplicazione;
+  dati con 100 prodotti validi). Emulatori: spesa con `list_items` da 30499 accettata, 30500 rifiutata; lista da 500 prodotti creata ed
+  eliminata dallo store (batch da 501).
+- **Verifica:** `npm run check` OK (**571/571**, build demo: il conteggio comprende test di un lavoro parallelo, vedi sotto); `test:emulator`
+  **24/24** su porte proprie (config `.nummo-lists-check.json` rimossa; runner hybrid 36786 non toccato). Non committato, non pubblicato.
+- **Attenzione:** nell'albero di lavoro c'è un lavoro parallelo non mio (app Android: `android/`, `src/services/androidApp.ts`,
+  `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
+  `haptics` e due chiavi in `src/i18n/en.ts`). Un commit di questa fase va limitato ai file della fase (in `en.ts` solo la riga dei 500
+  prodotti).
+
 ## Piani dei fondi fino a 120 voci (Rules da pubblicare) — 22 novembre 2026
 
 - Su richiesta: `fundPolicy.maxChanges` 24 → **120** (ricariche, budget ricorrenti, eccezioni, budget generale). Rules (identiche, `cmp`):

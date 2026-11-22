@@ -1338,6 +1338,21 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   Archiviazione e backup (`nummo-backup.json`), che conta come backup per il promemoria. La scelta è dell'utente: eliminare senza backup è
   possibile. Le note precedenti su una «copia automatica» prima della sostituzione sono superate.
 
+## Prodotti per lista fino a 500 — 22 novembre 2026
+
+- Su richiesta: `listPolicy.maxItems` 100 → **500** (lista, backup, passaggio tra le modalità, spesa registrata, duplicazione). Rules (le due
+  copie): `list_items` della spesa registrata ≤ **30499** caratteri (500 × 60 + 499 separatori; prima 6100). Le Rules non contano i
+  documenti dei prodotti: il numero resta un controllo del client, come prima.
+- Firestore: duplicare o eliminare una lista piena è un solo batch da 501 scritture. Il limite di 500 scritture per commit non esiste più
+  dal 29 marzo 2023 (release note di Firestore; restano 10 MiB per richiesta e 1 MiB per documento): nessuna suddivisione, la lista
+  continua a non comparire mai a metà.
+- **Prestazioni** (Chromium headless, 390×844, CPU rallentata 4× come un telefono di fascia media): con 500 prodotti la lista si apriva
+  in un solo blocco di circa 3,9 s e ogni spunta costava 1,6 s (tutte le righe ridisegnate; 0,5 s già con 100). Ora le righe sono
+  `ItemRow` memo con callback stabili (spunta 0,21 s) e la lista si disegna a blocchi (prime 50 righe in 0,76 s, il resto in transizioni
+  interrompibili, blocchi di al massimo ~0,2 s). Con 100 prodotti: prime righe 0,65 s, spunta 0,18 s.
+- Compatibilità: nessun cambio di formato né di `backupVersion`; una lista oltre 100 prodotti è non valida per un client non aggiornato
+  finché non ricarica, e la registrazione è rifiutata da un Firebase personale con le Rules vecchie.
+
 ## Piani dei fondi fino a 120 voci — 22 novembre 2026
 
 - Su richiesta: `fundPolicy.maxChanges` 24 → **120** (dieci anni di cambi mensili) per ricariche, budget ricorrenti, eccezioni e budget
@@ -1372,7 +1387,8 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   ricariche e budget (99.999,99 €, Rules `[0-9]{1,7}`: coerenti), 24 voci di piano per fondo (si aggiunge una voce per mese in cui il
   piano cambia: sono 2 anni di cambi mensili o 24 di annuali; alzabile fino a circa 140 senza superare il margine RE2; **portate a 120**
   subito dopo, vedi sotto), 100 prodotti per
-  lista (le Rules non possono contare i documenti; alla registrazione `list_items` ≤ 6100 caratteri), 100 template, lunghezze dei testi
+  lista (le Rules non possono contare i documenti; alla registrazione `list_items` ≤ 6100 caratteri; **portati a 500** subito dopo, vedi
+  sotto), 100 template, lunghezze dei testi
   (identiche tra client e Rules).
 
 ## Cambi di stato degli abbonamenti fino a 40 — 22 novembre 2026

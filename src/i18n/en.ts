@@ -625,7 +625,7 @@ export const english: Readonly<Record<string, string>> = {
   "Inserisci il nome della lista.": "Enter the list name.",
   "Inserisci il nome del prodotto.": "Enter the product name.",
   "Usa al massimo 60 caratteri.": "Use no more than 60 characters.",
-  "Una lista può contenere al massimo 100 prodotti.": "A list can hold at most 100 products.",
+  "Una lista può contenere al massimo 500 prodotti.": "A list can hold at most 500 products.",
   "Lista non valida.": "Invalid list.",
   "Prodotto non valido.": "Invalid product.",
   "La lista non esiste più.": "The list no longer exists.",

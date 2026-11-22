@@ -544,7 +544,7 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
             });
           });
         }
-        // One transaction per list with its items (at most 101 documents); an identical saved list is skipped.
+        // One transaction per list with its items (at most 501 documents: no limit of writes per transaction since March 2023); an identical saved list is skipped.
         for (const list of plan.addLists) {
           await runTransaction(db, async (tx) => {
             const ref = doc(lists, list.id);

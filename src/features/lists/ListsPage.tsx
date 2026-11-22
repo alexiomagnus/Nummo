@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { ActivityIndicator, HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { useBackLayer } from '../../components/BackNavigation';
@@ -217,6 +217,21 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
     if (minor !== list.total_minor) updateList(list, { total_minor: minor });
   }, [totalText, list, updateList]);
   const changeTotal = useCallback((value: string) => { setTotalText(value); setTotalError(null); }, []);
+  // Stable for the memoised rows: ticking one product re-renders that row only (up to 500 products since 22 November; every
+  // row re-rendered on each tick took ~1.6 s with the CPU slowed 4×, as on a mid-range phone).
+  const updateItem = useRef(remote.updateItem);
+  updateItem.current = remote.updateItem;
+  const toggleItem = useCallback((item: SyncedListItem) => { updateItem.current(item, { checked: !item.checked }); }, []);
+  // A long list is drawn progressively: the first rows at once, the rest in chunks, each in an interruptible transition after
+  // the previous one has been painted. 500 rows in one go blocked a mid-range phone for about 4 s (CPU slowed 4×); lists up to
+  // `firstRows` products are drawn whole, as before. The component is keyed by list, so each list starts again.
+  const [shownRows, setShownRows] = useState(firstRows);
+  useEffect(() => {
+    if (shownRows >= items.length) return;
+    const timer = setTimeout(() => startTransition(() => setShownRows((rows) => rows + rowsPerChunk)), 0);
+    return () => clearTimeout(timer);
+  }, [shownRows, items.length]);
+  const shownItems = shownRows >= items.length ? items : items.slice(0, shownRows);
   const copy = (onlyUnchecked: boolean) => {
     const id = remote.createList({ name: list.name, category_id: list.category_id }, { listId: list.id, onlyUnchecked });
     if (id) { notify(onlyUnchecked ? "Nuova lista creata con i prodotti non acquistati." : "Lista duplicata."); onOpen(id); }
@@ -279,19 +294,8 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
 
       {items.length === 0 ? <Text variant="bodyMedium" style={muted}>{editable ? t("La lista è vuota: aggiungi il primo prodotto.") : t("Nessun prodotto.")}</Text>
         : <View role="list" accessibilityLabel={t("Prodotti di {p0}", { p0: list.name })}>
-          {items.map((item, index) => (
-            <View key={item.id} role="listitem" style={[styles.itemRow, index < items.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant }]}>
-              <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} disabled={!editable} accessibilityRole="checkbox" aria-checked={item.checked}
-                aria-disabled={!editable || undefined} accessibilityLabel={item.name} style={styles.check}
-                onPress={() => remote.updateItem(item, { checked: !item.checked })}>
-                <View style={[styles.box, item.checked ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.onSurfaceVariant }, !editable && styles.dim]}>
-                  {item.checked && <SvgIcon shape={iconShapes.check} size={16} color={colors.onPrimary} />}
-                </View>
-                <Text variant="bodyLarge" style={[styles.grow, item.checked && { color: colors.onSurfaceVariant, textDecorationLine: 'line-through' }]}>{item.name}</Text>
-              </StateLayerPressable>
-              {editable && <IconButton style={styles.iconButton} accessibilityLabel={t("Modifica {p0}", { p0: item.name })} onPress={() => setEditingItem(item)}
-                icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} />}
-            </View>
+          {shownItems.map((item, index) => (
+            <ItemRow key={item.id} item={item} editable={editable} last={index === items.length - 1} onToggle={toggleItem} onEdit={setEditingItem} />
           ))}
         </View>}
 
@@ -323,6 +327,34 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
     </View>
   );
 }
+
+const firstRows = 50;
+const rowsPerChunk = 100;
+
+// One product of the checklist. Memoised on its fields (the store rebuilds the item objects at every snapshot), so a tick
+// re-renders only the row that changed.
+const ItemRow = memo(function ItemRow({ item, editable, last, onToggle, onEdit }: {
+  item: SyncedListItem; editable: boolean; last: boolean; onToggle: (item: SyncedListItem) => void; onEdit: (item: SyncedListItem) => void;
+}) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  return (
+    <View role="listitem" style={[styles.itemRow, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant }]}>
+      <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} disabled={!editable} accessibilityRole="checkbox" aria-checked={item.checked}
+        aria-disabled={!editable || undefined} accessibilityLabel={item.name} style={styles.check} onPress={() => onToggle(item)}>
+        <View style={[styles.box, item.checked ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.onSurfaceVariant }, !editable && styles.dim]}>
+          {item.checked && <SvgIcon shape={iconShapes.check} size={16} color={colors.onPrimary} />}
+        </View>
+        <Text variant="bodyLarge" style={[styles.grow, item.checked && { color: colors.onSurfaceVariant, textDecorationLine: 'line-through' }]}>{item.name}</Text>
+      </StateLayerPressable>
+      {editable && <IconButton style={styles.iconButton} accessibilityLabel={t("Modifica {p0}", { p0: item.name })} onPress={() => onEdit(item)}
+        icon={pencilIcon} />}
+    </View>
+  );
+}, (a, b) => a.editable === b.editable && a.last === b.last && a.onToggle === b.onToggle && a.onEdit === b.onEdit
+  && a.item.id === b.item.id && a.item.name === b.item.name && a.item.checked === b.item.checked
+  && a.item.list_id === b.item.list_id && a.item.position === b.item.position);
+const pencilIcon = ({ size, color }: { size: number; color: string }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />;
 
 // Checklist writes change progress and synchronisation, not this field. Keep its
 // Paper label/outline out of those renders while preserving editing and locale changes.

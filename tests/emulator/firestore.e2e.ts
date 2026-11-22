@@ -5,11 +5,11 @@ import { test } from 'node:test';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { initializeAuth, connectAuthEmulator, signInWithCredential, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { initializeFirestore, connectFirestoreEmulator, doc, setDoc, getDocFromServer, getDocsFromServer, collection,
-  updateDoc, deleteDoc, deleteField, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate, waitForPendingWrites } from 'firebase/firestore';
+  updateDoc, deleteDoc, deleteField, serverTimestamp, Timestamp, disableNetwork, enableNetwork, onSnapshot, terminate, waitForPendingWrites, query, where } from 'firebase/firestore';
 import { createFirestoreStore } from '../../src/services/firestoreStore.ts';
 import { checkOwnerAccess } from '../../src/services/ownerAccess.ts';
 import { makeBackup, parseBackup } from '../../src/domain/backup.ts';
-import { todayInRome } from '../../src/domain/policy.ts';
+import { listPolicy, todayInRome } from '../../src/domain/policy.ts';
 import { dataOf } from '../../src/domain/expense.ts';
 import { maxStatusChanges } from '../../src/domain/subscription.ts';
 import { maxCalendarChanges } from '../../src/domain/recurrence.ts';
@@ -606,14 +606,33 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         await denied(setDoc(itemRef(randomUUID()), { ...rawItem, ...patch }));
       }
       await denied(updateDoc(itemRef(bread.id), { list_id: randomUUID() }));
+      // A full list (500 products) is created and deleted in one batch of 501 writes: no limit of writes per commit.
+      const bigId = randomUUID();
+      owner.store.createList(bigId, { name: `Grande ${suffix}`, category_id: null }, Array.from({ length: listPolicy.maxItems }, (_, i) => ({ name: `Prodotto ${i}`, position: i })));
+      await waitForPendingWrites(owner.db);
+      const big = (await owner.store.exportSnapshot()).lists.find((l) => l.id === bigId)!;
+      assert.equal(big.items.length, listPolicy.maxItems);
+      const bigItems = (await getDocsFromServer(query(collection(owner.db, 'users', uid, 'listItems'), where('list_id', '==', bigId)))).docs
+        .map((d) => ({ ...d.data(), id: d.id }) as never);
+      assert.equal((bigItems as unknown[]).length, listPolicy.maxItems);
+      owner.store.removeList(big as never, bigItems);
+      await waitForPendingWrites(owner.db);
+      assert.equal((await getDocFromServer(listRef(bigId))).exists(), false);
+      assert.equal((await getDocsFromServer(query(collection(owner.db, 'users', uid, 'listItems'), where('list_id', '==', bigId)))).size, 0);
       // Expenses: list_id + list_items both or neither, one-off only, names joined by '\n' without empty names.
       const { expense_id: _e, status_changes: _s, fund_id: _f, list_id: _l, list_items: _li, ...base } = expense();
       const valid = { ...base, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       await setDoc(ref(randomUUID()), { ...valid, list_id: randomUUID(), list_items: 'Pane\nLatte' });
+      // 500 names of 60 characters (100 products until 22 November): exactly the 30499 characters allowed.
+      const longestNames = Array.from({ length: listPolicy.maxItems }, (_, i) => `${String(i).padStart(3, '0')}${'x'.repeat(57)}`).join('\n');
+      assert.equal(longestNames.length, 30499);
+      const fullListExpense = randomUUID();
+      await setDoc(ref(fullListExpense), { ...valid, list_id: randomUUID(), list_items: longestNames });
+      await deleteDoc(ref(fullListExpense));
       await setDoc(ref(randomUUID()), { ...valid, list_id: randomUUID(), list_items: '' });
       for (const patch of [{ list_id: randomUUID() }, { list_items: 'Pane' }, { list_id: 'x', list_items: 'Pane' }, { list_id: null, list_items: '' },
         { list_id: randomUUID(), list_items: ['Pane'] }, { list_id: randomUUID(), list_items: '\nPane' }, { list_id: randomUUID(), list_items: 'Pane\n' },
-        { list_id: randomUUID(), list_items: 'Pane\n\nLatte' }, { list_id: randomUUID(), list_items: 'Pane\tx' }, { list_id: randomUUID(), list_items: 'x'.repeat(6101) },
+        { list_id: randomUUID(), list_items: 'Pane\n\nLatte' }, { list_id: randomUUID(), list_items: 'Pane\tx' }, { list_id: randomUUID(), list_items: 'x'.repeat(30500) },
         { list_id: randomUUID(), list_items: 'Pane', recurrence: 'monthly' }]) {
         await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
       }

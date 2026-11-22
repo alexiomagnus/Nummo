@@ -29,7 +29,7 @@ test('liste: nomi validati, prodotti ordinati, avanzamento, posizioni e prodotti
   assert.equal(listNameError(' Spesa  sabato '), null);
   assert.equal(itemNameError(''), 'Inserisci il nome del prodotto.');
   assert.match(itemNameError('x'.repeat(61))!, /60 caratteri/);
-  assert.match(itemNameError('Pane', 100)!, /100 prodotti/);
+  assert.match(itemNameError('Pane', 500)!, /500 prodotti/);
   const items = [item(3, { checked: true, name: 'Latte' }), item(1, { name: 'Pane', checked: true }), item(2), { ...item(4), list_id: uuid(2) }];
   assert.deepEqual(itemsOf(uuid(1), items).map((i) => i.position), [1, 2, 3]);
   assert.deepEqual(progress(itemsOf(uuid(1), items)), { done: 2, total: 3 });
@@ -68,7 +68,7 @@ test('spesa da lista: campi facoltativi, solo singola, prodotti codificati in un
   assert.deepEqual([old.list_id, old.list_items], [null, []]);
   assert.deepEqual([dataOf(legacy as ExpenseRecord).list_id, dataOf(legacy as ExpenseRecord).list_items], [null, []]);
   for (const patch of [{ recurrence: 'monthly' }, { list_id: null }, { list_items: ['ok', ''] }, { list_items: ['a\nb'] }, { list_items: 'Pane' },
-    { list_items: Array.from({ length: 101 }, (_, i) => `P${i}`) }]) {
+    { list_items: Array.from({ length: 501 }, (_, i) => `P${i}`) }]) {
     assert.equal(parseExpenseRecord({ ...record, ...patch }), null, JSON.stringify(patch).slice(0, 60));
   }
   assert.ok(parseExpenseRecord({ ...record, list_items: [] }), 'a list registered with nothing ticked');
@@ -132,4 +132,27 @@ test('liste: testi tradotti in inglese, nomi utente mai tradotti', () => {
   }
   assert.equal(translate('en', '{p0} di {p1} acquistati', { p0: 3, p1: 10 }), '3 of 10 bought');
   assert.equal(translate('en', 'Supermercato'), 'Supermercato');
+});
+
+test('liste: fino a 500 prodotti (100 fino al 22 novembre), il 501° rifiutato in ogni forma', () => {
+  const items = (count: number) => Array.from({ length: count }, (_, i) => item(i));
+  assert.equal(itemNameError('Pane', 499), null);
+  assert.equal(itemNameError('Pane', 500), 'Una lista può contenere al massimo 500 prodotti.');
+  assert.equal(translate('en', itemNameError('Pane', 500)!), 'A list can hold at most 500 products.');
+  // List with its products (backup and passage between the modes).
+  assert.equal(parseListRecord(list({ items: items(500) }))?.items.length, 500);
+  assert.equal(parseListRecord(list({ items: items(501) })), null);
+  const file = JSON.parse(makeBackup({ expenses: [], categories: [], lists: [list({ items: items(500) })] }));
+  assert.equal(parseBackup(file).lists[0]!.items.length, 500);
+  assert.throws(() => parseBackup({ ...file, lists: [list({ items: items(501) })] }));
+  // Duplicate («Duplica», «prodotti non acquistati»): at most 500 copied.
+  assert.equal(copyItems(items(500), false).length, 500);
+  // Registered expense: 500 names of 60 characters = the 30499 characters the Rules allow.
+  const names = Array.from({ length: 500 }, (_, i) => `${String(i).padStart(3, '0')}${'x'.repeat(57)}`);
+  assert.equal(encodeListItems(names).length, 30499);
+  assert.deepEqual(decodeListItems(encodeListItems(names)), names);
+  assert.equal(parseExpenseRecord(expense({ list_items: names }))?.list_items.length, 500);
+  assert.equal(parseExpenseRecord(expense({ list_items: [...names, 'Uno di troppo'] })), null);
+  // Older data (up to 100 products) stays valid.
+  assert.equal(parseListRecord(list({ items: items(100) }))?.items.length, 100);
 });

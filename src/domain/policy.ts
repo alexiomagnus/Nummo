@@ -38,6 +38,8 @@ export function isValidDate(value: string): boolean {
 export const listPolicy = {
   maxNameLength: 40,
   maxItemLength: 60,
-  maxItems: 100,
+  // Products per list: 500 (100 until 22 November, on request). Duplicating or deleting a full list is one batch of 501 writes:
+  // Firestore no longer limits writes per commit (since March 2023; 10 MiB per request remains).
+  maxItems: 500,
   maxPosition: 999_999_999,
 } as const;
