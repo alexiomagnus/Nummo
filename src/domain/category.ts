@@ -89,7 +89,8 @@ export function categoryNameError(name: string, categories: readonly Category[])
   return null;
 }
 
-// Created once for a new, empty archive (seedDefaults.ts), or on request from an empty Categories page.
+// Created once for a new, empty archive (seedDefaults.ts), or on request from the Categories page («Ripristina le categorie
+// predefinite», with or without categories).
 export const defaultCategories: readonly { label: string; icon: CategoryIcon }[] = [
   { label: 'Alimentari', icon: 'cart' },
   { label: 'Intrattenimento', icon: 'popcorn' },
@@ -97,3 +98,11 @@ export const defaultCategories: readonly { label: string; icon: CategoryIcon }[]
   { label: 'Tecnologia', icon: 'laptop' },
   { label: 'Trasporti', icon: 'train' },
 ];
+
+// «Ripristina le categorie predefinite»: the defaults (named in the current language by `translate`) whose name no category
+// has yet, compared like the unique names (case and spaces ignored). Existing categories are never changed or removed.
+export function missingDefaultCategories(existing: readonly { label: string }[], translate: (label: string) => string): { label: string; icon: CategoryIcon }[] {
+  const key = (label: string) => normalizeCategoryName(label).toLowerCase();
+  const taken = new Set(existing.map((category) => key(category.label)));
+  return defaultCategories.map((category) => ({ ...category, label: translate(category.label) })).filter((category) => !taken.has(key(category.label)));
+}

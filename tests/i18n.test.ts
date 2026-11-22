@@ -127,8 +127,9 @@ test('ripristino: conflitto spiegato con titolo e conteggio essenziali', () => {
   assert.equal(translate('en', '1 elemento è diverso dai dati salvati.'), '1 item differs from your saved data.');
   assert.equal(translate('en', 'altri {p0}', { p0: 4 }), '4 more');
   assert.equal(translate('en', '{p0} esercenti', { p0: 11 }), '11 merchants');
-  assert.equal(translate('en', 'Elementi da eliminare: {p0}. Da scrivere: {p1}. Prima viene scaricata una copia dei dati attuali.', { p0: 1, p1: 0 }),
-    'Items to delete: 1. To write: 0. A copy of your current data is downloaded first.');
+  assert.equal(translate('en', 'Elementi da eliminare: {p0}. Da scrivere: {p1}.', { p0: 1, p1: 0 }), 'Items to delete: 1. To write: 0.');
+  // Before a deletion the backup is offered, never downloaded on its own (22 November).
+  assert.equal(translate('en', 'Vuoi prima scaricare un backup dei dati attuali?'), 'Do you want to download a backup of the current data first?');
 });
 
 test('impostazioni: interruttore del budget mensile tradotto in entrambe le lingue', () => {

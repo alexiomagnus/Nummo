@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n/I18nProvider';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from './AppDialog';
@@ -18,12 +18,14 @@ type DialogProps = {
   confirmLabel?: string;
   onDismiss: () => void;
   onConfirm: () => boolean | Promise<boolean>;
+  // Extra content under the description (e.g. the offer of a backup before deleting).
+  children?: ReactNode;
 };
 
 // Confirmation for every irreversible deletion (M3 basic dialog): small error-coloured icon,
 // left-aligned title and consequences, actions at the bottom right (full width on phones).
 // Escape cancels; the safe action («Annulla») takes the initial focus.
-export function DeleteDialog({ visible, name, title, description, confirmLabel, onDismiss, onConfirm }: DialogProps) {
+export function DeleteDialog({ visible, name, title, description, confirmLabel, onDismiss, onConfirm, children }: DialogProps) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -39,6 +41,7 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
                 <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>{title ?? t("Eliminare {p0}?", { p0: name })}</Text>
               </View>
               {(description ?? 'x') !== '' && <Text variant="bodyMedium" style={[styles.body, { color: colors.onSurfaceVariant }]}>{description ?? t("L’operazione non può essere annullata.")}</Text>}
+              {children && <View style={styles.extra}>{children}</View>}
             </ScrollView>
           </Dialog.ScrollArea>
           <View style={[styles.actions, compact && styles.actionsCompact]}>
@@ -59,6 +62,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl },
   title: { flex: 1 },
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
+  extra: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, alignItems: 'stretch' },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
 });

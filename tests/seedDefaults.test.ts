@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { defaultCategories, isCategoryIcon } from '../src/domain/category.ts';
+import { defaultCategories, isCategoryIcon, missingDefaultCategories } from '../src/domain/category.ts';
 import { shouldSeedDefaultCategories } from '../src/features/workspace/seedDefaults.ts';
 
 const part = { ready: true, count: 0, fromCache: false, pending: false };
@@ -22,4 +22,16 @@ test('creazione automatica: solo con archivio vuoto confermato dal server, onlin
     assert.equal(shouldSeedDefaultCategories({ ...base, [key]: { ...part, pending: true } }), false);
     assert.equal(shouldSeedDefaultCategories({ ...base, [key]: { ...part, count: 1 } }), false);
   }
+});
+
+test('ripristina le categorie predefinite: solo quelle che mancano per nome, nella lingua corrente', () => {
+  const same = (label: string) => label;
+  assert.equal(missingDefaultCategories([], same).length, 5);
+  // Case and spaces ignored, like the unique names; other categories never count nor change.
+  assert.deepEqual(missingDefaultCategories([{ label: ' alimentari ' }, { label: 'TRASPORTI' }, { label: 'Casa' }], same).map((c) => c.label),
+    ['Intrattenimento', 'Shopping', 'Tecnologia']);
+  assert.deepEqual(missingDefaultCategories(defaultCategories, same), []);
+  const english: Record<string, string> = { Alimentari: 'Groceries', Intrattenimento: 'Entertainment', Shopping: 'Shopping', Tecnologia: 'Technology', Trasporti: 'Transport' };
+  assert.deepEqual(missingDefaultCategories([{ label: 'Groceries' }], (label) => english[label] ?? label).map((c) => [c.label, c.icon]),
+    [['Entertainment', 'popcorn'], ['Shopping', 'shirt'], ['Technology', 'laptop'], ['Transport', 'train']]);
 });

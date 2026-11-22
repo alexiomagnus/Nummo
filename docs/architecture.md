@@ -1327,3 +1327,11 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   categorie con lo stesso nome si allineano a quella già salvata (`alignCategoriesByName`), perché entrambe le modalità creano le cinque
   predefinite con ID diversi e l'unione da file le considera conflitti. La regola vale solo per il passaggio, non per i file. Google Drive è
   nominato solo come consiglio su dove tenere il backup, senza integrazione.
+
+## Backup proposto, non automatico, prima di eliminare — 22 novembre 2026
+
+- Su richiesta dell'utente («chiedere se si vuole fare il backup attuale in json, non farlo in automatico»): «Elimina tutte le spese» e
+  «Sostituisci tutti i dati» non scaricano più da soli una copia (`nummo-backup-prima-di-eliminare.json`, `nummo-backup-prima-del-ripristino.json`).
+  Il dialogo di conferma chiede «Vuoi prima scaricare un backup dei dati attuali?» con «Scarica backup (JSON)»: lo stesso backup completo di
+  Archiviazione e backup (`nummo-backup.json`), che conta come backup per il promemoria. La scelta è dell'utente: eliminare senza backup è
+  possibile. Le note precedenti su una «copia automatica» prima della sostituzione sono superate.

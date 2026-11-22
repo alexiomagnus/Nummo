@@ -117,12 +117,12 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
 
   return (
     <View style={styles.root}>
-      {/* The new-list action shares the title row (short label and balanced compact padding on phones); the title wraps
+      {/* The new-list action shares the title row («Nuova lista» at every size since 22 November, balanced compact padding on phones); the title wraps
           before the button shrinks, so nothing overflows at 320 px. */}
       <PageHeader title={t("Liste della spesa")} style={styles.overviewHeader} action={
         <Button mode="contained" compact={compact} style={styles.headerButton} contentStyle={compact ? [compactIconPadding.roomy.content, styles.headerButtonContent] : styles.headerButtonContent}
           labelStyle={compact ? [compactIconPadding.roomy.label, styles.headerButtonLabel] : styles.headerButtonLabel} onPress={() => setEditing('new')} accessibilityLabel={t("Nuova lista")}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{compact ? t("Nuova") : t("Nuova lista")}</Button>} />
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{t("Nuova lista")}</Button>} />
       {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
       {!remote.ready && !remote.error && <View style={styles.loading}><ActivityIndicator accessibilityLabel={t("Caricamento delle liste")} /></View>}
       {remote.ready && remote.lists.length === 0 && <View style={[styles.empty, { backgroundColor: colors.elevation.level1 }]}>

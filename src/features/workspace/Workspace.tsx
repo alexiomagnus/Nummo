@@ -22,7 +22,7 @@ import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { todayInRome } from '../../domain/policy';
 import type { ExpenseRecord } from '../../domain/contract';
 import type { Category } from '../../domain/category';
-import { defaultCategories } from '../../domain/category';
+import { missingDefaultCategories } from '../../domain/category';
 import { CategorySettings } from '../categories/CategorySettings';
 import { useRemoteCategories } from '../categories/useRemoteCategories';
 import type { DashboardPreferences } from '../settings/preferences';
@@ -38,6 +38,7 @@ import { SubscriptionList } from '../history/SubscriptionList';
 import { makeBackup } from '../../domain/backup';
 import { backendMode, firestoreEmulator } from '../../services/backendConfig';
 import { BackupActions, download, downloadBackup } from '../backup/BackupActions';
+import { SameWidthGroup } from '../../components/SameWidth';
 import { message } from '../expenses/useRemoteExpenses';
 import { NotificationsPage } from '../notifications/NotificationsPage';
 import { useNotifications, type LocalArchive } from '../notifications/useNotifications';
@@ -301,8 +302,13 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     return saved;
   };
   const heading = t(headings[section]);
-  const addDefaults = () => backend.importRecords([], defaultCategories.map((c) => ({ ...c, label: t(c.label), id: crypto.randomUUID() })))
-    .then(() => notify("Categorie predefinite aggiunte.")).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
+  // Seeding and «Ripristina le categorie predefinite»: only the defaults missing by name are added, the rest is never touched.
+  const addDefaults = async () => {
+    const missing = missingDefaultCategories(categoryState.categories, t);
+    if (missing.length === 0) { notify("Le categorie predefinite ci sono già."); return; }
+    await backend.importRecords([], missing.map((c) => ({ ...c, id: crypto.randomUUID() })))
+      .then(() => notify("Categorie predefinite aggiunte.")).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
+  };
   // A new account (empty archive confirmed by the server) starts with the default categories, once per browser.
   const seedAttempted = useRef(false);
   const seedable = shouldSeedDefaultCategories({ online, error,
@@ -388,8 +394,11 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </VisitedSection>
     {/* Preserve import previews and in-flight actions when leaving this page; no reads until an explicit action. */}
     <View style={section === 'backup' && !starting ? styles.backupPage : styles.hidden}>
-      {typeof storage === 'function' ? storage({ backend, enabled: synchronized, shown: section === 'backup' && !starting }) : storage}
-      <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
+      {/* One width for every button of the page (storage, mode transfer, backup files; 22 November). */}
+      <SameWidthGroup>
+        {typeof storage === 'function' ? storage({ backend, enabled: synchronized, shown: section === 'backup' && !starting }) : storage}
+        <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
+      </SameWidthGroup>
     </View>
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} merchants={merchants} />}
     <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} defaultCategoryId={preferred.list} expenses={store.expenses}
@@ -415,7 +424,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         onCreate={categoryState.createCategory} onDelete={categoryState.deleteCategory} onUpdate={categoryState.updateCategory}
         notify={notify}
-        onAddDefaults={categoryState.categories.length === 0 ? () => { void addDefaults(); } : undefined} canAddDefaults={synchronized} />
+        onAddDefaults={() => { void addDefaults(); }} canAddDefaults={synchronized && categoryState.ready} />
     </>}
   </>;
 }

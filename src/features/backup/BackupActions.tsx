@@ -5,6 +5,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { Button, CancelButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { DeleteDialog } from '../../components/DeleteAction';
+import { useSameWidth } from '../../components/SameWidth';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { radius, spacing } from '../../theme/tokens';
@@ -87,7 +88,7 @@ type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: Imp
 
 // `onBackupDownloaded`: told when a full backup download has started (Standard mode: it resets the backup reminder).
 export function BackupActions({ backend, enabled, onBackupDownloaded }: { backend: DataStore; enabled: boolean; onBackupDownloaded?: (at: string) => void }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
   const notify = useSnackbar();
@@ -96,15 +97,12 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
   const [confirmWipe, setConfirmWipe] = useState(false);
-  // The three file actions (CSV, download, import) share one width, the widest of their labels (user's request, 21 November):
-  // measured in the current language, so switching language measures again from the natural widths. Phones stack them full width.
-  const [actionWidth, setActionWidth] = useState<{ locale: string; width: number }>({ locale: '', width: 0 });
-  const measureAction = (width: number) => setActionWidth((old) => {
-    const base = old.locale === locale ? old.width : 0;
-    return width > base + 0.5 ? { locale, width: Math.ceil(width) } : old.locale === locale ? old : { locale, width: base };
-  });
-  const sameWidth = !compact && actionWidth.locale === locale && actionWidth.width > 0 ? { minWidth: actionWidth.width } : null;
-  const fileAction = compact ? {} : { style: sameWidth, onLayout: (event: { nativeEvent: { layout: { width: number } } }) => measureAction(event.nativeEvent.layout.width) };
+  // A backup downloaded from the confirmation dialog now open (reset at every opening).
+  const [savedBefore, setSavedBefore] = useState(false);
+  const [saving, setSaving] = useState(false);
+  // The file actions share one width with the other buttons of the page (`SameWidthGroup` in Workspace); phones stack them full width.
+  const fileAction = useSameWidth();
+  const sameWidth = fileAction.style ?? null;
   // The preview appears below the buttons, often out of sight on phones: bring it into view when a file has been read
   // (only as far as needed; no animation with reduced motion).
   const reduceMotion = useReducedMotion();
@@ -129,6 +127,20 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     notify("Backup completo esportato.");
     onBackupDownloaded?.(at);
   });
+  // Before a deletion Nummo asks, it does not download on its own (user's request, 22 November): the dialog offers the full
+  // backup, which counts as any other backup download.
+  const backupFirst = async () => {
+    if (saving) return;
+    setSaving(true); setStatus('');
+    try { const at = await downloadBackup(backend); setSavedBefore(true); onBackupDownloaded?.(at); }
+    catch (e) { setStatus(message(e)); } finally { setSaving(false); }
+  };
+  const offerBackup = <View style={styles.offer}>
+    <Text variant="bodyMedium">{t("Vuoi prima scaricare un backup dei dati attuali?")}</Text>
+    <Button mode="contained-tonal" loading={saving} disabled={saving || savedBefore}
+      icon={icon(savedBefore ? iconShapes.check : iconShapes.download)} onPress={() => void backupFirst()}>
+      {savedBefore ? t("Backup scaricato") : t("Scarica backup (JSON)")}</Button>
+  </View>;
   const pick = () => {
     const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json';
     input.onchange = () => { void run(async () => {
@@ -171,7 +183,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
       <Text variant="titleSmall">{t("Elimina le spese")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
         <Button {...fileAction} mode="outlined" icon={icon(iconShapes.trash)} textColor={theme.colors.error} style={[sameWidth, { borderColor: theme.colors.error }]}
-          disabled={!enabled || busy} onPress={() => setConfirmWipe(true)}>{t("Elimina tutte le spese")}</Button>
+          disabled={!enabled || busy} onPress={() => { setSavedBefore(false); setConfirmWipe(true); }}>{t("Elimina tutte le spese")}</Button>
       </View>
       <Text variant="bodySmall" style={[hint, styles.footnote]}>{t("* Categorie, fondi, liste, template ed esercenti restano.")}</Text>
     </View>
@@ -180,35 +192,31 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         onMerge={() => void run(async () => {
           await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates); finish();
         })}
-        replace={<Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => setConfirmReplace(true)}>{t("Sostituisci tutti i dati")}</Button>} />
+        replace={<Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
     </View>}
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
-      description={replace && t("Elementi da eliminare: {p0}. Da scrivere: {p1}. Prima viene scaricata una copia dei dati attuali.", { p0: removed, p1: written })}
+      description={replace && t("Elementi da eliminare: {p0}. Da scrivere: {p1}.", { p0: removed, p1: written })}
       onDismiss={() => setConfirmReplace(false)}
       onConfirm={async () => {
         if (!preview || busy) return false;
         setBusy(true); setStatus('');
         try {
-          // Safety copy before the first deletion: the current data stays on disk if anything goes wrong.
-          download('nummo-backup-prima-del-ripristino.json', makeBackup(await backend.exportSnapshot()), 'application/json');
           await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
-      }} />
+      }}>{offerBackup}</DeleteDialog>
     <DeleteDialog visible={confirmWipe} name={t("tutte le spese")} title={t("Eliminare tutte le spese?")} confirmLabel={t("Elimina tutte")}
-      description={t("Si eliminano tutte le spese e gli abbonamenti. Prima viene scaricata una copia dei dati attuali.")}
+      description={t("Si eliminano tutte le spese e gli abbonamenti.")}
       onDismiss={() => setConfirmWipe(false)}
       onConfirm={async () => {
         if (busy) return false;
         setBusy(true); setStatus('');
         try {
-          // Safety copy before the first deletion, as for «Sostituisci tutti i dati».
-          download('nummo-backup-prima-di-eliminare.json', makeBackup(await backend.exportSnapshot()), 'application/json');
           const removed = await backend.removeAllExpenses();
           notify(removed === 1 ? t("1 spesa eliminata.") : t("{p0} spese eliminate.", { p0: removed }));
           return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
-      }} />
+      }}>{offerBackup}</DeleteDialog>
     {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}
   </Card>;
 }
@@ -218,6 +226,7 @@ const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   // Note under the buttons, a little further from them than the buttons are from each other (user's request, 21 November).
   footnote: { marginTop: spacing.sm },
+  offer: { gap: spacing.md },
   lines: { gap: 2 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },

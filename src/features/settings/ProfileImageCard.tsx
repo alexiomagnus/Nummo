@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
 import { HelperText, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
+import { SwitchRow } from '../../components/SwitchRow';
 import { Card } from '../../components/Card';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -61,8 +62,9 @@ export function StandardAvatar() {
 }
 
 // Settings card, both modes (the Advanced one since 22 November, on request): there «nothing chosen» is the Google photo.
-// Every choice applies at once.
-export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
+// Every choice applies at once. `ring`/`onRingChange`: «Anello colorato», the ring of the account button (a display
+// preference in `nummo.preferences.v1`, shared by every account), also drawn around the preview.
+export function ProfileImageCard({ scope, googlePhoto, ring, onRingChange }: ProfileScope & { ring: boolean; onRingChange: (ring: boolean) => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const image = useProfileImage(scope);
@@ -89,7 +91,9 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
   return (
     <Card title={t("Immagine del profilo")} style={styles.card}>
       <View style={styles.current}>
-        <ProfileAvatar image={image} size={accountAvatarSize * 2} googlePhoto={googlePhoto} />
+        <View style={[styles.ring, { borderColor: ring ? colors.primary : 'transparent' }]}>
+          <ProfileAvatar image={image} size={accountAvatarSize * 2} googlePhoto={googlePhoto} />
+        </View>
       </View>
       <View style={styles.options} role="radiogroup" aria-label={t("Immagine del profilo")}>
         {option('none', googlePhoto ? t("Foto di Google") : t("Nessuna immagine"), image.kind === 'none', noProfileImage, () => choose(noProfileImage), googlePhoto)}
@@ -104,6 +108,8 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
         </Button>
       </View>
       {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
+      <SwitchRow label={t("Anello colorato")} supporting={t("Un cerchio nel colore principale attorno all’immagine del profilo.")}
+        value={ring} onChange={onRingChange} />
       <input ref={input} type="file" accept="image/*" hidden
         onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ''; }} />
     </Card>
@@ -116,6 +122,8 @@ const styles = StyleSheet.create({
   fill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   picture: { width: '100%', height: '100%' },
   current: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  // The ring of the account button, doubled with the preview (3 + 3 around 72); transparent when off, so nothing moves.
+  ring: { borderRadius: radius.pill, borderWidth: 3, padding: 3, alignSelf: 'flex-start' },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   option: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: radius.pill },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

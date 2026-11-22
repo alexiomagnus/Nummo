@@ -23,6 +23,7 @@ import { MenuSelect } from '../../components/MenuSelect';
 import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 import { resetReceiptAi } from '../receipts/aiSettings';
 import { hasHaptics } from '../../theme/haptics';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { ProfileImageCard, type ProfileScope } from './ProfileImageCard';
 import { AppLockCard } from '../lock/AppLock';
 import { resetAppLockDelay } from '../lock/appLockStore';
@@ -77,6 +78,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
+  const phone = useSizeClass() === 'compact';
   // Measure the actual page: the desktop navigation and browser zoom reduce its usable width.
   // 360 dp per column: the colour swatches wrap onto a second row rather than squeeze, every chip row still fits.
   const wide = contentWidth >= 2 * 360 + spacing.xxl;
@@ -140,7 +142,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   return (
     <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
       <PageHeader title={t("Impostazioni")} action={<DoneButton onPress={onDone} />} />
-      {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} />}
+      {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} ring={preferences.avatarRing} onRingChange={(avatarRing) => onChange({ avatarRing })} />}
       <View style={[styles.grid, wide && styles.columns]}>
         {/* Lingua, Carattere and Tema first (left column on desktop), then Colore. */}
         {general}
@@ -182,7 +184,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
       </View>
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}
-      <Button mode="outlined" textColor={colors.secondary} style={styles.reset} onPress={resetAll}
+      <Button mode="outlined" textColor={colors.secondary} style={[styles.reset, phone && styles.resetPhone]} onPress={resetAll}
         icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
         {t("Ripristina predefiniti")}
       </Button>
@@ -198,6 +200,8 @@ const styles = StyleSheet.create({
   half: { flex: 1, minWidth: 0 },
   section: { width: '100%' },
   reset: { alignSelf: 'flex-start', borderRadius: radius.pill },
+  // Phones: as wide as the page, like the actions above it (user's request, 22 November).
+  resetPhone: { alignSelf: 'stretch' },
   styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   styleCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
   preview: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.sm, minHeight: 32, marginBottom: spacing.xs },

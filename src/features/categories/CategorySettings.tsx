@@ -92,7 +92,6 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
         {categories.length === 0 && ready && (
           <View style={styles.empty}>
             <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna categoria.")}</Text>
-            {onAddDefaults && <View style={styles.start}><Button mode="outlined" disabled={!canAddDefaults} onPress={onAddDefaults}>{t("Aggiungi quelle predefinite")}</Button></View>}
           </View>
         )}
         <View role="list">
@@ -110,6 +109,9 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
             );
           })}
         </View>
+        {/* Always offered, with or without categories (user's request, 22 November): it adds back only the defaults missing by name. */}
+        {onAddDefaults && <View style={compact ? undefined : styles.start}><Button mode="outlined" disabled={!canAddDefaults} onPress={onAddDefaults}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>{t("Ripristina le categorie predefinite")}</Button></View>}
         {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
         {editing && <CategoryEditor record={editing} categories={categories} ready={ready} error={error}
           onSave={async (nextName, nextIcon) => {

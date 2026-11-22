@@ -30,7 +30,8 @@ rilasci».
   - **Immagine del profilo** in testa alle Impostazioni: nessuna (in Avanzata la foto Google, l'omino se manca), cinque avatar astratti,
     oppure una foto (quadrato centrale a 192 px). Standard `nummo.profile.v1`, Avanzata `nummo.profile.v1.<uid>`.
   - **Blocco dell'app** (impronta, viso o PIN, WebAuthn) all'apertura e al ritorno dopo subito/1/5/15 minuti; recupero: in Avanzata «Esci»
-    e nuovo accesso Google, in Standard «Disattiva il blocco» dopo una conferma (deterrente, non protezione forte). Uno schermo, non cifratura.
+    e nuovo accesso Google, in Standard «Disattiva il blocco» con il PIN di Nummo a 6 cifre (sola conferma per i blocchi accesi prima del
+    PIN; deterrente, non protezione forte). Uno schermo, non cifratura.
   - **Importo massimo 999.999.999,99 €** (spese, prezzi, totale delle liste, template; Rules pubblicate); ricariche e budget dei fondi restano
     a 99.999,99. Campo Importo che rimpicciolisce il testo su smartphone.
   - **Limiti di lunghezza**: ricerche ed Esercente 30, nome della lista 40, prodotto 60, «Totale spesa» come l'Importo.
@@ -39,8 +40,8 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** `npm run check` OK su `17632af` (typecheck, **545/545**, build demo). `test:emulator` **22/22** sulle
-  Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
+- **Verifiche (22 novembre, ultime).** `npm run check` OK sulle modifiche non committate (typecheck, **548/548**, build demo).
+  `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
   campi. Nessun errore JS.
@@ -65,6 +66,57 @@ rilasci».
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## «Ripristina le categorie predefinite», « | » negli abbonamenti, «Cambia modalità» con contorno — 22 novembre 2026
+
+- Su richiesta (screenshot dell'utente):
+  - **Categorie:** «Aggiungi quelle predefinite» (solo a lista vuota) diventa «Ripristina le categorie predefinite», sempre presente sotto
+    l'elenco (su smartphone a tutta larghezza). Aggiunge solo le cinque predefinite che mancano per nome (maiuscole e spazi ignorati, nella
+    lingua corrente; `missingDefaultCategories` in `domain/category.ts`, test in `tests/seedDefaults.test.ts`); se ci sono tutte, «Le categorie
+    predefinite ci sono già.». Non modifica né elimina nulla. La creazione automatica su archivio vuoto usa la stessa funzione.
+  - **Abbonamenti (Spese):** nella riga «Mensile | Prossimo rinnovo …» al posto del punto, con uno spazio en (U+2002) per lato
+    (circa il doppio di uno spazio normale; su richiesta, dopo il primo screenshot). Gli altri « · » (rinnovi in arrivo) invariati.
+  - **Archiviazione e backup:** «Cambia modalità» (e «Scollega progetto» in Avanzata) con contorno invece che di testo; tutti i pulsanti della
+    pagina (sezione di archiviazione, passaggio dei dati, file di backup, elimina) hanno la stessa larghezza da medium (`SameWidthGroup` attorno
+    alla pagina in `Workspace`, `useSameWidth` in `components/SameWidth.tsx`, che sostituisce la misura interna di `BackupActions`); su
+    smartphone a tutta larghezza come prima.
+- **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard): a 1280×900 i cinque pulsanti della pagina larghi 233, a 390×844
+  tutti 364 (tutta la riga); Categorie con 5 categorie: pulsante presente, «ci sono già». Nessun errore JS. **Non provati nel browser:** ripristino
+  con una predefinita mancante (solo test di dominio), riga di un abbonamento (archivio demo senza abbonamenti), pulsanti dell'Avanzata.
+  Non committato, non pubblicato.
+
+## Pulsanti della scheda AI su smartphone, backup proposto prima di eliminare — 22 novembre 2026
+
+- Su richiesta (screenshot dell'utente):
+  - **Scheda «Analisi scontrini con AI», smartphone:** «Dimentica la chiave» e «Revoca il consenso» occupano tutta la riga, a metà ciascuno
+    (uno solo: tutta la riga), con margini dell'etichetta ridotti perché entrino a 320 px; «Ripristina predefiniti» a tutta larghezza.
+  - **Prima di eliminare** («Elimina tutte le spese», «Sostituisci tutti i dati»): niente più copia scaricata in automatico; il dialogo chiede
+    «Vuoi prima scaricare un backup dei dati attuali?» con «Scarica backup (JSON)» (tonale; dopo il download «Backup scaricato», disattivato;
+    si azzera a ogni apertura). È il backup completo di sempre (`nummo-backup.json`, conta per il promemoria). Decisione in `docs/architecture.md`.
+- **Verifica:** `npm run check` OK (**548/548**). Chromium headless su `dist-demo` (Standard, 390×844 touch): pulsanti AI 13..190 e 200..377,
+  «Ripristina predefiniti» 13..377; etichette intere a 360 e 320 px; dialogo di eliminazione: un solo download (`nummo-backup.json`) dal
+  pulsante del dialogo, nessun download alla conferma, pulsante di nuovo «Scarica backup (JSON)» alla riapertura. Nessun errore JS.
+  **Non provato nel browser:** il dialogo «Sostituisci tutti i dati». Non committato, non pubblicato.
+
+## Sezione «Passa alla modalità Standard» tolta, zoom a icona nella revisione, «Nuova lista», anello dell'avatar, «Salva» fermo — 22 novembre 2026
+
+- Su richiesta (screenshot dell'utente):
+  - **Archiviazione e backup (Avanzata):** tolti la frase «I dati sono anche sul dispositivo…» e il pulsante «Passa alla modalità Standard»
+    che comparivano dopo «Da Firebase al dispositivo» (`ModeTransfer` senza `onChangeMode` né stato `copied`; traduzioni rimosse). Il cambio
+    di modalità resta da «Cambia modalità».
+  - **Revisione dello scontrino:** niente più pulsante di testo «Ingrandisci la foto»; come prima della scansione, l'icona sull'angolo della foto.
+    Su desktop, sotto la foto resta uno spazio vuoto perché i pulsanti restino allineati ai campi.
+  - **Liste:** il pulsante in testa dice «Nuova lista» anche su smartphone (prima «Nuova»); a 320 px il titolo va a capo, nessun overflow.
+  - **Anello colorato** (Impostazioni → Immagine del profilo): interruttore, spento di base, preferenza `avatarRing` in `nummo.preferences.v1`;
+    anello `primary` da 2 attorno al pulsante dell'account (entrambe le modalità; spazio riservato, la foto non si sposta) e da 3 attorno
+    all'anteprima. «Ripristina predefiniti» lo spegne. Test in `tests/preferences.test.ts`.
+  - **«Salva» che scendeva scrivendo (smartphone):** causa = il contatore «1/100» della Descrizione, che compare al primo carattere e
+    aggiungeva ~16 dp al flusso. Ora, senza errori e fuori dalla revisione dello scontrino, sta fuori dal flusso nello spazio prima
+    dell'Esercente (`counterOnly` in `ExpenseFields`). Restano voluti: i suggerimenti dell'Esercente (combobox nel flusso) e gli errori dopo «Salva».
+- **Verifica:** `npm run check` OK (**548/548**). Chromium headless su `dist-demo` (Standard, 390×844 touch): «Salva» 556..612 prima e dopo aver
+  scritto «g», contatore tra Descrizione ed Esercente; «Nuova lista» intero a 390/360/320 senza scorrimento orizzontale; anello acceso →
+  preferenza salvata, anello sul pulsante dopo il ricaricamento e sull'anteprima. Nessun errore JS. **Non provati nel browser:** `ModeTransfer`
+  (solo Avanzata) e la revisione dello scontrino (serve l'AI): solo typecheck. Non committato, non pubblicato.
 
 ## Templates senza data — 22 novembre 2026
 

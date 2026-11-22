@@ -167,16 +167,15 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     // Review on a wide window: the photo takes the height of the form beside it (no fixed height, no empty space under the fields).
     <View style={[styles.picture, { backgroundColor: colors.surfaceVariant }, zoomed ? { height: 640 } : wide && stage === 'review' ? styles.pictureFill : { height: 240 }]}>
       <Image source={{ uri: preview }} resizeMode="contain" style={StyleSheet.absoluteFill} accessibilityLabel={t("Foto dello scontrino")} />
-      {/* Before the scan: enlarge/reduce as an icon on the photo's corner, not a loose line of text between photo and buttons
-          (user's request, 22 November: the panel looked confused). The review keeps its text button beside the fields. */}
-      {stage === 'ready' && <StateLayerPressable layerColor={colors.onSurface} radius={radius.button} onPress={() => setZoomed((value) => !value)}
+      {/* Enlarge/reduce as an icon on the photo's corner, before the scan and in the review, never a loose line of text
+          between photo and buttons (user's requests, 22 November). */}
+      {(stage === 'ready' || stage === 'review') && <StateLayerPressable layerColor={colors.onSurface} radius={radius.button} onPress={() => setZoomed((value) => !value)}
         accessibilityRole="button" accessibilityLabel={zoomed ? t("Riduci la foto") : t("Ingrandisci la foto")}
         style={[styles.zoomIcon, { backgroundColor: colors.surface }]}>
         <SvgIcon shape={zoomed ? iconShapes.shrink : iconShapes.expand} size={22} color={colors.onSurface} />
       </StateLayerPressable>}
     </View>
   ) : null;
-  const zoom = <Button compact onPress={() => setZoomed((value) => !value)}>{zoomed ? t("Riduci la foto") : t("Ingrandisci la foto")}</Button>;
 
   const inputs = <>
     <input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={(event) => { void choose(event.target.files?.[0]); event.target.value = ''; }} />
@@ -291,9 +290,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
         <View style={styles.columns}><View style={styles.side}>{picture}</View><View style={styles.main}>{review}</View></View>
         {/* The three buttons sit under the column of the fields, as wide as the inputs, well below the last one. They are a row of their own, so the
             photo (as tall as the fields) never ends on the same line as the buttons (user's request, 21 November). */}
-        <View style={styles.actionsRow}><View style={styles.sideActions}>{zoom}</View><View style={styles.main}><View style={styles.inlineActions} onLayout={(event) => setActionsWidth(event.nativeEvent.layout.width)}>{again}{cancel}{use}</View></View></View>
+        <View style={styles.actionsRow}><View style={styles.sideActions} /><View style={styles.main}><View style={styles.inlineActions} onLayout={(event) => setActionsWidth(event.nativeEvent.layout.width)}>{again}{cancel}{use}</View></View></View>
       </>
-      : <>{picture}<View style={styles.row}>{zoom}</View>{review}</>;
+      : <>{picture}{review}</>;
     // «Scansiona di nuovo» outlined like «Annulla» (a way back, to the photo), never a bare text action among the buttons.
     // «Annulla» and «Usa questi dati» stay together: on a phone the row wraps with «Scansiona di nuovo» above the pair,
     // instead of leaving the confirmation alone on the second line. All right-aligned (no auto margin, unlike Elimina).
@@ -334,8 +333,7 @@ const styles = StyleSheet.create({
   side: { flex: 2, minWidth: 0, gap: spacing.lg },
   main: { flex: 3, minWidth: 0 },
   actionsRow: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xl, marginTop: spacing.xxxl + spacing.xl - spacing.lg, marginBottom: spacing.lg },
-  // «Ingrandisci la foto» on the line of the buttons, so the photo itself ends where the fields end; with the buttons stacked,
-  // on the line of the first one (it is as tall as a button), never floating between the two rows.
+  // Empty space under the photo, so the buttons line up with the column of the fields.
   sideActions: { flex: 2, minWidth: 0, justifyContent: 'flex-start', alignItems: 'flex-start' },
   inlineActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   inlineAction: { flexGrow: 1 },

@@ -77,7 +77,10 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
           multiline numberOfLines={dense ? 2 : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription]}
           onChangeText={(value) => onChange('description', clipToLength(value, expensePolicy.maxDescriptionLength))} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
-        {(errors.description || length > 0) && <View style={styles.helperRow}>
+        {/* The counter appears with the first character: in the flow it pushed every field below, and «Salva» with them,
+            while typing (user's report, 22 November). Alone, it sits in the gap before the next field, out of the flow; the
+            row joins the flow only with an error (after «Salva», never while typing) or in the dense review, where the gap is too small. */}
+        {(errors.description || length > 0) && <View style={[styles.helperRow, !errors.description && !dense && styles.counterOnly]}>
           <HelperText type="error" visible={Boolean(errors.description)} accessibilityRole="alert" style={styles.helper}>{t(errors.description ?? ' ')}</HelperText>
           {length > 0 && <Text variant="bodySmall" style={{ color: length > expensePolicy.maxDescriptionLength ? colors.error : colors.onSurfaceVariant }}>{length}/{expensePolicy.maxDescriptionLength}</Text>}
         </View>}
@@ -150,6 +153,8 @@ const styles = StyleSheet.create({
   // 8 dp of it overlap that gap (user's request, 17 November).
   helperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: spacing.xs, paddingTop: spacing.xs, marginBottom: -spacing.sm },
   helper: { flex: 1, paddingBottom: 0, minHeight: 20 },
+  // Counter only: out of the flow, in the 16 dp gap under the description (right-aligned, clear of the next field's label).
+  counterOnly: { position: 'absolute', top: '100%', left: 0, right: 0, paddingTop: 0, marginBottom: 0, pointerEvents: 'none' },
   empty: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderRadius: radius.card, padding: spacing.lg },
   emptyText: { flex: 1, minWidth: 180, gap: spacing.xs },
 });

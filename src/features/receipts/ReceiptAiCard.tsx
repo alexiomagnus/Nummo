@@ -9,8 +9,13 @@ import { SwitchRow } from '../../components/SwitchRow';
 import { aiProviderLabels, aiProviders, recommendedModel } from '../../domain/receiptAi';
 import { useI18n } from '../../i18n/I18nProvider';
 import { inputOutline, spacing } from '../../theme/tokens';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { useReceiptAi } from './aiSettings';
 import { useAiModels } from './useAiModels';
+
+const phoneHalf = { flex: 1, minWidth: 0 };
+// Label margins a little tighter than Paper's compact ones: «Dimentica la chiave» fits half of a 320 px screen.
+const phoneLabel = { marginHorizontal: 6 };
 
 // Settings section of the receipt scan, AI only (local OCR and the OpenAI-compatible API removed on 21 November, on
 // request). Off by default: until the switch is on, «Scansiona scontrino» is not in the new-expense form and the options
@@ -21,6 +26,7 @@ export function ReceiptAiCard() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const ai = useReceiptAi();
+  const compact = useSizeClass() === 'compact';
   const { enabled, provider, model } = ai.settings;
   const list = useAiModels(ai.settings, enabled ? ai.apiKey : '');
   // With no model chosen yet, a fresh list proposes a small one that reads pictures; a name already written is kept.
@@ -61,9 +67,10 @@ export function ReceiptAiCard() {
           </View>}
           {/* No hint under an empty Modello (user's request, 17 November): the empty field says it already.
               A little more room after the fields (user's request, 17 November): the actions do not read as part of Modello. */}
-          {(ai.apiKey !== '' || ai.consented) && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
-            {ai.apiKey !== '' && <Button mode="outlined" onPress={() => ai.setApiKey('')}>{t("Dimentica la chiave")}</Button>}
-            {ai.consented && <Button mode="outlined" onPress={() => ai.change({ consent: '' })}>{t("Revoca il consenso")}</Button>}
+          {/* Phones: the two actions share the whole row in equal halves (one alone takes it all; user's request, 22 November). */}
+          {(ai.apiKey !== '' || ai.consented) && <View style={{ flexDirection: 'row', flexWrap: compact ? 'nowrap' : 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
+            {ai.apiKey !== '' && <Button mode="outlined" style={compact && phoneHalf} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.setApiKey('')}>{t("Dimentica la chiave")}</Button>}
+            {ai.consented && <Button mode="outlined" style={compact && phoneHalf} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.change({ consent: '' })}>{t("Revoca il consenso")}</Button>}
           </View>}
         </View>}
       </View>

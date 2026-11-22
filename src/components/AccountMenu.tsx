@@ -9,13 +9,14 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
 // `avatar`: the picture chosen in Settings, drawn instead of the person glyph and the Google photo; with it the menu says
-// nothing about the Google photo (loading, missing, «Riprova foto»).
-type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
+// nothing about the Google photo (loading, missing, «Riprova foto»). `ring`: a ring in the main colour around the picture
+// (Settings, «Anello colorato»; 22 November).
+type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: boolean; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
 // `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
-export function AccountMenu({ email, photoURL, avatar, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup }: Props) {
+export function AccountMenu({ email, photoURL, avatar, ring = false, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -31,6 +32,7 @@ export function AccountMenu({ email, photoURL, avatar, busy, onSignOut, onOpenSe
         <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} bleed={4} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={onSignOut ? `Account${email ? `: ${email}` : ''}` : t("Menu")}
           onPress={openMenu} style={styles.trigger}>
+          <View style={[styles.ring, { borderColor: ring ? colors.primary : 'transparent' }]}>
           {avatar ?? <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>
             <SvgIcon shape={iconShapes.user} size={22} color={colors.onPrimaryContainer} />
             {photoURL && !photoFailed && <img key={photoAttempt} src={photoURL} alt="" aria-hidden draggable={false}
@@ -38,6 +40,7 @@ export function AccountMenu({ email, photoURL, avatar, busy, onSignOut, onOpenSe
               onLoad={() => setPhotoLoaded(true)} onError={() => setPhotoFailed(true)}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: photoLoaded ? 1 : 0, transition: 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' }} />}
           </View>}
+          </View>
         </StateLayerPressable>
       </View>
       <AnchoredMenu visible={open} onDismiss={() => setOpen(false)} anchor={anchor} align="end" label="Account" contentStyle={styles.menu}>
@@ -85,6 +88,8 @@ const styles = StyleSheet.create({
   // Edge-to-edge rows: the menu clips hover/ripple to its outer corners, including the final row.
   item: { maxWidth: '100%', borderRadius: 0, overflow: 'hidden' },
   trigger: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  // Always 2 of border and 2 of gap around the 36 dp picture, transparent without the ring: turning it on never moves the picture.
+  ring: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, padding: 2 },
   avatar: { width: 36, height: 36, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   info: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 2, maxWidth: 280 },
   email: { flexShrink: 1 },

@@ -18,11 +18,12 @@ export type ChartType = (typeof chartTypes)[number];
 // on 21 November 2026: a value saved before the 16 November removal applies again.
 // `haptics`: short vibration on the phone navigation bar, the Analisi charts, «Salva», «Crea» and the Spese/Abbonamenti views (on by default; does nothing where the
 // browser cannot vibrate).
-export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; haptics: boolean; timeFormat: TimeFormat; timeZone: string };
+// `avatarRing`: a ring in the main colour around the account picture (off by default; 22 November, on request).
+export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; haptics: boolean; avatarRing: boolean; timeFormat: TimeFormat; timeZone: string };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'mono', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, avatarRing: false, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -46,6 +47,7 @@ export function parsePreferences(raw: string | null): Preferences {
     showArchivedFunds: typeof o.showArchivedFunds === 'boolean' ? o.showArchivedFunds : defaultPreferences.showArchivedFunds,
     templatesEnabled: typeof o.templatesEnabled === 'boolean' ? o.templatesEnabled : defaultPreferences.templatesEnabled,
     haptics: typeof o.haptics === 'boolean' ? o.haptics : defaultPreferences.haptics,
+    avatarRing: typeof o.avatarRing === 'boolean' ? o.avatarRing : defaultPreferences.avatarRing,
     timeFormat: oneOf(timeFormats, o.timeFormat, defaultPreferences.timeFormat),
     timeZone: parseTimeZoneChoice(o.timeZone),
   };

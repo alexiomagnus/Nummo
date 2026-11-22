@@ -158,7 +158,8 @@ function SubscriptionRow({ summary, category, fund, merchant, open, compact, can
   return (
     <View>
       <ListRow outlined dense icon={category?.icon ?? null} title={entry.description}
-        subtitle={[frequency, when].filter(Boolean).join(' · ')}
+        // « | » with an en space on each side (about twice a normal space): a little more room between the two facts (22 November).
+        subtitle={[frequency, when].filter(Boolean).join('\u2002|\u2002')}
         meta={<View style={styles.meta}><StatusBadge status={status} inTrial={inTrial} /></View>}
         expanded={open} controls={open ? detailsId : undefined}
         pressLabel={t("{p0} dettagli di {p1}", { p0: open ? t("Nascondi") : t("Mostra"), p1: entry.description })}

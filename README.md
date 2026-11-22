@@ -44,8 +44,8 @@ alcuni browser, come Firefox, mostrano una richiesta). **Archiviazione e backup*
 «Archivio locale protetto», «Protezione aggiuntiva non attiva» o «Protezione non disponibile». È una richiesta, non una
 garanzia, e non sostituisce un backup.
 
-**Elimina tutte le spese** (Archiviazione e backup, entrambe le modalità): elimina tutte le spese e gli abbonamenti, dopo una conferma e
-lo scaricamento automatico di una copia (`nummo-backup-prima-di-eliminare.json`); categorie, fondi, movimenti, liste, template ed esercenti
+**Elimina tutte le spese** (Archiviazione e backup, entrambe le modalità): elimina tutte le spese e gli abbonamenti, dopo una conferma
+che propone di scaricare prima un backup completo (JSON; mai in automatico); categorie, fondi, movimenti, liste, template ed esercenti
 restano.
 
 **Recupero**: su un dispositivo nuovo o svuotato scegli Standard, poi **Archiviazione e backup → Importa backup (JSON)**. Senza un backup i dati persi non sono recuperabili: nessuno ne ha una copia.

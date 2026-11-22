@@ -4,6 +4,7 @@ import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, CancelButton, ConfirmButton } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { useSameWidth } from '../../components/SameWidth';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import type { ProtectionState } from '../../services/storageProtection';
@@ -61,6 +62,7 @@ export function StandardStorage({ protection, onChangeMode, style }: Common & { 
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
   const [changing, setChanging] = useState(false);
+  const sameWidth = useSameWidth();
   return (
     <Card style={style}>
       {/* Same icon + text layout as the protection status below, so the two lines align. */}
@@ -69,8 +71,9 @@ export function StandardStorage({ protection, onChangeMode, style }: Common & { 
         <View style={styles.protectionText}><Text variant="bodyLarge">{t("Su questo dispositivo")}</Text></View>
       </View>
       {protection && <ProtectionStatus state={protection} />}
+      {/* Outlined and as wide as the other buttons of the page (user's request, 22 November): before, a text button. */}
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button mode="text" icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
+        <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
       </View>
       <ChangeModeDialog visible={changing} target="advanced" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('advanced')} />
     </Card>
@@ -86,6 +89,7 @@ export function AdvancedStorage({ project, cache, onChangeMode, style, connected
   const compact = useSizeClass() === 'compact';
   const [changing, setChanging] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const sameWidth = useSameWidth();
   return (
     <Card style={style}>
       <View style={styles.rows}>
@@ -94,8 +98,8 @@ export function AdvancedStorage({ project, cache, onChangeMode, style, connected
         <InfoRow shape={iconShapes.cloudOff} label={t("Cache offline")} value={t(cache)} />
       </View>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        {connected && onDisconnect && <Button mode="text" icon={icon(iconShapes.logout)} onPress={() => setDisconnecting(true)}>{t("Scollega progetto")}</Button>}
-        <Button mode="text" icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
+        {connected && onDisconnect && <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.logout)} onPress={() => setDisconnecting(true)}>{t("Scollega progetto")}</Button>}
+        <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
       </View>
       <ChangeModeDialog visible={changing} target="standard" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('standard')} />
       {onDisconnect && <DisconnectDialog visible={disconnecting} project={project} onDismiss={() => setDisconnecting(false)} onConfirm={onDisconnect} />}

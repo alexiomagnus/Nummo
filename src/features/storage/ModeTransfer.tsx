@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { useSameWidth } from '../../components/SameWidth';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { alignCategoriesByName, archiveAsImport as asImport, type ImportData, type ImportPlan } from '../../domain/backup';
@@ -10,7 +11,6 @@ import { useI18n } from '../../i18n/I18nProvider';
 import type { DataStore } from '../../services/dataStore';
 import { localDatabaseName, openLocalDatabase } from '../../services/localDatabase';
 import { createLocalStore, type LocalStore } from '../../services/localStore';
-import type { StorageMode } from '../../services/storageMode';
 import { spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { ImportPreview } from '../backup/BackupActions';
@@ -35,7 +35,7 @@ type Preview = { direction: 'in' | 'out'; data: ImportData; plan: ImportPlan };
 // browser, in either direction, on request. Never automatic, never a replacement: only what is missing is added
 // (user's request, 21 November). The Standard mode never starts Firebase, so both directions live here.
 // `shown`: the page is on screen. The device archive is looked at only from its first showing (the page is kept mounted).
-export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: { backend: DataStore; enabled: boolean; shown: boolean; onChangeMode: (mode: StorageMode) => void; style?: object }) {
+export function ModeTransfer({ backend, enabled, shown, style }: { backend: DataStore; enabled: boolean; shown: boolean; style?: object }) {
   const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -44,7 +44,7 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
-  const [copied, setCopied] = useState(false);
+  const sameWidth = useSameWidth();
   const store = useRef<LocalStore | null>(null);
   const live = useRef(true);
 
@@ -77,7 +77,7 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
   };
   // Standard → here: the device archive merged into this project.
   const bringIn = () => run(async () => {
-    setPreview(null); setCopied(false);
+    setPreview(null);
     const source = asImport(await (await openStore()).exportSnapshot());
     const { data } = alignCategoriesByName(source, (await backend.exportSnapshot()).categories);
     const plan = (await backend.previewImport(data)).merge;
@@ -85,7 +85,7 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
   });
   // Here → Standard: this project merged into the device archive (created if it never was).
   const copyOut = () => run(async () => {
-    setPreview(null); setCopied(false);
+    setPreview(null);
     const source = asImport(await backend.exportSnapshot());
     const target = await openStore();
     const { data } = alignCategoriesByName(source, (await target.exportSnapshot()).categories);
@@ -98,7 +98,6 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
     await target.importRecords(data.expenses, data.categories, 'merge', data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates);
     if (!live.current) return;
     setPreview(null);
-    if (current.direction === 'out') setCopied(true);
     notify(current.direction === 'in' ? "Dati della modalità Standard aggiunti a questo progetto." : "Dati copiati su questo dispositivo.");
     await count();
   });
@@ -112,9 +111,9 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
       <View style={styles.body}>
         {summary !== null && <Text variant="bodyMedium" accessibilityLiveRegion="polite">{summary}</Text>}
         <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-          <Button mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy || local.state !== 'ready'} onPress={() => void bringIn()}>
+          <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.upload)} disabled={!enabled || busy || local.state !== 'ready'} onPress={() => void bringIn()}>
             {t("Dal dispositivo a Firebase")}</Button>
-          <Button mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy || local.state === 'loading'} onPress={() => void copyOut()}>
+          <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.download)} disabled={!enabled || busy || local.state === 'loading'} onPress={() => void copyOut()}>
             {t("Da Firebase al dispositivo")}</Button>
         </View>
         {/* Short note under the buttons, as under «Backup completo» (user's request, 21 November: fewer words, clearer). */}
@@ -126,12 +125,6 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
           title={preview.direction === 'in' ? "Da aggiungere a Firebase" : "Da aggiungere al dispositivo"}
           emptyText={preview.direction === 'in' ? "Firebase ha già tutti i dati del dispositivo." : "Il dispositivo ha già tutti i dati di Firebase."}
           blockedTitle="Impossibile unire i dati" />}
-        {copied && <View style={styles.done}>
-          <Text variant="bodyMedium">{t("I dati sono anche sul dispositivo: nella modalità Standard li trovi senza account.")}</Text>
-          <View style={styles.start}>
-            <Button mode="contained" icon={icon(iconShapes.swap)} onPress={() => onChangeMode('standard')}>{t("Passa alla modalità Standard")}</Button>
-          </View>
-        </View>}
         {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}
       </View>
     </Card>
@@ -142,6 +135,4 @@ const styles = StyleSheet.create({
   body: { gap: spacing.md },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
-  done: { gap: spacing.sm },
-  start: { alignSelf: 'flex-start' },
 });
