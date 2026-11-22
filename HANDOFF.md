@@ -6,7 +6,10 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `f4691aa` (limiti degli abbonamenti: 1000 cambi di stato, 100 cambi di
+- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
+  22 novembre, nell'ordine: Rules («compiled successfully», «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle
+  online `index-040a3433…` identico a `dist/` (SHA-256), `firestore.rules` pubblico identico. Chi ha il proprio Firebase deve ricopiare le
+  Rules. Prima, **Rules e Hosting** da `f4691aa` (limiti degli abbonamenti: 1000 cambi di stato, 100 cambi di
   frequenza, 1000 pagamenti eliminati, 5000 occorrenze) pubblicati su richiesta il 22 novembre, nell'ordine: Rules
   (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», quindi la forma con `split` è accettata dal
   server; «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle online `index-d1e508c4…` identico a `dist/`
@@ -33,7 +36,8 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
+  Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
   Prima `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
   quello di «Colore dell'anello»): inviato e pubblicato su Hosting. Prima `f57b1b9` (pagina Esercenti, cambi di stato
   fino a 40, Indietro di un passo, colore dell'anello, barra inferiore senza lampeggi, storico dei pagamenti largo due pulsanti, vibrazione
@@ -61,7 +65,7 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** Su `f4691aa`: `npm run check` OK (**564/564**), `test:emulator` **24/24**, `test:hybrid` **9/9**.
+- **Verifiche (22 novembre, ultime).** Su `17ebce0`: `npm run check` OK (**565/565**), `test:emulator` **24/24**. Su `f4691aa`: `npm run check` OK (**564/564**), `test:emulator` **24/24**, `test:hybrid` **9/9**.
   Prima `npm run check` OK su `a4cbef0` (**560/560**). Prima `npm run check` OK su `f57b1b9` (typecheck, **557/557**, build demo); `test:emulator` **24/24** su
   `f57b1b9` (porte proprie 39199/39380). Prima `npm run check` OK su `1e5c615` (**551/551**);
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
@@ -99,7 +103,7 @@ rilasci».
   malformate; dati con 24 voci validi; un piano pieno non accetta un nuovo mese) e `tests/generalBudget.test.ts` (120). Emulatori: fondo con
   i tre piani al massimo creato e modificato, budget generale da 1919 caratteri accettato, 121 voci rifiutate (lunghe e brevi).
 - **Verifica:** `npm run check` OK (**565/565**, build demo); `test:emulator` **24/24** su porte proprie (config `.nummo-funds-check.json`
-  rimossa; runner hybrid 36786 non toccato). Non committato, non pubblicato.
+  rimossa; runner hybrid 36786 non toccato). Committato in `17ebce0`, inviato e pubblicato (Rules compilate dal server, poi Hosting).
 
 ## Revisione dei limiti degli abbonamenti (Rules da pubblicare) — 22 novembre 2026
 
