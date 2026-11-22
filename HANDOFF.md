@@ -6,7 +6,9 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Rules e Hosting** da `f57b1b9` pubblicati su richiesta il 22 novembre, nell'ordine: Rules
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `a4cbef0` (Indietro che non esce più dopo uno o due passi, anello degli avatar)
+  pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`: «Deploy complete!», bundle online `index-46bee5bd…` identico a `dist/`
+  (SHA-256). Rules invariate (quelle di `f57b1b9`). Prima, **Rules e Hosting** da `f57b1b9` pubblicati su richiesta il 22 novembre, nell'ordine: Rules
   (`firebase deploy --only firestore:rules --project nummo-6b6e2`: compilazione OK, «Deploy complete!»; cambi di stato fino a 40), poi
   `npm run deploy:hosting` («Deploy complete!»), bundle online `index-79ab0459…` identico a `dist/` (SHA-256), `firestore.rules` pubblico
   identico. Chi ha collegato il proprio Firebase deve ricopiare le Rules (oltre 8 cambi di stato). Prima, **Hosting** da `1e5c615` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
@@ -27,7 +29,8 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `f57b1b9` (pagina Esercenti, cambi di stato
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
+  quello di «Colore dell'anello»): inviato e pubblicato su Hosting. Prima `f57b1b9` (pagina Esercenti, cambi di stato
   fino a 40, Indietro di un passo, colore dell'anello, barra inferiore senza lampeggi, storico dei pagamenti largo due pulsanti, vibrazione
   sulla ricorrenza, «Annulla»/«OK» della data a 44, avvisi a 5 s): inviato e pubblicato con le Rules. Prima `1e5c615` (Elimina del fondo nel dialogo di modifica, «Palette» predefinita, pulsanti «Ripristina» uniformi, contorno rosso di Elimina): inviato e pubblicato su Hosting. Prima `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
   (template senza data), `9929c8f`
@@ -53,14 +56,14 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** `npm run check` OK su `f57b1b9` (typecheck, **557/557**, build demo); `test:emulator` **24/24** su
+- **Verifiche (22 novembre, ultime).** `npm run check` OK su `a4cbef0` (**560/560**). Prima `npm run check` OK su `f57b1b9` (typecheck, **557/557**, build demo); `test:emulator` **24/24** su
   `f57b1b9` (porte proprie 39199/39380). Prima `npm run check` OK su `1e5c615` (**551/551**);
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
   campi. Nessun errore JS.
 - **Da provare sul telefono (priorità):**
-  1. App installata sul Pixel 8: Indietro e gesto Indietro di sistema; blocco con impronta/viso reali (richiesta automatica, «Sblocca»,
+  1. App installata sul Pixel 8: Indietro e gesto Indietro di sistema, **più volte di fila senza toccare lo schermo** (correzione `a4cbef0`); blocco con impronta/viso reali (richiesta automatica, «Sblocca»,
      dove compare la passkey «Nummo» nel gestore delle password), recupero in Avanzata con «Esci»; foto del profilo dalla galleria;
      in Standard PIN di Nummo (accensione, «Non riesco a sbloccare», «Cambia il PIN») e «Elimina tutte le spese».
   2. In produzione (Avanzata): una spesa oltre 99.999,99 € accettata dal server; scelta di un avatar e ritorno alla foto Google.
@@ -102,7 +105,7 @@ rilasci».
   poi Indietro ×5: Fondi, Analisi, Spese, Nuova spesa, uscita; la cronologia resta di 3 voci (guardia ripresa con `forward()`, nessun
   nuovo `pushState`). Avatar scelto: anello bianco a 6 dall'avatar nel tema scuro, scuro nel chiaro, come i campioni dell'anello.
   Nessun errore JS. **Da provare sul telefono:** Indietro ripetuto senza toccare lo schermo (app installata e Chrome), gesto Indietro.
-  Non committato.
+  Committato in `a4cbef0`, inviato e pubblicato su Hosting.
 
 ## Pagina «Esercenti»: rinomina, unione, eliminazione — 22 novembre 2026
 
