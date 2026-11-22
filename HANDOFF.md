@@ -223,13 +223,13 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - Su richiesta («rigenera quest'ultima icona»): «Onde» (`waves`) sostituito da **Pietre** (rosa, id `stones`): tre ciottoli ellittici
   impilati, più stretti verso l'alto e appena inclinati, base/accento/base con 3 di spazio tra l'uno e l'altro. `waves` salvato →
   «Nessuna immagine». EN «Stones». Typecheck, `npm test` **542/542**, build demo; Chromium headless 390×844 scuro e chiaro: selezione,
-  salvataggio e pulsante in alto corretti, nessun errore JS. Non committato.
+  salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; non pubblicato.
 
 ## Avatar «Onde» al posto di «Sorriso» — 22 novembre 2026
 
 - Su richiesta («abbandona l'idea della faccia»): «Sorriso» (`smile`) sostituito da **Onde** (rosa, id `waves`): due onde corte a tratto
   tondo, sfalsate (base sopra a sinistra, accento sotto a destra: uguali e allineate sembravano il segno dell'Acquario). Nessuna faccia nel set. `smile` salvato → «Nessuna immagine». EN «Waves». Typecheck, `npm test` **542/542**, build demo; Chromium headless 390×844 scuro
-  e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Non committato.
+  e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; non pubblicato.
 
 ## Avatar «Girandola» e «Sorriso» al posto di «Moduli» e «Prisma» — 22 novembre 2026
 
@@ -237,7 +237,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   geometrica, testa tonda in base con occhi a pillola e sorriso ritagliati sullo sfondo, più un pallino d'accento; **Girandola** (blu, id
   `pinwheel`) quattro mezzi dischi che girano attorno al centro, alternati base/accento. Gli id `modules`/`prism` salvati si leggono come
   «Nessuna immagine» (mai pubblicati). Nomi EN Pinwheel/Smile, chiavi vecchie tolte da `en.ts`. Typecheck, `npm test` **542/542**, build
-  demo; Chromium headless 390×844 scuro e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Non committato.
+  demo; Chromium headless 390×844 scuro e chiaro: selezione, salvataggio e pulsante in alto corretti, nessun errore JS. Committato in `c5d3ee8` e inviato; non pubblicato.
 
 ## Cinque avatar astratti al posto delle icone del profilo — 22 novembre 2026
 
@@ -257,7 +257,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 - **Browser:** Chromium headless su `dist-demo`, Standard: 390×844 scuro e chiaro e 1280×900 chiaro; i cinque avatar cliccati uno per uno:
   `aria-checked` sul solo scelto, `nummo.profile.v1` aggiornato, pulsante in alto aggiornato; avatar salvato mostrato dopo il
   ricaricamento. Nessun errore JS. Ritoccati dopo la prima prova Goccia (più grande) e Prisma (metà più staccate). **Non provato** su
-  Android reale. Non committato, non pubblicato.
+  Android reale. Committato in `c5d3ee8` e inviato; non pubblicato.
 
 ## Immagine del profilo: stesse misure del pulsante, tre icone tolte dalla scelta — 22 novembre 2026
 
@@ -271,7 +271,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   `tests/profileImage.test.ts`. `AGENTS.md`.
 - **Verifica:** typecheck OK, `npm test` **541/541** sull'albero condiviso con l'altra sessione (blocco dell'app, non committato). Chromium
   headless su `dist-demo`, Standard, tema scuro, 390×844: stile pixel e minimale, zampa nel pulsante e nella scelta della stessa misura
-  (20 px), nove icone in due righe. Nessun errore JS. Non provato sul telefono. Non committato, non pubblicato.
+  (20 px), nove icone in due righe. Nessun errore JS. Non provato sul telefono. Committato in `c5d3ee8` e inviato; non pubblicato.
 - **Testo tolto:** su richiesta, niente più «Compare sul pulsante del menu, in alto a destra. Resta solo su questo dispositivo e non entra
   nel backup.» sotto l'anteprima (chiave tolta da `en.ts`); la scheda ha solo anteprima, scelte e «Carica una foto». Typecheck e
   `npm test` **541/541**.
