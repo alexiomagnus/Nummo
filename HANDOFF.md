@@ -218,6 +218,16 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Vibrazione al cambio Spese/Abbonamenti — 22 novembre 2026
+
+- Su richiesta (screenshot del selettore «Spese | Abbonamenti»): `tap` quando la vista cambia, nessuna vibrazione sul segmento già
+  selezionato. Nuova prop `haptic` di `SegmentedButtons`, spenta di base e accesa solo in `Workspace.tsx` per la «Vista della pagina
+  Spese»: gli altri selettori a segmenti (Ricorrenza, Da quando, tipo di movimento, Notifiche) restano senza, come deciso il 21 novembre.
+  `AGENTS.md`, README, commento di `preferences.ts`.
+- **Verifica:** `npm run check` OK (**521/521**). Chromium headless su `dist-demo`, 390×844 con touch emulato: Spese → Abbonamenti `[5]`,
+  → Spese `[5]`, di nuovo Spese `[]`; «Ricorrenza» in Nuova spesa → Annuale `[]`. Nessun errore JS. Non sentito sul telefono.
+  Non committato, non pubblicato.
+
 ## Separatore delle schede in evidenza, menu «immagine» al tocco prolungato, vibrazione 5/4 solo touch — 22 novembre 2026
 
 - **Separatore.** Su richiesta (screenshot del «Totale» di Spese, «1673,77 € · 66 spese»): prima un «–» con 8 di margine, poi, perché

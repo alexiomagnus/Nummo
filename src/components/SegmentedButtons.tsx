@@ -4,6 +4,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { selectionFill } from '../theme/motion';
 import { radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
+import { useHaptics } from './Haptics';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 // `label` is the short visible text; `accessibilityLabel` the full name when the short one is abbreviated.
@@ -15,6 +16,9 @@ type Props<T extends string> = {
   label: string;
   error?: boolean;
   disabled?: boolean;
+  // A `tap` vibration when the choice changes. Off by default: removed from every segmented button on 21 November (user's
+  // request), back only for the Spese/Abbonamenti views on 22 November (user's request, a switch of page view).
+  haptic?: boolean;
 };
 
 const checkSize = 18;
@@ -25,8 +29,9 @@ const steps = [{ padding: spacing.md, gap: spacing.sm }, { padding: spacing.sm, 
 // after dropping the check and narrowing the padding).
 // The check mark of the selected segment is optional in M3: it is drawn only when it fits beside the label, measured
 // from the segment width and the label's natural width (hidden nowrap clone); the filled colour still marks selection.
-export function SegmentedButtons<T extends string>({ options, value, onChange, label, error, disabled }: Props<T>) {
+export function SegmentedButtons<T extends string>({ options, value, onChange, label, error, disabled, haptic = false }: Props<T>) {
   const { colors } = useTheme();
+  const vibrate = useHaptics();
   const border = error ? colors.error : colors.outline;
   const [widths, setWidths] = useState<Readonly<Record<string, { segment?: number; text?: number }>>>({});
   const measure = (key: string, part: 'segment' | 'text', width: number) =>
@@ -57,7 +62,7 @@ export function SegmentedButtons<T extends string>({ options, value, onChange, l
         const room = roomOf(option.value, index, padding);
         const fits = room !== null && room >= gap + checkSize;
         return (
-          <StateLayerPressable key={option.value} disabled={disabled} layerColor={color} onPress={() => onChange(option.value)}
+          <StateLayerPressable key={option.value} disabled={disabled} layerColor={color} onPress={() => { if (haptic && option.value !== value) vibrate(); onChange(option.value); }}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled} accessibilityLabel={option.accessibilityLabel ?? option.label}
             onLayout={(event) => measure(option.value, 'segment', event.nativeEvent.layout.width)}
             style={[styles.segment,

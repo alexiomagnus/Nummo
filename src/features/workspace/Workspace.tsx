@@ -368,7 +368,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </View>
     <VisitedSection active={section === 'list' && !starting}>
       <View style={styles.list}>
-        <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView}
+        <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView} haptic
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
