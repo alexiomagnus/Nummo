@@ -6,7 +6,9 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `3994330` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `1e5c615` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+  «Deploy complete!», bundle online `index-5c7ec78e…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
+  Prima, **Hosting** da `3994330` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
   «Deploy complete!», bundle online `index-bac866b2…` identico a `dist/` (SHA-256; per qualche secondo il CDN serviva ancora il precedente).
   Rules invariate (quelle di `17632af`). Prima, **Hosting** da `a13e54c` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
   «Deploy complete!», bundle online `index-04eef827…` identico a `dist/` (SHA-256; per qualche secondo dopo il rilascio il CDN serviva
@@ -22,7 +24,7 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato su Hosting. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `1e5c615` (Elimina del fondo nel dialogo di modifica, «Palette» predefinita, pulsanti «Ripristina» uniformi, contorno rosso di Elimina): inviato e pubblicato su Hosting. Prima `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
   (template senza data), `9929c8f`
   (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
@@ -46,7 +48,7 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** `npm run check` OK su `3994330` (typecheck, **550/550**, build demo).
+- **Verifiche (22 novembre, ultime).** `npm run check` OK su `1e5c615` (typecheck, **551/551**, build demo).
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
@@ -78,7 +80,7 @@ rilasci».
 - Su richiesta (screenshot): da medium «Elimina» dei dialoghi di modifica (`DeleteAction labeled="wide"`: spesa, template, prodotto, fondo) è
   con contorno, contorno ed etichetta in `error`, alto 48 come «Annulla» e «Salva». Su smartphone resta il solo cestino con contorno.
 - **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): «Modifica fondo» con Elimina, Annulla e Salva alti 48. Nessun errore
-  JS. Non committato, non pubblicato.
+  JS. Committato in `1e5c615`, inviato e pubblicato su Hosting.
 
 ## «Elimina» del fondo nel dialogo di modifica, anche per i fondi usati (con il motivo) — 22 novembre 2026
 
@@ -89,7 +91,7 @@ rilasci».
   Alla conferma `FundsPage` ricontrolla con i dati più recenti (`fundInUse`). Nessun cambio a `DataStore`/Rules.
 - **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, 1280×900) con un backup di prova: nessun «Elimina» sulle schede
   attive; «Medio · Auto» → bloccato («15 spese»); «Prova attivo» non usato → eliminato, dialogo chiuso; archiviato non usato → conferma normale.
-  Nessun errore JS. **Non provati:** smartphone (solo cestino a sinistra, come negli altri dialoghi), Avanzata. Non committato, non pubblicato.
+  Nessun errore JS. **Non provati:** smartphone (solo cestino a sinistra, come negli altri dialoghi), Avanzata. Committato in `1e5c615`, inviato e pubblicato su Hosting.
 
 ## «Palette» predefinita, fondi archiviati non usati eliminabili — 22 novembre 2026
 
@@ -102,7 +104,7 @@ rilasci».
   fondo **archiviato** non usato ha «Elimina» accanto a «Ripristina», con la stessa conferma e `removeFund` (transazione con revisione).
 - **Verifica:** `npm run check` OK (**551/551**). Chromium headless su `dist-demo` (Standard, 1280×900, profilo nuovo): «Palette|Monocolore»,
   «Palette» selezionata; con un backup di prova con un fondo archiviato inutilizzato: «Elimina Prova archiviato» → conferma → eliminato, sezione
-  degli archiviati sparita. Nessun errore JS. Non committato, non pubblicato.
+  degli archiviati sparita. Nessun errore JS. Committato in `1e5c615`, inviato e pubblicato su Hosting.
 
 ## «Ripristina le categorie predefinite» come «Ripristina predefiniti», che su desktop è largo due pulsanti — 22 novembre 2026
 
@@ -110,7 +112,7 @@ rilasci».
   icona in `secondary`). Nelle Impostazioni, da medium, «Ripristina predefiniti» è largo quanto «Dimentica la chiave» e «Revoca il consenso»
   insieme (`doubleWidth`, non si misura; senza quei due pulsanti, larghezza propria). Smartphone invariato.
 - **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): 281..456, 466..641, «Ripristina predefiniti» 281..641; Categorie
-  con la pillola. Nessun errore JS. Non committato, non pubblicato.
+  con la pillola. Nessun errore JS. Committato in `1e5c615`, inviato e pubblicato su Hosting.
 
 ## «Elimina tutti i template» — 22 novembre 2026
 
