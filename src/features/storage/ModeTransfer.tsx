@@ -122,10 +122,13 @@ export function ModeTransfer({ backend, enabled, shown, onChangeMode, style }: {
         </View>
         {/* Short note under the buttons, as under «Backup completo» (user's request, 21 November: fewer words, clearer). */}
         <Text variant="bodySmall" style={muted}>{t("* Si aggiunge solo ciò che manca: nulla viene sovrascritto o eliminato.")}</Text>
-        {preview && <ImportPreview source={preview.direction === 'in' ? t("Dalla modalità Standard a questo progetto Firebase") : t("Da questo progetto Firebase alla modalità Standard")}
-          plan={preview.plan} busy={busy} enabled={enabled} onCancel={() => setPreview(null)} onMerge={() => void merge(preview)}
-          mergeLabel={preview.direction === 'in' ? "Aggiungi a Firebase" : "Aggiungi al dispositivo"}
-          title="Riepilogo del passaggio" blockedTitle="Impossibile unire i dati" />}
+        {/* Few words (user's request, 22 November): the direction in the title, then only what is added; nothing to add →
+            one sentence and «Chiudi». */}
+        {preview && <ImportPreview plan={preview.plan} busy={busy} enabled={enabled} onCancel={() => setPreview(null)} onMerge={() => void merge(preview)}
+          mergeLabel="Aggiungi" listOnly
+          title={preview.direction === 'in' ? "Da aggiungere a Firebase" : "Da aggiungere al dispositivo"}
+          emptyText={preview.direction === 'in' ? "Firebase ha già tutti i dati del dispositivo." : "Il dispositivo ha già tutti i dati di Firebase."}
+          blockedTitle="Impossibile unire i dati" />}
         {copied && <View style={styles.done}>
           <Text variant="bodyMedium">{t("I dati sono anche sul dispositivo: nella modalità Standard li trovi senza account.")}</Text>
           <View style={styles.start}>

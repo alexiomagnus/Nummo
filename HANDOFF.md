@@ -218,6 +218,26 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Riepilogo del passaggio più breve, «Annulla»/«OK» della data più stretti — 22 novembre 2026
+
+- **Passaggio dei dati** (Avanzata, «Dati della modalità Standard»; screenshot con «Riepilogo del passaggio», «Da questo progetto Firebase
+  alla modalità Standard», «Niente da aggiungere: dati già presenti.» e «Aggiungi al dispositivo» disattivato): su richiesta meno parole.
+  Con qualcosa da aggiungere: titolo «Da aggiungere al dispositivo» / «Da aggiungere a Firebase», sotto solo l'elenco («5 categorie»),
+  «Aggiungi» e «Annulla». Senza niente da aggiungere: una frase, «Il dispositivo ha già tutti i dati di Firebase.» / «Firebase ha già tutti
+  i dati del dispositivo.», e «Chiudi», mai un pulsante disattivato. Nuove prop facoltative di `ImportPreview` (`source` facoltativo,
+  `emptyText`, `listOnly`); il ripristino da file è invariato. Chiavi vecchie tolte da `en.ts`, nuove aggiunte. `AGENTS.md`.
+- **Selettore della data:** `small` di `CancelButton`/`ConfirmButton` con 16 ai lati dell'etichetta (prima 24) e minimo 72 (prima 88):
+  «Annulla» 81×40, «OK» 72×40 (prima circa 104 e 88).
+- **Verifica:** `npm run check` OK (**521/521**). Chromium headless su un export demo dedicato con emulatori miei (39099/39280, config
+  temporanea `.nummo-preview-check.json`, rimossa, emulatori fermati; runner hybrid 36786 non toccato), accesso come proprietario demo
+  dall'emulatore: «Da Firebase al dispositivo» → «Da aggiungere al dispositivo / 5 categorie», «Aggiungi», di nuovo → frase e «Chiudi»;
+  «Dal dispositivo a Firebase» → «Firebase ha già tutti i dati del dispositivo.»; 390×844 uguale; date picker 1280×900 e 390×844 con le
+  misure sopra. Nessun errore JS. L'export conteneva anche le modifiche non committate di un'altra sessione (vedi sotto).
+- **Albero condiviso:** durante questa fase un'altra sessione ha modifiche non committate (immagine del profilo, navigazione Indietro:
+  `App.tsx`, `AccountMenu.tsx`, `AppDialog.tsx`, `Overlay.tsx`, `ListsPage.tsx`, `image.ts`, `SignIn.tsx`, file nuovi in `settings/`,
+  `BackNavigation.ts`, `backStack.ts`, test), anche in file toccati qui (`SettingsPage.tsx`, `Workspace.tsx`, forse `en.ts`). Nel commit
+  separare per parti. Non committato, non pubblicato.
+
 ## Vibrazione al cambio Spese/Abbonamenti — 22 novembre 2026
 
 - Su richiesta (screenshot del selettore «Spese | Abbonamenti»): `tap` quando la vista cambia, nessuna vibrazione sul segmento già

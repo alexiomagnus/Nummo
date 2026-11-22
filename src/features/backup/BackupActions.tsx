@@ -18,10 +18,13 @@ const icon = (shape: string) => ({ size, color }: { size: number; color: string 
 // What a merge would do, before any write: the kinds of data it adds, or what blocks it (at most three names). Shared by
 // the backup file and the move between modes (ModeTransfer). `source`: the file name or the other archive; `replace`: an
 // extra action beside the merge (the file's «Sostituisci tutti i dati»).
+// `source` (a line under the title) and `emptyText` are optional: the move between modes (ModeTransfer) leaves out the line,
+// says the direction in the title and lists only what is added; with nothing to add it shows `emptyText` and «Chiudi»
+// alone, never a disabled button (user's request, 22 November: fewer words, clearer). The backup restore keeps all of it.
 export function ImportPreview({ source, plan: merge, busy, enabled, onMerge, onCancel, replace, mergeLabel = "Unisci ai dati esistenti",
-  title = "Riepilogo del ripristino", blockedTitle = "Impossibile unire il backup" }: {
-  source: string; plan: ImportPlan; busy: boolean; enabled: boolean; onMerge: () => void; onCancel: () => void; replace?: ReactNode; mergeLabel?: string;
-  title?: string; blockedTitle?: string;
+  title = "Riepilogo del ripristino", blockedTitle = "Impossibile unire il backup", emptyText, listOnly = false }: {
+  source?: string; plan: ImportPlan; busy: boolean; enabled: boolean; onMerge: () => void; onCancel: () => void; replace?: ReactNode; mergeLabel?: string;
+  title?: string; blockedTitle?: string; emptyText?: string; listOnly?: boolean;
 }) {
   const { t } = useI18n();
   const theme = useTheme();
@@ -41,15 +44,22 @@ export function ImportPreview({ source, plan: merge, busy, enabled, onMerge, onC
   const conflictNames = [...conflicts.shown.map((c) => c.kind === 'budget' ? t("Budget mensile") : c.label || t("Movimento senza nota")),
     ...(conflicts.more > 0 ? [t("altri {p0}", { p0: conflicts.more })] : [])].join(' · ');
   const missing = merge.missingFundReferences + merge.missingCategoryReferences;
+  if (emptyText && mergeEmpty && !mergeBlocked && !replace) return <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
+    <Text variant="bodyLarge">{t(emptyText)}</Text>
+    <View style={[styles.buttons, compact && styles.buttonsCompact]}>
+      <CancelButton disabled={busy} onPress={onCancel}>{t("Chiudi")}</CancelButton>
+    </View>
+  </View>;
   return <View style={[styles.preview, { backgroundColor: theme.colors.elevation.level2 }]} accessibilityRole="alert">
     <View style={styles.lines}>
       <Text variant="titleSmall">{mergeBlocked ? t(blockedTitle) : t(title)}</Text>
-      <Text variant="bodySmall" numberOfLines={1} style={hint}>{source}</Text>
+      {source !== undefined && <Text variant="bodySmall" numberOfLines={1} style={hint}>{source}</Text>}
     </View>
     <Text variant="bodyLarge">
       {mergeBlocked ? (merge.conflicts.length === 1 ? t("1 elemento è diverso dai dati salvati.")
         : t("{p0} elementi sono diversi dai dati salvati.", { p0: merge.conflicts.length }))
         : mergeEmpty ? t("Niente da aggiungere: dati già presenti.")
+        : listOnly ? added.join(' · ')
         : t("Da aggiungere: {p0}", { p0: added.join(' · ') })}</Text>
     {mergeBlocked && <Text variant="bodyMedium" numberOfLines={3}>{conflictNames}</Text>}
     {!mergeBlocked && missing > 0 && <Text variant="bodySmall" style={hint}>

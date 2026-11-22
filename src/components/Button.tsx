@@ -39,9 +39,11 @@ export const regularIconPadding = {
 // them is only the `gap` of `dialogActionsRow`, also where they sit in a plain View. The `compact` it adds is overridden too:
 // it shrinks the label's side margins from 24 to 8, so a label longer than the minimum width («Usa questi dati») looked
 // cramped next to the others.
-// `small`: the date picker only (user's request, 21 November: «Annulla» and «OK» looked too big under the calendar), 88 wide
-// and 40 tall (the Material 3 button height), still clear of each other.
-const dialogActionStyles = StyleSheet.create({ button: { minWidth: 112, marginRight: 0 }, phone: { minWidth: 96 }, small: { minWidth: 88 }, smallContent: { minHeight: 40 } });
+// `small`: the date picker only (user's request, 21 November: «Annulla» and «OK» looked too big under the calendar), 40 tall
+// (the Material 3 button height); shorter on 22 November (user's request): 16 beside the label instead of 24 and at least 72
+// wide, so «Annulla» is about 88 and «OK» 72, still clear of each other.
+const dialogActionStyles = StyleSheet.create({ button: { minWidth: 112, marginRight: 0 }, phone: { minWidth: 96 }, small: { minWidth: 72 }, smallContent: { minHeight: 40 },
+  smallLabel: { marginHorizontal: spacing.lg } });
 const dialogAction = dialogActionStyles.button;
 export const dialogActionsRow = StyleSheet.create({ row: { flexWrap: 'wrap', gap: spacing.md } }).row;
 // «Annulla» and the confirmation kept together next to a left-hand action (Elimina): when the row wraps on a narrow phone, the
@@ -56,9 +58,11 @@ function useActionStyle(narrowOnPhone?: boolean, small?: boolean) {
   if (small) return [dialogAction, dialogActionStyles.small];
   return narrowOnPhone && phone ? [dialogAction, dialogActionStyles.phone] : dialogAction;
 }
-export function CancelButton({ style, narrowOnPhone, small, contentStyle, ...rest }: ActionProps) {
-  return <Button {...rest} compact={false} mode="outlined" style={[style, useActionStyle(narrowOnPhone, small)]} contentStyle={[small && dialogActionStyles.smallContent, contentStyle]} />;
+export function CancelButton({ style, narrowOnPhone, small, contentStyle, labelStyle, ...rest }: ActionProps) {
+  return <Button {...rest} compact={false} mode="outlined" style={[style, useActionStyle(narrowOnPhone, small)]} contentStyle={[small && dialogActionStyles.smallContent, contentStyle]}
+    labelStyle={[small && dialogActionStyles.smallLabel, labelStyle]} />;
 }
-export function ConfirmButton({ style, narrowOnPhone, small, contentStyle, ...rest }: ActionProps) {
-  return <Button {...rest} compact={false} mode="contained" style={[style, useActionStyle(narrowOnPhone, small)]} contentStyle={[small && dialogActionStyles.smallContent, contentStyle]} />;
+export function ConfirmButton({ style, narrowOnPhone, small, contentStyle, labelStyle, ...rest }: ActionProps) {
+  return <Button {...rest} compact={false} mode="contained" style={[style, useActionStyle(narrowOnPhone, small)]} contentStyle={[small && dialogActionStyles.smallContent, contentStyle]}
+    labelStyle={[small && dialogActionStyles.smallLabel, labelStyle]} />;
 }
