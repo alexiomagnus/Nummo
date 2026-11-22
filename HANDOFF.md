@@ -6,11 +6,10 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `fa06adb` (articolo eliso nei testi delle notifiche, bundle `index-053e3738…`). Prima `2b1e8fb`
-  (notifiche dell'app Android 0.3.0), pubblicato su richiesta il
-  22 novembre con `npm run deploy:hosting` («Deploy complete!»), bundle online `index-4a671be6…` identico a `dist/` (SHA-256), con il
-  ramo per l'app. Prima `0f340bf` (app Android 0.2.0, bundle `index-9fe2b72e…`, voce sotto).
-  Ultime **Rules**: `48361b9`. In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `fa06adb` (articolo eliso nei testi delle notifiche), pubblicato su
+  richiesta il 22 novembre con `npm run deploy:hosting` («Deploy complete!»): bundle online `index-053e3738…` e `sw.js` identici ai locali.
+  Prima `2b1e8fb` (notifiche dell'app Android 0.3.0, bundle `index-4a671be6…`, identico a `dist/`), prima `0f340bf` (app Android 0.2.0,
+  bundle `index-9fe2b72e…`). Ultime **Rules**: `48361b9` (invariate da allora). In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
   richiesta il 22 novembre (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», «Deploy complete!»);
   **Hosting** poi pubblicato con `759792c` (app Android, vedi sotto): online `index-18586346…`, che comprende i 500 prodotti; verificato
   il 22 novembre ricompilando da `HEAD` pulito (`7b7ad76`) con `npm run build:cloud`: stesso bundle, stesso SHA-256 di quello online. Prima, **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
@@ -43,10 +42,10 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **App Android 0.3.0 (22 novembre):** notifiche come notifiche locali dell'app, provate sull'emulatore Android 17; committata in
-  `2b1e8fb`, Hosting pubblicato, release installata sul Pixel 8 via adb sopra la 0.2.0 (stessa chiave, `USE_EXACT_ALARM` concesso,
-  `POST_NOTIFICATIONS` da chiedere con «Attiva»). Sul Pixel 8 l'app di debug ha mostrato le tre notifiche all'orario esatto; da
-  provare la release a orario reale. Sezione «App Android 0.3.0» qui sotto.
+- **App Android 0.3.1 (22 novembre):** notifiche come notifiche locali dell'app (0.3.0, `2b1e8fb`), articolo eliso nei testi (0.3.1,
+  `fa06adb`); commit inviati, Hosting pubblicato. Provate sull'emulatore Android 17 e, con l'app di debug (poi disinstallata), sul Pixel 8:
+  tre notifiche all'orario esatto. **Release 0.3.1 installata sul Pixel 8** via adb (stessa chiave; `USE_EXACT_ALARM` concesso,
+  `POST_NOTIFICATIONS` da chiedere con «Attiva»): da provare a orario reale. Sezione «App Android 0.3.0» qui sotto.
 - **App Android 0.2.0 (22 novembre):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata in
   `nummo-6b6e2`. Committata in `0f340bf`, inviata, Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle
   online `index-9fe2b72e…` identico a `dist/`, SHA-256), Rules invariate; release 0.2.0 installata sul Pixel 8 via adb sopra la 0.1.0.
@@ -58,10 +57,11 @@ rilasci».
   anche in Non disturbare**. Ancora da provare sul telefono: blocco con impronta, fotocamera/«Carica una foto», backup e ripristino nell'app.
   Da fare dall'utente: copiare altrove la chiave di firma (`android/nummo-release.jks`, `android/keystore.properties`).
   Dettagli nella sezione «App Android» qui sotto.
-- **Git.** `main` = `origin/main`, solo il ramo `main`. Ultimo commit di codice `2b1e8fb` (notifiche dell'app Android 0.3.0): pubblicato su
-  Hosting, **non inviato** (`git push` su richiesta). Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
+  inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
+  pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
   sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
-  `759792c`. `npm run check` OK su `7b7ad76` (**571/571**). Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
+  `759792c`. Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
   Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
   Prima `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
   quello di «Colore dell'anello»): inviato e pubblicato su Hosting. Prima `f57b1b9` (pagina Esercenti, cambi di stato
@@ -75,6 +75,9 @@ rilasci».
   «OK» della data; altra sessione), `8dd92df` (vibrazione al cambio Spese/Abbonamenti), `8bf4f4d` (separatore delle schede, vibrazione 5/4 ms
   solo touch). L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
 - **Novità del 22 novembre, in breve** (dettagli nelle sezioni datate):
+  - **App Android** (`android/`, WebView con ponte nativo, APK installato a mano): vibrazione anche in silenzioso e Non disturbare, barre
+    di sistema del colore dell'app, sblocco con `BiometricPrompt`, salvataggio dei file; dalla 0.2.0 Avanzata con l'accesso Google del
+    telefono; dalla 0.3.0 notifiche come notifiche locali dell'app (0.3.1: «dall’8», «l’11» anche nel browser).
   - **Indietro (Android e browser)** chiude ciò che è aperto (overlay, lista aperta, pagina del menu, destinazione → Nuova spesa) ed esce
     solo da Nuova spesa: una voce di guardia nella cronologia (`theme/backStack.ts`, `useBackLayer`).
   - **Immagine del profilo** in testa alle Impostazioni: nessuna (in Avanzata la foto Google, l'omino se manca), cinque avatar astratti,
@@ -87,10 +90,12 @@ rilasci».
   - **Limiti di lunghezza**: ricerche ed Esercente 30, nome della lista 40, prodotto 60, «Totale spesa» come l'Importo.
   - Barra dei menu lontana dagli angoli arrotondati; vibrazione al cambio Spese/Abbonamenti; scansione dello scontrino più ordinata;
     riepilogo del passaggio dei dati più breve.
-- **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
-  dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
-  `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** Su `17ebce0`: `npm run check` OK (**565/565**), `test:emulator` **24/24**. Su `f4691aa`: `npm run check` OK (**564/564**), `test:emulator` **24/24**, `test:hybrid` **9/9**.
+- **Ultima sessione (22 novembre, sera):** ripresa delle notifiche dell'app Android lasciate non committate da un'altra sessione,
+  correzioni (Android 11–12, validazione come il servizio push), prove su emulatore e Pixel 8, articolo eliso nei testi delle notifiche;
+  `2b1e8fb` e `fa06adb` inviati e pubblicati su Hosting, release 0.3.1 sul Pixel 8. Rules e `DataStore` invariati. Sezione «App Android
+  0.3.0» qui sotto.
+- **Verifiche (22 novembre, ultime).** Su `fa06adb`: `npm run check` OK (**575/575**), `assembleRelease` OK; `test:emulator` non rieseguito
+  (Rules, `DataStore` e servizi invariati da `48361b9`, dove era **24/24**). Su `17ebce0`: `npm run check` OK (**565/565**), `test:emulator` **24/24**. Su `f4691aa`: `npm run check` OK (**564/564**), `test:emulator` **24/24**, `test:hybrid` **9/9**.
   Prima `npm run check` OK su `a4cbef0` (**560/560**). Prima `npm run check` OK su `f57b1b9` (typecheck, **557/557**, build demo); `test:emulator` **24/24** su
   `f57b1b9` (porte proprie 39199/39380). Prima `npm run check` OK su `1e5c615` (**551/551**);
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
@@ -98,6 +103,8 @@ rilasci».
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
   campi. Nessun errore JS.
 - **Da provare sul telefono (priorità):**
+  0. Release 0.3.1 sul Pixel 8: Notifiche → «Attiva notifiche di sistema» (dialogo di Android), primo promemoria all'orario scelto dopo ore a
+     schermo spento e in Non disturbare, tocco sulla notifica; Avanzata con l'accesso Google reale, uscita e nuovo accesso (dalla 0.2.0).
   1. App installata sul Pixel 8: Indietro e gesto Indietro di sistema, **più volte di fila senza toccare lo schermo** (correzione `a4cbef0`); blocco con impronta/viso reali (richiesta automatica, «Sblocca»,
      dove compare la passkey «Nummo» nel gestore delle password), recupero in Avanzata con «Esci»; foto del profilo dalla galleria;
      in Standard PIN di Nummo (accensione, «Non riesco a sbloccare», «Cambia il PIN») e «Elimina tutte le spese».
@@ -160,10 +167,10 @@ rilasci».
   al {p1}», «Dal {p0} all’{p1}», «Dall’{p0} all’{p1}», in inglese sempre «From {p0} to {p1}»). App 0.3.1 (versionCode 4). Test in
   `tests/serviceWorker.test.ts`; `npm run check` OK (**575/575**); riquadro provato in Chromium headless sulla demo (quattro forme in
   italiano, inglese invariato); `assembleRelease` OK; testo di `Reminders.kt` non visto su un dispositivo.
-  Committato in `fa06adb` (non inviato); Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online
+  Committato in `fa06adb`, inviato; Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online
   `index-053e3738…` e `sw.js` identici ai locali); release 0.3.1 installata sul Pixel 8 con `adb install -r` sopra la 0.3.0
   (`POST_NOTIFICATIONS` ancora da concedere con «Attiva»).
-- Committata in `2b1e8fb` (non inviata); Hosting pubblicato su richiesta (bundle `index-4a671be6…`, identico a `dist/`); release 0.3.0
+- Committata in `2b1e8fb`, inviata; Hosting pubblicato su richiesta (bundle `index-4a671be6…`, identico a `dist/`); release 0.3.0
   installata sul Pixel 8 con `adb install -r` sopra la 0.2.0.
 - **Prova sul Pixel 8 (22 novembre, 18:29, su richiesta)** con l'app di **debug** (`app.nummo.android.debug`, dati propri, demo
   `dist-demo` servita dal computer con `adb reverse tcp:8095`; la release non riceve comandi dal computer: DevTools della WebView solo in
@@ -248,7 +255,7 @@ rilasci».
   **24/24** su porte proprie (config `.nummo-lists-check.json` rimossa; runner hybrid 36786 non toccato). Committato in `48361b9` (solo i
   file della fase; l'indice verificato da solo: typecheck OK, **566/566**), inviato; **Rules pubblicate**, **Hosting no** (su richiesta:
   il lavoro Android nell'albero di lavoro finirebbe nella build); Hosting pubblicato poi con `759792c` (bundle `index-18586346…`).
-- **Attenzione:** nell'albero di lavoro c'è un lavoro parallelo non mio (app Android: `android/`, `src/services/androidApp.ts`,
+- **Superato** (il lavoro parallelo è stato committato in `759792c`): allora nell'albero di lavoro c'era un lavoro parallelo non mio (app Android: `android/`, `src/services/androidApp.ts`,
   `tests/androidApp.test.ts`, modifiche a `BackupActions`, `SettingsPage`, `ModeChoice`, `StorageSection`, `platformLock`, `bootTheme`,
   `haptics` e due chiavi in `src/i18n/en.ts`). Un commit di questa fase va limitato ai file della fase (in `en.ts` solo la riga dei 500
   prodotti).
@@ -1929,6 +1936,11 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
 
+- **Rilasci successivi del 22 novembre** (dal più recente): Hosting da `fa06adb` (articolo eliso nei testi delle notifiche), `2b1e8fb`
+  (notifiche dell'app Android 0.3.0), `0f340bf` (app 0.2.0, Avanzata con l'accesso Google nativo), `759792c` (app Android con ponte
+  nativo); Rules da `48361b9` (500 prodotti per lista); Rules e Hosting da `17ebce0` (piani dei fondi a 120 voci), `f4691aa` (limiti degli
+  abbonamenti), `f57b1b9` (cambi di stato fino a 40); Hosting da `a4cbef0`, `1e5c615`, `3994330`, `a13e54c`, `49a7c58`, `67f4a29`,
+  `9929c8f`. Esiti e bundle nella riga «Produzione» di «Stato corrente».
 - **Rilascio del 22 novembre: Rules e Hosting da `17632af`**: Indietro di Android, immagine del profilo (Standard e Avanzata, avatar
   astratti), blocco dell'app, importo massimo 999.999.999,99 € (Rules: importi fino a 99.999.999.999 centesimi, prezzi compatti fino a 143
   caratteri), barra dei menu, limiti dei campi, scansione più ordinata, riepilogo del passaggio più breve, vibrazione al cambio Spese/Abbonamenti.
@@ -5085,8 +5097,8 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (22 novembre):** tutto il codice fino a `1e5c615` è online su Hosting; Rules ultime quelle di `17632af` (importo massimo
-  999.999.999,99 €). Vedi «Stato corrente» e «Registro dei rilasci».
+- **Pubblicazione (22 novembre):** tutto il codice fino a `fa06adb` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+  lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
@@ -5097,7 +5109,8 @@ screen reader, concorrenza tra due dispositivi.
 
 1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
    poi la sera con `skipped_payments` (`1dbb396`), con gli esercenti (`f5411fb`), il 20 novembre con le 24 ID icona storiche
-   (`ad5aa73`), il 21 novembre con i template (`817a2f1`) e il 22 novembre con l'importo massimo 999.999.999,99 € (`17632af`). Da verificare ricaricando l'app: caricamento, sincronizzazione, pagina
+   (`ad5aa73`), il 21 novembre con i template (`817a2f1`) e il 22 novembre con l'importo massimo 999.999.999,99 € (`17632af`), i cambi di stato fino a 40 (`f57b1b9`), i limiti degli abbonamenti
+   (`f4691aa`), i piani dei fondi fino a 120 voci (`17ebce0`) e i prodotti per lista fino a 500 (`48361b9`). Da verificare ricaricando l'app: caricamento, sincronizzazione, pagina
    Templates, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
    serve autorizzazione. ID icona eliminati: chiuso (vedi «Problemi aperti»); resta facoltativa la verifica sui dati reali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
