@@ -6,7 +6,9 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `49a7c58` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+- **Produzione (progetto `nummo-6b6e2`).** **Hosting** da `a13e54c` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+  «Deploy complete!», bundle online `index-04eef827…` identico a `dist/` (SHA-256; per qualche secondo dopo il rilascio il CDN serviva
+  ancora l'HTML precedente). Rules invariate (quelle di `17632af`). Prima, **Hosting** da `49a7c58` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
   «Deploy complete!», bundle online `index-fe24bc41…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
   Prima, **Hosting** da `67f4a29` (template senza data) pubblicato su richiesta il 22 novembre (sera):
   «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256; la prima lettura subito dopo il rilascio dava ancora l'HTML
@@ -18,7 +20,7 @@ rilasci».
   (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
   Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
   per il 21–22 novembre, «Stato corrente precedente».
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato su Hosting. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
+- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`. Ultimo commit di codice `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato su Hosting. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
   (template senza data), `9929c8f`
   (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
   frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
@@ -42,7 +44,7 @@ rilasci».
 - **Ultima sessione (22 novembre, sera):** «Elimina tutte le spese», «Cambia modalità» nel colore principale, conteggi tolti dal passaggio
   dei dati, PIN del blocco in Standard (sezione dedicata qui sotto). `DataStore` cambiato (`removeAllExpenses`), Rules no. Committato in
   `9929c8f`, inviato e pubblicato su Hosting.
-- **Verifiche (22 novembre, ultime).** `npm run check` OK su `49a7c58` (typecheck, **549/549**, build demo).
+- **Verifiche (22 novembre, ultime).** `npm run check` OK su `a13e54c` (typecheck, **550/550**, build demo).
   `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
   servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
   virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
@@ -73,7 +75,7 @@ rilasci».
 
 - Su richiesta (screenshot): «Cambia modalità» di Archiviazione e backup pieno nel colore principale (`contained`, entrambe le modalità;
   «Scollega progetto» resta con contorno); tolta la nota «* Categorie, fondi, liste, template ed esercenti restano.» (e la traduzione).
-- **Verifica:** `npm run check` OK (vedi rilascio). Committato, inviato e pubblicato insieme alle sezioni precedenti non ancora committate.
+- **Verifica:** `npm run check` OK (vedi rilascio). Committato in `a13e54c`, inviato e pubblicato su Hosting.
 
 ## «Cambia modalità» largo come due pulsanti su desktop — 22 novembre 2026
 
@@ -81,13 +83,13 @@ rilasci».
   (`doubleWidth` in `components/SameWidth.tsx`; non si misura, quindi la larghezza comune resta quella di un'etichetta). In Avanzata, accanto a
   «Scollega progetto», ognuno resta largo uno. Smartphone invariato.
 - **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): «Cambia modalità» 281+476, sotto 281+233 e 524+233 (stessi bordi);
-  a 390 tutti 364. Avanzata non provata nel browser. Non committato, non pubblicato.
+  a 390 tutti 364. Avanzata non provata nel browser. Committato in `a13e54c`, inviato e pubblicato su Hosting.
 
 ## Impostazioni su desktop: «Dimentica la chiave», «Revoca il consenso» e «Ripristina predefiniti» della stessa larghezza — 22 novembre 2026
 
 - Su richiesta (screenshot): da medium i tre pulsanti hanno la stessa larghezza, quella dell'etichetta più lunga, senza occupare la riga
   (`SameWidthGroup` attorno a `SettingsPage`, `useSameWidth` nella scheda AI e in `ResetAllButton`). Smartphone invariato (metà riga e tutta la riga).
-- **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): 281..480, 490..689, 281..480 (199 ciascuno). Non committato, non pubblicato.
+- **Verifica:** `npm run check` OK. Chromium headless (Standard, 1280×900): 281..480, 490..689, 281..480 (199 ciascuno). Committato in `a13e54c`, inviato e pubblicato su Hosting.
 
 ## Dialoghi di eliminazione con backup: «Annulla» ed «Elimina» a metà riga su desktop — 22 novembre 2026
 
@@ -95,7 +97,7 @@ rilasci».
   occupano tutta la riga, a metà ciascuno, allineati a «Scarica backup (JSON)» (`half` in `DeleteDialog`, solo quando c'è contenuto extra:
   gli altri dialoghi di eliminazione restano a destra). Su smartphone invariati (impilati a tutta larghezza).
 - **Verifica:** `npm run check` OK. Chromium headless (Standard): a 1280×900 backup 465+350, Annulla 466+168, Elimina tutte 647+168; a 390×844
-  tutti ~308 impilati. Non committato, non pubblicato.
+  tutti ~308 impilati. Committato in `a13e54c`, inviato e pubblicato su Hosting.
 
 ## Categorie in uso non eliminabili — 22 novembre 2026
 
@@ -109,7 +111,7 @@ rilasci».
 - **Verifica:** `npm run check` OK (**550/550**). Chromium headless su `dist-demo` (Standard, 1280×900) dopo l'import di `nummo-utente-medio.json`:
   le dieci categorie «Medio · …» bloccate con i conteggi giusti (es. 53 spese; 8 spese e 2 abbonamenti; 5 abbonamenti), le cinque predefinite
   inutilizzate con il dialogo di sempre; «Tecnologia» eliminata davvero (15 → 14). Nessun errore JS. **Non provati:** Avanzata, smartphone,
-  la frase al singolare. Non committato, non pubblicato.
+  la frase al singolare. Committato in `a13e54c`, inviato e pubblicato su Hosting.
 
 ## «Ripristina le categorie predefinite», « | » negli abbonamenti, «Cambia modalità» con contorno — 22 novembre 2026
 
