@@ -59,8 +59,11 @@ rilasci».
   Dettagli nella sezione «App Android» qui sotto.
 - **Release dell'app Android (GitHub, su richiesta, 22 novembre):** `android-v0.3.1` (tag annotato su `fa06adb`, inviato) con
   `nummo-0.3.1.apk` (SHA-256 `a04f6f3d…18ea`, confermato da GitHub; certificato `00b1c85c…0fcf`) e il file `.sha256`; repository privato.
-  Versioni precedenti (0.1.0–0.3.0) senza release: i loro APK sono stati sovrascritti dalle build successive.
-- **Git.** `main` = `origin/main`, albero pulito, solo il ramo `main`, un tag (`android-v0.3.1`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
+  Poi, su richiesta, `android-v0.2.0` (su `0f340bf`, APK `6af4a0c8…9178`) e `android-v0.1.0` (su `759792c`, APK `06504315…c0f7`),
+  **ricompilate** in worktree temporanee (rimosse) con la stessa chiave e la `local.properties` attuale: stesso codice, non lo stesso file
+  degli APK installati allora (sovrascritti); pubblicate con `--latest=false` (la «Latest» resta la 0.3.1). Le note avvisano che Android
+  non installa una versione più vecchia sopra una più recente. Nessuna release per la 0.3.0 (superata dalla 0.3.1, stesso giorno).
+- **Git.** `main` = `origin/main`, solo il ramo `main`, tre tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.1`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
   inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
   pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
   sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
