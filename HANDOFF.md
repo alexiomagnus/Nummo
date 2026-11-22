@@ -44,7 +44,8 @@ rilasci».
   per il 21–22 novembre, «Stato corrente precedente».
 - **App Android 0.3.0 (22 novembre):** notifiche come notifiche locali dell'app, provate sull'emulatore Android 17; committata in
   `2b1e8fb`, Hosting pubblicato, release installata sul Pixel 8 via adb sopra la 0.2.0 (stessa chiave, `USE_EXACT_ALARM` concesso,
-  `POST_NOTIFICATIONS` da chiedere con «Attiva»). Da provare sul telefono. Sezione «App Android 0.3.0» qui sotto.
+  `POST_NOTIFICATIONS` da chiedere con «Attiva»). Sul Pixel 8 l'app di debug ha mostrato le tre notifiche all'orario esatto; da
+  provare la release a orario reale. Sezione «App Android 0.3.0» qui sotto.
 - **App Android 0.2.0 (22 novembre):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata in
   `nummo-6b6e2`. Committata in `0f340bf`, inviata, Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle
   online `index-9fe2b72e…` identico a `dist/`, SHA-256), Rules invariate; release 0.2.0 installata sul Pixel 8 via adb sopra la 0.1.0.
@@ -155,7 +156,14 @@ rilasci».
   installata), Avanzata nell'app con le notifiche. 
 - **Noto, non corretto (anche in `sw.js`):** «Il riepilogo dal 8 novembre…» invece di «dall'8» (anche «dall'1», «dall'11»).
 - Committata in `2b1e8fb` (non inviata); Hosting pubblicato su richiesta (bundle `index-4a671be6…`, identico a `dist/`); release 0.3.0
-  installata sul Pixel 8 con `adb install -r` sopra la 0.2.0. **Da provare sul telefono:** Notifiche → «Attiva notifiche di sistema»
+  installata sul Pixel 8 con `adb install -r` sopra la 0.2.0.
+- **Prova sul Pixel 8 (22 novembre, 18:29, su richiesta)** con l'app di **debug** (`app.nummo.android.debug`, dati propri, demo
+  `dist-demo` servita dal computer con `adb reverse tcp:8095`; la release non riceve comandi dal computer: DevTools della WebView solo in
+  debug, ricevitori non esportati, pulsanti di prova nascosti). `POST_NOTIFICATIONS` concesso con `pm grant` alla sola app di debug,
+  Standard scelta, «Attiva notifiche di sistema» → `active`; dal ponte tre promemoria a +10/+20/+30 s: backup, riepilogo (15–21 novembre)
+  e rinnovo (23 novembre) arrivati **all'orario esatto** (18:29:26, :36, :46, da `sent_*`), allarmi esatti `policy_permission`, nessun
+  errore nel logcat. Release e suoi dati non toccati. L'app di debug resta installata (prossimo backup il 29 novembre, 18:29): da
+  disinstallare su richiesta. **Da provare sul telefono:** Notifiche → «Attiva notifiche di sistema»
   (dialogo di Android), arrivo all'orario scelto dopo ore a schermo spento, in Non disturbare, tocco sulla notifica.
 
 ## App Android 0.2.0: Avanzata con l'accesso Google nativo — 22 novembre 2026
