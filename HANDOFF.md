@@ -162,8 +162,8 @@ rilasci».
   debug, ricevitori non esportati, pulsanti di prova nascosti). `POST_NOTIFICATIONS` concesso con `pm grant` alla sola app di debug,
   Standard scelta, «Attiva notifiche di sistema» → `active`; dal ponte tre promemoria a +10/+20/+30 s: backup, riepilogo (15–21 novembre)
   e rinnovo (23 novembre) arrivati **all'orario esatto** (18:29:26, :36, :46, da `sent_*`), allarmi esatti `policy_permission`, nessun
-  errore nel logcat. Release e suoi dati non toccati. L'app di debug resta installata (prossimo backup il 29 novembre, 18:29): da
-  disinstallare su richiesta. **Da provare sul telefono:** Notifiche → «Attiva notifiche di sistema»
+  errore nel logcat. Release e suoi dati non toccati. Poi, su richiesta, app di debug disinstallata, `adb reverse`/`forward`
+  tolti e server della demo fermato: sul Pixel resta solo la release 0.3.0. **Da provare sul telefono:** Notifiche → «Attiva notifiche di sistema»
   (dialogo di Android), arrivo all'orario scelto dopo ore a schermo spento, in Non disturbare, tocco sulla notifica.
 
 ## App Android 0.2.0: Avanzata con l'accesso Google nativo — 22 novembre 2026
