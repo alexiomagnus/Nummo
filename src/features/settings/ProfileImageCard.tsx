@@ -93,7 +93,7 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
   const option = (key: string, label: string, selected: boolean, shown: ProfileImage, onPress: () => void, photo: string | null = null) => (
     <StateLayerPressable key={key} layerColor={colors.onSurface} radius={radius.pill} accessibilityRole="radio" aria-checked={selected}
       accessibilityLabel={`${label}${selected ? t(", selezionata") : ''}`} {...({ title: label } as object)} onPress={onPress}
-      style={[styles.option, fillTransition, { borderColor: selected ? colors.primary : 'transparent' }]}>
+      style={[styles.option, styles.avatarOption, fillTransition, { borderColor: selected ? colors.onSurface : 'transparent' }]}>
       <ProfileAvatar image={shown} size={accountAvatarSize} googlePhoto={photo} />
     </StateLayerPressable>
   );
@@ -149,6 +149,9 @@ const styles = StyleSheet.create({
   ring: { borderRadius: radius.pill, borderWidth: 3, padding: 3, alignSelf: 'flex-start' },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   option: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: radius.pill },
+  // The selection of an avatar looks like that of «Colore dell'anello» (user's request, 22 November): the same onSurface ring
+  // (white on dark, dark on light) with the same 6 between ring and picture: 36 + 2 × 6 + 2 × 2 = 52.
+  avatarOption: { width: accountAvatarSize + 2 * 6 + 2 * 2, height: accountAvatarSize + 2 * 6 + 2 * 2 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   ringChoice: { gap: spacing.sm },
   swatch: { width: 32, height: 32, borderRadius: radius.pill },

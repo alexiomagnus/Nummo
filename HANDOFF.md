@@ -81,6 +81,29 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Indietro che usciva dopo uno o due passi, contorno di «Colore» come l'anello — 22 novembre 2026
+
+- **Indietro su Android (segnalazione: «mi porta indietro di uno/due passaggi e poi mi fa uscire dall'app»).** Causa: l'intervento di
+  Chrome contro la manipolazione della cronologia. Dopo ogni Indietro `backStack.ts` rimetteva la guardia con `pushState`, senza un tocco
+  dell'utente. Dopo un back/forward Chrome non conta più l'attivazione precedente (crbug.com/1248529), e una voce aggiunta senza attivazione
+  rende saltabili **tutte** le voci del documento: al successivo Indietro di sistema Chrome saltava l'intera app e la chiudeva. Bastava un
+  tocco in mezzo per «riparare», da qui l'«uno/due passaggi». Le prove headless non lo vedevano perché `Page.navigateToHistoryEntry` non
+  applica l'intervento.
+  Correzione: dopo un Indietro la guardia è ancora la voce in avanti, quindi si ritorna su di essa con `history.forward()`, che non aggiunge
+  voci e non è soggetto all'intervento. `pushState` resta solo quando avanti non c'è la guardia (primo livello aperto da un tocco). Due
+  ripieghi: se avanti c'è un'altra voce (la guida) si torna indietro e si aggiunge la guardia; se avanti non c'è nulla, `pushState` dopo
+  400 ms (`forwardTimeout`). La storia finta di `tests/backStack.test.ts` ora modella l'intervento (`intervention`, `tap()`): i due test
+  nuovi falliscono sul codice precedente e passano col nuovo, più un test sul ripiego.
+- **Selezione degli avatar come quella di «Colore dell'anello»** (su richiesta, con screenshot; una prima lettura aveva cambiato per errore
+  la scheda «Colore», annullato): nella scheda «Immagine del profilo» l'avatar scelto ha l'anello `onSurface` da 2 (bianco nel tema scuro,
+  scuro nel chiaro) invece di `primary`, con lo stesso spazio di 6 tra anello e immagine dei campioni (cerchio da 52 attorno all'avatar
+  da 36, `avatarOption`).
+- **Verifica:** `npm run check` OK (**560/560**). Chromium headless su `dist-demo` (Standard, 390×844): Spese → Analisi → Fondi → Liste,
+  poi Indietro ×5: Fondi, Analisi, Spese, Nuova spesa, uscita; la cronologia resta di 3 voci (guardia ripresa con `forward()`, nessun
+  nuovo `pushState`). Avatar scelto: anello bianco a 6 dall'avatar nel tema scuro, scuro nel chiaro, come i campioni dell'anello.
+  Nessun errore JS. **Da provare sul telefono:** Indietro ripetuto senza toccare lo schermo (app installata e Chrome), gesto Indietro.
+  Non committato.
+
 ## Pagina «Esercenti»: rinomina, unione, eliminazione — 22 novembre 2026
 
 - Su richiesta (scelte dell'utente: 1a = eliminare un esercente usato lo toglie dalle spese, 2 = rinominare verso un nome esistente unisce
