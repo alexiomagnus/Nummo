@@ -475,7 +475,9 @@ e con contenuto sovrapposto), quindi è dedotta: campo di testo attivo e viewpor
 osservato alla stessa larghezza (`observeVirtualKeyboard`). Copre sia `interactive-widget=resizes-content` (Chrome
 Android) sia il solo visual viewport (iOS), ignora pinch zoom e barre del browser. Dal 9 novembre il tocco su un campo
 scrivibile anticipa la scomparsa della barra prima dei resize; se la tastiera non viene confermata entro 800 ms,
-la barra torna visibile. Dopo la conferma resta nascosta anche al blur finché il viewport non recupera almeno il 95%
+la barra torna visibile. Dal 22 novembre l'anticipo parte dal focus dato da un tocco (rilascio sul campo, poi focus entro 500 ms) o dal
+rilascio su un campo già attivo, mai dalla pressione: nascondere la barra a `pointerdown` e rimostrarla a `pointercancel` la faceva
+lampeggiare (circa 85 ms) a ogni scorrimento iniziato su un campo, cioè quasi ogni scorrimento di Nuova spesa. Dopo la conferma resta nascosta anche al blur finché il viewport non recupera almeno il 95%
 dell'altezza, evitando ricomparse durante la chiusura. Il solo focus da tastiera fisica non anticipa l'apertura.
 Durante la digitazione la pillola mobile
 si nasconde; dal 9 novembre le azioni di Nuova spesa restano sempre nel flusso (vedi decisione sopra): nel poco spazio
@@ -1015,7 +1017,7 @@ utilizzabile senza fondi e senza budget; con fondi esistenti l'inserimento di un
 (ogni fondo e «Senza fondo»; per i mesi futuri la previsione). Le Rules (`generalBudget`) impongono documento unico, campi esatti, formato e revisione;
 l'ordine dei mesi è del decoder. Scritture in transazione sulla revisione vista, con listener separato in `useRemoteFunds`: un suo errore non nasconde i fondi.
 **Backup v6** (non ancora rilasciato, nessun nuovo numero): `general_budget` solo se presente; unione = riempie un budget vuoto, mai sovrascrive
-(un budget diverso blocca l'importazione), sostituzione = uguaglia il file (senza `general_budget` lo azzera, con copia automatica precedente).
+(un budget diverso blocca l'importazione), sostituzione = uguaglia il file (senza `general_budget` lo azzera, con copia automatica precedente: superata il 22 novembre, ora il backup è solo proposto, vedi «Backup proposto, non automatico, prima di eliminare»).
 
 **Scelte non fatte.** Non si rimuovono ricariche, movimenti, trasferimenti o eccezioni dal modello né dal backup: sarebbe una migrazione
 distruttiva di dati reali. Una futura dismissione richiede una decisione esplicita. Il budget generale non ha eccezioni mensili.
@@ -1335,3 +1337,15 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   Il dialogo di conferma chiede «Vuoi prima scaricare un backup dei dati attuali?» con «Scarica backup (JSON)»: lo stesso backup completo di
   Archiviazione e backup (`nummo-backup.json`), che conta come backup per il promemoria. La scelta è dell'utente: eliminare senza backup è
   possibile. Le note precedenti su una «copia automatica» prima della sostituzione sono superate.
+
+## Cambi di stato degli abbonamenti fino a 40 — 22 novembre 2026
+
+- Su richiesta (un abbonamento reale bloccato da «Troppe variazioni di stato…»): `maxStatusChanges` da 8 a **40** (circa 20 cicli
+  pausa/riattiva). Il limite di 8 veniva dai controlli per posizione delle Rules; da quando `status_changes` è una stringa compatta
+  validata da una sola regex il numero di voci non pesa sul budget di espressioni: Rules `size() <= 839` (40 × «YYYY-MM-DD:cancelled»
+  + 39 separatori) e `{0,39}`. Caso peggiore rimisurato in emulatore (8 prezzi, 40 stati di lunghezza massima, prova, 4 cambi di frequenza,
+  60 pagamenti eliminati, fondo, esercente): accettato. Le note precedenti su «8 stati» descrivono il limite di allora.
+- Scartati: togliere i cambi più vecchi (decidono quali pagamenti passati contano), trasformare le pause in `skipped_payments` (perde la
+  pausa, limite 60). Backup invariato (v11): un client precedente rifiuterebbe una serie con più di 8 cambi, come ogni dato più recente.
+- Messaggio separato quando la data scelta precede l'ultimo cambio (`statusChangeProblem`), prima mostrato come «troppe variazioni».
+- Rules da pubblicare con autorizzazione; chi usa il proprio Firebase deve ricopiarle.

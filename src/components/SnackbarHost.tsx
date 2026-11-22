@@ -7,8 +7,9 @@ type Notify = (message: string) => void;
 const SnackbarContext = createContext<Notify>(() => {});
 export const useSnackbar = (): Notify => useContext(SnackbarContext);
 
-// Short messages: 3 s (5 s felt too long, user's request of 17 November); «Chiudi» dismisses earlier.
-const snackbarDuration = 3000;
+// 5 s (user's request, 22 November: 3 s since 17 November, then 4 s the same day; still within the 4–10 s of Material 3);
+// «Chiudi» dismisses earlier.
+const snackbarDuration = 5000;
 
 // Transient notifications (M3 snackbar). `bottomOffset` keeps it above the navigation bar.
 export function SnackbarProvider({ bottomOffset, onVisibleChange, children }: {

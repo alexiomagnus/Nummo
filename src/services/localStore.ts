@@ -15,7 +15,7 @@ import { parseFundData, parseMovementData, type BudgetChange, type Fund, type Fu
 import { todayInRome } from '../domain/policy.ts';
 import { itemNameError, listNameError, normalizeListText, parseListData, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 import { trialTimingError } from '../domain/trial.ts';
-import { parseMerchant, type Merchant } from '../domain/merchant.ts';
+import { parseMerchant, renamedMerchant, type Merchant } from '../domain/merchant.ts';
 import { parseTemplateData, templateFields, type TemplateRecord } from '../domain/template.ts';
 import { checkNewMerchant, invalidArchive, listRecords, type DataStore } from './dataStore.ts';
 import type { LocalDatabase, LocalRow, LocalStoreName, LocalTx } from './localDatabase.ts';
@@ -137,6 +137,19 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
     if (!created) throw new Error('L’esercente scelto non esiste più.');
     tx.put('merchants', { id: created.id, name: created.name });
   }
+  // Every expense pointing at merchant `from` points at `to` (null: no merchant); returns how many changed.
+  async function moveMerchant(tx: LocalTx, from: string, to: string | null) {
+    const time = now();
+    let moved = 0;
+    for (const row of await tx.getAll('expenses')) {
+      if (row.merchant_id !== from) continue;
+      const next: LocalRow = { ...row, revision: (row.revision as number) + 1, updated_at: time };
+      if (to) next.merchant_id = to; else delete next.merchant_id;
+      tx.put('expenses', next);
+      moved++;
+    }
+    return moved;
+  }
   // The saved expense at the revision the editor saw, or a conflict.
   async function currentExpense(tx: LocalTx, previous: SyncedExpense) {
     const row = await tx.get('expenses', previous.id);
@@ -205,6 +218,26 @@ export function createLocalStore(db: LocalDatabase, channel: ChangeChannel | nul
         const list = previous.list_id ? await tx.get('lists', previous.list_id) : undefined;
         tx.delete('expenses', previous.id);
         if (list && list.expense_id === previous.id) tx.put('lists', { ...list, expense_id: null, updated_at: now() });
+      });
+    },
+    // Rename/removal of a merchant (22 November): one transaction, the expenses and both merchant records together.
+    async renameMerchant(merchant, name) {
+      const target = renamedMerchant(name);
+      if (typeof target === 'string') throw new Error(target);
+      return commit(['expenses', 'merchants'], async (tx) => {
+        if (!(await tx.get('merchants', merchant.id))) throw conflict();
+        tx.put('merchants', { id: target.id, name: target.name });
+        if (target.id === merchant.id) return 0;
+        const moved = await moveMerchant(tx, merchant.id, target.id);
+        tx.delete('merchants', merchant.id);
+        return moved;
+      });
+    },
+    async removeMerchant(merchant) {
+      return commit(['expenses', 'merchants'], async (tx) => {
+        const moved = await moveMerchant(tx, merchant.id, null);
+        tx.delete('merchants', merchant.id);
+        return moved;
       });
     },
     // One transaction: all of them or none.

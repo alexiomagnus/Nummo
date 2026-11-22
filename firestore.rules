@@ -88,13 +88,14 @@ service cloud.firestore {
         && (count < 8 || priceChange(l[7]));
     }
     // Subscription status history (mirrors src/domain/subscription.ts), stored as ONE string
-    // "YYYY-MM-DD:status;…" (1..8 entries): a single regex keeps it within the 1000-expression budget, which
-    // eight price changes already nearly fill (a list of maps cost more per entry than a price change).
+    // "YYYY-MM-DD:status;…" (1..40 entries; 8 until 22 November): a single regex keeps it within the 1000-expression
+    // budget, which eight price changes already nearly fill, whatever the number of entries (a list of maps cost more per
+    // entry than a price change). 839 = 40 × «YYYY-MM-DD:cancelled» + 39 separators.
     // Optional: absent on every record that never changed status, so writes valid under older Rules stay
     // valid. Only for series. Increasing dates and "not in the future" are checked by the client decoder.
     function statusChanges(d) {
-      return !('status_changes' in d) || (d.recurrence != null && d.status_changes is string && d.status_changes.size() <= 167
-        && d.status_changes.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)(;[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)){0,7}'));
+      return !('status_changes' in d) || (d.recurrence != null && d.status_changes is string && d.status_changes.size() <= 839
+        && d.status_changes.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)(;[0-9]{4}-[0-9]{2}-[0-9]{2}:(active|paused|cancelled)){0,39}'));
     }
     // Payments of a series removed by hand (mirrors src/domain/skippedPayments.ts): ONE string of occurrence numbers
     // "3,7,12" (1..60, 0..9999 each). Optional, only for series; increasing order is checked by the client decoder.

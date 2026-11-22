@@ -11,6 +11,12 @@ import { checkOwnerAccess } from '../../src/services/ownerAccess.ts';
 import { makeBackup, parseBackup } from '../../src/domain/backup.ts';
 import { todayInRome } from '../../src/domain/policy.ts';
 import { dataOf } from '../../src/domain/expense.ts';
+import { maxStatusChanges } from '../../src/domain/subscription.ts';
+
+// Status history of `count` entries of the longest kind («YYYY-MM-DD:cancelled»), on increasing days: with 40, exactly the
+// 839 characters the Rules accept (size and regex both at their limit).
+const longestStatuses = (count: number) => Array.from({ length: count }, (_, i) =>
+  `${new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10)}:cancelled`).join(';');
 await import('../../scripts/seed-demo.ts');
 const projectId = 'demo-nummo';
 const suffix = randomUUID().slice(0, 8);
@@ -167,7 +173,7 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       // The worst supported combination remains writable with a trial as well.
       const worstId = randomUUID();
       const worst = { ...raw, expense_date: '2026-01-01', first_payment_date: '2099-12-09', fund_id: randomUUID(),
-        status_changes: Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';'),
+        status_changes: longestStatuses(maxStatusChanges),
         price_changes: encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false }))) };
       t.diagnostic('trial budget: create');
       await setDoc(ref(worstId), worst);
@@ -292,10 +298,10 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       assert.equal(afterTrial.first_payment_date, '2099-12-09');
       assert.equal(afterTrial.schema_version, 3);
       await denied(updateDoc(ref(expense_id), { first_payment_date: '2099-12-09', updated_at: serverTimestamp(), revision: saved.revision + 1 }));
-      // The worst supported combination (8 prices, 8 statuses, fund, trial, 4 switches) stays writable.
+      // The worst supported combination (8 prices, 40 statuses of the longest kind, fund, trial, 4 switches) stays writable.
       const worstId = randomUUID();
       const worst = { ...raw, expense_date: '2026-01-01', first_payment_date: '2099-12-09', fund_id: randomUUID(),
-        status_changes: Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';'),
+        status_changes: longestStatuses(maxStatusChanges),
         price_changes: encodeTrialPrices(Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false }))),
         calendar_changes: '996:2099-12-31:w;997:2099-12-31:m;998:2099-12-31:y;999:2099-12-31:w',
         // Plus the longest list of removed payments (60 numbers of 4 digits) and the longest merchant ID.
@@ -314,16 +320,16 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const { fund_id: _fund, list_id: _list, list_items: _items, ...storedSeries } = series;
       const valid = { ...storedSeries, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       // Stored form: one string "date:status;…" (see subscription.ts / firestore.rules).
-      const eight = Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';');
+      const longest = longestStatuses(maxStatusChanges);
       for (const patch of [{ status_changes: '2026-03-10:stopped' }, { status_changes: '10/03/2026:paused' }, { status_changes: '' },
-        { status_changes: '2026-03-10:paused;' }, { status_changes: [{ date: '2026-03-10', status: 'paused' }] }, { status_changes: `${eight};2026-09-15:cancelled` },
+        { status_changes: '2026-03-10:paused;' }, { status_changes: [{ date: '2026-03-10', status: 'paused' }] }, { status_changes: `${longest};2099-12-31:paused` }, { status_changes: longestStatuses(maxStatusChanges + 1) },
         { recurrence: null, price_changes: [], status_changes: '2026-03-10:paused' }]) {
         await denied(setDoc(ref(randomUUID()), { ...valid, ...patch }));
       }
-      // Worst case for the expression budget: eight statuses together with eight price changes.
+      // Worst case for the expression budget: 40 statuses together with eight price changes.
       const { status_changes: _, ...legacy } = valid;
       const legacyWorstId = randomUUID();
-      await setDoc(ref(legacyWorstId), { ...legacy, fund_id: randomUUID(), status_changes: eight, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
+      await setDoc(ref(legacyWorstId), { ...legacy, fund_id: randomUUID(), status_changes: longest, price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
       await updateDoc(ref(legacyWorstId), { description: 'TEST budget legacy', updated_at: serverTimestamp(), revision: 2 });
       await deleteDoc(ref(legacyWorstId));
       await setDoc(ref(randomUUID()), legacy);
@@ -474,13 +480,13 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
         { date: '2099-01-01' }, { note: ' x' }, { extra: true }]) {
         await denied(setDoc(movementRef(randomUUID()), { ...rawMovement, ...patch }));
       }
-      // Expenses: fund_id optional (absent = no fund), uuid when present; worst case 8 prices + 8 statuses + fund_id fits the Rules budget.
+      // Expenses: fund_id optional (absent = no fund), uuid when present; worst case 8 prices + 40 statuses + fund_id fits the Rules budget.
       const { expense_id: _e, status_changes: _s, fund_id: _f, list_id: _l, list_items: _li, ...base } = expense();
       const valid = { ...base, created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 };
       await denied(setDoc(ref(randomUUID()), { ...valid, fund_id: 'x' }));
       await denied(setDoc(ref(randomUUID()), { ...valid, fund_id: null }));
-      const eight = Array.from({ length: 8 }, (_, i) => `2026-0${i + 1}-15:${i % 2 ? 'active' : 'paused'}`).join(';');
-      await setDoc(ref(randomUUID()), { ...valid, recurrence: 'monthly', expense_date: '2026-01-05', fund_id: id, status_changes: eight,
+      const longest = longestStatuses(maxStatusChanges);
+      await setDoc(ref(randomUUID()), { ...valid, recurrence: 'monthly', expense_date: '2026-01-05', fund_id: id, status_changes: longest,
         price_changes: Array.from({ length: 8 }, (_, i) => ({ index: i + 1, amount_minor: 100, once: false })) });
       const withFund = { ...expense(), fund_id: id };
       await owner.store.createExpense(withFund);
@@ -663,6 +669,33 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       const backup = parseBackup(JSON.parse(makeBackup(await owner.store.exportSnapshot())));
       assert.ok(backup.merchants!.some((m) => m.id === id && m.name === name));
       for (const e of (await owner.store.exportSnapshot()).expenses.filter((x) => ([first.expense_id, again.expense_id, plainRequest.expense_id] as string[]).includes(x.id))) await owner.store.removeExpense(e);
+    });
+    await t.test('esercenti: rinomina, unione e eliminazione dalla pagina Esercenti, spese aggiornate con le revisioni', async () => {
+      const merchantRef = (id: string) => doc(owner.db, 'users', uid, 'merchants', id);
+      const suffix = randomUUID().slice(0, 8);
+      const typo = { id: `m-eselunga ${suffix}`, name: `Eselunga ${suffix}` }, right = { id: `m-esselunga ${suffix}`, name: `Esselunga ${suffix}` };
+      const a = { ...expense(), merchant_id: typo.id }, b = { ...expense(), merchant_id: typo.id }, c = { ...expense(), merchant_id: right.id };
+      await owner.store.createExpense(a, typo);
+      await owner.store.createExpense(b);
+      await owner.store.createExpense(c, right);
+      const revisionOf = async (id: string) => (await getDocFromServer(ref(id))).data()!.revision as number;
+      // Same key: only the name.
+      assert.equal(await owner.store.renameMerchant(typo, `eselunga ${suffix}`), 0);
+      assert.equal((await getDocFromServer(merchantRef(typo.id))).data()!.name, `eselunga ${suffix}`);
+      // Into an existing merchant: the expenses move with a new revision, the old document goes.
+      const before = await revisionOf(a.expense_id);
+      assert.equal(await owner.store.renameMerchant(typo, `ESSELUNGA ${suffix}`), 2);
+      assert.equal((await getDocFromServer(ref(a.expense_id))).data()!.merchant_id, right.id);
+      assert.equal(await revisionOf(a.expense_id), before + 1);
+      assert.ok(!(await getDocFromServer(merchantRef(typo.id))).exists());
+      assert.equal((await getDocFromServer(merchantRef(right.id))).data()!.name, `ESSELUNGA ${suffix}`);
+      // Removal: off every expense (field removed), expenses kept, document deleted.
+      assert.equal(await owner.store.removeMerchant({ id: right.id, name: `ESSELUNGA ${suffix}` }), 3);
+      for (const id of [a.expense_id, b.expense_id, c.expense_id]) assert.ok(!('merchant_id' in (await getDocFromServer(ref(id))).data()!));
+      assert.ok(!(await getDocFromServer(merchantRef(right.id))).exists());
+      // Another account cannot touch them.
+      await denied(deleteDoc(doc(intruder.db, 'users', uid, 'merchants', right.id)));
+      for (const e of (await owner.store.exportSnapshot()).expenses.filter((x) => ([a.expense_id, b.expense_id, c.expense_id] as string[]).includes(x.id))) await owner.store.removeExpense(e);
     });
     await t.test('template: regole, scritture dirette con esercente, documento senza esercente, modifica che conserva la creazione, eliminazione e backup', async () => {
       const templateRef = (id: string) => doc(owner.db, 'users', uid, 'templates', id);

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { profileImageKeyFor, maxPhotoLength, noProfileImage, parseProfileImage, serializeProfileImage } from '../src/features/settings/profileImage.ts';
+import { profileImageKeyFor, maxPhotoLength, noProfileImage, parseProfileImage, parseProfileRing, profileRingColor, profileRingKeyFor, profileRings, serializeProfileImage, serializeProfileRing } from '../src/features/settings/profileImage.ts';
+import { buildScheme } from '../src/theme/palette.ts';
 import { profileAvatarHue, profileAvatarLabels, profileAvatarRoles, profileAvatars, profileAvatarSvg } from '../src/features/settings/profileAvatars.ts';
 
 const photo = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwc=';
@@ -78,4 +79,17 @@ test('immagine del profilo: una chiave per la Standard e una per account in Avan
   assert.equal(profileImageKeyFor('local'), 'nummo.profile.v1');
   assert.equal(profileImageKeyFor('uid-A'), 'nummo.profile.v1.uid-A');
   assert.notEqual(profileImageKeyFor('uid-A'), profileImageKeyFor('uid-B'));
+});
+
+test('anello dell’Avanzata: colore dell’app di base, sei colori, valori estranei ignorati', () => {
+  assert.equal(profileRingKeyFor('uid-1'), 'nummo.profileRing.v1.uid-1');
+  assert.deepEqual(profileRings, ['app', 'mint', 'blue', 'violet', 'rose', 'amber', 'graphite']);
+  assert.equal(parseProfileRing(null), 'app');
+  assert.equal(parseProfileRing('rose'), 'rose');
+  for (const raw of ['', 'red', '"rose"', '#ff0000', 'APP']) assert.equal(parseProfileRing(raw), 'app', raw);
+  assert.equal(serializeProfileRing('app'), null, 'il valore predefinito non si salva');
+  assert.equal(serializeProfileRing('blue'), 'blue');
+  assert.equal(profileRingColor('app', '#123456', true), '#123456', 'segue il colore principale dell’app');
+  assert.equal(profileRingColor('rose', '#123456', true), buildScheme('rose', 'mono', true).primary);
+  assert.notEqual(profileRingColor('rose', '#123456', false), profileRingColor('rose', '#123456', true), 'tema chiaro e scuro');
 });

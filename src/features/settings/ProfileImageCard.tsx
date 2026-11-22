@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
-import { HelperText, useTheme } from 'react-native-paper';
+import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
@@ -10,8 +10,9 @@ import { fillTransition } from '../../theme/motion';
 import { motion, radius, spacing } from '../../theme/tokens';
 import { prepareAvatar } from '../receipts/image';
 import { profileAvatarLabels, profileAvatars, profileAvatarSvg } from './profileAvatars';
-import { maxPhotoLength, noProfileImage, type ProfileImage } from './profileImage';
-import { saveProfileImage, useProfileImage } from './useProfileImage';
+import { accentLabels } from '../../theme/palette';
+import { maxPhotoLength, noProfileImage, profileRingColor, profileRings, type ProfileImage, type ProfileRing } from './profileImage';
+import { saveProfileImage, saveProfileRing, useProfileImage, useProfileRing } from './useProfileImage';
 
 // Size of the account button's picture, and of every choice in the card, so that a choice looks exactly like the button
 // (user's report, 22 November); the preview is twice as large.
@@ -69,11 +70,16 @@ export function StandardAvatar() {
 export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
   const ring = scope !== localProfileScope;
   const { t } = useI18n();
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const image = useProfileImage(scope);
+  const ringChoice = useProfileRing(scope);
+  const ringColor = profileRingColor(ringChoice, colors.primary, dark);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const chooseRing = (next: ProfileRing) => {
+    setError(saveProfileRing(next, scope) ? null : 'Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.');
+  };
   const choose = (next: ProfileImage) => {
     setError(saveProfileImage(next, scope) ? null : 'Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.');
   };
@@ -94,7 +100,7 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
   return (
     <Card title={t("Immagine del profilo")} style={styles.card}>
       <View style={styles.current}>
-        <View style={[styles.ring, { borderColor: ring ? colors.primary : 'transparent' }]}>
+        <View style={[styles.ring, fillTransition, { borderColor: ring ? ringColor : 'transparent' }]}>
           <ProfileAvatar image={image} size={accountAvatarSize * 2} googlePhoto={googlePhoto} />
         </View>
       </View>
@@ -104,6 +110,22 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
         {profileAvatars.map((avatar) => option(avatar, t("Avatar {p0}", { p0: t(profileAvatarLabels[avatar]) }),
           image.kind === 'avatar' && image.avatar === avatar, { kind: 'avatar', avatar }, () => choose({ kind: 'avatar', avatar })))}
       </View>
+      {/* Advanced mode only: the colour of the ring (user's request, 22 November). The app's colour first (default), then the
+          six accents of «Colore»; each swatch shows the colour the ring takes in the current scheme. */}
+      {ring && <View style={styles.ringChoice}>
+        <Text variant="titleSmall" nativeID="profile-ring-label">{t("Colore dell'anello")}</Text>
+        <View style={styles.options} role="radiogroup" aria-labelledby="profile-ring-label">
+          {profileRings.map((choice) => {
+            const selected = choice === ringChoice;
+            const label = choice === 'app' ? t("Colore dell'app") : t(accentLabels[choice]);
+            return <StateLayerPressable key={choice} layerColor={colors.onSurface} radius={radius.pill} accessibilityRole="radio" aria-checked={selected}
+              accessibilityLabel={`${label}${selected ? t(", selezionato") : ''}`} {...({ title: label } as object)} onPress={() => chooseRing(choice)}
+              style={[styles.option, fillTransition, { borderColor: selected ? colors.onSurface : 'transparent' }]}>
+              <View style={[styles.swatch, { backgroundColor: profileRingColor(choice, colors.primary, dark) }]} />
+            </StateLayerPressable>;
+          })}
+        </View>
+      </View>}
       <View style={styles.actions}>
         <Button mode="outlined" loading={busy} disabled={busy} onPress={() => input.current?.click()}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.image} size={size} color={color} />}>
@@ -128,5 +150,7 @@ const styles = StyleSheet.create({
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   option: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: radius.pill },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  ringChoice: { gap: spacing.sm },
+  swatch: { width: 32, height: 32, borderRadius: radius.pill },
   helper: { paddingHorizontal: 0 },
 });

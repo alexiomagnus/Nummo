@@ -1,4 +1,5 @@
 import { profileAvatars, type ProfileAvatarId } from './profileAvatars.ts';
+import { accents, buildScheme, type Accent } from '../../theme/palette.ts';
 
 // Picture of the account button: nothing (Standard: the person glyph; Advanced: the Google photo, or the person glyph
 // when there is none), one of the preset avatars, or a photo chosen by the user. Presentation only, kept in this browser
@@ -37,3 +38,24 @@ export function parseProfileImage(raw: string | null): ProfileImage {
 }
 
 export const serializeProfileImage = (image: ProfileImage): string | null => image.kind === 'none' ? null : JSON.stringify(image);
+
+// Colour of the ring around the account picture, Advanced mode only (the ring marks it; user's request, 22 November):
+// the app's main colour (default, it follows «Colore») or the main colour of one of the six accents of «Colore», in the
+// current light or dark scheme (contrast already tested there). One per account, kept in this browser under
+// `nummo.profileRing.v1.<uid>` like the picture: never in the archive or a backup. Validated at every read.
+export const profileRingKey = 'nummo.profileRing.v1';
+export const profileRingKeyFor = (scope: string): string => `${profileRingKey}.${scope}`;
+export type ProfileRing = 'app' | Accent;
+export const defaultProfileRing: ProfileRing = 'app';
+export const profileRings: readonly ProfileRing[] = ['app', ...accents];
+
+export function parseProfileRing(raw: string | null): ProfileRing {
+  return raw !== null && (profileRings as readonly string[]).includes(raw) ? raw as ProfileRing : defaultProfileRing;
+}
+
+export const serializeProfileRing = (ring: ProfileRing): string | null => ring === defaultProfileRing ? null : ring;
+
+// `appColor`: the current main colour of the app (`colors.primary`).
+export function profileRingColor(ring: ProfileRing, appColor: string, dark: boolean): string {
+  return ring === 'app' ? appColor : buildScheme(ring, 'mono', dark).primary;
+}

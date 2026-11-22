@@ -1,6 +1,6 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState, type ReactNode } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions, type LayoutChangeEvent, type LayoutRectangle } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding, regularIconPadding } from '../../components/Button';
 import { ListRow, listRowStyles } from '../../components/ListRow';
@@ -148,8 +148,18 @@ function SubscriptionRow({ summary, category, fund, merchant, open, compact, can
     : since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
   // The payment history opens in a dialog (it can be long, and a payment can be removed there).
   // Phones: on its own row below the actions, on the right; from medium: far left of the actions row.
+  // Phones: exactly as wide as two actions (user's request, 22 November). On one row, the last two (status + Modifica),
+  // aligned with them: measured, because the three actions grow from different label widths. When the actions wrap onto
+  // two rows (long labels, narrow screens: Modifica alone below), the first row holds two actions across the whole width,
+  // so the history takes the whole width too. Until measured, its own width.
+  const [statusBox, setStatusBox] = useState<LayoutRectangle | null>(null);
+  const [editBox, setEditBox] = useState<LayoutRectangle | null>(null);
+  const measure = (set: (box: LayoutRectangle) => void) => (event: LayoutChangeEvent) => set(event.nativeEvent.layout);
+  const measured = compact && statusBox && editBox;
+  const oneRow = measured && Math.abs(statusBox.y - editBox.y) < 1;
+  const historyStyle = !measured ? undefined : oneRow ? { width: editBox.x + editBox.width - statusBox.x } : styles.historyWide;
   const history = (
-    <Button mode="contained-tonal" aria-haspopup="dialog" onPress={onHistory}
+    <Button mode="contained-tonal" aria-haspopup="dialog" onPress={onHistory} style={historyStyle}
       accessibilityLabel={t("Storico dei pagamenti di {p0}, {p1}", { p0: entry.description, p1: payments.length })}
       icon={({ size, color }) => <SvgIcon shape={iconShapes.list} size={size} color={color} />}>
       {t("Storico dei pagamenti ({p0})", { p0: payments.length })}
@@ -187,21 +197,21 @@ function SubscriptionRow({ summary, category, fund, merchant, open, compact, can
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
               onPress={() => onChange('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
             {/* Pause/resume in the middle, between cancel and edit. Phones: short visible labels so the three actions fit one row; the accessible name stays the full action. */}
-            {status === 'active' && <Button compact={compact} mode="outlined" style={compact && [styles.statusAction, styles.fill]} contentStyle={pausePad?.content} labelStyle={pausePad?.label} disabled={!canChange || working} loading={working}
+            {status === 'active' && <Button onLayout={compact ? measure(setStatusBox) : undefined} compact={compact} mode="outlined" style={compact && [styles.statusAction, styles.fill]} contentStyle={pausePad?.content} labelStyle={pausePad?.label} disabled={!canChange || working} loading={working}
               accessibilityLabel={t("Metti in pausa")}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
               onPress={() => onChange('paused')}>{compact ? t("Pausa") : t("Metti in pausa")}</Button>}
-            {status !== 'active' && <Button compact={compact} mode="contained-tonal" style={compact && [styles.statusAction, styles.fill]} contentStyle={iconPad?.content} labelStyle={iconPad?.label} disabled={!canChange || working} loading={working}
+            {status !== 'active' && <Button onLayout={compact ? measure(setStatusBox) : undefined} compact={compact} mode="contained-tonal" style={compact && [styles.statusAction, styles.fill]} contentStyle={iconPad?.content} labelStyle={iconPad?.label} disabled={!canChange || working} loading={working}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
               onPress={() => onChange('active')}>{t("Riattiva")}</Button>}
-            <Button compact={compact} mode="outlined" style={compact && [narrow && styles.narrowEdit, styles.fill]}
+            <Button onLayout={compact ? measure(setEditBox) : undefined} compact={compact} mode="outlined" style={compact && [narrow && styles.narrowEdit, styles.fill]}
               contentStyle={narrow ? undefined : iconPad?.content} labelStyle={narrow ? textPad : iconPad?.label} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })}
               icon={narrow ? undefined : ({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} onPress={onEdit}>{t("Modifica")}</Button>
           </View>
           {!canChange && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
             {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}
           </Text>}
-          {compact && <View style={styles.end}>{history}</View>}
+          {compact && <View style={[styles.end, measured && !oneRow && styles.stretch]}>{history}</View>}
         </View>}
       </ListRow>
     </View>
@@ -240,5 +250,7 @@ const styles = StyleSheet.create({
   statusAction: { minWidth: 98 },
   textOnlyLabel: { marginHorizontal: spacing.md },
   end: { alignSelf: 'flex-end' },
+  historyWide: { width: '100%' },
+  stretch: { alignSelf: 'stretch' },
   historySlot: { marginRight: 'auto' },
 });

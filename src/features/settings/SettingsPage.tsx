@@ -25,11 +25,11 @@ import { resetReceiptAi } from '../receipts/aiSettings';
 import { hasHaptics } from '../../theme/haptics';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { SameWidthGroup, doubleWidth, useSameWidth } from '../../components/SameWidth';
-import { ProfileImageCard, type ProfileScope } from './ProfileImageCard';
+import { ProfileImageCard, localProfileScope, type ProfileScope } from './ProfileImageCard';
 import { AppLockCard } from '../lock/AppLock';
 import { resetAppLockDelay } from '../lock/appLockStore';
-import { noProfileImage } from './profileImage';
-import { saveProfileImage } from './useProfileImage';
+import { defaultProfileRing, noProfileImage } from './profileImage';
+import { saveProfileImage, saveProfileRing } from './useProfileImage';
 
 // Read once: the primary pointer of a device does not change while the page is open.
 const vibrationAvailable = hasHaptics();
@@ -76,7 +76,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   // preferences, the receipt scan (off, no service), the profile picture of the Standard mode and, with an archive open,
   // its preferred categories and fund.
   // The app lock is the exception: only its delay goes back to the default, since turning it off asks for the fingerprint.
-  const resetAll = () => { onReset(); resetReceiptAi(); resetAppLockDelay(); if (profile) saveProfileImage(noProfileImage, profile.scope); onResetArchive?.(); };
+  const resetAll = () => { onReset(); resetReceiptAi(); resetAppLockDelay(); if (profile) { saveProfileImage(noProfileImage, profile.scope); if (profile.scope !== localProfileScope) saveProfileRing(defaultProfileRing, profile.scope); } onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);

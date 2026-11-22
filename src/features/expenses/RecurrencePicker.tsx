@@ -10,6 +10,7 @@ type Props = { value: Recurrence | ''; error?: boolean; disabled?: boolean; onCh
 // Frequency of a recurring expense: weekly / monthly / yearly as a Material 3 segmented button.
 export function RecurrencePicker({ value, error, disabled, onChange }: Props) {
   const { t } = useI18n();
-  return <SegmentedButtons label={t("Ricorrenza")} value={value} error={error} disabled={disabled} onChange={onChange}
+  // `haptic`: a tap when the frequency changes (user's request, 22 November).
+  return <SegmentedButtons haptic label={t("Ricorrenza")} value={value} error={error} disabled={disabled} onChange={onChange}
     options={recurrences.map((recurrence) => ({ value: recurrence, label: t(shortLabels[recurrence]), accessibilityLabel: t(recurrenceLabels[recurrence]) }))} />;
 }

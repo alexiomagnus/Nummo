@@ -115,7 +115,7 @@ Due strade:
   «Scansiona scontrino» non compare. L'AI propone importo, data, descrizione, esercente e categoria da controllare prima di salvare.
   La chiave resta salvata solo in questo browser (una per servizio) e la foto viene inviata al servizio scelto solo dopo il consenso.
   Nessuna lettura sul dispositivo (OCR rimosso il 21 novembre 2026).
-- **Nuova spesa** con importo, data, descrizione, categoria ed **Esercente** facoltativo (suggerimenti dagli esercenti già usati, più frequenti e recenti per primi; «amazon» e «AMAZON» sono lo stesso esercente); **Spese** con ricerca, filtri, modifica ed eliminazione.
+- **Nuova spesa** con importo, data, descrizione, categoria ed **Esercente** facoltativo (suggerimenti dagli esercenti già usati, più frequenti e recenti per primi; «amazon» e «AMAZON» sono lo stesso esercente; pagina **Esercenti** dal menu account per rinominarli, unirli o eliminarli, togliendoli dalle spese); **Spese** con ricerca, filtri, modifica ed eliminazione.
 - **Abbonamenti** settimanali, mensili e annuali, con prove gratuite, variazioni di prezzo, pausa/annullamento e cambi di frequenza futuri che conservano i pagamenti maturati.
 - **Categorie** personalizzabili, con 39 icone selezionabili in tre stili, e **Analisi** con totali e grafici.
 - **Fondi e budget** facoltativi: un fondo è un gruppo di spese (nome, colore, icona) con ricarica mensile e budget mensile facoltativi; la pagina Fondi mostra la spesa del mese e i budget, «Aggiungi»/«Trasferisci» per i fondi con saldo e, aprendo un fondo, solo i totali del mese (aggiunte, trasferimenti, ricariche, speso). Nessuna cifra di saldo mostrata.
@@ -127,8 +127,8 @@ Due strade:
   Spese e Abbonamenti, accesa di base e
   disattivabile in **Impostazioni → Funzionalità → Vibrazione**; solo su telefoni e tablet dove il browser lo permette (Chrome e simili su Android,
   non Safari/iOS né Firefox), mai su computer, dove l'interruttore non compare. Con il telefono in silenzioso o in Non disturbare Android non vibra.
-- Tasto **Indietro** di Android (e del browser): chiude il dialogo, il menu o la pagina aperta e torna a Nuova spesa; esce dall'app solo da
-  Nuova spesa senza nulla aperto.
+- Tasto **Indietro** di Android (e del browser): chiude il dialogo o il menu aperto, altrimenti torna alla pagina visitata prima, un passo
+  alla volta; esce dall'app solo da Nuova spesa senza pagine precedenti né nulla aperto.
 - **Impostazioni → Blocco dell'app**: Nummo chiede impronta, viso o il PIN del dispositivo all'apertura e quando ci torni dopo il tempo scelto
   (subito, 1, 5 o 15 minuti). Nasconde i dati sullo schermo, non li cifra. Se non riesci a sbloccare: in Avanzata esci e riaccedi con Google, in
   Standard lo disattivi con il **PIN di Nummo** (6 cifre) scelto quando lo accendi (con un blocco acceso prima, senza PIN, basta una conferma

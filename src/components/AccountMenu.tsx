@@ -9,14 +9,14 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 
 // Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
 // `avatar`: the picture chosen in Settings, drawn instead of the person glyph and the Google photo; with it the menu says
-// nothing about the Google photo (loading, missing, «Riprova foto»). `ring`: a ring in the main colour around the picture,
-// the mark of the Advanced mode (22 November; never in the Standard mode).
-type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: boolean; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void };
+// nothing about the Google photo (loading, missing, «Riprova foto»). `ring`: the colour of a ring around the picture, the
+// mark of the Advanced mode (22 November; never in the Standard mode; colour chosen in Settings, the main one by default).
+type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: string; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void; onOpenMerchants: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
 // `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
-export function AccountMenu({ email, photoURL, avatar, ring = false, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup }: Props) {
+export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup, onOpenMerchants }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -32,7 +32,7 @@ export function AccountMenu({ email, photoURL, avatar, ring = false, busy, onSig
         <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} bleed={4} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={onSignOut ? `Account${email ? `: ${email}` : ''}` : t("Menu")}
           onPress={openMenu} style={styles.trigger}>
-          <View style={[styles.ring, { borderColor: ring ? colors.primary : 'transparent' }]}>
+          <View style={[styles.ring, { borderColor: ring ?? 'transparent' }]}>
           {avatar ?? <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>
             <SvgIcon shape={iconShapes.user} size={22} color={colors.onPrimaryContainer} />
             {photoURL && !photoFailed && <img key={photoAttempt} src={photoURL} alt="" aria-hidden draggable={false}
@@ -74,6 +74,10 @@ export function AccountMenu({ email, photoURL, avatar, ring = false, busy, onSig
       <Menu.Item title={t("Archiviazione e backup")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.database} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenBackup(); }} />
+      {/* The merchants learned for the «Esercente» suggestions (22 November, on request). */}
+      <Menu.Item title={t("Esercenti")} style={styles.item}
+        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.store} size={size} color={color} />}
+        onPress={() => { setOpen(false); onOpenMerchants(); }} />
       {onSignOut && <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
         onPress={() => { setOpen(false); onSignOut(); }} />}

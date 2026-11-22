@@ -24,7 +24,8 @@ import { DataWorkspace, RemoteWorkspace, StartupWorkspace, type StorageSlot } fr
 import { ModeChoice } from './src/features/storage/ModeChoice';
 import { useBackLayer } from './src/components/BackNavigation';
 import { ProfileAvatar, StandardAvatar, accountAvatarSize, type ProfileScope } from './src/features/settings/ProfileImageCard';
-import { useProfileImage } from './src/features/settings/useProfileImage';
+import { useProfileImage, useProfileRing } from './src/features/settings/useProfileImage';
+import { profileRingColor } from './src/features/settings/profileImage';
 import { AppLockScreen, useLockRecovery } from './src/features/lock/AppLock';
 import { disableAppLock } from './src/features/lock/appLockStore';
 import { backLevels } from './src/theme/backStack';
@@ -178,15 +179,17 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
   const [categoriesRequest, setCategoriesRequest] = useState(0);
   const [templatesRequest, setTemplatesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
+  const [merchantsRequest, setMerchantsRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
   const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar />} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
-    onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenBackup={openBackup} />;
+    onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenBackup={openBackup}
+    onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} />;
   return (
     <>
       <View style={styles.fill}>
         <DataWorkspace backend={store} scope="local" storageNote={t('Spese e categorie salvate su questo dispositivo.')}
-          onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} backupRequest={backupRequest} settingsRequest={settingsRequest}
+          onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} backupRequest={backupRequest} merchantsRequest={merchantsRequest} settingsRequest={settingsRequest}
           notificationsRequest={notificationsRequest} localArchive={store}
           renderSettings={renderSettings}
           storage={<StandardStorage protection={protection} onChangeMode={onChangeMode} style={styles.wide} />}
@@ -215,6 +218,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const [categoriesRequest, setCategoriesRequest] = useState(0);
   const [templatesRequest, setTemplatesRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
+  const [merchantsRequest, setMerchantsRequest] = useState(0);
   const session = useSession(!configMissing);
   // «Esci» goes back to the first screen (Standard / Avanzata), not to the sign-in screen (user's request, 21 November).
   const signOut = () => { if (session.status === 'signed-in') session.signOut(() => onChangeMode(null)); };
@@ -235,13 +239,15 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   </>;
   // The picture chosen for this account in Settings (since 22 November); nothing chosen: the Google photo, as before.
   const chosenAvatar = useProfileImage(session.status === 'signed-in' ? session.user.uid : 'local');
+  // The ring marks the Advanced mode; its colour is chosen in Settings (22 November), the app's main colour by default.
+  const ringColor = profileRingColor(useProfileRing(session.status === 'signed-in' ? session.user.uid : 'local'), theme.colors.primary, theme.dark);
   const advancedSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) =>
     renderSettings(onDone, archiveSections, onResetArchive, session.status === 'signed-in' ? { scope: session.user.uid, googlePhoto: session.user.photoURL } : undefined);
   const account = session.status === 'signed-in'
-    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} ring busy={session.busy} onSignOut={signOut}
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} ring={ringColor} busy={session.busy} onSignOut={signOut}
       avatar={chosenAvatar.kind === 'none' ? undefined : <ProfileAvatar image={chosenAvatar} size={accountAvatarSize} />} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)}
-      onOpenBackup={openBackup} /> : null;
+      onOpenBackup={openBackup} onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} /> : null;
 
   // Startup: while Auth restores the session and the first data load, the workspace shell shows loading status.
   // No duplicate form with fake empty data. Only when the previous visit
@@ -295,7 +301,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       {signedIn && !denied ? (
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
-            onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} backupRequest={backupRequest}
+            onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} backupRequest={backupRequest} merchantsRequest={merchantsRequest}
             settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={advancedSettings}
             storage={storage()}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}

@@ -12,8 +12,10 @@ export type SubscriptionStatus = (typeof subscriptionStatuses)[number];
 export type StatusChange = Readonly<{ date: string; status: SubscriptionStatus }>;
 export const statusLabels: Record<SubscriptionStatus, string> = { active: 'Attivo', paused: 'In pausa', cancelled: 'Annullato' };
 
-// Mirrored by firestore.rules (positional checks, same budget reasoning as price changes).
-export const maxStatusChanges = 8;
+// Mirrored by firestore.rules. 8 until 22 November (when the Rules checked each entry); since the field is one compact
+// string checked by a single regex, the count no longer weighs on the expression budget: 40 (about 20 pause/resume
+// cycles; user's request after «Troppe variazioni di stato»).
+export const maxStatusChanges = 40;
 
 function isStatus(value: unknown): value is SubscriptionStatus {
   return typeof value === 'string' && (subscriptionStatuses as readonly string[]).includes(value);
@@ -64,12 +66,22 @@ export function currentStatus(changes: readonly StatusChange[]): SubscriptionSta
 // change on the same day replaces the first. Returns the unchanged list when the status is already in force, null
 // when `date` precedes the last change or the limit is reached.
 export function setStatus(changes: readonly StatusChange[], status: SubscriptionStatus, date: string): StatusChange[] | null {
+  return statusChangeProblem(changes, status, date) ? null : applyStatus(changes, status, date);
+}
+
+// Why `setStatus` refuses, for a message that says it: `before-last` when `date` precedes the last change, `too-many`
+// when the change would exceed `maxStatusChanges`; null when it is accepted.
+export function statusChangeProblem(changes: readonly StatusChange[], status: SubscriptionStatus, date: string): 'before-last' | 'too-many' | null {
   const last = changes[changes.length - 1];
-  if (last && last.date > date) return null;
+  if (last && last.date > date) return 'before-last';
+  return applyStatus(changes, status, date).length > maxStatusChanges ? 'too-many' : null;
+}
+
+function applyStatus(changes: readonly StatusChange[], status: SubscriptionStatus, date: string): StatusChange[] {
+  const last = changes[changes.length - 1];
   if (currentStatus(changes) === status) return [...changes];
   const kept = last && last.date === date ? changes.slice(0, -1) : [...changes];
-  const next = currentStatus(kept) === status ? kept : [...kept, { date, status }];
-  return next.length > maxStatusChanges ? null : next;
+  return currentStatus(kept) === status ? kept : [...kept, { date, status }];
 }
 
 // First occurrence after `today` that will actually be paid: none for paused or cancelled series.

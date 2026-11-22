@@ -6,7 +6,7 @@ import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/
 import { DateField } from '../../components/DateField';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { paymentsRemoved, type SubscriptionSummary } from '../../domain/history';
-import { setStatus, type SubscriptionStatus } from '../../domain/subscription';
+import { setStatus, statusChangeProblem, type SubscriptionStatus } from '../../domain/subscription';
 import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
 
@@ -37,6 +37,8 @@ export function StatusDialog({ summary, status, today, onConfirm, close }: Props
   const [busy, setBusy] = useState(false);
   const from = when === 'today' ? today : date;
   const next = useMemo(() => setStatus(changes, status, from), [changes, status, from]);
+  // Why it is refused: the two cases have different remedies (22 November: one message said «too many» for both).
+  const problem = next ? null : statusChangeProblem(changes, status, from);
   const removed = useMemo(() => next && when === 'date' ? paymentsRemoved(entry, next, today) : [], [next, when, entry, today]);
   const removedTotal = removed.reduce((sum, item) => sum + item.amount_minor, 0);
   const cancel = status === 'cancelled';
@@ -76,7 +78,9 @@ export function StatusDialog({ summary, status, today, onConfirm, close }: Props
                 <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{t("Spariscono dallo storico, dalle spese e dai totali.")}</Text>
               </View>)}
           </>}
-          {!next && <HelperText type="error" accessibilityRole="alert">{t("Troppe variazioni di stato per questo abbonamento: per continuare creane uno nuovo.")}</HelperText>}
+          {problem && <HelperText type="error" accessibilityRole="alert">{problem === 'too-many'
+            ? t("Troppe variazioni di stato per questo abbonamento: per continuare creane uno nuovo.")
+            : t("Questo abbonamento ha già un cambio di stato dopo questa data: scegline una dal {p0} in poi.", { p0: formatDate(minDate) })}</HelperText>}
         </ScrollView>
       </Dialog.ScrollArea>
       <Dialog.Actions style={dialogActionsRow}>

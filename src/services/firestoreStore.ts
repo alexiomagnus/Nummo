@@ -4,7 +4,7 @@ import { trialTimingError } from '../domain/trial.ts';
 import { todayInRome } from '../domain/policy.ts';
 import {
   collection, deleteDoc, deleteField, doc, getDocFromServer, getDocsFromServer, onSnapshot, runTransaction, serverTimestamp, setDoc,
-  Timestamp, updateDoc, writeBatch, type Firestore, type DocumentData, type QuerySnapshot,
+  Timestamp, updateDoc, writeBatch, query, where, type Firestore, type DocumentData, type QuerySnapshot,
 } from 'firebase/firestore';
 import { planImport, sameCategory, sameExpense, sameFund, sameMovement, validateBackupData, type ImportData, type ImportMode } from '../domain/backup.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
@@ -16,7 +16,7 @@ import { categoryNameKey, parseSyncedBudget, type SyncedBudget, parseSyncedCateg
 import { decodeListItems, encodeListItems, listNameError, itemNameError, normalizeListText, parseListData, sameListRecord, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
 import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFundData, parseMovementData, sameBudgets, type BudgetChange, type Fund, type FundData, type Movement, type MovementData } from '../domain/funds.ts';
 
-import { parseMerchant, type Merchant } from '../domain/merchant.ts';
+import { parseMerchant, renamedMerchant, type Merchant } from '../domain/merchant.ts';
 import { parseTemplateData, sameTemplate, templateFields, type TemplateData, type TemplateRecord } from '../domain/template.ts';
 import { checkNewMerchant, listRecords, type BudgetSnapshot, type DataStore, type SnapshotState } from './dataStore.ts';
 export type { BudgetSnapshot, SnapshotState } from './dataStore.ts';
@@ -80,6 +80,33 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
   // General monthly budget (issue #7): the only document of `settings`.
   const budgetRef = doc(db, 'users', uid, 'settings', 'budget');
   const conflict = () => new Error('I dati sono cambiati in un’altra sessione. Riapri la modifica e riprova.');
+  // Rename or removal of a merchant (22 November): every expense pointing at `from`, read from the server (offline: refused
+  // before any write), changed in groups of 100 transactions on the revisions read (`change` gives the new merchant, null =
+  // none). Expenses saved meanwhile with `from` are picked up by reading again; then `finish` (the merchant documents).
+  // Not atomic over all groups: an interruption says so, and running it again completes it.
+  async function moveMerchantExpenses(from: string, to: string | null, finish: () => Promise<void>) {
+    let moved = 0;
+    try {
+      for (let round = 0; round < 3; round++) {
+        const used = await getDocsFromServer(query(expenses, where('merchant_id', '==', from)));
+        if (used.empty) break;
+        for (let i = 0; i < used.docs.length; i += 100) {
+          const group = used.docs.slice(i, i + 100);
+          await runTransaction(db, async (tx) => {
+            const current = await Promise.all(group.map((d) => tx.get(d.ref)));
+            group.forEach((d, index) => { if (!current[index]!.exists() || current[index]!.data()!.revision !== d.data().revision) throw conflict(); });
+            group.forEach((d) => tx.update(d.ref, { merchant_id: to ?? deleteField(), revision: d.data().revision + 1, updated_at: serverTimestamp() }));
+          });
+          moved += group.length;
+        }
+      }
+      await finish();
+    } catch (reason) {
+      if (moved === 0) throw reason;
+      throw new Error('Operazione interrotta: alcune spese sono già aggiornate. Riprova per completarla.');
+    }
+    return moved;
+  }
   // Reads the saved archive from the server for a restore plan. Refuses while writes are pending.
   async function readAll() {
     const [e, c, f, m, l, i, b, s, x] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements),
@@ -175,6 +202,24 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
         tx.delete(ref);
         if (list?.exists() && list.data().expense_id === previous.id) tx.update(list.ref, { expense_id: null, updated_at: serverTimestamp() });
       });
+    },
+    async renameMerchant(merchant: Merchant, name: string) {
+      const target = renamedMerchant(name);
+      if (typeof target === 'string') throw new Error(target);
+      if (target.id === merchant.id) {
+        await runTransaction(db, async (tx) => {
+          const current = await tx.get(doc(merchants, merchant.id));
+          if (!current.exists()) throw conflict();
+          tx.set(current.ref, storedMerchant(target));
+        });
+        return 0;
+      }
+      // The new merchant first (it exists, or takes the typed name), so that no expense ever points at a missing one.
+      await setDoc(doc(merchants, target.id), storedMerchant(target));
+      return moveMerchantExpenses(merchant.id, target.id, () => deleteDoc(doc(merchants, merchant.id)));
+    },
+    async removeMerchant(merchant: Merchant) {
+      return moveMerchantExpenses(merchant.id, null, () => deleteDoc(doc(merchants, merchant.id)));
     },
     // Read from the server (offline: refused before any delete), then batches of 400: not atomic over the whole archive, so
     // an interruption says so and running it again finishes the job.

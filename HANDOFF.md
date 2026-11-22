@@ -75,6 +75,126 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Pagina «Esercenti»: rinomina, unione, eliminazione — 22 novembre 2026
+
+- Su richiesta (scelte dell'utente: 1a = eliminare un esercente usato lo toglie dalle spese, 2 = rinominare verso un nome esistente unisce
+  i due dopo conferma): voce «Esercenti» (icona negozio) nel menu account sotto «Archiviazione e backup», contatore `merchantsRequest`
+  (Standard e Avanzata), sezione `merchants` tra le pagine del menu (`accountPages`, «Fatto», cronologia di Indietro).
+  `features/merchants/MerchantsPage.tsx`: riga di spiegazione, ricerca (30), elenco alfabetico con «n spese»/«Nessuna spesa», matita →
+  `RenameDialog` (nome a 30 nel campo; se la chiave è di un altro esercente: «Esiste già l'esercente …: i due diventeranno uno solo…» e
+  «Unisci»), cestino → `DeleteAction` con il numero di spese che resteranno senza esercente. Pulsanti disattivati senza sincronizzazione.
+- Dati: `renamedMerchant` (dominio), `DataStore.renameMerchant`/`removeMerchant` in Firestore (spese lette dal server con `where`
+  su `merchant_id`, gruppi di 100 transazioni sulle revisioni, fino a 3 letture per le spese salvate nel frattempo, nuovo esercente prima e
+  vecchio eliminato per ultimo; interruzione a metà → «Operazione interrotta… Riprova per completarla.») e in locale (una transazione).
+  Rules invariate (gli esercenti si potevano già scrivere ed eliminare), backup invariato. Guida e README aggiornati (IT/EN).
+- **Verifica:** `npm run check` OK (**557/557**, test nuovo in `tests/localStore.test.ts`). `test:emulator` **24/24** su porte proprie
+  (test nuovo: stessa chiave, unione con revisioni +1, eliminazione con campo tolto, estraneo negato). Chromium headless su `dist-demo`
+  (Standard, 390×844, `nummo-esercenti-v10.json` unito): 12 esercenti con i conteggi giusti; «Coop» → «esselunga» propone l'unione →
+  «esselunga · 13 spese»; «Bar da Mario» (4 spese) eliminato con la conferma che lo dice; «Libreria Rossi» → «Libreria Bianchi»; ricerca
+  «caffe» → «Caffè Centrale»; Indietro → Archiviazione e backup. Nessun errore JS. Non provati: Avanzata nel browser, desktop.
+
+## Cambi di stato fino a 40 (Rules da pubblicare) — 22 novembre 2026
+
+- Su richiesta («sono d'accordo, puoi procedere» dopo l'analisi qui sotto): `maxStatusChanges` 8 → **40**; `firestore.rules` e
+  `public/firestore.rules` (identiche) `statusChanges`: `size() <= 839`, regex `{0,39}`. Nuova `statusChangeProblem` (`'too-many'` |
+  `'before-last'`) in `domain/subscription.ts`: `StatusDialog` e `Workspace` dicono «Questo abbonamento ha già un cambio di stato dopo questa
+  data: scegline una dal … in poi.» invece di «Troppe variazioni…» quando la data precede l'ultimo cambio (IT/EN). Decisione in
+  `docs/architecture.md`.
+- **Verifica:** `npm run check` OK (**556/556**; test di dominio con 40/41 cambi e i due motivi). `test:emulator` **23/23** su porte proprie
+  (39199/39380, config temporanea `.nummo-status-check.json` rimossa; runner hybrid 36786 non toccato): 40 stati di lunghezza massima
+  (839 caratteri) accettati anche nel caso peggiore con 8 prezzi, prova, 4 cambi di frequenza, 60 pagamenti eliminati, fondo ed esercente;
+  41 stati e 40 + uno rifiutati.
+- **Da fare:** pubblicare le Rules (solo con autorizzazione, prima o insieme a Hosting: con Hosting nuovo e Rules vecchie un 9° cambio
+  verrebbe rifiutato dal server con un errore). Finché non sono pubblicate in produzione il limite effettivo resta 8. Non committato.
+
+## Colore dell'anello in Avanzata, analisi del limite dei cambi di stato — 22 novembre 2026
+
+- **Colore dell'anello** (su richiesta; solo Avanzata da collegati): nella scheda «Immagine del profilo» delle Impostazioni, sotto gli avatar,
+  «Colore dell'anello» con sette campioni tondi: «Colore dell'app» (il `primary` attuale, predefinito, segue «Colore») e i sei colori di
+  «Colore» (Menta, Blu, Viola, Rosa, Ambra, Grafite: il loro `primary` nello schema chiaro o scuro corrente, già testato per il contrasto).
+  Vale per il pulsante dell'account e per l'anteprima. Per account in `nummo.profileRing.v1.<uid>` (`profileImage.ts`: `parseProfileRing`,
+  `profileRingColor`; `useProfileRing`/`saveProfileRing` in `useProfileImage.ts`), mai nel backup; «Ripristina predefiniti» lo riporta al
+  colore dell'app. `AccountMenu.ring` ora è il colore (stringa) invece di un booleano. In Standard la sezione non c'è.
+- **Analisi del limite dei cambi di stato (richiesta dell'utente, nessuna modifica):** il limite di 8 (`maxStatusChanges`) nasce quando le
+  Rules controllavano gli stati per posizione nell'array; oggi `status_changes` in Firestore è una stringa compatta validata da **una sola
+  regex** (`statusChanges` in `firestore.rules`: `size() <= 167` e `{0,7}`), quindi il numero di cambi non pesa sul budget di espressioni.
+  Alzarlo (es. a 40: `size() <= 839`, `{0,39}`) cambia solo due costanti nelle Rules, `maxStatusChanges` e i test; da rimisurare comunque con
+  `test:emulator` (caso peggiore). Conseguenze: Rules da ripubblicare (e da ricopiare per chi ha il proprio Firebase), client vecchi (schede
+  non aggiornate) vedrebbero come non valida una serie con più di 8 cambi; i backup restano v11 (lettura più permissiva). Alternative
+  valutate e scartate: compattare la cronologia (gli stati passati decidono quali pagamenti contano: non si possono togliere senza cambiare
+  i totali), trasformare le pause passate in pagamenti eliminati (`skipped_payments`, limite 60, perde il senso della pausa). In attesa della scelta.
+- **Verifica:** `npm run check` OK (**556/556**, test nuovo in `tests/profileImage.test.ts`). Chromium headless su un export dedicato con
+  emulatori miei (39199/39380, config temporanea `.nummo-ring-check.json` rimossa, emulatori fermati; runner hybrid 36786 non toccato),
+  accesso dal popup dell'emulatore come proprietario demo, 390×844 scuro: anello del pulsante = colore dell'app; sette campioni con i colori
+  giusti; «Rosa» → pulsante e anteprima rosa, chiave `rose`; dopo il ricaricamento ancora rosa; tema chiaro → rosa dello schema chiaro;
+  «Ripristina predefiniti» → chiave tolta, colore dell'app. Nessun errore JS. Non provati: telefono reale, larghezza desktop. Non committato.
+
+## Indietro di un passo alla volta, vibrazione sulla ricorrenza — 22 novembre 2026
+
+- **Indietro (Android e browser), su richiesta:** torna esattamente alla pagina visitata prima, non più sempre a Nuova spesa. Cronologia pura
+  in `features/workspace/pageTrail.ts` (`visit`, `stepBack`, `done`; test in `tests/pageTrail.test.ts`): solo in memoria, vuota a ogni
+  avvio, al massimo 20 passi (oltre si dimenticano i più vecchi; con la cronologia vuota Indietro porta a Nuova spesa). Ordine invariato:
+  prima overlay e lista aperta, poi la pagina. «Fatto» delle pagine del menu account torna alla sezione di partenza come passo indietro,
+  togliendo dalla cronologia le pagine del menu aperte nel frattempo (Spese → Impostazioni → Categorie → Fatto → Indietro = Nuova spesa).
+  Da Nuova spesa Indietro torna ancora indietro se ci sono pagine precedenti; esce dall'app solo con la cronologia vuota. Nessun cambio
+  a `backStack.ts` (una sola voce di guardia): il livello `page` si registra di nuovo a ogni passo (`key` = pagina e lunghezza).
+- **Vibrazione** (`tap`) al cambio di ricorrenza Settimana/Mese/Anno (`RecurrencePicker`, Nuova spesa e modifica della frequenza).
+- **Domanda dell'utente:** «posso mettere in pausa un abbonamento solo 8 volte?» Risposta data: il limite è di 8 cambi di stato in tutto
+  (pausa, riattivazione e annullamento contano uno ciascuno; più cambi nello stesso giorno valgono uno), quindi circa 4 cicli pausa/riattiva.
+  In attesa di una scelta (alzarlo richiede Rules e rimisura del budget).
+- **Verifica:** `npm run check` OK (**555/555**). Chromium headless su `dist-demo` (Standard, 390×844): Nuova spesa → Spese → Analisi →
+  Fondi → Impostazioni → «Fatto» (Fondi) → Indietro: Analisi, Spese, Nuova spesa, poi uscita dalla pagina; cronologia del browser sempre
+  con una sola voce in più. Vibrazione non provata su telefono (solo la prop, come per Spese/Abbonamenti). Non committato.
+
+## «Storico dei pagamenti» largo due pulsanti su smartphone — 22 novembre 2026
+
+- Su richiesta (screenshot): nei dettagli di un abbonamento, su smartphone, «Storico dei pagamenti» è largo esattamente quanto gli ultimi due
+  pulsanti della riga sopra (Pausa/Riattiva + Modifica) e allineato ai loro bordi. Le tre azioni crescono da etichette di larghezza diversa,
+  quindi i due pulsanti si misurano (`onLayout`); se le azioni vanno su due righe (etichette lunghe a 360/320 px: «Modifica» da solo sotto)
+  lo storico occupa tutta la riga, come la coppia sopra. Da medium invariato.
+- **Domanda dell'utente sul dialogo «Metti in pausa» con «Troppe variazioni di stato…» (iPhone, «Claude Code Pro»):** è `StatusDialog`
+  (pausa da oggi o da una data passata). `setStatus` rifiuta se l'abbonamento ha già 8 cambi di stato (`maxStatusChanges`, anche nelle
+  Rules) o se l'ultimo cambio è successivo alla data scelta; il dialogo mostra lo stesso messaggio per entrambi i casi. Dati dell'utente
+  non visti: causa da confermare (backup JSON, `status_changes` di quella serie). Nessuna modifica fatta in attesa della scelta.
+- **Verifica:** `npm run check` OK. Chromium headless su `dist-demo` (Standard, `nummo-utente-medio.json` unito, «Affitto»): a 390 «Pausa»
+  136,8 → «Modifica» 355,0, storico 137,0..355,0; a 412 144,2 → 377,0, storico 144,0..377,0; a 360 e 320 azioni su due righe, storico
+  25..325 e 25..285 come «Modifica». Nessun errore JS. Non committato.
+
+## Barra inferiore che lampeggiava allo scorrimento, avvisi a 5 secondi — 22 novembre 2026
+
+- **Barra inferiore (su segnalazione: «sparisce per millesimi di secondo e riappare»).** Causa: l'anticipo della tastiera virtuale
+  nascondeva la barra a `pointerdown` su un campo scrivibile e la rimostrava a `pointercancel` quando il tocco diventava uno scorrimento.
+  In Nuova spesa quasi ogni scorrimento parte da un campo, quindi lampeggiava spesso. Riprodotto in Chromium headless (390×640, touch
+  emulato, trascinamento dalla Descrizione): opacità 0 per circa 85 ms, poi 1. Correzione in `observeVirtualKeyboard` (`theme/viewport.ts`):
+  l'anticipo parte dal focus che segue il rilascio sul campo (entro `touchFocusWindow`, 500 ms) o dal rilascio su un campo già attivo
+  (tastiera chiusa con Indietro); `pointercancel`/scroll non servono più e sono stati tolti. Un tocco che ferma lo scorrimento non mette
+  il focus e non nasconde nulla. La barra sparisce ~80 ms più tardi (al rilascio invece che alla pressione), sempre prima della tastiera.
+  Test riscritti in `tests/viewport.test.ts`.
+- **Avvisi** a **5 s** (richiesta successiva, al posto dei 4 s qui sotto).
+- **Verifica:** `npm run check` OK (**551/551**). Chromium headless su `dist-demo`: trascinamento dalla Descrizione a 390×640 e 360×640 →
+  barra sempre visibile; tocco → nascosta al focus, di nuovo visibile dopo 800 ms (nessuna tastiera nell'emulazione, fallback atteso).
+  `scripts/check-keyboard.mjs` (anche `--steps 4 --switch`): barra nascosta al focus con spazio conservato, liberato al primo restringimento
+  oltre la soglia, ricompare in un fotogramma alla chiusura; nessun errore JS né long task. **Da provare sul telefono:** scorrimento di
+  Nuova spesa partendo da un campo, tocco su un campo (la barra deve sparire prima della tastiera), riapertura dopo Indietro, iPhone.
+  Non committato.
+
+## «Annulla»/«OK» della data più alti, avvisi a 4 secondi — 22 novembre 2026
+
+- Su richiesta (screenshot): «Annulla» e «OK» del selettore della data (`small` di `CancelButton`/`ConfirmButton`) alti 44 invece di 40
+  («leggermente»), sempre sotto i 48 degli altri pulsanti dei dialoghi; larghezza invariata.
+- Avvisi temporanei (`useSnackbar`, `SnackbarHost.tsx`) da 3 a **4 s** (richiesta «un po' più lunga»; 5 s erano stati giudicati troppo lunghi
+  il 17 novembre; 4 s è il minimo indicato da Material 3). «Chiudi» li chiude prima, come sempre.
+- **Verifica:** `npm run check` OK (**551/551**). Chromium headless su `dist-demo` (Standard): selettore della data aperto da Nuova spesa a
+  390×844 e 1280×900, «Annulla» e «OK» alti 44; nessun errore JS. Durata degli avvisi non cronometrata nel browser (costante `4e3` nel bundle).
+  Non committato.
+
+## Riallineamento documentale — 22 novembre 2026
+
+- Su richiesta, dopo il riscontro tra documenti e codice su `074171c` (`npm run check` OK, **551/551**; nessuna discrepanza nel codice rispetto
+  ad `AGENTS.md`): corretti in questo file «Funzionalità implementate» (sostituzione senza copia automatica, «Elimina tutte le spese», categorie
+  ripristinabili e non eliminabili se in uso) e «Prossime attività» (Hosting fino a `1e5c615`, Rules del 22 novembre con `17632af`), più un
+  rimando in `docs/architecture.md` alla nota storica sulla copia automatica. Nessun codice toccato, nessun commit.
+
 ## «Elimina» dei dialoghi di modifica con contorno rosso — 22 novembre 2026
 
 - Su richiesta (screenshot): da medium «Elimina» dei dialoghi di modifica (`DeleteAction labeled="wide"`: spesa, template, prodotto, fondo) è
@@ -4623,7 +4743,8 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   fino a otto prezzi per numero di rinnovo, «Storico dei pagamenti» con eliminazione di un singolo pagamento). In Avanzata una nuova
   spesa offline libera il modulo ed è segnata «In attesa di invio» finché il server non la conferma (`1c83b54`).
 - **Categorie:** pagina dal menu account; nomi unici; 64 ID icona validi (40 attive, 39 selezionabili; ritirate `sofa` e le 24
-  storiche, queste ultime solo col contorno), tre stili (minimale, colorato, pixel); cinque predefinite su archivio vuoto.
+  storiche, queste ultime solo col contorno), tre stili (minimale, colorato, pixel); cinque predefinite su archivio vuoto,
+  ripristinabili con «Ripristina le categorie predefinite» (solo quelle mancanti); una categoria usata da spese o abbonamenti non si elimina.
 - **Fondi** (destinazione «Fondi»): facoltativi; nome, icona, colore, saldo iniziale, ricarica e budget mensili facoltativi; riepilogo
   del mese con sette totali, mai elenchi né saldi; Aggiungi/Trasferisci solo con dati di saldo; archiviazione; fondo preferito scelto in
   Impostazioni (per browser). Budget mensile generale **non più nell'interfaccia** dal 16 novembre (dati e backup compatibili).
@@ -4635,7 +4756,7 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 - **Archiviazione e backup** (menu account, sotto Categorie): stato e cambio della modalità, in Avanzata passaggio dei dati tra le due
   modalità («Dal dispositivo a Firebase», «Da Firebase al dispositivo», solo unione), CSV di sola consultazione, JSON
   `nummo-backup` **v11** (con i template) unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
-  con copia automatica.
+  (dal 22 novembre il dialogo propone di scaricare prima un backup completo, mai una copia automatica); «Elimina tutte le spese».
 - **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
   orario e fuso scelti dall'utente.
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
@@ -4711,8 +4832,8 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (22 novembre):** tutto il codice fino a `17632af` è online su Hosting, Rules comprese (importo massimo 999.999.999,99 €).
-  Vedi «Registro dei rilasci».
+- **Pubblicazione (22 novembre):** tutto il codice fino a `1e5c615` è online su Hosting; Rules ultime quelle di `17632af` (importo massimo
+  999.999.999,99 €). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
@@ -4723,7 +4844,7 @@ screen reader, concorrenza tra due dispositivi.
 
 1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
    poi la sera con `skipped_payments` (`1dbb396`), con gli esercenti (`f5411fb`), il 20 novembre con le 24 ID icona storiche
-   (`ad5aa73`) e il 21 novembre con i template (`817a2f1`). Da verificare ricaricando l'app: caricamento, sincronizzazione, pagina
+   (`ad5aa73`), il 21 novembre con i template (`817a2f1`) e il 22 novembre con l'importo massimo 999.999.999,99 € (`17632af`). Da verificare ricaricando l'app: caricamento, sincronizzazione, pagina
    Templates, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
    serve autorizzazione. ID icona eliminati: chiuso (vedi «Problemi aperti»); resta facoltativa la verifica sui dati reali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):

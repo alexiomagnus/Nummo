@@ -135,46 +135,61 @@ test('tastiera virtuale: apertura, passaggio tra campi, chiusura, zoom e rimozio
   assert.deepEqual(confirmed, [true, false, true, false], 'lo spazio della barra si libera solo con tastiera confermata e torna alla fine della chiusura');
 });
 
-test('tastiera virtuale: tocco anticipa apertura, nessun flash nei primi resize e fallback con tastiera fisica', (context) => {
-  context.mock.timers.enable({ apis: ['setTimeout'] });
-  const input = { tagName: 'INPUT', type: 'text' };
-  const doc = Object.assign(new EventTarget(), { activeElement: input });
+test('tastiera virtuale: il tocco che entra in un campo anticipa l’apertura, nessun flash nei primi resize e fallback con tastiera fisica', (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const body = { tagName: 'BODY' }, input = { tagName: 'INPUT', type: 'text' }, picker = { ...input, readOnly: true };
+  const doc = Object.assign(new EventTarget(), { activeElement: body as object });
   const visual = Object.assign(new EventTarget(), { height: 915, width: 412, scale: 1 });
   const target = Object.assign(new EventTarget(), { innerHeight: 915, innerWidth: 412, visualViewport: visual, document: doc });
   const states: boolean[] = [];
   const confirmed: boolean[] = [];
   const stop = observeVirtualKeyboard(target as unknown as Window, (open) => states.push(open), (value) => confirmed.push(value));
-  const pointer = (pointerType: string, entry: object) => {
-    const event = Object.assign(new Event('pointerdown'), { pointerType });
+  const pointer = (type: string, pointerType: string, entry: object) => {
+    const event = Object.assign(new Event(type), { pointerType });
     Object.defineProperty(event, 'target', { value: entry });
     doc.dispatchEvent(event);
   };
-  pointer('mouse', input);
-  pointer('touch', { ...input, readOnly: true });
+  const focus = (entry: object) => { doc.activeElement = entry; doc.dispatchEvent(new Event('focusin')); };
+  // A tap: pointerdown, pointerup, then the focus.
+  const tap = (entry: object, pointerType = 'touch') => { pointer('pointerdown', pointerType, entry); pointer('pointerup', pointerType, entry); focus(entry); };
+  tap(input, 'mouse');
+  focus(body); context.mock.timers.tick(10);
+  tap(picker);
+  focus(body); context.mock.timers.tick(10);
   assert.deepEqual(states, [], 'mouse e picker non anticipano la tastiera');
-  pointer('touch', input);
-  assert.deepEqual(states, [true], 'barra nascosta prima del primo resize');
-  assert.deepEqual(confirmed, [], 'il tocco non deve liberare spazio e spostare il bersaglio prima del rilascio');
+  pointer('pointerdown', 'touch', input);
+  assert.deepEqual(states, [], 'la sola pressione non nasconde la barra: potrebbe diventare uno scorrimento');
+  pointer('pointerup', 'touch', input); focus(input);
+  assert.deepEqual(states, [true], 'barra nascosta al focus dato dal tocco, prima del primo resize');
+  assert.deepEqual(confirmed, [], 'il tocco non deve liberare spazio e spostare il bersaglio');
   visual.height = 880; visual.dispatchEvent(new Event('resize'));
   assert.deepEqual(states, [true], 'nessuna ricomparsa all’inizio dell’animazione');
   visual.height = 503; visual.dispatchEvent(new Event('resize'));
   context.mock.timers.tick(1000);
   assert.deepEqual(states, [true], 'tastiera confermata dal viewport');
   assert.deepEqual(confirmed, [true]);
+  // Back closes the keyboard, the field keeps the focus; a tap on it opens the keyboard again without a new focus.
   visual.height = 915; visual.dispatchEvent(new Event('resize'));
-  pointer('touch', input);
+  assert.deepEqual(states, [true, false]);
+  pointer('pointerdown', 'touch', input); pointer('pointerup', 'touch', input);
+  assert.deepEqual(states, [true, false, true], 'tocco sul campo già attivo: anticipo al rilascio');
   visual.height = 860; visual.dispatchEvent(new Event('resize'));
   context.mock.timers.tick(1000);
   assert.deepEqual(states, [true, false, true, false], 'con sole barre browser il tocco non lascia la barra nascosta');
   assert.deepEqual(confirmed, [true, false], 'il fallback non cambia la geometria della pagina');
-  pointer('touch', input);
+  // A focus long after the touch (programmatic) does not count as a touch.
+  focus(body); context.mock.timers.tick(10);
+  pointer('pointerup', 'touch', input); context.mock.timers.tick(600); focus(input);
+  assert.deepEqual(states, [true, false, true, false], 'focus lontano dal tocco: nessun anticipo');
+  focus(body); context.mock.timers.tick(10);
+  tap(input);
   stop();
   context.mock.timers.tick(1000);
   assert.deepEqual(states, [true, false, true, false, true], 'cleanup annulla anche l’anticipo pendente');
 });
 
-test('tastiera virtuale: un tocco su un campo che diventa scorrimento non nasconde la barra', (context) => {
-  context.mock.timers.enable({ apis: ['setTimeout'] });
+test('tastiera virtuale: uno scorrimento iniziato su un campo non fa sparire la barra', (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   const body = { tagName: 'BODY' }, input = { tagName: 'INPUT', type: 'text' };
   const doc = Object.assign(new EventTarget(), { activeElement: body as object });
   const visual = Object.assign(new EventTarget(), { height: 844, width: 390, scale: 1 });
@@ -187,20 +202,22 @@ test('tastiera virtuale: un tocco su un campo che diventa scorrimento non nascon
     doc.dispatchEvent(event);
   };
   touch('pointerdown');
+  doc.dispatchEvent(new Event('scroll'));
   touch('pointercancel'); // the browser took over the pan
-  assert.deepEqual(states, [true, false], 'scorrimento iniziato su un campo: barra subito di nuovo visibile');
-  touch('pointerdown');
-  doc.dispatchEvent(new Event('scroll'));
-  assert.deepEqual(states, [true, false, true, false], 'scroll senza campo attivo annulla l’anticipo');
+  context.mock.timers.tick(1000);
+  assert.deepEqual(states, [], 'nessuna scomparsa né ricomparsa: prima la barra lampeggiava a ogni scorrimento');
+  // A tap that stops a fling focuses nothing.
+  touch('pointerdown'); touch('pointerup');
+  context.mock.timers.tick(1000);
+  assert.deepEqual(states, [], 'tocco che ferma lo scorrimento: la barra resta');
   // A real tap: focus arrives, then the field is scrolled into view while the keyboard opens.
-  touch('pointerdown');
-  doc.activeElement = input;
+  touch('pointerdown'); touch('pointerup');
+  doc.activeElement = input; doc.dispatchEvent(new Event('focusin'));
   doc.dispatchEvent(new Event('scroll'));
-  touch('pointercancel');
-  assert.deepEqual(states, [true, false, true, false, true], 'con il campo attivo la barra resta nascosta');
+  assert.deepEqual(states, [true], 'con il campo attivo la barra resta nascosta');
   visual.height = 450; visual.dispatchEvent(new Event('resize'));
   context.mock.timers.tick(1000);
-  assert.deepEqual(states, [true, false, true, false, true], 'tastiera confermata');
+  assert.deepEqual(states, [true], 'tastiera confermata');
   stop();
 });
 

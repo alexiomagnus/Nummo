@@ -5,7 +5,7 @@ import { applyPriceEdit, type ExpenseData } from '../src/domain/expense.ts';
 import { allFunds, breakdown, effectiveFundFilter, expandOccurrences, filterByFund, matchesFund, noFund, paymentsRemoved, forecastOccurrences, subscriptionSummaries, subscriptionSummary, upcomingRenewals, type ExpenseEntry } from '../src/domain/history.ts';
 import { backupVersion, exportCsv, makeBackup, parseBackup, planImport } from '../src/domain/backup.ts';
 import { makeChange } from '../src/domain/pricing.ts';
-import { currentStatus, decodeStatusChanges, encodeStatusChanges, nextPaidRenewal, parseStatusChanges, setStatus, statusAt, type StatusChange } from '../src/domain/subscription.ts';
+import { currentStatus, decodeStatusChanges, encodeStatusChanges, maxStatusChanges, nextPaidRenewal, parseStatusChanges, setStatus, statusAt, statusChangeProblem, type StatusChange } from '../src/domain/subscription.ts';
 
 // Monthly on the 5th from January 2026.
 const entry = (over: Partial<ExpenseEntry> = {}): ExpenseEntry => ({
@@ -67,8 +67,17 @@ test('setStatus: stesso stato invariato, doppio cambio nello stesso giorno sosti
   assert.deepEqual(setStatus([paused('2026-03-01')], 'active', '2026-03-01'), []);
   assert.deepEqual(setStatus([paused('2026-03-01')], 'cancelled', '2026-03-01'), [cancelled('2026-03-01')]);
   assert.equal(setStatus([paused('2026-03-02')], 'active', '2026-03-01'), null);
-  const full = Array.from({ length: 8 }, (_, i) => (i % 2 ? active : paused)(`2026-0${i + 1}-10`));
-  assert.equal(setStatus(full, 'cancelled', '2026-09-10'), null);
+  // 40 changes on different days (8 until 22 November): the next one is refused, and the reason says so.
+  const day = (n: number) => new Date(Date.UTC(2026, 0, 1 + n)).toISOString().slice(0, 10);
+  const full = Array.from({ length: maxStatusChanges }, (_, i) => (i % 2 ? active : paused)(day(i)));
+  assert.equal(maxStatusChanges, 40);
+  assert.equal(setStatus(full, 'cancelled', day(60)), null);
+  assert.equal(statusChangeProblem(full, 'cancelled', day(60)), 'too-many');
+  assert.equal(statusChangeProblem(full.slice(0, 39), 'cancelled', day(60)), null, 'il quarantesimo è ammesso');
+  assert.deepEqual(parseStatusChanges(full), full);
+  assert.equal(parseStatusChanges([...full, cancelled(day(60))]), null);
+  assert.equal(statusChangeProblem([paused('2026-03-02')], 'active', '2026-03-01'), 'before-last', 'data prima dell’ultimo cambio');
+  assert.equal(statusChangeProblem([paused('2026-03-02')], 'active', '2026-03-05'), null);
 });
 
 test('riepilogo: pagamenti, numero e totale coincidono con la dashboard, prezzi storici inclusi', () => {
@@ -185,8 +194,8 @@ test('pausa datata: mai prima dell’ultima variazione, due variazioni nello ste
   // From a pause to a cancellation the payments between the two dates were already skipped: nothing else is removed.
   const e = entry({ status_changes: [paused('2026-03-10')] });
   assert.deepEqual(paymentsRemoved(e, setStatus(e.status_changes!, 'cancelled', '2026-04-01')!, '2026-05-20'), []);
-  const full = Array.from({ length: 8 }, (_, i) => (i % 2 ? active : paused)(`2026-01-${String(10 + i).padStart(2, '0')}`));
-  assert.equal(setStatus(full, 'paused', '2026-02-01'), null);
+  const full = Array.from({ length: maxStatusChanges }, (_, i) => (i % 2 ? active : paused)(new Date(Date.UTC(2026, 0, 10 + i)).toISOString().slice(0, 10)));
+  assert.equal(setStatus(full, 'paused', '2026-03-01'), null);
 });
 
 test('filtro per fondo: tutti, senza fondo o un fondo; un fondo scomparso vale «tutti»', () => {

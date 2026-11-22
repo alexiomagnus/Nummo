@@ -33,9 +33,17 @@ export type DataStore = {
   watchLists: Watch<SyncedList>;
   watchListItems: Watch<SyncedListItem>;
   watchBudget(next: (value: BudgetSnapshot) => void, error: (reason: Error) => void): Unsubscribe;
-  // Merchants (merchant.ts): created only together with the first expense that uses them, never edited or deleted from
-  // the interface (only a «replace» import removes them).
+  // Merchants (merchant.ts): created only together with the first expense that uses them; since 22 November (on request)
+  // renamed or removed from the «Esercenti» page, and removed by a «replace» import.
   watchMerchants: Watch<Merchant>;
+  // New name (`renamedMerchant`). Same key: only the displayed name changes. Another key: the expenses that use the merchant
+  // point at the new one, which is created or, when it already exists, takes the typed name (the two become one); then the
+  // old one is deleted. Returns how many expenses moved. Firestore: groups of transactions on the server's revisions, not
+  // atomic over all of them (running it again finishes the job); local: one transaction.
+  renameMerchant(merchant: Merchant, name: string): Promise<number>;
+  // Removes the merchant and takes it off every expense that uses it (the expenses stay, without a merchant). Returns how
+  // many expenses changed; same atomicity as `renameMerchant`.
+  removeMerchant(merchant: Merchant): Promise<number>;
   watchTemplates: Watch<SyncedTemplate>;
   // Read-only verification of an uncertain save; never a second write.
   confirmExpense(request: ExpenseRequest): Promise<Receipt>;

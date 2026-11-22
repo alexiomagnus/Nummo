@@ -575,3 +575,40 @@ test('elimina tutte le spese in locale: solo le spese, in una transazione; il re
   assert.equal(await store.removeAllExpenses(), 0, 'ripetibile');
   expenses.stop();
 });
+
+test('esercenti: rinomina, unione con un esercente esistente ed eliminazione che lo toglie dalle spese', async () => {
+  const { store } = open();
+  const typo = { id: 'm-eselunga', name: 'Eselunga' }, right = { id: 'm-esselunga', name: 'Esselunga' };
+  const a = expense({ merchant_id: typo.id }), b = expense({ merchant_id: typo.id }), c = expense({ merchant_id: right.id }), d = expense();
+  await store.createExpense(a, typo);
+  await store.createExpense(b);
+  await store.createExpense(c, right);
+  await store.createExpense(d);
+  const snapshot = async () => store.exportSnapshot();
+  const byId = async (id: string) => (await snapshot()).expenses.find((e) => e.id === id)!;
+  // Same key: only the displayed name.
+  assert.equal(await store.renameMerchant(typo, '  eselunga  '), 0);
+  assert.deepEqual((await snapshot()).merchants.find((m) => m.id === typo.id), { id: typo.id, name: 'eselunga' });
+  await assert.rejects(store.renameMerchant(typo, '   '), /Scrivi il nome/);
+  await assert.rejects(store.renameMerchant(typo, 'x'.repeat(61)), /al massimo 60/);
+  // Another key that already exists: the two become one, with the typed name; revisions advance.
+  const before = await byId(a.expense_id);
+  assert.equal(await store.renameMerchant(typo, 'ESSELUNGA'), 2);
+  let saved = await snapshot();
+  assert.deepEqual(saved.merchants, [{ id: right.id, name: 'ESSELUNGA' }]);
+  assert.deepEqual(saved.expenses.filter((e) => e.merchant_id === right.id).length, 3);
+  assert.equal((await byId(a.expense_id)).revision, before.revision + 1);
+  assert.equal((await byId(d.expense_id)).merchant_id ?? null, null, 'una spesa senza esercente non cambia');
+  await assert.rejects(store.renameMerchant(typo, 'Altro'), /sono cambiati/, 'esercente già unito');
+  // Another key that does not exist: created, the old one removed.
+  assert.equal(await store.renameMerchant({ id: right.id, name: 'ESSELUNGA' }, 'Esselunga Bari'), 3);
+  saved = await snapshot();
+  assert.deepEqual(saved.merchants, [{ id: 'm-esselunga bari', name: 'Esselunga Bari' }]);
+  // Removal: taken off every expense, which stays.
+  assert.equal(await store.removeMerchant({ id: 'm-esselunga bari', name: 'Esselunga Bari' }), 3);
+  saved = await snapshot();
+  assert.deepEqual(saved.merchants, []);
+  assert.equal(saved.expenses.length, 4);
+  assert.ok(saved.expenses.every((e) => (e.merchant_id ?? null) === null));
+  assert.ok(makeBackup(saved), 'archivio ancora esportabile');
+});

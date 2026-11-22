@@ -16,6 +16,8 @@ export const keyboardHeightRatio = 0.8;
 // sooner; without a limit, a viewport that never got that tall again (the browser's address bar shown again after it
 // had been hidden while the reference was measured, an Android task switch) kept the bar hidden for good.
 export const keyboardClosingLimit = 1000;
+// Longest time between the touch leaving a field (pointerup) and the focus it gives, for that focus to count as a touch.
+export const touchFocusWindow = 500;
 export type KeyboardReference = { width: number; tallest: number };
 
 export function nextKeyboardReference(previous: KeyboardReference | null, width: number, height: number): KeyboardReference {
@@ -82,23 +84,34 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
     if (!next) confirmed = false;
     publish(next);
   };
-  const touchEntry = (event: PointerEvent) => {
-    if (event.pointerType !== 'touch' || !isTextEntry(event.target as FocusTarget)) return;
-    // Hide before the first viewport resize, not halfway through the animation.
+  // Anticipation: hide before the first viewport resize, not halfway through the animation. It starts when a touch has
+  // really entered a field, never on pointerdown: a touch on a field that turns into a scroll (and on Nuova spesa almost
+  // every scroll starts on a field) hid the bar on pointerdown and showed it again on pointercancel, a flash at every
+  // scroll (user's report, 22 November). A tap focuses the field after the finger lifts and before the keyboard opens:
+  // so on pointerup, the touched field is remembered and the focus it receives anticipates the keyboard; a tap on the
+  // field that already has focus (keyboard closed with Back) anticipates on pointerup itself. A tap that stops a fling
+  // focuses nothing and hides nothing.
+  const anticipate = () => {
     opening = true;
     publish(true);
     clearTimeout(openingTimer);
     // A hardware keyboard or a prevented focus may leave the viewport unchanged.
     openingTimer = setTimeout(() => { opening = false; evaluate(); }, 800);
   };
-  // A touch that starts on a field and turns into a scroll (pointercancel when the browser takes over the pan, or a
-  // scroll before any field has focus) brings no keyboard: show navigation again at once instead of after the timeout,
-  // or scrolling a form full of fields keeps hiding it.
-  const touchAbandoned = () => {
-    if (!opening || isTextEntry(doc.activeElement as FocusTarget)) return;
-    opening = false;
-    clearTimeout(openingTimer);
-    evaluate();
+  let touchedField: unknown = null;
+  let touchedAt = 0;
+  const touchEnd = (event: PointerEvent) => {
+    touchedField = null;
+    if (event.pointerType !== 'touch' || !isTextEntry(event.target as FocusTarget)) return;
+    if (event.target === doc.activeElement) { anticipate(); return; }
+    touchedField = event.target;
+    touchedAt = Date.now();
+  };
+  const touchFocus = () => {
+    const active = doc.activeElement;
+    const touched = active !== null && active === touchedField && Date.now() - touchedAt < touchFocusWindow;
+    touchedField = null;
+    if (touched && isTextEntry(active as FocusTarget)) anticipate();
   };
   const resize = () => {
     // Background windows may report transient dimensions during Android task transitions: they must not become the
@@ -114,15 +127,13 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
   };
   // Focus moving between two fields passes through <body>: decide after the new field has received focus.
   let pending: ReturnType<typeof setTimeout> | undefined;
-  const focusChange = () => { clearTimeout(pending); pending = setTimeout(evaluate, 0); };
+  const focusChange = (event: Event) => { if (event.type === 'focusin') touchFocus(); clearTimeout(pending); pending = setTimeout(evaluate, 0); };
   resize();
   target.addEventListener('resize', resize);
   visual?.addEventListener('resize', resize);
   doc.addEventListener('focusin', focusChange);
   doc.addEventListener('focusout', focusChange);
-  doc.addEventListener('pointerdown', touchEntry, true);
-  doc.addEventListener('pointercancel', touchAbandoned, true);
-  doc.addEventListener('scroll', touchAbandoned, true);
+  doc.addEventListener('pointerup', touchEnd, true);
   return () => {
     clearTimeout(pending);
     clearTimeout(openingTimer);
@@ -131,9 +142,7 @@ export function observeVirtualKeyboard(target: Window, update: (open: boolean) =
     visual?.removeEventListener('resize', resize);
     doc.removeEventListener('focusin', focusChange);
     doc.removeEventListener('focusout', focusChange);
-    doc.removeEventListener('pointerdown', touchEntry, true);
-    doc.removeEventListener('pointercancel', touchAbandoned, true);
-    doc.removeEventListener('scroll', touchAbandoned, true);
+    doc.removeEventListener('pointerup', touchEnd, true);
   };
 }
 

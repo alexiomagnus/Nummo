@@ -41,8 +41,9 @@ export const regularIconPadding = {
 // cramped next to the others.
 // `small`: the date picker only (user's request, 21 November: «Annulla» and «OK» looked too big under the calendar), 40 tall
 // (the Material 3 button height); shorter on 22 November (user's request): 16 beside the label instead of 24 and at least 72
-// wide; later the same day both 88 wide (user's request: «Annulla» and «OK» the same length), which «Annulla» fits.
-const dialogActionStyles = StyleSheet.create({ button: { minWidth: 112, marginRight: 0 }, phone: { minWidth: 96 }, small: { minWidth: 88 }, smallContent: { minHeight: 40 },
+// wide; later the same day both 88 wide (user's request: «Annulla» and «OK» the same length), which «Annulla» fits; then 44 tall
+// (user's request, 22 November: «slightly» taller), still below the 48 of the other dialog buttons.
+const dialogActionStyles = StyleSheet.create({ button: { minWidth: 112, marginRight: 0 }, phone: { minWidth: 96 }, small: { minWidth: 88 }, smallContent: { minHeight: 44 },
   smallLabel: { marginHorizontal: spacing.lg } });
 const dialogAction = dialogActionStyles.button;
 export const dialogActionsRow = StyleSheet.create({ row: { flexWrap: 'wrap', gap: spacing.md } }).row;

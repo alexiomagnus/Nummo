@@ -70,6 +70,15 @@ export function merchantNameError(value: string): string | null {
   return null;
 }
 
+// New name chosen in the «Esercenti» page (22 November, on request): kept as typed (spaces normalised), since it is a
+// deliberate spelling; its key may be another merchant's, and then the two become one (the caller confirms the merge).
+export function renamedMerchant(value: string): Merchant | string {
+  const name = normalizeMerchantName(value);
+  if (!name) return 'Scrivi il nome dell’esercente.';
+  if (/[\t\r\n]/u.test(name)) return 'Il nome non può contenere a capo o tabulazioni.';
+  return merchantNameError(name) ?? { id: merchantKey(name), name };
+}
+
 // A stored merchant: name already normalised, 1..60 characters, ID equal to the key of the name.
 export function parseMerchant(value: unknown): Merchant | null {
   const v = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
