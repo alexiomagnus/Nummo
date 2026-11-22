@@ -112,7 +112,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     }
     const filled = draftOfTemplate(template);
     const fundId = template.fund_id === null ? noFund : fundChoices.some((choice) => choice.fund.id === template.fund_id) ? template.fund_id : '';
-    update({ description: filled.description, date: filled.date, categoryId: existingCategory(template.category_id, categories), fundId,
+    update({ description: filled.description, categoryId: existingCategory(template.category_id, categories), fundId,
       ...(template.amount_minor !== null ? { amount: filled.amount } : {}), ...(template.merchant ? { merchant: template.merchant } : {}) });
   };
   // Leaving a field empty is not an error yet: missing values are reported on save.

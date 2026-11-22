@@ -36,7 +36,7 @@ type Props = {
 // out; only the picker of Nuova spesa is hidden.
 // Removed on 16 November 2026, reintroduced on 21 November on request (now with «Esercente»).
 export function TemplatesPage({ remote, categories, fundChoices, fundNames, merchants, enabled, onToggle }: Props) {
-  const { t, formatAmount, formatDate } = useI18n();
+  const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
   const haptic = useHaptics();
   const muted = { color: colors.onSurfaceVariant };
@@ -66,7 +66,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
             : <View role="list">{remote.templates.map((template, index) => {
               const category = labels.get(template.category_id);
               const details = [category?.label ?? t("Categoria eliminata"), template.fund_id ? fundNames.get(template.fund_id) ?? t("Fondo eliminato") : null,
-                template.merchant, formatDate(template.date)].filter(Boolean).join(' · ');
+                template.merchant].filter(Boolean).join(' · ');
               return <ListRow key={template.id} icon={category?.icon ?? null} title={template.description} subtitle={details} divider={index < remote.templates.length - 1}
                 pressLabel={t("Modifica {p0}", { p0: template.description })} onPress={() => setEditing(template)}
                 trailing={<View style={styles.trailing}>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Category } from '../../domain/category';
 import { noFund } from '../../domain/funds';
+import { todayInRome } from '../../domain/policy';
 import type { RankedMerchant } from '../../domain/merchant';
 import { draftOfTemplate, newTemplateDraft, validateTemplateDraft, type TemplateData, type TemplateDraft, type TemplateErrors, type TemplateRecord } from '../../domain/template';
 import { useSizeClass } from '../../theme/useSizeClass';
@@ -31,14 +32,16 @@ export function useTemplateForm({ categories, fundChoices, merchants, initial, o
   };
   const [draft, setDraft] = useState<TemplateDraft>(start);
   const [errors, setErrors] = useState<TemplateErrors>({});
-  // Remounts the date field after a saved template, so «Altra data» closes with the cleared draft.
+  // Remounts the fields after a saved template, so they start again from the cleared draft.
   const [formKey, setFormKey] = useState(0);
   const update = (patch: Partial<TemplateDraft>) => {
     setDraft((previous) => ({ ...previous, ...patch }));
     setErrors((previous) => { const next = { ...previous }; for (const key of Object.keys(patch) as (keyof TemplateDraft)[]) delete next[key]; return next; });
   };
   const submit = () => {
-    const result = validateTemplateDraft({ ...draft, fundId: draft.fundId === noFund ? '' : draft.fundId }, categories, funds, { fundChosen: draft.fundId !== '' });
+    // No date field (22 November, on request): the stored `date` (still required by the data and the Rules) is the day of
+    // the save, and «Nuova spesa» never takes it from a template.
+    const result = validateTemplateDraft({ ...draft, date: todayInRome(), fundId: draft.fundId === noFund ? '' : draft.fundId }, categories, funds, { fundChosen: draft.fundId !== '' });
     if (!result.ok) { setErrors(result.errors); return; }
     if (onSubmit(result.data) && !initial) { setDraft(newTemplateDraft()); setErrors({}); setFormKey((key) => key + 1); }
   };
@@ -46,8 +49,8 @@ export function useTemplateForm({ categories, fundChoices, merchants, initial, o
 }
 export type TemplateFormState = ReturnType<typeof useTemplateForm>;
 
-// The fields of a template: the very same ones as «Nuova spesa» (amount and date on the first row, description, merchant,
-// category with the fund beside it or below it on phones), minus the repeat: a recurring expense already repeats by
+// The fields of a template: the very same ones as «Nuova spesa» (amount on the first row, description, merchant, category
+// with the fund beside it or below it on phones), minus the date (22 November, on request) and the repeat: a recurring expense already repeats by
 // itself. Only the merchant may stay empty (the amount is required since 21 November, on request).
 export function TemplateFields({ form, disabled, dense }: { form: TemplateFormState; disabled?: boolean; dense?: boolean }) {
   const { draft, errors, update, formKey, categories, fundChoices, merchants } = form;
@@ -55,7 +58,7 @@ export function TemplateFields({ form, disabled, dense }: { form: TemplateFormSt
   return (
     <ExpenseFields dense={dense ?? size === 'expanded'} key={formKey} values={draft} errors={errors} categories={categories} disabled={disabled}
       fund={fundChoices.length > 0 ? <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={disabled}
-        onChange={(fundId) => update({ fundId })} /> : undefined} fundBelow={size === 'compact'}
+        onChange={(fundId) => update({ fundId })} /> : undefined} fundBelow={size === 'compact'} withoutDate
       merchant={{ value: draft.merchant, merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
       onChange={(field, value) => update({ [field]: value })} onBlur={() => {}} />
   );

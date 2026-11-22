@@ -62,6 +62,16 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Templates senza data — 22 novembre 2026
+
+- Su richiesta («non deve essere possibile inserire la data»): pagina Templates e dialogo di modifica senza il campo Data (`withoutDate` di
+  `ExpenseFields`: l'Importo occupa tutta la prima riga). Il campo `date` resta nei dati (Rules e backup invariati): si salva con il giorno
+  del salvataggio (anche modificando un template vecchio) e non conta più: Nuova spesa non lo prende dal template (resta la data del modulo)
+  e l'elenco non lo mostra. Guida (IT/EN) e README senza «data» nei template.
+- **Verifica:** typecheck, `npm test` **547/547**, `build:demo`. Chromium headless su `dist-demo` (Standard) a 1280×900 e 390×844: nessun campo
+  Data visibile, template creato (12,50 €, «Caffè al bar», categoria) con `date` di oggi; nessun errore JS. **Non provati:** dialogo di
+  modifica e scelta del template in Nuova spesa nel browser. Non committato, non pubblicato.
+
 ## «Elimina tutte le spese», «Cambia modalità» nel colore principale, PIN del blocco in Standard — 22 novembre 2026
 
 - **Elimina tutte le spese** (su richiesta: «solamente tutti i dati delle spese registrate», copia automatica prima, solo l'archivio): nuovo

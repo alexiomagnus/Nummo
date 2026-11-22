@@ -33,6 +33,8 @@ type Props = {
   fundBelow?: boolean;
   // «Esercente», after the description: only the new-expense form and the expense editor show it.
   merchant?: { value: string; merchants: readonly RankedMerchant[]; error?: string; onChange: (value: string) => void };
+  // Templates: no date field (22 November, on request); the amount takes the whole first row.
+  withoutDate?: boolean;
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
@@ -40,7 +42,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row (also on phones, where they share it in halves), then description, merchant (optional), category and `extra` (repeat).
 // Every other field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, fund, fundBelow = false, merchant, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, fund, fundBelow = false, merchant, withoutDate = false, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -63,12 +65,12 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
               onBlur={() => onBlur('amount')} accessibilityLabel={t("Importo in euro, obbligatorio")}
               contentStyle={[styles.amountText, compact && styles.amountTextCompact, compact && amountSize(values.amount)]} left={leadingIcon(iconShapes.euro)} />
           </View>
-          <View style={[styles.date, compact && styles.dateCompact]}>
+          {!withoutDate && <View style={[styles.date, compact && styles.dateCompact]}>
             <DateField value={values.date} disabled={disabled} error={Boolean(errors.date)} onChange={(date) => onChange('date', date)} />
-          </View>
+          </View>}
         </View>
         {errors.amount && <HelperText type="error" accessibilityRole="alert">{t(errors.amount)}</HelperText>}
-        {errors.date && <HelperText type="error" accessibilityRole="alert">{t(errors.date)}</HelperText>}
+        {!withoutDate && errors.date && <HelperText type="error" accessibilityRole="alert">{t(errors.date)}</HelperText>}
       </View>
       <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
