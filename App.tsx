@@ -24,6 +24,8 @@ import { DataWorkspace, RemoteWorkspace, StartupWorkspace, type StorageSlot } fr
 import { ModeChoice } from './src/features/storage/ModeChoice';
 import { useBackLayer } from './src/components/BackNavigation';
 import { StandardAvatar } from './src/features/settings/ProfileImageCard';
+import { AppLockScreen, useLockRecovery } from './src/features/lock/AppLock';
+import { disableAppLock } from './src/features/lock/appLockStore';
 import { backLevels } from './src/theme/backStack';
 import { AdvancedStorage, StandardStorage } from './src/features/storage/StorageSection';
 import { ModeTransfer } from './src/features/storage/ModeTransfer';
@@ -72,6 +74,7 @@ export default function App() {
             <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} />
             <Root dark={dark} onToggleTheme={() => updatePreferences({ theme: dark ? 'light' : 'dark' })}
               preferences={preferences} onChangePreferences={updatePreferences} onResetPreferences={resetPreferences} />
+            <AppLockScreen />
           </PaperProvider>
         </SafeAreaProvider>
         </HapticsProvider>
@@ -211,6 +214,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const session = useSession(!configMissing);
   // «Esci» goes back to the first screen (Standard / Avanzata), not to the sign-in screen (user's request, 21 November).
   const signOut = () => { if (session.status === 'signed-in') session.signOut(() => onChangeMode(null)); };
+  // App lock, signed in: «Non riesco a sbloccare» signs out (the data need Google again) and turns the lock off afterwards.
+  useLockRecovery(session.status === 'signed-in' ? () => session.signOut(() => { disableAppLock(); onChangeMode(null); }) : null);
   const storageNote = t(demo || firestoreEmulator
     ? 'Spese e categorie negli emulatori locali Firestore.'
     : 'Spese e categorie nel tuo progetto Firebase personale.') + ' ' + t(persistentCache

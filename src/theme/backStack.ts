@@ -25,7 +25,8 @@ export type BackWindow = {
 
 // Higher levels close first; within a level, the most recently opened. A page and the detail inside it may register in
 // the same commit, children first (React runs child effects first): the level keeps the order right anyway.
-export const backLevels = { page: 0, detail: 1, overlay: 2 } as const;
+// `lock`: the app lock screen (features/lock), above everything; it refuses, so Back does nothing while locked.
+export const backLevels = { page: 0, detail: 1, overlay: 2, lock: 3 } as const;
 export type BackLevel = (typeof backLevels)[keyof typeof backLevels];
 
 // `onBack` closes the layer and returns true, or returns false to refuse (a dialog busy with an operation): the layer

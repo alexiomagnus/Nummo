@@ -60,6 +60,7 @@ export const iconShapes = {
   // Protection of the device archive (page Archiviazione e backup).
   shield: '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6l-7-3Z"/>',
   shieldCheck: '<path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6l-7-3Z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15.5v2"/>',
   shieldOff: '<path d="M8 4.7 12 3l7 3v5.5c0 1.8-.5 3.5-1.5 5M16 19a12 12 0 0 1-4 2c-4.1-1.6-7-5.3-7-9.5V7M3 3l18 18"/>',
   template: '<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/>',
   // Enlarge / reduce a photo (receipt scan): four corners pointing out / in.

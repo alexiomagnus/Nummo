@@ -218,6 +218,23 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
   browser (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo
   con `docs/testing/`, tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Blocco dell'app con impronta o viso — 22 novembre 2026
+
+- Su richiesta, con le scelte dell'utente: recupero con Google in Avanzata e «Non riesco a sbloccare» con conferma in Standard; blocco
+  all'apertura e al ritorno dopo un tempo scelto (subito, 1, 5, 15 minuti; predefinito 1). WebAuthn con autenticatore di piattaforma, nessuna
+  dipendenza nuova; dettagli e limiti in `AGENTS.md` (è uno schermo, non cifratura). File: `domain/appLock.ts`, `services/platformLock.ts`,
+  `features/lock/` (`appLockStore.ts`, `AppLock.tsx`: schermata e scheda «Blocco dell’app»), `App.tsx` (schermata, recupero in Avanzata),
+  `SettingsPage.tsx` (scheda dopo Funzionalità, reset del solo ritardo), `backStack.ts` (livello `lock`), icona `lock`, `createPortal` in
+  `react-dom.d.ts`, Guida («Blocco con impronta o viso») e testi IT/EN.
+- **Verifica:** `npm run check` OK (**540/540**, nuovo `tests/appLock.test.ts`). Chromium headless su `dist-demo` servito su `localhost`
+  (WebAuthn rifiuta gli IP), autenticatore virtuale CDP, Standard, 390×844 touch: interruttore → credenziale creata (1) e scelta dei
+  ritardi; nascosta e tornata subito con 1 minuto → nessun blocco; ricarica → bloccata, `#root` inert, Indietro ed Escape non sbloccano;
+  impronta rifiutata → messaggio, accettata → sblocco; «Subito» → bloccata appena nascosta, sblocco automatico al ritorno; «Non riesco a
+  sbloccare» → «Disattiva il blocco» → Nuova spesa; riaccensione con la stessa credenziale (sempre 1); spegnimento con impronta rifiutata
+  negato, con impronta accettata riuscito. Nessun errore JS. **Non provati:** il recupero in Avanzata («Esci», serve un accesso Google),
+  impronta/viso reali sul Pixel 8 nell'app installata e su iPhone (Safari può chiedere un tocco prima della richiesta: c'è «Sblocca»),
+  dove appare la passkey «Nummo» nel gestore delle password del telefono. Non committato, non pubblicato.
+
 ## Tasto «Indietro» che non esce dall'app, immagine del profilo in Standard — 22 novembre 2026
 
 - **Indietro (Android e browser).** Su richiesta: prima l'app non scriveva nulla nella cronologia (solo la guida `#guida`), quindi Indietro

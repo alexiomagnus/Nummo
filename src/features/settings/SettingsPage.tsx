@@ -24,6 +24,8 @@ import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 import { resetReceiptAi } from '../receipts/aiSettings';
 import { hasHaptics } from '../../theme/haptics';
 import { ProfileImageCard } from './ProfileImageCard';
+import { AppLockCard } from '../lock/AppLock';
+import { resetAppLockDelay } from '../lock/appLockStore';
 import { noProfileImage } from './profileImage';
 import { saveProfileImage } from './useProfileImage';
 
@@ -67,7 +69,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   // «Ripristina predefiniti» brings back the defaults of everything on this page (user's request, 21 November): the
   // preferences, the receipt scan (off, no service), the profile picture of the Standard mode and, with an archive open,
   // its preferred categories and fund.
-  const resetAll = () => { onReset(); resetReceiptAi(); if (profileImage) saveProfileImage(noProfileImage); onResetArchive?.(); };
+  // The app lock is the exception: only its delay goes back to the default, since turning it off asks for the fingerprint.
+  const resetAll = () => { onReset(); resetReceiptAi(); resetAppLockDelay(); if (profileImage) saveProfileImage(noProfileImage); onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
@@ -170,6 +173,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
           {vibrationAvailable && <SwitchRow label={t("Vibrazione")} supporting={t("Una breve vibrazione quando interagisci con l'app. Su Android non vibra con il telefono in silenzioso o in Non disturbare.")}
             value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />}
         </Card>
+        <AppLockCard />
         {archiveSections}
         <ReceiptAiCard />
       </View>
