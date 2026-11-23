@@ -81,6 +81,24 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## Pannelli come schermi, transizione più morbida — 23 novembre 2026
+
+- **Su richiesta** («animazione ancora più smooth e soddisfacente»; sostituire con lo stesso metodo i pannelli: Nuova lista, selettore della
+  data, Aggiungi denaro, Trasferisci, Modifica fondo, Storico dei pagamenti, Modifica serie/spesa, Prodotti acquistati, scheda «Prossimo mese»).
+- **Fatto:** `components/ScreenLayer.tsx` (strato comune, origine, trasformazione in apertura e chiusura, anche per smontaggio su una copia),
+  `theme/containerTransform.ts` (ex `features/history/detailMotion.ts`, molla 0,95/200, velo, scala del contenuto), `AppDialog` con
+  `variant` (`screen` di base, `alert` per `DeleteDialog`, `StorageSection`, `AppLock`) e `label`; `DetailScreen` ora su `ScreenLayer`;
+  «Prossimo mese» apre uno schermo dei rinnovi; `useFocusHandoff` con `textEntry` va al primo campo anche se prima c'è un pulsante. Tutti gli
+  altri dialoghi (categorie, template, esercenti, scansione, registrazione della lista, stato dell'abbonamento, assegnazione ai fondi,
+  dettagli di Analisi…) diventano schermi con lo stesso codice. Testi: «{p0} entro {p1} giorni» nuovo.
+- **Verifica:** `npm run check` OK (**590/590**). Chromium headless, `nummo-test-casi-limite-2026-11-08.json` importato, 390×844 chiaro e
+  1440×900 scuro: data, Modifica spesa dal dettaglio (schermo sopra schermo), «Prossimo mese», Storico dei pagamenti dal dettaglio di una
+  serie, Aggiungi denaro, Trasferisci, Modifica fondo, Nuova lista (focus nel nome): ognuno cresce dal suo pulsante o campo e torna indietro
+  animato, nessuna copia lasciata in `#root`, nessun errore JS. Con `nummo-pagamenti-eliminati-v9.json`: «Modifica serie», Storico e «Da
+  quando» («Metti in pausa») aperti sopra il dettaglio della serie. **Non provati** nel browser gli altri schermi (categorie, template,
+  esercenti, scansione con fotocamera, registrazione lista, assegnazione, dettagli di Analisi), né tastiera virtuale reale, iPhone, app
+  Android. Committato e inviato su richiesta; Hosting non pubblicato.
+
 ## Schermo di dettaglio delle spese — 23 novembre 2026
 
 - **Su richiesta** (al tocco su una spesa uno schermo di dettaglio al posto dei dettagli aperti nella scheda, transizione M3 Expressive,

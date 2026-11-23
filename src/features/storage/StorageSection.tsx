@@ -116,7 +116,7 @@ function DialogFrame({ visible, title, label, onDismiss, children, actions }: { 
   const compact = useSizeClass() === 'compact';
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={{ maxWidth: 440 }}>
+      <Dialog variant="alert" visible={visible} onDismiss={onDismiss} style={{ maxWidth: 440 }}>
         <View role="alertdialog" aria-label={label} style={styles.container}>
           <Dialog.ScrollArea style={styles.scrollArea}>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.dialogBody}>

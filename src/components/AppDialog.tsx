@@ -7,6 +7,7 @@ import { transitions } from '../theme/motion';
 import { dialogColor } from '../theme/theme';
 import { layout, motion, radius, spacing } from '../theme/tokens';
 import { Scrim, useEscape, useFocusHandoff, useOverlayMotion, usePresence } from './Overlay';
+import { ScreenLayer } from './ScreenLayer';
 import { noScrollEdges, scrollEdges, type ScrollEdges } from './scrollEdges';
 
 type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dismissable' | 'testID'> & {
@@ -14,6 +15,12 @@ type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dism
   // Focus the first text field on opening also on touch-first devices, bringing up the keyboard. Only for creation
   // dialogs that start from typing a name (Nuova lista, Nuovo fondo): every other dialog keeps the keyboard closed.
   focusTextEntry?: boolean;
+  // `screen` (default since 23 November, on request): a full screen of the app on the shared screen layer (ScreenLayer),
+  // with the container transform from the element that opened it. `alert`: the small centred dialog, kept only for short
+  // confirmations and warnings (delete, change of mode, the lock's PIN).
+  variant?: 'screen' | 'alert';
+  // Accessible name of a screen without Title (the date picker, whose headline is the date).
+  label?: string;
   children: ReactNode;
 };
 
@@ -26,7 +33,35 @@ const surfaceExit = transitions([['opacity', motion.fade, motion.exitEasing], ['
 // Shared surface and viewport bounds for settings, editors, dates and confirmations.
 // Matching `background` also makes outlined-field label notches blend with the modal.
 // Layout of Paper's Dialog (Title/Content/ScrollArea/Actions keep working), animated by the shared overlay layer.
-function AppDialogRoot({ visible = false, onDismiss, dismissable = true, testID, style, focusTextEntry = false, children }: Props) {
+function AppDialogRoot(props: Props) {
+  if ((props.variant ?? 'screen') === 'screen') return props.visible ? <ScreenDialog {...props} /> : null;
+  return <AlertDialog {...props} />;
+}
+
+// Editors and content panels as screens: Title goes into the top bar beside Back, the other blocks (Content, ScrollArea)
+// fill the screen and Actions sit at its bottom, above the safe area (and above the keyboard: the screen shrinks with it).
+// Back, Escape and the system Back dismiss it, unless `dismissable` is false (an operation running).
+function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = false, label, children }: Props) {
+  const { t } = useI18n();
+  let title: ReactNode;
+  const blocks: ReactNode[] = [];
+  Children.toArray(children).forEach((child) => {
+    if (child == null || typeof child === 'boolean') return;
+    if (isValidElement<{ children?: ReactNode; style?: StyleProp<ViewStyle> }>(child) && child.type === Dialog.Title) { title = child.props.children; return; }
+    if (isValidElement<{ style?: StyleProp<ViewStyle> }>(child) && child.type === Dialog.Actions) {
+      blocks.push(cloneElement(child as ReactElement<{ style?: StyleProp<ViewStyle> }>, { style: [child.props.style, screenStyles.actions] }));
+      return;
+    }
+    blocks.push(child);
+  });
+  const dismiss = () => { if (dismissable && onDismiss) onDismiss(); };
+  return <ScreenLayer label={label ?? (typeof title === 'string' ? title : t("Indietro"))} title={title} backLabel={t("Indietro")} onBack={dismiss} backDisabled={!dismissable}
+    onEscape={() => { if (!dismissable || !onDismiss) return false; onDismiss(); }} scroll={false} textEntry={focusTextEntry}>
+    <View testID={testID} style={screenStyles.body}>{blocks}</View>
+  </ScreenLayer>;
+}
+
+function AlertDialog({ visible = false, onDismiss, dismissable = true, testID, style, focusTextEntry = false, children }: Props) {
   const { t } = useI18n();
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -99,6 +134,13 @@ function ScrollArea({ style, children, ...rest }: ComponentProps<typeof View>) {
 
 const scrollAreaStyles = StyleSheet.create({
   container: { paddingHorizontal: 24, flexGrow: 1, flexShrink: 1, marginBottom: 24 },
+});
+
+const screenStyles = StyleSheet.create({
+  body: { flex: 1, minHeight: 0, paddingTop: spacing.sm },
+  // Always at the bottom of the screen, whatever the height of the content above (Paper's Actions grow by default, which
+  // would take the free space before the auto margin and leave the buttons under the fields).
+  actions: { marginTop: 'auto', flexGrow: 0 },
 });
 
 const styles = StyleSheet.create({

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { cardClip, cardShift, crossfade, detailSpring, fullClip, usableCard } from '../src/features/history/detailMotion.ts';
+import { cardClip, cardShift, crossfade, detailSpring, fullClip, usableCard } from '../src/theme/containerTransform.ts';
 import { springEasing, springValue } from '../src/theme/themeTransition.ts';
 
 const phone = { left: 0, top: 0, width: 390, height: 844 };
@@ -32,14 +32,15 @@ test('dettaglio spesa: si parte dalla scheda solo se è disposta e per almeno me
   assert.equal(usableCard({ ...card, top: 844 - 20 }, phone), false);
 });
 
-test('dettaglio spesa: molla fluida, senza rimbalzo visibile, sotto il mezzo secondo', () => {
+test('dettaglio spesa: molla morbida, risposta pronta, nessun rimbalzo, sotto i 600 ms', () => {
   const { duration, easing } = springEasing(detailSpring);
-  assert.ok(duration >= 400 && duration <= 500, `durata ${duration}`);
+  assert.ok(duration >= 500 && duration <= 600, `durata ${duration}`);
   assert.match(easing, /^linear\(0, /);
   const samples = Array.from({ length: 300 }, (_, i) => springValue(detailSpring, i / 300));
-  assert.ok(Math.max(...samples) < 1.002, 'nessun rimbalzo visibile');
-  const at90 = samples.findIndex((value) => value >= 0.9) * (1000 / 300);
-  assert.ok(at90 >= 150 && at90 <= 250, `90 % in ${at90} ms`);
+  assert.ok(Math.max(...samples) < 1.0005, 'nessun rimbalzo');
+  const at = (v: number) => samples.findIndex((value) => value >= v) * (1000 / 300);
+  assert.ok(at(0.5) <= 130, `metà strada in ${at(0.5)} ms: risposta pronta al tocco`);
+  assert.ok(at(0.9) >= 230 && at(0.9) <= 290, `90 % in ${at(0.9)} ms`);
 });
 
 test('dettaglio spesa: dissolvenza incrociata, mai due contenuti pieni insieme', () => {

@@ -206,7 +206,7 @@ function PinDialog({ visible, onDismiss, onConfirm }: { visible: boolean; onDism
   const title = t("Scegli il PIN di Nummo");
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={close} style={{ maxWidth: 400 }}>
+      <Dialog variant="alert" visible={visible} onDismiss={close} style={{ maxWidth: 400 }}>
         <View role="dialog" aria-label={title} style={styles.dialog}>
           <Dialog.ScrollArea style={styles.dialogArea}>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.dialogBody}>

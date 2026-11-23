@@ -133,6 +133,7 @@ export const english: Readonly<Record<string, string>> = {
   "Apri i dettagli di {p0}, {p1}": "Open the details of {p0}, {p1}",
   "Torna alle spese": "Back to expenses",
   "Torna agli abbonamenti": "Back to subscriptions",
+  "{p0} entro {p1} giorni": "{p0} within {p1} days",
   "Pausa": "Pause",
   "Modifica {p0}": "Edit {p0}",
   "Dettagli di {p0}": "Details for {p0}",

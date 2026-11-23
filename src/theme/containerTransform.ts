@@ -1,16 +1,25 @@
-// Geometry and timing of the expense detail's container transform (23 November, on request): the tapped card grows into
-// the detail screen and shrinks back into it. Pure, so it is tested without a DOM (tests/detailMotion.test.ts).
+// Geometry and timing of the container transform of every screen layer (components/ScreenLayer.tsx: the detail of an
+// expense or subscription, and every editor and content panel that used to be a dialog; 23 November, on request): the
+// pressed element (a card, a button, a field) grows into the screen and the screen shrinks back into it. Pure, so it is
+// tested without a DOM (tests/containerTransform.test.ts).
 
-import type { Spring } from '../../theme/themeTransition.ts';
+import type { Spring } from './themeTransition.ts';
 
 export type Box = Readonly<{ left: number; top: number; width: number; height: number }>;
 
-// Material 3 Expressive, standard motion scheme, slow spatial spring (damping ratio 0.9, stiffness 300): about 450 ms,
-// 90 % of the way in 200 ms, an overshoot of 0.15 % (invisible). The expressive springs bounce visibly, too much for a
-// container that fills the screen (the request: fluid, not elastic).
-export const detailSpring: Spring = { stiffness: 300, damping: 0.9 * 2 * Math.sqrt(300), mass: 1 };
+// Softer than the first version (M3 standard slow spatial, 0.9/300: about 450 ms), on request («ancora più smooth»): damping
+// ratio 0.95, stiffness 200. Half the way in about 115 ms, so the response to the tap is as quick, then a longer, softer
+// landing (90 % at 260 ms, settled in about 550 ms) and no overshoot at all, which a container filling the screen must not have.
+export const detailSpring: Spring = { stiffness: 200, damping: 0.95 * 2 * Math.sqrt(200), mass: 1 };
 
-// The detail fills `frame`; `card` is the tapped card, both in the same coordinates. The clip that shows only the card's
+// The page under the growing screen dims to this opacity of the theme's backdrop (and back), for depth while it moves;
+// once the screen covers its frame the scrim is hidden under it.
+export const scrimOpacity = 0.32;
+
+// The screen's content enters from slightly smaller, centred on the pressed element (and leaves the same way).
+export const contentScale = 0.94;
+
+// The screen fills `frame`; `card` is the pressed element (a card, a button, a field), both in the same coordinates. The clip that shows only the card's
 // area of the detail surface, with the card's own corner radius: the start of the opening, the end of the closing.
 export function cardClip(card: Box, frame: Box, radius: number): string {
   const top = card.top - frame.top;

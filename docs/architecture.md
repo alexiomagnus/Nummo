@@ -1564,3 +1564,23 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   (generico sul valore mostrato, con `cardId` per la scheda d'origine): `ExpenseDetail` e `SubscriptionDetail` danno solo il contenuto. Le
   azioni della serie (storico, pausa/annullamento con `StatusDialog`, riattivazione, Modifica) vivono nel dettaglio, con le stesse funzioni
   del workspace di prima; la riga della lista apre soltanto.
+
+## Pannelli come schermi, transizione più morbida — 23 novembre 2026
+
+- **Richiesta dell'utente:** animazione d'apertura ancora più fluida e gli stessi schermi al posto dei pannelli (Nuova lista, selettore della
+  data, Aggiungi denaro, Trasferisci tra fondi, Modifica fondo, Storico dei pagamenti, Modifica serie/spesa, Prodotti acquistati, la scheda
+  «Prossimo mese»).
+- **Decisione:** un solo strato, `components/ScreenLayer.tsx` (estratto dal dettaglio delle spese), e `AppDialog` che di base lo usa: tutti i
+  dialoghi di modifica e di contenuto diventano schermi senza riscriverli (stessa API Title/Content/ScrollArea/Actions: il titolo va nella
+  barra in alto, le azioni in fondo). Restano piccoli dialoghi (`variant="alert"`) solo le conferme e gli avvisi brevi (eliminazione, cambio
+  di modalità, PIN del blocco): uno schermo intero per «Eliminare…?» sarebbe sproporzionato e farebbe perdere il contesto.
+- **Origine della trasformazione:** l'id di una scheda quando c'è (spese, abbonamenti, «Prossimo mese»), altrimenti l'elemento premuto per
+  ultimo (`pointerdown` in cattura, o Invio/Spazio da tastiera) entro 4 s, risalito al pulsante o alla riga; Safari non dà il focus ai
+  pulsanti al clic, per questo non basta `activeElement`. Il raggio di partenza è quello dell'origine (una pillola resta pillola).
+- **Chiusura per smontaggio:** quasi tutti i dialoghi si chiudono smontandosi (`{editing && <Editor />}`), quindi senza un'uscita. Nella
+  pulizia dell'effetto di layout (il DOM c'è ancora) lo strato si clona così com'è in quel momento (ritaglio, colore, opacità letti dagli
+  stili calcolati, anche a metà apertura), la copia inerte va in `#root` e torna nell'origine; poi si toglie. La pagina è subito usabile.
+- **Più morbida:** molla 0,95/200 (prima 0,9/300): metà strada in circa 115 ms come prima, atterraggio più lungo (circa 550 ms), nessun
+  rimbalzo; velo del fondo del tema sulla pagina (0,32) mentre lo schermo cresce; contenuto che entra da 0,94 di scala centrato
+  sull'origine; `will-change` durante il movimento. Niente ombra: `clip-path` la taglierebbe.
+

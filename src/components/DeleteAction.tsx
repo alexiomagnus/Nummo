@@ -37,7 +37,7 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
   const halves = children && !compact ? styles.half : undefined;
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={() => { if (!busy) onDismiss(); }} style={{ maxWidth: 400 }}>
+      <Dialog variant="alert" visible={visible} onDismiss={() => { if (!busy) onDismiss(); }} style={{ maxWidth: 400 }}>
         <View role="alertdialog" aria-label={title ?? t("Eliminare {p0}?", { p0: name })} style={styles.container}>
           <Dialog.ScrollArea style={styles.scrollArea}>
             <ScrollView keyboardShouldPersistTaps="handled">

@@ -87,7 +87,11 @@ export function useFocusHandoff(visible: boolean, shown: boolean, container: { c
   useEffect(() => {
     const node = container.current;
     if (!shown || !(node instanceof HTMLElement)) return;
-    const first = node.querySelector<HTMLElement>('input:not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly]), button:not([disabled]):not([tabindex="-1"]):not([aria-hidden="true"]), [role="menuitem"]:not([aria-disabled="true"]), [tabindex="0"]');
+    // A creation screen that starts from typing (textEntry) goes to its first text field even when a button comes before it
+    // (the Back button at the top of a screen layer).
+    const field = 'input:not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly])';
+    const first = (textEntry ? node.querySelector<HTMLElement>(field) : null)
+      ?? node.querySelector<HTMLElement>(`${field}, button:not([disabled]):not([tabindex="-1"]):not([aria-hidden="true"]), [role="menuitem"]:not([aria-disabled="true"]), [tabindex="0"]`);
     if (!first) return;
     const touchFirst = typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(hover: none) and (pointer: coarse)').matches;
     if (initialFocusAllowed(first, touchFirst, textEntry)) { first.focus({ preventScroll: true }); return; }
