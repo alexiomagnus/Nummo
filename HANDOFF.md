@@ -73,7 +73,7 @@ rilasci».
   data del tag, quindi tag `android-v0.3.1` ricreato con la data di oggi sullo stesso `fa06adb` (locale e remoto) e release ricreata con
   lo stesso titolo, le stesse note e gli stessi due file (APK scaricato prima e dopo, SHA-256 verificato), «Latest». Ordine su GitHub:
   0.3.1, 0.3.0, 0.2.0, 0.1.0. Chi aveva il vecchio tag in locale lo aggiorna con `git fetch --tags --force`.
-- **Git.** `main` = `origin/main`, solo il ramo `main`, quattro tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.0`, `android-v0.3.1`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.0`, `android-v0.3.1`, `android-v0.3.2`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
   inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
   pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
   sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
@@ -164,7 +164,9 @@ rilasci».
 - **Verifica:** typecheck e `npm test` OK (**581/581**); `assembleDebug assembleRelease` OK. Emulatore `Medium_Phone_API_37.0`
   (Android 17), release 0.3.2 sul sito di produzione, Standard: tocchi sulla barra → `Prebaked=HEAVY_CLICK(MEDIUM)`, `usage: TOUCH`,
   `finished`, anche con suoneria SILENT e Non disturbare attivo (l'emulatore lo riproduce col ripiego da 30 ms). **Non sentita** sul
-  Pixel 8. Committata e inviata; nessuna release GitHub, non installata sul telefono.
+  Pixel 8. Committata e inviata in `f74ff3a`. **Release GitHub `android-v0.3.2`** (su richiesta: tag annotato su `f74ff3a`, inviato;
+  APK compilato in una worktree pulita, poi rimossa con la copia della chiave; SHA-256 `9889a428…092a`, confermato da GitHub; certificato
+  `00b1c85c…0fcf`; versionCode 5), segnata «Latest» al posto della 0.3.1. L'utente la installa da GitHub sul Pixel 8.
 
 ## Cambio tema chiaro/scuro animato (M3 Expressive) — 23 novembre 2026
 
