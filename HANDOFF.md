@@ -6,7 +6,10 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `72fcf5a` (23 novembre, su richiesta: cambio tema animato e più lento,
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `d633282` (23 novembre, su richiesta: template dopo template senza
+  importo ed esercente del precedente, più tutto il codice fino a `f74ff3a`), da una worktree pulita (rimossa; il lavoro non committato
+  di un'altra sessione escluso): «Deploy complete!», bundle online `index-8c4df371…` identico a quello compilato (SHA-256), `sw.js`
+  identico. Rules invariate. Prima `72fcf5a` (23 novembre, su richiesta: cambio tema animato e più lento,
   menu dell'account senza limite di altezza, vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene),
   pubblicato con `npm run deploy:hosting` da una worktree pulita (rimossa, con la copia di `.env.production.local`): «Deploy complete!»,
   bundle online `index-e41d56f4…` identico a quello compilato (SHA-256), `sw.js` identico. Rules invariate. Arriva anche all'app Android
