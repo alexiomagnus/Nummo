@@ -689,8 +689,11 @@ Un abbonamento è una spesa ricorrente: nessuna nuova collezione né duplicazion
   in silenzio.
 - La modifica della serie (`ExpenseEditor` → `applyPriceEdit`) conserva gli stati; trasformarla in spesa singola li
   azzera, come il piano prezzi.
-- Non implementato: data di effetto scelta dall'utente (solo oggi), più di 8 cambi di stato per serie (oltre si crea
+- Non implementato (allora): data di effetto scelta dall'utente (solo oggi), più di 8 cambi di stato per serie (oltre si crea
   una nuova serie), nuovo ciclo dalla data di riattivazione.
+  **Superato in parte:** pausa e annullamento possono valere da una data passata scelta in `StatusDialog`, e il limite è oggi di
+  1000 cambi (`maxStatusChanges`, dal 22 novembre; prima 40, in origine 8), vedi le sezioni successive. Resta non implementato il
+  nuovo ciclo dalla riattivazione: la riattivazione vale sempre da oggi.
 
 ## Fondi e budget (8 novembre 2026)
 

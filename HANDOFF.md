@@ -123,14 +123,18 @@ rilasci».
   (su iOS probabilmente non si apre). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
   separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser.
-- **Ambiente.** Nessun runner hybrid attivo e nessun lock: su richiesta (22 novembre, sera), dopo l'ispezione, `.firebase/hybrid.lock`
+- **Ambiente.** Lock e runner hybrid: vedi sotto (23 novembre). Su richiesta (22 novembre, sera), dopo l'ispezione, `.firebase/hybrid.lock`
   del runner 291668 (partito alle 17:12 e interrotto senza pulizia: config rimasta, sessione `hybrid-aR7NqG` con la sola config della CLI e
   nessun `export/`, quindi niente da recuperare) rinominato in `hybrid.lock.stale-291668` e `.nummo-hybrid-291668.json` rimosso.
-  `emulator-data/` è l'export promosso alle 17:11 dalla sessione 36786. Poi, su richiesta e dopo l'ispezione, `.firebase/` ripulita:
+  `emulator-data/` è l'export promosso il 22 novembre alle 21:11 da una sessione hybrid successiva alla pulizia, che ha lasciato la
+  copia precedente (quella delle 17:11, sessione 36786) in `.firebase/hybrid-vtMRe6/previous` (riscontrato il 23 novembre, nessuna
+  modifica). Il 23 novembre, al momento della verifica, era attivo un runner hybrid dell'utente (PID 6588, `dev-hybrid.ts --clear`, con
+  il suo lock, `.nummo-hybrid-6588.json` e la sessione `hybrid-NBhDrA`): stato del momento, non toccato. Prima, su richiesta e dopo
+  l'ispezione, `.firebase/` ripulita:
   tolti i sei `hybrid.lock.stale-*`, le otto sessioni con la sola config della CLI, le otto copie vecchie dell'archivio locale (8–14
   novembre) e le cartelle di recupero del 10–11 novembre (`recovery-7au5sZ`, `recovery-20261110-orphan-41530`,
   `promote-20261111-recovery-41530`), superate da `emulator-data/`. Restano, per scelta dell'utente: `hybrid-hRM9mM/previous` (copia del
-  16 novembre, l'ultima precedente a `emulator-data/`), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
+  16 novembre), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
   `hosting.*.cache` (della CLI). I riferimenti alle cartelle tolte nelle sezioni storiche sotto non valgono più. AVD `Pixel_8` dell'emulatore: ha un PIN di blocco schermo
   sconosciuto (messo in una prova precedente; utente bloccato dopo l'avvio, app non avviabili): per le prove usare `Medium_Phone_API_37.0`
   (Android 17, senza blocco) o ricrearlo solo su richiesta.
@@ -5025,7 +5029,7 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   del mese con sette totali, mai elenchi né saldi; Aggiungi/Trasferisci solo con dati di saldo; archiviazione; fondo preferito scelto in
   Impostazioni (per browser). Budget mensile generale **non più nell'interfaccia** dal 16 novembre (dati e backup compatibili).
 - **Liste della spesa** (destinazione «Liste»): crea/rinomina/duplica/elimina, checklist con salvataggio automatico, «Registra spesa»
-  in transazione (una spesa con `list_id`/`list_items`, lista archiviata); eliminare la spesa riattiva la lista. Limite 100 prodotti.
+  in transazione (una spesa con `list_id`/`list_items`, lista archiviata); eliminare la spesa riattiva la lista. Fino a 500 prodotti per lista (100 fino al 22 novembre).
 - **Analisi:** periodi mese, mese scorso, 3 e 12 mesi; Ciambella, Blocchi e Barre (quota sul totale; variazione rispetto al periodo
   precedente rimossa con `26c5b8d`), andamento giornaliero;
   filtro «Fondo».
@@ -5034,7 +5038,7 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   `nummo-backup` **v11** (con i template) unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
   (dal 22 novembre il dialogo propone di scaricare prima un backup completo, mai una copia automatica); «Elimina tutte le spese».
 - **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
-  orario e fuso scelti dall'utente.
+  orario e fuso scelti dall'utente. Nell'app Android (dalla 0.3.0) le stesse notifiche come notifiche locali dell'app (`Reminders.kt`).
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
   tastiera virtuale gestita, transizioni con riduzione movimento; vibrazione breve (5/4 ms dal 22 novembre) solo su dispositivi touch,
   nella barra mobile, in Analisi e su «Salva»/«Crea», interruttore «Vibrazione» (assente su desktop); pagina offline di Nummo dal service worker (nessun avvio offline).
