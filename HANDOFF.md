@@ -145,7 +145,7 @@ rilasci».
 - **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
-  `docs/testing/` (file v11 con template ed esercente creato il 23 novembre, collaudo dall'interfaccia da fare), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+  `docs/testing/` (file v11 con template ed esercente creato e collaudato il 23 novembre), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
 ## Cambio tema chiaro/scuro animato (M3 Expressive) — 23 novembre 2026
 
@@ -189,7 +189,11 @@ rilasci».
   collaudo in `docs/testing/README.md`; valori al 23 novembre verificati da un test nuovo in `tests/testingBackups.test.ts` (export
   identico byte per byte, unione su archivio vuoto e sopra il v10 senza conflitti, conflitto su un template modificato, file dichiarato
   v10 rifiutato).
-- **Non eseguiti:** collaudo dall'interfaccia (Standard e Avanzata), importazione nell'emulatore con le Rules.
+- **Collaudo dall'interfaccia eseguito (su richiesta, stesso giorno)** in Chromium headless su `dist-demo/`, Standard e Avanzata
+  (emulatori demo propri su porte dedicate 39199/39380, config temporanea rimossa; il runner hybrid dell'utente non toccato):
+  tutti i passi con il risultato atteso, Rules che accettano i 9 template, nessun errore JS. Esiti in `docs/testing/README.md`.
+- **Osservazione da decidere:** passando direttamente da un template all'altro, Importo ed Esercente del precedente restano se il
+  nuovo non li ha (`applyTemplate` in `ExpenseForm.tsx`): un caffè può ereditare l'esercente «Q8» del pieno. Non corretto.
 
 ## App Android 0.3.0: notifiche nell'app — 22 novembre 2026
 

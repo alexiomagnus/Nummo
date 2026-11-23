@@ -204,6 +204,9 @@ Esercenti, che li elimina lasciando le spese senza esercente).
 
 Prima di provare: **Templates → «Usa i template»** acceso, altrimenti il pulsante «Template» di Nuova spesa non compare.
 
+Risultati partendo da un modulo vuoto (dopo un salvataggio o «Nessun template»); per il passaggio diretto da un template all'altro
+vedi l'osservazione sotto il collaudo.
+
 | Template | Caso | In Nuova spesa dopo la scelta |
 | --- | --- | --- |
 | `V11 Spesa settimanale` 45,00 € | esercente scritto `lidl` (minuscolo), fondo Quotidiano | Esercente «lidl»; salvata, la spesa usa l'esercente **esistente** «Lidl» (nessun nuovo esercente, nome invariato) |
@@ -228,7 +231,7 @@ Valori calcolati con il dominio al **23 novembre 2026**, su archivio contenente 
 - **Anteprima dell'unione** su archivio vuoto: 8 spese, 4 categorie, 2 fondi, 5 esercenti, **9 template**, nessun conflitto né
   riferimento mancante. Seconda unione: nulla da aggiungere.
 
-**Collaudo dall'interfaccia (non ancora eseguito):**
+**Collaudo dall'interfaccia** (passi; esiti nel paragrafo seguente):
 
 1. **Unisci ai dati esistenti** in Standard; poi Templates: 9 template, matita su ogni riga; con «Usa i template» spento elenco e
    modulo in grigio, mai nascosti.
@@ -243,6 +246,31 @@ Valori calcolati con il dominio al **23 novembre 2026**, su archivio contenente 
    nome di 60 caratteri, `amount_minor: null` e il fondo archiviato.
 
 Dichiarato v10, lo stesso file è rifiutato («L’esercente nei template richiede un backup versione 11 o successiva.»): coperto dal test.
+
+**Collaudo eseguito (23 novembre 2026)** su `dist-demo/` in Chromium headless a 1280×900, italiano, tema chiaro, nessun errore JS.
+
+- **Standard** (archivio nuovo, con le cinque categorie predefinite): tutti i passi 1–6 con il risultato atteso. Anteprima
+  «8 spese · 4 categorie · 2 fondi · 5 esercenti · 9 template», seconda unione «Niente da aggiungere»; Templates spento in grigio,
+  il template con la categoria assente mostra «Categoria eliminata»; selettore in ordine alfabetico; ogni riga della tabella
+  verificata da modulo vuoto (con fondo archiviato e senza fondo preferito: «Nessun fondo»); dopo il salvataggio Lidl a 4 spese e
+  nessun «lidl» in più, «Pizzeria Nuova Napoli» creato; `V11 Pane` a 2,60 € → unione bloccata con «1 elemento è diverso dai dati
+  salvati.» e `V11 Pane`; Sostituisci: «Elementi da eliminare: 9. Da scrivere: 1.» (2 spese, 5 categorie predefinite, 1 esercente
+  e il vecchio `V11 Pane`, riscritto), backup proposto e scaricato, nessuna copia automatica, poi `V11 Pane` a 2,40 € ed esercenti
+  come nel file; «Lidl» rinominato «Lidl Italia», il template conserva `lidl` e salvato ricrea «Lidl» (1 spesa); export JSON v11 con
+  i 9 template identici al file, CSV con BOM e solo le spese. Modifica di `V11 Vecchio template senza importo` → «Inserisci
+  l’importo.». A 390×844 (smartphone emulato) `V11 Mobili su misura` riempie il modulo senza scorrimento orizzontale, «Salva»
+  sopra la navigazione.
+- **Avanzata** (emulatori demo propri su porte dedicate, export della demo costruito per quelle porte, accesso dal popup
+  dell'emulatore Auth come proprietario demo): stessa anteprima, unione accettata dalle Rules per tutti i 9 template (letti via
+  REST: `amount_minor` nullo, 99999999999, esercente di 60 caratteri, fondo archiviato), seconda unione senza aggiunte, spesa
+  salvata da `V11 Pizza d'asporto` con `merchant_id` `m-pizzeria nuova napoli` creato insieme, export con template e fondi identici
+  al file, Sostituisci («Elementi da eliminare: 7. Da scrivere: 0.») → sul server 9 template, 5 esercenti, 8 spese, 4 categorie,
+  2 fondi.
+- **Osservazione (non corretta, da decidere):** passando **direttamente** da un template all'altro, Importo ed Esercente del
+  precedente restano se il nuovo non li ha (`applyTemplate` in `ExpenseForm.tsx` li applica solo se presenti). Esempio: dopo
+  `V11 Pieno`, `V11 Caffè e cornetto…` tiene l'esercente «Q8»; dopo `V11 Categoria che non esiste più`, `V11 Vecchio template
+  senza importo` tiene 9,99. Da modulo vuoto il risultato è quello della tabella.
+- **Non provati:** smartphone reale, inglese, CSV in un foglio di calcolo.
 
 ## Fixture dei test automatici
 
