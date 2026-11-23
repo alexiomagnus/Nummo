@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { StyleSheet, View, useColorScheme } from 'react-native';
 import { ActivityIndicator, IconButton, PaperProvider, Text, useTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ import { SvgIcon, iconShapes } from './src/components/SvgIcon';
 import type { Preferences } from './src/features/settings/preferences';
 import { SettingsPage } from './src/features/settings/SettingsPage';
 import { usePreferences } from './src/features/settings/usePreferences';
+import { switchTheme } from './src/theme/themeTransition';
 import { AccessDenied } from './src/features/session/AccessDenied';
 import { FirebaseConnect, OwnerSetup } from './src/features/session/FirebaseSetup';
 import { inAndroidApp } from './src/services/androidApp';
@@ -67,6 +69,14 @@ export default function App() {
   const dark = preferences.theme === 'system' ? systemScheme === 'dark' : preferences.theme === 'dark';
   const { accent, colorMode, font } = preferences;
   const theme = useMemo(() => createTheme(dark, reduceMotion, { accent, colorMode, font }), [dark, reduceMotion, accent, colorMode, font]);
+  // A change that turns light into dark or back (top-bar button, «Tema» in Settings) is revealed by a circle from the
+  // control (themeTransition.ts); every other change, «Sistema» included when it keeps the same look, applies at once.
+  const changePreferences = useCallback((change: Partial<Preferences>) => {
+    const theme = change.theme;
+    const nextDark = theme === undefined ? dark : theme === 'system' ? systemScheme === 'dark' : theme === 'dark';
+    if (nextDark === dark) updatePreferences(change);
+    else switchTheme(document, () => flushSync(() => updatePreferences(change)), { reducedMotion: reduceMotion });
+  }, [dark, systemScheme, reduceMotion, updatePreferences]);
   // Without initial metrics the provider renders nothing until an effect has measured the safe area.
   const [safeArea] = useState(initialSafeAreaMetrics);
   return (
@@ -76,8 +86,8 @@ export default function App() {
         <SafeAreaProvider initialMetrics={safeArea}>
           <PaperProvider theme={theme}>
             <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} />
-            <Root dark={dark} onToggleTheme={() => updatePreferences({ theme: dark ? 'light' : 'dark' })}
-              preferences={preferences} onChangePreferences={updatePreferences} onResetPreferences={resetPreferences} />
+            <Root dark={dark} onToggleTheme={() => changePreferences({ theme: dark ? 'light' : 'dark' })}
+              preferences={preferences} onChangePreferences={changePreferences} onResetPreferences={resetPreferences} />
             <AppLockScreen />
           </PaperProvider>
         </SafeAreaProvider>

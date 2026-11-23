@@ -1,6 +1,6 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 22 novembre 2026
+## Stato corrente — 22 novembre 2026 (aggiornato il 23)
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, dal più recente, sono cronaca delle singole fasi
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
@@ -62,8 +62,10 @@ rilasci».
   Poi, su richiesta, `android-v0.2.0` (su `0f340bf`, APK `6af4a0c8…9178`) e `android-v0.1.0` (su `759792c`, APK `06504315…c0f7`),
   **ricompilate** in worktree temporanee (rimosse) con la stessa chiave e la `local.properties` attuale: stesso codice, non lo stesso file
   degli APK installati allora (sovrascritti); pubblicate con `--latest=false` (la «Latest» resta la 0.3.1). Le note avvisano che Android
-  non installa una versione più vecchia sopra una più recente. Nessuna release per la 0.3.0 (superata dalla 0.3.1, stesso giorno).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, tre tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.1`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
+  non installa una versione più vecchia sopra una più recente. Il 23 novembre, su richiesta, anche `android-v0.3.0` (tag annotato su
+  `2b1e8fb`, inviato; APK `a3efdc94…658f`, confermato da GitHub, certificato `00b1c85c…0fcf`, versionCode 3), ricompilata allo stesso
+  modo in una worktree temporanea (rimossa, con la copia della chiave), `--latest=false`; le note dicono che è superata dalla 0.3.1.
+- **Git.** `main` = `origin/main`, solo il ramo `main`, quattro tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.0`, `android-v0.3.1`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
   inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
   pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
   sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
@@ -100,7 +102,8 @@ rilasci».
   correzioni (Android 11–12, validazione come il servizio push), prove su emulatore e Pixel 8, articolo eliso nei testi delle notifiche;
   `2b1e8fb` e `fa06adb` inviati e pubblicati su Hosting, release 0.3.1 sul Pixel 8. Rules e `DataStore` invariati. Sezione «App Android
   0.3.0» qui sotto.
-- **Verifiche (22 novembre, ultime).** Su `fa06adb`: `npm run check` OK (**575/575**), `assembleRelease` OK; `test:emulator` non rieseguito
+- **Verifiche (ultime).** Su `7008e73` (23 novembre, con il test del backup v11): `npm run check` OK (**576/576**, build demo).
+  Su `fa06adb`: `npm run check` OK (**575/575**), `assembleRelease` OK; `test:emulator` non rieseguito
   (Rules, `DataStore` e servizi invariati da `48361b9`, dove era **24/24**). Su `17ebce0`: `npm run check` OK (**565/565**), `test:emulator` **24/24**. Su `f4691aa`: `npm run check` OK (**564/564**), `test:emulator` **24/24**, `test:hybrid` **9/9**.
   Prima `npm run check` OK su `a4cbef0` (**560/560**). Prima `npm run check` OK su `f57b1b9` (typecheck, **557/557**, build demo); `test:emulator` **24/24** su
   `f57b1b9` (porte proprie 39199/39380). Prima `npm run check` OK su `1e5c615` (**551/551**);
@@ -143,6 +146,34 @@ rilasci».
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (file v11 con template ed esercente creato il 23 novembre, collaudo dall'interfaccia da fare), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Cambio tema chiaro/scuro animato (M3 Expressive) — 23 novembre 2026
+
+- **Su richiesta.** Il passaggio tra chiaro e scuro (pulsante della barra in alto e «Tema» nelle Impostazioni) è una rivelazione
+  circolare: il tema nuovo cresce dal controllo premuto (quello col focus; senza, dal centro) fino a coprire la finestra, sulla molla
+  spaziale lenta dello schema espressivo di M3 Expressive (rapporto 0,8, rigidità 200: 656 ms, leggero overshoot), resa come easing
+  CSS `linear()` (`springEasing`). View Transitions API (`src/theme/themeTransition.ts`, `switchTheme`), aggiornamento con `flushSync`
+  in `changePreferences` di `App.tsx`; durante l'istantanea le transizioni CSS sono spente (`data-theme-switching`, `GlobalStyle`).
+  Senza la API, con il movimento ridotto o se l'aspetto non cambia (per esempio «Sistema» uguale al tema attuale) il cambio resta
+  istantaneo. Nessuna dipendenza nuova.
+- **Verifica:** `npm run check` OK (**581/581** sullo snapshot del commit, senza il lavoro parallelo nell'albero; 5 nuovi in
+  `tests/themeTransition.test.ts`). Chromium headless su `dist-demo` (Standard, 412×915): tocco sul pulsante → un'animazione
+  `clip-path` su `::view-transition-new(root)` da (324, 32), 656 ms; tema scuro applicato, attributo tolto; con movimento ridotto
+  nessuna animazione; nessun errore JS. Screencast: il DOM cambia in un unico commit, ma un solo fotogramma (192 ms) mostrava i campi
+  ancora chiari dentro il cerchio, già corretti al successivo: probabilmente rasterizzazione software headless. **Da vedere su
+  dispositivo reale** (telefono, WebView dell'app, Safari, Firefox); il percorso da «Tema» nelle Impostazioni non provato nel browser.
+  Vale per web e app Android dopo `deploy:hosting`. Committato e inviato con il menu dell'account; Hosting non pubblicato.
+
+## Menu dell'account senza limite di altezza fisso — 23 novembre 2026
+
+- **Su richiesta** (screenshot: in Avanzata «Esci» restava sotto lo scorrimento del menu). `AccountMenu` passa ad `AnchoredMenu`
+  `maxHeight={Number.POSITIVE_INFINITY}`: il limite di 360 dei selettori (`MENU_MAX_HEIGHT`) non vale più per questo menu, che è
+  limitato solo dallo spazio nella finestra (`menuVerticalPlacement`) e scorre solo se non c'entra. Vale per web e app Android
+  (che apre il sito): nell'app arriva con `deploy:hosting`, senza un nuovo APK.
+- **Verifica:** `npm run check` OK (**576/576**, build demo). Chromium headless su `dist-demo`, Standard, 1280×800, 390×844 e
+  360×640: menu alto 351 senza scorrimento (6 voci da 48), almeno 229 px liberi sotto; nessun errore JS. **Non provato in Avanzata**
+  (dove compare «Esci»): servirebbe l'emulatore Auth; con una voce in più l'altezza attesa è circa 400, dentro la finestra anche a 360×640.
+  Committato e inviato con il cambio tema; Hosting non pubblicato.
 
 ## Backup di collaudo v11 con template ed esercente — 23 novembre 2026
 

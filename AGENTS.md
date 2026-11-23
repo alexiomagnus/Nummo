@@ -305,6 +305,9 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   Per le animazioni riusare `motion`/`motion.ts` (`transitions` per durate/curve per proprietà) e `Reveal`, rispettando
   `prefers-reduced-motion` con `useReducedMotion()`: `theme.animation.scale` non è affidabile, perché `PaperProvider`
   con un tema esplicito lo forza sempre a 1.
+  Cambio chiaro ↔ scuro (23 novembre, su richiesta): solo da `changePreferences` di `App.tsx` → `switchTheme` di `theme/themeTransition.ts`
+  (View Transitions API, cerchio dal controllo col focus sulla molla spaziale lenta M3 Expressive resa con `linear()`, transizioni CSS
+  spente durante l'istantanea con `data-theme-switching`); istantaneo senza la API, con movimento ridotto o se l'aspetto non cambia.
 - Overlay (`Overlay.tsx`, unico livello per menu, fogli e dialoghi): mai Paper `Menu` o `Modal`/`Dialog` diretti.
   `usePresence` + transizioni CSS solo su `transform`/`opacity`; superfici opache in pochi frame all'ingresso
   (`motion.fade`), uscita con `motion.exitEasing` senza copie semitrasparenti sulla pagina; con movimento ridotto

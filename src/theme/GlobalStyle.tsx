@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react';
 import { useTheme } from 'react-native-paper';
 import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
+import { themeSwitchAttribute } from './themeTransition';
 import { radius } from './tokens';
 import { observeScrolling, observeViewportHeight, scrollingAttribute, stickyBottomProperty } from './viewport';
 
@@ -23,6 +24,10 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       * { scrollbar-width: thin; scrollbar-color: ${colors.outline} transparent; }
       /* Dialogs and sheets: the scrollbar shows only while the content scrolls, then disappears (observeScrolling).
          No transition here: a rule on every element would override RN Web's own transitions. */
+      /* Light ↔ dark switch (themeTransition.ts): the new page is revealed by a circle animated from script, never
+         cross-faded; while it is snapshotted, colour transitions are off so it already has its final colours. */
+      ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+      [${themeSwitchAttribute}] *, [${themeSwitchAttribute}] *::before, [${themeSwitchAttribute}] *::after { transition: none !important; }
       [role='dialog'] * { scrollbar-color: transparent transparent; }
       [role='dialog'] [${scrollingAttribute}] { scrollbar-color: ${colors.outline} transparent; }
       /* Desktop panel (AppShell): the track stops a corner radius short of both ends, so the bar runs only along the

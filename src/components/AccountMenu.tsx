@@ -43,7 +43,9 @@ export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, on
           </View>
         </StateLayerPressable>
       </View>
-      <AnchoredMenu visible={open} onDismiss={() => setOpen(false)} anchor={anchor} align="end" label="Account" contentStyle={styles.menu}>
+      {/* No fixed cap (the selectors' 360 hid «Esci» under the scroll, 23 November): only the room in the window limits it. */}
+      <AnchoredMenu visible={open} onDismiss={() => setOpen(false)} anchor={anchor} align="end" label="Account" contentStyle={styles.menu}
+        maxHeight={Number.POSITIVE_INFINITY}>
       {onSignOut ? <View style={styles.info}>
         <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Account Google")}</Text>
         <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? t("Account senza e-mail")}</Text>
