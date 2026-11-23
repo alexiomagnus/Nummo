@@ -13,7 +13,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
-import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGroup, InfoRow, PrimaryAction } from './DetailScreen';
+import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGrid, PrimaryAction, type GridCell } from './DetailScreen';
 import { PaymentsDialog } from './PaymentsDialog';
 import { StatusDialog } from './StatusDialog';
 import { StatusBadge, subscriptionCardId } from './SubscriptionList';
@@ -67,30 +67,29 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
   const frequency = inForce ? t(recurrenceLabels[inForce]) : '';
   // Under the badge only since when it is paused or cancelled: the next renewal already has its row in the details.
   const when = status !== 'active' && since ? t(status === 'paused' ? "In pausa dal {p0}" : "Annullato dal {p0}", { p0: formatDate(since) }) : '';
-  const rows = [
-    <InfoRow key="payments" icon={<SvgIcon shape={iconShapes.receipt} size={24} color={muted} />} label={t("Pagamenti effettuati")} value={String(payments.length)} />,
-    <InfoRow key="total" icon={<SvgIcon shape={iconShapes.euro} size={24} color={muted} />} label={t("Totale speso")} value={formatAmount(total)} />,
-    <InfoRow key="category" icon={category?.icon ? <CategoryGlyph icon={category.icon} size={24} color={muted} />
-      : <SvgIcon shape={iconShapes.tag} size={24} color={muted} />} label={t("Categoria")} value={category?.label ?? t("Senza categoria")} />,
+  const icon = (shape: string) => <SvgIcon shape={shape} size={22} color={muted} />;
+  const paid = payments.length === 1 ? t("1 pagamento") : t("{p0} pagamenti", { p0: payments.length });
+  // Two columns so that the whole detail fits one phone screen (user's request, 23 November); the payments and their total
+  // are one row that opens the history (it replaces the separate «Storico dei pagamenti» button).
+  const cells: GridCell[] = [
+    // In the palette's colour (user's request, 23 November), like the history screen it opens.
+    { key: 'payments', wide: true, accent: true, icon: <SvgIcon shape={iconShapes.receipt} size={22} color={colors.onSecondaryContainer} />, label: t("Storico dei pagamenti"), value: `${paid} · ${formatAmount(total)}`,
+      onPress: () => setHistory(true), accessibilityLabel: t("Storico dei pagamenti di {p0}, {p1}", { p0: entry.description, p1: payments.length }) },
+    { key: 'category', icon: category?.icon ? <CategoryGlyph icon={category.icon} size={22} color={muted} /> : icon(iconShapes.tag),
+      label: t("Categoria"), value: category?.label ?? t("Senza categoria") },
   ];
-  if (fund !== undefined) rows.push(<InfoRow key="fund" icon={fund ? <FundAvatar fund={fund} size={28} /> : <NoFundAvatar size={28} />}
-    label={t("Fondo")} value={fund ? fund.name : t("Nessun fondo")} />);
-  if (frequency) rows.push(<InfoRow key="frequency" icon={<SvgIcon shape={iconShapes.rotateCcw} size={24} color={muted} />} label={t("Frequenza")} value={frequency} />);
-  rows.push(<InfoRow key="start" icon={<SvgIcon shape={iconShapes.calendar} size={24} color={muted} />} label={t("Inizio")} value={formatDate(entry.expense_date)} />);
-  rows.push(<InfoRow key="next" icon={<SvgIcon shape={iconShapes.calendar} size={24} color={muted} />} label={t(inTrial ? "Primo pagamento" : "Prossimo rinnovo")}
-    value={next ? formatDate(next.date) : t("Nessuno")} />);
+  if (fund !== undefined) cells.push({ key: 'fund', icon: fund ? <FundAvatar fund={fund} size={24} /> : <NoFundAvatar size={24} />,
+    label: t("Fondo"), value: fund ? fund.name : t("Nessun fondo") });
+  if (frequency) cells.push({ key: 'frequency', icon: icon(iconShapes.rotateCcw), label: t("Frequenza"), value: frequency });
+  cells.push({ key: 'start', icon: icon(iconShapes.calendar), label: t("Inizio"), value: formatDate(entry.expense_date) });
+  cells.push({ key: 'next', icon: icon(iconShapes.calendar), label: t(inTrial ? "Primo pagamento" : "Prossimo rinnovo"), value: next ? formatDate(next.date) : t("Nessuno") });
   return <>
-    <DetailHero icon={category?.icon ?? null} title={entry.description} amount={formatAmount(amount_minor)} muted={status !== 'active'}>
+    <DetailHero dense icon={category?.icon ?? null} title={entry.description} amount={formatAmount(amount_minor)} muted={status !== 'active'}>
       {merchant && <DetailMerchant name={merchant} label={t("Esercente")} />}
       <DetailMarks><StatusBadge status={status} inTrial={inTrial} /></DetailMarks>
       {when ? <Text variant="bodyMedium" style={[styles.center, { color: muted }]}>{when}</Text> : null}
     </DetailHero>
-    <InfoGroup rows={rows} />
-    <Button mode="contained-tonal" aria-haspopup="dialog" onPress={() => setHistory(true)}
-      accessibilityLabel={t("Storico dei pagamenti di {p0}, {p1}", { p0: entry.description, p1: payments.length })}
-      icon={({ size, color }) => <SvgIcon shape={iconShapes.list} size={size} color={color} />}>
-      {t("Storico dei pagamenti ({p0})", { p0: payments.length })}
-    </Button>
+    <InfoGrid cells={cells} />
     <View style={styles.actions}>
       <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })} icon={iconShapes.pencil} onPress={() => onEdit(entry.id)} />
       {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). */}
@@ -117,7 +116,7 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
 
 const styles = StyleSheet.create({
   center: { textAlign: 'center' },
-  actions: { gap: spacing.md },
+  actions: { gap: spacing.sm },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   half: { flexGrow: 1, flexBasis: 140 },
 });

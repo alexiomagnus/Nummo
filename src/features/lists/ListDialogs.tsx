@@ -35,7 +35,7 @@ export function ListEditor({ record, categories, defaultCategoryId = '', onSave,
   };
   const options = [{ value: '', label: t("Nessuna categoria"), icon: <NoFundAvatar size={24} /> },
     ...categories.map((c) => ({ value: c.id, label: c.label, icon: c.icon ? <CategoryGlyph icon={c.icon} size={20} /> : undefined }))];
-  return <Portal><Dialog visible onDismiss={close} style={styles.dialog} focusTextEntry={!record}>
+  return <Portal><Dialog variant="sheet" visible onDismiss={close} style={styles.dialog} focusTextEntry={!record}>
     <Dialog.Title>{record ? t("Modifica lista") : t("Nuova lista")}</Dialog.Title>
     <Dialog.Content style={styles.content}>
       <View>
@@ -64,7 +64,7 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
     setError(problem);
     if (!problem && onSave(name)) close();
   };
-  return <Portal><Dialog visible onDismiss={close} style={styles.dialog}>
+  return <Portal><Dialog variant="sheet" visible onDismiss={close} style={styles.dialog}>
     <Dialog.Title>{t("Modifica prodotto")}</Dialog.Title>
     <Dialog.Content style={styles.content}>
       <View>

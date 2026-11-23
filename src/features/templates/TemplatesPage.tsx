@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
-import { Button } from '../../components/Button';
+import { Button, DangerButton } from '../../components/Button';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { Card } from '../../components/Card';
@@ -80,9 +80,9 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
                 </View>} />;
             })}</View>}
           {/* Every template at once (user's request, 22 November); Nuova spesa and the saved expenses are not touched. */}
-          {remote.templates.length > 0 && <Button mode="outlined" textColor={colors.error} disabled={!remote.ready || !enabled}
-            style={[styles.removeAll, { borderColor: colors.error }]} onPress={() => setConfirmAll(true)}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</Button>}
+          {remote.templates.length > 0 && <DangerButton disabled={!remote.ready || !enabled}
+            style={styles.removeAll} onPress={() => setConfirmAll(true)}
+            icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</DangerButton>}
         </Card>
       </View>
       <DeleteDialog visible={confirmAll} name={t("tutti i template")}

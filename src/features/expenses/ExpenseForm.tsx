@@ -171,17 +171,17 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. No message
           when the fields are filled (removed on request, 17 November): the filled fields speak for themselves. */}
       {/* «Scansiona scontrino» and «Template» share the first row (user's request, 21 November: the Template field above the
-          repeat pushed «Salva» under the navigation on phones); without the scan, Template takes its place. Phones: each as
-          wide as «Importo» and «Data» below (same halves and gap as the amount/date row), so the edges line up. */}
+          repeat pushed «Salva» under the navigation on phones); without the scan, Template takes its place. At every size each
+          is half of the row (user's request, 23 November, for desktop too: the whole row, exactly the same length). */}
       {(scanEnabled || templateShown) && <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
-        {scanEnabled && <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={size === 'compact' && styles.scanHalf}
+        {scanEnabled && <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={styles.scanHalf}
           compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
           accessibilityLabel={t("Scansiona scontrino")}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{narrow ? t("Scansiona") : t("Scansiona scontrino")}</Button>}
         {templateShown && <TemplatePicker templates={templates} categories={categories} disabled={!enabled}
           value={templates.some((item) => item.id === templateId) ? templateId : ''} onChange={applyTemplate}
-          style={size === 'compact' && styles.scanHalf} />}
-        {size === 'compact' && !(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
+          style={styles.scanHalf} />}
+        {!(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
       </View>}
       {/* Templates turned on but none saved yet: the button cannot appear, so say why. */}
       {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il pulsante Template compare quando crei un template nella pagina Templates.")}</Text>}

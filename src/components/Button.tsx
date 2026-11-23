@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
+import { screenActionStyles, useScreenActions } from './screenActions';
 import { StyleSheet } from 'react-native';
-import { Button as PaperButton } from 'react-native-paper';
+import { Button as PaperButton, useTheme } from 'react-native-paper';
 import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 
@@ -64,6 +65,22 @@ export function CancelButton({ style, narrowOnPhone, small, contentStyle, labelS
     labelStyle={[small && dialogActionStyles.smallLabel, labelStyle]} />;
 }
 export function ConfirmButton({ style, narrowOnPhone, small, contentStyle, labelStyle, ...rest }: ActionProps) {
-  return <Button {...rest} compact={false} mode="contained" style={[style, useActionStyle(narrowOnPhone, small)]} contentStyle={[small && dialogActionStyles.smallContent, contentStyle]}
-    labelStyle={[small && dialogActionStyles.smallLabel, labelStyle]} />;
+  // In a screen's actions: a full-width pill like «Salva» of Nuova spesa (screenActions.ts).
+  const onScreen = useScreenActions();
+  return <Button {...rest} compact={false} mode="contained" style={[style, useActionStyle(narrowOnPhone, small), onScreen && screenActionStyles.button]}
+    contentStyle={[small && dialogActionStyles.smallContent, contentStyle, onScreen && screenActionStyles.content]}
+    labelStyle={[small && dialogActionStyles.smallLabel, labelStyle, onScreen && screenActionStyles.label]} />;
 }
+
+// Every «Elimina» (user's request, 23 November: «completamente in rosso, stessa forma e stessa colorazione»): filled in the error
+// colour with its label in onError, pill-shaped. Layout (width, alignment) stays with the caller.
+export function DangerButton({ style, ...rest }: Omit<ComponentProps<typeof PaperButton>, 'mode' | 'buttonColor' | 'textColor'>) {
+  const danger = useDangerColors();
+  return <Button {...rest} mode="contained" buttonColor={danger.fill} textColor={danger.ink} style={[style, dangerStyle]} />;
+}
+// A real red in both themes: `error` in light; in dark M3's `error` is a pale salmon, so the deep `errorContainer` with its ink.
+export function useDangerColors(): { fill: string; ink: string } {
+  const { colors, dark } = useTheme();
+  return dark ? { fill: colors.errorContainer, ink: colors.onErrorContainer } : { fill: colors.error, ink: colors.onError };
+}
+const dangerStyle = StyleSheet.create({ pill: { borderRadius: radius.pill, borderWidth: 0 } }).pill;

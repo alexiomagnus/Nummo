@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { Button, CancelButton } from '../../components/Button';
+import { Button, CancelButton, DangerButton } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { useSameWidth } from '../../components/SameWidth';
@@ -186,8 +186,8 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     <View style={styles.group}>
       <Text variant="titleSmall">{t("Elimina le spese")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.trash)} textColor={theme.colors.error} style={[sameWidth, { borderColor: theme.colors.error }]}
-          disabled={!enabled || busy} onPress={() => { setSavedBefore(false); setConfirmWipe(true); }}>{t("Elimina tutte le spese")}</Button>
+        <DangerButton {...fileAction} icon={icon(iconShapes.trash)} style={sameWidth}
+          disabled={!enabled || busy} onPress={() => { setSavedBefore(false); setConfirmWipe(true); }}>{t("Elimina tutte le spese")}</DangerButton>
       </View>
     </View>
     {preview && <View ref={previewRef}>

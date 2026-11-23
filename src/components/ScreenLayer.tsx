@@ -1,12 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cardClip, cardShift, contentScale, crossfade, detailSpring, fullClip, scrimOpacity, usableCard, type Box } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
 import { motion, radius, sizeClassOf, spacing, type SizeClass } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { useEscape, useFocusHandoff, useOverlayMotion } from './Overlay';
+import { recentVelocity, sheetDragOutcome, type DragSample } from './menuGeometry';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -42,11 +43,29 @@ export type ScreenLayerProps = {
   scroll?: boolean;
   // Focus the first text field on opening also on touch-first devices (Nuova lista, Nuovo fondo).
   textEntry?: boolean;
+  // Colours of a screen that continues a coloured card (the «Prossimo mese» card: its container colour fills the screen, so the
+  // card turns into it without a change of colour). Default: the page's background and the tonal Back button.
+  tone?: ScreenTone;
+  // A bottom sheet as tall as its content instead of the whole screen (short forms: Nuova lista, a product; user's request,
+  // 23 November): handle on top instead of Back (drag it down to close), the page dimmed behind it (a tap there closes too),
+  // at most 640 wide on large screens. It still grows from the element that opened it.
+  sheet?: boolean;
   children: ReactNode;
 };
 
-export function ScreenLayer({ label, originId, title, backLabel, onBack, backDisabled = false, onEscape, scroll = true, textEntry = false, children }: ScreenLayerProps) {
-  const { colors } = useTheme();
+export type ScreenTone = { background: string; content: string; button: string; onButton: string };
+
+export function ScreenLayer({ label, originId, title, backLabel, onBack, backDisabled = false, onEscape, scroll = true, textEntry = false, tone, sheet = false, children }: ScreenLayerProps) {
+  const theme = useTheme();
+  const { colors } = theme;
+  // A sheet stands above the dimmed page in the raised surface colour of the bottom sheets (BottomSheet in Overlay.tsx).
+  const background = tone?.background ?? (sheet ? colors.elevation.level1 : colors.background);
+  // With a tone, everything inside reads its colours from it (texts, icons, the notches of outlined fields); a sheet at least
+  // its background, for the notches.
+  const toned = useMemo(() => tone ? { ...theme, colors: { ...theme.colors, background: tone.background, surface: tone.background,
+    onBackground: tone.content, onSurface: tone.content, onSurfaceVariant: tone.content } }
+    : sheet ? { ...theme, colors: { ...theme.colors, background } } : theme, [theme, tone?.background, tone?.content, sheet, background]);
+  const button = tone ? { background: tone.button, color: tone.onButton } : { background: colors.secondaryContainer, color: colors.onSecondaryContainer };
   const size = useSizeClass();
   const compact = size === 'compact';
   const insets = useSafeAreaInsets();
@@ -55,8 +74,17 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
   const root = useRef<ComponentRef<typeof View>>(null);
   const surface = useRef<ComponentRef<typeof View>>(null);
   const frameRadius = size === 'expanded' ? radius.dialog : 0;
-  const latest = useRef({ frame, frameRadius, background: colors.background, backdrop: colors.backdrop, animate });
-  latest.current = { frame, frameRadius, background: colors.background, backdrop: colors.backdrop, animate };
+  const latest = useRef({ frame, frameRadius, background, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled });
+  latest.current = { frame, frameRadius, background, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled };
+  // A sheet grows into its own rectangle (measured: its height is the content's), with round top corners only.
+  const settingsFor = (node: HTMLElement): Settings => {
+    const { frame: box, frameRadius: corner, background: fill, backdrop } = latest.current;
+    if (!latest.current.sheet) return { frame: box, frameRadius: corner, background: fill, backdrop };
+    const own = parts(node).surface?.getBoundingClientRect();
+    const rootRect = rootBox();
+    const area = own && rootRect ? { left: own.left - rootRect.left, top: own.top - rootRect.top, width: own.width, height: own.height } : box;
+    return { frame: area, frameRadius: radius.dialog, background: fill, backdrop, whole: sheetClip, rest: scrimOpacity, rise: true };
+  };
 
   // The frame follows the window (rotation, a resized desktop window, the keyboard shrinking #root), and the size class:
   // the rail or drawer appears and the panel moves, after the shell has rendered.
@@ -76,7 +104,11 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
     const node = dom(root.current);
     if (!latest.current.animate || !node || typeof node.animate !== 'function') return undefined;
     const origin = pickOrigin(originId);
-    let run: Run | null = play(parts(node), measureOrigin(origin), latest.current, true, null);
+    let run: Run | null = play(parts(node), measureOrigin(origin), settingsFor(node), true, null);
+    // The element that became the screen is left empty while it is open (user's request, 23 November: the date field, the
+    // «Nuova lista» button stayed visible above a sheet): opacity only, so it keeps its place and can take the focus back.
+    const previousOpacity = origin?.style.opacity ?? '';
+    if (origin) origin.style.opacity = '0';
     void run.finished.then((done) => { if (done && run) { run.cancel(); run = null; } });
     return () => {
       const { animate: moving } = latest.current;
@@ -85,7 +117,11 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
         clip: getComputedStyle(live.surface).clipPath, background: getComputedStyle(live.surface).backgroundColor,
         opacity: Number(getComputedStyle(live.content).opacity), scrim: Number(getComputedStyle(live.scrim).opacity),
       } : null;
+      const settings = settingsFor(node);
+      const dragged = live.surface?.dataset.dragged === 'true' ? live.surface.getBoundingClientRect().height : null;
+      const shift = live.surface?.style.transform ?? '';
       run?.cancel();
+      if (origin) origin.style.opacity = previousOpacity;
       const host = document.getElementById('root');
       if (!moving || !host || !node.isConnected) return;
       const copy = node.cloneNode(true) as HTMLElement;
@@ -98,12 +134,65 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
       const copied = parts(copy);
       copied.ghostHost?.replaceChildren();
       host.appendChild(copy);
-      const back = play(copied, measureOrigin(originId ? pickOrigin(originId) : origin?.isConnected ? origin : null), latest.current, false, state);
+      // Pulled down by its handle: it goes on down, from where the finger left it, instead of flying back to its origin.
+      const back = dragged !== null ? slideDown(copied, shift, dragged, state?.scrim ?? scrimOpacity)
+        : play(copied, measureOrigin(originId ? pickOrigin(originId) : origin?.isConnected ? origin : null), settings, false, state);
       const remove = () => copy.remove();
       void back.finished.then(remove);
+      // The element comes back as the screen lands on it (its copy fades in at the same time), not before.
+      const target = originId ? pickOrigin(originId) : origin?.isConnected ? origin : null;
+      target?.animate([{ opacity: 0 }, { opacity: 0, offset: dragged !== null ? 0.3 : crossfade.close.cardShown }, { opacity: 1 }],
+        { duration: back.duration, easing: 'linear' });
       setTimeout(remove, back.duration + 400);
     };
   }, []);
+
+  // Sheet: drag the handle down to close (as the selectors' bottom sheets: `sheetDragOutcome`). The surface follows the finger
+  // without transition and the scrim fades with the distance; let go far or fast enough it closes, otherwise it settles back.
+  const handle = useRef<ComponentRef<typeof View>>(null);
+  useEffect(() => {
+    const grip = dom(handle.current);
+    const node = dom(root.current);
+    if (!sheet || !grip || !node) return undefined;
+    grip.style.touchAction = 'none';
+    let drag: { id: number; y: number; samples: DragSample[]; offset: number } | null = null;
+    const { surface: sheetNode, scrim } = parts(node);
+    const down = (event: PointerEvent) => {
+      if (event.button !== 0 || !event.isPrimary || latest.current.backDisabled) return;
+      drag = { id: event.pointerId, y: event.clientY, samples: [{ t: event.timeStamp, y: event.clientY }], offset: 0 };
+      try { grip.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ }
+    };
+    const move = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id || !sheetNode) return;
+      drag.offset = Math.max(0, event.clientY - drag.y);
+      drag.samples.push({ t: event.timeStamp, y: event.clientY });
+      if (drag.samples.length > 32) drag.samples.shift();
+      sheetNode.style.transform = `translateY(${drag.offset}px)`;
+      if (scrim) scrim.style.opacity = String(scrimOpacity * Math.max(0, 1 - drag.offset / Math.max(1, sheetNode.offsetHeight)));
+    };
+    const up = (event: PointerEvent, commit: boolean) => {
+      if (!drag || event.pointerId !== drag.id || !sheetNode) return;
+      const { offset, samples } = drag;
+      drag = null;
+      if (offset === 0) return;
+      if (commit && sheetDragOutcome(offset, recentVelocity([...samples, { t: event.timeStamp, y: event.clientY }]), sheetNode.offsetHeight) === 'dismiss') {
+        sheetNode.dataset.dragged = 'true';
+        latest.current.onBack();
+        return;
+      }
+      sheetNode.animate([{ transform: `translateY(${offset}px)` }, { transform: 'translateY(0px)' }], { duration: motion.medium, easing: bezier(motion.enter) });
+      sheetNode.style.transform = '';
+      if (scrim) scrim.style.opacity = '';
+    };
+    const release = (event: PointerEvent) => up(event, true);
+    const cancel = (event: PointerEvent) => up(event, false);
+    grip.addEventListener('pointerdown', down);
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', release);
+    grip.addEventListener('pointercancel', cancel);
+    return () => { grip.removeEventListener('pointerdown', down); grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', release); grip.removeEventListener('pointercancel', cancel); };
+  }, [sheet]);
 
   // Details use the page's margins; editors keep the 24 of their blocks (Paper's Content/Actions), and the top bar lines up with them.
   const padding = !scroll ? spacing.xl : compact ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
@@ -111,21 +200,29 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
   return (
     <View ref={root} role="dialog" aria-modal aria-label={label} {...part('root')}
       style={[styles.root, { left: frame.left, top: frame.top, width: frame.width, height: frame.height }]}>
-      <View {...part('scrim')} pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.backdrop, opacity: 0, borderRadius: frameRadius }]} />
-      <View ref={surface} {...part('surface')} style={[StyleSheet.absoluteFill, styles.surface, { borderRadius: frameRadius, backgroundColor: colors.background }]}>
-        <View {...part('content')} style={styles.content}>
-          <View style={[styles.topBar, { paddingTop: (compact ? insets.top : 0) + spacing.lg, paddingLeft: padding + side, paddingRight: padding + side }]}>
+      {sheet ? <Pressable {...part('scrim')} accessibilityRole="button" accessibilityLabel={backLabel} focusable={false} disabled={backDisabled} onPress={onBack}
+        style={[StyleSheet.absoluteFill, styles.sheetScrim, { backgroundColor: colors.backdrop, opacity: scrimOpacity, borderRadius: frameRadius }]} />
+        : <View {...part('scrim')} pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.backdrop, opacity: 0, borderRadius: frameRadius }]} />}
+      <View ref={surface} {...part('surface')} style={sheet
+        ? [styles.sheet, styles.surface, { backgroundColor: background, maxHeight: Math.max(0, frame.height - (compact ? insets.top : 0) - spacing.xxxl) }]
+        : [StyleSheet.absoluteFill, styles.surface, { borderRadius: frameRadius, backgroundColor: background }]}>
+        <View {...part('content')} style={sheet ? styles.sheetContent : styles.content}>
+          {sheet ? <View style={[styles.sheetTop, { paddingLeft: padding + side, paddingRight: padding + side }]}>
+            {/* The drag handle (user's request, 23 November: «per buttare giù la scheda»); a wide hit area around the small bar. */}
+            <View ref={handle} {...part('handle')} aria-hidden style={styles.handleArea}><View style={[styles.handle, { backgroundColor: colors.onSurfaceVariant }]} /></View>
+            {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={[styles.sheetTitle, tone && { color: tone.content }]}>{title}</Text>}
+          </View> : <View style={[styles.topBar, { paddingTop: (compact ? insets.top : 0) + spacing.lg, paddingLeft: padding + side, paddingRight: padding + side }]}>
             {/* Tonal round button, larger than a bare icon (user's request, 23 November), a little below the edge. */}
             <StateLayerPressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} disabled={backDisabled}
-              layerColor={colors.onSecondaryContainer} radius={radius.pill} style={[styles.back, { backgroundColor: colors.secondaryContainer }]}>
-              <SvgIcon shape={iconShapes.chevronLeft} size={28} color={colors.onSecondaryContainer} />
+              layerColor={button.color} radius={radius.pill} style={[styles.back, { backgroundColor: button.background }]}>
+              <SvgIcon shape={iconShapes.chevronLeft} size={28} color={button.color} />
             </StateLayerPressable>
-            {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={styles.title}>{title}</Text>}
-          </View>
+            {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={[styles.title, tone && { color: tone.content }]}>{title}</Text>}
+          </View>}
           {scroll ? <ScrollView style={styles.grow} keyboardShouldPersistTaps="handled" {...(size === 'expanded' ? { dataSet: { panelScroll: 'true' } } : null)}
             contentContainerStyle={[styles.scroll, { paddingHorizontal: padding + side, paddingBottom: padding + insets.bottom }]}>
-            {children}
-          </ScrollView> : <View style={[styles.grow, { paddingLeft: side, paddingRight: side, paddingBottom: insets.bottom }]}>{children}</View>}
+            <ThemeProvider theme={toned}>{children}</ThemeProvider>
+          </ScrollView> : <View style={[sheet ? styles.sheetBody : styles.grow, { paddingLeft: side, paddingRight: side, paddingBottom: insets.bottom }]}><ThemeProvider theme={toned}>{children}</ThemeProvider></View>}
         </View>
         {/* The copy of the origin during the transform, above the content. */}
         <View {...part('ghosts')} aria-hidden pointerEvents="none" style={StyleSheet.absoluteFill} />
@@ -156,7 +253,21 @@ function pickOrigin(originId?: string): HTMLElement | null {
   const recent = lastActivation && performance.now() - lastActivation.at < recentMs ? lastActivation.element : null;
   const element = recent ?? (document.activeElement && document.activeElement !== document.body ? document.activeElement : null);
   const target = element?.closest<HTMLElement>(originSelector) ?? (element instanceof HTMLElement ? element : null);
-  return target?.isConnected ? target : null;
+  return target?.isConnected ? outermost(target) : null;
+}
+
+// The element as drawn: Paper's buttons put their fill and outline on a wrapper around the pressable (role=button), so the
+// origin climbs to the outermost ancestor with the same rectangle. Its copy then carries the fill, and hiding it while the
+// screen is open hides the whole button, not only its label (user's request, 23 November: «deve scomparire il tasto»).
+function outermost(element: HTMLElement): HTMLElement {
+  const box = element.getBoundingClientRect();
+  let current = element;
+  for (let parent = current.parentElement; parent && parent !== document.body && parent.id !== 'root'; parent = parent.parentElement) {
+    const rect = parent.getBoundingClientRect();
+    if (Math.abs(rect.left - box.left) > 1 || Math.abs(rect.top - box.top) > 1 || Math.abs(rect.width - box.width) > 1 || Math.abs(rect.height - box.height) > 1) break;
+    current = parent;
+  }
+  return current;
 }
 
 type Origin = { node: HTMLElement; box: Box; background: string | null; radius: number };
@@ -177,7 +288,9 @@ function measureOrigin(node: HTMLElement | null): Origin | null {
 
 type Parts = { surface: HTMLElement | null; content: HTMLElement | null; ghostHost: HTMLElement | null; scrim: HTMLElement | null };
 type Run = { finished: Promise<boolean>; cancel: () => void; duration: number };
-type Settings = { frame: Box; frameRadius: number; background: string; backdrop: string };
+// `whole`: the clip of the open surface (a sheet: round top corners only); `rest`: the scrim's opacity once open (a sheet keeps it).
+// `rise`: a sheet, whose origin may lie above it: the surface also travels vertically from the origin's height to its place.
+type Settings = { frame: Box; frameRadius: number; background: string; backdrop: string; whole?: string; rest?: number; rise?: boolean };
 type From = { clip: string; background: string; opacity: number; scrim: number } | null;
 
 const part = (name: string) => ({ dataSet: { screenPart: name } }) as object;
@@ -186,7 +299,7 @@ function parts(node: HTMLElement): Parts {
   return { surface: find('surface'), content: find('content'), ghostHost: find('ghosts'), scrim: find('scrim') };
 }
 
-function play({ surface, content, ghostHost, scrim }: Parts, origin: Origin | null, { frame, frameRadius, background }: Settings, opening: boolean, from: From): Run {
+function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | null, { frame, frameRadius, background, whole: wholeClip, rest = 0, rise = false }: Settings, opening: boolean, from: From): Run {
   const animations: Animation[] = [];
   let ghost: HTMLElement | null = null;
   const spring = springEasing(detailSpring);
@@ -194,15 +307,23 @@ function play({ surface, content, ghostHost, scrim }: Parts, origin: Origin | nu
   const springy = view?.CSS?.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : bezier(motion.enter);
   const both = 'both' as const;
   let duration = spring.duration;
-  if (surface && content && ghostHost && scrim && origin && usableCard(origin.box, frame)) {
+  // A sheet: the origin is lifted onto the sheet's top edge and the whole surface travels by the difference while it grows.
+  const travel = rise && found ? found.box.top - frame.top : 0;
+  const origin = found && rise ? { ...found, box: { ...found.box, top: frame.top } } : found;
+  const usable = origin && (rise ? origin.box.width > 0 && origin.box.height > 0 : usableCard(origin.box, frame));
+  if (surface && content && ghostHost && scrim && origin && usable) {
     const options = { duration, easing: springy, fill: both };
     const fade = { duration, easing: 'linear', fill: both };
     const { open: inbound, close: outbound } = crossfade;
     const small = cardClip(origin.box, frame, origin.radius);
-    const whole = fullClip(frameRadius);
+    const whole = wholeClip ?? fullClip(frameRadius);
     const tint = origin.background ?? background;
     animations.push(surface.animate(opening ? { clipPath: [small, whole], backgroundColor: [tint, background] }
       : { clipPath: [from?.clip && from.clip !== 'none' ? from.clip : whole, small], backgroundColor: [from?.background ?? background, tint] }, options));
+    if (travel !== 0) {
+      const away = `translateY(${travel}px)`;
+      animations.push(surface.animate({ transform: opening ? [away, 'translateY(0px)'] : ['translateY(0px)', away] }, options));
+    }
     animations.push(scrim.animate({ opacity: opening ? [0, scrimOpacity] : [from?.scrim || scrimOpacity, 0] }, { duration, easing: bezier(motion.easing), fill: both }));
     // A copy of the origin at its place, moving with the container's corner: it fades out as the screen opens, in as it closes.
     ghost = origin.node.cloneNode(true) as HTMLElement;
@@ -230,6 +351,7 @@ function play({ surface, content, ghostHost, scrim }: Parts, origin: Origin | nu
     duration = opening ? motion.long : motion.exit;
     const options = opening ? { duration, easing: bezier(motion.enter), fill: both } : { duration, easing: bezier(motion.exitEasing), fill: both };
     animations.push(surface.animate({ opacity: opening ? [0, 1] : [from?.opacity ?? 1, 0], transform: opening ? ['scale(0.97)', 'scale(1)'] : ['scale(1)', 'scale(0.97)'] }, options));
+    if (rest > 0) animations.push(scrim.animate({ opacity: opening ? [0, rest] : [from?.scrim ?? rest, 0] }, options));
   }
   for (const node of [surface, content]) node?.style.setProperty('will-change', 'clip-path, transform, opacity');
   let cancelled = false;
@@ -243,6 +365,20 @@ function play({ surface, content, ghostHost, scrim }: Parts, origin: Origin | nu
   const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => !cancelled, () => false);
   return { finished, cancel, duration };
 }
+
+// A sheet pulled down by its handle leaves downwards from where it is, the scrim fading with it.
+function slideDown({ surface, scrim }: Parts, transform: string, height: number, scrimFrom: number): Run {
+  const animations: Animation[] = [];
+  const duration = motion.exit;
+  const options = { duration, easing: bezier(motion.exitEasing), fill: 'both' as const };
+  if (surface) animations.push(surface.animate({ transform: [transform || 'translateY(0px)', `translateY(${height}px)`] }, options));
+  if (scrim) animations.push(scrim.animate({ opacity: [scrimFrom, 0] }, options));
+  const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => true, () => false);
+  return { finished, cancel: () => animations.forEach((animation) => animation.cancel()), duration };
+}
+
+// Open sheet: round top corners, square bottom (it sits on the bottom edge).
+const sheetClip = `inset(0px 0px 0px 0px round ${radius.dialog}px ${radius.dialog}px 0px 0px)`;
 
 // ——— frame ———
 
@@ -275,4 +411,14 @@ const styles = StyleSheet.create({
   back: { width: 52, height: 52, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   title: { flex: 1, minWidth: 0 },
   scroll: { flexGrow: 1, gap: spacing.xl, paddingTop: spacing.sm },
+  sheetScrim: { cursor: 'auto' } as object,
+  // Bottom of the frame, centred, at most 640 wide (Material 3 bottom sheet on large screens).
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 640, marginHorizontal: 'auto',
+    borderTopLeftRadius: radius.dialog, borderTopRightRadius: radius.dialog },
+  sheetContent: { flexShrink: 1, minHeight: 0 },
+  sheetBody: { flexShrink: 1, minHeight: 0 },
+  sheetTop: { alignItems: 'stretch', paddingTop: spacing.xs },
+  handleArea: { alignSelf: 'center', width: 96, height: 32, alignItems: 'center', justifyContent: 'center', cursor: 'grab' } as object,
+  handle: { width: 32, height: 4, borderRadius: 2, opacity: 0.4 },
+  sheetTitle: { marginTop: spacing.xs },
 });

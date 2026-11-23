@@ -62,7 +62,7 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
   }
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
+      <Dialog variant="sheet" visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
         <Dialog.ScrollArea style={styles.scrollArea}>
           <ScrollView keyboardShouldPersistTaps="handled">
             <View style={styles.headline} accessibilityLiveRegion="polite">

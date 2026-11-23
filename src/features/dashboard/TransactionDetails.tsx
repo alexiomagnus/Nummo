@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog } from '../../components/AppDialog';
-import { CancelButton, dialogActionsRow } from '../../components/Button';
 import { ListRow } from '../../components/ListRow';
 import type { Category } from '../../domain/category';
 import type { Fund } from '../../domain/funds';
@@ -62,7 +61,7 @@ export function TransactionDetails({ title, items, categories, funds = [], onClo
           meta={compact ? amount : undefined} trailing={compact ? undefined : amount} />;
       })}
     </ScrollView></AppDialog.ScrollArea>
-    <AppDialog.Actions style={dialogActionsRow}><CancelButton onPress={onClose}>{t("Chiudi")}</CancelButton></AppDialog.Actions>
+    {/* No «Chiudi»: the screen's Back closes it (user's request, 23 November). */}
   </AppDialog></Portal>;
 }
 

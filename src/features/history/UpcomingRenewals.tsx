@@ -5,7 +5,6 @@ import { StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ScreenLayer } from '../../components/ScreenLayer';
-import { InfoGroup } from './DetailScreen';
 import { listRowStyles } from '../../components/ListRow';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -47,8 +46,10 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
         </View>
         <SvgIcon shape={iconShapes.chevronRight} size={24} color={colors.onPrimaryContainer} />
       </StateLayerPressable>
+      {/* The screen keeps the card's colour (user's request, 23 November): the card turns into it without a change of colour. */}
       {open && <Portal><ScreenLayer originId={cardId} label={t("Prossimo mese")} backLabel={t("Torna agli abbonamenti")}
-        onBack={() => setOpen(false)} onEscape={() => setOpen(false)}>
+        onBack={() => setOpen(false)} onEscape={() => setOpen(false)}
+        tone={{ background: colors.primaryContainer, content: colors.onPrimaryContainer, button: colors.primary, onButton: colors.onPrimary }}>
         <RenewalsContent renewals={renewals} categories={categories} soon={soon} count={count} days={days} />
       </ScreenLayer></Portal>}
     </View>
@@ -58,34 +59,38 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
 function RenewalsContent({ renewals, categories, soon, count, days }: Props & { count: string }) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
-  const muted = { color: colors.onSurfaceVariant };
+  // Everything in the card's tones: text on its container colour, the icon tile as on the card, dividers as the old open card.
+  const tone = { color: colors.onPrimaryContainer };
   return <>
     <View style={styles.hero}>
-      <View style={[styles.heroTile, { backgroundColor: colors.primaryContainer }]}>
-        <SvgIcon shape={iconShapes.calendar} size={36} color={colors.onPrimaryContainer} />
+      <View style={[styles.heroTile, { backgroundColor: colors.primary }]}>
+        <SvgIcon shape={iconShapes.calendar} size={36} color={colors.onPrimary} />
       </View>
-      <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={styles.center}>{t("Prossimo mese")}</Text>
-      <Text variant="displaySmall" style={[styles.amount, styles.bold, styles.center]}>{formatAmount(soon)}</Text>
-      <Text variant="bodyLarge" style={[muted, styles.center]}>{t("{p0} entro {p1} giorni", { p0: count, p1: days })}</Text>
+      <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={[tone, styles.center]}>{t("Prossimo mese")}</Text>
+      <Text variant="displaySmall" style={[tone, styles.amount, styles.bold, styles.center]}>{formatAmount(soon)}</Text>
+      <Text variant="bodyLarge" style={[tone, styles.center]}>{t("{p0} entro {p1} giorni", { p0: count, p1: days })}</Text>
     </View>
     <View role="list">
-      <InfoGroup rows={renewals.map(({ occurrence, previous }) => {
+      {renewals.map(({ occurrence, previous }, index) => {
         const category = categories.find((c) => c.id === occurrence.category_id);
         const changed = occurrence.amount_minor !== previous;
         const details = [dateFormat(locale).format(new Date(`${occurrence.date}T00:00:00Z`)),
           changed && t("da {p0}", { p0: formatAmount(previous) })].filter(Boolean).join(' · ');
         return (
-          <View key={occurrence.key} role="listitem" style={styles.row}>
-            <View aria-hidden style={styles.rowIcon}>{category?.icon ? <CategoryGlyph icon={category.icon} size={24} color={colors.onSurfaceVariant} />
-              : <SvgIcon shape={iconShapes.tag} size={24} color={colors.onSurfaceVariant} />}</View>
-            <View style={styles.text}>
-              <Text variant="bodyLarge" numberOfLines={2} style={styles.strong}>{occurrence.description}</Text>
-              <Text variant="bodySmall" style={muted}>{details}</Text>
+          <View key={occurrence.key} role="listitem">
+            {index > 0 && <View style={[styles.divider, { backgroundColor: colors.onPrimaryContainer }]} />}
+            <View style={styles.row}>
+              <View aria-hidden style={styles.rowIcon}>{category?.icon ? <CategoryGlyph icon={category.icon} size={24} color={colors.onPrimaryContainer} />
+                : <SvgIcon shape={iconShapes.tag} size={24} color={colors.onPrimaryContainer} />}</View>
+              <View style={styles.text}>
+                <Text variant="titleMedium" numberOfLines={2} style={[tone, styles.strong]}>{occurrence.description}</Text>
+                <Text variant="bodyMedium" style={tone}>{details}</Text>
+              </View>
+              <Text variant="titleLarge" style={[tone, listRowStyles.amount]}>{formatAmount(occurrence.amount_minor)}</Text>
             </View>
-            <Text variant="titleMedium" style={listRowStyles.amount}>{formatAmount(occurrence.amount_minor)}</Text>
           </View>
         );
-      })} />
+      })}
     </View>
   </>;
 }
@@ -105,6 +110,7 @@ const styles = StyleSheet.create({
   heroTile: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   center: { textAlign: 'center' },
   bold: { fontWeight: '700' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingVertical: spacing.md, paddingHorizontal: spacing.xs },
   rowIcon: { width: 28, alignItems: 'center', justifyContent: 'center' },
+  divider: { height: StyleSheet.hairlineWidth, opacity: 0.25 },
 });

@@ -1,7 +1,6 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog } from '../../components/AppDialog';
-import { CancelButton, dialogActionsRow } from '../../components/Button';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import { radius, spacing } from '../../theme/tokens';
@@ -31,7 +30,7 @@ export function ProductsDialog({ description, products, onClose }: {
         ))}
       </View>
     </ScrollView></AppDialog.ScrollArea>
-    <AppDialog.Actions style={dialogActionsRow}><CancelButton onPress={onClose}>{t("Chiudi")}</CancelButton></AppDialog.Actions>
+    {/* No «Chiudi»: the screen's Back closes it (user's request, 23 November). */}
   </AppDialog></Portal>;
 }
 

@@ -136,7 +136,8 @@ const styles = StyleSheet.create({
   categoryColumn: { gap: spacing.lg },
   half: { flex: 1, minWidth: 0 },
   amount: { flex: 1, minWidth: 0 },
-  date: { width: 200, flexShrink: 0 },
+  // Same length as the amount from medium too (user's request, 23 November; it was 200 wide beside a stretched amount).
+  date: { flex: 1, minWidth: 0 },
   // Phones: date to the right of the amount, the row split in two equal halves, as long as each half holds its value: below
   // 2 × 156 + gap the row wraps and each field takes the whole width (edit dialog at 360–390 px, where the halves cut
   // «19 nov 2026» and the amount; 21 November). 156 = leading icon area + «19 nov 2026» + padding, and «1234,56» at 28 px.

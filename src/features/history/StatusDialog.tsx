@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
+import { ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { DateField } from '../../components/DateField';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { paymentsRemoved, type SubscriptionSummary } from '../../domain/history';
@@ -49,7 +49,7 @@ export function StatusDialog({ summary, status, today, onConfirm, close }: Props
     try { if (await onConfirm(from)) close(); } finally { setBusy(false); }
   };
   return <Portal>
-    <Dialog visible onDismiss={() => { if (!busy) close(); }}>
+    <Dialog variant="sheet" visible onDismiss={() => { if (!busy) close(); }}>
       <Dialog.Title>{title}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
@@ -84,7 +84,7 @@ export function StatusDialog({ summary, status, today, onConfirm, close }: Props
         </ScrollView>
       </Dialog.ScrollArea>
       <Dialog.Actions style={dialogActionsRow}>
-        <CancelButton disabled={busy} onPress={close}>{t("Indietro")}</CancelButton>
+        {/* No «Indietro»: the sheet closes with its handle, a tap above it or Back (user's request, 23 November). */}
         <ConfirmButton disabled={busy || !next} loading={busy}
           buttonColor={cancel ? colors.error : undefined} textColor={cancel ? colors.onError : undefined} onPress={() => void submit()}>{title}</ConfirmButton>
       </Dialog.Actions>

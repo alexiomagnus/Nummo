@@ -7,7 +7,9 @@ import { transitions } from '../theme/motion';
 import { dialogColor } from '../theme/theme';
 import { layout, motion, radius, spacing } from '../theme/tokens';
 import { Scrim, useEscape, useFocusHandoff, useOverlayMotion, usePresence } from './Overlay';
-import { ScreenLayer } from './ScreenLayer';
+import { ScreenLayer, type ScreenTone } from './ScreenLayer';
+import { CancelButton, dialogActionPair } from './Button';
+import { ScreenActionsContext } from './screenActions';
 import { noScrollEdges, scrollEdges, type ScrollEdges } from './scrollEdges';
 
 type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dismissable' | 'testID'> & {
@@ -18,9 +20,12 @@ type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dism
   // `screen` (default since 23 November, on request): a full screen of the app on the shared screen layer (ScreenLayer),
   // with the container transform from the element that opened it. `alert`: the small centred dialog, kept only for short
   // confirmations and warnings (delete, change of mode, the lock's PIN).
-  variant?: 'screen' | 'alert';
+  // `sheet`: the same, as a bottom sheet as tall as its content with a drag handle (short forms; ScreenLayer `sheet`).
+  variant?: 'screen' | 'sheet' | 'alert';
   // Accessible name of a screen without Title (the date picker, whose headline is the date).
   label?: string;
+  // Colours of a screen opened from a coloured element (the payment history, from its accent row): see ScreenLayer.
+  tone?: ScreenTone;
   children: ReactNode;
 };
 
@@ -34,31 +39,55 @@ const surfaceExit = transitions([['opacity', motion.fade, motion.exitEasing], ['
 // Matching `background` also makes outlined-field label notches blend with the modal.
 // Layout of Paper's Dialog (Title/Content/ScrollArea/Actions keep working), animated by the shared overlay layer.
 function AppDialogRoot(props: Props) {
-  if ((props.variant ?? 'screen') === 'screen') return props.visible ? <ScreenDialog {...props} /> : null;
+  if ((props.variant ?? 'screen') !== 'alert') return props.visible ? <ScreenDialog {...props} /> : null;
   return <AlertDialog {...props} />;
 }
 
 // Editors and content panels as screens: Title goes into the top bar beside Back, the other blocks (Content, ScrollArea)
 // fill the screen and Actions sit at its bottom, above the safe area (and above the keyboard: the screen shrinks with it).
 // Back, Escape and the system Back dismiss it, unless `dismissable` is false (an operation running).
-function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = false, label, children }: Props) {
+function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = false, label, tone, variant, children }: Props) {
   const { t } = useI18n();
   let title: ReactNode;
   const blocks: ReactNode[] = [];
   Children.toArray(children).forEach((child) => {
     if (child == null || typeof child === 'boolean') return;
     if (isValidElement<{ children?: ReactNode; style?: StyleProp<ViewStyle> }>(child) && child.type === Dialog.Title) { title = child.props.children; return; }
-    if (isValidElement<{ style?: StyleProp<ViewStyle> }>(child) && child.type === Dialog.Actions) {
-      blocks.push(cloneElement(child as ReactElement<{ style?: StyleProp<ViewStyle> }>, { style: [child.props.style, screenStyles.actions] }));
+    if (isValidElement<{ style?: StyleProp<ViewStyle>; children?: ReactNode }>(child) && child.type === Dialog.Actions) {
+      const actions = screenActions(child.props.children, dismissable);
+      if (actions.length === 0) return;
+      blocks.push(cloneElement(child as ReactElement<{ style?: StyleProp<ViewStyle>; children?: ReactNode }>,
+        { style: [child.props.style, screenStyles.actions], children: <ScreenActionsContext.Provider value>{actions}</ScreenActionsContext.Provider> }));
       return;
     }
     blocks.push(child);
   });
   const dismiss = () => { if (dismissable && onDismiss) onDismiss(); };
   return <ScreenLayer label={label ?? (typeof title === 'string' ? title : t("Indietro"))} title={title} backLabel={t("Indietro")} onBack={dismiss} backDisabled={!dismissable}
-    onEscape={() => { if (!dismissable || !onDismiss) return false; onDismiss(); }} scroll={false} textEntry={focusTextEntry}>
-    <View testID={testID} style={screenStyles.body}>{blocks}</View>
+    onEscape={() => { if (!dismissable || !onDismiss) return false; onDismiss(); }} scroll={false} textEntry={focusTextEntry} tone={tone} sheet={variant === 'sheet'}>
+    <View testID={testID} style={variant === 'sheet' ? screenStyles.sheetBody : screenStyles.body}>{blocks}</View>
   </ScreenLayer>;
+}
+
+// On a screen or sheet the actions are a column of full-width pills (user's requests, 23 November): Elimina above, the
+// confirmation (Salva, Crea, OK…) below. «Annulla» (CancelButton) is left out when the screen can be dismissed: Back, the
+// handle, a tap outside or the system Back do the same (user's choice, same day). It stays only while dismissing is refused
+// (a receipt being read: then it is the only way to stop it).
+type Styled = ReactElement<{ style?: StyleProp<ViewStyle>; children?: ReactNode }>;
+const isPair = (element: Styled): boolean => {
+  const has = (style: unknown): boolean => style === dialogActionPair || (Array.isArray(style) && style.some(has));
+  return has(element.props.style);
+};
+function screenActions(children: ReactNode, dropCancel: boolean): Styled[] {
+  const items: Styled[] = [];
+  const visit = (node: ReactNode) => Children.forEach(node, (child) => {
+    if (!isValidElement(child)) return;
+    if (dropCancel && child.type === CancelButton) return;
+    if (isPair(child as Styled)) { visit((child as Styled).props.children); return; }
+    items.push(child as Styled);
+  });
+  visit(children);
+  return items.map((item, index) => cloneElement(item, { key: item.key ?? index, style: [item.props.style, screenStyles.full] }));
 }
 
 function AlertDialog({ visible = false, onDismiss, dismissable = true, testID, style, focusTextEntry = false, children }: Props) {
@@ -138,9 +167,12 @@ const scrollAreaStyles = StyleSheet.create({
 
 const screenStyles = StyleSheet.create({
   body: { flex: 1, minHeight: 0, paddingTop: spacing.sm },
+  sheetBody: { flexShrink: 1, minHeight: 0, paddingTop: spacing.sm },
   // Always at the bottom of the screen, whatever the height of the content above (Paper's Actions grow by default, which
   // would take the free space before the auto margin and leave the buttons under the fields).
-  actions: { marginTop: 'auto', flexGrow: 0 },
+  // A column: each action as wide as the screen, Elimina above the confirmation.
+  actions: { marginTop: 'auto', flexGrow: 0, flexWrap: 'nowrap', flexDirection: 'column', alignItems: 'stretch', gap: spacing.md },
+  full: { flexGrow: 0, alignSelf: 'stretch', alignItems: 'stretch', marginRight: 0, marginLeft: 0 },
 });
 
 const styles = StyleSheet.create({

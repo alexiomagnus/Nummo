@@ -3,7 +3,8 @@ import { useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from './AppDialog';
-import { Button, CancelButton, ConfirmButton } from './Button';
+import { screenActionStyles, useScreenActions } from './screenActions';
+import { CancelButton, ConfirmButton, DangerButton, useDangerColors } from './Button';
 import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -31,6 +32,7 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
+  const danger = useDangerColors();
   const [busy, setBusy] = useState(false);
   // With extra content (the backup offered before deleting, full width), «Annulla» and the confirmation share the whole row in
   // equal halves from medium too, lined up with it (user's request, 22 November); phones stack them at full width anyway.
@@ -53,7 +55,7 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
           <View style={[styles.actions, compact && styles.actionsCompact]}>
             {blocked ? <CancelButton onPress={onDismiss}>{t("Chiudi")}</CancelButton> : <>
             <CancelButton disabled={busy} onPress={onDismiss} style={halves}>{t("Annulla")}</CancelButton>
-            <ConfirmButton buttonColor={colors.error} textColor={colors.onError} disabled={busy} loading={busy} style={halves}
+            <ConfirmButton buttonColor={danger.fill} textColor={danger.ink} disabled={busy} loading={busy} style={[halves, dangerPill]}
               accessibilityLabel={confirmLabel ?? t("Conferma eliminazione di {p0}", { p0: name })}
               onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{confirmLabel ?? t("Elimina")}</ConfirmButton>
             </>}
@@ -63,6 +65,9 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
     </Portal>
   );
 }
+
+// The confirmation «Elimina» is a red pill like every other «Elimina» (DangerButton).
+const dangerPill = { borderRadius: radius.pill };
 
 const styles = StyleSheet.create({
   container: { flexShrink: 1, minHeight: 0 },
@@ -83,7 +88,9 @@ const styles = StyleSheet.create({
 export function DeleteAction({ name, title, description, blocked, onDelete, labeled: labeledProp, mode = 'text', disabled, onOpenChange }: { name: string; title?: string; description?: string; blocked?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean | 'wide'; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { t } = useI18n();
   const phone = useSizeClass() === 'compact';
-  const labeled = labeledProp === 'wide' ? !phone : labeledProp;
+  // On a screen (AppDialog as a screen) Elimina has a row of its own above «Annulla»/«Salva»: always with its label.
+  const onScreen = useScreenActions();
+  const labeled = labeledProp === 'wide' ? !phone || onScreen : labeledProp;
   const danger = labeledProp === 'wide';
   const action = useRef(onDelete);
   const [open, setOpen] = useState(false);
@@ -95,8 +102,9 @@ export function DeleteAction({ name, title, description, blocked, onDelete, labe
     {labeled
       // In the edit dialogs from medium «Elimina» is outlined too, its outline in error red like the label (user's request, 22
       // November): it reads as a button beside «Annulla», not as loose text; same height as the other actions.
-      ? <Button mode={danger ? 'outlined' : mode} disabled={disabled} icon={icon} textColor={colors.error} style={danger ? { borderColor: colors.error } : undefined}
-        accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</Button>
+      ? <DangerButton disabled={disabled} icon={icon} style={onScreen && screenActionStyles.button}
+        contentStyle={onScreen ? screenActionStyles.content : undefined} labelStyle={onScreen ? screenActionStyles.label : undefined}
+        accessibilityLabel={t("Elimina {p0}", { p0: name })} onPress={request}>{t("Elimina")}</DangerButton>
       // In the edit dialogs (phones) the trash is outlined like «Annulla» beside it (same 48 dp height and radius), the outline in
       // the icon's own error red (user's request, 21 November).
       : <IconButton disabled={disabled} icon={icon} mode={danger ? 'outlined' : undefined} iconColor={danger ? colors.error : undefined}

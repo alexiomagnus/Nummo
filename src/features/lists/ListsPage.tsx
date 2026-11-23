@@ -2,7 +2,7 @@ import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useStat
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { ActivityIndicator, HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { useBackLayer } from '../../components/BackNavigation';
-import { Button, compactIconPadding } from '../../components/Button';
+import { Button, compactIconPadding, DangerButton } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
 import { PageHeader } from '../../components/PageHeader';
@@ -140,9 +140,9 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
           {t("Liste archiviate ({p0})", { p0: archived.length })}</Button>
         {showArchived && <Reveal role="list" accessibilityLabel={t("Liste archiviate")} style={styles.list}>{archived.map(card)}</Reveal>}
         {/* All the archived lists at once (user's request, 22 November); their expenses stay in Spese with the products. */}
-        {showArchived && <Button mode="outlined" textColor={colors.error} style={[styles.start, { borderColor: colors.error }]}
+        {showArchived && <DangerButton style={styles.start}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />} onPress={() => setConfirmArchived(true)}>
-          {t("Elimina le liste archiviate")}</Button>}
+          {t("Elimina le liste archiviate")}</DangerButton>}
       </View>}
       <DeleteDialog visible={confirmArchived} name={t("le liste archiviate")}
         title={archived.length === 1 ? t("Eliminare 1 lista archiviata?") : t("Eliminare {p0} liste archiviate?", { p0: archived.length })}
