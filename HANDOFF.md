@@ -5295,7 +5295,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (22 novembre):** tutto il codice fino a `fa06adb` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (23 novembre):** tutto il codice fino a `da3103e` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
