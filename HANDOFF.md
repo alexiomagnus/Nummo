@@ -166,7 +166,8 @@ rilasci».
   `finished`, anche con suoneria SILENT e Non disturbare attivo (l'emulatore lo riproduce col ripiego da 30 ms). **Non sentita** sul
   Pixel 8. Committata e inviata in `f74ff3a`. **Release GitHub `android-v0.3.2`** (su richiesta: tag annotato su `f74ff3a`, inviato;
   APK compilato in una worktree pulita, poi rimossa con la copia della chiave; SHA-256 `9889a428…092a`, confermato da GitHub; certificato
-  `00b1c85c…0fcf`; versionCode 5), segnata «Latest» al posto della 0.3.1. L'utente la installa da GitHub sul Pixel 8.
+  `00b1c85c…0fcf`; versionCode 5), segnata «Latest» al posto della 0.3.1. **Installata dall'utente da GitHub sul Pixel 8 il 23 novembre:
+  intensità confermata («la vibrazione ora va bene»).**
 
 ## Cambio tema chiaro/scuro animato (M3 Expressive) — 23 novembre 2026
 
