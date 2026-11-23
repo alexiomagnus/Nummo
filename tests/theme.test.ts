@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { accents, buildScheme, dialogColors, positiveColors } from '../src/theme/palette.ts';
+import { accents, buildScheme, cardColor, dialogColors, mixColors, positiveColors } from '../src/theme/palette.ts';
 import { sizeClassOf, type Scheme } from '../src/theme/tokens.ts';
 
 // WCAG 2.x relative luminance and contrast ratio.
@@ -51,6 +51,20 @@ for (const [accent, mode, name] of accents.flatMap((a) => (['mono', 'palette'] a
     }
   });
 }
+
+test('schede delle spese: piene e colorate solo nel tema chiaro, testi e importi leggibili', () => {
+  assert.equal(mixColors('#000000', '#FFFFFF', 0.5), '#808080');
+  for (const accent of accents) for (const mode of ['mono', 'palette'] as const) {
+    assert.equal(cardColor(buildScheme(accent, mode, true), true), null, 'scuro: restano con il contorno');
+    const scheme = buildScheme(accent, mode, false);
+    const card = cardColor(scheme, false)!;
+    assert.match(card, /^#[0-9A-F]{6}$/u);
+    assert.ok(contrast(card, scheme.background) > 1.05, `${accent}/${mode}: la scheda si distingue dallo sfondo`);
+    for (const text of ['onSurface', 'onSurfaceVariant', 'primary', 'error'] as const) {
+      assert.ok(contrast(scheme[text], card) >= 4.5, `${accent}/${mode}: ${text} sulla scheda ${contrast(scheme[text], card).toFixed(2)}`);
+    }
+  }
+});
 
 test('verde delle entrate: contrasto almeno 4,5:1 su ogni superficie, per ogni accento e tema', () => {
   for (const accent of accents) for (const mode of ['mono', 'palette'] as const) for (const dark of [false, true]) {

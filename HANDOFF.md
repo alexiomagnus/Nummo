@@ -180,6 +180,23 @@ rilasci».
   (dove compare «Esci»): servirebbe l'emulatore Auth; con una voce in più l'altezza attesa è circa 400, dentro la finestra anche a 360×640.
   Committato e inviato con il cambio tema; Hosting non pubblicato.
 
+## Tema chiaro più deciso, schede delle spese colorate — 23 novembre 2026
+
+- **Su richiesta, in due passi** («il tema chiaro non è all'altezza dello scuro», poi «ancora più deciso, con le schede delle spese
+  colorate»). Solo il tema chiaro, stessi ruoli Material 3; tema scuro invariato (verificato a schermo).
+  - `palette.ts` (Palette e gli altri colori): contenitori di selezioni, chip e indicatori saturi e più scuri (tono ~76, prima ~86),
+    livelli di superficie 92 → 83 (prima 95 → 89), sfondo 95 più tinto, contorni e testo secondario più scuri, primario più vivo.
+  - `tokens.ts`: Menta monocolore con gli stessi toni (calcolati con la formula di `palette.ts` per la tinta menta) e rosso degli errori
+    del tema chiaro `#A3161A` (prima `#BA1A1A`), altrimenti sotto 4,5:1 sul contenitore più scuro.
+  - **Schede di Spese e Abbonamenti** (`ListRow outlined`): nel tema chiaro piene, con il nuovo colore `card` del tema (`cardColor` in
+    `palette.ts` = metà contenitore primario e metà bianco, `cardFill` in `theme.ts`), senza contorno visibile (bordo del colore del fondo,
+    misure invariate); nel tema scuro restano con il contorno.
+- **Verifica:** `tests/theme.test.ts` (contrasti per ogni colore e modalità, più un test nuovo sulle schede: testo, secondario, primario e
+  rosso ≥ 4,5:1, scheda distinta dallo sfondo, nessun fondo nello scuro); `npm run check` OK (**581/581**, compresi i test dell'altra
+  sessione). Chromium headless su `dist-demo`, 412×915 e 1280×800, prima/dopo di Nuova spesa, Spese (anche una scheda aperta), Analisi,
+  Fondi, Impostazioni con i dati del file v11; Spese nello scuro identica. Colori statici d'avvio (`#F5FBF5` in `public/index.html` e
+  `offline.html`) lasciati: poi vale il colore salvato. **Non provato** su telefono reale né a schermo con gli altri cinque colori.
+
 ## Vibrazione solo nell'app Android, stessa intensità, anche sulla legenda di Analisi — 23 novembre 2026
 
 - **Su richiesta.** Le righe della legenda di Analisi vibrano al tocco (`LegendRow`; erano state tolte il 21 novembre). Un solo effetto

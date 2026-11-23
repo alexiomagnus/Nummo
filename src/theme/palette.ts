@@ -48,18 +48,23 @@ function generate(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
   const common = {
     error: error.error, onError: error.onError, errorContainer: error.errorContainer, onErrorContainer: error.onErrorContainer,
   };
+  // Light (reworked on 23 November, user's request: it read weaker than the dark one, then «ancora più deciso»). Like the dark
+  // scheme, the surface containers are clear steps apart (92 → 83 instead of 95 → 89) on a more tinted background, and the
+  // containers of selections, chips and indicators are saturated and deeper (tone ~76 instead of ~86); outlines and secondary
+  // text are firmer and the primary more vivid (M3 Expressive). The error red of the light scheme is a little deeper
+  // (tokens.ts) so it keeps 4.5:1 on the deepest container.
   if (!dark) {
     return {
       ...common,
-      primary: p(42, 31), onPrimary: '#FFFFFF', primaryContainer: p(65, 86), onPrimaryContainer: p(90, 9),
-      secondary: sec(16, 34), onSecondary: '#FFFFFF', secondaryContainer: sec(32, 87), onSecondaryContainer: sec(45, 11),
-      tertiary: ter(34, 33), onTertiary: '#FFFFFF', tertiaryContainer: ter(55, 86), onTertiaryContainer: ter(80, 10),
-      background: p(30, 97), onBackground: p(14, 10),
-      surface: p(30, 97), onSurface: p(14, 10), surfaceVariant: p(14, 88), onSurfaceVariant: p(10, 27),
-      outline: p(6, 42), outlineVariant: p(10, 77),
+      primary: p(60, 26), onPrimary: '#FFFFFF', primaryContainer: p(78, 76), onPrimaryContainer: p(90, 9),
+      secondary: sec(28, 30), onSecondary: '#FFFFFF', secondaryContainer: sec(50, 77), onSecondaryContainer: sec(55, 10),
+      tertiary: ter(45, 30), onTertiary: '#FFFFFF', tertiaryContainer: ter(68, 76), onTertiaryContainer: ter(85, 9),
+      background: p(45, 95), onBackground: p(16, 9),
+      surface: p(45, 95), onSurface: p(16, 9), surfaceVariant: p(22, 82), onSurfaceVariant: p(16, 22),
+      outline: p(10, 36), outlineVariant: p(18, 66),
       inverseSurface: p(10, 18), inverseOnSurface: p(22, 94), inversePrimary: p(45, 72),
-      surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: p(24, 95), surfaceContainer: p(20, 93),
-      surfaceContainerHigh: p(16, 91), surfaceContainerHighest: p(14, 89),
+      surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: p(36, 92), surfaceContainer: p(32, 89),
+      surfaceContainerHigh: p(28, 86), surfaceContainerHighest: p(26, 83),
     };
   }
   return {
@@ -88,6 +93,17 @@ export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean): Sch
   }
   return scheme;
 }
+
+// Mix of two #RRGGBB colours (`weight` of the first).
+export function mixColors(a: string, b: string, weight: number): string {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  return `#${[0, 1, 2].map((i) => Math.round(channel(a, i) * weight + channel(b, i) * (1 - weight)).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+
+// Fill of the expense and subscription cards (filled M3 card, tinted with the primary): light only, 23 November, user's request
+// («le schede delle spese colorate»). null in dark, where the cards stay outlined.
+export const cardColor = (scheme: Scheme, dark: boolean): string | null =>
+  dark ? null : mixColors(scheme.primaryContainer, scheme.surfaceContainerLowest, 0.5);
 
 // Semantic green for money coming in (additions, recharges), the counterpart of `error` for money going out. Fixed, not tied to
 // the accent: the meaning must not change with the chosen colour. Contrast ≥ 4.5:1 on every surface (tests/theme.test.ts).

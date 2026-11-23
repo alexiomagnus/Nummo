@@ -1480,3 +1480,15 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   anche le destinazioni attraversate trascinando sulla barra e le parti dei grafici vibrano come un tocco. Il cancello da 60 ms resta.
 - **Compatibilità.** Nessuna modifica Kotlin: le app 0.1.0–0.3.1 ricevono solo `tap`, che conoscono già; `tick` resta nel ponte. Il cambio
   arriva all'app con la pubblicazione dell'Hosting. Le decisioni precedenti sulle durate nel browser (21–22 novembre) restano come storia.
+
+## Tema chiaro più deciso, schede delle spese piene — 23 novembre 2026
+
+- **Richiesta dell'utente:** il tema chiaro si leggeva peggio dello scuro; poi «ancora più deciso, con le schede delle spese colorate».
+- **Decisione:** nessun ruolo nuovo di Material 3, solo i valori chiari di `palette.ts` e `tokens.ts` nello stile M3 Expressive:
+  contenitori tonali saturi (tono ~76), `surfaceContainer*` a passi ampi (92/89/86/83) su uno sfondo più tinto, contorni e
+  `onSurfaceVariant` più scuri. Per scendere a 83 il rosso degli errori del tema chiaro passa da `#BA1A1A` (M3) a `#A3161A`: con il
+  primo, il testo di errore sul contenitore più scuro restava a 4,3:1.
+- **Schede delle spese:** nel tema chiaro `ListRow outlined` (Spese, Abbonamenti) è una scheda piena (M3 filled card) tinta col primario,
+  colore `card` del tema (`cardColor`: metà `primaryContainer`, metà bianco); il bordo prende il colore del fondo, così le misure non
+  cambiano. Nel tema scuro le schede restano con il contorno, che lì già si leggeva bene.
+- I contrasti sono verificati da `tests/theme.test.ts` per ogni colore e modalità, schede comprese.

@@ -1,5 +1,5 @@
 import { MD3DarkTheme, MD3LightTheme, configureFonts, type MD3Theme } from 'react-native-paper';
-import { buildScheme, dialogColors, positiveColors } from './palette';
+import { buildScheme, cardColor, dialogColors, positiveColors } from './palette';
 import { paperRoundness, typefaces } from './tokens';
 import type { Preferences } from '../features/settings/preferences';
 
@@ -13,6 +13,7 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
     // Page panel: a touch lighter than the background (lowest container in light, low in dark).
     panel: dark ? s.surfaceContainerLow : s.surfaceContainerLowest,
     positive: dark ? positiveColors.dark : positiveColors.light,
+    card: cardColor(s, dark),
     ...dialogColors(s, dark),
   };
   return {
@@ -42,5 +43,7 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
 // Reads the custom `panel` colour added by `createTheme` (Paper's colour type cannot be augmented).
 export const panelColor = (colors: object): string => (colors as { panel?: string }).panel ?? 'transparent';
 export const dialogColor = (colors: object): string => (colors as { dialog: string }).dialog;
+// Reads the custom `card` fill of the expense cards (light theme), null where they stay outlined (dark), see palette.ts.
+export const cardFill = (colors: object): string | null => (colors as { card?: string | null }).card ?? null;
 // Reads the custom `positive` colour (money coming in), see palette.ts.
 export const positiveColor = (colors: object): string => (colors as { positive: string }).positive;

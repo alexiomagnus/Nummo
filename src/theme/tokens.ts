@@ -17,16 +17,19 @@ export type Scheme = {
 // Mint identity: primary hue ≈ 150°. Text/background pairs are ≥ 4.5:1, outlines ≥ 3:1.
 export const schemes: { light: Scheme; dark: Scheme } = {
   light: {
-    primary: '#2D6A4F', onPrimary: '#FFFFFF', primaryContainer: '#B7F0CF', onPrimaryContainer: '#002113',
-    secondary: '#4D6357', onSecondary: '#FFFFFF', secondaryContainer: '#CFE9D8', onSecondaryContainer: '#0A1F14',
-    tertiary: '#3A6573', onTertiary: '#FFFFFF', tertiaryContainer: '#BEEAF9', onTertiaryContainer: '#001F28',
-    error: '#BA1A1A', onError: '#FFFFFF', errorContainer: '#FFDAD6', onErrorContainer: '#410002',
-    background: '#F5FBF5', onBackground: '#171D19',
-    surface: '#F5FBF5', onSurface: '#171D19', surfaceVariant: '#DBE5DD', onSurfaceVariant: '#404943',
-    outline: '#6F7972', outlineVariant: '#BFC9C1',
+    // Light reworked on 23 November (user's request, twice: firmer, then «ancora più deciso»): the same tones as the light
+    // scheme of palette.ts for the mint hue, so Menta monocolore and Palette read alike. Error a little deeper than M3's
+    // #BA1A1A: 4.5:1 also on the deepest container.
+    primary: '#1B6A46', onPrimary: '#FFFFFF', primaryContainer: '#92F2C7', onPrimaryContainer: '#022C19',
+    secondary: '#37624F', onSecondary: '#FFFFFF', secondaryContainer: '#A7E2C7', onSecondaryContainer: '#0B281B',
+    tertiary: '#2F6576', onTertiary: '#FFFFFF', tertiaryContainer: '#9FDAF0', onTertiaryContainer: '#001F28',
+    error: '#A3161A', onError: '#FFFFFF', errorContainer: '#FFDAD6', onErrorContainer: '#410002',
+    background: '#EDF8F3', onBackground: '#131B17',
+    surface: '#EDF8F3', onSurface: '#131B17', surfaceVariant: '#C7DBD2', onSurfaceVariant: '#2F4139',
+    outline: '#53655D', outlineVariant: '#99B8AA',
     inverseSurface: '#2C322E', inverseOnSurface: '#ECF2EC', inversePrimary: '#9BD4B3',
-    surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: '#EFF5EF', surfaceContainer: '#E9F0E9',
-    surfaceContainerHigh: '#E3EAE3', surfaceContainerHighest: '#DEE4DD',
+    surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: '#E3F2EB', surfaceContainer: '#DAECE4',
+    surfaceContainerHigh: '#D1E5DC', surfaceContainerHighest: '#C8DFD5',
   },
   dark: {
     primary: '#9BD4B3', onPrimary: '#003826', primaryContainer: '#145239', onPrimaryContainer: '#B7F0CF',
