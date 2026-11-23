@@ -69,6 +69,10 @@ rilasci».
   non installa una versione più vecchia sopra una più recente. Il 23 novembre, su richiesta, anche `android-v0.3.0` (tag annotato su
   `2b1e8fb`, inviato; APK `a3efdc94…658f`, confermato da GitHub, certificato `00b1c85c…0fcf`, versionCode 3), ricompilata allo stesso
   modo in una worktree temporanea (rimossa, con la copia della chiave), `--latest=false`; le note dicono che è superata dalla 0.3.1.
+  Poi, su richiesta (23 novembre, 15:32), la 0.3.1 **ripubblicata** perché comparisse come la più recente: GitHub ordina le release per
+  data del tag, quindi tag `android-v0.3.1` ricreato con la data di oggi sullo stesso `fa06adb` (locale e remoto) e release ricreata con
+  lo stesso titolo, le stesse note e gli stessi due file (APK scaricato prima e dopo, SHA-256 verificato), «Latest». Ordine su GitHub:
+  0.3.1, 0.3.0, 0.2.0, 0.1.0. Chi aveva il vecchio tag in locale lo aggiorna con `git fetch --tags --force`.
 - **Git.** `main` = `origin/main`, solo il ramo `main`, quattro tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.0`, `android-v0.3.1`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
   inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
   pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
