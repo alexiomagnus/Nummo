@@ -6,7 +6,11 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `d633282` (23 novembre, su richiesta: template dopo template senza
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `e3c250e` (23 novembre, su richiesta: audit mobile, `#root` sull'area
+  visibile con la tastiera di iOS, barre di sistema che seguono il cerchio del cambio tema), pubblicato con `npm run deploy:hosting`
+  dall'albero principale pulito (uguale al commit): «Deploy complete!», bundle online `index-3ee80b89…` identico a quello compilato
+  (SHA-256), `sw.js` e `offline.html` identici, `index.html` online con `--nummo-viewport-top`. Rules invariate. Arriva all'app Android
+  senza un nuovo APK. Prima `d633282` (23 novembre, su richiesta: template dopo template senza
   importo ed esercente del precedente, più tutto il codice fino a `f74ff3a`), da una worktree pulita (rimossa; il lavoro non committato
   di un'altra sessione escluso): «Deploy complete!», bundle online `index-8c4df371…` identico a quello compilato (SHA-256), `sw.js`
   identico. Rules invariate. Prima `72fcf5a` (23 novembre, su richiesta: cambio tema animato e più lento,
@@ -194,7 +198,8 @@ rilasci».
   headless su `dist-demo` 412×915: cerchio da 868 ms dal pulsante, `theme-color` cambiato 145 ms dopo l'inizio (prima: all'inizio); menu
   ancorato a 1280×800 4 px sotto il campo; nessun errore JS. **Non provato su iPhone/Safari reale** (servono: tastiera su Nuova spesa con
   campo basso, Descrizione, dialogo di modifica, PIN della schermata di blocco, PWA installata; scorrimento del modulo a tastiera aperta,
-  dove Safari può spostare il visual viewport anche col dito: `#root` lo segue a ogni evento, da guardare se tremola). Non committato.
+  dove Safari può spostare il visual viewport anche col dito: `#root` lo segue a ogni evento, da guardare se tremola). Committato in
+  `e3c250e` (`npm run check` di nuovo OK, 585/585, sull'albero del commit) e pubblicato su Hosting (vedi «Stato corrente»).
 
 ## App Android 0.3.2: vibrazione un gradino più forte — 23 novembre 2026
 
