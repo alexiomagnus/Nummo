@@ -7,13 +7,13 @@ e possono dire cose superate; il riepilogo precedente (21 novembre) è conservat
 rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novembre, l'elenco dei commit e la storia delle release Android,
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `da3103e` (23 novembre, su richiesta: accenti del tema chiaro più chiari,
-  pallini di «Colore» e anello del profilo vivi; tema scuro invariato), pubblicato con `npm run deploy:hosting` dall'albero principale
-  pulito: «Deploy complete!», bundle online `index-9f999119…` identico a quello compilato (SHA-256), `sw.js` e `offline.html` identici.
-  Comprende tutto il codice fino a `da3103e`. Prima `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `9e032b8` (23 novembre, su richiesta: schermo di dettaglio di spese e
+  abbonamenti), pubblicato con `npm run deploy:hosting` dall'albero principale pulito: «Deploy complete!», bundle online
+  `index-d8345c5c…` identico a quello compilato (SHA-256). Comprende tutto il codice fino a `9e032b8`. Prima `da3103e` (accenti del tema
+  chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
   invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
   99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
-- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
+- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
   vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
 - **App Android: 0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
@@ -23,8 +23,8 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.2` «Latest», poi 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `da3103e`,
-  inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `9e032b8`,
+  inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
   L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
@@ -100,8 +100,8 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   **Verifica:** `npm run check` OK (**590/590**); Chromium headless con `nummo-pagamenti-eliminati-v9.json` importato, 360×740 e 390×844
   chiaro/scuro, 1440×900: tre abbonamenti aperti e chiusi (pulsante, Escape, `history.back()`), scorrimento 180 → 180, focus sulla scheda,
   «Modifica serie», «Storico dei pagamenti» e «Metti in pausa» aperti sopra il dettaglio; spese ancora OK (salvataggio ed eliminazione).
-  Non provati il cambio di stato confermato né l'eliminazione di un pagamento dal dettaglio. Committato e inviato su richiesta;
-  Hosting **non** pubblicato. Decisione e motivi in `docs/architecture.md`. L'eliminazione resta nel
+  Non provati il cambio di stato confermato né l'eliminazione di un pagamento dal dettaglio. Committato in `9e032b8`, inviato e
+  pubblicato su Hosting (bundle `index-d8345c5c…`). Decisione e motivi in `docs/architecture.md`. L'eliminazione resta nel
   dialogo di modifica (non è stato aggiunto un secondo «Elimina» nel dettaglio); non esistono note né duplicazione delle spese.
 - **Verifica:** `npm run check` OK (**590/590**: 5 test nuovi in `tests/detailMotion.test.ts`, typecheck, build demo). Chromium headless
   su `dist-demo`, Standard, file v11 importato dall'interfaccia, 390×844 chiaro e scuro, 800×1100, 1440×900 chiaro e scuro: tre spese
@@ -2067,7 +2067,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
 
-- **Rilasci del 23 novembre** (solo Hosting, dal più recente): `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo template),
+- **Rilasci del 23 novembre** (solo Hosting, dal più recente): `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo template),
   `72fcf5a` (cambio tema animato, menu dell'account, vibrazione solo nell'app, tema chiaro più deciso). Esiti nello «Stato corrente».
 
 - **Rilasci successivi del 22 novembre** (dal più recente): Hosting da `fa06adb` (articolo eliso nei testi delle notifiche), `2b1e8fb`
@@ -5325,7 +5325,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (23 novembre):** tutto il codice fino a `da3103e` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (23 novembre):** tutto il codice fino a `9e032b8` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
