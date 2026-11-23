@@ -1,166 +1,81 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 22 novembre 2026 (aggiornato il 23)
+## Stato corrente — 23 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, dal più recente, sono cronaca delle singole fasi
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
-rilasci».
+rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novembre, l'elenco dei commit e la storia delle release Android,
+prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre».
 
 - **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `e3c250e` (23 novembre, su richiesta: audit mobile, `#root` sull'area
   visibile con la tastiera di iOS, barre di sistema che seguono il cerchio del cambio tema), pubblicato con `npm run deploy:hosting`
-  dall'albero principale pulito (uguale al commit): «Deploy complete!», bundle online `index-3ee80b89…` identico a quello compilato
-  (SHA-256), `sw.js` e `offline.html` identici, `index.html` online con `--nummo-viewport-top`. Rules invariate. Arriva all'app Android
-  senza un nuovo APK. Prima `d633282` (23 novembre, su richiesta: template dopo template senza
-  importo ed esercente del precedente, più tutto il codice fino a `f74ff3a`), da una worktree pulita (rimossa; il lavoro non committato
-  di un'altra sessione escluso): «Deploy complete!», bundle online `index-8c4df371…` identico a quello compilato (SHA-256), `sw.js`
-  identico. Rules invariate. Prima `72fcf5a` (23 novembre, su richiesta: cambio tema animato e più lento,
-  menu dell'account senza limite di altezza, vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene),
-  pubblicato con `npm run deploy:hosting` da una worktree pulita (rimossa, con la copia di `.env.production.local`): «Deploy complete!»,
-  bundle online `index-e41d56f4…` identico a quello compilato (SHA-256), `sw.js` identico. Rules invariate. Arriva anche all'app Android
-  (0.3.1) senza un nuovo APK. Prima `fa06adb` (articolo eliso nei testi delle notifiche), pubblicato su
-  richiesta il 22 novembre con `npm run deploy:hosting` («Deploy complete!»): bundle online `index-053e3738…` e `sw.js` identici ai locali.
-  Prima `2b1e8fb` (notifiche dell'app Android 0.3.0, bundle `index-4a671be6…`, identico a `dist/`), prima `0f340bf` (app Android 0.2.0,
-  bundle `index-9fe2b72e…`). Ultime **Rules**: `48361b9` (invariate da allora). In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
-  richiesta il 22 novembre (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», «Deploy complete!»);
-  **Hosting** poi pubblicato con `759792c` (app Android, vedi sotto): online `index-18586346…`, che comprende i 500 prodotti; verificato
-  il 22 novembre ricompilando da `HEAD` pulito (`7b7ad76`) con `npm run build:cloud`: stesso bundle, stesso SHA-256 di quello online. Prima, **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
-  22 novembre, nell'ordine: Rules («compiled successfully», «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle
-  online `index-040a3433…` identico a `dist/` (SHA-256), `firestore.rules` pubblico identico. Chi ha il proprio Firebase deve ricopiare le
-  Rules. Prima, **Rules e Hosting** da `f4691aa` (limiti degli abbonamenti: 1000 cambi di stato, 100 cambi di
-  frequenza, 1000 pagamenti eliminati, 5000 occorrenze) pubblicati su richiesta il 22 novembre, nell'ordine: Rules
-  (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», quindi la forma con `split` è accettata dal
-  server; «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle online `index-d1e508c4…` identico a `dist/`
-  (SHA-256), `firestore.rules` pubblico identico. Chi ha collegato il proprio Firebase deve ricopiare le Rules. Prima, **Hosting** da `a4cbef0` (Indietro che non esce più dopo uno o due passi, anello degli avatar)
-  pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`: «Deploy complete!», bundle online `index-46bee5bd…` identico a `dist/`
-  (SHA-256). Rules invariate (quelle di `f57b1b9`). Prima, **Rules e Hosting** da `f57b1b9` pubblicati su richiesta il 22 novembre, nell'ordine: Rules
-  (`firebase deploy --only firestore:rules --project nummo-6b6e2`: compilazione OK, «Deploy complete!»; cambi di stato fino a 40), poi
-  `npm run deploy:hosting` («Deploy complete!»), bundle online `index-79ab0459…` identico a `dist/` (SHA-256), `firestore.rules` pubblico
-  identico. Chi ha collegato il proprio Firebase deve ricopiare le Rules (oltre 8 cambi di stato). Prima, **Hosting** da `1e5c615` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
-  «Deploy complete!», bundle online `index-5c7ec78e…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
-  Prima, **Hosting** da `3994330` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
-  «Deploy complete!», bundle online `index-bac866b2…` identico a `dist/` (SHA-256; per qualche secondo il CDN serviva ancora il precedente).
-  Rules invariate (quelle di `17632af`). Prima, **Hosting** da `a13e54c` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
-  «Deploy complete!», bundle online `index-04eef827…` identico a `dist/` (SHA-256; per qualche secondo dopo il rilascio il CDN serviva
-  ancora l'HTML precedente). Rules invariate (quelle di `17632af`). Prima, **Hosting** da `49a7c58` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
-  «Deploy complete!», bundle online `index-fe24bc41…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
-  Prima, **Hosting** da `67f4a29` (template senza data) pubblicato su richiesta il 22 novembre (sera):
-  «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256; la prima lettura subito dopo il rilascio dava ancora l'HTML
-  precedente, poi quello nuovo). Rules invariate dal `17632af` (nessuna differenza; `firestore.rules` pubblico identico): non ripubblicate.
-  Prima, **Hosting** da `9929c8f` pubblicato su richiesta il 22 novembre (sera) con
-  `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
-  Prima, **Rules e Hosting** da `17632af`, pubblicati su richiesta il 22 novembre nell'ordine: Rules
-  (compilazione OK, «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), sito 200, bundle online identico a `dist/`
-  (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
-  Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
-  per il 21–22 novembre, «Stato corrente precedente».
-- **App Android 0.3.1 (22 novembre):** notifiche come notifiche locali dell'app (0.3.0, `2b1e8fb`), articolo eliso nei testi (0.3.1,
-  `fa06adb`); commit inviati, Hosting pubblicato. Provate sull'emulatore Android 17 e, con l'app di debug (poi disinstallata), sul Pixel 8:
-  tre notifiche all'orario esatto. **Release 0.3.1 installata sul Pixel 8** via adb (stessa chiave; `USE_EXACT_ALARM` concesso,
-  `POST_NOTIFICATIONS` da chiedere con «Attiva»): da provare a orario reale. Sezione «App Android 0.3.0» qui sotto.
-- **App Android 0.2.0 (22 novembre):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata in
-  `nummo-6b6e2`. Committata in `0f340bf`, inviata, Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle
-  online `index-9fe2b72e…` identico a `dist/`, SHA-256), Rules invariate; release 0.2.0 installata sul Pixel 8 via adb sopra la 0.1.0.
-  Da provare sul telefono: accesso Google reale, uscita e nuovo accesso. Sezione «App Android 0.2.0» qui sotto.
-- **App Android (22 novembre):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte, committate in `759792c`,
-  inviate e pubblicate su Hosting su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online `index-18586346…` identico a
-  `dist/` (SHA-256) e con il ponte; porta online anche i 500 prodotti per lista di `48361b9`, Rules già pubblicate). Rules invariate.
-  Installata sul Pixel 8 dell'utente via adb il 22 novembre (Android 17, WebView 157): **verificato dall'utente che la vibrazione funziona
-  anche in Non disturbare**. Ancora da provare sul telefono: blocco con impronta, fotocamera/«Carica una foto», backup e ripristino nell'app.
-  Da fare dall'utente: copiare altrove la chiave di firma (`android/nummo-release.jks`, `android/keystore.properties`).
-  Dettagli nella sezione «App Android» qui sotto.
-- **Release dell'app Android (GitHub, su richiesta, 22 novembre):** `android-v0.3.1` (tag annotato su `fa06adb`, inviato) con
-  `nummo-0.3.1.apk` (SHA-256 `a04f6f3d…18ea`, confermato da GitHub; certificato `00b1c85c…0fcf`) e il file `.sha256`; repository privato.
-  Poi, su richiesta, `android-v0.2.0` (su `0f340bf`, APK `6af4a0c8…9178`) e `android-v0.1.0` (su `759792c`, APK `06504315…c0f7`),
-  **ricompilate** in worktree temporanee (rimosse) con la stessa chiave e la `local.properties` attuale: stesso codice, non lo stesso file
-  degli APK installati allora (sovrascritti); pubblicate con `--latest=false` (la «Latest» resta la 0.3.1). Le note avvisano che Android
-  non installa una versione più vecchia sopra una più recente. Il 23 novembre, su richiesta, anche `android-v0.3.0` (tag annotato su
-  `2b1e8fb`, inviato; APK `a3efdc94…658f`, confermato da GitHub, certificato `00b1c85c…0fcf`, versionCode 3), ricompilata allo stesso
-  modo in una worktree temporanea (rimossa, con la copia della chiave), `--latest=false`; le note dicono che è superata dalla 0.3.1.
-  Poi, su richiesta (23 novembre, 15:32), la 0.3.1 **ripubblicata** perché comparisse come la più recente: GitHub ordina le release per
-  data del tag, quindi tag `android-v0.3.1` ricreato con la data di oggi sullo stesso `fa06adb` (locale e remoto) e release ricreata con
-  lo stesso titolo, le stesse note e gli stessi due file (APK scaricato prima e dopo, SHA-256 verificato), «Latest». Ordine su GitHub:
-  0.3.1, 0.3.0, 0.2.0, 0.1.0. Chi aveva il vecchio tag in locale lo aggiorna con `git fetch --tags --force`.
-- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.0`, `android-v0.3.1`, `android-v0.3.2`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
-  inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
-  pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
-  sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
-  `759792c`. Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
-  Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
-  Prima `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
-  quello di «Colore dell'anello»): inviato e pubblicato su Hosting. Prima `f57b1b9` (pagina Esercenti, cambi di stato
-  fino a 40, Indietro di un passo, colore dell'anello, barra inferiore senza lampeggi, storico dei pagamenti largo due pulsanti, vibrazione
-  sulla ricorrenza, «Annulla»/«OK» della data a 44, avvisi a 5 s): inviato e pubblicato con le Rules. Prima `1e5c615` (Elimina del fondo nel dialogo di modifica, «Palette» predefinita, pulsanti «Ripristina» uniformi, contorno rosso di Elimina): inviato e pubblicato su Hosting. Prima `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
-  (template senza data), `9929c8f`
-  (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
-  frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
-  astratti; altra sessione), `a6c2b88` (blocco dell'app con impronta o viso), `ec8c5c3` (scansione più ordinata, categorie su smartphone;
-  altra sessione), `b2f6d1e` (Indietro di Android, immagine del profilo in Standard), `c862fa9` (riepilogo del passaggio più breve, «Annulla»/
-  «OK» della data; altra sessione), `8dd92df` (vibrazione al cambio Spese/Abbonamenti), `8bf4f4d` (separatore delle schede, vibrazione 5/4 ms
-  solo touch). L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
-- **Novità del 22 novembre, in breve** (dettagli nelle sezioni datate):
-  - **App Android** (`android/`, WebView con ponte nativo, APK installato a mano): vibrazione anche in silenzioso e Non disturbare, barre
-    di sistema del colore dell'app, sblocco con `BiometricPrompt`, salvataggio dei file; dalla 0.2.0 Avanzata con l'accesso Google del
-    telefono; dalla 0.3.0 notifiche come notifiche locali dell'app (0.3.1: «dall’8», «l’11» anche nel browser).
-  - **Indietro (Android e browser)** chiude ciò che è aperto (overlay, lista aperta, pagina del menu, destinazione → Nuova spesa) ed esce
-    solo da Nuova spesa: una voce di guardia nella cronologia (`theme/backStack.ts`, `useBackLayer`).
-  - **Immagine del profilo** in testa alle Impostazioni: nessuna (in Avanzata la foto Google, l'omino se manca), cinque avatar astratti,
-    oppure una foto (quadrato centrale a 192 px). Standard `nummo.profile.v1`, Avanzata `nummo.profile.v1.<uid>`.
-  - **Blocco dell'app** (impronta, viso o PIN, WebAuthn) all'apertura e al ritorno dopo subito/1/5/15 minuti; recupero: in Avanzata «Esci»
-    e nuovo accesso Google, in Standard «Disattiva il blocco» con il PIN di Nummo a 6 cifre (sola conferma per i blocchi accesi prima del
-    PIN; deterrente, non protezione forte). Uno schermo, non cifratura.
-  - **Importo massimo 999.999.999,99 €** (spese, prezzi, totale delle liste, template; Rules pubblicate); ricariche e budget dei fondi restano
-    a 99.999,99. Campo Importo che rimpicciolisce il testo su smartphone.
-  - **Limiti di lunghezza**: ricerche ed Esercente 30, nome della lista 40, prodotto 60, «Totale spesa» come l'Importo.
-  - Barra dei menu lontana dagli angoli arrotondati; vibrazione al cambio Spese/Abbonamenti; scansione dello scontrino più ordinata;
-    riepilogo del passaggio dei dati più breve.
-- **Ultima sessione (22 novembre, sera):** ripresa delle notifiche dell'app Android lasciate non committate da un'altra sessione,
-  correzioni (Android 11–12, validazione come il servizio push), prove su emulatore e Pixel 8, articolo eliso nei testi delle notifiche;
-  `2b1e8fb` e `fa06adb` inviati e pubblicati su Hosting, release 0.3.1 sul Pixel 8. Rules e `DataStore` invariati. Sezione «App Android
-  0.3.0» qui sotto.
-- **Verifiche (ultime).** Su `7008e73` (23 novembre, con il test del backup v11): `npm run check` OK (**576/576**, build demo).
-  Su `fa06adb`: `npm run check` OK (**575/575**), `assembleRelease` OK; `test:emulator` non rieseguito
-  (Rules, `DataStore` e servizi invariati da `48361b9`, dove era **24/24**). Su `17ebce0`: `npm run check` OK (**565/565**), `test:emulator` **24/24**. Su `f4691aa`: `npm run check` OK (**564/564**), `test:emulator` **24/24**, `test:hybrid` **9/9**.
-  Prima `npm run check` OK su `a4cbef0` (**560/560**). Prima `npm run check` OK su `f57b1b9` (typecheck, **557/557**, build demo); `test:emulator` **24/24** su
-  `f57b1b9` (porte proprie 39199/39380). Prima `npm run check` OK su `1e5c615` (**551/551**);
-  `test:emulator` **23/23** su `9929c8f` (porte proprie); prima **22/22** sulle Rules di `20b14e0` (999.999.999,99 € accettato, 1.000.000.000,00 rifiutato), su porte proprie 39199/39380; da allora Rules, `DataStore` e
-  servizi invariati. Prove in Chromium headless (demo, emulatori propri; mai il runner hybrid): Indietro, blocco con autenticatore WebAuthn
-  virtuale, avatar in Standard e in Avanzata (accesso dal popup dell'emulatore Auth), importo lungo a 320–1280 px, barra dei menu, limiti dei
-  campi. Nessun errore JS.
+  dall'albero principale pulito: «Deploy complete!», bundle online `index-3ee80b89…` identico a quello compilato (SHA-256), `sw.js` e
+  `offline.html` identici. Comprende tutto il codice fino a `e3c250e`. Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
+  invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
+  99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
+- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `e3c250e` (audit mobile), `d633282` (template dopo
+  template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
+  vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
+- **App Android: 0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
+  intensità confermata. Funzioni: WebView del sito con ponte nativo (vibrazione anche in silenzioso e Non disturbare, barre di sistema del
+  colore dell'app, sblocco con `BiometricPrompt`, salvataggio dei file), Avanzata con l'accesso Google del telefono (dalla 0.2.0),
+  notifiche come notifiche locali dell'app (dalla 0.3.0). Da fare dall'utente: copiare altrove la chiave di firma
+  (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
+- **Release GitHub** (repository privato): `android-v0.3.2` «Latest», poi 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
+  `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `e3c250e`,
+  inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `e3c250e` (audit mobile), `d633282` (template dopo
+  template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
+  `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
+  L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
+- **Novità del 23 novembre, in breve** (dettagli nelle sezioni datate):
+  - **iOS e tastiera:** `#root` è `position: fixed` sull'area visibile e segue lo spostamento del visual viewport di Safari: la barra
+    superiore non esce più dallo schermo e non resta una striscia vuota sopra la tastiera. Lo stesso vale per lo schermo di blocco.
+  - **Cambio chiaro/scuro** come cerchio che si allarga dal controllo (View Transitions, molla morbida da 868 ms); le barre del browser e
+    dell'app cambiano colore quando il cerchio copre il bordo superiore.
+  - **Tema chiaro più deciso** e schede di Spese/Abbonamenti piene nel tema chiaro; tema scuro invariato.
+  - **Vibrazione solo nell'app Android**, un solo effetto ovunque (anche sulla legenda di Analisi); nel browser nessuna vibrazione.
+  - **Menu dell'account** senza limite di altezza fisso; **template dopo template**: importo ed esercente del precedente non restano.
+- **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
+  immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
+  999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
+- **Verifiche (ultime).** Su `e3c250e`: `npm run check` OK (**585/585**, typecheck, build demo). `scripts/check-keyboard.mjs` in sei
+  scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
+  visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
+  menu ancorato su desktop, nessun errore JS. Su `f74ff3a`: `assembleDebug assembleRelease` OK. `test:emulator` **24/24** l'ultima volta su
+  `48361b9`: Rules, `DataStore` e servizi invariati da allora; `test:hybrid` **9/9** su `f4691aa`.
 - **Da provare sul telefono (priorità):**
-  0. Release 0.3.1 sul Pixel 8: Notifiche → «Attiva notifiche di sistema» (dialogo di Android), primo promemoria all'orario scelto dopo ore a
-     schermo spento e in Non disturbare, tocco sulla notifica; Avanzata con l'accesso Google reale, uscita e nuovo accesso (dalla 0.2.0).
-  1. App installata sul Pixel 8: Indietro e gesto Indietro di sistema, **più volte di fila senza toccare lo schermo** (correzione `a4cbef0`); blocco con impronta/viso reali (richiesta automatica, «Sblocca»,
-     dove compare la passkey «Nummo» nel gestore delle password), recupero in Avanzata con «Esci»; foto del profilo dalla galleria;
-     in Standard PIN di Nummo (accensione, «Non riesco a sbloccare», «Cambia il PIN») e «Elimina tutte le spese».
-  2. In produzione (Avanzata): una spesa oltre 99.999,99 € accettata dal server; scelta di un avatar e ritorno alla foto Google.
-  3. iPhone/Safari: Indietro a scorrimento, blocco (Safari può chiedere un tocco: c'è «Sblocca»).
-  4. Rimasti dal 21 novembre: vibrazione 5/4 ms (senza Non disturbare), menu «immagine» al tocco prolungato, tastiera virtuale (campo in basso
-     e nei dialoghi, iOS a passi), modifica spesa a 360–412 px, revisione dello scontrino su telefono reale.
+  0. iPhone (Safari e web app installata), dopo l'audit mobile: tastiera su Nuova spesa con un campo in basso e la Descrizione, dialogo di
+     modifica, PIN della schermata di blocco; scorrimento del modulo a tastiera aperta (`#root` segue ogni spostamento: guardare se trema);
+     cambio chiaro/scuro; Indietro a scorrimento; blocco (Safari può chiedere un tocco: c'è «Sblocca»).
+  1. App 0.3.2 sul Pixel 8: Notifiche → «Attiva notifiche di sistema», primo promemoria all'orario scelto dopo ore a schermo spento e in
+     Non disturbare, tocco sulla notifica; Avanzata con l'accesso Google reale, uscita e nuovo accesso; vibrazione su legenda e grafici di
+     Analisi e sul trascinamento della barra; cambio tema (le barre di Android hanno un solo colore: quella in basso può cambiare poco prima
+     del cerchio).
+  2. App sul Pixel 8: Indietro e gesto Indietro di sistema più volte di fila senza toccare lo schermo; blocco con impronta/viso reali e
+     recupero in Avanzata con «Esci»; foto del profilo dalla galleria; in Standard PIN di Nummo («Non riesco a sbloccare», «Cambia il PIN»)
+     e «Elimina tutte le spese»; fotocamera, backup e ripristino nell'app.
+  3. In produzione (Avanzata): una spesa oltre 99.999,99 € accettata dal server; scelta di un avatar e ritorno alla foto Google; menu
+     dell'account con «Esci» senza scorrimento.
+  4. Rimasti dal 21 novembre: menu «immagine» al tocco prolungato, modifica spesa a 360–412 px, revisione dello scontrino su telefono reale.
 - **Da verificare su dispositivo (storico):** «Carica foto» e scansione con l'AI da telefono; blocco dello zoom con due dita; ritocchi mobile
   del 17 novembre su iPhone e scheda AI con Gemini reale; icona dell'app (cache del launcher); tastiera automatica di Nuova lista/Nuovo fondo
   (su iOS probabilmente non si apre). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
-  separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser.
-- **Ambiente.** Lock e runner hybrid: vedi sotto (23 novembre). Su richiesta (22 novembre, sera), dopo l'ispezione, `.firebase/hybrid.lock`
-  del runner 291668 (partito alle 17:12 e interrotto senza pulizia: config rimasta, sessione `hybrid-aR7NqG` con la sola config della CLI e
-  nessun `export/`, quindi niente da recuperare) rinominato in `hybrid.lock.stale-291668` e `.nummo-hybrid-291668.json` rimosso.
-  `emulator-data/` è l'export promosso il 22 novembre alle 21:11 da una sessione hybrid successiva alla pulizia, che ha lasciato la
-  copia precedente (quella delle 17:11, sessione 36786) in `.firebase/hybrid-vtMRe6/previous` (riscontrato il 23 novembre, nessuna
-  modifica). Il 23 novembre, al momento della verifica, era attivo un runner hybrid dell'utente (PID 6588, `dev-hybrid.ts --clear`, con
-  il suo lock, `.nummo-hybrid-6588.json` e la sessione `hybrid-NBhDrA`): stato del momento, non toccato. Prima, su richiesta e dopo
-  l'ispezione, `.firebase/` ripulita:
-  tolti i sei `hybrid.lock.stale-*`, le otto sessioni con la sola config della CLI, le otto copie vecchie dell'archivio locale (8–14
-  novembre) e le cartelle di recupero del 10–11 novembre (`recovery-7au5sZ`, `recovery-20261110-orphan-41530`,
-  `promote-20261111-recovery-41530`), superate da `emulator-data/`. Restano, per scelta dell'utente: `hybrid-hRM9mM/previous` (copia del
-  16 novembre), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
-  `hosting.*.cache` (della CLI). I riferimenti alle cartelle tolte nelle sezioni storiche sotto non valgono più. AVD `Pixel_8` dell'emulatore: ha un PIN di blocco schermo
-  sconosciuto (messo in una prova precedente; utente bloccato dopo l'avvio, app non avviabili): per le prove usare `Medium_Phone_API_37.0`
-  (Android 17, senza blocco) o ricrearlo solo su richiesta.
+  separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser; il
+  pulsante tondo della barra mobile anima la larghezza in JS (un ricalcolo del layout per fotogramma per 250 ms, nessun artefatto visto).
+- **Ambiente.** Il 23 novembre era attivo un runner hybrid dell'utente (PID 6588, `dev-hybrid.ts --clear`, con il suo lock,
+  `.nummo-hybrid-6588.json` e la sessione `hybrid-NBhDrA`): stato del momento, non toccato. In `.firebase/` restano, per scelta dell'utente,
+  `hybrid-hRM9mM/previous` (copia del 16 novembre), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
+  `hosting.*.cache` (della CLI); `hybrid-vtMRe6/previous` è la copia dell'archivio locale delle 17:11 del 22 novembre, lasciata dalla
+  promozione delle 21:11 che ha prodotto l'attuale `emulator-data/`. Le altre cartelle citate nelle sezioni storiche sono state tolte il
+  22 novembre. AVD `Pixel_8` dell'emulatore con un PIN di blocco sconosciuto: per le prove usare `Medium_Phone_API_37.0` (Android 17).
   Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
 - **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
-- **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
-  (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
-  `docs/testing/` (file v11 con template ed esercente creato e collaudato il 23 novembre), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+- **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): prove su iPhone dopo l'audit mobile e sul Pixel 8 (sopra);
+  Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
+  Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
+  fondo su telefono reale.
 
 ## Template dopo template: importo ed esercente del precedente non restano — 23 novembre 2026
 
@@ -2096,11 +2011,108 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
 
+- **Rilasci del 23 novembre** (solo Hosting, dal più recente): `e3c250e` (audit mobile), `d633282` (template dopo template),
+  `72fcf5a` (cambio tema animato, menu dell'account, vibrazione solo nell'app, tema chiaro più deciso). Esiti nello «Stato corrente».
+
 - **Rilasci successivi del 22 novembre** (dal più recente): Hosting da `fa06adb` (articolo eliso nei testi delle notifiche), `2b1e8fb`
   (notifiche dell'app Android 0.3.0), `0f340bf` (app 0.2.0, Avanzata con l'accesso Google nativo), `759792c` (app Android con ponte
   nativo); Rules da `48361b9` (500 prodotti per lista); Rules e Hosting da `17ebce0` (piani dei fondi a 120 voci), `f4691aa` (limiti degli
   abbonamenti), `f57b1b9` (cambi di stato fino a 40); Hosting da `a4cbef0`, `1e5c615`, `3994330`, `a13e54c`, `49a7c58`, `67f4a29`,
-  `9929c8f`. Esiti e bundle nella riga «Produzione» di «Stato corrente».
+  `9929c8f`. Esiti e bundle nel «Dettaglio dei rilasci del 22–23 novembre», qui sotto.
+- **Dettaglio dei rilasci del 22–23 novembre** (spostato dallo «Stato corrente» al riallineamento del 23 novembre, testo invariato:
+  le voci «Produzione», «App Android», «Release dell'app Android» e «Git» com'erano allora):
+
+  - **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `e3c250e` (23 novembre, su richiesta: audit mobile, `#root` sull'area
+    visibile con la tastiera di iOS, barre di sistema che seguono il cerchio del cambio tema), pubblicato con `npm run deploy:hosting`
+    dall'albero principale pulito (uguale al commit): «Deploy complete!», bundle online `index-3ee80b89…` identico a quello compilato
+    (SHA-256), `sw.js` e `offline.html` identici, `index.html` online con `--nummo-viewport-top`. Rules invariate. Arriva all'app Android
+    senza un nuovo APK. Prima `d633282` (23 novembre, su richiesta: template dopo template senza
+    importo ed esercente del precedente, più tutto il codice fino a `f74ff3a`), da una worktree pulita (rimossa; il lavoro non committato
+    di un'altra sessione escluso): «Deploy complete!», bundle online `index-8c4df371…` identico a quello compilato (SHA-256), `sw.js`
+    identico. Rules invariate. Prima `72fcf5a` (23 novembre, su richiesta: cambio tema animato e più lento,
+    menu dell'account senza limite di altezza, vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene),
+    pubblicato con `npm run deploy:hosting` da una worktree pulita (rimossa, con la copia di `.env.production.local`): «Deploy complete!»,
+    bundle online `index-e41d56f4…` identico a quello compilato (SHA-256), `sw.js` identico. Rules invariate. Arriva anche all'app Android
+    (0.3.1) senza un nuovo APK. Prima `fa06adb` (articolo eliso nei testi delle notifiche), pubblicato su
+    richiesta il 22 novembre con `npm run deploy:hosting` («Deploy complete!»): bundle online `index-053e3738…` e `sw.js` identici ai locali.
+    Prima `2b1e8fb` (notifiche dell'app Android 0.3.0, bundle `index-4a671be6…`, identico a `dist/`), prima `0f340bf` (app Android 0.2.0,
+    bundle `index-9fe2b72e…`). Ultime **Rules**: `48361b9` (invariate da allora). In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
+    richiesta il 22 novembre (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», «Deploy complete!»);
+    **Hosting** poi pubblicato con `759792c` (app Android, vedi sotto): online `index-18586346…`, che comprende i 500 prodotti; verificato
+    il 22 novembre ricompilando da `HEAD` pulito (`7b7ad76`) con `npm run build:cloud`: stesso bundle, stesso SHA-256 di quello online. Prima, **Rules e Hosting** da `17ebce0` (piani dei fondi fino a 120 voci) pubblicati su richiesta il
+    22 novembre, nell'ordine: Rules («compiled successfully», «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle
+    online `index-040a3433…` identico a `dist/` (SHA-256), `firestore.rules` pubblico identico. Chi ha il proprio Firebase deve ricopiare le
+    Rules. Prima, **Rules e Hosting** da `f4691aa` (limiti degli abbonamenti: 1000 cambi di stato, 100 cambi di
+    frequenza, 1000 pagamenti eliminati, 5000 occorrenze) pubblicati su richiesta il 22 novembre, nell'ordine: Rules
+    (`firebase deploy --only firestore:rules --project nummo-6b6e2`: «compiled successfully», quindi la forma con `split` è accettata dal
+    server; «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), bundle online `index-d1e508c4…` identico a `dist/`
+    (SHA-256), `firestore.rules` pubblico identico. Chi ha collegato il proprio Firebase deve ricopiare le Rules. Prima, **Hosting** da `a4cbef0` (Indietro che non esce più dopo uno o due passi, anello degli avatar)
+    pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`: «Deploy complete!», bundle online `index-46bee5bd…` identico a `dist/`
+    (SHA-256). Rules invariate (quelle di `f57b1b9`). Prima, **Rules e Hosting** da `f57b1b9` pubblicati su richiesta il 22 novembre, nell'ordine: Rules
+    (`firebase deploy --only firestore:rules --project nummo-6b6e2`: compilazione OK, «Deploy complete!»; cambi di stato fino a 40), poi
+    `npm run deploy:hosting` («Deploy complete!»), bundle online `index-79ab0459…` identico a `dist/` (SHA-256), `firestore.rules` pubblico
+    identico. Chi ha collegato il proprio Firebase deve ricopiare le Rules (oltre 8 cambi di stato). Prima, **Hosting** da `1e5c615` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+    «Deploy complete!», bundle online `index-5c7ec78e…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
+    Prima, **Hosting** da `3994330` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+    «Deploy complete!», bundle online `index-bac866b2…` identico a `dist/` (SHA-256; per qualche secondo il CDN serviva ancora il precedente).
+    Rules invariate (quelle di `17632af`). Prima, **Hosting** da `a13e54c` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+    «Deploy complete!», bundle online `index-04eef827…` identico a `dist/` (SHA-256; per qualche secondo dopo il rilascio il CDN serviva
+    ancora l'HTML precedente). Rules invariate (quelle di `17632af`). Prima, **Hosting** da `49a7c58` pubblicato su richiesta il 22 novembre con `npm run deploy:hosting`:
+    «Deploy complete!», bundle online `index-fe24bc41…` identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
+    Prima, **Hosting** da `67f4a29` (template senza data) pubblicato su richiesta il 22 novembre (sera):
+    «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256; la prima lettura subito dopo il rilascio dava ancora l'HTML
+    precedente, poi quello nuovo). Rules invariate dal `17632af` (nessuna differenza; `firestore.rules` pubblico identico): non ripubblicate.
+    Prima, **Hosting** da `9929c8f` pubblicato su richiesta il 22 novembre (sera) con
+    `npm run deploy:hosting`: «Deploy complete!», sito 200, bundle online identico a `dist/` (SHA-256). Rules invariate (quelle di `17632af`).
+    Prima, **Rules e Hosting** da `17632af`, pubblicati su richiesta il 22 novembre nell'ordine: Rules
+    (compilazione OK, «Deploy complete!»), poi `npm run deploy:hosting` («Deploy complete!»), sito 200, bundle online identico a `dist/`
+    (SHA-256), `sw.js`, `offline.html` e `firestore.rules` pubblici identici. Rilascio precedente: Hosting da `8bf4f4d` (22 novembre, notte).
+    Chi ha collegato il proprio Firebase deve ricopiare le Rules (importi oltre 99.999,99 €). Cronologia completa: «Registro dei rilasci» e,
+    per il 21–22 novembre, «Stato corrente precedente».
+  - **App Android 0.3.1 (22 novembre):** notifiche come notifiche locali dell'app (0.3.0, `2b1e8fb`), articolo eliso nei testi (0.3.1,
+    `fa06adb`); commit inviati, Hosting pubblicato. Provate sull'emulatore Android 17 e, con l'app di debug (poi disinstallata), sul Pixel 8:
+    tre notifiche all'orario esatto. **Release 0.3.1 installata sul Pixel 8** via adb (stessa chiave; `USE_EXACT_ALARM` concesso,
+    `POST_NOTIFICATIONS` da chiedere con «Attiva»): da provare a orario reale. Sezione «App Android 0.3.0» qui sotto.
+  - **App Android 0.2.0 (22 novembre):** Avanzata con l'accesso Google nativo (Credential Manager), app Android registrata in
+    `nummo-6b6e2`. Committata in `0f340bf`, inviata, Hosting pubblicato su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle
+    online `index-9fe2b72e…` identico a `dist/`, SHA-256), Rules invariate; release 0.2.0 installata sul Pixel 8 via adb sopra la 0.1.0.
+    Da provare sul telefono: accesso Google reale, uscita e nuovo accesso. Sezione «App Android 0.2.0» qui sotto.
+  - **App Android (22 novembre):** `android/` (WebView + ponte nativo, solo Standard) e modifiche web del ponte, committate in `759792c`,
+    inviate e pubblicate su Hosting su richiesta (`npm run deploy:hosting`: «Deploy complete!», bundle online `index-18586346…` identico a
+    `dist/` (SHA-256) e con il ponte; porta online anche i 500 prodotti per lista di `48361b9`, Rules già pubblicate). Rules invariate.
+    Installata sul Pixel 8 dell'utente via adb il 22 novembre (Android 17, WebView 157): **verificato dall'utente che la vibrazione funziona
+    anche in Non disturbare**. Ancora da provare sul telefono: blocco con impronta, fotocamera/«Carica una foto», backup e ripristino nell'app.
+    Da fare dall'utente: copiare altrove la chiave di firma (`android/nummo-release.jks`, `android/keystore.properties`).
+    Dettagli nella sezione «App Android» qui sotto.
+  - **Release dell'app Android (GitHub, su richiesta, 22 novembre):** `android-v0.3.1` (tag annotato su `fa06adb`, inviato) con
+    `nummo-0.3.1.apk` (SHA-256 `a04f6f3d…18ea`, confermato da GitHub; certificato `00b1c85c…0fcf`) e il file `.sha256`; repository privato.
+    Poi, su richiesta, `android-v0.2.0` (su `0f340bf`, APK `6af4a0c8…9178`) e `android-v0.1.0` (su `759792c`, APK `06504315…c0f7`),
+    **ricompilate** in worktree temporanee (rimosse) con la stessa chiave e la `local.properties` attuale: stesso codice, non lo stesso file
+    degli APK installati allora (sovrascritti); pubblicate con `--latest=false` (la «Latest» resta la 0.3.1). Le note avvisano che Android
+    non installa una versione più vecchia sopra una più recente. Il 23 novembre, su richiesta, anche `android-v0.3.0` (tag annotato su
+    `2b1e8fb`, inviato; APK `a3efdc94…658f`, confermato da GitHub, certificato `00b1c85c…0fcf`, versionCode 3), ricompilata allo stesso
+    modo in una worktree temporanea (rimossa, con la copia della chiave), `--latest=false`; le note dicono che è superata dalla 0.3.1.
+    Poi, su richiesta (23 novembre, 15:32), la 0.3.1 **ripubblicata** perché comparisse come la più recente: GitHub ordina le release per
+    data del tag, quindi tag `android-v0.3.1` ricreato con la data di oggi sullo stesso `fa06adb` (locale e remoto) e release ricreata con
+    lo stesso titolo, le stesse note e gli stessi due file (APK scaricato prima e dopo, SHA-256 verificato), «Latest». Ordine su GitHub:
+    0.3.1, 0.3.0, 0.2.0, 0.1.0. Chi aveva il vecchio tag in locale lo aggiorna con `git fetch --tags --force`.
+  - **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag (`android-v0.1.0`, `android-v0.2.0`, `android-v0.3.0`, `android-v0.3.1`, `android-v0.3.2`). Ultimo commit di codice `fa06adb` (articolo eliso, app 0.3.1):
+    inviato e pubblicato su Hosting; `npm run check` OK (**575/575**). Prima `2b1e8fb` (notifiche dell'app Android 0.3.0): inviato e
+    pubblicato su Hosting. Prima `0f340bf` (app Android 0.2.0): inviato e pubblicato su Hosting. Prima `759792c` (app Android, altra
+    sessione): inviato e pubblicato su Hosting. Prima `48361b9` (500 prodotti per lista, checklist più veloce): inviato, Rules pubblicate, Hosting con
+    `759792c`. Prima `17ebce0` (piani dei fondi fino a 120 voci): inviato e pubblicato con le Rules.
+    Prima `f4691aa` (revisione dei limiti degli abbonamenti): inviato e pubblicato con le Rules.
+    Prima `a4cbef0` (Indietro su Android ripreso con `history.forward()`, anello dell'avatar scelto come
+    quello di «Colore dell'anello»): inviato e pubblicato su Hosting. Prima `f57b1b9` (pagina Esercenti, cambi di stato
+    fino a 40, Indietro di un passo, colore dell'anello, barra inferiore senza lampeggi, storico dei pagamenti largo due pulsanti, vibrazione
+    sulla ricorrenza, «Annulla»/«OK» della data a 44, avvisi a 5 s): inviato e pubblicato con le Rules. Prima `1e5c615` (Elimina del fondo nel dialogo di modifica, «Palette» predefinita, pulsanti «Ripristina» uniformi, contorno rosso di Elimina): inviato e pubblicato su Hosting. Prima `3994330` (elimina le liste archiviate, elimina tutti i template, anello dell'avatar solo in Avanzata): inviato e pubblicato. Prima `a13e54c` (categorie in uso non eliminabili, larghezze e colori dei pulsanti): inviato e pubblicato. Prima `49a7c58` (categorie predefinite ripristinabili, backup proposto prima di eliminare, anello dell'avatar, ritocchi): inviato e pubblicato. Commit di codice precedenti del 22 novembre, tutti pubblicati: `67f4a29`
+    (template senza data), `9929c8f`
+    (elimina tutte le spese, PIN del blocco in Standard, «Cambia modalità» nel colore principale), poi, pubblicati con `17632af`: `17632af` (ricerche ed Esercente a 30 caratteri), `973e8a9` (limiti dei campi di ricerca e delle liste, immagine del profilo in Avanzata,
+    frase tolta dal blocco), `20b14e0` (importo massimo 999.999.999,99 €, barra dei menu lontana dagli angoli), `c5d3ee8` (cinque avatar
+    astratti; altra sessione), `a6c2b88` (blocco dell'app con impronta o viso), `ec8c5c3` (scansione più ordinata, categorie su smartphone;
+    altra sessione), `b2f6d1e` (Indietro di Android, immagine del profilo in Standard), `c862fa9` (riepilogo del passaggio più breve, «Annulla»/
+    «OK» della data; altra sessione), `8dd92df` (vibrazione al cambio Spese/Abbonamenti), `8bf4f4d` (separatore delle schede, vibrazione 5/4 ms
+    solo touch). L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
 - **Rilascio del 22 novembre: Rules e Hosting da `17632af`**: Indietro di Android, immagine del profilo (Standard e Avanzata, avatar
   astratti), blocco dell'app, importo massimo 999.999.999,99 € (Rules: importi fino a 99.999.999.999 centesimi, prezzi compatti fino a 143
   caratteri), barra dei menu, limiti dei campi, scansione più ordinata, riepilogo del passaggio più breve, vibrazione al cambio Spese/Abbonamenti.
