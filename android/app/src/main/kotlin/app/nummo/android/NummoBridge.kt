@@ -18,11 +18,12 @@ class NummoBridge(private val activity: MainActivity) {
     private val google = GoogleSignIn(activity)
 
     // Android's touch feedback, as native controls use it: it follows the system's touch-feedback setting and keeps
-    // working on silent and in Do Not Disturb (navigator.vibrate in Chrome does not). `tap` a click, `tick` a light tick.
+    // working on silent and in Do Not Disturb (navigator.vibrate in Chrome does not). `tap` a heavy click (LONG_PRESS, the
+    // step above VIRTUAL_KEY's click, which felt slightly too weak: 0.3.2, 23 November, on request), `tick` a light tick.
     @JavascriptInterface
     fun haptic(kind: String) {
         val effect = when (kind) {
-            "tap" -> HapticFeedbackConstants.VIRTUAL_KEY
+            "tap" -> HapticFeedbackConstants.LONG_PRESS
             "tick" -> HapticFeedbackConstants.CLOCK_TICK
             else -> return
         }

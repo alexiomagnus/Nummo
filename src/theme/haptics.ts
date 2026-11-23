@@ -8,7 +8,8 @@ import { androidBridge } from '../services/androidApp.ts';
 // Do Not Disturb (VibrationManagerAndroid.java), with no way for the page to tell. History of the browser pulses (5/4 ms
 // on 22 November) in HANDOFF.md; `docs/testing/prova-vibrazione.html` remains as a record of those trials.
 //
-// One effect everywhere, with the same strength (23 November, user's request): `tap`, Android's VIRTUAL_KEY / CLICK.
+// One effect everywhere, with the same strength (23 November, user's request): `tap`. The app decides what it is: from
+// 0.3.2 Android's LONG_PRESS / HEAVY_CLICK, one step stronger (same day, on request); up to 0.3.1 VIRTUAL_KEY / CLICK.
 // The bridge also knows `tick` (CLOCK_TICK, lighter): no longer used, kept by the app for compatibility.
 export const hapticEffect = 'tap';
 

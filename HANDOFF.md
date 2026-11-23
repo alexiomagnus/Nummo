@@ -155,6 +155,17 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (file v11 con template ed esercente creato e collaudato il 23 novembre), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## App Android 0.3.2: vibrazione un gradino più forte — 23 novembre 2026
+
+- **Su richiesta** («leggermente più forte»; scelta dell'utente tra `HEAVY_CLICK` e una composizione del vibratore con intensità
+  regolabile). In `NummoBridge.kt` `tap` → `HapticFeedbackConstants.LONG_PRESS` (prima `VIRTUAL_KEY`): effetto predefinito
+  `HEAVY_CLICK`, sempre un impulso singolo, stesso uso TOUCH, nessun permesso nuovo. Versione 0.3.2 (versionCode 5). Il sito non cambia
+  (solo un commento in `haptics.ts`): le app fino alla 0.3.1 restano sul CLICK. Decisione in `docs/architecture.md`.
+- **Verifica:** typecheck e `npm test` OK (**581/581**); `assembleDebug assembleRelease` OK. Emulatore `Medium_Phone_API_37.0`
+  (Android 17), release 0.3.2 sul sito di produzione, Standard: tocchi sulla barra → `Prebaked=HEAVY_CLICK(MEDIUM)`, `usage: TOUCH`,
+  `finished`, anche con suoneria SILENT e Non disturbare attivo (l'emulatore lo riproduce col ripiego da 30 ms). **Non sentita** sul
+  Pixel 8. Committata e inviata; nessuna release GitHub, non installata sul telefono.
+
 ## Cambio tema chiaro/scuro animato (M3 Expressive) — 23 novembre 2026
 
 - **Su richiesta.** Il passaggio tra chiaro e scuro (pulsante della barra in alto e «Tema» nelle Impostazioni) è una rivelazione

@@ -1480,6 +1480,11 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   anche le destinazioni attraversate trascinando sulla barra e le parti dei grafici vibrano come un tocco. Il cancello da 60 ms resta.
 - **Compatibilità.** Nessuna modifica Kotlin: le app 0.1.0–0.3.1 ricevono solo `tap`, che conoscono già; `tick` resta nel ponte. Il cambio
   arriva all'app con la pubblicazione dell'Hosting. Le decisioni precedenti sulle durate nel browser (21–22 novembre) restano come storia.
+- **Intensità (app 0.3.2, 23 novembre, su richiesta: «leggermente più forte»).** Nell'app `tap` diventa `LONG_PRESS` (HEAVY_CLICK
+  predefinito), il gradino successivo degli effetti di `performHapticFeedback`: sempre un impulso singolo, stesso uso TOUCH (Feedback
+  tattile, silenzioso, Non disturbare), nessun permesso nuovo. Scartata una composizione del vibratore con intensità regolabile
+  (`VibrationEffect.Composition`): regolazione più fine, ma permesso `VIBRATE` e comportamento in Non disturbare da riverificare.
+  Il sito non cambia: l'intensità dipende dalla versione dell'app (0.1.0–0.3.1 restano sul CLICK).
 
 ## Tema chiaro più deciso, schede delle spese piene — 23 novembre 2026
 
