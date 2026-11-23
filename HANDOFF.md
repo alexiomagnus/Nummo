@@ -7,13 +7,13 @@ e possono dire cose superate; il riepilogo precedente (21 novembre) è conservat
 rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novembre, l'elenco dei commit e la storia delle release Android,
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `e3c250e` (23 novembre, su richiesta: audit mobile, `#root` sull'area
-  visibile con la tastiera di iOS, barre di sistema che seguono il cerchio del cambio tema), pubblicato con `npm run deploy:hosting`
-  dall'albero principale pulito: «Deploy complete!», bundle online `index-3ee80b89…` identico a quello compilato (SHA-256), `sw.js` e
-  `offline.html` identici. Comprende tutto il codice fino a `e3c250e`. Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `da3103e` (23 novembre, su richiesta: accenti del tema chiaro più chiari,
+  pallini di «Colore» e anello del profilo vivi; tema scuro invariato), pubblicato con `npm run deploy:hosting` dall'albero principale
+  pulito: «Deploy complete!», bundle online `index-9f999119…` identico a quello compilato (SHA-256), `sw.js` e `offline.html` identici.
+  Comprende tutto il codice fino a `da3103e`. Prima `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
   invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
   99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
-- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `e3c250e` (audit mobile), `d633282` (template dopo
+- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
   vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
 - **App Android: 0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
@@ -23,8 +23,8 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.2` «Latest», poi 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `e3c250e`,
-  inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `e3c250e` (audit mobile), `d633282` (template dopo
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `da3103e`,
+  inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
   L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
@@ -35,11 +35,13 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
     dell'app cambiano colore quando il cerchio copre il bordo superiore.
   - **Tema chiaro più deciso** e schede di Spese/Abbonamenti piene nel tema chiaro; tema scuro invariato.
   - **Vibrazione solo nell'app Android**, un solo effetto ovunque (anche sulla legenda di Analisi); nel browser nessuna vibrazione.
+  - **Accenti del tema chiaro** più chiari per ogni tinta (Blu, Viola, Rosa, Grafite non più quasi neri); pallini di «Colore» e anello del
+    profilo con colori vivi. Tema scuro invariato (una revisione più accesa è stata provata e ritirata).
   - **Menu dell'account** senza limite di altezza fisso; **template dopo template**: importo ed esercente del precedente non restano.
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** Su `e3c250e`: `npm run check` OK (**585/585**, typecheck, build demo). `scripts/check-keyboard.mjs` in sei
+- **Verifiche (ultime).** Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
   visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
   menu ancorato su desktop, nessun errore JS. Su `f74ff3a`: `assembleDebug assembleRelease` OK. `test:emulator` **24/24** l'ultima volta su
@@ -48,16 +50,18 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   0. iPhone (Safari e web app installata), dopo l'audit mobile: tastiera su Nuova spesa con un campo in basso e la Descrizione, dialogo di
      modifica, PIN della schermata di blocco; scorrimento del modulo a tastiera aperta (`#root` segue ogni spostamento: guardare se trema);
      cambio chiaro/scuro; Indietro a scorrimento; blocco (Safari può chiedere un tocco: c'è «Sblocca»).
-  1. App 0.3.2 sul Pixel 8: Notifiche → «Attiva notifiche di sistema», primo promemoria all'orario scelto dopo ore a schermo spento e in
+  1. Colori del tema chiaro su telefono (ogni colore, Palette e Monocolore; anello in Avanzata). Tastiera lenta alla prima apertura: chiedere
+     se nell'app o in Chrome, quanto presto dopo l'apertura, Standard o Avanzata (misure nella sezione datata «Colori degli accenti…»).
+  2. App 0.3.2 sul Pixel 8: Notifiche → «Attiva notifiche di sistema», primo promemoria all'orario scelto dopo ore a schermo spento e in
      Non disturbare, tocco sulla notifica; Avanzata con l'accesso Google reale, uscita e nuovo accesso; vibrazione su legenda e grafici di
      Analisi e sul trascinamento della barra; cambio tema (le barre di Android hanno un solo colore: quella in basso può cambiare poco prima
      del cerchio).
-  2. App sul Pixel 8: Indietro e gesto Indietro di sistema più volte di fila senza toccare lo schermo; blocco con impronta/viso reali e
+  3. App sul Pixel 8: Indietro e gesto Indietro di sistema più volte di fila senza toccare lo schermo; blocco con impronta/viso reali e
      recupero in Avanzata con «Esci»; foto del profilo dalla galleria; in Standard PIN di Nummo («Non riesco a sbloccare», «Cambia il PIN»)
      e «Elimina tutte le spese»; fotocamera, backup e ripristino nell'app.
-  3. In produzione (Avanzata): una spesa oltre 99.999,99 € accettata dal server; scelta di un avatar e ritorno alla foto Google; menu
+  4. In produzione (Avanzata): una spesa oltre 99.999,99 € accettata dal server; scelta di un avatar e ritorno alla foto Google; menu
      dell'account con «Esci» senza scorrimento.
-  4. Rimasti dal 21 novembre: menu «immagine» al tocco prolungato, modifica spesa a 360–412 px, revisione dello scontrino su telefono reale.
+  5. Rimasti dal 21 novembre: menu «immagine» al tocco prolungato, modifica spesa a 360–412 px, revisione dello scontrino su telefono reale.
 - **Da verificare su dispositivo (storico):** «Carica foto» e scansione con l'AI da telefono; blocco dello zoom con due dita; ritocchi mobile
   del 17 novembre su iPhone e scheda AI con Gemini reale; icona dell'app (cache del launcher); tastiera automatica di Nuova lista/Nuovo fondo
   (su iOS probabilmente non si apre). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
@@ -97,7 +101,7 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   Tenuti, senza guadagno misurabile: `useState(() => todayInRome())` in `Workspace.tsx`, formattatori `Intl` in cache in `policy.ts`,
   `expense.ts`, `timeZones.ts`, `pushSchedule.ts`. **Da chiedere all'utente:** app o Chrome, quanto presto dopo l'apertura, Standard o Avanzata.
 - **Verifica:** `npm run check` OK (**585/585**, typecheck, build demo) dopo il ritiro della revisione dello scuro. Chromium headless su `dist-demo` 412×915: Spese e
-  Impostazioni in chiaro e scuro con Ambra/Palette, Blu e Menta, nessun errore JS. **Non provato** su telefono. Non committato.
+  Impostazioni in chiaro e scuro con Ambra/Palette, Blu e Menta, nessun errore JS. **Non provato** su telefono. Committato in `da3103e`, inviato e pubblicato su Hosting (bundle `index-9f999119…`).
 
 ## Template dopo template: importo ed esercente del precedente non restano — 23 novembre 2026
 
@@ -2033,7 +2037,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
 
-- **Rilasci del 23 novembre** (solo Hosting, dal più recente): `e3c250e` (audit mobile), `d633282` (template dopo template),
+- **Rilasci del 23 novembre** (solo Hosting, dal più recente): `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo template),
   `72fcf5a` (cambio tema animato, menu dell'account, vibrazione solo nell'app, tema chiaro più deciso). Esiti nello «Stato corrente».
 
 - **Rilasci successivi del 22 novembre** (dal più recente): Hosting da `fa06adb` (articolo eliso nei testi delle notifiche), `2b1e8fb`
