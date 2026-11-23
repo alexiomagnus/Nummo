@@ -1,0 +1,318 @@
+{
+  "format": "nummo-backup",
+  "version": 11,
+  "exported_at": "2026-11-23T08:00:00.000Z",
+  "categories": [
+    {
+      "id": "e0000001-0000-4000-8000-000000000001",
+      "label": "V11 · Alimentari",
+      "icon": "cart"
+    },
+    {
+      "id": "e0000001-0000-4000-8000-000000000004",
+      "label": "V11 · Casa",
+      "icon": "house"
+    },
+    {
+      "id": "e0000001-0000-4000-8000-000000000002",
+      "label": "V11 · Ristoranti e bar",
+      "icon": "coffee"
+    },
+    {
+      "id": "e0000001-0000-4000-8000-000000000003",
+      "label": "V11 · Trasporti",
+      "icon": "fuel"
+    }
+  ],
+  "funds": [
+    {
+      "id": "e0000002-0000-4000-8000-000000000001",
+      "name": "V11 · Quotidiano",
+      "icon": "wallet",
+      "color": 1,
+      "initial_minor": 0,
+      "start_date": "2026-09-01",
+      "recharges": [],
+      "budgets": [
+        {
+          "month": "2026-09",
+          "amount_minor": 30000
+        }
+      ],
+      "budget_exceptions": [],
+      "archived": false,
+      "created_at": "2026-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "e0000002-0000-4000-8000-000000000002",
+      "name": "V11 · Vacanze 2025",
+      "icon": "piggy",
+      "color": 4,
+      "initial_minor": 0,
+      "start_date": "2025-06-01",
+      "recharges": [],
+      "budgets": [],
+      "budget_exceptions": [],
+      "archived": true,
+      "created_at": "2025-06-01T08:00:00.000Z"
+    }
+  ],
+  "movements": [],
+  "lists": [],
+  "merchants": [
+    {
+      "id": "m-falegnameria e restauro dei mobili antichi di esposito figli",
+      "name": "Falegnameria e Restauro dei Mobili Antichi di Esposito Figli"
+    },
+    {
+      "id": "m-forno bianchi",
+      "name": "Forno Bianchi"
+    },
+    {
+      "id": "m-lidl",
+      "name": "Lidl"
+    },
+    {
+      "id": "m-q8",
+      "name": "Q8"
+    },
+    {
+      "id": "m-trattoria la pergola",
+      "name": "Trattoria La Pergola"
+    }
+  ],
+  "templates": [
+    {
+      "id": "e0000004-0000-4000-8000-000000000004",
+      "description": "V11 Caffè e cornetto \"al banco\"; colazione",
+      "amount_minor": 250,
+      "date": "2026-11-21",
+      "category_id": "e0000001-0000-4000-8000-000000000002",
+      "fund_id": null,
+      "created_at": "2026-11-21T09:03:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000008",
+      "description": "V11 Categoria che non esiste più",
+      "amount_minor": 999,
+      "date": "2026-11-22",
+      "category_id": "e0000001-0000-4000-8000-000000000099",
+      "fund_id": null,
+      "created_at": "2026-11-22T10:03:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000006",
+      "description": "V11 Mobili su misura",
+      "amount_minor": 99999999999,
+      "date": "2026-11-22",
+      "category_id": "e0000001-0000-4000-8000-000000000004",
+      "fund_id": null,
+      "merchant": "Falegnameria e Restauro dei Mobili Antichi di Esposito Figli",
+      "created_at": "2026-11-22T10:01:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000002",
+      "description": "V11 Pane",
+      "amount_minor": 240,
+      "date": "2026-11-21",
+      "category_id": "e0000001-0000-4000-8000-000000000001",
+      "fund_id": "e0000002-0000-4000-8000-000000000001",
+      "merchant": "Forno Bianchi",
+      "created_at": "2026-11-21T09:01:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000003",
+      "description": "V11 Pieno",
+      "amount_minor": 6000,
+      "date": "2026-11-21",
+      "category_id": "e0000001-0000-4000-8000-000000000003",
+      "fund_id": null,
+      "merchant": "Q8",
+      "created_at": "2026-11-21T09:02:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000005",
+      "description": "V11 Pizza d'asporto",
+      "amount_minor": 1850,
+      "date": "2026-11-22",
+      "category_id": "e0000001-0000-4000-8000-000000000002",
+      "fund_id": null,
+      "merchant": "Pizzeria Nuova Napoli",
+      "created_at": "2026-11-22T10:00:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000001",
+      "description": "V11 Spesa settimanale",
+      "amount_minor": 4500,
+      "date": "2026-11-21",
+      "category_id": "e0000001-0000-4000-8000-000000000001",
+      "fund_id": "e0000002-0000-4000-8000-000000000001",
+      "merchant": "lidl",
+      "created_at": "2026-11-21T09:00:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000009",
+      "description": "V11 Vecchio template senza importo",
+      "amount_minor": null,
+      "date": "2026-11-20",
+      "category_id": "e0000001-0000-4000-8000-000000000004",
+      "fund_id": null,
+      "created_at": "2026-11-20T18:00:00.000Z"
+    },
+    {
+      "id": "e0000004-0000-4000-8000-000000000007",
+      "description": "V11 Weekend al lago",
+      "amount_minor": 15000,
+      "date": "2026-11-22",
+      "category_id": "e0000001-0000-4000-8000-000000000004",
+      "fund_id": "e0000002-0000-4000-8000-000000000002",
+      "created_at": "2026-11-22T10:02:00.000Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "e0000003-0000-4000-8000-000000000008",
+      "amount_minor": 120000,
+      "currency": "EUR",
+      "description": "V11 Restauro della credenza",
+      "category_id": "e0000001-0000-4000-8000-000000000004",
+      "expense_date": "2026-09-20",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-falegnameria e restauro dei mobili antichi di esposito figli",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-09-20T17:00:00.000Z"
+    },
+    {
+      "id": "e0000003-0000-4000-8000-000000000001",
+      "amount_minor": 4380,
+      "currency": "EUR",
+      "description": "V11 Spesa settimanale",
+      "category_id": "e0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-10-31",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "e0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-lidl",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-10-31T17:00:00.000Z"
+    },
+    {
+      "id": "e0000003-0000-4000-8000-000000000002",
+      "amount_minor": 5120,
+      "currency": "EUR",
+      "description": "V11 Spesa settimanale",
+      "category_id": "e0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-11-07",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "e0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-lidl",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-07T17:00:00.000Z"
+    },
+    {
+      "id": "e0000003-0000-4000-8000-000000000004",
+      "amount_minor": 240,
+      "currency": "EUR",
+      "description": "V11 Pane",
+      "category_id": "e0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-11-10",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "e0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-forno bianchi",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-10T17:00:00.000Z"
+    },
+    {
+      "id": "e0000003-0000-4000-8000-000000000006",
+      "amount_minor": 6000,
+      "currency": "EUR",
+      "description": "V11 Pieno",
+      "category_id": "e0000001-0000-4000-8000-000000000003",
+      "expense_date": "2026-11-12",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-q8",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-12T17:00:00.000Z"
+    },
+    {
+      "id": "e0000003-0000-4000-8000-000000000003",
+      "amount_minor": 4795,
+      "currency": "EUR",
+      "description": "V11 Spesa settimanale",
+      "category_id": "e0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-11-14",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "e0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-lidl",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-14T17:00:00.000Z"
+    },
+    {
+      "id": "e0000003-0000-4000-8000-000000000007",
+      "amount_minor": 6450,
+      "currency": "EUR",
+      "description": "V11 Cena di compleanno",
+      "category_id": "e0000001-0000-4000-8000-000000000002",
+      "expense_date": "2026-11-15",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": null,
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-trattoria la pergola",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-15T17:00:00.000Z"
+    },
+    {
+      "id": "e0000003-0000-4000-8000-000000000005",
+      "amount_minor": 240,
+      "currency": "EUR",
+      "description": "V11 Pane",
+      "category_id": "e0000001-0000-4000-8000-000000000001",
+      "expense_date": "2026-11-18",
+      "recurrence": null,
+      "price_changes": [],
+      "status_changes": [],
+      "fund_id": "e0000002-0000-4000-8000-000000000001",
+      "list_id": null,
+      "list_items": [],
+      "merchant_id": "m-forno bianchi",
+      "source": "web_app",
+      "schema_version": 1,
+      "created_at": "2026-11-18T17:00:00.000Z"
+    }
+  ]
+}

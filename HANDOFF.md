@@ -142,7 +142,18 @@ rilasci».
 - **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): Avanzata con notifiche e riepilogo mai provata nel browser
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
-  `docs/testing/` (nessun file di collaudo v11 con template ed esercente), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+  `docs/testing/` (file v11 con template ed esercente creato il 23 novembre, collaudo dall'interfaccia da fare), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
+
+## Backup di collaudo v11 con template ed esercente — 23 novembre 2026
+
+- **Su richiesta.** `docs/testing/nummo-template-v11.json` (9 template `V11`, 8 spese, 4 categorie, 2 fondi di cui uno archiviato,
+  5 esercenti), generato con `makeBackup` del dominio. Casi: esercente in altra grafia di uno salvato, esercente non ancora salvato,
+  esercente di 60 caratteri con l'importo massimo, «Nessun fondo» esplicito, fondo archiviato, categoria assente, template senza
+  importo (come quelli salvati prima del 21 novembre), descrizione con virgolette e `;`. Tabella dei risultati attesi e passi del
+  collaudo in `docs/testing/README.md`; valori al 23 novembre verificati da un test nuovo in `tests/testingBackups.test.ts` (export
+  identico byte per byte, unione su archivio vuoto e sopra il v10 senza conflitti, conflitto su un template modificato, file dichiarato
+  v10 rifiutato).
+- **Non eseguiti:** collaudo dall'interfaccia (Standard e Avanzata), importazione nell'emulatore con le Rules.
 
 ## App Android 0.3.0: notifiche nell'app — 22 novembre 2026
 
@@ -5042,7 +5053,7 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
   tastiera virtuale gestita, transizioni con riduzione movimento; vibrazione breve (5/4 ms dal 22 novembre) solo su dispositivi touch,
   nella barra mobile, in Analisi e su «Salva»/«Crea», interruttore «Vibrazione» (assente su desktop); pagina offline di Nummo dal service worker (nessun avvio offline).
-- **Collaudo:** `docs/testing/` con quattro backup fittizi (casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
+- **Collaudo:** `docs/testing/` con cinque backup fittizi (template ed esercente v11 dal 23 novembre, casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
   esercenti v10) e guida ai risultati attesi; spese standard, prove gratuite e cambio di frequenza sono stati spostati in
   `tests/fixtures/` (solo test automatici, commit `302b24e`).
 

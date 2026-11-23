@@ -1,9 +1,9 @@
 # Backup di collaudo
 
-Quattro file JSON fittizi da importare a mano, preferibilmente nella demo locale (`npm run emulators`, `emulators:seed`,
-`dev:demo`) o in un archivio Standard di prova: casi limite (v5), utente medio (v6), pagamenti eliminati (v9) ed esercenti (v10).
-Nomi di categorie, fondi e descrizioni hanno prefissi distinti (`TEST`, `Medio ·`, `V9`, `V10`): i file si possono unire allo
-stesso archivio senza conflitti tra loro.
+Cinque file JSON fittizi da importare a mano, preferibilmente nella demo locale (`npm run emulators`, `emulators:seed`,
+`dev:demo`) o in un archivio Standard di prova: casi limite (v5), utente medio (v6), pagamenti eliminati (v9), esercenti (v10)
+e template (v11). Nomi di categorie, fondi, descrizioni e template hanno prefissi distinti (`TEST`, `Medio ·`, `V9`, `V10`, `V11`):
+i file si possono unire allo stesso archivio senza conflitti tra loro (gli esercenti di v10 e v11 hanno nomi diversi).
 
 ## Casi limite (backup v5)
 
@@ -193,6 +193,57 @@ Ordine dei suggerimenti al 20 novembre (frequenza con emivita di 90 giorni, poi 
 5. Un file v9 che contenesse esercenti o `merchant_id` viene rifiutato («Gli esercenti richiedono un backup versione 10 o
    successiva.»): coperto dai test automatici, nessun file dedicato.
 
+## Template ed esercente (backup v11)
+
+File: [`nummo-template-v11.json`](nummo-template-v11.json), backup **v11** (formato attuale dal 21 novembre 2026), dati fittizi,
+circa 9 kB, scritto dall'esportatore del dominio (`makeBackup`). **9 template `V11`**, 8 spese singole `V11`, 4 categorie `V11 ·`,
+2 fondi (`V11 · Quotidiano`, budget 300,00 € dal settembre 2026; `V11 · Vacanze 2025`, **archiviato**), 5 esercenti senza
+prefisso (Lidl, Forno Bianchi, Q8, Trattoria La Pergola e un nome di **60 caratteri**, il massimo), nessuna lista né movimento.
+Come per il v10, gli esercenti non si possono togliere con un'unione: usare la demo o un archivio di prova (oppure la pagina
+Esercenti, che li elimina lasciando le spese senza esercente).
+
+Prima di provare: **Templates → «Usa i template»** acceso, altrimenti il pulsante «Template» di Nuova spesa non compare.
+
+| Template | Caso | In Nuova spesa dopo la scelta |
+| --- | --- | --- |
+| `V11 Spesa settimanale` 45,00 € | esercente scritto `lidl` (minuscolo), fondo Quotidiano | Esercente «lidl»; salvata, la spesa usa l'esercente **esistente** «Lidl» (nessun nuovo esercente, nome invariato) |
+| `V11 Pane` 2,40 € | esercente identico a quello salvato | tutto compilato, fondo Quotidiano |
+| `V11 Pieno` 60,00 € | «Nessun fondo» scelto anche se esistono fondi | Fondo «Nessun fondo», nessuna richiesta di sceglierlo |
+| `V11 Caffè e cornetto "al banco"; colazione` 2,50 € | senza esercente, virgolette e `;` | Esercente vuoto; descrizione intatta |
+| `V11 Pizza d'asporto` 18,50 € | esercente **non ancora salvato** (`Pizzeria Nuova Napoli`) | l'esercente nasce solo con «Salva» (pagina Esercenti: da 5 a 6); se si sceglie «Nessun template» prima di salvare, non nasce |
+| `V11 Mobili su misura` 999.999.999,99 € | importo massimo ed esercente di 60 caratteri | importo intero nel campo (testo più piccolo su smartphone); esercente intero nel campo, su una riga con «…» nei suggerimenti |
+| `V11 Weekend al lago` 150,00 € | fondo **archiviato** | il fondo archiviato non si propone: il campo torna al fondo preferito (Impostazioni), se c'è, altrimenti «Nessun fondo» |
+| `V11 Categoria che non esiste più` 9,99 € | categoria assente dal file | Categoria da scegliere di nuovo; l'anteprima del ripristino non la conta tra i riferimenti mancanti (solo le spese) |
+| `V11 Vecchio template senza importo` | `amount_minor: null`, come i template salvati prima del 21 novembre | Importo vuoto da scrivere; nella pagina Templates la modifica chiede l'importo prima di salvare |
+
+Nessun template ha la data applicata: la `date` del file non compare né nell'elenco né in Nuova spesa. Nel selettore i template
+sono in ordine alfabetico (il primo è `V11 Caffè e cornetto…`).
+
+Valori calcolati con il dominio al **23 novembre 2026**, su archivio contenente solo questo file:
+
+- **Esercenti** (pagina Esercenti e suggerimenti): Lidl 3 spese, Forno Bianchi 2, Trattoria La Pergola 1, Q8 1, Falegnameria… 1.
+  Suggerimenti: «l» → Lidl, Trattoria La Pergola; «f» → Forno Bianchi, Falegnameria…; «LIDL» o «q8» → nessuno (già scritto per intero).
+- **Totali:** 8 spese, **1.472,25 €** (settembre 1.200,00 · ottobre 43,80 · novembre **228,45 €**); fondo `V11 · Quotidiano` a
+  novembre **103,95 €** su 300,00 €.
+- **Anteprima dell'unione** su archivio vuoto: 8 spese, 4 categorie, 2 fondi, 5 esercenti, **9 template**, nessun conflitto né
+  riferimento mancante. Seconda unione: nulla da aggiungere.
+
+**Collaudo dall'interfaccia (non ancora eseguito):**
+
+1. **Unisci ai dati esistenti** in Standard; poi Templates: 9 template, matita su ogni riga; con «Usa i template» spento elenco e
+   modulo in grigio, mai nascosti.
+2. Nuova spesa → «Template»: i casi della tabella, uno alla volta; «Nessun template» svuota tutto il modulo.
+3. Salvare `V11 Spesa settimanale` e `V11 Pizza d'asporto`: Esercenti mostra Lidl a 4 spese e il nuovo «Pizzeria Nuova Napoli».
+4. Modificare `V11 Pane` (es. 2,60 €) e unire di nuovo il file: conflitto «1 elemento è diverso…» che nomina `V11 Pane`, nessuna
+   sovrascrittura; **Sostituisci** lo riporta a 2,40 € (dopo la proposta di scaricare un backup).
+5. Esercenti → rinominare «Lidl» in «Lidl Italia» (chiave diversa: un nuovo esercente): il template conserva `lidl` e, usato di
+   nuovo, crea ancora l'esercente «Lidl» (i template conservano il nome, non cambiano).
+6. Esportare il JSON: v11 con gli stessi 9 template (anche `merchant: null` e `amount_minor: null`); il CSV non contiene template.
+7. In Avanzata (demo/emulatore): l'importazione dei template deve essere accettata dalle Rules, compreso l'importo massimo, il
+   nome di 60 caratteri, `amount_minor: null` e il fondo archiviato.
+
+Dichiarato v10, lo stesso file è rifiutato («L’esercente nei template richiede un backup versione 11 o successiva.»): coperto dal test.
+
 ## Fixture dei test automatici
 
 I backup usati solo dai test di regressione sono in `tests/fixtures/`, non qui: spese standard (v5, lettore storico),
@@ -243,7 +294,7 @@ Osservazioni del collaudo, **corrette lo stesso giorno** e riverificate nella de
 ripristino contano gli esercenti («12 esercenti»; conferma «Elementi da eliminare: N. Da scrivere: M.»); al 61° pagamento eliminato
 la conferma si chiude e il messaggio compare sopra il dialogo; nel modulo di modifica l'importo usa il separatore della lingua.
 
-I due file v9 e v10 di questa cartella sono verificati da `tests/testingBackups.test.ts`: lettura, export identico (a parte il numero
+I file v9, v10 e v11 di questa cartella sono verificati da `tests/testingBackups.test.ts`: lettura, export identico (a parte il numero
 di versione per il v9), i valori delle tabelle qui sopra al 20 novembre 2026, piano di unione e CSV. Se si cambiano i file o le
 regole di calcolo, aggiornare insieme file, test e tabelle.
 Il file dei casi limite qui sopra resta **v5** di proposito: esercita il lettore storico anche dall'interfaccia.
