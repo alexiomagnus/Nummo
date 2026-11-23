@@ -170,7 +170,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
         <View style={styles.body}>
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
-          <View style={[styles.scroll, panel, styles.panelClip, { backgroundColor: panelBg }]}>
+          {/* `appPanel`: the area a page-level layer covers from medium up (the expense detail, ExpenseDetail.tsx). */}
+          <View {...{ dataSet: { appPanel: 'true' } }} style={[styles.scroll, panel, styles.panelClip, { backgroundColor: panelBg }]}>
           <ScrollView ref={scroller} style={styles.scroll} {...scrollMarks} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>

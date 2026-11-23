@@ -81,6 +81,36 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## Schermo di dettaglio delle spese — 23 novembre 2026
+
+- **Su richiesta** (al tocco su una spesa uno schermo di dettaglio al posto dei dettagli aperti nella scheda, transizione M3 Expressive,
+  ritorno alla lista com'era). Lo screenshot citato come riferimento nella richiesta non era allegato: riferimento alle schermate esistenti.
+- **Fatto:** `features/history/ExpenseDetail.tsx` (livello Portal: su smartphone tutta l'app, da medium il pannello del contenuto;
+  icona, descrizione, importo grande, esercente, segni «Lista spesa»/«In attesa di invio»; un gruppo con Data estesa, Categoria, Fondo,
+  Ripetizione se c'è, Prodotti acquistati con «Prodotti (n)»; «Modifica» a pillola), `detailMotion.ts` (geometria e molla, puri),
+  `ExpenseList` (riga con chevron a destra, niente più dettagli interni né `usePresence`), stato in `Workspace`, `ListRow opens`,
+  `data-app-panel` in `AppShell`, due testi nuovi IT/EN, uno tolto. Pulsante Indietro poi ingrandito su richiesta (stesso giorno): tondo
+  tonale da 52 (`secondaryContainer`), freccia da 28, a ogni dimensione.
+- **Poi, su richiesta (stesso giorno):** pulsante Indietro 16 più in basso (e sotto la safe area) a ogni dimensione; **stesso schermo per gli
+  abbonamenti** (`SubscriptionDetail.tsx`). Il guscio (livello, trasformazione, barra con Indietro, eroe, gruppo di righe, azione
+  principale) è ora `DetailScreen.tsx`, usato da `ExpenseDetail` e `SubscriptionDetail`. La riga degli abbonamenti (`SubscriptionList`) apre
+  il dettaglio: storico, stato e Modifica sono passati lì (`StatusDialog`/`PaymentsDialog` invariati, `changeStatus`/`removePayment` di
+  `Workspace` invariati); tolte le misure dei pulsanti della riga. Sotto lo stato il «da quando» solo per pausa/annullamento (il prossimo
+  rinnovo ha la sua riga). Testi: «Torna agli abbonamenti» nuovo; «Mostra», «Nascondi», «{p0} dettagli di {p1}» tolti.
+  **Verifica:** `npm run check` OK (**590/590**); Chromium headless con `nummo-pagamenti-eliminati-v9.json` importato, 360×740 e 390×844
+  chiaro/scuro, 1440×900: tre abbonamenti aperti e chiusi (pulsante, Escape, `history.back()`), scorrimento 180 → 180, focus sulla scheda,
+  «Modifica serie», «Storico dei pagamenti» e «Metti in pausa» aperti sopra il dettaglio; spese ancora OK (salvataggio ed eliminazione).
+  Non provati il cambio di stato confermato né l'eliminazione di un pagamento dal dettaglio. Committato e inviato su richiesta;
+  Hosting **non** pubblicato. Decisione e motivi in `docs/architecture.md`. L'eliminazione resta nel
+  dialogo di modifica (non è stato aggiunto un secondo «Elimina» nel dettaglio); non esistono note né duplicazione delle spese.
+- **Verifica:** `npm run check` OK (**590/590**: 5 test nuovi in `tests/detailMotion.test.ts`, typecheck, build demo). Chromium headless
+  su `dist-demo`, Standard, file v11 importato dall'interfaccia, 390×844 chiaro e scuro, 800×1100, 1440×900 chiaro e scuro: tre spese
+  aperte per dimensione con i dati giusti, ritaglio che cresce dalla scheda (≈450 ms) e torna nella scheda, chiuse con il pulsante, con
+  Escape e con `history.back()`; scorrimento della lista invariato (180 → 180), focus di nuovo sulla scheda, «Modifica» apre l'editor sopra
+  il dettaglio; a 390×844 salvataggio dall'editor (il dettaglio mostra subito la nuova descrizione) ed eliminazione (il dettaglio si chiude,
+  7 spese su 8, scorrimento invariato); nessun errore JS (solo l'avviso già noto di `useNativeDriver`). **Non provato** su telefono reale
+  (Android, iPhone/Safari, app 0.3.2: gesto Indietro, fluidità del `clip-path` su un telefono di fascia media).
+
 ## Colori degli accenti nel chiaro, tastiera lenta alla prima apertura — 23 novembre 2026
 
 - **Su richiesta** (screenshot di «Colore» e «Colore dell'anello»: colori del tema chiaro troppo scuri; tema scuro da migliorare come il

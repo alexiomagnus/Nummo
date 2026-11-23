@@ -45,6 +45,8 @@ type Props = {
   pressLabel?: string;
   expanded?: boolean;
   controls?: string;
+  // The row opens a screen of its own (Spese → the expense's detail): a chevron pointing right, as on the lists' cards.
+  opens?: boolean;
   // Tighter vertical rhythm for dense lists (title up to two lines).
   dense?: boolean;
   // No icon tile: every row of the list would show the same icon (Analisi details of one category).
@@ -53,10 +55,11 @@ type Props = {
 
 // The one list row of the app (Spese, Categorie): icon tile, title + subtitle, trailing slot, hairline divider.
 // Every row has the same minimum height and centres its content vertically.
-export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, dense, subtitleExtra, subtitleBelow, iconless }: Props) {
+export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, opens, dense, subtitleExtra, subtitleBelow, iconless }: Props) {
   const { colors } = useTheme();
   const fill = outlined ? cardFill(colors) : null;
   const expandable = onPress !== undefined && expanded !== undefined;
+  const opening = onPress !== undefined && opens === true && !expandable;
   const content = <>
     {!iconless && <IconTile icon={icon} />}
     <View style={styles.text}>
@@ -68,11 +71,14 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
       </View> : subtitle ? <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{subtitle}</Text> : null}
       {subtitleBelow}
     </View>
-    {(trailing || expandable) && <View style={styles.trailing}>
+    {(trailing || expandable || opening) && <View style={styles.trailing}>
       {trailing}
       {/* Small decorative chevron: hints that the row opens; state is announced by aria-expanded on the button. */}
       {expandable && <View aria-hidden style={styles.chevron}>
         <SvgIcon shape={expanded ? iconShapes.chevronUp : iconShapes.chevronDown} size={24} color={colors.onSurfaceVariant} />
+      </View>}
+      {opening && <View aria-hidden style={styles.chevron}>
+        <SvgIcon shape={iconShapes.chevronRight} size={24} color={colors.onSurfaceVariant} />
       </View>}
     </View>}
   </>;
@@ -85,7 +91,7 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
     <View role="listitem" {...{ dataSet: { wholeRow: 'true' } }} style={outlined ? [styles.row, styles.outlined, fill ? { borderColor: fill, backgroundColor: fill } : { borderColor: dense ? colors.outlineVariant : colors.outline }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
       {onPress ? <StateLayerPressable onPress={onPress} layerColor={colors.onSurface} radius={outlined ? innerRadius : radius.control}
         bottomRadius={outlined && hasChildren ? 0 : undefined} accessibilityRole="button"
-        accessibilityLabel={pressLabel} aria-expanded={expanded} aria-controls={controls} style={[styles.main, dense && styles.dense, outlined ? inset : styles.pressable]}>{content}</StateLayerPressable>
+        accessibilityLabel={pressLabel} aria-expanded={expanded} aria-controls={controls} aria-haspopup={opening ? 'dialog' : undefined} style={[styles.main, dense && styles.dense, outlined ? inset : styles.pressable]}>{content}</StateLayerPressable>
         : <View style={[styles.main, dense && styles.dense, inset]}>{content}</View>}
       {hasChildren && (outlined ? <View style={styles.outlinedChildren}>{children}</View> : children)}
     </View>

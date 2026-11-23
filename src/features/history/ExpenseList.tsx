@@ -1,44 +1,37 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { Fragment, memo, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { Fragment, memo, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import type { Category } from '../../domain/category';
 import { clipToLength, searchPolicy } from '../../domain/policy';
-import type { Fund } from '../../domain/funds';
 import { searchAndSort, sortLabels, sortOptions, type Occurrence, type SortOption } from '../../domain/history';
-import { recurrenceLabels } from '../../domain/recurrence';
 import { leadingIcon } from '../../components/FieldIcon';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
-import { usePresence, useOverlayMotion } from '../../components/Overlay';
-import { fadeTransition } from '../../theme/motion';
-import { inputOutline, motion, radius, spacing } from '../../theme/tokens';
+import { inputOutline, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { expenseMonths } from './expenseMonths';
-import { ProductsDialog } from './ProductsDialog';
-import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
+import { expenseCardId } from './ExpenseDetail';
 
 type Props = {
   occurrences: readonly Occurrence[];
   categories: readonly Category[];
   error: string | null;
-  onEdit?: (expenseId: string) => void;
+  // Opens the expense's detail screen (ExpenseDetail, drawn by the workspace above the list).
+  onOpen?: (expenseId: string) => void;
   // Expenses that registered a shopping list → the products bought (marked «Lista spesa», listed in the details).
   listItems?: ReadonlyMap<string, readonly string[]>;
   // Merchant name of each expense (by expense ID); expenses without one have no entry.
   merchantNames?: ReadonlyMap<string, string>;
-  // Funds (archived included): with at least one, the details name the expense's fund, or «Nessun fondo».
-  funds?: readonly Fund[];
   // Expenses written on this device and not yet confirmed by the server (Advanced mode, offline): «In attesa di invio».
   pendingIds?: ReadonlySet<string>;
   // Shown instead of «Nessuna spesa.» when the list is empty because of the fund filter (source text, translated here).
   emptyLabel?: string;
 };
 
-const dateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const shortDateFormat = (locale: string) => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const monthFormat = (locale: string) => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const monthLabel = (month: string, formatter: Intl.DateTimeFormat, locale: string) => {
@@ -52,11 +45,8 @@ const pageSize = 50;
 
 export const ExpenseList = memo(ExpenseListView);
 
-function ExpenseListView({ occurrences, categories, error, onEdit, listItems, merchantNames, funds, pendingIds, emptyLabel }: Props) {
-  const fundById = useMemo(() => new Map((funds ?? []).map((fund) => [fund.id, fund])), [funds]);
-  const hasFunds = fundById.size > 0;
+function ExpenseListView({ occurrences, categories, error, onOpen, listItems, merchantNames, pendingIds, emptyLabel }: Props) {
   const { t, locale } = useI18n();
-  const dates = useMemo(() => dateFormat(locale), [locale]);
   const shortDates = useMemo(() => shortDateFormat(locale), [locale]);
   const months = useMemo(() => monthFormat(locale), [locale]);
   // Month of a date as the search reads it, in the current language: full and short name («novembre nov»); the year is added
@@ -74,7 +64,6 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, me
   const [sort, setSort] = useState<SortOption>('date-desc');
   const [categoryFilter, setCategoryFilter] = useState<string>(ALL);
   const [visibleCount, setVisibleCount] = useState(pageSize);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   // A deleted category leaves expenses pointing at a missing ID: they count as uncategorised.
   const known = useMemo(() => new Set(categories.map((category) => category.id)), [categories]);
   const categoryById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
@@ -140,8 +129,7 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, me
             heading={byDate && (index === 0 || results[index - 1]!.date.slice(0, 7) !== item.date.slice(0, 7))}
             summary={summaries.get(item.date.slice(0, 7))!} category={categoryById.get(item.category_id ?? '')}
             products={listItems?.get(item.expenseId)} merchant={merchantNames?.get(item.expenseId)} pending={pendingIds?.has(item.expenseId) ?? false}
-            fund={hasFunds ? fundById.get(item.fund_id ?? '') ?? null : undefined} open={expanded.has(item.key)} setExpanded={setExpanded}
-            dates={dates} shortDates={shortDates} months={months} amounts={amounts} onEdit={onEdit} />;
+            shortDates={shortDates} months={months} amounts={amounts} onOpen={onOpen} />;
         })}
         {occurrences.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t(emptyLabel ?? "Nessuna spesa.")}</Text>}
         {occurrences.length > 0 && results.length === 0 && (
@@ -161,130 +149,59 @@ function ExpenseListView({ occurrences, categories, error, onEdit, listItems, me
   );
 }
 
-// Stable props let expanding one detail or appending a page leave existing rows alone.
-const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, merchant, pending, fund, open, setExpanded,
-  dates, shortDates, months, amounts, onEdit }: {
+// Stable props let appending a page leave existing rows alone. A tap opens the expense's detail screen (ExpenseDetail,
+// 23 November, on request: it replaced the details opened inside the card); the element around the card carries the id
+// the detail grows from and shrinks back into.
+const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, merchant, pending,
+  shortDates, months, amounts, onOpen }: {
   item: Occurrence; index: number; heading: boolean; summary: { count: number; total: number };
-  category?: Category; products?: readonly string[]; merchant?: string; pending: boolean; open: boolean;
-  // undefined: no funds at all (no field); null: the expense has no fund (or a fund no longer listed).
-  fund?: Fund | null;
-  setExpanded: Dispatch<SetStateAction<ReadonlySet<string>>>;
-  dates: Intl.DateTimeFormat; shortDates: Intl.DateTimeFormat; months: Intl.DateTimeFormat; amounts: Intl.NumberFormat;
-  onEdit?: (id: string) => void;
+  category?: Category; products?: readonly string[]; merchant?: string; pending: boolean;
+  shortDates: Intl.DateTimeFormat; months: Intl.DateTimeFormat; amounts: Intl.NumberFormat;
+  onOpen?: (expenseId: string) => void;
 }) {
   const { t, locale } = useI18n();
   const theme = useTheme();
-  const animate = useOverlayMotion();
-  const { mounted, shown } = usePresence(open, motion.fade, animate);
-  // Phones: «Modifica» at the right of the last line (see the details below); wider pages keep it at the end of the line,
-  // after the products.
-  const compact = useSizeClass() === 'compact';
-  const [showProducts, setShowProducts] = useState(false);
-  const formatDate = (date: string) => dates.format(new Date(`${date}T00:00:00Z`));
   const formatAmount = (minor: number) => amounts.format(minor / 100);
-          const month = item.date.slice(0, 7);
-          const monthCount = `${summary.count} ${summary.count === 1 ? t("spesa") : t("spese")}`;
-          const detailsId = `expense-details-${item.key}`;
-          // Discreet mark (tonal chip with the lists icon) for expenses registered from a shopping list.
-          const listMark = products && <View style={[styles.listMark, { backgroundColor: theme.colors.secondaryContainer }]}>
-            <SvgIcon shape={iconShapes.checklist} size={14} color={theme.colors.onSecondaryContainer} />
-            <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>{t("Lista spesa")}</Text>
-          </View>;
-          // Written on this device, not yet on the server (offline): a discreet tonal chip, gone once the server confirms.
-          const pendingMark = pending && <View style={[styles.listMark, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <SvgIcon shape={iconShapes.sync} size={14} color={theme.colors.onSurfaceVariant} />
-            <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("In attesa di invio")}</Text>
-          </View>;
-          const marks = listMark && pendingMark ? <View style={styles.marks}>{listMark}{pendingMark}</View> : listMark || pendingMark;
-          // Merchant beside the date, in the accent colour with the shop icon, so it reads apart from the date; one line,
-          // a long name ends with «…» (full name in the editor; not repeated in the details, user's request of 21 November).
-          const merchantMark = merchant && <View style={styles.merchantMark}>
-            <SvgIcon shape={iconShapes.store} size={14} color={theme.colors.primary} />
-            <Text variant="labelMedium" numberOfLines={1} style={[styles.merchantName, { color: theme.colors.primary }]}>{merchant}</Text>
-          </View>;
-          const editButton = onEdit && <View style={styles.editRow}>
-            <Button mode="outlined" accessibilityLabel={t("Modifica {p0}", { p0: item.description })}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />}
-              onPress={() => onEdit(item.expenseId)}>{t("Modifica")}</Button>
-          </View>;
-          const fields = <>
-            <View style={styles.detailField}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Data")}</Text>
-              <Text variant="bodyMedium">{formatDate(item.date)}</Text>
-            </View>
-            <View style={styles.detailField}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Categoria")}</Text>
-              <Text variant="bodyMedium">{category?.label ?? t("Senza categoria")}</Text>
-            </View>
-            {fund !== undefined && <View style={styles.detailField}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Fondo")}</Text>
-              <View style={styles.fundValue}>
-                {fund ? <FundAvatar fund={fund} size={20} /> : <NoFundAvatar size={20} />}
-                <Text variant="bodyMedium" style={styles.fundName}>{fund ? fund.name : t("Nessun fondo")}</Text>
-              </View>
-            </View>}
-            {item.recurrence && <View style={styles.detailField}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Ripetizione")}</Text>
-              <Text variant="bodyMedium">{t(recurrenceLabels[item.recurrence])}</Text>
-            </View>}
-          </>;
-          // Products of a registered list: a tonal button opens them all in a dialog (never an inline run of names).
-          const productsField = products && (products.length === 0
-            ? <View style={styles.detailField}>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("Prodotti acquistati")}</Text>
-              <Text variant="bodyMedium">{t("Nessun prodotto spuntato")}</Text>
-            </View>
-            : <View style={styles.start}>
-              <Button mode="contained-tonal" aria-haspopup="dialog" onPress={() => setShowProducts(true)}
-                accessibilityLabel={t("Prodotti acquistati di {p0}, {p1}", { p0: item.description, p1: products.length })}
-                icon={({ size, color }) => <SvgIcon shape={iconShapes.checklist} size={size} color={color} />}>
-                {t("Prodotti ({p0})", { p0: products.length })}
-              </Button>
-            </View>);
-          return (
-            <Fragment key={item.key}>
-              {heading && (
-                <View {...{ dataSet: { wholeRow: 'true' } }} style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
-                  <View style={styles.monthLabel}>
-                    <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{monthLabel(month, months, locale)}</Text>
-                    <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>{monthCount}</Text>
-                  </View>
-                  <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmount(summary.total)}</Text>
-                </View>
-              )}
-              <View>
-              <ListRow outlined dense icon={category?.icon ?? null} title={item.description}
-                subtitle={shortDates.format(new Date(`${item.date}T00:00:00Z`))}
-                meta={marks || undefined} subtitleExtra={merchantMark}
-                expanded={open} controls={open ? detailsId : undefined}
-                pressLabel={t("{p0} dettagli di {p1}, {p2}", { p0: open ? t("Nascondi") : t("Mostra"), p1: item.description, p2: (merchant ? `${formatDate(item.date)}, ${merchant}` : formatDate(item.date)) + (pending ? `, ${t("In attesa di invio")}` : '') })}
-                onPress={() => setExpanded((previous) => {
-                  const next = new Set(previous);
-                  if (next.has(item.key)) next.delete(item.key); else next.add(item.key);
-                  return next;
-                })}
-                trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>}>
-                {mounted && <View nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: item.description })}
-                  style={[compact ? styles.compactDetails : styles.details, { borderColor: theme.colors.outlineVariant, opacity: shown ? 1 : 0 }, animate && fadeTransition]}>
-                  {compact ? <>
-                    {/* Phones: «Modifica» closes the last line (beside the products, or beside the fields without them), never
-                        a line of its own; the fields wrap in the room left of it. */}
-                    <View style={styles.compactLine}>
-                      <View style={styles.compactFields}>{fields}</View>
-                      {!productsField && editButton}
-                    </View>
-                    {productsField && <View style={styles.compactLine}>{productsField}{editButton}</View>}
-                  </> : <>
-                    {fields}
-                    {productsField}
-                    {editButton}
-                  </>}
-                </View>}
-              </ListRow>
-              {showProducts && products && <ProductsDialog description={item.description} products={products} onClose={() => setShowProducts(false)} />}
-              </View>
-            </Fragment>
-          );
+  const month = item.date.slice(0, 7);
+  const monthCount = `${summary.count} ${summary.count === 1 ? t("spesa") : t("spese")}`;
+  const shortDate = shortDates.format(new Date(`${item.date}T00:00:00Z`));
+  // Discreet mark (tonal chip with the lists icon) for expenses registered from a shopping list.
+  const listMark = products && <View style={[styles.listMark, { backgroundColor: theme.colors.secondaryContainer }]}>
+    <SvgIcon shape={iconShapes.checklist} size={14} color={theme.colors.onSecondaryContainer} />
+    <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>{t("Lista spesa")}</Text>
+  </View>;
+  // Written on this device, not yet on the server (offline): a discreet tonal chip, gone once the server confirms.
+  const pendingMark = pending && <View style={[styles.listMark, { backgroundColor: theme.colors.surfaceVariant }]}>
+    <SvgIcon shape={iconShapes.sync} size={14} color={theme.colors.onSurfaceVariant} />
+    <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>{t("In attesa di invio")}</Text>
+  </View>;
+  const marks = listMark && pendingMark ? <View style={styles.marks}>{listMark}{pendingMark}</View> : listMark || pendingMark;
+  // Merchant beside the date, in the accent colour with the shop icon, so it reads apart from the date; one line,
+  // a long name ends with «…» (whole in the detail screen).
+  const merchantMark = merchant && <View style={styles.merchantMark}>
+    <SvgIcon shape={iconShapes.store} size={14} color={theme.colors.primary} />
+    <Text variant="labelMedium" numberOfLines={1} style={[styles.merchantName, { color: theme.colors.primary }]}>{merchant}</Text>
+  </View>;
+  return (
+    <Fragment key={item.key}>
+      {heading && (
+        <View {...{ dataSet: { wholeRow: 'true' } }} style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
+          <View style={styles.monthLabel}>
+            <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{monthLabel(month, months, locale)}</Text>
+            <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>{monthCount}</Text>
+          </View>
+          <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmount(summary.total)}</Text>
+        </View>
+      )}
+      <View nativeID={expenseCardId(item.expenseId)}>
+        <ListRow outlined dense opens icon={category?.icon ?? null} title={item.description} subtitle={shortDate}
+          meta={marks || undefined} subtitleExtra={merchantMark}
+          pressLabel={t("Apri i dettagli di {p0}, {p1}", { p0: item.description, p1: (merchant ? `${shortDate}, ${merchant}` : shortDate) + (pending ? `, ${t("In attesa di invio")}` : '') })}
+          onPress={onOpen ? () => onOpen(item.expenseId) : undefined}
+          trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>} />
+      </View>
+    </Fragment>
+  );
 });
 
 const styles = StyleSheet.create({
@@ -305,21 +222,7 @@ const styles = StyleSheet.create({
   monthName: { fontWeight: '700', fontSize: 15, lineHeight: 22 },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
   rowAmount: { minWidth: 80, textAlign: 'right' },
-  // Pushed to the right end of the last line of fields: beside them when there is room, on its own line otherwise.
-  editRow: { marginLeft: 'auto', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm },
-  // Fields only as wide as their text, side by side: no half-row columns with empty space between them.
-  details: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.xxl, rowGap: spacing.md, borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: spacing.md, paddingBottom: spacing.md, paddingHorizontal: spacing.md },
-  // Never wider than the line: a long value (a 60-character merchant, a long category) wraps instead of running under
-  // «Modifica» and out of the card.
-  detailField: { minWidth: 0, maxWidth: '100%', flexShrink: 1, gap: spacing.xs },
-  compactDetails: { gap: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.md, paddingBottom: spacing.md,
-    paddingHorizontal: spacing.md },
-  compactLine: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.lg },
-  compactFields: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xxl, rowGap: spacing.md },
   empty: { gap: spacing.sm },
-  fundValue: { flexDirection: 'row', alignItems: 'center', gap: 6, minWidth: 0 },
-  fundName: { flexShrink: 1 },
   merchantMark: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
   merchantName: { flexShrink: 1, minWidth: 0 },
   marks: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },

@@ -35,6 +35,8 @@ import { useRemoteMerchants } from '../expenses/useRemoteMerchants';
 import { rankMerchants, type RankedMerchant } from '../../domain/merchant';
 import { MerchantsPage } from '../merchants/MerchantsPage';
 import { ExpenseList } from '../history/ExpenseList';
+import { ExpenseDetail, type ExpenseDetailValue } from '../history/ExpenseDetail';
+import { SubscriptionDetail, type SubscriptionDetailValue } from '../history/SubscriptionDetail';
 import { UpcomingRenewals } from '../history/UpcomingRenewals';
 import { SubscriptionList } from '../history/SubscriptionList';
 import { makeBackup } from '../../domain/backup';
@@ -281,6 +283,17 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
   const oneOff = useMemo(() => occurrences.filter((item) => item.recurrence === null), [occurrences]);
   const edit = useCallback((id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null), [store.expenses]);
+  // Detail screen of one expense of the Spese list (ExpenseDetail): looked up by ID among every one-off expense, not only the
+  // filtered ones, so an edit that takes it out of the fund filter does not close it. Gone (deleted here or on another
+  // device), or the page or view changed: it closes.
+  // The same for a subscription (SubscriptionDetail), among every series.
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const openDetail = useCallback((id: string) => setDetailId(id), []);
+  const closeDetail = useCallback(() => setDetailId(null), []);
+  const detailItem = useMemo(() => detailId ? oneOff.find((item) => item.expenseId === detailId) ?? null : null, [detailId, oneOff]);
+  const [seriesId, setSeriesId] = useState<string | null>(null);
+  const openSeries = useCallback((id: string) => setSeriesId(id), []);
+  const closeSeries = useCallback(() => setSeriesId(null), []);
   // Only the change itself is written (see subscription.ts). Confirmed by the server transaction.
   // Fund filter of the Spese page (both views, the renewals card included): presentation only, the setting can turn it off.
   const [fundChoice, setFundChoice] = useState(allFunds);
@@ -379,6 +392,23 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     if (next.kind === 'renewal') { setListView('subscriptions'); onNavigate('list'); return; }
     setOpened(next); onNavigate('notifications');
   }), [onNavigate]);
+  const detailShown = section === 'list' && listView === 'expenses' && !starting ? detailItem : null;
+  useEffect(() => { if (detailId && !detailShown) setDetailId(null); }, [detailId, detailShown]);
+  const funds = fundState.funds;
+  const expenseDetail = useMemo<ExpenseDetailValue | null>(() => detailShown && {
+    item: detailShown, category: categoryState.categories.find((c) => c.id === detailShown.category_id),
+    fund: funds.length > 0 ? funds.find((f) => f.id === detailShown.fund_id) ?? null : undefined,
+    merchant: merchantNames.get(detailShown.expenseId), products: listItems.get(detailShown.expenseId),
+    pending: store.pendingIds?.has(detailShown.expenseId) ?? false,
+  }, [detailShown, categoryState.categories, funds, merchantNames, listItems, store.pendingIds]);
+  const seriesShown = section === 'list' && listView === 'subscriptions' && !starting && seriesId
+    ? subscriptions.find((item) => item.entry.id === seriesId) ?? null : null;
+  useEffect(() => { if (seriesId && !seriesShown) setSeriesId(null); }, [seriesId, seriesShown]);
+  const seriesDetail = useMemo<SubscriptionDetailValue | null>(() => seriesShown && {
+    summary: seriesShown, category: categoryState.categories.find((c) => c.id === seriesShown.entry.category_id),
+    fund: funds.length > 0 ? funds.find((f) => f.id === seriesShown.entry.fund_id) ?? null : undefined,
+    merchant: merchantNames.get(seriesShown.entry.id),
+  }, [seriesShown, categoryState.categories, funds, merchantNames]);
   const listNote = editing?.list_id ? (listState.lists.some((l) => l.id === editing.list_id && l.expense_id === editing.id) ? 'linked' : 'unlinked') : undefined;
   return <>
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
@@ -413,12 +443,12 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
-        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onEdit={edit} listItems={listItems} merchantNames={merchantNames} funds={fundState.funds} pendingIds={store.pendingIds}
+        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onOpen={openDetail} listItems={listItems} merchantNames={merchantNames} pendingIds={store.pendingIds}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
-          <SubscriptionList subscriptions={shownSubscriptions} funds={fundState.funds} merchantNames={merchantNames} emptyLabel={fundFilter === allFunds ? undefined : "Nessun abbonamento per questo fondo."} categories={categoryState.categories} error={error}
-            canChange={synchronized && Boolean(store.update)} onEdit={edit} onSetStatus={changeStatus} onRemovePayment={removePayment} today={today} />
+          <SubscriptionList subscriptions={shownSubscriptions} emptyLabel={fundFilter === allFunds ? undefined : "Nessun abbonamento per questo fondo."} categories={categoryState.categories} error={error}
+            onOpen={openSeries} />
         </>}
       </View>
     </VisitedSection>
@@ -430,6 +460,10 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
       </SameWidthGroup>
     </View>
+    {/* Before the editor: opened from the detail, the editor's portal mounts later and stays above it. */}
+    <ExpenseDetail value={expenseDetail} onClose={closeDetail} onEdit={edit} />
+    <SubscriptionDetail value={seriesDetail} onClose={closeSeries} canChange={synchronized && Boolean(store.update)} today={today}
+      onEdit={edit} onSetStatus={changeStatus} onRemovePayment={removePayment} />
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} merchants={merchants} />}
     <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} defaultCategoryId={preferred.list} expenses={store.expenses}
       fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify}
