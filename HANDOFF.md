@@ -6,7 +6,11 @@ Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate 
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `fa06adb` (articolo eliso nei testi delle notifiche), pubblicato su
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `72fcf5a` (23 novembre, su richiesta: cambio tema animato e più lento,
+  menu dell'account senza limite di altezza, vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene),
+  pubblicato con `npm run deploy:hosting` da una worktree pulita (rimossa, con la copia di `.env.production.local`): «Deploy complete!»,
+  bundle online `index-e41d56f4…` identico a quello compilato (SHA-256), `sw.js` identico. Rules invariate. Arriva anche all'app Android
+  (0.3.1) senza un nuovo APK. Prima `fa06adb` (articolo eliso nei testi delle notifiche), pubblicato su
   richiesta il 22 novembre con `npm run deploy:hosting` («Deploy complete!»): bundle online `index-053e3738…` e `sw.js` identici ai locali.
   Prima `2b1e8fb` (notifiche dell'app Android 0.3.0, bundle `index-4a671be6…`, identico a `dist/`), prima `0f340bf` (app Android 0.2.0,
   bundle `index-9fe2b72e…`). Ultime **Rules**: `48361b9` (invariate da allora). In ordine inverso: **Rules** da `48361b9` (prodotti per lista fino a 500: `list_items` ≤ 30499) pubblicate su
@@ -162,12 +166,12 @@ rilasci».
   nessuna animazione; nessun errore JS. Screencast: il DOM cambia in un unico commit, ma un solo fotogramma (192 ms) mostrava i campi
   ancora chiari dentro il cerchio, già corretti al successivo: probabilmente rasterizzazione software headless. **Da vedere su
   dispositivo reale** (telefono, WebView dell'app, Safari, Firefox); il percorso da «Tema» nelle Impostazioni non provato nel browser.
-  Vale per web e app Android dopo `deploy:hosting`. Committato e inviato con il menu dell'account; Hosting non pubblicato.
+  Vale per web e app Android dopo `deploy:hosting`. Committato e inviato con il menu dell'account; Hosting pubblicato con `72fcf5a`.
 - **Più lenta e morbida (su richiesta, stesso giorno: «troppo di fretta»).** La molla spaziale lenta (0,8/200) portava il cerchio al
   90 % del raggio in 215 ms, poi solo una coda invisibile. Ora `themeRevealSpring`, rapporto 0,95 e rigidità 80 (non un token M3:
   più morbida della molla lenta espressiva): nessun rimbalzo visibile, 90 % a circa 410 ms, durata 868 ms (precisione finale 0,2 %,
   meno di 2 px sul raggio). Test aggiornati; `npm run check` OK (**581/581** sullo snapshot del commit); Chromium headless:
-  animazione da 868 ms dal pulsante, nessun errore JS. Committato e inviato; Hosting non pubblicato.
+  animazione da 868 ms dal pulsante, nessun errore JS. Committato e inviato; Hosting pubblicato con `72fcf5a`.
 
 ## Menu dell'account senza limite di altezza fisso — 23 novembre 2026
 
@@ -178,7 +182,7 @@ rilasci».
 - **Verifica:** `npm run check` OK (**576/576**, build demo). Chromium headless su `dist-demo`, Standard, 1280×800, 390×844 e
   360×640: menu alto 351 senza scorrimento (6 voci da 48), almeno 229 px liberi sotto; nessun errore JS. **Non provato in Avanzata**
   (dove compare «Esci»): servirebbe l'emulatore Auth; con una voce in più l'altezza attesa è circa 400, dentro la finestra anche a 360×640.
-  Committato e inviato con il cambio tema; Hosting non pubblicato.
+  Committato e inviato con il cambio tema; Hosting pubblicato con `72fcf5a`.
 
 ## Tema chiaro più deciso, schede delle spese colorate — 23 novembre 2026
 
