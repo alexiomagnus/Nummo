@@ -149,7 +149,11 @@ export function AnchoredMenu({ visible, onDismiss, anchor, width, align = 'start
   if (!mounted) return null;
   // iOS shrinks only the visual viewport for the keyboard: the smaller of the two is what can be seen.
   const viewportHeight = Math.min(screen.height, globalThis.visualViewport?.height ?? screen.height);
-  const place = menuVerticalPlacement(anchor.y, anchor.y + anchor.height, viewportHeight, insets.top, insets.bottom, spacing.lg, spacing.xs, maxHeight, MENU_MIN_BELOW);
+  // The anchor is measured in window coordinates, the menu is placed inside #root, which starts lower when iOS has panned
+  // the visual viewport for its keyboard (index.html, visibleViewportTop): same coordinates as the menu.
+  const rootTop = typeof document === 'undefined' ? 0 : document.getElementById('root')?.getBoundingClientRect().top ?? 0;
+  const anchorTop = anchor.y - rootTop;
+  const place = menuVerticalPlacement(anchorTop, anchorTop + anchor.height, viewportHeight, insets.top, insets.bottom, spacing.lg, spacing.xs, maxHeight, MENU_MIN_BELOW);
   const margin = spacing.sm;
   const available = Math.max(0, screen.width - insets.left - insets.right - 2 * margin);
   const horizontal: ViewStyle = width !== undefined

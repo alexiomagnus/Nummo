@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { batchKeyboardReports, initialFocusAllowed, isTextEntry, keyboardOpen, nextKeyboardReference, observeViewportShrink, observeVirtualKeyboard, observeViewportHeight, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight } from '../src/theme/viewport.ts';
+import { batchKeyboardReports, initialFocusAllowed, isTextEntry, keyboardOpen, nextKeyboardReference, observeViewportShrink, observeVirtualKeyboard, observeViewportHeight, observeViewportTop, reserveScrollPadding, stickyBottomProperty, visibleViewportHeight, visibleViewportTop } from '../src/theme/viewport.ts';
 
 test('viewport: tastiera e barre browser riducono lo spazio disponibile; fallback senza API e zoom indipendente', () => {
   assert.equal(visibleViewportHeight(900, { height: 750.4, scale: 1 }), 750);
@@ -346,4 +346,34 @@ test('tastiera virtuale: ogni nuovo restringimento del viewport riporta in vista
   stop();
   resize(300);
   assert.equal(queued.length, 1, 'nessun ascolto dopo la rimozione');
+});
+
+test('viewport iOS: la tastiera sposta il viewport visibile, #root lo segue; zoom e misure nascoste ignorati', () => {
+  assert.equal(visibleViewportTop(null), 0, 'senza VisualViewport: in cima');
+  assert.equal(visibleViewportTop({ offsetTop: 212.6, scale: 1 }), 213);
+  assert.equal(visibleViewportTop({ offsetTop: -8, scale: 1 }), 0, 'rimbalzo elastico: mai sopra la pagina');
+  assert.equal(visibleViewportTop({ offsetTop: 120, scale: 2 }), null, 'zoom: si tiene il valore');
+  assert.equal(visibleViewportTop({ offsetTop: NaN, scale: 1 }), 0);
+  const doc = Object.assign(new EventTarget(), { visibilityState: 'visible' });
+  const visual = Object.assign(new EventTarget(), { offsetTop: 0, height: 844, scale: 1 });
+  const target = Object.assign(new EventTarget(), { innerHeight: 844, visualViewport: visual, document: doc });
+  const tops: number[] = [];
+  const stop = observeViewportTop(target as unknown as Window, (top) => tops.push(top));
+  // Safari pans the visual viewport (its own scroll event) to show a field the keyboard would cover.
+  visual.offsetTop = 180;
+  visual.dispatchEvent(new Event('scroll'));
+  visual.dispatchEvent(new Event('resize')); // same value: not reported again
+  doc.visibilityState = 'hidden';
+  visual.offsetTop = 40;
+  visual.dispatchEvent(new Event('scroll'));
+  doc.visibilityState = 'visible';
+  visual.offsetTop = 0;
+  target.dispatchEvent(new Event('pageshow'));
+  visual.scale = 1.5; visual.offsetTop = 300;
+  visual.dispatchEvent(new Event('scroll'));
+  assert.deepEqual(tops, [0, 180, 0]);
+  stop();
+  visual.scale = 1; visual.offsetTop = 90;
+  visual.dispatchEvent(new Event('scroll'));
+  assert.deepEqual(tops, [0, 180, 0]);
 });

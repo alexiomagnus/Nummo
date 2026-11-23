@@ -4,7 +4,7 @@ import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from 
 import type { Accent, ColorMode } from './palette';
 import { themeSwitchAttribute } from './themeTransition';
 import { radius } from './tokens';
-import { observeScrolling, observeViewportHeight, scrollingAttribute, stickyBottomProperty } from './viewport';
+import { observeScrolling, observeViewportHeight, observeViewportTop, scrollingAttribute, stickyBottomProperty } from './viewport';
 
 // Web-only rules RN Web cannot express: the font family (the @font-face rules live in public/index.html, so the font
 // is available from the first render), visible keyboard focus, dynamic
@@ -117,8 +117,10 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
   }, [mode, accent, colorMode]);
   useEffect(() => {
     const root = document.documentElement;
-    const stop = observeViewportHeight(window, (height) => root.style.setProperty('--nummo-viewport-height', `${height}px`));
-    return () => { stop(); root.style.removeProperty('--nummo-viewport-height'); };
+    // Height and top of the visible part of the page: #root (index.html) and the lock screen cover exactly that area.
+    const stopHeight = observeViewportHeight(window, (height) => root.style.setProperty('--nummo-viewport-height', `${height}px`));
+    const stopTop = observeViewportTop(window, (top) => root.style.setProperty('--nummo-viewport-top', `${top}px`));
+    return () => { stopHeight(); stopTop(); root.style.removeProperty('--nummo-viewport-height'); root.style.removeProperty('--nummo-viewport-top'); };
   }, []);
   useEffect(() => observeScrolling(document), []);
   // Safari on iOS ignores user-scalable=no in the viewport meta: its own gesture events are the only way to stop a

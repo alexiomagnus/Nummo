@@ -227,6 +227,44 @@ export function reserveScrollPadding(element: ScrollHost | null, height: number,
   return () => { if (previous) target.style.setProperty(stickyBottomProperty, previous); else target.style.removeProperty(stickyBottomProperty); };
 }
 
+// Where the visible part of the page starts, from the top of the layout viewport. iOS never shrinks the layout viewport
+// for its keyboard: it shrinks only the visual one and, to show a field the keyboard would cover, pans it down inside the
+// layout viewport (`offsetTop`). An app sized to the visual height but drawn from the layout top then had its top bar
+// scrolled out of view and an empty strip of background above the keyboard. #root is `position: fixed` at this offset
+// (index.html, `--nummo-viewport-top`), so it always covers exactly what can be seen. Chrome on Android
+// (resizes-content) and desktop browsers always report 0. Pinch zoom (offset of a magnified view): null, keep the value.
+export function visibleViewportTop(visual?: { offsetTop: number; scale: number } | null): number | null {
+  if (!visual) return 0;
+  if (Math.abs(visual.scale - 1) > 0.01) return null;
+  return Number.isFinite(visual.offsetTop) ? Math.max(0, Math.round(visual.offsetTop)) : 0;
+}
+
+// Reports visibleViewportTop on every change: the visual viewport's own `scroll` (the pan) and `resize`, plus the same
+// resumption events as observeViewportHeight. Returns the cleanup.
+export function observeViewportTop(target: Window, update: (top: number) => void): () => void {
+  const visual = target.visualViewport;
+  const doc = target.document;
+  let previous: number | null = null;
+  const measure = () => {
+    if (doc?.visibilityState === 'hidden') return;
+    const top = visibleViewportTop(visual);
+    if (top !== null && top !== previous) { previous = top; update(top); }
+  };
+  measure();
+  visual?.addEventListener('scroll', measure);
+  visual?.addEventListener('resize', measure);
+  target.addEventListener('resize', measure);
+  doc?.addEventListener('visibilitychange', measure);
+  target.addEventListener('pageshow', measure);
+  return () => {
+    visual?.removeEventListener('scroll', measure);
+    visual?.removeEventListener('resize', measure);
+    target.removeEventListener('resize', measure);
+    doc?.removeEventListener('visibilitychange', measure);
+    target.removeEventListener('pageshow', measure);
+  };
+}
+
 export function observeViewportHeight(target: Window, update: (height: number) => void): () => void {
   const visual = target.visualViewport;
   const doc = target.document;

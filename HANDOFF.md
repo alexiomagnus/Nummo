@@ -170,6 +170,32 @@ rilasci».
   vuoti); Pieno, «Eni» scritto a mano → Caffè (2,50, «Eni» resta). Nessun errore JS. Non provato su smartphone (stesso codice, foglio al
   posto del menu). Committato e inviato; Hosting pubblicato (vedi «Produzione»).
 
+## Audit mobile: area visibile su iOS, barre durante il cambio tema — 23 novembre 2026
+
+- **Su richiesta** (audit di animazioni, aree in alto/in basso e inserimento dati su iOS, senza cambiare il design). La registrazione
+  citata nella richiesta non era allegata né presente sul disco: analisi dal codice e prove in emulazione.
+- **Causa principale trovata (iOS):** Safari riduce per la tastiera solo il visual viewport e lo sposta in basso (`offsetTop`) per mostrare
+  il campo; `#root` era nel flusso, alto quanto il visual viewport ma disegnato dall'inizio del layout viewport: barra superiore fuori
+  schermo e striscia vuota sopra la tastiera. **Correzione:** `#root` `position: fixed` con `top: var(--nummo-viewport-top)`
+  (`public/index.html`), pubblicata da `observeViewportTop` (`viewport.ts`, evento `scroll` del visual viewport) in `GlobalStyle`; lo schermo
+  di blocco (campo PIN) usa le stesse variabili (`AppLock.tsx`); `AnchoredMenu` sottrae l'inizio di `#root` dall'ancora (`Overlay.tsx`).
+  Android/desktop: offset sempre 0.
+- **Cambio tema:** `theme-color` e barre dell'app Android cambiavano all'inizio del cerchio; ora `holdDocumentChrome` (`bootTheme.ts`) li
+  trattiene finché il cerchio non copre il bordo superiore (`topEdgeCover`/`springTimeAt` in `themeTransition.ts`).
+- **Verificato e lasciato:** animazioni solo `opacity`/`transform` (overlay, `Reveal`, cambio di sezione sul solo contenuto), movimento
+  ridotto rispettato, niente `filter`/`backdrop-filter`, zoom di Safari sui campi già impedito da `maximum-scale=1`. Pulsante tondo della
+  barra: `width` animata in JS, accettato. Dettagli e motivazioni in `docs/architecture.md`.
+- **Strumenti:** `scripts/check-keyboard.mjs --ios` (visual viewport sostituito che si riduce e si sposta come Safari; colonna `fit`).
+  Prima della correzione (build di `fdd0a96`, `--ios --keyboard 520`): spostamento 72 px, `rootTop` 0, `fit:false`. Dopo: `rootTop` 72,
+  `fit:true` in tutti i fotogrammi di sei scenari (iOS a passi con cambio di campo, dialogo Nuova lista, campo in alto a 360×640;
+  Android a passi con cambio di campo, dialogo, 360×640), nessun long task né errore JS.
+- **Verifica:** `npm run check` OK (**585/585**: 3 test nuovi in `tests/viewport.test.ts` e `tests/themeTransition.test.ts`, più quello dei template
+  della sessione parallela, poi committato in `d633282`). Chromium
+  headless su `dist-demo` 412×915: cerchio da 868 ms dal pulsante, `theme-color` cambiato 145 ms dopo l'inizio (prima: all'inizio); menu
+  ancorato a 1280×800 4 px sotto il campo; nessun errore JS. **Non provato su iPhone/Safari reale** (servono: tastiera su Nuova spesa con
+  campo basso, Descrizione, dialogo di modifica, PIN della schermata di blocco, PWA installata; scorrimento del modulo a tastiera aperta,
+  dove Safari può spostare il visual viewport anche col dito: `#root` lo segue a ogni evento, da guardare se tremola). Non committato.
+
 ## App Android 0.3.2: vibrazione un gradino più forte — 23 novembre 2026
 
 - **Su richiesta** («leggermente più forte»; scelta dell'utente tra `HEAVY_CLICK` e una composizione del vibratore con intensità

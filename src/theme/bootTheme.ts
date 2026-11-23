@@ -17,16 +17,38 @@ export function applyDocumentTheme(doc: Document, background: string, dark: bool
   root.style.colorScheme = dark ? 'dark' : 'light';
   root.style.setProperty('--nummo-boot-bg', background);
   root.style.backgroundColor = background;
-  const tags = Array.from(doc.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
-  const meta = tags[0] ?? doc.head.appendChild(Object.assign(doc.createElement('meta'), { name: 'theme-color' }));
-  tags.slice(1).forEach((tag) => tag.remove());
-  meta.removeAttribute('media');
-  meta.content = background;
-  // Android app: the status and navigation bars take the same colour, with icons readable on it (in Chrome they keep the
-  // manifest's fixed colour). Never an error for the page.
-  const bridge = androidBridge(doc.defaultView);
-  const color = systemBarsColor(background);
-  if (bridge && color) try { bridge.setSystemBars(color, dark); } catch { /* app gone */ }
+  const chrome = () => {
+    const tags = Array.from(doc.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
+    const meta = tags[0] ?? doc.head.appendChild(Object.assign(doc.createElement('meta'), { name: 'theme-color' }));
+    tags.slice(1).forEach((tag) => tag.remove());
+    meta.removeAttribute('media');
+    meta.content = background;
+    // Android app: the status and navigation bars take the same colour, with icons readable on it (in Chrome they keep the
+    // manifest's fixed colour). Never an error for the page.
+    const bridge = androidBridge(doc.defaultView);
+    const color = systemBarsColor(background);
+    if (bridge && color) try { bridge.setSystemBars(color, dark); } catch { /* app gone */ }
+  };
+  if (chromeHold) chromeHold.pending = chrome;
+  else chrome();
+}
+
+// Browser and system bars during the light ↔ dark reveal (themeTransition.ts). The page shows the old theme until the
+// circle reaches it, but the bars (theme-color: Chrome's address bar, the installed app's status bar; the Android app's
+// status and navigation bars) switched at once: a new-coloured bar above an old-coloured page. While held, the last
+// colour asked for waits; `release` applies it. A newer hold supersedes an older one, whose release then does nothing
+// (its colour is stale).
+let chromeHold: { pending: (() => void) | null } | null = null;
+export function holdDocumentChrome(): () => void {
+  const hold: { pending: (() => void) | null } = { pending: null };
+  chromeHold = hold;
+  return () => {
+    if (chromeHold !== hold) return;
+    chromeHold = null;
+    const apply = hold.pending;
+    hold.pending = null;
+    apply?.();
+  };
 }
 
 export function makeBootTheme(preferences: { theme: BootTheme['mode']; accent: Accent; colorMode: ColorMode }): BootTheme {

@@ -5,9 +5,13 @@
 // state before to the final state in one frame; an intermediate frame (scroller still short of the hidden bar's room,
 // field cut, empty strip on closing) is the glitch fixed on 21 November (see useVirtualKeyboard in AppShell).
 // Requires `chromium` in PATH. A real keyboard (its animation, iOS) is not reproduced: confirm on a device.
+// --ios: Safari's model instead (no interactive-widget support there): the layout viewport keeps its height, only a
+// stand-in `window.visualViewport` shrinks and pans down (offsetTop) as far as Safari would to show the field above the
+// keyboard. Each frame then also reports the pan (`top`), the top of #root (`rootTop`) and whether #root covers exactly
+// the visible area (`fit`): a top bar out of view or an empty strip above the keyboard shows as fit=false.
 //
 // npm run build:demo && node scripts/check-keyboard.mjs dist-demo [--field top|low|dialog] [--keyboard 330]
-//   [--vp 390x844] [--cpu 4] [--steps 1] [--switch] [--cycles 1] [--out DIR]
+//   [--vp 390x844] [--cpu 4] [--steps 1] [--switch] [--cycles 1] [--ios] [--out DIR]
 // --field: first field of Nuova spesa, the lowest visible one, or the name of the Nuova lista dialog.
 // --steps N: the keyboard opens in N viewport steps. --switch: with the keyboard open, move to the first and then to the lowest field. --cpu: CPU throttling rate.
 import assert from 'node:assert/strict';
@@ -27,6 +31,7 @@ const keyboard = Number(opt('keyboard', '330'));
 const cpu = Number(opt('cpu', '1'));
 const cycles = Number(opt('cycles', '1'));
 const switching = process.argv.includes('--switch');
+const ios = process.argv.includes('--ios');
 const steps = Number(opt('steps', '1'));
 const out = opt('out', null);
 assert.ok(width > 0 && height > keyboard && keyboard >= 0 && cpu >= 1 && cycles >= 1 && Number.isInteger(steps) && steps >= 1);
@@ -72,6 +77,20 @@ try {
   const mark = (label) => evaluate(`window.__frames.push({ mark: ${JSON.stringify(label)} }); true`);
 
   await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
+  // --ios: a visual viewport the script moves (window.__vv.set(height, offsetTop)), firing resize and scroll as Safari does.
+  if (ios) await send('Page.addScriptToEvaluateOnNewDocument', { source: `(() => {
+    const vv = new EventTarget();
+    let height = null, top = 0;
+    for (const [name, get] of Object.entries({ height: () => height ?? innerHeight, width: () => innerWidth, offsetTop: () => top,
+      offsetLeft: () => 0, pageTop: () => top, pageLeft: () => 0, scale: () => 1 })) Object.defineProperty(vv, name, { get });
+    window.__vv = { set(nextHeight, nextTop) {
+      const resized = nextHeight !== (height ?? innerHeight), moved = nextTop !== top;
+      height = nextHeight; top = nextTop;
+      if (resized) vv.dispatchEvent(new Event('resize'));
+      if (moved) vv.dispatchEvent(new Event('scroll'));
+    } };
+    Object.defineProperty(window, 'visualViewport', { configurable: true, get: () => vv });
+  })()` });
   await send('Network.setBlockedURLs', { urls: ['https://*'] });
   await viewport(height);
   await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
@@ -101,7 +120,10 @@ try {
       while (bar?.parentElement && !bar.style?.paddingBottom) bar = bar.parentElement;
       const style = mobile && bar ? getComputedStyle(bar) : null;
       const active = document.activeElement !== document.body ? document.activeElement?.getBoundingClientRect() : null;
-      window.__frames.push({ t: Math.round(now - start), viewport: Math.round(visualViewport.height), root: Math.round(document.querySelector('#root').getBoundingClientRect().height),
+      const box = document.querySelector('#root').getBoundingClientRect();
+      const pan = ${ios} ? { top: Math.round(visualViewport.offsetTop), rootTop: Math.round(box.top),
+        fit: Math.abs(box.top - visualViewport.offsetTop) < 1 && Math.abs(box.height - visualViewport.height) < 1 } : {};
+      window.__frames.push({ t: Math.round(now - start), viewport: Math.round(visualViewport.height), root: Math.round(box.height), ...pan,
         scroller: scroller?.clientHeight, scrollTop: Math.round(scroller?.scrollTop ?? 0),
         bar: style ? style.display + '/' + style.opacity + '/' + Math.round(bar.getBoundingClientRect().height) : '-',
         field: active ? Math.round(active.top) + '..' + Math.round(active.bottom) : '-' });
@@ -127,7 +149,15 @@ try {
     await mark(`keyboard opens (viewport ${height - keyboard}${steps > 1 ? `, ${steps} steps` : ''})`);
     // --steps: the viewport shrinks in steps one frame apart, as iOS reports its keyboard animation (and some Android
     // keyboards their suggestion strip): the focused field must stay in view after the last one, not only the first.
-    for (let step = 1; step <= steps; step++) { await viewport(height - Math.round(keyboard * step / steps)); if (step < steps) await sleep(17); }
+    if (ios) {
+      // Safari pans just enough to show the focused field (its layout position, before any resize) above the keyboard.
+      const bottom = await evaluate(`document.activeElement?.getBoundingClientRect().bottom ?? 0`);
+      const pan = Math.max(0, Math.min(keyboard, Math.round(bottom + 16 - (height - keyboard))));
+      for (let step = 1; step <= steps; step++) {
+        await evaluate(`window.__vv.set(${height - Math.round(keyboard * step / steps)}, ${step === steps ? pan : 0}); true`);
+        if (step < steps) await sleep(17);
+      }
+    } else for (let step = 1; step <= steps; step++) { await viewport(height - Math.round(keyboard * step / steps)); if (step < steps) await sleep(17); }
     await sleep(700);
     if (switching) for (const which of ['top', 'low']) {
       const next = await fieldAt(field === 'dialog' ? 'dialog' : which);
@@ -135,7 +165,9 @@ try {
       await mark(`switch to the ${which} field`); await tap(next); await sleep(500);
     }
     await mark('blur'); await evaluate('document.activeElement?.blur?.(); true'); await sleep(120);
-    await mark(`keyboard closes (viewport ${height})`); await viewport(height); await sleep(700);
+    await mark(`keyboard closes (viewport ${height})`);
+    if (ios) await evaluate(`window.__vv.set(${height}, 0); true`); else await viewport(height);
+    await sleep(700);
   }
   const frames = await evaluate('window.__frames');
   // Identical consecutive frames are printed once: every printed line is a change on screen.

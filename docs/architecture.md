@@ -1497,3 +1497,28 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   colore `card` del tema (`cardColor`: metà `primaryContainer`, metà bianco); il bordo prende il colore del fondo, così le misure non
   cambiano. Nel tema scuro le schede restano con il contorno, che lì già si leggeva bene.
 - I contrasti sono verificati da `tests/theme.test.ts` per ogni colore e modalità, schede comprese.
+
+## Area visibile su iOS e barre durante il cambio tema — 23 novembre 2026
+
+- **Richiesta dell'utente:** audit della stabilità mobile (animazioni, aree in alto e in basso, inserimento dati su iOS), senza cambiare
+  il design.
+- **Tastiera di iOS.** Safari non supporta `interactive-widget=resizes-content`: riduce solo il visual viewport e, se la tastiera coprirebbe
+  il campo, lo sposta in basso dentro il layout viewport (`visualViewport.offsetTop`, evento `scroll` del visual viewport). `#root` era nel
+  flusso, alto quanto il visual viewport ma disegnato dall'inizio del layout viewport: con lo spostamento, la barra superiore usciva dallo
+  schermo e sopra la tastiera restava una striscia di sfondo. **Decisione:** `#root` `position: fixed` con `top` = `offsetTop` (variabile
+  `--nummo-viewport-top` da `GlobalStyle`) e l'altezza di prima, quindi copre sempre esattamente l'area visibile, qualunque spostamento
+  faccia Safari; si usa `top` e non `transform`, che renderebbe `#root` il contenitore dei discendenti `fixed`. Chrome Android
+  (resizes-content), WebView dell'app e desktop hanno sempre offset 0: nessun cambiamento. Con lo zoom (disattivato) il valore resta quello
+  di prima. Lo schermo di blocco (fuori da `#root`) usa le stesse variabili; i menu ancorati sottraggono l'inizio di `#root` dall'ancora.
+  Nessun `window.scrollTo` correttivo: lo spostamento di Safari non si combatte, lo si segue.
+- **Cambio tema.** Il colore delle barre (`theme-color` del browser e dell'app installata, barre di stato e navigazione dell'app Android)
+  cambiava all'inizio della rivelazione, sopra una pagina che mostrava ancora il tema vecchio. **Decisione:** `holdDocumentChrome` lo
+  trattiene finché il cerchio non ha coperto il bordo superiore (tempo calcolato sulla stessa molla); una presa più recente scarta la
+  precedente. Con un solo colore per entrambe le barre (Android) quella in basso può ancora cambiare poco prima del cerchio quando parte
+  dal pulsante in alto; dal centro della finestra cambiano insieme alla fine.
+- **Verificato e lasciato com'è:** animazioni solo su `opacity`/`transform` (overlay, `Reveal`, cambio di sezione con Web Animations sul
+  solo contenuto, mai su barra superiore o navigazione), movimento ridotto rispettato, nessun `backdrop-filter`/`filter`; zoom automatico di
+  Safari sui campi sotto 16 px già impedito da `maximum-scale=1` (l'importo su smartphone scende fino a 14 px). Il pulsante tondo della
+  barra mobile anima ancora `width` con `Animated` JS (un ricalcolo del layout per fotogramma per 250 ms): accettato, nessun artefatto
+  osservato.
+

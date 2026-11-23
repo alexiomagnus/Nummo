@@ -4,6 +4,8 @@
 // snapshot is clipped by a growing circle. Without the API (older browsers), with reduced motion or when nothing visible
 // changes, the theme switches at once, as before.
 
+import { holdDocumentChrome } from './bootTheme.ts';
+
 export type Spring = Readonly<{ stiffness: number; damping: number; mass: number }>;
 export type Point = Readonly<{ x: number; y: number }>;
 type Rect = Readonly<{ left: number; top: number; width: number; height: number }>;
@@ -49,6 +51,20 @@ export function revealOrigin(rect: Rect | null, width: number, height: number): 
   return x >= 0 && x <= width && y >= 0 && y <= height ? { x, y } : centre;
 }
 
+// Fraction of the final radius at which the circle covers the whole top edge of the window (where the status bar and the
+// browser's address bar sit): the distance from the origin to the farther top corner.
+export function topEdgeCover(origin: Point, width: number, radius: number): number {
+  if (!(radius > 0)) return 0;
+  return Math.min(1, Math.hypot(Math.max(origin.x, width - origin.x), origin.y) / radius);
+}
+
+// First time (ms) at which the spring reaches `fraction` of its course, within `duration` (the reveal's whole length).
+export function springTimeAt(spring: Spring, fraction: number, duration: number): number {
+  if (fraction <= 0) return 0;
+  for (let ms = 0; ms <= duration; ms += 4) if (springValue(spring, ms / 1000) >= fraction) return ms;
+  return duration;
+}
+
 type ViewTransition = { ready: Promise<void>; finished: Promise<void> };
 type TransitionDocument = Document & { startViewTransition?: (update: () => void) => ViewTransition };
 
@@ -71,21 +87,28 @@ export function switchTheme(doc: Document, apply: () => void, options: { reduced
   const radius = revealRadius(origin, width, height);
   const root = doc.documentElement;
   root.setAttribute(themeSwitchAttribute, '');
+  // The bars keep the old colour until the circle has covered the top edge of the page (holdDocumentChrome): at the top
+  // they then always match the page under them. With one colour for both bars (theme-color, the Android app), the bottom
+  // one changes a little before the circle gets there; it used to change at the very start for both.
+  const releaseChrome = holdDocumentChrome();
   let transition: ViewTransition;
   try {
     transition = start.call(doc, apply);
   } catch {
     root.removeAttribute(themeSwitchAttribute);
+    releaseChrome();
     apply();
     return;
   }
   const spring = springEasing(themeRevealSpring);
   const easing = view.CSS?.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : 'cubic-bezier(0.05, 0.7, 0.1, 1)';
   const at = `${origin.x}px ${origin.y}px`;
+  const chromeAt = springTimeAt(themeRevealSpring, topEdgeCover(origin, width, radius), spring.duration);
   transition.ready.then(() => {
     root.removeAttribute(themeSwitchAttribute);
     root.animate({ clipPath: [`circle(0px at ${at})`, `circle(${radius}px at ${at})`] },
       { duration: spring.duration, easing, pseudoElement: '::view-transition-new(root)' });
-  }, () => root.removeAttribute(themeSwitchAttribute));
-  transition.finished.catch(() => undefined).finally(() => root.removeAttribute(themeSwitchAttribute));
+    setTimeout(releaseChrome, chromeAt);
+  }, () => { root.removeAttribute(themeSwitchAttribute); releaseChrome(); });
+  transition.finished.catch(() => undefined).finally(() => { root.removeAttribute(themeSwitchAttribute); releaseChrome(); });
 }

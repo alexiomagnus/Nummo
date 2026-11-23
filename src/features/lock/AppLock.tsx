@@ -309,7 +309,10 @@ export function AppLockCard({ requirePin = false }: { requirePin?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { position: 'fixed' as 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2147483000, alignItems: 'center', justifyContent: 'center', padding: spacing.xxl },
+  // The visible part of the page, as #root (index.html): with the iOS keyboard open for the PIN, the centred content
+  // stays above the keyboard instead of in the middle of the taller layout viewport.
+  screen: { position: 'fixed' as 'absolute', top: 'var(--nummo-viewport-top, 0px)' as unknown as number, left: 0, right: 0,
+    height: 'var(--nummo-viewport-height, 100%)' as unknown as number, zIndex: 2147483000, alignItems: 'center', justifyContent: 'center', padding: spacing.xxl },
   content: { width: '100%', maxWidth: 400, alignItems: 'center', gap: spacing.lg },
   badge: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
   center: { textAlign: 'center' },

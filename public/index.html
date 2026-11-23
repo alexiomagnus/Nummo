@@ -49,7 +49,10 @@
       @media (prefers-color-scheme: dark) { html, body { background: var(--nummo-boot-bg, #0F1511); } body { color: #DEE4DD; } }
       /* clip: the app scrolls inside its own containers; a menu animating in from beyond the right edge (Paper Menu)
          must not widen the page, which Chrome on Android would then keep zoomed out. hidden is the fallback. */
-      #root { display: flex; height: var(--nummo-viewport-height, 100%); flex: 1; overflow: hidden; overflow: clip; }
+      /* Fixed over the visible part of the page (GlobalStyle: --nummo-viewport-top/height). iOS shrinks only the visual
+         viewport for its keyboard and pans it down inside the layout viewport: in the flow, the top bar went out of view
+         and an empty strip showed above the keyboard. Elsewhere the top is always 0. */
+      #root { position: fixed; top: var(--nummo-viewport-top, 0px); left: 0; right: 0; display: flex; height: var(--nummo-viewport-height, 100%); overflow: hidden; overflow: clip; }
       @supports (height: 100dvh) { #root { height: var(--nummo-viewport-height, 100dvh); } }
       /* Dichiarato qui (non dopo il mount di React) e con il file già in preload: il primo rendering usa subito il font. */
       @font-face { font-family: 'Google Sans'; font-style: normal; font-weight: 400 700; font-display: swap;
