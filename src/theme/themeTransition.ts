@@ -1,6 +1,6 @@
 // Light ↔ dark switch as a Material 3 Expressive circular reveal (23 November, on request): the new theme grows from the
-// control that asked for it (the top-bar button or the «Tema» chip) over the old one, on the slow spatial spring of the
-// expressive scheme. Web View Transitions API: the browser snapshots the old page, the update runs, and only the new
+// control that asked for it (the top-bar button or the «Tema» chip) over the old one, on a soft spring (`themeRevealSpring`).
+// Web View Transitions API: the browser snapshots the old page, the update runs, and only the new
 // snapshot is clipped by a growing circle. Without the API (older browsers), with reduced motion or when nothing visible
 // changes, the theme switches at once, as before.
 
@@ -8,9 +8,11 @@ export type Spring = Readonly<{ stiffness: number; damping: number; mass: number
 export type Point = Readonly<{ x: number; y: number }>;
 type Rect = Readonly<{ left: number; top: number; width: number; height: number }>;
 
-// Material 3 Expressive, expressive motion scheme, slow spatial spring (damping ratio 0.8, stiffness 200): the one for
-// full-screen movement. Same RN-style parameters as `spatialSpring` in tokens.ts.
-export const slowSpatialSpring: Spring = { stiffness: 200, damping: 0.8 * 2 * Math.sqrt(200), mass: 1 };
+// Softer than the expressive slow spatial spring (ratio 0.8, stiffness 200), first used and found hurried (23 November, on
+// request): there the circle reached 90 % of its radius in 215 ms, so the visible part was over almost at once. Ratio 0.95
+// and stiffness 80: no visible bounce, 90 % at about 410 ms, settled in under 0.9 s. Same RN-style parameters as
+// `spatialSpring` in tokens.ts.
+export const themeRevealSpring: Spring = { stiffness: 80, damping: 0.95 * 2 * Math.sqrt(80), mass: 1 };
 
 // Step response of a damped spring from 0 to 1 at time `t` (seconds). Under-damped only (ratio < 1), as every M3 spring.
 export function springValue(spring: Spring, t: number): number {
@@ -23,7 +25,7 @@ export function springValue(spring: Spring, t: number): number {
 
 // The spring as a CSS `linear()` easing and the time it takes to settle within `precision` of the end, so a Web
 // Animation follows it exactly (the overshoot included) with a fixed duration.
-export function springEasing(spring: Spring, precision = 0.001, steps = 40): { easing: string; duration: number } {
+export function springEasing(spring: Spring, precision = 0.002, steps = 40): { easing: string; duration: number } {
   const omega = Math.sqrt(spring.stiffness / spring.mass);
   const ratio = Math.min(spring.damping / (2 * Math.sqrt(spring.stiffness * spring.mass)), 0.999);
   // The envelope e^(−ζωt)/√(1−ζ²) bounds the distance from the end: past this time the motion is invisible.
@@ -77,7 +79,7 @@ export function switchTheme(doc: Document, apply: () => void, options: { reduced
     apply();
     return;
   }
-  const spring = springEasing(slowSpatialSpring);
+  const spring = springEasing(themeRevealSpring);
   const easing = view.CSS?.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : 'cubic-bezier(0.05, 0.7, 0.1, 1)';
   const at = `${origin.x}px ${origin.y}px`;
   transition.ready.then(() => {

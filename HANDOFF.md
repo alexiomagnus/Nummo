@@ -163,6 +163,11 @@ rilasci».
   ancora chiari dentro il cerchio, già corretti al successivo: probabilmente rasterizzazione software headless. **Da vedere su
   dispositivo reale** (telefono, WebView dell'app, Safari, Firefox); il percorso da «Tema» nelle Impostazioni non provato nel browser.
   Vale per web e app Android dopo `deploy:hosting`. Committato e inviato con il menu dell'account; Hosting non pubblicato.
+- **Più lenta e morbida (su richiesta, stesso giorno: «troppo di fretta»).** La molla spaziale lenta (0,8/200) portava il cerchio al
+  90 % del raggio in 215 ms, poi solo una coda invisibile. Ora `themeRevealSpring`, rapporto 0,95 e rigidità 80 (non un token M3:
+  più morbida della molla lenta espressiva): nessun rimbalzo visibile, 90 % a circa 410 ms, durata 868 ms (precisione finale 0,2 %,
+  meno di 2 px sul raggio). Test aggiornati; `npm run check` OK (**581/581** sullo snapshot del commit); Chromium headless:
+  animazione da 868 ms dal pulsante, nessun errore JS. Committato e inviato; Hosting non pubblicato.
 
 ## Menu dell'account senza limite di altezza fisso — 23 novembre 2026
 

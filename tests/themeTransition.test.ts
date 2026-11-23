@@ -1,18 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { revealOrigin, revealRadius, slowSpatialSpring, springEasing, springValue, switchTheme, themeSwitchAttribute } from '../src/theme/themeTransition.ts';
+import { revealOrigin, revealRadius, themeRevealSpring, springEasing, springValue, switchTheme, themeSwitchAttribute } from '../src/theme/themeTransition.ts';
 
-test('cambio tema: molla spaziale lenta M3 Expressive, parte da 0, supera appena la fine e si ferma a 1', () => {
-  assert.equal(springValue(slowSpatialSpring, 0), 0);
-  const samples = Array.from({ length: 200 }, (_, i) => springValue(slowSpatialSpring, i / 200));
+test('cambio tema: molla morbida, parte da 0, senza rimbalzo visibile, si ferma a 1', () => {
+  assert.equal(springValue(themeRevealSpring, 0), 0);
+  const samples = Array.from({ length: 200 }, (_, i) => springValue(themeRevealSpring, i / 200));
   const peak = Math.max(...samples);
-  assert.ok(peak > 1 && peak < 1.03, `overshoot leggero (rapporto 0,8), non ${peak}`);
-  const { easing, duration } = springEasing(slowSpatialSpring);
-  assert.ok(duration >= 450 && duration <= 800, `durata da movimento a tutto schermo, non ${duration} ms`);
+  assert.ok(peak < 1.001, `nessun rimbalzo visibile, non ${peak}`);
+  const at = (value: number) => samples.findIndex((sample) => sample >= value) * 5;
+  assert.ok(at(0.9) >= 380 && at(0.9) <= 450, `90 % del raggio verso 410 ms (215 con la molla precedente), non ${at(0.9)}`);
+  const { easing, duration } = springEasing(themeRevealSpring);
+  assert.ok(duration >= 800 && duration <= 950, `durata entro 0,95 s, non ${duration} ms`);
   assert.match(easing, /^linear\(0, [\d., ]+, 1\)$/);
   const points = easing.slice('linear('.length, -1).split(', ').map(Number);
   assert.equal(points.length, 41);
-  assert.ok(Math.abs(springValue(slowSpatialSpring, duration / 1000) - 1) < 0.002, 'alla fine della durata la molla è ferma');
+  assert.ok(Math.abs(springValue(themeRevealSpring, duration / 1000) - 1) < 0.003, 'alla fine della durata la molla è ferma');
 });
 
 test('cambio tema: il cerchio copre tutta la finestra dal punto di partenza', () => {
@@ -84,5 +86,5 @@ test('cambio tema: transizioni CSS spente durante l’istantanea, poi cerchio da
   const radius = revealRadius({ x: 364, y: 32 }, 412, 915);
   assert.deepEqual(keyframes.clipPath, ['circle(0px at 364px 32px)', `circle(${radius}px at 364px 32px)`]);
   assert.equal(timing.pseudoElement, '::view-transition-new(root)');
-  assert.equal(timing.duration, springEasing(slowSpatialSpring).duration);
+  assert.equal(timing.duration, springEasing(themeRevealSpring).duration);
 });
