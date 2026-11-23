@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { makeBackup, parseBackup, planImport } from '../src/domain/backup.ts';
-import { sameTemplate, sortTemplates, parseTemplate, templateFields, validateTemplateDraft, draftOfTemplate, newTemplateDraft, type TemplateRecord } from '../src/domain/template.ts';
+import { sameTemplate, sortTemplates, parseTemplate, templateFields, validateTemplateDraft, draftOfTemplate, newTemplateDraft, templateOptionalFields, type TemplateRecord } from '../src/domain/template.ts';
 import { parseSyncedTemplate } from '../src/domain/firestore.ts';
 
 const cat = '11111111-1111-4111-8111-111111111111';
@@ -84,4 +84,24 @@ test('template: backup v11 con round trip, piano di importazione e file preceden
   assert.deepEqual(conflict.conflicts.map((c) => c.kind), ['template']);
   const replace = planImport({ expenses: [], categories, templates: [t2] }, { expenses: [], categories, templates: [t1, t2] }, 'replace');
   assert.deepEqual([replace.removeTemplateIds, replace.sameTemplates], [[t1.id], 1]);
+});
+
+test('template dopo template: importo ed esercente lasciati dal precedente si tolgono, quelli scritti a mano restano', () => {
+  const base = { date: '2026-11-01', category_id: 'c', fund_id: null };
+  const fuel = { ...base, description: 'Pieno', amount_minor: 5000, merchant: 'Q8' };
+  const coffee = { ...base, description: 'Caffè', amount_minor: 120, merchant: null };
+  const old = { ...base, description: 'Vecchio', amount_minor: null, merchant: null };
+  // From an empty form: the template fills both and remembers them.
+  const first = templateOptionalFields(fuel, { amount: '', merchant: '' }, {});
+  assert.deepEqual(first, { patch: { amount: '50,00', merchant: 'Q8' }, fill: { amount: '50,00', merchant: 'Q8' } });
+  // «Pieno» then «Caffè»: the coffee gets its amount and no longer Q8.
+  assert.deepEqual(templateOptionalFields(coffee, { amount: '50,00', merchant: 'Q8' }, first.fill),
+    { patch: { amount: '1,20', merchant: '' }, fill: { amount: '1,20' } });
+  // A template without amount (saved before 21 November) takes back the previous template's amount too.
+  assert.deepEqual(templateOptionalFields(old, { amount: '50,00', merchant: 'Q8' }, first.fill).patch, { amount: '', merchant: '' });
+  // Values changed by hand after the first template stay.
+  assert.deepEqual(templateOptionalFields(old, { amount: '48,30', merchant: 'Eni' }, first.fill), { patch: {}, fill: {} });
+  // Values typed before any template stay as well.
+  assert.deepEqual(templateOptionalFields(coffee, { amount: '3,00', merchant: 'Bar Roma' }, {}), { patch: { amount: '1,20' }, fill: { amount: '1,20' } });
+  assert.deepEqual(templateOptionalFields(old, { amount: '3,00', merchant: 'Bar Roma' }, {}), { patch: {}, fill: {} });
 });

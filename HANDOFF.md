@@ -155,6 +155,18 @@ rilasci».
   (solo test di dominio), telefoni reali e Safari/iOS/Firefox (protezione locale e richiesta di Firefox), collaudo in demo con
   `docs/testing/` (file v11 con template ed esercente creato e collaudato il 23 novembre), tastiera automatica di Nuova lista/Nuovo fondo su telefono reale.
 
+## Template dopo template: importo ed esercente del precedente non restano — 23 novembre 2026
+
+- **Su richiesta** (opzione 2 tra tre proposte: togliere solo ciò che veniva dal template precedente). `templateOptionalFields` in
+  `domain/template.ts` (puro): Importo ed Esercente del template scelto se li ha; altrimenti il valore lasciato dal template precedente,
+  se ancora uguale, si svuota, e uno scritto a mano (prima del template o modificato dopo) resta. `ExpenseForm` ricorda in `templateFill`
+  ciò che l'ultimo template ha messo (azzerato da «Nessun template» e dopo un salvataggio). Descrizione, categoria e fondo come prima;
+  data e ricorrenza mai toccate. Commento di `applyTemplate` corretto (diceva che il template riempie la data).
+- **Verifica:** `npm run check` OK (**582/582**, 1 test nuovo in `tests/template.test.ts`). Chromium headless su `dist-demo`, Standard,
+  1280×900, file v11 unito dall'interfaccia: Pieno (60,00, Q8) → Caffè (2,50, esercente vuoto); Pieno → Vecchio senza importo (entrambi
+  vuoti); Pieno, «Eni» scritto a mano → Caffè (2,50, «Eni» resta). Nessun errore JS. Non provato su smartphone (stesso codice, foglio al
+  posto del menu). Committato e inviato; Hosting pubblicato (vedi «Produzione»).
+
 ## App Android 0.3.2: vibrazione un gradino più forte — 23 novembre 2026
 
 - **Su richiesta** («leggermente più forte»; scelta dell'utente tra `HEAVY_CLICK` e una composizione del vibratore con intensità
@@ -240,8 +252,8 @@ rilasci».
 - **Collaudo dall'interfaccia eseguito (su richiesta, stesso giorno)** in Chromium headless su `dist-demo/`, Standard e Avanzata
   (emulatori demo propri su porte dedicate 39199/39380, config temporanea rimossa; il runner hybrid dell'utente non toccato):
   tutti i passi con il risultato atteso, Rules che accettano i 9 template, nessun errore JS. Esiti in `docs/testing/README.md`.
-- **Osservazione da decidere:** passando direttamente da un template all'altro, Importo ed Esercente del precedente restano se il
-  nuovo non li ha (`applyTemplate` in `ExpenseForm.tsx`): un caffè può ereditare l'esercente «Q8» del pieno. Non corretto.
+- **Osservazione:** passando direttamente da un template all'altro, Importo ed Esercente del precedente restavano se il nuovo non li
+  aveva: un caffè poteva ereditare l'esercente «Q8» del pieno. **Corretto il 23 novembre** (sezione «Template dopo template» sopra).
 
 ## App Android 0.3.0: notifiche nell'app — 22 novembre 2026
 

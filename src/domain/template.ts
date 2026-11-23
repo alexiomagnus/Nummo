@@ -42,6 +42,29 @@ export function draftOfTemplate(template: TemplateData): TemplateDraft {
     amount: amount === null ? '' : `${Math.floor(amount / 100)},${String(amount % 100).padStart(2, '0')}` };
 }
 
+// Amount and merchant are optional in a template (the amount only in those saved before 21 November): one without them
+// leaves the field alone, so a value typed by hand is kept. A value the previous template put there and still untouched is
+// taken back instead (23 November, on request): «Pieno» (Q8) then «Caffè» (no merchant) must not give a coffee at Q8.
+// `fill`: what this template put in, to compare with on the next choice; a field edited since then no longer matches.
+export type TemplateFill = Readonly<{ amount?: string; merchant?: string }>;
+type OptionalFields = { amount: string; merchant: string };
+
+export function templateOptionalFields(template: TemplateData, current: Readonly<OptionalFields>, previous: TemplateFill):
+  { patch: Partial<OptionalFields>; fill: TemplateFill } {
+  const filled = draftOfTemplate(template);
+  const patch: Partial<OptionalFields> = {};
+  const fill: { amount?: string; merchant?: string } = {};
+  for (const field of ['amount', 'merchant'] as const) {
+    if (filled[field]) {
+      patch[field] = filled[field];
+      fill[field] = filled[field];
+    } else if (previous[field] !== undefined && current[field] === previous[field]) {
+      patch[field] = '';
+    }
+  }
+  return { patch, fill };
+}
+
 // `funds`: the funds the template may use (active ones); `fundChosen` is false while funds exist and none (nor
 // «Nessun fondo») has been picked yet, like in the new-expense form.
 export function validateTemplateDraft(draft: TemplateDraft, categories: readonly Category[], funds: readonly { id: string }[],

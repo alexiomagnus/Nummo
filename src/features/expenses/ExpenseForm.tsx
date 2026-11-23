@@ -22,7 +22,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { ScanReceiptDialog } from '../receipts/ScanReceiptDialog';
 import { useReceiptAi } from '../receipts/aiSettings';
 import type { RankedMerchant } from '../../domain/merchant';
-import { draftOfTemplate, type TemplateRecord } from '../../domain/template';
+import { draftOfTemplate, templateOptionalFields, type TemplateFill, type TemplateRecord } from '../../domain/template';
 import { TemplatePicker } from '../templates/TemplatePicker';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
@@ -61,6 +61,8 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   const [scanning, setScanning] = useState(false);
   // The template the form was filled from (shown in its field until saved); the fields stay editable afterwards.
   const [templateId, setTemplateId] = useState('');
+  // Amount and merchant as the last template put them: the next template takes them back if still untouched.
+  const [templateFill, setTemplateFill] = useState<TemplateFill>({});
   // «Scansiona scontrino» exists only once the scan is switched on in Settings (off by default, 21 November).
   const scanEnabled = useReceiptAi().settings.enabled;
   // Locked while sending and while the outcome is uncertain: a retry must resend the same data.
@@ -78,6 +80,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     setErrors({});
     setFormKey((key) => key + 1);
     setTemplateId('');
+    setTemplateFill({});
     store.startNew();
   }, [submission.status]);
   // A category deleted in the other section simply stops being selected; without one, the preferred category if it exists.
@@ -98,13 +101,14 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       return next;
     });
   };
-  // Fills amount (when the template has one), date, description, merchant (when it has one), category and fund; never the
-  // repeat. A category or fund that no longer exists is left to be chosen again. «Nessun template» clears the whole form,
+  // Fills description, category and fund, and amount and merchant when the template has them (otherwise a value left by the
+  // previous template is taken back and one typed by hand stays: `templateOptionalFields`); never the date or the repeat. A category or fund that no longer exists is left to be chosen again. «Nessun template» clears the whole form,
   // as after a saved expense (user's request, 21 November), whether or not it had been filled from a template.
   const applyTemplate = (id: string) => {
     const template = templates?.find((item) => item.id === id);
     setTemplateId(template ? template.id : '');
     if (!template) {
+      setTemplateFill({});
       setDraft(newDraft());
       setErrors({});
       setFormKey((key) => key + 1);
@@ -112,8 +116,9 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     }
     const filled = draftOfTemplate(template);
     const fundId = template.fund_id === null ? noFund : fundChoices.some((choice) => choice.fund.id === template.fund_id) ? template.fund_id : '';
-    update({ description: filled.description, categoryId: existingCategory(template.category_id, categories), fundId,
-      ...(template.amount_minor !== null ? { amount: filled.amount } : {}), ...(template.merchant ? { merchant: template.merchant } : {}) });
+    const optional = templateOptionalFields(template, { amount: draft.amount, merchant: draft.merchant ?? '' }, templateFill);
+    setTemplateFill(optional.fill);
+    update({ description: filled.description, categoryId: existingCategory(template.category_id, categories), fundId, ...optional.patch });
   };
   // Leaving a field empty is not an error yet: missing values are reported on save.
   const validateField = (field: BaseField) => {
