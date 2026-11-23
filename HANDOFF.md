@@ -7,14 +7,15 @@ e possono dire cose superate; il riepilogo precedente (21 novembre) è conservat
 rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novembre, l'elenco dei commit e la storia delle release Android,
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre».
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `7bfa99b` (23 novembre, su richiesta: pannelli come schermi, transizione più
-  morbida), pubblicato con `npm run deploy:hosting` dall'albero principale pulito: «Deploy complete!», bundle online `index-c592ccbd…`
-  identico a quello compilato (SHA-256). Comprende tutto il codice fino a `7bfa99b`. Prima `9e032b8` (dettaglio di spese e abbonamenti,
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `de199c7` (23 novembre, su richiesta: fogli con maniglia, azioni a pillola, «Elimina»
+  rosso, schermi rifiniti), pubblicato con `npm run deploy:hosting` dall'albero principale pulito: «Deploy complete!», bundle online
+  `index-290105cc…` identico a quello compilato (SHA-256). Comprende tutto il codice fino a `de199c7`. Prima `7bfa99b` (pannelli come
+  schermi, bundle `index-c592ccbd…`), prima `9e032b8` (dettaglio di spese e abbonamenti,
   bundle `index-d8345c5c…`), prima `da3103e` (accenti del tema
   chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
   invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
   99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
-- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
+- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
   vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
 - **App Android: 0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
@@ -24,8 +25,8 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.2` «Latest», poi 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `7bfa99b`,
-  inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `de199c7`,
+  inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
   L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
@@ -87,7 +88,7 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
 - **Poi, su richiesta (stesso giorno):** lo schermo «Prossimo mese» ha il colore della scheda (`tone` di `ScreenLayer`: fondo
   `primaryContainer`, testi e icone `onPrimaryContainer`, Indietro e riquadro del calendario in `primary`/`onPrimary`, righe con divisori
   tenui come la vecchia scheda aperta): la scheda cresce senza cambiare colore. Verificato in Chromium headless a 390×844 scuro (apertura,
-  chiusura animata, nessun errore JS); `npm run check` OK. Committato e inviato su richiesta; Hosting non pubblicato.
+  chiusura animata, nessun errore JS); `npm run check` OK. Committato in `de199c7`, inviato e pubblicato su Hosting (bundle `index-290105cc…`).
 - **Poi, su richiesta (stesso giorno):** tolto «Chiudi» da Prodotti acquistati, Storico dei pagamenti e dettagli di Analisi (basta
   Indietro); negli schermi i pulsanti delle azioni occupano tutta la riga (`expandActions` di `AppDialog`: «Annulla» e la conferma in parti
   uguali, il cestino con la sua larghezza); dettaglio dell'abbonamento in una pagina senza scorrere: eroe più compatto (`dense`), dettagli
@@ -98,13 +99,13 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   schermo dello storico nel colore della palette (`primaryContainer`, `tone` di `ScreenLayer`/`AppDialog`, che ora rifà anche il tema del
   contenuto: testi e icone in `onPrimaryContainer`), così la riga si apre nello schermo senza cambiare colore. Lo screenshot con «Chiudi»
   nei dettagli di Analisi era della versione pubblicata: il pulsante era già tolto nel codice. Chromium headless 390×844 scuro OK, nessun
-  errore JS; `npm run check` OK. Committato e inviato su richiesta; Hosting non pubblicato.
+  errore JS; `npm run check` OK. Committato in `de199c7`, inviato e pubblicato su Hosting (bundle `index-290105cc…`).
 - **Poi, su richiesta (stesso giorno):** Nuova lista come foglio «a metà» con la maniglia per trascinarlo giù: `variant="sheet"` di
   `AppDialog` / `sheet` di `ScreenLayer` (alto quanto il contenuto, angoli in alto, velo fisso, tocco sul velo o trascinamento della
   maniglia oltre un terzo o veloce = chiude e scende dal punto lasciato, altrimenti torna su; colore `elevation.level1`; massimo 640 da
   desktop; apertura dal pulsante con il ritaglio più uno spostamento verticale). Applicato a Nuova lista, Modifica lista, Modifica prodotto.
   Chromium headless 390×844 scuro e 1440×900 chiaro: foglio alto 298, trascinamento di 300 px → chiuso, nessuna copia lasciata, nessun
-  errore JS. Non provato su touch reale. Committato e inviato su richiesta; Hosting non pubblicato.
+  errore JS. Non provato su touch reale. Committato in `de199c7`, inviato e pubblicato su Hosting (bundle `index-290105cc…`).
 - **Poi, su richiesta (stesso giorno):** foglio anche per il selettore della data (`DateField`) e per «Da quando» di «Metti in pausa» /
   «Annulla abbonamento» (`StatusDialog`, tolto il pulsante «Indietro» in fondo: resta la conferma a tutta larghezza). Nei fogli non c'è il
   pulsante Indietro tondo (la maniglia lo sostituisce). Chromium headless 360×740 scuro: data e pausa come fogli, nessun errore JS.
@@ -113,16 +114,16 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   con Indietro/maniglia/tocco fuori; resta solo mentre lo schermo non si può chiudere, la lettura di uno scontrino); l'origine (il campo
   della data, il pulsante «Nuova lista»…) resta vuota mentre lo schermo è aperto e ricompare all'atterraggio. Non toccata la colonna di
   pulsanti della revisione dello scontrino su desktop (fuori da Actions). Chromium headless 390×844 scuro: origine a opacità 0 da aperto e
-  1 dopo, pillole 342×56, nessun «Annulla», nessun errore JS; `npm run check` OK. Committato e inviato su richiesta; Hosting non pubblicato.
+  1 dopo, pillole 342×56, nessun «Annulla», nessun errore JS; `npm run check` OK. Committato in `de199c7`, inviato e pubblicato su Hosting (bundle `index-290105cc…`).
 - **Poi, su richiesta (stesso giorno):** in Nuova spesa «Scansiona scontrino» e «Template» a metà riga ciascuno anche da medium (prima solo
   su smartphone): misurati in Chromium headless 542+542 a 1440×900, 330+330 a 800×1100, 177+177 a 390×844, insieme larghi quanto «Salva».
 - **Poi, su richiesta (stesso giorno):** l'origine sparisce per intero mentre lo schermo è aperto (`outermost`: risale al contenitore del
   pulsante Paper con il riempimento; prima restava la pillola vuota); Importo e Data della stessa lunghezza anche da medium
-  (`ExpenseFields`: misurati 542+542 a 1440×900). Chromium headless 1440×900 scuro: nessun errore JS; `npm run check` OK. Committato e inviato su richiesta; Hosting non pubblicato.
+  (`ExpenseFields`: misurati 542+542 a 1440×900). Chromium headless 1440×900 scuro: nessun errore JS; `npm run check` OK. Committato in `de199c7`, inviato e pubblicato su Hosting (bundle `index-290105cc…`).
 - **Poi, su richiesta (stesso giorno):** riga «Storico dei pagamenti» e il suo schermo nel colore di «Scansiona scontrino»
   (`secondaryContainer`, prima `primaryContainer`); ogni «Elimina» con etichetta rosso pieno a pillola (`DangerButton`, `useDangerColors`:
   nello scuro `errorContainer`, perché `error` è rosa): negli schermi, nella conferma di `DeleteDialog`, nelle pagine Backup, Templates e
-  Liste. Chromium headless 390×844 scuro: nessun errore JS; `npm run check` OK. Committato e inviato su richiesta; Hosting non pubblicato.
+  Liste. Chromium headless 390×844 scuro: nessun errore JS; `npm run check` OK. Committato in `de199c7`, inviato e pubblicato su Hosting (bundle `index-290105cc…`).
 
 - **Su richiesta** («animazione ancora più smooth e soddisfacente»; sostituire con lo stesso metodo i pannelli: Nuova lista, selettore della
   data, Aggiungi denaro, Trasferisci, Modifica fondo, Storico dei pagamenti, Modifica serie/spesa, Prodotti acquistati, scheda «Prossimo mese»).
@@ -2127,7 +2128,7 @@ recente, sono cronaca delle singole fasi e possono dire cose superate.
 
 Dal più recente; ogni rilascio è stato fatto su richiesta. Dettagli nelle sezioni datate più sotto.
 
-- **Rilasci del 23 novembre** (solo Hosting, dal più recente): `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo template),
+- **Rilasci del 23 novembre** (solo Hosting, dal più recente): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo template),
   `72fcf5a` (cambio tema animato, menu dell'account, vibrazione solo nell'app, tema chiaro più deciso). Esiti nello «Stato corrente».
 
 - **Rilasci successivi del 22 novembre** (dal più recente): Hosting da `fa06adb` (articolo eliso nei testi delle notifiche), `2b1e8fb`
@@ -5385,7 +5386,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (23 novembre):** tutto il codice fino a `7bfa99b` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (23 novembre):** tutto il codice fino a `de199c7` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
