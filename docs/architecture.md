@@ -1470,3 +1470,13 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   garanzia d'orario, libreria in più).
 - **Limiti:** gli orari si aggiornano solo quando la pagina è aperta (come nel browser, dove li riceve il servizio); un'app 0.2.0 senza i
   metodi resta senza notifiche: la pagina le dà per non disponibili, come in un browser senza Web Push.
+
+## Vibrazione solo nell'app Android, un solo effetto — 23 novembre 2026
+
+- **Richiesta dell'utente:** vibrazione anche sulle righe della legenda di Analisi, stessa intensità in ogni punto, e solo nell'app
+  Android, che ha la vibrazione migliore (feedback tattile nativo, anche in silenzioso e in Non disturbare).
+- **Decisione.** `theme/haptics.ts` usa soltanto il ponte `NummoAndroid.haptic`; la Vibration API del browser è tolta (niente
+  vibrazione né interruttore «Vibrazione» nel browser). Un solo effetto, `tap` (`VIRTUAL_KEY`/CLICK), al posto della coppia `tap`/`tick`:
+  anche le destinazioni attraversate trascinando sulla barra e le parti dei grafici vibrano come un tocco. Il cancello da 60 ms resta.
+- **Compatibilità.** Nessuna modifica Kotlin: le app 0.1.0–0.3.1 ricevono solo `tap`, che conoscono già; `tick` resta nel ponte. Il cambio
+  arriva all'app con la pubblicazione dell'Hosting. Le decisioni precedenti sulle durate nel browser (21–22 novembre) restano come storia.

@@ -5,7 +5,6 @@ import { flushSync } from 'react-dom';
 import { Animated, Easing, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { HapticKind } from '../theme/haptics';
 import { layerTransition } from '../theme/motion';
 import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
 import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt, slotWithHysteresis } from './navIndicator';
@@ -201,8 +200,8 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const { t } = useI18n();
   const { colors, fonts } = useTheme();
   const reduceMotion = useReducedMotion();
-  // Phone only (this bar): a short vibration on every press of a destination or of the round action, and a lighter tick
-  // while a finger dragged along the pill enters another destination (see useSlidingIndicator). «Vibrazione» in Settings.
+  // Phone only (this bar), in the Android app: a short vibration on every press of a destination or of the round action, and
+  // the same one while a finger dragged along the pill enters another destination (see useSlidingIndicator). «Vibrazione» in Settings.
   const haptic = useHaptics();
   // The round action enters/leaves with width, opacity and scale; the pill is flex: 1, so it widens/narrows with it.
   // The action stays mounted until its exit animation has finished (an interrupted one must not unmount it).
@@ -300,7 +299,7 @@ const pillGap = 0;
 // Taps, keyboard and screen readers keep using the item buttons; the drag is only a shortcut. Moves use the M3 Expressive
 // spatial spring; with reduced motion the indicator jumps. Web only: native pointer events on the pill's DOM node.
 function useSlidingIndicator<T extends string>(destinations: readonly Destination<T>[], index: number, onSelect: (value: T) => void, reduceMotion: boolean,
-  haptic: (kind?: HapticKind) => void) {
+  haptic: () => void) {
   const count = destinations.length;
   const ref = useRef<ComponentRef<typeof View>>(null);
   const [width, setWidth] = useState(0);
@@ -351,7 +350,7 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
     let start: { id: number; x: number; y: number } | null = null;
     let active = false;
     let swallowClick = false;
-    let slot: number | null = null; // destination under the finger during a drag: a tick each time it changes
+    let slot: number | null = null; // destination under the finger during a drag: a vibration each time it changes
     const at = (clientX: number) => {
       const rect = node.getBoundingClientRect();
       return slotAt(clientX - rect.left, rect.width, latest.current.destinations.length, pillPadding, pillGap);
@@ -379,7 +378,7 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
       const value = at(event.clientX);
       position.setValue(value);
       const next = slotWithHysteresis(value, slot);
-      if (next !== slot) { slot = next; latest.current.haptic('tick'); }
+      if (next !== slot) { slot = next; latest.current.haptic(); }
       setFocus(next);
     };
     const end = (event: PointerEvent, commit: boolean) => {
@@ -392,7 +391,7 @@ function useSlidingIndicator<T extends string>(destinations: readonly Destinatio
       setFocus(null);
       setLift(0);
       const { destinations: items, index: current, onSelect: select } = latest.current;
-      // The destination opened is the one highlighted (and ticked) under the finger, dead band included.
+      // The destination opened is the one highlighted (and vibrated) under the finger, dead band included.
       const target = commit ? slot ?? Math.round(at(event.clientX)) : current;
       if (target < 0) { fade(0); return; }
       moveTo(target);

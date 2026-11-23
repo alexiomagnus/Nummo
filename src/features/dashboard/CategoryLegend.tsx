@@ -2,6 +2,7 @@ import { memo, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
+import { useHaptics } from '../../components/Haptics';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import type { Category } from '../../domain/category';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
@@ -74,10 +75,11 @@ type RowProps = { item: Series; icon: Category['icon'] | null; colors: ChartColo
 const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, index, selected, onActive, onOpen }: RowProps) {
   const { t, formatAmount } = useI18n();
   const theme = useTheme();
+  const haptic = useHaptics(); // like the parts of the chart (23 November, user's request): stable, the row stays memoised
   const selectable = index !== undefined;
   return <View nativeID={selectable ? `dashboard-category-${item.key}` : undefined} role="listitem">
     <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
-      onPress={() => { if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
+      onPress={() => { haptic(); if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
       style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.secondaryContainer }, selectionFill]}>
       <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />

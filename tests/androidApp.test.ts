@@ -32,27 +32,21 @@ test('app Android: il ponte vale solo con tutti i metodi, mai nel browser', () =
   assert.equal(inAndroidApp(), false, 'nei test (e nel browser) non c’è');
 });
 
-test('app Android: vibrazione nativa senza durate, stesso intervallo minimo, mai un errore', () => {
+test('app Android: vibrazione nativa, un solo effetto, stesso intervallo minimo, mai un errore', () => {
   const { bridge, calls } = fakeBridge();
   let clock = 0;
-  const desktop = () => ({ matches: false });
-  // Even without the Vibration API and with no coarse pointer reported, the app has haptics.
-  assert.equal(hasHaptics(undefined, desktop, bridge), true);
-  const haptics = createHaptics(undefined, () => clock, desktop, bridge);
-  assert.equal(haptics('tap', true), true);
+  assert.equal(hasHaptics(bridge), true);
+  const haptics = createHaptics(bridge, () => clock);
+  assert.equal(haptics(true), true);
   clock += hapticGap - 1;
-  assert.equal(haptics('tick', true), false, 'troppo vicino al precedente');
+  assert.equal(haptics(true), false, 'troppo vicino al precedente');
   clock += 1;
-  assert.equal(haptics('tick', true), true);
+  assert.equal(haptics(true), true);
   clock += hapticGap;
-  assert.equal(haptics('tap', false), false, 'interruttore spento');
-  assert.deepEqual(calls, [['haptic', 'tap'], ['haptic', 'tick']]);
-  const vibrations: unknown[] = [];
-  const both = createHaptics({ vibrate: (p) => { vibrations.push(p); return true; } }, () => 0, desktop, bridge);
-  assert.equal(both('tap', true), true);
-  assert.deepEqual(vibrations, [], 'nell’app mai navigator.vibrate');
-  const broken = createHaptics(undefined, () => 0, desktop, fakeBridge({ haptic: () => { throw new Error('gone'); } }).bridge);
-  assert.equal(broken('tap', true), false);
+  assert.equal(haptics(false), false, 'interruttore spento');
+  assert.deepEqual(calls, [['haptic', 'tap'], ['haptic', 'tap']]);
+  const broken = createHaptics(fakeBridge({ haptic: () => { throw new Error('gone'); } }).bridge, () => 0);
+  assert.equal(broken(true), false);
 });
 
 test('app Android: barre di sistema col colore di sfondo del tema, solo #RRGGBB', () => {

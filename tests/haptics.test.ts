@@ -1,76 +1,56 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { canVibrate, createHaptics, hapticGap, hapticPatterns, hasHaptics } from '../src/theme/haptics.ts';
+import { createHaptics, hapticEffect, hapticGap, hasHaptics } from '../src/theme/haptics.ts';
 import { slotWithHysteresis } from '../src/components/navIndicator.ts';
 
-function recorder(accept: boolean | (() => boolean) = true) {
-  const calls: (number | number[])[] = [];
-  const nav = { vibrate: (pattern: number | number[]) => { calls.push(pattern); return typeof accept === 'function' ? accept() : accept; } };
-  return { calls, nav };
+// A fake bridge of the Android app that records the effects it is asked for.
+function recorder(fail = false) {
+  const calls: string[] = [];
+  const bridge = { haptic: (kind: string) => { if (fail) throw new Error('gone'); calls.push(kind); } };
+  return { calls, bridge };
 }
 
-// Primary pointer of a phone (finger) or of a desktop (mouse, touchpad).
-const touch = (query: string) => ({ matches: query === '(pointer: coarse)' });
-const desktop = (query: string) => ({ matches: query === '(pointer: fine)' });
+test('vibrazione: solo nell’app Android, mai nel browser', () => {
+  assert.equal(hasHaptics(undefined), false);
+  assert.equal(createHaptics(undefined, () => 0)(true), false);
+  assert.equal(hasHaptics(recorder().bridge), true);
+});
 
-test('vibrazione: un solo impulso breve per tipo, solo se attiva e disponibile', () => {
-  const { calls, nav } = recorder();
+test('vibrazione: lo stesso effetto ovunque, solo se attiva', () => {
+  const { calls, bridge } = recorder();
   let clock = 0;
-  const haptics = createHaptics(nav, () => clock, touch);
-  assert.equal(haptics('tap', true), true);
+  const haptics = createHaptics(bridge, () => clock);
+  assert.equal(haptics(true), true);
   clock += hapticGap;
-  assert.equal(haptics('tick', true), true);
-  // Always a single number (one pulse), never a pattern of several pulses; tick lighter than tap, both click-short.
-  assert.deepEqual(calls, [hapticPatterns.tap, hapticPatterns.tick]);
-  assert.ok(hapticPatterns.tick < hapticPatterns.tap && hapticPatterns.tap <= 20);
-  clock += hapticGap;
-  assert.equal(haptics('tap', false), false);
-  assert.equal(calls.length, 2);
+  assert.equal(haptics(false), false, 'interruttore spento');
+  assert.equal(haptics(true), true);
+  assert.deepEqual(calls, [hapticEffect, hapticEffect]);
+  assert.equal(hapticEffect, 'tap');
 });
 
 test('vibrazione: richieste ravvicinate scartate, mai un ronzio da impulsi in fila', () => {
-  const { calls, nav } = recorder();
-  let clock = 1000;
-  const haptics = createHaptics(nav, () => clock, touch);
-  assert.equal(haptics('tick', true), true);
-  clock += 16; // next frame of a fast drag
-  assert.equal(haptics('tick', true), false);
-  clock += hapticGap - 17; // still inside the gap from the accepted one
-  assert.equal(haptics('tap', true), false);
-  clock += 1;
-  assert.equal(haptics('tap', true), true);
-  assert.deepEqual(calls, [hapticPatterns.tick, hapticPatterns.tap]);
-});
-
-test('vibrazione: una richiesta rifiutata dal browser non blocca la successiva', () => {
-  let accept = false;
-  const { calls, nav } = recorder(() => accept);
+  const { calls, bridge } = recorder();
   let clock = 0;
-  const haptics = createHaptics(nav, () => clock, touch);
-  assert.equal(haptics('tap', true), false); // before the first user interaction
-  accept = true;
+  const haptics = createHaptics(bridge, () => clock);
+  assert.equal(haptics(true), true);
+  clock += hapticGap - 1;
+  assert.equal(haptics(true), false);
   clock += 1;
-  assert.equal(haptics('tap', true), true);
+  assert.equal(haptics(true), true);
   assert.equal(calls.length, 2);
 });
 
-test('vibrazione: browser senza Vibration API o che rifiuta, mai un errore', () => {
-  assert.equal(canVibrate(undefined), false);
-  assert.equal(canVibrate({}), false);
-  assert.equal(createHaptics(undefined, undefined, touch)('tap', true), false);
-  assert.equal(createHaptics({}, undefined, touch)('tap', true), false);
-  assert.equal(createHaptics({ vibrate: () => false }, undefined, touch)('tap', true), false);
-  assert.equal(createHaptics({ vibrate: () => { throw new Error('blocked'); } }, undefined, touch)('tap', true), false);
-});
-
-test('vibrazione: mai su desktop, anche se il browser offre la Vibration API', () => {
-  const { calls, nav } = recorder();
-  assert.equal(hasHaptics(nav, touch), true);
-  assert.equal(hasHaptics(nav, desktop), false);
-  assert.equal(hasHaptics(nav, undefined), false); // no media queries: unknown device, no haptics
-  assert.equal(hasHaptics({}, touch), false);
-  assert.equal(createHaptics(nav, () => 0, desktop)('tap', true), false);
-  assert.equal(calls.length, 0);
+test('vibrazione: un ponte che fallisce non è mai un errore e non blocca la richiesta successiva', () => {
+  let clock = 0;
+  const broken = createHaptics(recorder(true).bridge, () => clock);
+  assert.equal(broken(true), false);
+  let fail = true;
+  const calls: string[] = [];
+  const flaky = createHaptics({ haptic: (kind) => { if (fail) throw new Error('busy'); calls.push(kind); } }, () => clock);
+  assert.equal(flaky(true), false);
+  fail = false;
+  assert.equal(flaky(true), true, 'nessuna attesa dopo un fallimento');
+  assert.deepEqual(calls, ['tap']);
 });
 
 test('barra mobile: zona morta sul confine tra due destinazioni, un solo cambio per attraversamento', () => {

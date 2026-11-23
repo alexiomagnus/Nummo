@@ -26,7 +26,6 @@ export const english: Readonly<Record<string, string>> = {
   "Mostra fondi archiviati": "Show archived funds",
   "Nella pagina Fondi, i fondi che non usi più.": "On the Funds page, the funds you no longer use.",
   "Vibrazione": "Vibration",
-  "Una breve vibrazione quando interagisci con l'app. Su Android non vibra con il telefono in silenzioso o in Non disturbare.": "A short vibration when you interact with the app. On Android it does not vibrate while the phone is on silent or in Do Not Disturb.",
   "Una breve vibrazione quando interagisci con l'app. Segue le impostazioni di vibrazione di Android.": "A short vibration when you interact with the app. It follows Android's vibration settings.",
   "Questa versione dell'app Android offre solo la modalità Standard: aggiornala o usa Nummo nel browser.": "This version of the Android app offers only Standard mode: update it or use Nummo in the browser.",
   "Nella pagina Liste, le liste già registrate come spesa.": "On the Lists page, the lists already recorded as an expense.",

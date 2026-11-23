@@ -124,10 +124,10 @@ Due strade:
 - **Liste della spesa** con checklist, totale manuale e registrazione di una sola spesa per acquisto.
 - **Archiviazione e backup**, dal menu account: dove sono i dati, protezione locale, cambio modalità; CSV per consultazione (Excel/LibreOffice, con le colonne finali «Fondo» ed «Esercente») e backup JSON v11 (con i template), unico formato di ripristino, con lettori delle versioni precedenti.
 - Tema chiaro/scuro, colori personalizzabili e tre stili per le icone delle categorie (minimale, colorato o pixel art); layout per smartphone, tablet e desktop.
-- Vibrazione breve al tocco della barra in basso su smartphone, dei grafici di Analisi (blocchi e ciambella), di «Salva» e «Crea» e al cambio tra
-  Spese e Abbonamenti, accesa di base e
-  disattivabile in **Impostazioni → Funzionalità → Vibrazione**; solo su telefoni e tablet dove il browser lo permette (Chrome e simili su Android,
-  non Safari/iOS né Firefox), mai su computer, dove l'interruttore non compare. Con il telefono in silenzioso o in Non disturbare Android non vibra.
+- Vibrazione breve, **solo nell'app Android** (dal 23 novembre; nel browser nessuna vibrazione), sempre della stessa intensità: al tocco della
+  barra in basso, dei grafici di Analisi (blocchi, ciambella e righe della legenda), di «Salva» e «Crea» e al cambio tra Spese e Abbonamenti e
+  della ricorrenza; accesa di base e disattivabile in **Impostazioni → Funzionalità → Vibrazione**. Segue il «Feedback tattile» di Android e
+  funziona anche in silenzioso e in Non disturbare.
 - Tasto **Indietro** di Android (e del browser): chiude il dialogo o il menu aperto, altrimenti torna alla pagina visitata prima, un passo
   alla volta; esce dall'app solo da Nuova spesa senza pagine precedenti né nulla aperto.
 - **Impostazioni → Blocco dell'app**: Nummo chiede impronta, viso o il PIN del dispositivo all'apertura e quando ci torni dopo il tempo scelto

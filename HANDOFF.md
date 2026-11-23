@@ -180,6 +180,15 @@ rilasci».
   (dove compare «Esci»): servirebbe l'emulatore Auth; con una voce in più l'altezza attesa è circa 400, dentro la finestra anche a 360×640.
   Committato e inviato con il cambio tema; Hosting non pubblicato.
 
+## Vibrazione solo nell'app Android, stessa intensità, anche sulla legenda di Analisi — 23 novembre 2026
+
+- **Su richiesta.** Le righe della legenda di Analisi vibrano al tocco (`LegendRow`; erano state tolte il 21 novembre). Un solo effetto
+  ovunque (`hapticEffect` = `tap`, CLICK di Android): niente più `tick` più leggero per grafici e trascinamento sulla barra. Vibrazione
+  **solo nell'app Android** (`hasHaptics` = ponte presente): nel browser nessuna vibrazione e nessun interruttore «Vibrazione»; tolta
+  la riga sul silenzioso del browser (IT/EN). Nessuna modifica Kotlin né nuova versione dell'app: arriva all'app con l'Hosting.
+- **Verifica:** `npm run check` OK (**575/575**: 5 test della Vibration API tolti, 4 nuovi per il solo ponte). **Non provato** sul telefono (serve
+  l'Hosting pubblicato e poi l'app 0.3.1 sul Pixel 8: legenda, grafici, trascinamento sulla barra con la stessa vibrazione).
+
 ## Backup di collaudo v11 con template ed esercente — 23 novembre 2026
 
 - **Su richiesta.** `docs/testing/nummo-template-v11.json` (9 template `V11`, 8 spese, 4 categorie, 2 fondi di cui uno archiviato,

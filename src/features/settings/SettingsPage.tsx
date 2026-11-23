@@ -22,7 +22,6 @@ import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
 import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
 import { resetReceiptAi } from '../receipts/aiSettings';
-import { inAndroidApp } from '../../services/androidApp';
 import { hasHaptics } from '../../theme/haptics';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { SameWidthGroup, doubleWidth, useSameWidth } from '../../components/SameWidth';
@@ -32,12 +31,9 @@ import { resetAppLockDelay } from '../lock/appLockStore';
 import { defaultProfileRing, noProfileImage } from './profileImage';
 import { saveProfileImage, saveProfileRing } from './useProfileImage';
 
-// Read once: the primary pointer of a device does not change while the page is open.
+// Read once: only in the Android app (23 November, on request), where the vibration is Android's touch feedback.
 const vibrationAvailable = hasHaptics();
-// In the Android app the vibration is Android's touch feedback, which works on silent too (services/androidApp.ts).
-const vibrationNote = inAndroidApp()
-  ? "Una breve vibrazione quando interagisci con l'app. Segue le impostazioni di vibrazione di Android."
-  : "Una breve vibrazione quando interagisci con l'app. Su Android non vibra con il telefono in silenzioso o in Non disturbare.";
+const vibrationNote = "Una breve vibrazione quando interagisci con l'app. Segue le impostazioni di vibrazione di Android.";
 
 type Props = {
   preferences: Preferences;
@@ -183,7 +179,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
           <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
-          {/* Only where the device can vibrate (finger as primary pointer): never on desktop (22 November, on request). */}
+          {/* Only in the Android app: never in the browser (23 November, on request). */}
           {vibrationAvailable && <SwitchRow label={t("Vibrazione")} supporting={t(vibrationNote)}
             value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />}
         </Card>
