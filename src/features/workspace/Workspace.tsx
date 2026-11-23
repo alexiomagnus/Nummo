@@ -122,7 +122,7 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   // The device archive needs no network: «online» only gates what waits for a server.
   const [browserOnline, setOnline] = useState(navigator.onLine);
   const online = local || browserOnline;
-  const [today, setToday] = useState(todayInRome());
+  const [today, setToday] = useState(() => todayInRome());
   useEffect(() => {
     const change = () => { setOnline(navigator.onLine); setToday(todayInRome()); };
     window.addEventListener('online', change); window.addEventListener('offline', change); window.addEventListener('focus', change);

@@ -1,5 +1,5 @@
 import { profileAvatars, type ProfileAvatarId } from './profileAvatars.ts';
-import { accents, buildScheme, type Accent } from '../../theme/palette.ts';
+import { accentSwatches, accents, type Accent } from '../../theme/palette.ts';
 
 // Picture of the account button: nothing (Standard: the person glyph; Advanced: the Google photo, or the person glyph
 // when there is none), one of the preset avatars, or a photo chosen by the user. Presentation only, kept in this browser
@@ -55,7 +55,8 @@ export function parseProfileRing(raw: string | null): ProfileRing {
 
 export const serializeProfileRing = (ring: ProfileRing): string | null => ring === defaultProfileRing ? null : ring;
 
-// `appColor`: the current main colour of the app (`colors.primary`).
+// `appColor`: the current accent as shown (`accentSwatchColor` of the theme). The ring is decoration, not text: it takes the
+// accents' shown colours (accentSwatches), not the darker text-safe primary of the light scheme (23 November).
 export function profileRingColor(ring: ProfileRing, appColor: string, dark: boolean): string {
-  return ring === 'app' ? appColor : buildScheme(ring, 'mono', dark).primary;
+  return ring === 'app' ? appColor : accentSwatches(ring, 'mono', dark)[0]!;
 }

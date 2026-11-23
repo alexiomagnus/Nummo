@@ -13,7 +13,7 @@ import { SwitchRow } from '../../components/SwitchRow';
 import { PageHeader } from '../../components/PageHeader';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { accentLabels, accents, buildScheme, type ColorMode } from '../../theme/palette';
+import { accentLabels, accentSwatches, accents, type ColorMode } from '../../theme/palette';
 import { layout, radius, spacing } from '../../theme/tokens';
 import type { FontChoice, Preferences, ThemeChoice } from './preferences';
 import type { TimeFormat } from '../../domain/timeFormat';
@@ -120,9 +120,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
         <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
           {accents.map((accent) => {
-            const scheme = buildScheme(accent, preferences.colorMode, dark);
             const selected = accent === preferences.accent;
-            const dots = [scheme.primary, ...(preferences.colorMode === 'palette' && accent !== 'graphite' ? [scheme.secondary, scheme.tertiary] : [])];
+            // Shown colours of the accent (accentSwatches): in light the dots were the text-safe roles, far too dark.
+            const dots = accentSwatches(accent, preferences.colorMode, dark);
             return (
               <StateLayerPressable key={accent} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="radio"
                 aria-checked={selected} accessibilityLabel={`${t(accentLabels[accent])}${selected ? t(", selezionato") : ''}`}

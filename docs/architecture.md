@@ -1522,3 +1522,18 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   barra mobile anima ancora `width` con `Animated` JS (un ricalcolo del layout per fotogramma per 250 ms): accettato, nessun artefatto
   osservato.
 
+## Colori degli accenti nel tema chiaro — 23 novembre 2026
+
+- **Segnalazione dell'utente:** nel tema chiaro i colori dei selettori («Colore», «Colore dell'anello») erano troppo scuri.
+- **Causa:** primario, secondario e terziario chiari avevano una luminosità HSL fissa (26–30). Per raggiungere 4,5:1 sul contenitore più
+  scuro (tono 83, dalla revisione del chiaro) bastava per la menta, ma blu, viola, rosa e grafite, meno luminosi a parità di HSL, finivano a
+  7–8:1: blu notte, prugna, granata.
+- **Decisione:** per ogni tinta il tono più chiaro che tiene 4,6:1 su contenitore più scuro, scheda piena e sotto il bianco (`readable` in
+  `generate`). L'ambra resta brunastra come testo: un ambra leggibile su fondi ambrati non può essere più chiaro. Per questo i pallini di
+  «Colore» e l'anello del profilo (decorativi, WCAG non testuale 3:1) usano `accentSwatches`: nel chiaro il tono più chiaro e vivo con 3,1:1
+  sullo sfondo, come i colori seme di un selettore Material You; nello scuro i ruoli dello schema, già chiari e vivi. «Colore dell'app»
+  dell'anello è `accentSwatchColor` del tema, non più `primary`. Menta monocolore chiara (valori in `tokens.ts`) invariata: era già al limite.
+- **Tema scuro invariato.** Una revisione come quella del chiaro (contenitori più saturi, superfici a passi più ampi, primario più vivo,
+  schede piene) è stata provata lo stesso giorno e ritirata su richiesta dell'utente: colori troppo accesi. Lo scuro resta quello di prima,
+  schede col contorno; il chiaro cambia solo nei ruoli degli accenti.
+

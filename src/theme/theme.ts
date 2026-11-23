@@ -1,5 +1,5 @@
 import { MD3DarkTheme, MD3LightTheme, configureFonts, type MD3Theme } from 'react-native-paper';
-import { buildScheme, cardColor, dialogColors, positiveColors } from './palette';
+import { accentSwatches, buildScheme, cardColor, dialogColors, positiveColors } from './palette';
 import { paperRoundness, typefaces } from './tokens';
 import type { Preferences } from '../features/settings/preferences';
 
@@ -14,6 +14,8 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
     panel: dark ? s.surfaceContainerLow : s.surfaceContainerLowest,
     positive: dark ? positiveColors.dark : positiveColors.light,
     card: cardColor(s, dark),
+    // The accent as shown, not read (avatar ring «Colore dell'app»): see accentSwatches.
+    accentSwatch: accentSwatches(preferences?.accent ?? 'mint', 'mono', dark)[0]!,
     ...dialogColors(s, dark),
   };
   return {
@@ -45,5 +47,7 @@ export const panelColor = (colors: object): string => (colors as { panel?: strin
 export const dialogColor = (colors: object): string => (colors as { dialog: string }).dialog;
 // Reads the custom `card` fill of the expense cards (light theme), null where they stay outlined (dark), see palette.ts.
 export const cardFill = (colors: object): string | null => (colors as { card?: string | null }).card ?? null;
+// Reads the custom `accentSwatch` colour (the current accent where it is only shown), see accentSwatches in palette.ts.
+export const accentSwatchColor = (colors: object): string => (colors as { accentSwatch: string }).accentSwatch;
 // Reads the custom `positive` colour (money coming in), see palette.ts.
 export const positiveColor = (colors: object): string => (colors as { positive: string }).positive;

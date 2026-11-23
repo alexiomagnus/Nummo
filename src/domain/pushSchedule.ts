@@ -34,8 +34,16 @@ export function deviceTimeZone(): string {
 // The zone to use for a stored choice: «auto» = the device's, otherwise the chosen IANA name.
 export const resolveTimeZone = (choice: string): string => (choice === autoTimeZone ? deviceTimeZone() : choice);
 
-const zoneParts = (zone: string, at: number) => Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: zone, hourCycle: 'h23',
-  year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(at)).map((p) => [p.type, p.value]));
+// One formatter per zone: the schedule converts many instants in the same zone.
+const zoneClocks = new Map<string, Intl.DateTimeFormat>();
+const zoneParts = (zone: string, at: number) => {
+  let clock = zoneClocks.get(zone);
+  if (!clock) {
+    clock = new Intl.DateTimeFormat('en-GB', { timeZone: zone, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    zoneClocks.set(zone, clock);
+  }
+  return Object.fromEntries(clock.formatToParts(new Date(at)).map((p) => [p.type, p.value]));
+};
 // Minutes east of UTC in a zone at an instant (Rome: CET +60, CEST +120).
 function zoneOffset(zone: string, at: number): number {
   const parts = zoneParts(zone, at);

@@ -77,6 +77,28 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## Colori degli accenti nel chiaro, tastiera lenta alla prima apertura — 23 novembre 2026
+
+- **Su richiesta** (screenshot di «Colore» e «Colore dell'anello»: colori del tema chiaro troppo scuri; tema scuro da migliorare come il
+  chiaro; tastiera che su Android ci mette alcuni secondi la prima volta).
+- **Colori chiari:** primario, secondario e terziario generati prendono per ogni tinta il tono più chiaro con 4,6:1 (contenitore più
+  scuro, scheda, bianco sopra): Blu `#1B3C6A` → `#27589D`, Viola `#401E66` → `#7035B3`, Rosa `#681D33` → `#9C2B4D`, Grafite
+  `#3D4148` → `#535962`, Ambra `#6A4A1B` → `#78541E` (più chiaro non si legge come testo). Pallini di «Colore» e anello (anche «Colore
+  dell'app») con `accentSwatches`: colori vivi a 3:1 sullo sfondo nel chiaro. Menta monocolore chiara invariata.
+- **Tema scuro:** una revisione come quella del chiaro (contenitori più saturi, superfici più distinte, primario più vivo, schede piene) è
+  stata fatta e poi **ritirata su richiesta** («colori troppo accesi»): lo scuro è identico a prima (tutti i 12 schemi confrontati con
+  `828babf`, schede col contorno). Dettagli in `docs/architecture.md`.
+- **Tastiera (misure, nessuna correzione risolutiva):** emulatore Android 17 con l'app 0.3.2 sul sito di produzione, log `ImeTracker`:
+  la pagina chiede la tastiera 75–90 ms dopo il tocco, ma 1279 ms se si tocca 2 s dopo l'apertura (avvio della pagina ancora in corso);
+  quando Gboard deve ricreare la sua vista (`onCreateInputView`) passano ~1,5 s prima di `onKeyboardViewShown` (Gboard caldo: 335–540 ms),
+  costo del sistema uguale in ogni app. In Chromium con CPU 4× e 2084 spese (backup generato, fittizio) l'avvio cresce di ~200 ms rispetto
+  all'archivio vuoto; dal momento in cui il modulo è attivo il focus arriva in 67–157 ms. Il tempo d'avvio è rendering React (2,5 s di
+  script con CPU 4×; layout 118 ms, stili 261 ms). Provata e ritirata la misura delle etichette della barra col canvas (nessun guadagno).
+  Tenuti, senza guadagno misurabile: `useState(() => todayInRome())` in `Workspace.tsx`, formattatori `Intl` in cache in `policy.ts`,
+  `expense.ts`, `timeZones.ts`, `pushSchedule.ts`. **Da chiedere all'utente:** app o Chrome, quanto presto dopo l'apertura, Standard o Avanzata.
+- **Verifica:** `npm run check` OK (**585/585**, typecheck, build demo) dopo il ritiro della revisione dello scuro. Chromium headless su `dist-demo` 412×915: Spese e
+  Impostazioni in chiaro e scuro con Ambra/Palette, Blu e Menta, nessun errore JS. **Non provato** su telefono. Non committato.
+
 ## Template dopo template: importo ed esercente del precedente non restano — 23 novembre 2026
 
 - **Su richiesta** (opzione 2 tra tre proposte: togliere solo ciò che veniva dal template precedente). `templateOptionalFields` in

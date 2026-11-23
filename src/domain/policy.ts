@@ -19,10 +19,12 @@ export function clipToLength(text: string, max: number): string {
   return chars.length > max ? chars.slice(0, max).join('') : text;
 }
 
+// One formatter for every call: building an Intl.DateTimeFormat costs far more than using it, and today's date is asked
+// for many times while the workspace first renders (startup profile, 23 November: the largest self time of our code).
+let romeDay: Intl.DateTimeFormat | null = null;
 export function todayInRome(now = new Date()): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: expensePolicy.timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(now);
+  romeDay ??= new Intl.DateTimeFormat('en-GB', { timeZone: expensePolicy.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' });
+  const parts = romeDay.formatToParts(now);
   const part = (type: string) => parts.find((item) => item.type === type)!.value;
   return `${part('year')}-${part('month')}-${part('day')}`;
 }

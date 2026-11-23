@@ -138,8 +138,10 @@ export function validateDraft(draft: ExpenseDraft, categories: readonly Category
 }
 
 // Display only; never feed the result back into calculations.
+let euros: Intl.NumberFormat | null = null;
 export function formatAmountMinor(amountMinor: number): string {
-  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: expensePolicy.currency }).format(amountMinor / 100);
+  euros ??= new Intl.NumberFormat('it-IT', { style: 'currency', currency: expensePolicy.currency });
+  return euros.format(amountMinor / 100);
 }
 
 export type PriceEdit = Readonly<{

@@ -11,6 +11,7 @@ import { motion, radius, spacing } from '../../theme/tokens';
 import { prepareAvatar } from '../receipts/image';
 import { profileAvatarLabels, profileAvatars, profileAvatarSvg } from './profileAvatars';
 import { accentLabels } from '../../theme/palette';
+import { accentSwatchColor } from '../../theme/theme';
 import { maxPhotoLength, noProfileImage, profileRingColor, profileRings, type ProfileImage, type ProfileRing } from './profileImage';
 import { saveProfileImage, saveProfileRing, useProfileImage, useProfileRing } from './useProfileImage';
 
@@ -73,7 +74,7 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
   const { colors, dark } = useTheme();
   const image = useProfileImage(scope);
   const ringChoice = useProfileRing(scope);
-  const ringColor = profileRingColor(ringChoice, colors.primary, dark);
+  const ringColor = profileRingColor(ringChoice, accentSwatchColor(colors), dark);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +122,7 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
             return <StateLayerPressable key={choice} layerColor={colors.onSurface} radius={radius.pill} accessibilityRole="radio" aria-checked={selected}
               accessibilityLabel={`${label}${selected ? t(", selezionato") : ''}`} {...({ title: label } as object)} onPress={() => chooseRing(choice)}
               style={[styles.option, fillTransition, { borderColor: selected ? colors.onSurface : 'transparent' }]}>
-              <View style={[styles.swatch, { backgroundColor: profileRingColor(choice, colors.primary, dark) }]} />
+              <View style={[styles.swatch, { backgroundColor: profileRingColor(choice, accentSwatchColor(colors), dark) }]} />
             </StateLayerPressable>;
           })}
         </View>

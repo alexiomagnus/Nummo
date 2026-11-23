@@ -46,7 +46,7 @@ import { getDatabase, warmUpServices } from './src/services/firebase';
 import { checkOwnerAccess, type OwnerAccess } from './src/services/ownerAccess';
 import { GlobalStyle } from './src/theme/GlobalStyle';
 import { initialSafeAreaMetrics } from './src/theme/initialMetrics';
-import { createTheme } from './src/theme/theme';
+import { accentSwatchColor, createTheme } from './src/theme/theme';
 import { fadeTransition } from './src/theme/motion';
 import { motion, spacing } from './src/theme/tokens';
 import { useReducedMotion } from './src/theme/useSizeClass';
@@ -253,7 +253,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   // The picture chosen for this account in Settings (since 22 November); nothing chosen: the Google photo, as before.
   const chosenAvatar = useProfileImage(session.status === 'signed-in' ? session.user.uid : 'local');
   // The ring marks the Advanced mode; its colour is chosen in Settings (22 November), the app's main colour by default.
-  const ringColor = profileRingColor(useProfileRing(session.status === 'signed-in' ? session.user.uid : 'local'), theme.colors.primary, theme.dark);
+  const ringColor = profileRingColor(useProfileRing(session.status === 'signed-in' ? session.user.uid : 'local'), accentSwatchColor(theme.colors), theme.dark);
   const advancedSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) =>
     renderSettings(onDone, archiveSections, onResetArchive, session.status === 'signed-in' ? { scope: session.user.uid, googlePhoto: session.user.photoURL } : undefined);
   const account = session.status === 'signed-in'

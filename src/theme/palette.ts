@@ -54,17 +54,31 @@ function generate(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
   // text are firmer and the primary more vivid (M3 Expressive). The error red of the light scheme is a little deeper
   // (tokens.ts) so it keeps 4.5:1 on the deepest container.
   if (!dark) {
+    // Accent roles (primary, secondary, tertiary: buttons, text, swatches, the avatar ring) take, for each hue, the lightest
+    // tone that still reads at 4.5:1 (plus a small margin) on the deepest surface container, on the filled expense card and
+    // under white text. A fixed HSL lightness, as before (26–30), was right for mint but far too dark for blue, violet, rose
+    // and graphite (7–8:1: navy, plum, maroon; user's report, 23 November), whose luminance is lower at the same lightness.
+    const primaryContainer = p(78, 76);
+    const surfaceContainerHighest = p(26, 83);
+    const grounds = [surfaceContainerHighest, mixColors(primaryContainer, '#FFFFFF', 0.5), '#FFFFFF'];
+    const readable = (make: (l: number) => string) => {
+      for (let l = 60; l > 10; l -= 0.5) {
+        const color = make(l);
+        if (grounds.every((ground) => contrastRatio(color, ground) >= accentContrast)) return color;
+      }
+      return make(10);
+    };
     return {
       ...common,
-      primary: p(60, 26), onPrimary: '#FFFFFF', primaryContainer: p(78, 76), onPrimaryContainer: p(90, 9),
-      secondary: sec(28, 30), onSecondary: '#FFFFFF', secondaryContainer: sec(50, 77), onSecondaryContainer: sec(55, 10),
-      tertiary: ter(45, 30), onTertiary: '#FFFFFF', tertiaryContainer: ter(68, 76), onTertiaryContainer: ter(85, 9),
+      primary: readable((l) => p(60, l)), onPrimary: '#FFFFFF', primaryContainer, onPrimaryContainer: p(90, 9),
+      secondary: readable((l) => sec(28, l)), onSecondary: '#FFFFFF', secondaryContainer: sec(50, 77), onSecondaryContainer: sec(55, 10),
+      tertiary: readable((l) => ter(45, l)), onTertiary: '#FFFFFF', tertiaryContainer: ter(68, 76), onTertiaryContainer: ter(85, 9),
       background: p(45, 95), onBackground: p(16, 9),
       surface: p(45, 95), onSurface: p(16, 9), surfaceVariant: p(22, 82), onSurfaceVariant: p(16, 22),
       outline: p(10, 36), outlineVariant: p(18, 66),
       inverseSurface: p(10, 18), inverseOnSurface: p(22, 94), inversePrimary: p(45, 72),
       surfaceContainerLowest: '#FFFFFF', surfaceContainerLow: p(36, 92), surfaceContainer: p(32, 89),
-      surfaceContainerHigh: p(28, 86), surfaceContainerHighest: p(26, 83),
+      surfaceContainerHigh: p(28, 86), surfaceContainerHighest,
     };
   }
   return {
@@ -81,6 +95,30 @@ function generate(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
   };
 }
 
+// Colours that stand for an accent where it is only shown, never read as text: the dots of «Colore» and the avatar ring
+// (user's report, 23 November: in light they were the text-safe primary, navy, plum, maroon and brown). In light each hue
+// takes the lightest vivid tone with 3:1 on the background (WCAG non-text contrast), like the seed colours of a Material
+// You picker; in dark the scheme's own primary, secondary and tertiary, already light and vivid there. One colour, or three
+// in palette mode (graphite has one hue only).
+export function accentSwatches(accent: Accent, mode: ColorMode, dark: boolean): string[] {
+  const scheme = buildScheme(accent, mode, dark);
+  const multi = mode === 'palette' && accent !== 'graphite';
+  if (dark) return multi ? [scheme.primary, scheme.secondary, scheme.tertiary] : [scheme.primary];
+  const { hue, sat } = accentSpec[accent];
+  const vivid = (h: number, s: number) => {
+    for (let l = 70; l > 15; l -= 0.5) {
+      const color = hex(h, s * sat, l);
+      if (contrastRatio(color, scheme.background) >= swatchContrast) return color;
+    }
+    return hex(h, s * sat, 15);
+  };
+  const first = vivid(hue, 72);
+  return multi ? [first, vivid((hue + 45) % 360, 60), vivid((hue + 150) % 360, 66)] : [first];
+}
+
+// 3:1 (non-text contrast) with a margin for rounding.
+const swatchContrast = 3.1;
+
 // Mint + mono is the original identity and keeps its hand-tuned values. In mono mode the tertiary
 // roles are the neutral surface-variant pair, so icon tiles stay tonal; in palette mode they carry a hue.
 export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
@@ -93,6 +131,20 @@ export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean): Sch
   }
   return scheme;
 }
+
+// WCAG 2.x contrast ratio of two #RRGGBB colours.
+export function contrastRatio(a: string, b: string): number {
+  const luminance = (color: string) => {
+    const [r, g, b] = [0, 1, 2].map((i) => parseInt(color.slice(1 + i * 2, 3 + i * 2), 16) / 255)
+      .map((value) => (value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+  };
+  const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (high! + 0.05) / (low! + 0.05);
+}
+
+// Target for the accent roles of the light scheme: AA (4.5:1) with a margin for rounding.
+const accentContrast = 4.6;
 
 // Mix of two #RRGGBB colours (`weight` of the first).
 export function mixColors(a: string, b: string, weight: number): string {

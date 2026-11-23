@@ -35,9 +35,18 @@ export function timeZoneLabel(zone: string, at: Date = new Date()): string {
   } catch { return city; }
 }
 
+// One formatter per zone (the picker asks for every common zone, each render).
+const zoneClocks = new Map<string, Intl.DateTimeFormat>();
+const zoneClock = (zone: string): Intl.DateTimeFormat => {
+  let clock = zoneClocks.get(zone);
+  if (!clock) {
+    clock = new Intl.DateTimeFormat('en-GB', { timeZone: zone, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    zoneClocks.set(zone, clock);
+  }
+  return clock;
+};
 const offsetMinutes = (zone: string, at: Date): number => {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: zone, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit' }).formatToParts(at).map((p) => [p.type, p.value]));
+  const parts = Object.fromEntries(zoneClock(zone).formatToParts(at).map((p) => [p.type, p.value]));
   return (Date.UTC(+parts.year!, +parts.month! - 1, +parts.day!, +parts.hour!, +parts.minute!) - Math.floor(at.getTime() / 60_000) * 60_000) / 60_000;
 };
 
