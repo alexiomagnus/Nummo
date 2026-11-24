@@ -66,5 +66,7 @@ export const iconShapes = {
   // Enlarge / reduce a photo (receipt scan): four corners pointing out / in.
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   shrink: '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
+  // Torch of the camera (receipt scan): a lightning bolt.
+  flash: '<path d="M13 3 5 13.5h6L10 21l9-11h-6l1-7Z"/>',
   copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
 } as const;

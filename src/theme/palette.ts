@@ -160,4 +160,19 @@ export const cardColor = (scheme: Scheme, dark: boolean): string | null =>
 // Semantic green for money coming in (additions, recharges), the counterpart of `error` for money going out. Fixed, not tied to
 // the accent: the meaning must not change with the chosen colour. Contrast ≥ 4.5:1 on every surface (tests/theme.test.ts).
 export const positiveColors = { light: '#18692C', dark: '#7DD992' } as const;
+// Camera viewfinder of the receipt scan (CameraViewfinder.tsx): always dark, in either theme, like a camera app, so the
+// picture is judged against black and the white controls read over any frame. Fixed values, not tied to the accent.
+export const viewfinderColors = {
+  background: '#0B0A08',
+  sheet: '#000000',
+  onMedia: '#FFFFFF',
+  onMediaMuted: 'rgba(255, 255, 255, 0.72)',
+  control: 'rgba(255, 255, 255, 0.16)',
+  controlActive: '#FFFFFF',
+  onControlActive: '#0B0A08',
+  ring: 'rgba(255, 255, 255, 0.42)',
+  handle: 'rgba(255, 255, 255, 0.5)',
+  badge: 'rgba(11, 10, 8, 0.55)',
+  shade: 'rgba(11, 10, 8, 0.62)',
+} as const;
 

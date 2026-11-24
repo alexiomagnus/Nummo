@@ -117,6 +117,26 @@ di quel giorno e la verifica su `d196dc9`.
   `npm run check` OK (**596/596**, insieme alle notifiche). Committato in `a8f694f`, inviato e pubblicato su Hosting (bundle
   `index-ab8ddc12…` e icone online identici byte per byte). APK non ricompilato.
 
+## Fotocamera della scansione come livello immersivo — 24 novembre 2026
+
+- **Su richiesta** (da riquadro centrato con «Annulla»/«Scatta» impilati a foglio immersivo ancorato in basso). Nuovo
+  `src/features/receipts/CameraViewfinder.tsx`: portale in `#root` (`position: absolute; inset: 0` = l'area visibile, anche con il
+  visual viewport di iOS; lo schermo di blocco lo rende `inert`), z-index 1100; fascia scura in alto (24 %, safe area) con «Scansiona
+  scontrino» e la torcia solo se `getCapabilities().torch` (stato in `ScanReceiptDialog`, `applyConstraints({ advanced: [{ torch }] })`);
+  foglio `flex: 1` con angoli superiori `radius.dialog` (28), `<video>` in `object-fit: cover` a tutta superficie, maniglia 38×4,
+  suggerimento in pillola con `backdrop-filter: blur(10px)`; in fondo, su un gradiente, Indietro (48, sfocato 12), scatto (72, disco bianco
+  con anello traslucido) e galleria (48). Colori fissi scuri in `viewfinderColors` (`theme/palette.ts`), icona `flash` in `SvgIcon`.
+  `useEscape` (Escape e Indietro chiudono la fotocamera), `overrideDocumentChrome` (barra di stato scura), focus su Indietro e ritorno
+  all'origine. Lo scatto è invariato (fotogramma nativo intero); i tracciati si fermano come prima (scatto, chiusura, smontaggio). La
+  galleria dalla fotocamera la chiude solo quando si sceglie un file. Sotto il livello il dialogo resta al passo da cui si è partiti
+  (`shown`). Testi nuovi: «Accendi la torcia»/«Spegni la torcia» (con l'inglese). A ogni dimensione copre tutta l'app, come chiesto
+  («fullscreen»), non solo il pannello come gli schermi da medium.
+- **Verifica:** `npm test` OK (**596/596**), typecheck, `build:demo`. Chromium headless con fotocamera finta su `dist-demo`, Standard,
+  scuro, 390×844 e 1440×900: livello 390×844 / 1440×900 dentro `#root`, foglio da 203 / 216 alto 641 / 684 con angoli 28/28/0, video
+  `cover` a 1920×1080 nativi, pulsanti 48/72/48, focus su «Torna indietro», `theme-color` #0B0A08; Escape → livello chiuso, dialogo
+  al passo «Scegli»; «Scatta» → foto nell'anteprima e «Scansiona»; nessun errore JS. **Non provati:** torcia reale (Chrome Android),
+  iPhone, app Android (WebView), galleria aperta dalla fotocamera su telefono. Non committato.
+
 ## Notifiche: forma uniforme, tocco con ripiego, iOS solo dalla Home, modello assetlinks — 24 novembre 2026
 
 - **Su richiesta** (audit e standardizzazione delle notifiche push). Scelte dell'utente: `icon` resta il PNG trasparente

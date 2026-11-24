@@ -1013,6 +1013,8 @@ export const english: Readonly<Record<string, string>> = {
   "Inquadra tutto lo scontrino, ben illuminato e senza pieghe.": "Frame the whole receipt, well lit and flat.",
   "Avvio della fotocamera…": "Starting the camera…",
   "Scatta": "Take photo",
+  "Accendi la torcia": "Turn on the torch",
+  "Spegni la torcia": "Turn off the torch",
   "Fotocamera non autorizzata: consenti l’accesso nel browser oppure scegli un’immagine.": "Camera not allowed: grant access in the browser or choose an image.",
   "Nessuna fotocamera trovata: scegli un’immagine.": "No camera found: choose an image.",
   "Non è stato possibile usare la fotocamera: scegli un’immagine.": "The camera could not be used: choose an image.",

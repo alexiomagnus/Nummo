@@ -20,6 +20,7 @@ import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { ExpenseFields } from '../expenses/ExpenseFields';
 import { useReceiptAi } from './aiSettings';
+import { CameraViewfinder } from './CameraViewfinder';
 import { prepareImage, toBase64 } from './image';
 
 type Props = {
@@ -82,7 +83,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
-  const stopCamera = () => { stream.current?.getTracks().forEach((track) => track.stop()); stream.current = null; setCameraReady(false); };
+  // Torch of the back camera, where the browser reports one (Chrome on Android): null = no button.
+  const [torch, setTorch] = useState<boolean | null>(null);
+  const stopCamera = () => { stream.current?.getTracks().forEach((track) => track.stop()); stream.current = null; setCameraReady(false); setTorch(null); };
   useEffect(() => stopCamera, []);
   const openCamera = async () => {
     // Only a browser without getUserMedia (or a page outside a secure context) falls back to the system camera.
@@ -94,6 +97,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       const media = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
       stream.current = media;
       if (video.current) { video.current.srcObject = media; await video.current.play().catch(() => {}); }
+      const track = media.getVideoTracks()[0];
+      const capabilities = track?.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean }) | undefined;
+      setTorch(capabilities?.torch === true ? false : null);
       setCameraReady(true);
     } catch (problem) {
       stopCamera();
@@ -103,7 +109,21 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       setStage(back === 'ready' && image ? 'ready' : 'pick');
     }
   };
+  // The preview lives in the camera layer, mounted with the step: a stream that arrived before it is attached here.
+  useEffect(() => {
+    const element = video.current;
+    if (stage !== 'camera' || !element || !stream.current || element.srcObject === stream.current) return;
+    element.srcObject = stream.current;
+    void element.play().catch(() => {});
+  }, [stage, cameraReady]);
   const closeCamera = () => { stopCamera(); setStage(image ? 'ready' : 'pick'); };
+  const toggleTorch = () => {
+    const track = stream.current?.getVideoTracks()[0];
+    if (!track || torch === null) return;
+    const next = !torch;
+    // `torch` is not in the DOM typings yet; a refusal leaves the state as it was.
+    track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] }).then(() => setTorch(next), () => {});
+  };
   const shoot = async () => {
     const source = video.current;
     if (!source || !source.videoWidth) return;
@@ -179,7 +199,13 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
 
   const inputs = <>
     <input ref={camera} type="file" accept="image/*" capture="environment" hidden onChange={(event) => { void choose(event.target.files?.[0]); event.target.value = ''; }} />
-    <input ref={gallery} type="file" accept="image/*" hidden onChange={(event) => { void choose(event.target.files?.[0]); event.target.value = ''; }} />
+    {/* Also opened from the live camera: a picture chosen there closes the camera first. */}
+    <input ref={gallery} type="file" accept="image/*" hidden onChange={(event) => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (file && stream.current) closeCamera();
+      void choose(file);
+    }} />
   </>;
   // Always one row, the two buttons in equal halves (on phones compact, with short labels: the full ones did not fit half
   // of a 390 px screen; the full name for screen readers), 12 apart as «Annulla» and «Scansiona» under them, so the two
@@ -196,7 +222,10 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
 
   let body;
   let actions;
-  if (stage === 'pick') {
+  // The live camera is a layer of its own over everything (CameraViewfinder); under it the dialog keeps the step it
+  // came from, so closing the camera shows it unchanged.
+  const shown: Stage = stage === 'camera' ? (image ? 'ready' : 'pick') : stage;
+  if (shown === 'pick') {
     body = <>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         {t("Fotografa o carica lo scontrino: Nummo propone importo, data, descrizione, esercente e categoria.")}</Text>
@@ -205,19 +234,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>;
     actions = <CancelButton onPress={onClose}>{t("Annulla")}</CancelButton>;
-  } else if (stage === 'camera') {
-    body = <>
-      <View style={[styles.picture, styles.camera, { backgroundColor: colors.surfaceVariant }]}>
-        <video ref={video} autoPlay playsInline muted aria-label={t("Anteprima della fotocamera")} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-      </View>
-      <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }} accessibilityLiveRegion="polite">
-        {cameraReady ? t("Inquadra tutto lo scontrino, ben illuminato e senza pieghe.") : t("Avvio della fotocamera…")}</Text>
-    </>;
-    actions = [
-      <CancelButton key="cancel" onPress={closeCamera}>{t("Annulla")}</CancelButton>,
-      <ConfirmButton key="shoot" disabled={!cameraReady} onPress={() => void shoot()}>{t("Scatta")}</ConfirmButton>,
-    ];
-  } else if (stage === 'ready') {
+  } else if (shown === 'ready') {
     // Photo (with its zoom icon), then the tonal photo buttons, then «Annulla»/«Scansiona»: every row in two equal halves,
     // so the buttons line up; tonal, not outlined, so they do not look like «Annulla» (user's request, 22 November).
     body = <>
@@ -231,7 +248,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       <CancelButton key="cancel" onPress={onClose} style={styles.equal}>{t("Annulla")}</CancelButton>,
       <ConfirmButton key="scan" disabled={preparing || !aiReady} onPress={start} style={styles.equal}>{failed ? t("Riprova") : t("Scansiona")}</ConfirmButton>,
     ];
-  } else if (stage === 'consent') {
+  } else if (shown === 'consent') {
     body = <>
       <Text variant="titleSmall">{t("Inviare la foto a {p0}?", { p0: provider })}</Text>
       <Text variant="bodyMedium">{t("Con la scansione avanzata la foto dello scontrino esce da questo dispositivo e viene inviata a {p0} ({p1}), che la tratta secondo le proprie condizioni. Nummo non la conserva.", { p0: provider, p1: ai.destination })}</Text>
@@ -241,7 +258,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
       <CancelButton key="cancel" onPress={() => setStage('ready')}>{t("Annulla")}</CancelButton>,
       <ConfirmButton key="consent" onPress={() => { ai.giveConsent(); void run(); }}>{t("Acconsento e invio")}</ConfirmButton>,
     ];
-  } else if (stage === 'working') {
+  } else if (shown === 'working') {
     body = <>
       {picture}
       <View style={styles.block} accessibilityLiveRegion="polite">
@@ -311,6 +328,9 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     {/* `actions` is a button or an array of keyed buttons (or a keyed View holding a pair), never a Fragment: Dialog.Actions clones each child to add
         `compact` and its margin, and a Fragment cannot take them («Invalid prop `compact` supplied to React.Fragment»). */}
     {actions && <Dialog.Actions style={dialogActionsRow}>{actions}</Dialog.Actions>}
+    {stage === 'camera' && <CameraViewfinder videoRef={video} ready={cameraReady} galleryDisabled={preparing}
+      torch={torch === null ? null : { on: torch, toggle: toggleTorch }}
+      onShoot={() => void shoot()} onGallery={() => gallery.current?.click()} onClose={closeCamera} />}
   </Dialog></Portal>;
 }
 
@@ -327,7 +347,6 @@ const styles = StyleSheet.create({
   picture: { width: '100%', borderRadius: radius.card, overflow: 'hidden' },
   zoomIcon: { position: 'absolute', top: spacing.sm, right: spacing.sm, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', opacity: 0.92 },
   pictureFill: { flex: 1, minHeight: 240 },
-  camera: { height: 360 },
   progress: { height: 6, borderRadius: radius.pill },
   columns: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xl },
   side: { flex: 2, minWidth: 0, gap: spacing.lg },
