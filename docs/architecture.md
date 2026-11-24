@@ -1610,3 +1610,19 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   Categoria e fondo si risolvono quando i dati del modulo sono pronti (`enabled` di `ExpenseForm`); valori inutilizzabili e parametri
   sconosciuti non bloccano nulla, un solo avviso. Nessuna categoria, fondo o esercente creato dal link; nessun dato verso server.
 
+## Transizione lista ↔ dettaglio senza sovrapposizioni — 24 novembre 2026
+
+- **Segnalazione dell'utente** (dettaglio di una spesa su telefono): copia della scheda appesa sopra la lista scorrendo subito dopo il
+  ritorno; scheda che lasciava un buco e contenuto del dettaglio sopra filtri e lista in apertura; barra «Nummo» e navigazione sopra lo
+  schermo che cresce e sopra il pulsante Indietro, in entrata e in uscita.
+- **Cause** (misurate con le animazioni ferme a tempi precisi, Chromium 390×844): (1) la copia di chiusura, appesa a `#root`, si
+  restringe verso la posizione della scheda misurata all'inizio e resta lì fino alla fine anche se la lista scorre; (2) la copia della
+  scheda viaggiava con l'angolo del contenitore e il contenuto compariva dal 15 % del tempo, con il contenitore (dello stesso colore della
+  pagina) ancora piccolo; (3) su smartphone barra in alto e navigazione sono coperte solo a fine crescita e scoperte all'inizio del ritiro,
+  mentre il contenuto è ancora visibile e viene tagliato.
+- **Correzione** in `ScreenLayer`/`containerTransform`: copia ferma al suo posto e via entro il 25 %; contenuto dal 40 % al 65 % (contenitore
+  quasi pieno); in chiusura il contenuto sparisce in 90 ms (`closeLead`) prima che il contenitore si muova; la copia di chiusura sfuma e si
+  toglie al primo `scroll`, `wheel`, `touchmove` o `pointerdown` (e la scheda vera ricompare subito); su smartphone, finché uno schermo
+  intero è aperto, barra in alto e navigazione (`data-app-chrome` di `AppShell`) sfumano in 150 ms con l'apertura e tornano in 250 ms dopo
+  la scomparsa del contenuto (`holdChrome`, contatore per gli schermi impilati; solo Web Animations, nessun render dello shell).
+

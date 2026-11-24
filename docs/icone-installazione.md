@@ -4,6 +4,14 @@ Verifica del 9 novembre 2026. Il logo principale (`logo`) e gli studi in
 `docs/design/logo-concepts/` restano invariati. Non risultano script di generazione
 degli asset di installazione nel repository.
 
+**24 novembre 2026, su richiesta:** fondo nero (`#000000`) e logo bianco (`#FFFFFF`) al posto del verde scuro (`#0F1512`) con
+logo menta (`#97D8BB`), per desktop e mobile. Rigenerati con `rsvg-convert` da SVG: `icon.svg` (stessa forma e scala 0,72),
+`icon-192.png` e `icon-512.png` (da `icon.svg`, angoli trasparenti), `icon-maskable-512.png` (quadrato pieno, logo a scala 0,5:
+37,5 % del lato, come prima) e `apple-touch-icon.png` (quadrato pieno, scala 0,62: circa 46,5 %, come prima). App Android:
+`icon_background`/`icon_foreground` in `android/app/src/main/res/values/colors.xml` (serve un nuovo APK). Invariati
+`icon-monochrome.svg`, `badge-96.png` e la piccola icona delle notifiche Android (la tinge il sistema). Un'app web già installata
+aggiorna l'icona quando il browser rilegge il manifest (su Android può richiedere giorni).
+
 ## Asset e scopi
 
 | Asset in `public/icons/` | Uso |

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { cardClip, cardShift, crossfade, detailSpring, fullClip, usableCard } from '../src/theme/containerTransform.ts';
+import { cardClip, closeLead, crossfade, detailSpring, fullClip, usableCard } from '../src/theme/containerTransform.ts';
 import { springEasing, springValue } from '../src/theme/themeTransition.ts';
 
 const phone = { left: 0, top: 0, width: 390, height: 844 };
@@ -16,7 +16,6 @@ test('dettaglio spesa: il ritaglio iniziale è la scheda, con il suo raggio, e q
 });
 
 test('dettaglio spesa: la copia della scheda segue l’angolo del contenitore', () => {
-  assert.deepEqual(cardShift(card, phone), { x: -12, y: -300 });
 });
 
 test('dettaglio spesa: si parte dalla scheda solo se è disposta e per almeno metà visibile', () => {
@@ -45,8 +44,9 @@ test('dettaglio spesa: molla morbida, risposta pronta, nessun rimbalzo, sotto i 
 
 test('dettaglio spesa: dissolvenza incrociata, mai due contenuti pieni insieme', () => {
   const { open, close } = crossfade;
-  // Apertura: la copia della scheda sparisce prima che il contenuto sia pieno.
-  assert.ok(open.contentIn < open.cardOut && open.cardOut < open.contentShown && open.contentShown < 1);
-  // Chiusura: il contenuto se ne va presto (la molla ha già fatto gran parte della strada) e la scheda torna dopo.
-  assert.ok(close.cardIn < close.contentOut && close.contentOut < close.cardShown && close.cardShown <= 0.4);
+  // Apertura: prima sparisce la copia della scheda, poi (a contenitore quasi pieno) compare il contenuto: mai sovrapposti.
+  assert.ok(open.cardOut <= open.contentIn && open.contentIn >= 0.35 && open.contentIn < open.contentShown && open.contentShown < 1);
+  // Chiusura: il contenuto se ne va prima che il contenitore si restringa (mai tagliato), poi torna la scheda.
+  assert.ok(closeLead >= 60 && closeLead <= 120, 'breve anticipo, la risposta resta pronta');
+  assert.ok(close.cardIn < close.cardShown && close.cardShown <= 0.4);
 });

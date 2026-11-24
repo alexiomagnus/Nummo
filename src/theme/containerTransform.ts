@@ -44,19 +44,17 @@ export function usableCard(card: Box | null, frame: Box): card is Box {
   return visibleHeight >= card.height / 2 && visibleWidth >= card.width / 2;
 }
 
-// Where the copy of the card goes while the container grows: its top-left corner follows the container's (the frame's),
-// so the card seems to become the screen instead of staying behind.
-export function cardShift(card: Box, frame: Box): { x: number; y: number } {
-  return { x: frame.left - card.left, y: frame.top - card.top };
-}
-
-// Fade-through of the two contents, as fractions of the transform's duration. The spring covers most of the way early
-// (90 % at about 45 % of the time), so the two directions are timed apart instead of mirrored: opening, the card's copy is
-// gone by `cardOut` and the detail's content appears between `contentIn` and `contentShown`; closing, the content is gone
-// by `contentOut`, before the shrinking clip cuts it much, and the card's copy appears between `cardIn` and `cardShown`.
+// Fade-through of the two contents, as fractions of the transform's duration (24 November, on the user's report: the detail's
+// content appeared over the list while the container was still small, and the card's place looked like a hole). The copy of
+// the card stays at its place (it no longer travels with the container's corner) and is gone by `cardOut`; only then, with
+// the container covering nearly all the frame (the spring is at about 90 % by 40 % of the time), the content appears between
+// `contentIn` and `contentShown`: the screen is opaque and whole before anything is drawn on it. Closing, the content fades
+// out first, in `closeLead` ms while the container still covers the frame (so the shrinking clip never cuts the Back button
+// or the content), then the container shrinks and the card's copy appears between `cardIn` and `cardShown` of the spring.
 export const crossfade = {
-  open: { cardOut: 0.3, contentIn: 0.15, contentShown: 0.55 },
-  close: { contentOut: 0.2, cardIn: 0.1, cardShown: 0.35 },
+  open: { cardOut: 0.25, contentIn: 0.4, contentShown: 0.65 },
+  close: { cardIn: 0.1, cardShown: 0.35 },
 } as const;
+export const closeLead = 90;
 
 const px = (value: number) => `${Math.round(value * 100) / 100}px`;

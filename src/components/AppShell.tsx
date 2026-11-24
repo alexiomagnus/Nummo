@@ -153,7 +153,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom}>
-      <View role="banner" style={[styles.topBar, { backgroundColor: colors.background, paddingTop: insets.top, paddingHorizontal: padding, height: layout.topBarHeight + insets.top }]}>
+      {/* `appChrome`: faded out on phones while a whole screen is open (ScreenLayer, holdChrome). */}
+      <View role="banner" {...{ dataSet: { appChrome: 'true' } }} style={[styles.topBar, { backgroundColor: colors.background, paddingTop: insets.top, paddingHorizontal: padding, height: layout.topBarHeight + insets.top }]}>
         {fab && hasNav ? (
           // The brand leads to the primary screen (new expense); on it, it does nothing.
           <StateLayerPressable layerColor="transparent" accessibilityRole="button" accessibilityLabel={`Nummo, ${fab.label}`}
@@ -259,7 +260,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const { pill, indicator, focus, suppressPressed } = useSlidingIndicator(destinations, index, onSelect, reduceMotion, haptic);
   const shownIndex = focus ?? index;
   return (
-    <View aria-hidden={hidden} {...{ inert: hidden ? true : undefined }} pointerEvents={hidden ? 'none' : 'auto'}
+    <View aria-hidden={hidden} {...{ inert: hidden ? true : undefined, dataSet: { appChrome: 'true' } }} pointerEvents={hidden ? 'none' : 'auto'}
       onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
       style={[styles.floating, { paddingBottom: bottomSpace, paddingHorizontal: barSide }, hidden && (reserveSpace ? { opacity: 0 } : styles.hidden)]}>
       <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>

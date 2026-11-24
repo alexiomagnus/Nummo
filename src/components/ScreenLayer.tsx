@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRe
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { cardClip, cardShift, contentScale, crossfade, detailSpring, fullClip, scrimOpacity, usableCard, type Box } from '../theme/containerTransform';
+import { cardClip, closeLead, contentScale, crossfade, detailSpring, fullClip, scrimOpacity, usableCard, type Box } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
 import { overrideDocumentChrome } from '../theme/bootTheme';
 import { motion, radius, sizeClassOf, spacing, type SizeClass } from '../theme/tokens';
@@ -21,8 +21,10 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 // Opening and closing are a Material 3 container transform from and back into the element that opened it (the card, the
 // button, the field: its id when given, otherwise the element last pressed or activated by the keyboard): the surface grows
 // from that rectangle with its corner radius on a soft spring (`detailSpring`), the page beneath dims a little, a copy of
-// the element moves with the container's corner and fades out while the screen's content fades in from slightly smaller.
-// Closing runs the same way back, re-measuring the element (it may have moved); with no element in view, a short fade.
+// the element fades out at its place, then the screen's content fades in from slightly smaller once the opaque container
+// covers nearly all the frame. Closing fades the content out first, then shrinks the container back, re-measuring the
+// element (it may have moved), while its copy fades in; with no element in view, a short fade. On phones the app's top bar
+// and floating navigation fade out as a screen opens and back in as it closes (`holdChrome`), so they never show over it.
 // A screen usually closes by unmounting (`{editing && <Editor />}`): the cleanup clones the layer as it is at that moment
 // and plays the way back on the copy (inert, outside React), so every screen also closes smoothly and the page is usable at
 // once. Web Animations only (clip-path, opacity, transform); with reduced motion everything is instant.
@@ -120,6 +122,8 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
     if (!latest.current.animate || !node || typeof node.animate !== 'function') return undefined;
     const origin = pickOrigin(originId);
     let run: Run | null = play(parts(node), measureOrigin(origin), settingsFor(node), true, null);
+    // Phones, a whole screen: the top bar and the navigation of the page under it go away with the opening.
+    let chrome = compact && !latest.current.sheet ? holdChrome() : null;
     // The element that became the screen is left empty while it is open (user's request, 23 November: the date field, the
     // «Nuova lista» button stayed visible above a sheet): opacity only, so it keeps its place and can take the focus back.
     const previousOpacity = origin?.style.opacity ?? '';
@@ -138,7 +142,7 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
       run?.cancel();
       if (origin) origin.style.opacity = previousOpacity;
       const host = document.getElementById('root');
-      if (!moving || !host || !node.isConnected) return;
+      if (!moving || !host || !node.isConnected) { chrome?.(0); chrome = null; return; }
       const copy = node.cloneNode(true) as HTMLElement;
       copy.setAttribute('inert', '');
       copy.setAttribute('aria-hidden', 'true');
@@ -152,13 +156,34 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
       // Pulled down by its handle: it goes on down, from where the finger left it, instead of flying back to its origin.
       const back = dragged !== null ? slideDown(copied, shift, dragged, state?.scrim ?? scrimOpacity)
         : play(copied, measureOrigin(originId ? pickOrigin(originId) : origin?.isConnected ? origin : null), settings, false, state);
-      const remove = () => copy.remove();
-      void back.finished.then(remove);
+      // The top bar and the navigation come back once the content has gone, while the container shrinks.
+      chrome?.(back.lead);
+      chrome = null;
       // The element comes back as the screen lands on it (its copy fades in at the same time), not before.
       const target = originId ? pickOrigin(originId) : origin?.isConnected ? origin : null;
-      target?.animate([{ opacity: 0 }, { opacity: 0, offset: dragged !== null ? 0.3 : crossfade.close.cardShown }, { opacity: 1 }],
-        { duration: back.duration, easing: 'linear' });
-      setTimeout(remove, back.duration + 1500);
+      const shownAt = dragged !== null ? 0.3 : (back.lead + crossfade.close.cardShown * (back.duration - back.lead)) / back.duration;
+      const reveal = target?.animate([{ opacity: 0 }, { opacity: 0, offset: shownAt }, { opacity: 1 }], { duration: back.duration, easing: 'linear' });
+      // The copy is drawn where the element was when the closing began. Scrolling the page (or touching it) right away would
+      // leave it hanging over the moving list until the end (user's report, 24 November): any scroll, wheel or touch ends it at
+      // once, with a quick fade, and the element itself shows.
+      const interruptions = ['scroll', 'wheel', 'touchmove', 'pointerdown'] as const;
+      let ended = false;
+      const end = () => {
+        if (ended) return;
+        ended = true;
+        interruptions.forEach((name) => document.removeEventListener(name, interrupt, true));
+        copy.remove();
+      };
+      function interrupt() {
+        if (ended) return;
+        interruptions.forEach((name) => document.removeEventListener(name, interrupt, true));
+        reveal?.cancel();
+        const fade = copy.animate([{ opacity: 1 }, { opacity: 0 }], { duration: motion.fade, easing: 'linear', fill: 'forwards' });
+        void fade.finished.then(end, end);
+      }
+      interruptions.forEach((name) => document.addEventListener(name, interrupt, { capture: true, passive: true }));
+      void back.finished.then(end);
+      setTimeout(end, back.duration + 1500);
     };
   }, []);
 
@@ -259,6 +284,37 @@ export function closeAllScreens(): void {
   [...openScreens].reverse().forEach((close) => close());
 }
 
+// ——— the app's chrome on phones ———
+
+// On phones a screen covers the whole app, top bar and floating navigation included, but it covers them only at the end of
+// its growth and uncovers them at once when it starts shrinking: they showed over the growing screen and over its Back button
+// (user's report, 24 November). While at least one whole screen is open they fade out (marked `data-app-chrome` in AppShell),
+// with the opening, and come back with the closing of the last one, after its content has gone. Web Animations only, so the
+// shell renders nothing and keeps its own opacity (the navigation hidden for the keyboard).
+let chromeHolders = 0;
+let chromeFades: Animation[] = [];
+function holdChrome(): (delay: number) => void {
+  chromeHolders += 1;
+  if (chromeHolders === 1) {
+    chromeFades = [...document.querySelectorAll<HTMLElement>('[data-app-chrome]')].map((element) =>
+      element.animate([{ opacity: 1 }, { opacity: 0 }], { duration: motion.short, easing: 'linear', fill: 'forwards' }));
+  }
+  let released = false;
+  return (delay) => {
+    if (released) return;
+    released = true;
+    chromeHolders = Math.max(0, chromeHolders - 1);
+    if (chromeHolders > 0) return;
+    const fades = chromeFades;
+    chromeFades = [];
+    for (const fade of fades) {
+      const element = (fade.effect as KeyframeEffect | null)?.target;
+      if (element?.isConnected) element.animate([{ opacity: 0 }, { opacity: 1 }], { duration: motion.medium, delay, easing: 'linear', fill: 'backwards' });
+      fade.cancel();
+    }
+  };
+}
+
 // ——— origin: the element that opened the screen ———
 
 // The element last pressed or activated from the keyboard: the screen opens a moment later (after a state change, sometimes
@@ -315,7 +371,8 @@ function measureOrigin(node: HTMLElement | null): Origin | null {
 // ——— the transform ———
 
 type Parts = { surface: HTMLElement | null; content: HTMLElement | null; ghostHost: HTMLElement | null; scrim: HTMLElement | null };
-type Run = { finished: Promise<boolean>; cancel: () => void; duration: number };
+// `duration`: the whole run in ms; `lead`: the part before the container moves (the closing content's fade-out).
+type Run = { finished: Promise<boolean>; cancel: () => void; duration: number; lead: number };
 // `whole`: the clip of the open surface (a sheet: round top corners only); `rest`: the scrim's opacity once open (a sheet keeps it).
 // `rise`: a sheet, whose origin may lie above it: the surface also travels vertically from the origin's height to its place.
 type Settings = { frame: Box; frameRadius: number; background: string; backdrop: string; whole?: string; rest?: number; rise?: boolean };
@@ -335,13 +392,16 @@ function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | nul
   const springy = view?.CSS?.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : bezier(motion.enter);
   const both = 'both' as const;
   let duration = spring.duration;
+  let lead = 0;
   // A sheet: the origin is lifted onto the sheet's top edge and the whole surface travels by the difference while it grows.
   const travel = rise && found ? found.box.top - frame.top : 0;
   const origin = found && rise ? { ...found, box: { ...found.box, top: frame.top } } : found;
   const usable = origin && (rise ? origin.box.width > 0 && origin.box.height > 0 : usableCard(origin.box, frame));
   if (surface && content && ghostHost && scrim && origin && usable) {
-    const options = { duration, easing: springy, fill: both };
-    const fade = { duration, easing: 'linear', fill: both };
+    // Closing: the content fades out while the container still covers the frame, then everything else starts.
+    lead = opening ? 0 : closeLead;
+    const options = { duration, delay: lead, easing: springy, fill: both };
+    const fade = { duration, delay: lead, easing: 'linear', fill: both };
     const { open: inbound, close: outbound } = crossfade;
     const small = cardClip(origin.box, frame, origin.radius);
     const whole = wholeClip ?? fullClip(frameRadius);
@@ -352,8 +412,9 @@ function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | nul
       const away = `translateY(${travel}px)`;
       animations.push(surface.animate({ transform: opening ? [away, 'translateY(0px)'] : ['translateY(0px)', away] }, options));
     }
-    animations.push(scrim.animate({ opacity: opening ? [0, scrimOpacity] : [from?.scrim || scrimOpacity, 0] }, { duration, easing: bezier(motion.easing), fill: both }));
-    // A copy of the origin at its place, moving with the container's corner: it fades out as the screen opens, in as it closes.
+    animations.push(scrim.animate({ opacity: opening ? [0, scrimOpacity] : [from?.scrim || scrimOpacity, 0] }, { duration, delay: lead, easing: bezier(motion.easing), fill: both }));
+    // A copy of the origin at its place: it fades out as the screen opens, in as it closes. It stays where the element is (it
+    // used to travel with the container's corner, which left the element's place looking like a hole).
     ghost = origin.node.cloneNode(true) as HTMLElement;
     ghost.setAttribute('aria-hidden', 'true');
     ghost.setAttribute('inert', '');
@@ -362,18 +423,20 @@ function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | nul
     Object.assign(ghost.style, { position: 'absolute', left: `${origin.box.left - frame.left}px`, top: `${origin.box.top - frame.top}px`,
       width: `${origin.box.width}px`, height: `${origin.box.height}px`, margin: '0', boxSizing: 'border-box', pointerEvents: 'none' });
     ghostHost.appendChild(ghost);
-    const shift = cardShift(origin.box, frame);
-    const moved = `translate(${shift.x}px, ${shift.y}px)`;
-    animations.push(ghost.animate({ transform: opening ? ['translate(0px, 0px)', moved] : [moved, 'translate(0px, 0px)'] }, options));
     animations.push(ghost.animate(opening ? [{ opacity: 1, offset: 0 }, { opacity: 0, offset: inbound.cardOut }, { opacity: 0, offset: 1 }]
       : [{ opacity: 0, offset: 0 }, { opacity: 0, offset: outbound.cardIn }, { opacity: 1, offset: outbound.cardShown }, { opacity: 1, offset: 1 }], fade));
-    // The content grows from the origin's centre, slightly smaller, and fades in after the copy has gone (out first on closing).
+    // The content grows from the origin's centre, slightly smaller, once the card's copy has gone and the container covers
+    // nearly all the frame; closing, it leaves first, in the lead, before the container moves.
     content.style.transformOrigin = `${origin.box.left - frame.left + origin.box.width / 2}px ${origin.box.top - frame.top + origin.box.height / 2}px`;
-    const start = from?.opacity ?? 1;
-    animations.push(content.animate(opening ? [{ opacity: 0, offset: 0 }, { opacity: 0, offset: inbound.contentIn },
-      { opacity: 1, offset: inbound.contentShown }, { opacity: 1, offset: 1 }]
-      : [{ opacity: start, offset: 0 }, { opacity: 0, offset: outbound.contentOut }, { opacity: 0, offset: 1 }], fade));
-    animations.push(content.animate({ transform: opening ? [`scale(${contentScale})`, 'scale(1)'] : ['scale(1)', `scale(${contentScale})`] }, options));
+    if (opening) {
+      animations.push(content.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: inbound.contentIn },
+        { opacity: 1, offset: inbound.contentShown }, { opacity: 1, offset: 1 }], fade));
+      animations.push(content.animate({ transform: [`scale(${contentScale})`, 'scale(1)'] }, options));
+    } else {
+      const leaving = { duration: lead, easing: bezier(motion.exitEasing), fill: both };
+      animations.push(content.animate({ opacity: [from?.opacity ?? 1, 0], transform: ['scale(1)', `scale(${contentScale})`] }, leaving));
+    }
+    duration += lead;
   } else if (surface && scrim) {
     // Nothing to grow from or return to (out of view, gone, opened from elsewhere): a short fade with a slight scale.
     duration = opening ? motion.long : motion.exit;
@@ -391,7 +454,7 @@ function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | nul
     if (content) content.style.transformOrigin = '';
   };
   const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => !cancelled, () => false);
-  return { finished, cancel, duration };
+  return { finished, cancel, duration, lead };
 }
 
 // A sheet pulled down by its handle leaves downwards from where it is, the scrim fading with it.
@@ -402,7 +465,7 @@ function slideDown({ surface, scrim }: Parts, transform: string, height: number,
   if (surface) animations.push(surface.animate({ transform: [transform || 'translateY(0px)', `translateY(${height}px)`] }, options));
   if (scrim) animations.push(scrim.animate({ opacity: [scrimFrom, 0] }, options));
   const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => true, () => false);
-  return { finished, cancel: () => animations.forEach((animation) => animation.cancel()), duration };
+  return { finished, cancel: () => animations.forEach((animation) => animation.cancel()), duration, lead: 0 };
 }
 
 // Open sheet: round top corners, square bottom (it sits on the bottom edge).

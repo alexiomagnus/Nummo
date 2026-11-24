@@ -92,6 +92,18 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Icona nera con logo bianco; transizione lista ↔ dettaglio senza sovrapposizioni — 24 novembre 2026
+
+- **Icona (su richiesta):** fondo nero e logo bianco per favicon, icone del manifest, `apple-touch-icon` e app Android (`colors.xml`);
+  dettagli in `docs/icone-installazione.md`. Il logo nella barra in alto dell'app resta nel colore del tema. **App Android:** il cambio
+  arriva solo con un nuovo APK (non ricompilato né rilasciato). PWA installate: icona aggiornata quando il browser rilegge il manifest.
+- **Transizione (segnalazione dell'utente con tre sintomi):** cause e correzione in `docs/architecture.md` («Transizione lista ↔
+  dettaglio…»). Verifica in Chromium headless su `dist-demo` (Standard, scuro, 14 spese create col link di precompilazione), animazioni
+  ferme a 30/80/140/220/320 ms: prima il contenuto compariva sopra filtri e lista a 80–140 ms, la scheda lasciava un vuoto, la barra
+  «Nummo» copriva il pulsante Indietro a 20–60 ms in chiusura; dopo nessuno dei tre. Chiusura seguita da scorrimento a 60 ms: copia tolta
+  entro 150 ms, scheda opaca. Barra e navigazione: 0 da aperto, 1 dopo, anche con Modifica sopra il dettaglio; da desktop mai nascoste.
+  Nessun errore JS. **Non provato su telefono reale** (gesto Indietro di iOS/Android). Movimento ridotto invariato (istantaneo).
+
 ## Notifiche: forma uniforme, tocco con ripiego, iOS solo dalla Home, modello assetlinks — 24 novembre 2026
 
 - **Su richiesta** (audit e standardizzazione delle notifiche push). Scelte dell'utente: `icon` resta il PNG trasparente
