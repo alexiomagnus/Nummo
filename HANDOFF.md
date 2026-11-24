@@ -92,6 +92,13 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Testi superati di README e Guida — 24 novembre 2026
+
+- **Su richiesta.** README, «Notifiche»: tolto «o, in mancanza, come avvisi dentro l'app» (non esistono dal 15 novembre); ora cita
+  anche i rinnovi e le notifiche dell'app Android. Guida, «Fondi e budget»: «Gli avvisi ti segnalano…» diventa «Nella pagina Fondi vedi
+  quanto hai speso e se sei vicino al limite o l'hai superato…» (la barra del budget, `BudgetMeter`, lo scrive ancora; tolta solo la riga
+  sotto il campo di Nuova spesa il 17 novembre), con la traduzione inglese. `npm run check` OK (**594/594**). Non committato.
+
 ## Link per compilare Nuova spesa — 24 novembre 2026
 
 - **Su richiesta** («implementa il link di precompilazione di Nuova spesa», idea di `TODO.md` del 15 novembre, ora tolta da lì).

@@ -141,8 +141,10 @@ Due strade:
 - Interfaccia in italiano e inglese: **Impostazioni → Lingua / Settings → Language**,
   dal menu account o dall'ingranaggio prima dell'accesso. Scelta immediata, salvata
   nel browser; italiano iniziale. Nomi e descrizioni dei dati esistenti restano invariati.
-- **Notifiche** configurabili: promemoria per il backup JSON (Standard) e riepilogo periodico delle spese, come notifiche di
-  sistema anche ad app chiusa (Web Push, con servizio di invio da configurare) o, in mancanza, come avvisi dentro l'app.
+- **Notifiche** configurabili: promemoria per il backup JSON (Standard), riepilogo periodico delle spese e avviso il giorno prima del
+  rinnovo di un abbonamento, solo come notifiche di sistema, anche ad app chiusa (Web Push, con servizio di invio da configurare;
+  nell'app Android notifiche dell'app). Nessun avviso dentro l'app: dove le notifiche di sistema non sono disponibili, la pagina
+  Notifiche lo dice.
 - **Due modalità di archiviazione**: Standard (sul dispositivo, senza account, backup JSON manuale) e Avanzata (Firestore, con sincronizzazione dell'SDK). Solo web; vedi i [limiti](#installazione-come-pwa).
 
 ### Link per compilare Nuova spesa
