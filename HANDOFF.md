@@ -109,6 +109,12 @@ di quel giorno e la verifica su `d196dc9`.
   (`nummo-utente-medio.json`): pulsanti con raggio a pillola; nessun errore JS. **Non provati** su telefono (il poster grigio compare solo
   nella WebView/Chrome Android). Commit `665d96e`, pubblicato su Hosting.
 
+## «Apri a metà schermo»: testo più semplice, dopo «Vibrazione» — 24 novembre 2026
+
+Su richiesta: la riga di supporto ora dice «Su smartphone le schede si aprono a metà: trascinale in su per ingrandirle.» (anche in
+`en.ts`); l'interruttore è dopo «Vibrazione» nella scheda Funzionalità (nel browser, dove «Vibrazione» non c'è, è l'ultimo).
+`npm run check` 596/596. Committato e pubblicato su Hosting.
+
 ## Archiviazione a pillole, form delle Categorie, ripristino delle categorie — 24 novembre 2026
 
 Su richiesta. (1) Tutti i pulsanti di «Archiviazione e backup» a pillola (`StorageSection`, `ModeTransfer`, `BackupActions`).
