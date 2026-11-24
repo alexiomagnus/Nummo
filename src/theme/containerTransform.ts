@@ -26,4 +26,6 @@ export const slideSpring: Spring = { stiffness: 220, damping: 0.95 * 2 * Math.sq
 // l'icona, molto soft e clean in stile Material 3 Expressive»): a spatial spring with a small overshoot (damping ratio 0.75), from a
 // smaller, slightly turned tile; its opacity on a short curve of its own; started a little after the screen.
 export const heroIconSpring: Spring = { stiffness: 380, damping: 0.75 * 2 * Math.sqrt(380), mass: 1 };
-export const heroIconEntry = { delay: 120, fade: 180, scale: 0.6, turn: -10 } as const;
+// 25 November (user's request, «una smooth animation per l'icona»): started as the screen settles (it went unnoticed under the slide
+// at 120 ms), and in two beats: the tile, then the glyph inside it, a little later, from smaller and turned the other way.
+export const heroIconEntry = { delay: 300, fade: 220, scale: 0.6, turn: -10, glyphDelay: 420, glyphScale: 0.3, glyphTurn: 24 } as const;

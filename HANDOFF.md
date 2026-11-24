@@ -98,6 +98,15 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Icona dei dettagli: stessa misura per spese e abbonamenti, animazione in due tempi — 25 novembre 2026
+
+Su richiesta (screenshot del dettaglio di una spesa e di un abbonamento): l'icona del dettaglio di una spesa prende la misura di quella
+degli abbonamenti, riquadro 64 e glifo 38 (`DetailHero`; prima 84/48). Animazione d'ingresso più visibile e sempre morbida
+(`heroIconEntry`): parte a 300 ms, quando lo schermo sta arrivando (a 120 ms si perdeva sotto lo scorrimento), il riquadro da 0,6 e −10°
+e poi, a 420 ms, il glifo da 0,3 e +24°, entrambi sulla molla `heroIconSpring` con dissolvenza in 220 ms; nulla con movimento ridotto.
+Headless a 390×844: quattro animazioni all'apertura, riquadro 64 e glifo 38 in spesa e abbonamento a fine animazione; nessun errore JS.
+`npm run check` OK (599/599).
+
 ## «Modifica categoria» come pannello trascinabile — 25 novembre 2026
 
 Su richiesta (screenshot di «Modifica categoria»: «poter scrollare con uno swipe verso l'alto o verso il basso, seguire le regole degli

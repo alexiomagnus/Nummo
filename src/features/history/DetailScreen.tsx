@@ -43,25 +43,32 @@ export function DetailHero({ icon, title, amount, muted, dense, children }: { ic
   const { colors } = useTheme();
   const reduced = useReducedMotion();
   const tile = useRef<ComponentRef<typeof View>>(null);
+  const glyph = useRef<ComponentRef<typeof View>>(null);
   // Once, when the screen opens (see `heroIconSpring`); nothing with reduced motion.
   useLayoutEffect(() => {
     const node = tile.current as unknown as HTMLElement | null;
     if (reduced || !node || typeof node.animate !== 'function') return undefined;
     const spring = springEasing(heroIconSpring);
     const easing = typeof CSS !== 'undefined' && CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : 'cubic-bezier(0.2, 0, 0, 1)';
-    const { delay, fade, scale, turn } = heroIconEntry;
+    const { delay, fade, scale, turn, glyphDelay, glyphScale, glyphTurn } = heroIconEntry;
+    const inner = glyph.current as unknown as HTMLElement | null;
     const moves = [
       node.animate({ transform: [`scale(${scale}) rotate(${turn}deg)`, 'scale(1) rotate(0deg)'] }, { duration: spring.duration, delay, easing, fill: 'backwards' }),
       node.animate({ opacity: [0, 1] }, { duration: fade, delay, easing: 'cubic-bezier(0.2, 0, 0, 1)', fill: 'backwards' }),
+      ...(inner ? [
+        inner.animate({ transform: [`scale(${glyphScale}) rotate(${glyphTurn}deg)`, 'scale(1) rotate(0deg)'] }, { duration: spring.duration, delay: glyphDelay, easing, fill: 'backwards' }),
+        inner.animate({ opacity: [0, 1] }, { duration: fade, delay: glyphDelay, easing: 'cubic-bezier(0.2, 0, 0, 1)', fill: 'backwards' }),
+      ] : []),
     ];
     return () => moves.forEach((move) => move.cancel());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <View style={[styles.hero, dense && styles.denseHero]}>
-      {/* A little larger since 24 November (user's request): 84 (64 dense), glyph 48 (38). */}
+      {/* The same size for expenses and subscriptions (user's request, 25 November: the expense's took the subscription's): tile 64,
+          glyph 38. */}
       <View ref={tile} style={[styles.heroTile, dense && styles.denseTile, { backgroundColor: colors.primaryContainer }]}>
-        {icon ? <CategoryGlyph icon={icon} size={dense ? 38 : 48} color={colors.onPrimaryContainer} />
-          : <SvgIcon shape={iconShapes.tag} size={dense ? 34 : 42} color={colors.onPrimaryContainer} />}
+        <View ref={glyph}>{icon ? <CategoryGlyph icon={icon} size={38} color={colors.onPrimaryContainer} />
+          : <SvgIcon shape={iconShapes.tag} size={34} color={colors.onPrimaryContainer} />}</View>
       </View>
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={styles.center}>{title}</Text>
       <Text variant="displaySmall" style={[styles.amount, { color: muted ? colors.onSurfaceVariant : colors.onSurface }]}>{amount}</Text>
@@ -182,7 +189,7 @@ export const outlinedActionContent = { minHeight: layout.controlHeight - 2 } as 
 
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.sm },
-  heroTile: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  heroTile: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   denseHero: { gap: spacing.xs, paddingBottom: 0 },
   denseTile: { width: 64, height: 64, borderRadius: 32, marginBottom: spacing.xs },
   gridRow: { flexDirection: 'row' },
