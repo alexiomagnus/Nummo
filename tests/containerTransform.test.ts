@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { cardClip, closeLead, crossfade, detailSpring, fullClip, usableCard } from '../src/theme/containerTransform.ts';
+import { cardClip, closeLead, closePrecision, crossfade, detailSpring, fullClip, usableCard } from '../src/theme/containerTransform.ts';
 import { springEasing, springValue } from '../src/theme/themeTransition.ts';
 
 const phone = { left: 0, top: 0, width: 390, height: 844 };
@@ -31,15 +31,24 @@ test('dettaglio spesa: si parte dalla scheda solo se è disposta e per almeno me
   assert.equal(usableCard({ ...card, top: 844 - 20 }, phone), false);
 });
 
-test('dettaglio spesa: molla morbida, risposta pronta, nessun rimbalzo, sotto i 600 ms', () => {
+test('dettaglio spesa: molla morbida, risposta pronta, nessun rimbalzo, sotto i 500 ms', () => {
   const { duration, easing } = springEasing(detailSpring);
-  assert.ok(duration >= 500 && duration <= 600, `durata ${duration}`);
+  assert.ok(duration >= 440 && duration <= 500, `durata ${duration}`);
   assert.match(easing, /^linear\(0, /);
   const samples = Array.from({ length: 300 }, (_, i) => springValue(detailSpring, i / 300));
   assert.ok(Math.max(...samples) < 1.0005, 'nessun rimbalzo');
   const at = (v: number) => samples.findIndex((value) => value >= v) * (1000 / 300);
-  assert.ok(at(0.5) <= 130, `metà strada in ${at(0.5)} ms: risposta pronta al tocco`);
-  assert.ok(at(0.9) >= 230 && at(0.9) <= 290, `90 % in ${at(0.9)} ms`);
+  assert.ok(at(0.5) <= 110, `metà strada in ${at(0.5)} ms: risposta pronta al tocco`);
+  assert.ok(at(0.9) >= 200 && at(0.9) <= 250, `90 % in ${at(0.9)} ms`);
+});
+
+test('dettaglio spesa: la chiusura non si trascina sull’ultimo tratto', () => {
+  const open = springEasing(detailSpring).duration;
+  const close = springEasing(detailSpring, closePrecision);
+  assert.ok(close.duration <= open - 80 && close.duration <= 400, `chiusura in ${close.duration} ms`);
+  // Alla fine della chiusura la molla è già al 99 %: l'ultimo tratto lineare è di pochi pixel.
+  assert.ok(springValue(detailSpring, close.duration / 1000) >= 0.99);
+  assert.ok(closeLead + close.duration <= 460, 'chiusura completa sotto i 460 ms');
 });
 
 test('dettaglio spesa: dissolvenza incrociata, mai due contenuti pieni insieme', () => {
@@ -49,4 +58,6 @@ test('dettaglio spesa: dissolvenza incrociata, mai due contenuti pieni insieme',
   // Chiusura: il contenuto se ne va prima che il contenitore si restringa (mai tagliato), poi torna la scheda.
   assert.ok(closeLead >= 60 && closeLead <= 120, 'breve anticipo, la risposta resta pronta');
   assert.ok(close.cardIn < close.cardShown && close.cardShown <= 0.4);
+  // Il fondo vuoto del contenitore si scioglie solo con la copia della scheda già piena, prima dell'ultimo tratto.
+  assert.ok(close.surfaceGone > close.cardShown && close.surfaceGone <= 0.8);
 });

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRe
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { cardClip, closeLead, contentScale, crossfade, detailSpring, fullClip, scrimOpacity, usableCard, type Box } from '../theme/containerTransform';
+import { cardClip, closeLead, closePrecision, contentScale, crossfade, detailSpring, fullClip, scrimOpacity, usableCard, type Box } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
 import { overrideDocumentChrome } from '../theme/bootTheme';
 import { motion, radius, sizeClassOf, spacing, type SizeClass } from '../theme/tokens';
@@ -387,7 +387,7 @@ function parts(node: HTMLElement): Parts {
 function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | null, { frame, frameRadius, background, whole: wholeClip, rest = 0, rise = false }: Settings, opening: boolean, from: From): Run {
   const animations: Animation[] = [];
   let ghost: HTMLElement | null = null;
-  const spring = springEasing(detailSpring);
+  const spring = opening ? springEasing(detailSpring) : springEasing(detailSpring, closePrecision);
   const view = surface?.ownerDocument.defaultView;
   const springy = view?.CSS?.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : bezier(motion.enter);
   const both = 'both' as const;
@@ -406,8 +406,15 @@ function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | nul
     const small = cardClip(origin.box, frame, origin.radius);
     const whole = wholeClip ?? fullClip(frameRadius);
     const tint = origin.background ?? background;
-    animations.push(surface.animate(opening ? { clipPath: [small, whole], backgroundColor: [tint, background] }
-      : { clipPath: [from?.clip && from.clip !== 'none' ? from.clip : whole, small], backgroundColor: [from?.background ?? background, tint] }, options));
+    if (opening) animations.push(surface.animate({ clipPath: [small, whole], backgroundColor: [tint, background] }, options));
+    else {
+      animations.push(surface.animate({ clipPath: [from?.clip && from.clip !== 'none' ? from.clip : whole, small] }, options));
+      // Once the card's copy is whole (`cardShown`) it draws the card by itself: the rest of the shrinking container is empty, and
+      // in the last stretch, a little larger than the card, it covered the neighbouring rows and the month heading (user's report,
+      // 24 November). Its fill dissolves instead (`surfaceGone`), so the page shows around the copy as the container lands.
+      animations.push(surface.animate([{ backgroundColor: from?.background ?? background, offset: 0 }, { backgroundColor: tint, offset: outbound.cardShown },
+        { backgroundColor: 'transparent', offset: outbound.surfaceGone }, { backgroundColor: 'transparent', offset: 1 }], fade));
+    }
     if (travel !== 0) {
       const away = `translateY(${travel}px)`;
       animations.push(surface.animate({ transform: opening ? [away, 'translateY(0px)'] : ['translateY(0px)', away] }, options));

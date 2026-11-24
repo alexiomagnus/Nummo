@@ -8,9 +8,14 @@ import type { Spring } from './themeTransition.ts';
 export type Box = Readonly<{ left: number; top: number; width: number; height: number }>;
 
 // Softer than the first version (M3 standard slow spatial, 0.9/300: about 450 ms), on request («ancora più smooth»): damping
-// ratio 0.95, stiffness 200. Half the way in about 115 ms, so the response to the tap is as quick, then a longer, softer
-// landing (90 % at 260 ms, settled in about 550 ms) and no overshoot at all, which a container filling the screen must not have.
-export const detailSpring: Spring = { stiffness: 200, damping: 0.95 * 2 * Math.sqrt(200), mass: 1 };
+// ratio 0.95, no overshoot at all, which a container filling the screen must not have. Stiffness 200 until 24 November, then
+// 260 on request («leggermente più veloci»): half the way in about 100 ms, 90 % at 225 ms, settled in about 480 ms.
+export const detailSpring: Spring = { stiffness: 260, damping: 0.95 * 2 * Math.sqrt(260), mass: 1 };
+
+// Closing ends the spring at about 99 % (precision of `springEasing`) instead of 99.8 %: the last part of the way crawls, and
+// while the container is only a few pixels larger than the card it covered the neighbouring rows and the month heading for
+// about 300 ms before vanishing (user's report, 24 November: the closing «non perfetta»). About 380 ms instead of 480.
+export const closePrecision = 0.01;
 
 // The page under the growing screen dims to this opacity of the theme's backdrop (and back), for depth while it moves;
 // once the screen covers its frame the scrim is hidden under it.
@@ -50,11 +55,12 @@ export function usableCard(card: Box | null, frame: Box): card is Box {
 // the container covering nearly all the frame (the spring is at about 90 % by 40 % of the time), the content appears between
 // `contentIn` and `contentShown`: the screen is opaque and whole before anything is drawn on it. Closing, the content fades
 // out first, in `closeLead` ms while the container still covers the frame (so the shrinking clip never cuts the Back button
-// or the content), then the container shrinks and the card's copy appears between `cardIn` and `cardShown` of the spring.
+// or the content), then the container shrinks and the card's copy appears between `cardIn` and `cardShown` of the spring;
+// the empty container's fill then dissolves by `surfaceGone`, leaving the copy alone over the page (24 November).
 export const crossfade = {
   open: { cardOut: 0.25, contentIn: 0.4, contentShown: 0.65 },
-  close: { cardIn: 0.1, cardShown: 0.35 },
+  close: { cardIn: 0.1, cardShown: 0.35, surfaceGone: 0.7 },
 } as const;
-export const closeLead = 90;
+export const closeLead = 70;
 
 const px = (value: number) => `${Math.round(value * 100) / 100}px`;

@@ -1595,6 +1595,13 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
 - **Ritirato il 24 novembre (su richiesta: «quasi troppo smooth», «ci mettono tanto tempo»).** Tornati alla molla 0,95/200 e alle
   dissolvenze di prima (copia via entro il 30 %, contenuto dal 15 % al 55 %; in chiusura contenuto via entro il 20 %, copia dal 10 % al
   35 %); tolti l'avvio dopo il primo disegno (`startAfterPaint`) e `contain: paint`; anche le pagine del menu account partono subito.
+- **Più rapide, chiusura senza coda (24 novembre, su richiesta: «non ancora perfette, in particolare la chiusura», «leggermente più
+  veloci»).** Registrate fotogramma per fotogramma (headless, rallentate): in chiusura l'ultimo tratto della molla, con il contenitore vuoto
+  di pochi pixel più grande della scheda, copriva per circa 300 ms le righe vicine e l'intestazione del mese, poi spariva di colpo.
+  Molla 0,95/260 (circa 480 ms invece di 550, 90 % a 225 ms); la chiusura si ferma al 99 % (`closePrecision`, circa 380 ms) con un anticipo
+  di 70 ms invece di 90 (in tutto circa 450 ms invece di 640); il fondo del contenitore, vuoto dopo il contenuto, si scioglie tra il 35 % e il
+  70 % (`surfaceGone`): attorno alla copia della scheda, già piena, la pagina ricompare in dissolvenza invece che a scatto. Più rapida anche
+  l'entrata delle pagine, che usa la stessa molla.
 
 ## Link per compilare Nuova spesa — 24 novembre 2026
 

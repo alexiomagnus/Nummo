@@ -31,10 +31,21 @@ export function observeWholeRows(scroller: HTMLElement): () => void {
   // Rows shown whole at the last update, with their top: one that grows in place (details opened) past the bottom is
   // scrolled into view instead of disappearing under the user's pointer.
   let shown = new Map<HTMLElement, number>();
+  let waiting = false;
   const update = () => {
     frame = 0;
+    if (waiting) return;
     const box = scroller.getBoundingClientRect();
     const rows = Array.from(scroller.querySelectorAll<HTMLElement>(wholeRowSelector));
+    // While a transform animation moves the rows (the page entering, AppShell), their rectangles are not where they will
+    // stay: measuring then marked a row that ends up whole in view as cut, and nothing measured again after the animation
+    // (24 November, on report: the first expense faded at the top of Spese). Measure once it is over.
+    const moving = movingRows(scroller, rows);
+    if (moving.length) {
+      waiting = true;
+      void Promise.allSettled(moving.map((animation) => animation.finished)).then(() => { waiting = false; schedule(); });
+      return;
+    }
     const edges = rows.map((row) => { const rect = row.getBoundingClientRect(); return { top: rect.top, bottom: rect.bottom }; });
     const hidden = new Set(clippedRows(edges, { top: box.top, bottom: box.bottom }));
     const grown = rows.findIndex((row, index) => hidden.has(index) && Math.abs((shown.get(row) ?? Number.NaN) - edges[index]!.top) < 1);
@@ -79,6 +90,7 @@ export function observeWholeRows(scroller: HTMLElement): () => void {
   mutations.observe(scroller, { childList: true, subtree: true });
   schedule();
   return () => {
+    waiting = true; // a pending wait must not schedule after the cleanup
     if (frame) cancelAnimationFrame(frame);
     scroller.removeEventListener('click', reveal);
     scroller.removeEventListener('scroll', schedule);
@@ -90,4 +102,15 @@ export function observeWholeRows(scroller: HTMLElement): () => void {
       row.style.removeProperty(peekProperty);
     }
   };
+}
+
+// Running animations, inside the scroller, that move an element containing marked rows.
+function movingRows(scroller: HTMLElement, rows: readonly HTMLElement[]): Animation[] {
+  if (!rows.length || typeof scroller.getAnimations !== 'function') return [];
+  return scroller.getAnimations({ subtree: true }).filter((animation) => {
+    const effect = animation.effect;
+    if (animation.playState !== 'running' || !(effect instanceof KeyframeEffect) || !(effect.target instanceof Element)) return false;
+    const target = effect.target;
+    return effect.getKeyframes().some((frame) => 'transform' in frame) && rows.some((row) => target.contains(row));
+  });
 }

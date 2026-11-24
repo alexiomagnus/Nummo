@@ -94,6 +94,35 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Schermi: chiusura senza coda, apertura e chiusura più rapide — 24 novembre 2026
+
+Su richiesta («le animazioni non sono ancora perfette, in particolar modo la chiusura»; «leggermente più veloci»). Registrazione
+headless rallentata (0,3×) del dettaglio di una spesa a 1440×900 e 390×844: in chiusura il contenitore, già vuoto, passava gli ultimi
+circa 300 ms poco più grande della scheda, coprendo righe vicine e intestazione del mese, che poi riapparivano a scatto.
+- `theme/containerTransform.ts`: `detailSpring` 0,95/260 (prima 0,95/200): apertura circa 480 ms (prima 550), anche l'entrata delle
+  pagine di `AppShell`; `closePrecision` 0,01: la chiusura si ferma al 99 % (circa 380 ms); `closeLead` 70 (prima 90): chiusura completa
+  circa 450 ms (prima circa 640); `crossfade.close.surfaceGone` 0,7.
+- `ScreenLayer.tsx` (`play`): in chiusura il fondo del contenitore va dal colore della scheda (al 35 %, copia già piena) a trasparente
+  al 70 %: la pagina riappare in dissolvenza attorno alla copia invece di essere coperta fino all'ultimo.
+- Test: `tests/containerTransform.test.ts` aggiornato (durate, chiusura sotto i 460 ms, ordine delle dissolvenze). `npm run check`
+  597/597. Rivista la registrazione dopo la modifica a entrambe le dimensioni, nessun errore JS. Non provato su dispositivi reali né nel
+  tema chiaro (la copia della scheda piena porta il proprio fondo). Committato e inviato, non pubblicato su Hosting.
+
+## Prima spesa sfumata entrando in Spese — 24 novembre 2026
+
+Su segnalazione (desktop, tema scuro): entrando in Spese una riga interamente visibile restava sbiadita e ritagliata come
+se fosse tagliata dal bordo del pannello. Causa: dal 24 novembre anche le destinazioni entrano con l'animazione della pagina
+(`translateY` + `scale` in `AppShell`); `observeWholeRows` (`theme/wholeRows.ts`) misurava le righe durante l'animazione,
+quando la pagina era ancora più in basso, marcava `data-clipped` la riga che allora toccava il bordo e non rimisurava più
+(le animazioni WAAPI non generano `scroll`, `resize` né mutazioni). Correzione: prima di misurare, se un'animazione di
+`transform` in corso dentro lo scroller contiene righe marcate, si aspetta la sua fine (`movingRows`, `finished`) e poi si
+misura; nessun'altra modifica.
+
+Verifica: `npm run check` (596/596). Headless Chromium 1440×900, Standard scura con `docs/testing/nummo-utente-medio.json`
+unito, tre passaggi Analisi → Spese: prima della correzione «Spesa Lidl» (bordo inferiore 848, pannello 868) restava
+`data-clipped`; dopo, solo la riga davvero tagliata dal bordo («Bolletta luce», 856–918). Non provato su smartphone o
+tablet reali. Committato e inviato, non pubblicato su Hosting.
+
 ## App Android 0.3.3: icona nera con logo bianco — 24 novembre 2026
 
 - **Su richiesta.** Solo la versione (versionCode 6, `versionName` 0.3.3, commit `6e3ebd0`): l'icona era già in `colors.xml` (`a8f694f`).
