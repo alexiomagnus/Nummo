@@ -71,18 +71,22 @@ export function peekOffset(height: number): number {
   return Math.round(Math.max(0, height) / 2);
 }
 
-// Where a released drag goes. A flick (fast enough and past the slop) moves one step in its direction: down from whole to peek,
-// from peek to closed; up always to whole. Otherwise the nearest of the three positions.
+// Where a released drag goes, by its length (user's request, 24 November: «se lo swipe è più lungo chiude l'intera pagina, se è più
+// corto la tiene aperta a metà»). From whole: past half the screen it closes; a shorter deliberate drag down (at least `deliberate`,
+// or a flick) leaves it at half; less than that it stays whole. From half: a deliberate drag or a flick down closes, up opens it
+// whole; less than that it stays at half.
 export function detentOutcome(y: number, velocity: number, height: number, from: Detent): Detent | 'dismiss' {
   const peek = peekOffset(height);
-  const start = from === 'full' ? 0 : peek;
-  const moved = y - start;
-  if (Math.abs(moved) >= 24 && Math.abs(velocity) >= 0.5) {
-    if (velocity < 0) return 'full';
-    return from === 'full' ? 'peek' : 'dismiss';
+  const deliberate = Math.min(64, Math.max(0, height) * 0.1);
+  const moved = y - (from === 'full' ? 0 : peek);
+  const flick = Math.abs(moved) >= 24 && Math.abs(velocity) >= 0.5;
+  if (from === 'full') {
+    if (moved >= peek) return 'dismiss';
+    return moved >= deliberate || (flick && velocity > 0) ? 'peek' : 'full';
   }
-  const stops: [Detent | 'dismiss', number][] = [['full', 0], ['peek', peek], ['dismiss', height]];
-  return stops.reduce((best, stop) => Math.abs(stop[1] - y) < Math.abs(best[1] - y) ? stop : best)[0];
+  if (moved <= -deliberate || (flick && velocity < 0)) return 'full';
+  if (moved >= deliberate || (flick && velocity > 0)) return 'dismiss';
+  return 'peek';
 }
 
 // Owner of a touch on the detail's content: whole, only a drag that starts with the content at its top and goes down moves the

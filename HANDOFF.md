@@ -109,6 +109,50 @@ di quel giorno e la verifica su `d196dc9`.
   (`nummo-utente-medio.json`): pulsanti con raggio a pillola; nessun errore JS. **Non provati** su telefono (il poster grigio compare solo
   nella WebView/Chrome Android). Commit `665d96e`, pubblicato su Hosting.
 
+## «Annulla» a pillola nella conferma di eliminazione — 24 novembre 2026
+
+Su richiesta (screenshot dal telefono, «Eliminare l'esercente Amazon?»): in `DeleteDialog` (`DeleteAction.tsx`) «Annulla», e «Chiudi»
+quando l'eliminazione è bloccata, sono a pillola (`radius.pill`) come «Elimina» sotto, con il loro contorno; vale per ogni conferma
+di eliminazione. `npm run check` 596/596.
+
+## Rilascio secondo la lunghezza, «Apri a metà schermo» spento di base — 24 novembre 2026
+
+Su richiesta («se lo swipe è più lungo chiude l'intera pagina, se è più corto la tiene aperta a metà; il toggle al contrario: di base
+si aprono per intero e con il toggle a metà»). Vale per dettagli e pannelli.
+- `detentOutcome` (`menuGeometry.ts`) decide per lunghezza, non più per posizione più vicina: da intero, oltre metà schermo chiude; un
+  trascinamento più corto ma voluto (almeno `deliberate` = min(64, 10 % dell'altezza)) o un colpo verso il basso lascia a metà; meno
+  resta intero. Da metà: almeno `deliberate` (o un colpo) verso il basso chiude, verso l'alto riapre intero; meno resta a metà. Test
+  aggiornati in `tests/menuGeometry.test.ts`.
+- `halfScreens` spento di base (`defaultPreferences`, `HalfScreensContext` con `false`); testo della riga «… si aprono a metà invece
+  che interi …» (anche in `en.ts`); test in `tests/preferences.test.ts`. Chi l'aveva già acceso lo ritrova acceso.
+- Verifica: `npm run check` 596/596; headless con touch a 390×844: i passaggi del dettaglio come prima, più trascinamento lungo da
+  intero (300 → 800) → chiuso e corto (300 → 450) → metà; con le preferenze di base la Categoria si apre intera (844). Nessun errore
+  JS. Committato e inviato.
+
+## Pannelli a metà schermo: Template, Scansiona scontrino, data, Categoria, Fondo — 24 novembre 2026
+
+Su richiesta, dopo la prova sul telefono dei dettagli («funziona bene; stesso comportamento per Template, Scansiona scontrino, il
+calendario, la categoria e il fondo; in queste sezioni eliminare il tasto torna indietro; un toggle nelle impostazioni per aprire la
+pagina per intero o per metà, standard per metà»).
+- `ScreenLayer` `detents="panel"`: le tre posizioni dei dettagli (intero, ridotto, chiuso; trascinamento da tutta la superficie,
+  maniglia anche pulsante, tocco sopra chiude in ridotto), ma in ridotto lo schermo **si accorcia** (`top` = metà altezza, non un
+  `transform`): l'area scorrevole e le azioni in fondo restano nella metà visibile («OK» della data, «Scatta foto»). Nessun pulsante
+  Indietro su smartphone; da medium invariati (schermo del pannello con Indietro). Un campo di testo che prende il focus in ridotto apre
+  il pannello intero (la tastiera). Apertura in ridotto: posizionato prima del primo disegno e poi sale come un foglio (pagina ferma e
+  velata, barre dell'app visibili); intero come gli altri schermi.
+- Dove: «Template» (`TemplatePicker`) e «Scansiona scontrino» (`ScanReceiptDialog`) con `detents` di `AppDialog`; il selettore della
+  data su smartphone (`DateField`: prima un foglio, ora pannello; layout del telefono invariato, titolo dentro); Categoria e Fondo con
+  `panel` di `SelectField`, impostato in `ExpenseFields` e `FundField` (quindi ovunque compaiono: Nuova spesa, modifica della spesa,
+  Templates, revisione dello scontrino, registrazione di una lista); gli altri `SelectField` restano col foglio dal basso.
+- Impostazioni › Funzionalità: «Apri a metà schermo» (`halfScreens` in `nummo.preferences.v1`, acceso di base, poi spento di base
+  lo stesso giorno: vedi sopra; `HalfScreensContext` in `ScreenLayer`, fornito da `App.tsx`). Spento, i pannelli si aprono interi e si possono
+  comunque ridurre. Testi in `en.ts`; test in `tests/preferences.test.ts`.
+- Verifica: `npm run check` 596/596. Chromium headless con touch emulato a 390×844, backup di prova con fondi: acceso, Categoria,
+  Fondo, data e Scansiona si aprono a metà (alto 422 su 844, nessun Indietro, «OK» a 820 visibile); trascinata su la Categoria diventa
+  intera, giù torna a metà, la scelta di una voce chiude e imposta il campo; tocco sopra chiude Fondo e data. Spento: si aprono interi
+  (alto 844). Nessun errore JS. Template non provato in headless (servono template salvati e l'interruttore «Usa i template»). Non
+  provato su telefono. Committato e inviato.
+
 ## Trascinamento da tutto il pannello, nota su Drive tolta, pulsanti alti uguali — 24 novembre 2026
 
 Su richiesta.

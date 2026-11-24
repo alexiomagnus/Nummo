@@ -9,6 +9,7 @@ import { Button } from './src/components/Button';
 import { Card } from './src/components/Card';
 import { IconStyleProvider } from './src/components/CategoryGlyph';
 import { HapticsProvider } from './src/components/Haptics';
+import { HalfScreensContext } from './src/components/ScreenLayer';
 import { useOverlayMotion, usePresence } from './src/components/Overlay';
 import { ThemeIcon } from './src/components/ThemeIcon';
 import { SvgIcon, iconShapes } from './src/components/SvgIcon';
@@ -83,6 +84,7 @@ export default function App() {
     <I18nProvider language={preferences.language}>
       <IconStyleProvider style={preferences.iconStyle}>
         <HapticsProvider enabled={preferences.haptics}>
+        <HalfScreensContext.Provider value={preferences.halfScreens}>
         <SafeAreaProvider initialMetrics={safeArea}>
           <PaperProvider theme={theme}>
             <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} />
@@ -91,6 +93,7 @@ export default function App() {
             <AppLockScreen />
           </PaperProvider>
         </SafeAreaProvider>
+        </HalfScreensContext.Provider>
         </HapticsProvider>
       </IconStyleProvider>
     </I18nProvider>

@@ -50,8 +50,9 @@ export function DateField({ value, error, disabled, name, label, minDate = expen
 // Material 3 modal date picker: headline with the pending date, month grid, Annulla / OK. Days outside the allowed
 // range are disabled; the default remains 2000-01-01 … today for ordinary expenses.
 function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfirm }: { visible: boolean; value: string; minDate: string; maxDate: string; onDismiss: () => void; onConfirm: (date: string) => void }) {
-  // A sheet on phones; from medium the whole content panel, as before (user's request, 23 November: the sheet in the middle of
-  // a desktop page did not please).
+  // Phones: a panel with three positions (opens in peek or whole as chosen in Settings; a sheet until 24 November, changed on
+  // request); from medium the whole content panel, as before (user's request, 23 November: the sheet in the middle of a desktop
+  // page did not please). `sheet` keeps the phone layout: the headline inside, no title.
   const sheet = useSizeClass() === 'compact';
   const { t, locale } = useI18n();
   const { colors } = useTheme();
@@ -66,7 +67,7 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
   }
   return (
     <Portal>
-      <Dialog variant={sheet ? 'sheet' : 'screen'} visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
+      <Dialog detents visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
         {/* Full screen (from medium): the chosen date is the title beside Back, so the whole month fits the panel without scrolling
             (user's request, 24 November: the last week was cut under «OK»). */}
         {!sheet && <Dialog.Title><Text variant="titleLarge" style={styles.headlineText}>{headlineFormat(locale).format(new Date(`${picked}T00:00:00Z`))}</Text></Dialog.Title>}

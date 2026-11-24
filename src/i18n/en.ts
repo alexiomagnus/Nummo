@@ -720,6 +720,8 @@ export const english: Readonly<Record<string, string>> = {
   "Torna indietro": "Go back",
   "Riduci i dettagli": "Shrink the details",
   "Espandi i dettagli": "Expand the details",
+  "Apri a metà schermo": "Open at half screen",
+  "Su smartphone, Template, Scansiona scontrino, la data, la categoria e il fondo si aprono a metà invece che interi: trascinali in su per vederli interi.": "On phones, Template, Scan receipt, the date, the category and the fund open at half screen instead of whole: drag them up to see them whole.",
   "Usa Nummo senza account": "Use Nummo without an account",
   "Questo Nummo è privato": "This Nummo is private",
   "L'account {p0} non può accedere: in modalità Avanzata entra solo il proprietario di questo Nummo.": "The account {p0} cannot sign in: in Advanced mode only the owner of this Nummo can get in.",

@@ -102,7 +102,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
             {errors.categoryId && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(errors.categoryId)}</HelperText>}
           </View>
         ) : (
-          <SelectField label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
+          <SelectField panel label={t("Categoria")} options={options} value={values.categoryId} onChange={(id) => onChange('categoryId', id)}
             disabled={disabled} error={errors.categoryId} />
         )}
         </View>

@@ -1,10 +1,11 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
+import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { AnchoredMenu, BottomSheet, type MenuAnchor } from './Overlay';
+import { ScreenLayer } from './ScreenLayer';
 import { decorativeIcon } from './FieldIcon';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -17,6 +18,9 @@ type Props<T extends string> = {
   onChange: (value: T) => void;
   error?: string;
   disabled?: boolean;
+  // Phones: the choices in a panel with three positions (ScreenLayer `detents` `panel`: peek or whole as chosen in Settings, drag
+  // from anywhere, no Back) instead of the bottom sheet; user's request, 24 November, for Categoria and Fondo of Nuova spesa.
+  panel?: boolean;
 };
 
 // Material 3 exposed dropdown: an outlined text field (label, trailing arrow). On phones the choices open in a modal
@@ -24,7 +28,7 @@ type Props<T extends string> = {
 // the field, below it or above when there is no room. The field is read-only and not focusable itself: the surrounding
 // button owns focus, press and accessibility; the overlay returns focus to it without scrolling.
 
-export function SelectField<T extends string>({ label, options, value, onChange, error, disabled }: Props<T>) {
+export function SelectField<T extends string>({ label, options, value, onChange, error, disabled, panel = false }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -63,7 +67,11 @@ export function SelectField<T extends string>({ label, options, value, onChange,
             right={decorativeIcon(({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />, false)} />
         </div>
       </Pressable>
-      {compact
+      {compact && panel
+        ? open && <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={closeMenu} onEscape={closeMenu} detents="panel">
+          <View role="menu" aria-label={label} style={styles.panelRows}>{rows}</View>
+        </ScreenLayer></Portal>
+        : compact
         ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
         : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={anchor.width} label={label} contentStyle={styles.menu}>{rows}</AnchoredMenu>}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
@@ -81,4 +89,6 @@ const styles = StyleSheet.create({
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },
   check: { width: 20, height: 20 },
+  // Rows edge to edge of the panel, as in the bottom sheet (the screen's own side margins are cancelled).
+  panelRows: { marginHorizontal: -spacing.md },
 });

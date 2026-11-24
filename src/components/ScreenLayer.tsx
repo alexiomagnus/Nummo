@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,9 +54,17 @@ export type ScreenLayerProps = {
   // Details (expense, subscription, fund) on phones: dragged down they stop halfway («peek», the top half of the screen over the
   // dimmed page) and from there go back up whole or down and closed (user's request, 24 November). A handle on top shows it and is
   // also a button (shrink / expand) for who cannot drag.
-  detents?: boolean;
+  // `panel` (user's request, 24 November: Template, Scansiona scontrino, the date, Categoria and Fondo of Nuova spesa): the same three
+  // positions, but in peek the screen gets shorter instead of only moving down, so its scroll area and its actions at the bottom fit
+  // the visible half; no Back button on phones (it closes by dragging, the handle, a tap above, the system Back); it opens in peek or
+  // whole as chosen in Settings (`HalfScreensContext`, whole by default). A text field focused in peek opens it whole.
+  detents?: boolean | 'panel';
   children: ReactNode;
 };
+
+// «Apri a metà schermo» (Settings, `halfScreens` in nummo.preferences.v1, off by default): whether the `panel` screens open in peek on
+// phones.
+export const HalfScreensContext = createContext(false);
 
 export type ScreenTone = { background: string; content: string; button: string; onButton: string };
 
@@ -80,8 +88,15 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   const root = useRef<ComponentRef<typeof View>>(null);
   const surface = useRef<ComponentRef<typeof View>>(null);
   const frameRadius = size === 'expanded' ? radius.dialog : 0;
-  const latest = useRef({ frame, frameRadius, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled });
-  latest.current = { frame, frameRadius, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled };
+  // Three positions on phones (details and panels: see `detents`); a panel may open in peek.
+  const stops = Boolean(detents) && compact && !sheet;
+  const fit = detents === 'panel';
+  const halfScreens = useContext(HalfScreensContext);
+  const [detent, setDetent] = useState<Detent>(() => stops && fit && halfScreens ? 'peek' : 'full');
+  const detentRef = useRef(detent);
+  detentRef.current = detent;
+  const latest = useRef({ frame, frameRadius, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled, fit });
+  latest.current = { frame, frameRadius, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled, fit };
   // A sheet slides by its own height (measured: it is as tall as its content).
   const settingsFor = (node: HTMLElement): Settings => {
     const { frame: box, frameRadius: corner, backdrop, sheet: isSheet } = latest.current;
@@ -121,11 +136,17 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   // Opening in the commit that inserts the layer, before the first paint; closing from the cleanup, on a copy.
   useLayoutEffect(() => {
     const node = dom(root.current);
+    // A panel opening in peek is put there before the first paint, then rises to it like a sheet (the page stays, dimmed).
+    const half = detentRef.current === 'peek';
+    const { surface: opened, scrim: dimmed } = node ? parts(node) : { surface: null, scrim: null };
+    const whole = latest.current.frame.height;
+    if (half && opened) pose(opened, dimmed, peekOffset(whole), whole, latest.current.backdrop, true);
     if (!latest.current.animate || !node || typeof node.animate !== 'function') return undefined;
-    let run: Run | null = slide(parts(node), node, settingsFor(node), true);
-    // Phones, a whole screen: the top bar and the navigation of the page under it go away with the opening (and come back while a
-    // detail is in peek, see below).
-    chrome.current = compact && !latest.current.sheet ? holdChrome() : null;
+    const opening = settingsFor(node);
+    let run: Run | null = slide(parts(node), node, half ? { ...opening, frame: { ...opening.frame, height: whole - peekOffset(whole) }, sheet: true } : opening, true);
+    // Phones, a whole screen: the top bar and the navigation of the page under it go away with the opening (and come back while it is
+    // in peek, see below).
+    chrome.current = compact && !latest.current.sheet && !half ? holdChrome() : null;
     void run.finished.then((done) => { if (done && run) { run.cancel(); run = null; } });
     return () => {
       const { animate: moving } = latest.current;
@@ -133,6 +154,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       const scrimNow = live.scrim ? Number(getComputedStyle(live.scrim).opacity) : scrimOpacity;
       const dragged = live.surface?.dataset.dragged === 'true' ? live.surface.getBoundingClientRect().height : null;
       const shift = live.surface?.style.transform ?? '';
+      const lowered = shift !== '' || (live.surface?.style.top ?? '') !== '';
       const settings = settingsFor(node);
       run?.cancel();
       const host = document.getElementById('root');
@@ -146,7 +168,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
         zIndex: '1000', pointerEvents: 'none' });
       host.appendChild(copy);
       // Pulled down, or in peek: it goes on down from where it is.
-      const back = dragged !== null || shift !== '' ? slideDown(parts(copy), shift, dragged ?? live.surface?.getBoundingClientRect().height ?? box.height, scrimNow)
+      const back = dragged !== null || lowered ? slideDown(parts(copy), shift, dragged ?? live.surface?.getBoundingClientRect().height ?? box.height, scrimNow)
         : slide(parts(copy), copy, settings, false);
       // The top bar and the navigation come back while it goes down.
       chrome.current?.(0);
@@ -199,10 +221,6 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   }, [sheet]);
 
   // ——— Details on phones: whole, peek, closed ———
-  const stops = detents && compact && !sheet;
-  const [detent, setDetent] = useState<Detent>('full');
-  const detentRef = useRef(detent);
-  detentRef.current = detent;
   const topBar = useRef<ComponentRef<typeof View>>(null);
   const scroller = useRef<ScrollViewInstance>(null);
   // Moves the screen to a position (animated from where it is, on the opening's spring) and keeps it there with an inline transform.
@@ -210,17 +228,18 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const node = dom(root.current);
     const { surface: moving, scrim } = node ? parts(node) : { surface: null, scrim: null };
     if (!moving) return;
-    const height = moving.getBoundingClientRect().height;
+    const height = latest.current.frame.height;
     const y = target === 'peek' ? peekOffset(height) : 0;
+    const sizing = latest.current.fit;
     const start = from ?? (target === 'peek' ? 0 : peekOffset(height));
     const fade = (at: number) => String(detentScrim(at, height));
-    pose(moving, null, y, height, latest.current.backdrop);
+    pose(moving, null, y, height, latest.current.backdrop, sizing);
     if (scrim) scrim.style.opacity = y ? fade(y) : '';
     if (latest.current.animate && start !== y) {
       const spring = springEasing(slideSpring, slideTimings.precision);
       const easing = CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : bezier(motion.enter);
       // Corners and shadow travel with it: squared off only as it lands whole.
-      const look = (at: number) => ({ transform: `translateY(${at}px)`, borderTopLeftRadius: `${at > 0 ? slideTimings.corner : 0}px`,
+      const look = (at: number) => ({ ...(sizing ? { top: `${at}px` } : { transform: `translateY(${at}px)` }), borderTopLeftRadius: `${at > 0 ? slideTimings.corner : 0}px`,
         borderTopRightRadius: `${at > 0 ? slideTimings.corner : 0}px`, boxShadow: `0px ${at > 0 ? -12 : 0}px ${at > 0 ? 32 : 0}px ${latest.current.backdrop}` });
       moving.animate([look(start), look(y)], { duration: spring.duration, easing });
       scrim?.animate({ opacity: [fade(start), y ? fade(y) : '0'] }, { duration: spring.duration, easing: 'linear' });
@@ -240,7 +259,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const scrim = node ? parts(node).scrim : null;
     if (!stops || !node || !moving) return undefined;
     let drag: { start: number; base: number; samples: DragSample[]; y: number } | null = null;
-    const height = () => moving.getBoundingClientRect().height;
+    const height = () => latest.current.frame.height;
     const begin = (y: number, time: number) => {
       moving.getAnimations().forEach((animation) => animation.cancel());
       scrim?.getAnimations().forEach((animation) => animation.cancel());
@@ -252,7 +271,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       drag.y = Math.max(0, drag.base + y - drag.start);
       drag.samples.push({ t: time, y });
       if (drag.samples.length > 32) drag.samples.shift();
-      pose(moving, scrim, drag.y, height(), latest.current.backdrop);
+      pose(moving, scrim, drag.y, height(), latest.current.backdrop, latest.current.fit);
     };
     // Returns whether the screen moved, so the click that may follow is not taken by what is under the finger.
     const finish = (y: number, time: number, commit: boolean): boolean => {
@@ -271,12 +290,18 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       return true;
     };
     if (content) content.style.overscrollBehaviorY = 'contain'; // no pull-to-refresh or scroll chaining to the page behind
+    // A panel in peek opens whole when a text field takes the focus: the keyboard would leave almost nothing of it.
+    const typing = (event: FocusEvent) => {
+      const target = event.target;
+      if (detentRef.current === 'peek' && target instanceof HTMLElement && target.matches('input, textarea, [contenteditable="true"]')) settle('full');
+    };
+    moving.addEventListener('focusin', typing);
     // From anywhere on the screen with a finger (user's request, 24 November), from the top bar with a mouse.
     const stop = watchDrag(node, moving, bar ? [bar] : [], {
       owner: (dx, dy, scrolled) => detailGestureOwner(dx, dy, scrolled ? 1 : 0, detentRef.current),
       begin, follow, finish,
     });
-    return () => { stop(); if (content) content.style.overscrollBehaviorY = ''; };
+    return () => { stop(); moving.removeEventListener('focusin', typing); if (content) content.style.overscrollBehaviorY = ''; };
   }, [stops, settle]);
 
   // Details use the page's margins; editors keep the 24 of their blocks (Paper's Content/Actions), and the top bar lines up with them.
@@ -310,10 +335,10 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
               <View style={[styles.handle, { backgroundColor: colors.onSurfaceVariant }]} />
             </Pressable>}
             {/* Tonal round button, larger than a bare icon (user's request, 23 November), a little below the edge. */}
-            <StateLayerPressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} disabled={backDisabled}
+            {!(stops && fit) && <StateLayerPressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} disabled={backDisabled}
               layerColor={button.color} radius={radius.pill} style={[styles.back, { backgroundColor: button.background }]}>
               <SvgIcon shape={iconShapes.chevronLeft} size={28} color={button.color} />
-            </StateLayerPressable>
+            </StateLayerPressable>}
             {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={[styles.title, tone && { color: tone.content }]}>{title}</Text>}
           </View>}
           {scroll ? <ScrollView ref={scroller} style={styles.grow} keyboardShouldPersistTaps="handled" {...(size === 'expanded' ? { dataSet: { panelScroll: 'true' } } : null)}
@@ -428,9 +453,11 @@ function detentScrim(y: number, height: number): number {
   const peek = peekOffset(height);
   return y <= peek ? scrimOpacity * Math.min(1, y / Math.max(1, peek)) : scrimOpacity * Math.max(0, 1 - (y - peek) / Math.max(1, height - peek));
 }
-function pose(surface: HTMLElement, scrim: HTMLElement | null, y: number, height: number, backdrop: string): void {
+// `sizing` (a panel): the top edge moves and the screen gets shorter, instead of a transform of the whole screen.
+function pose(surface: HTMLElement, scrim: HTMLElement | null, y: number, height: number, backdrop: string, sizing = false): void {
   const lifted = y > 0;
-  surface.style.transform = lifted ? `translateY(${y}px)` : '';
+  if (sizing) surface.style.top = lifted ? `${y}px` : '';
+  else surface.style.transform = lifted ? `translateY(${y}px)` : '';
   surface.style.borderTopLeftRadius = lifted ? `${slideTimings.corner}px` : '';
   surface.style.borderTopRightRadius = lifted ? `${slideTimings.corner}px` : '';
   surface.style.boxShadow = lifted ? `0px -12px 32px ${backdrop}` : '';

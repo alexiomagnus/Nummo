@@ -179,6 +179,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
           <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
             value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
+          <SwitchRow label={t("Apri a metà schermo")} supporting={t("Su smartphone, Template, Scansiona scontrino, la data, la categoria e il fondo si aprono a metà invece che interi: trascinali in su per vederli interi.")}
+            value={preferences.halfScreens} onChange={(halfScreens) => onChange({ halfScreens })} />
           {/* Only in the Android app: never in the browser (23 November, on request). */}
           {vibrationAvailable && <SwitchRow label={t("Vibrazione")} supporting={t(vibrationNote)}
             value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />}

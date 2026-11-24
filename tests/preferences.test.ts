@@ -127,3 +127,10 @@ test('preferenze: «Palette» predefinita dal 22 novembre, una scelta salvata re
   assert.equal(parsePreferences('{}').colorMode, 'palette');
   assert.equal(parsePreferences('{"colorMode":"mono"}').colorMode, 'mono');
 });
+
+test('«Apri a metà schermo»: spento di base, una scelta salvata resta, un valore non valido torna al predefinito', () => {
+  assert.equal(defaultPreferences.halfScreens, false);
+  assert.equal(parsePreferences(null).halfScreens, false);
+  assert.equal(parsePreferences(JSON.stringify({ halfScreens: true })).halfScreens, true);
+  assert.equal(parsePreferences(JSON.stringify({ halfScreens: 'sì' })).halfScreens, false);
+});

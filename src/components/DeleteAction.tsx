@@ -53,8 +53,8 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
             </ScrollView>
           </Dialog.ScrollArea>
           <View style={[styles.actions, compact && styles.actionsCompact]}>
-            {blocked ? <CancelButton onPress={onDismiss}>{t("Chiudi")}</CancelButton> : <>
-            <CancelButton disabled={busy} onPress={onDismiss} style={halves}>{t("Annulla")}</CancelButton>
+            {blocked ? <CancelButton onPress={onDismiss} style={dangerPill}>{t("Chiudi")}</CancelButton> : <>
+            <CancelButton disabled={busy} onPress={onDismiss} style={[halves, dangerPill]}>{t("Annulla")}</CancelButton>
             <ConfirmButton buttonColor={danger.fill} textColor={danger.ink} disabled={busy} loading={busy} style={[halves, dangerPill]}
               accessibilityLabel={confirmLabel ?? t("Conferma eliminazione di {p0}", { p0: name })}
               onPress={async () => { setBusy(true); try { if (await onConfirm()) onDismiss(); } finally { setBusy(false); } }}>{confirmLabel ?? t("Elimina")}</ConfirmButton>
@@ -66,7 +66,8 @@ export function DeleteDialog({ visible, name, title, description, confirmLabel, 
   );
 }
 
-// The confirmation «Elimina» is a red pill like every other «Elimina» (DangerButton).
+// The confirmation «Elimina» is a red pill like every other «Elimina» (DangerButton); «Annulla» and «Chiudi» beside it are pills too
+// (user's request, 24 November), with their outline.
 const dangerPill = { borderRadius: radius.pill };
 
 const styles = StyleSheet.create({
