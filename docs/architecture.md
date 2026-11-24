@@ -1543,14 +1543,16 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
 - **Richiesta dell'utente:** al tocco su una spesa di Spese, al posto dei dettagli aperti dentro la scheda, uno schermo di dettaglio dedicato
   con una transizione Material 3 Expressive (container transform), ritorno alla lista con filtri, ordinamento, ricerca e scorrimento intatti.
 - **Decisione: un livello sopra la lista, non una pagina che la sostituisce.** `ExpenseDetail` è un Portal Paper (lo stesso livello di
-  dialoghi e fogli, `Overlay.tsx`): la lista resta montata e immobile sotto, quindi al ritorno non c'è nulla da ripristinare né da
-  ridisegnare. Una pagina al posto della lista (come la lista aperta in Liste) avrebbe chiesto di salvare e ripristinare lo scorrimento e
+  dialoghi e fogli, `Overlay.tsx`; oggi il Portal è in `DetailScreen.tsx` e lo strato è `components/ScreenLayer.tsx`, vedi «Pannelli come
+  schermi» sotto): la lista resta montata e immobile sotto, quindi al ritorno non c'è nulla da ripristinare né da
+  ridisegnare. Una pagina al posto della lista (come era allora la lista aperta in Liste, oggi anch'essa uno schermo) avrebbe chiesto di salvare e ripristinare lo scorrimento e
   di tenere la lista montata e nascosta. Nessun router: lo stato è in `Workspace` (ID della spesa), cercata tra tutte le spese singole, così
   una modifica che la esclude dal filtro del fondo non chiude il dettaglio; si chiude se la spesa sparisce o cambiano pagina o vista.
 - **Area:** su smartphone tutta l'app (barra propria con Indietro, safe area dentro); da medium il pannello del contenuto (`data-app-panel`
   in `AppShell`), con navigazione e barra superiore visibili: a tutta finestra su desktop una sola spesa sarebbe stata dispersiva.
 - **Transizione:** ritaglio `clip-path: inset(... round r)` della superficie dal rettangolo della scheda al pannello e colore di fondo dalla
-  scheda (piena nel chiaro) allo sfondo, su una molla M3 (rapporto 0,9, rigidità 300: circa 450 ms, rimbalzo invisibile, `detailMotion.ts`)
+  scheda (piena nel chiaro) allo sfondo, su una molla M3 (rapporto 0,9, rigidità 300: circa 450 ms, rimbalzo invisibile, `detailMotion.ts`;
+  **superata:** oggi molla 0,95/200, circa 550 ms, in `theme/containerTransform.ts`, vedi le sezioni sotto)
   resa con `linear()` (`springEasing`, ripiego emphasized-decelerate senza `linear()`); una copia DOM della scheda (`cloneNode`, `inert`)
   segue l'angolo del contenitore e svanisce mentre compare il contenuto (dissolvenza incrociata con tempi diversi in apertura e chiusura: la
   molla fa il 90 % della strada nel primo 45 % del tempo). Web Animations avviate nel `useLayoutEffect` del componente dentro il Portal
