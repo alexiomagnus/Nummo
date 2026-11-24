@@ -180,8 +180,8 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
 
       {/* Before the editors: opened from the fund's screen, their screens mount later and stay above it. */}
       {detail && <FundDetail item={detail} monthLabel={monthLabel} isDefault={detail.fund.id === defaultFundId}
-        tracksBalance={balanceFunds.has(detail.fund.id)} canWrite={canWrite} onClose={() => setDetailId(null)}
-        onEdit={() => setEditing(detail.fund as SyncedFund)} onAdd={() => setMoving({ kind: 'income', to: detail.fund.id })}
+        canWrite={canWrite} onClose={() => setDetailId(null)}
+        onEdit={() => setEditing(detail.fund as SyncedFund)}
         onArchive={(value) => void archive(detail.fund as SyncedFund, value)}
         remove={{ blocked: usageText(detail.fund.id, true),
           title: usageText(detail.fund.id) ? t("Il fondo {p0} è in uso", { p0: detail.fund.name }) : t("Eliminare il fondo {p0}?", { p0: detail.fund.name }),

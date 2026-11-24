@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -9,8 +10,10 @@ import type { FundMonth } from '../../domain/funds';
 import { useI18n } from '../../i18n/I18nProvider';
 import { positiveColor } from '../../theme/theme';
 import { radius, spacing } from '../../theme/tokens';
-import { InfoGroup, PrimaryAction, detailActions, outlinedActionContent, secondaryActionContent } from '../history/DetailScreen';
-import { useSizeClass } from '../../theme/useSizeClass';
+import { InfoGroup, PrimaryAction, detailActions, outlinedActionContent } from '../history/DetailScreen';
+import { useReducedMotion, useSizeClass } from '../../theme/useSizeClass';
+import { heroIconSpring } from '../../theme/containerTransform';
+import { springEasing } from '../../theme/themeTransition';
 import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
 
@@ -26,12 +29,9 @@ export type FundDetailProps = {
   item: FundMonth;
   monthLabel: string;
   isDefault: boolean;
-  // The fund keeps a balance: «Aggiungi denaro».
-  tracksBalance: boolean;
   canWrite: boolean;
   onClose: () => void;
   onEdit: () => void;
-  onAdd: () => void;
   onArchive: (archived: boolean) => void;
   // Only for archived funds (active ones are deleted from their edit screen).
   remove: { blocked?: string; title: string; description: string; onDelete: () => Promise<boolean> };
@@ -46,9 +46,36 @@ export function FundDetail(props: FundDetailProps) {
   </ScreenLayer></Portal>;
 }
 
-function FundContent({ item, monthLabel, isDefault, tracksBalance, canWrite, onEdit, onAdd, onArchive, remove }: FundDetailProps) {
+function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive, remove }: FundDetailProps) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
+  // Archiving or restoring changes the screen in place (the «Archiviato» mark, the actions): a soft transition instead of a jump (user's
+  // request, 25 November): the avatar settles from a little smaller, the marks and the new actions come in from below, on the spring of
+  // the detail icons. Nothing at the opening, nothing with reduced motion.
+  const reduced = useReducedMotion();
+  const avatarRef = useRef<ComponentRef<typeof View>>(null);
+  const marksRef = useRef<ComponentRef<typeof View>>(null);
+  const actionsRef = useRef<ComponentRef<typeof View>>(null);
+  const wasArchived = useRef(item.fund.archived);
+  useLayoutEffect(() => {
+    if (wasArchived.current === item.fund.archived) return undefined;
+    wasArchived.current = item.fund.archived;
+    if (reduced) return undefined;
+    const spring = springEasing(heroIconSpring);
+    const easing = typeof CSS !== 'undefined' && CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : 'cubic-bezier(0.2, 0, 0, 1)';
+    const fade = { duration: 220, easing: 'cubic-bezier(0.2, 0, 0, 1)', fill: 'backwards' as const };
+    const node = (ref: { current: unknown }) => { const element = ref.current as HTMLElement | null; return element && typeof element.animate === 'function' ? element : null; };
+    const moves: Animation[] = [];
+    const avatar = node(avatarRef);
+    if (avatar) moves.push(avatar.animate({ transform: ['scale(0.82) rotate(-8deg)', 'scale(1) rotate(0deg)'] }, { duration: spring.duration, easing }));
+    const marks = node(marksRef);
+    if (marks) moves.push(marks.animate({ transform: ['translateY(8px) scale(0.9)', 'none'] }, { duration: spring.duration, delay: 60, easing, fill: 'backwards' }),
+      marks.animate({ opacity: [0, 1] }, { ...fade, delay: 60 }));
+    const actions = node(actionsRef);
+    if (actions) moves.push(actions.animate({ transform: ['translateY(16px)', 'none'] }, { duration: spring.duration, delay: 120, easing, fill: 'backwards' }),
+      actions.animate({ opacity: [0, 1] }, { ...fade, delay: 120 }));
+    return () => moves.forEach((move) => move.cancel());
+  }, [item.fund.archived, reduced]);
   // From medium the actions share one row in equal parts (user's request, 24 November).
   const wide = useSizeClass() !== 'compact';
   const { fund } = item;
@@ -71,12 +98,12 @@ function FundContent({ item, monthLabel, isDefault, tracksBalance, canWrite, onE
   };
   return <>
     <View style={styles.hero}>
-      <FundAvatar fund={fund} size={72} />
+      <View ref={avatarRef}><FundAvatar fund={fund} size={72} /></View>
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={styles.center}>{fund.name}</Text>
       <Text variant="displaySmall" style={[styles.amount, styles.center]}>{formatAmount(spentNow)}</Text>
       <Text variant="bodyMedium" style={[muted, styles.center]}>
         {`${forecast ? t("previsti") : t("speso nel mese")} · ${monthLabel}`}</Text>
-      {(isDefault || fund.archived) && <View style={styles.marks}>
+      {(isDefault || fund.archived) && <View ref={marksRef} style={styles.marks}>
         {isDefault && <View style={[styles.badge, { backgroundColor: colors.secondaryContainer }]}>
           <SvgIcon shape={iconShapes.star} size={16} color={colors.onSecondaryContainer} />
           <Text variant="labelMedium" style={{ color: colors.onSecondaryContainer }}>{t("Preferito")}</Text>
@@ -104,16 +131,15 @@ function FundContent({ item, monthLabel, isDefault, tracksBalance, canWrite, onE
     {/* Actions as on the other screens: full-width pills, the main one first. */}
     <ScreenActionsContext.Provider value>
       <View style={styles.actions}>
-        <View style={wide ? detailActions.line : styles.actions}>
+        <View ref={actionsRef} style={wide ? detailActions.line : styles.actions}>
         {fund.archived ? <>
           <PrimaryAction label={t("Ripristina")} icon={iconShapes.archive} onPress={() => onArchive(false)} style={wide && detailActions.part} />
           <View style={wide ? detailActions.part : undefined}><DeleteAction labeled disabled={!canWrite} name={fund.name} blocked={remove.blocked} title={remove.title} description={remove.description}
             onDelete={remove.onDelete} /></View>
         </> : <>
           <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: fund.name })} icon={iconShapes.pencil} onPress={onEdit} style={wide && detailActions.part} />
-          <View style={[styles.row, wide && [detailActions.part, { flexGrow: tracksBalance ? 2 : 1 }]]}>
-            {tracksBalance && <Button mode="contained-tonal" disabled={!canWrite} style={styles.half} contentStyle={secondaryActionContent} accessibilityLabel={t("Aggiungi denaro a {p0}", { p0: fund.name })}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />} onPress={onAdd}>{t("Aggiungi denaro")}</Button>}
+          {/* «Aggiungi denaro» is no longer here (user's request, 25 November): money is added from the page's «Aggiungi». */}
+          <View style={[styles.row, wide && detailActions.part]}>
             <Button mode="outlined" disabled={!canWrite} style={styles.half} contentStyle={outlinedActionContent} onPress={() => onArchive(true)}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.archive} size={size} color={color} />}>{t("Archivia")}</Button>
           </View>

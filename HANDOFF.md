@@ -98,6 +98,15 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Dettaglio del fondo: niente «Aggiungi denaro», transizione su Archivia/Ripristina — 25 novembre 2026
+
+Su richiesta (screenshot del dettaglio di un fondo da desktop): tolto «Aggiungi denaro» da `FundDetail` (e le prop `onAdd`/`tracksBalance`;
+il denaro si aggiunge da «Aggiungi» della pagina Fondi). Premendo «Archivia» o «Ripristina» lo schermo cambia con una transizione
+morbida invece di un salto: l'avatar si assesta da 0,82 e −8°, i segni («Archiviato», «Preferito») e la nuova riga di azioni salgono
+di 8/16 px in dissolvenza, sfasati di 60/120 ms, sulla molla `heroIconSpring`; nulla all'apertura né con movimento ridotto. Headless
+col backup dei casi limite (fondi con saldo) a 1440×900 e 390×844: azioni «Modifica, Archivia» → «Ripristina, Elimina» → di nuovo,
+5 e 3 animazioni in corso subito dopo il tocco, finite dopo; nessun errore JS. `npm run check` OK (599/599).
+
 ## «Modifica fondo» di nuovo con Indietro, senza trascinamento — 25 novembre 2026
 
 Su richiesta («questa sezione deve avere il tasto indietro e non la possibilità di scrollare»; era la seconda parte, non chiarita, della
