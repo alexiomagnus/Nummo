@@ -109,6 +109,23 @@ di quel giorno e la verifica su `d196dc9`.
   (`nummo-utente-medio.json`): pulsanti con raggio a pillola; nessun errore JS. **Non provati** su telefono (il poster grigio compare solo
   nella WebView/Chrome Android). Commit `665d96e`, pubblicato su Hosting.
 
+## Pannelli anche in Fondi, niente Indietro nei dettagli, titolo staccato dalla maniglia — 24 novembre 2026
+
+Su richiesta (screenshot dal telefono).
+- Conferma di eliminazione: «Annulla» (e «Chiudi») alti quanto «Elimina» (`DeleteAction.tsx`: contenuto `minTouch - 2`, il bordo da 1
+  del pulsante con contorno faceva 2 in più).
+- Pannelli e dettagli su smartphone: il titolo e il contenuto partono 12 sotto la maniglia (`handleClearance` di `ScreenLayer`: prima il
+  titolo di «Scansiona scontrino» la toccava).
+- Nessun pulsante Indietro su smartphone in tutti gli schermi con le tre posizioni, quindi anche nei dettagli di spesa, abbonamento e
+  fondo (prima solo nei pannelli).
+- Pagina Fondi: «Nuovo fondo»/«Modifica fondo» (`FundEditor`) e «Aggiungi denaro»/«Trasferisci tra fondi» (`MovementDialog`) diventano
+  pannelli (`detents` di `AppDialog`): trascinamento giù a metà o chiuso, su per espandere, aperti interi o a metà secondo
+  «Apri a metà schermo».
+- Verifica: `npm run check` 596/596; headless con touch a 390×844: titolo 22 sotto la maniglia (Scansiona, Nuovo fondo, Aggiungi
+  denaro, Trasferisci), nessun Indietro nel dettaglio di una spesa e nei pannelli, i tre schermi di Fondi trascinati giù di 300 vanno a
+  metà; nessun errore JS. Altezze della conferma di eliminazione non misurate in headless (stessa correzione dei pulsanti del fondo,
+  misurata il 24). Committato e inviato.
+
 ## «Annulla» a pillola nella conferma di eliminazione — 24 novembre 2026
 
 Su richiesta (screenshot dal telefono, «Eliminare l'esercente Amazon?»): in `DeleteDialog` (`DeleteAction.tsx`) «Annulla», e «Chiudi»

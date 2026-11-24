@@ -54,9 +54,10 @@ export type ScreenLayerProps = {
   // Details (expense, subscription, fund) on phones: dragged down they stop halfway («peek», the top half of the screen over the
   // dimmed page) and from there go back up whole or down and closed (user's request, 24 November). A handle on top shows it and is
   // also a button (shrink / expand) for who cannot drag.
-  // `panel` (user's request, 24 November: Template, Scansiona scontrino, the date, Categoria and Fondo of Nuova spesa): the same three
-  // positions, but in peek the screen gets shorter instead of only moving down, so its scroll area and its actions at the bottom fit
-  // the visible half; no Back button on phones (it closes by dragging, the handle, a tap above, the system Back); it opens in peek or
+  // No Back button on phones with three positions (user's request, 24 November: it closes by dragging, the handle, a tap above, the
+  // system Back). `panel` (user's request, 24 November: Template, Scansiona scontrino, the date, Categoria and Fondo, Nuovo fondo and
+  // the fund movements): the same three positions, but in peek the screen gets shorter instead of only moving down, so its scroll area
+  // and its actions at the bottom fit the visible half; it opens in peek or
   // whole as chosen in Settings (`HalfScreensContext`, whole by default). A text field focused in peek opens it whole.
   detents?: boolean | 'panel';
   children: ReactNode;
@@ -328,14 +329,14 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
             {/* The drag handle (user's request, 23 November: «per buttare giù la scheda»); a wide hit area around the small bar. */}
             <View ref={handle} {...part('handle')} aria-hidden style={styles.handleArea}><View style={[styles.handle, { backgroundColor: colors.onSurfaceVariant }]} /></View>
             {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={[styles.sheetTitle, tone && { color: tone.content }]}>{title}</Text>}
-          </View> : <View ref={topBar} style={[styles.topBar, { paddingTop: (compact ? insets.top : 0) + spacing.lg, paddingLeft: padding + side, paddingRight: padding + side }]}>
+          </View> : <View ref={topBar} style={[styles.topBar, { paddingTop: (compact ? insets.top : 0) + (stops ? handleClearance : spacing.lg), paddingLeft: padding + side, paddingRight: padding + side }]}>
             {/* The handle of a detail on phones: shows that it can be pulled down, and shrinks or expands it at a tap. */}
             {stops && <Pressable accessibilityRole="button" accessibilityLabel={detent === 'peek' ? t("Espandi i dettagli") : t("Riduci i dettagli")}
               onPress={() => settle(detent === 'peek' ? 'full' : 'peek')} style={[styles.detentHandle, { top: insets.top + spacing.xs }]}>
               <View style={[styles.handle, { backgroundColor: colors.onSurfaceVariant }]} />
             </Pressable>}
             {/* Tonal round button, larger than a bare icon (user's request, 23 November), a little below the edge. */}
-            {!(stops && fit) && <StateLayerPressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} disabled={backDisabled}
+            {!stops && <StateLayerPressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} disabled={backDisabled}
               layerColor={button.color} radius={radius.pill} style={[styles.back, { backgroundColor: button.background }]}>
               <SvgIcon shape={iconShapes.chevronLeft} size={28} color={button.color} />
             </StateLayerPressable>}
@@ -616,6 +617,10 @@ function measureFrame(size: SizeClass): Box {
   if (!panel || !(panel.width > 0)) return { left: 0, top: 0, width: root.width, height: root.height };
   return { left: panel.left - root.left, top: panel.top - root.top, width: panel.width, height: panel.height };
 }
+
+// With the handle on top (details and panels on phones), what follows starts below it, not beside it (user's report, 24 November:
+// the title touched the handle): the handle's 24-high target at 4 from the top, then 12.
+const handleClearance = spacing.xs + 24 + spacing.md;
 
 const styles = StyleSheet.create({
   root: { position: 'absolute' },

@@ -88,7 +88,7 @@ export function FundEditor({ record, funds, ready, error, onSave, close, remove 
 
   const field = (key: keyof Errors) => errors[key] ? <HelperText type="error" accessibilityRole="alert">{t(errors[key]!)}</HelperText> : null;
   return <Portal>
-    <Dialog visible onDismiss={() => { if (!busy) close(); }} focusTextEntry={!record}>
+    <Dialog visible detents onDismiss={() => { if (!busy) close(); }} focusTextEntry={!record}>
       <Dialog.Title>{record ? t("Modifica fondo") : t("Nuovo fondo")}</Dialog.Title>
       {/* Dividers on the edges that hide content come from AppDialog.ScrollArea, as in every dialog. */}
       <Dialog.ScrollArea style={styles.area}>
