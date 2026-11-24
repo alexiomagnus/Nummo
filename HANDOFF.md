@@ -98,6 +98,13 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## «Modifica fondo» di nuovo con Indietro, senza trascinamento — 25 novembre 2026
+
+Su richiesta («questa sezione deve avere il tasto indietro e non la possibilità di scrollare»; era la seconda parte, non chiarita, della
+richiesta su «Modifica categoria»): `FundEditor` (Nuovo fondo e Modifica fondo) senza `detents`: schermo normale con il pulsante
+Indietro tondo in alto, senza maniglia né posizioni. Headless a 390×844: Indietro presente, nessuna maniglia, un trascinamento giù non
+sposta lo schermo; nessun errore JS. `npm run check` OK (599/599).
+
 ## Icona dei dettagli: stessa misura per spese e abbonamenti, animazione in due tempi — 25 novembre 2026
 
 Su richiesta (screenshot del dettaglio di una spesa e di un abbonamento): l'icona del dettaglio di una spesa prende la misura di quella

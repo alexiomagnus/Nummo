@@ -28,7 +28,7 @@ type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dism
   // Colours of a screen opened from a coloured element (the payment history, from its accent row): see ScreenLayer.
   tone?: ScreenTone;
   // On phones: a panel with three positions (whole, peek, closed), dragged from anywhere, no Back button (ScreenLayer `detents`
-  // `panel`; user's requests, 24 November: Template, Scansiona scontrino, the date picker, the fund editors, then the read-only
+  // `panel`; user's requests, 24 November: Template, Scansiona scontrino, the date picker, the fund movements, then the read-only
   // screens: the transactions of Analisi, Prodotti acquistati, Storico dei pagamenti). Opens whole unless `opensHalf`.
   detents?: boolean;
   // With `detents`: always open in peek (Template), or a peek that shows all the content (the date picker). See ScreenLayer.
