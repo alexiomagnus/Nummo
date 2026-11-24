@@ -116,7 +116,10 @@ Su richiesta. (1) Tutti i pulsanti di «Archiviazione e backup» a pillola (`Sto
 predefinite» (scelta dell'utente: tenere quelle usate): conferma (`DeleteDialog`, «Ripristina») che dice quante se ne eliminano e
 quante restano; poi elimina una per una le categorie non usate da spese o abbonamenti (`resetCategories` in `Workspace`, stessa
 eliminazione del cestino) e aggiunge le predefinite mancanti per nome. Testi in `en.ts`. Verifica: solo `npm run check` 596/596
-(nessuna prova headless né su telefono, per il limite d'uso). Commit e pubblicazione nella stessa sessione.
+Commit `ca00370`, pubblicato su Hosting (bundle online identico
+all'export). Poi headless a 390×844 con `nummo-utente-medio.json` (15 categorie): «Icona» a destra del nome (stessa riga), «Aggiungi»
+sotto a tutta larghezza; l'avviso dice «Si eliminano 5 categorie non usate. 10 categorie restano perché le usano spese o
+abbonamenti…»; dopo «Ripristina» restano le 10 usate più le 5 predefinite; nessun errore JS. Non provato su telefono.
 
 ## Pannelli anche in Fondi, niente Indietro nei dettagli, titolo staccato dalla maniglia — 24 novembre 2026
 
