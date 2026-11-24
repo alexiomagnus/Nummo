@@ -90,6 +90,20 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## «Template» apre uno schermo come «Scansiona scontrino» — 24 novembre 2026
+
+- **Su richiesta** (screenshot di Nuova spesa: «stessa animazione del tasto scansiona scontrino e lo stesso comportamento di visualizzazione
+  ma deve partire dall'input template l'animazione e rispettare i colori di template»). `TemplatePicker` disegna da sé il pulsante (stessi
+  contorno, icona, etichetta e freccia in `primary`) e al tocco apre un `AppDialog` a schermo (container transform dal pulsante, che sparisce
+  finché lo schermo è aperto): titolo «Template», elenco con «Nessun template» in testa, icona della categoria, descrizione, importo a destra;
+  la voce scelta in `primaryContainer` con la spunta. Una scelta chiude lo schermo e compila il modulo come prima (`applyTemplate`
+  invariato); Indietro/Escape chiudono senza cambiare nulla. Tolte da `SelectField` le prop `trigger`, `triggerStyle` e `menuMinWidth`,
+  usate solo qui. Nessun testo nuovo.
+- **Verifica:** Chromium headless su `dist-demo`, Standard, scuro, `nummo-template-v11.json` importato dall'interfaccia, 390×844 e
+  1440×900: ritaglio iniziale uguale al rettangolo del pulsante (anche dentro il pannello da desktop), pulsante a opacità 0 da aperto e 1
+  dopo, nove template più «Nessun template», scelta di «V11 Pizza d'asporto» → 18,50, descrizione ed esercente compilati, voce segnata alla
+  riapertura, Escape chiude; nessun errore JS. Non provato su telefono reale.
+
 ## Animazione piena anche per Nuova spesa e le destinazioni — 24 novembre 2026
 
 - **Su richiesta** (screenshot del menu account e della rail: «le animazioni aggiunte a ciascuna di queste pagine voglio che le implementi
