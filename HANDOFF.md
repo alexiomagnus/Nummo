@@ -8,7 +8,7 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
   «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
   datate), bundle online `index-b03086d6…` identico byte per byte all'export. In mezzo, dopo `a8f694f`, anche `b231eeb`, `27e46bd`,
   `00a980a`/`665d96e`/`05a5ed6`, `10f3f67`, `73b9d75`, `1ed557b`, `ca00370`, `12f68c5` (sezioni datate). Prima `a8f694f` (icona nera
@@ -39,7 +39,7 @@ di quel giorno e la verifica su `d196dc9`.
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.3` «Latest», poi 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, sei tag `android-v0.1.0`…`android-v0.3.3`. Ultimo commit di codice `574956f`,
+- **Git.** `main` = `origin/main`, solo il ramo `main`, sei tag `android-v0.1.0`…`android-v0.3.3`. Ultimo commit di codice `651d93e`,
   inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
@@ -103,7 +103,8 @@ di quel giorno e la verifica su `d196dc9`.
 Su richiesta («far entrare tutta la pagina senza doverla scrollare, è poco lo spazio superato»): nel riquadro «Rinnovi» di
 `ExpenseEditor` tolto il titolo visibile (resta il nome accessibile del gruppo), padding e spazi da 16 a 12, riquadro dell'icona di
 `NextRenewalRow` da 44 a 40: il riquadro passa da 200 a 144. Headless con «Affitto»: a 390×844 prima sforava di 18, ora entra con 38 di
-margine; a 412×915 entrava già; a 360×740 sfora ancora (134: lì serve scorrere). `npm run check` OK (598/598).
+margine; a 412×915 entrava già; a 360×740 sfora ancora (134: lì serve scorrere). `npm run check` OK (598/598). Commit
+`651d93e` (con la sezione seguente), pubblicato su Hosting (bundle `index-9611df32…` identico all'export).
 
 ## Transazioni di Analisi, Prodotti e Storico dei pagamenti trascinabili — 24 novembre 2026
 
@@ -5916,7 +5917,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (24 novembre):** tutto il codice fino a `574956f` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (24 novembre):** tutto il codice fino a `651d93e` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
