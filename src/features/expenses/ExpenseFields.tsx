@@ -23,7 +23,7 @@ type Props = {
   categories: readonly Category[];
   dataState?: 'loading' | 'ready' | 'error';
   disabled?: boolean;
-  // Only the desktop new-expense page opts into a shorter, denser form.
+  // A shorter, denser form: the desktop new-expense page, the receipt review and the editors (expense, series, template, list).
   dense?: boolean;
   // Rendered below the category picker (the repeat switch and its options).
   extra?: ReactNode;
@@ -35,8 +35,6 @@ type Props = {
   merchant?: { value: string; merchants: readonly RankedMerchant[]; error?: string; onChange: (value: string) => void };
   // Templates: no date field (22 November, on request); the amount takes the whole first row.
   withoutDate?: boolean;
-  // The fields fill the height they are given: the description grows into the free room (the expense editor's screen).
-  grow?: boolean;
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
@@ -44,7 +42,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row (also on phones, where they share it in halves), then description, merchant (optional), category and `extra` (repeat).
 // Every other field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, fund, fundBelow = false, merchant, withoutDate = false, grow = false, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, fund, fundBelow = false, merchant, withoutDate = false, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -58,7 +56,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
     })),
   ], [categories, t]);
   return (
-    <View style={[styles.layout, dense && styles.denseLayout, grow && styles.grow]} aria-busy={dataState === 'loading'}>
+    <View style={[styles.layout, dense && styles.denseLayout]} aria-busy={dataState === 'loading'}>
       <View>
         <View style={[styles.firstRow, compact && styles.firstRowCompact]}>
           <View style={[styles.amount, compact && styles.amountCompact]}>
@@ -74,9 +72,9 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
         {errors.amount && <HelperText type="error" accessibilityRole="alert">{t(errors.amount)}</HelperText>}
         {!withoutDate && errors.date && <HelperText type="error" accessibilityRole="alert">{t(errors.date)}</HelperText>}
       </View>
-      <View style={grow ? styles.grow : undefined}>
+      <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
-          multiline numberOfLines={dense ? 2 : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription, grow && styles.grow]}
+          multiline numberOfLines={dense ? 2 : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription]}
           onChangeText={(value) => onChange('description', clipToLength(value, expensePolicy.maxDescriptionLength))} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {/* The counter appears with the first character: in the flow it pushed every field below, and «Salva» with them,
@@ -126,7 +124,6 @@ function amountSize(amount: string) {
 
 const styles = StyleSheet.create({
   layout: { gap: spacing.lg },
-  grow: { flexGrow: 1 },
   denseLayout: { gap: spacing.md },
   denseDescription: { minHeight: 80 },
   // Phones with Fondo on its own row: the room it takes comes from here, so «Salva» stays whole above the navigation.

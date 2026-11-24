@@ -98,6 +98,21 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Descrizione degli editor più bassa, azioni su una riga da desktop — 24 novembre 2026
+
+- **Su segnalazione** («terribile, la sezione descrizione è troppo grande»): tolta la Descrizione che cresceva fino alle azioni
+  (`grow` di `ExpenseFields`, introdotto lo stesso giorno). Modifica spesa/serie e la registrazione di una lista usano `dense` come
+  l'editor dei template: Descrizione su due righe (72), spazi da 12.
+- **Su richiesta** («per risparmiare spazio, almeno su desktop, bottone elimina e salva sulla stessa riga; analizza questo
+  comportamento in altre sezioni»): da medium le azioni degli schermi (`AppDialog` `screenActions`, `actionsRow`/`share`) sono su una
+  riga in parti uguali, «Elimina» a sinistra e la conferma a destra: vale per tutti gli editor (spesa, serie, template, prodotto,
+  fondo, movimenti…). Su smartphone restano in colonna. Stesso trattamento nei dettagli di abbonamento («Modifica», «Annulla
+  abbonamento», «Metti in pausa»/«Riattiva») e fondo («Modifica», «Aggiungi denaro», «Archivia»; archiviato: «Ripristina»,
+  «Elimina») con `detailActions` di `DetailScreen` e la prop `style` di `PrimaryAction`.
+- **Verifica:** `npm run check` OK (598/598). Headless con `nummo-utente-medio.json`: a 1440×900 Elimina | Salva 550×56 ciascuno su
+  una riga (spesa e serie), dettaglio abbonamento tre pulsanti da circa 360 su una riga, fondo Modifica | Archivia; a 390×844 tutto in
+  colonna come prima; Descrizione alta 72 a entrambe le dimensioni; nessun errore JS. Non provato su telefono.
+
 ## Scelte su schermi propri, icone di Periodo e Grafico, icona dei dettagli animata, «Apri a metà schermo» tolto — 24 novembre 2026
 
 - **Su richiesta** (screenshot):

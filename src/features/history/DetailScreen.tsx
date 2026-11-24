@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type ComponentRef, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Button } from '../../components/Button';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
@@ -159,9 +159,9 @@ export function InfoGrid({ cells }: { cells: readonly GridCell[] }) {
 }
 
 // The page's one primary action (Modifica): full width, pill-shaped, as «Salva» in Nuova spesa.
-export function PrimaryAction({ label, accessibilityLabel, icon, onPress }: { label: string; accessibilityLabel?: string; icon: string; onPress: () => void }) {
+export function PrimaryAction({ label, accessibilityLabel, icon, onPress, style }: { label: string; accessibilityLabel?: string; icon: string; onPress: () => void; style?: StyleProp<ViewStyle> }) {
   return (
-    <View style={styles.actions}>
+    <View style={[styles.actions, style]}>
       <Button mode="contained" accessibilityLabel={accessibilityLabel} onPress={onPress}
         icon={({ size: iconSize, color }) => <SvgIcon shape={icon} size={iconSize} color={color} />}
         contentStyle={styles.actionContent} labelStyle={styles.actionLabel} style={styles.action}>{label}</Button>
@@ -172,6 +172,12 @@ export function PrimaryAction({ label, accessibilityLabel, icon, onPress }: { la
 // The half-width actions under «Modifica» (subscription and fund details): as tall as it outside (user's request, 24 November).
 // An outlined button draws its 1 dp border around the content, so its content is 2 shorter.
 export const secondaryActionContent = { minHeight: layout.controlHeight } as const;
+// From medium the actions of a detail share one row in equal parts (user's request, 24 November: «per risparmiare spazio, almeno su
+// desktop»): `line` around them, `part` on each (also on the inner row of the half-width ones, with `flex` = how many it holds).
+export const detailActions = StyleSheet.create({
+  line: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.md },
+  part: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
+});
 export const outlinedActionContent = { minHeight: layout.controlHeight - 2 } as const;
 
 const styles = StyleSheet.create({

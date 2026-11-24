@@ -65,10 +65,13 @@ function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = 
     if (child == null || typeof child === 'boolean') return;
     if (isValidElement<{ children?: ReactNode; style?: StyleProp<ViewStyle> }>(child) && child.type === Dialog.Title) { title = child.props.children; return; }
     if (isValidElement<{ style?: StyleProp<ViewStyle>; children?: ReactNode }>(child) && child.type === Dialog.Actions) {
-      const actions = screenActions(child.props.children, dismissable);
+      // From medium, two or more actions share one row in equal parts, Elimina first and the confirmation last (user's request,
+      // 24 November: «per risparmiare spazio, almeno su desktop, bottone elimina e salva sulla stessa riga»); on phones a column.
+      const inRow = !compact;
+      const actions = screenActions(child.props.children, dismissable, inRow);
       if (actions.length === 0) return;
       blocks.push(cloneElement(child as ReactElement<{ style?: StyleProp<ViewStyle>; children?: ReactNode }>,
-        { style: [child.props.style, screenStyles.actions], children: <ScreenActionsContext.Provider value>{actions}</ScreenActionsContext.Provider> }));
+        { style: [child.props.style, screenStyles.actions, inRow && actions.length > 1 && screenStyles.actionsRow], children: <ScreenActionsContext.Provider value>{actions}</ScreenActionsContext.Provider> }));
       return;
     }
     blocks.push(child);
@@ -89,7 +92,7 @@ const isPair = (element: Styled): boolean => {
   const has = (style: unknown): boolean => style === dialogActionPair || (Array.isArray(style) && style.some(has));
   return has(element.props.style);
 };
-function screenActions(children: ReactNode, dropCancel: boolean): Styled[] {
+function screenActions(children: ReactNode, dropCancel: boolean, inRow = false): Styled[] {
   const items: Styled[] = [];
   const visit = (node: ReactNode) => Children.forEach(node, (child) => {
     if (!isValidElement(child)) return;
@@ -98,7 +101,8 @@ function screenActions(children: ReactNode, dropCancel: boolean): Styled[] {
     items.push(child as Styled);
   });
   visit(children);
-  return items.map((item, index) => cloneElement(item, { key: item.key ?? index, style: [item.props.style, screenStyles.full] }));
+  const place = inRow && items.length > 1 ? screenStyles.share : screenStyles.full;
+  return items.map((item, index) => cloneElement(item, { key: item.key ?? index, style: [item.props.style, place] }));
 }
 
 function AlertDialog({ visible = false, onDismiss, dismissable = true, testID, style, focusTextEntry = false, children }: Props) {
@@ -186,6 +190,9 @@ const screenStyles = StyleSheet.create({
   // Natural height whatever the dialog passed for its row layout: a `flex: 1` (equal halves in a row) in this column would mean
   // basis 0 and shrinkable, a zero-height box with the button spilling below the screen («Scansiona», 24 November).
   full: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', alignSelf: 'stretch', alignItems: 'stretch', marginRight: 0, marginLeft: 0 },
+  // From medium: the actions in one row, equal parts.
+  actionsRow: { flexDirection: 'row', alignItems: 'stretch' },
+  share: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, alignSelf: 'auto', alignItems: 'stretch', marginRight: 0, marginLeft: 0 },
 });
 
 const styles = StyleSheet.create({

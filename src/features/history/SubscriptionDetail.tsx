@@ -13,7 +13,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
-import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGrid, PrimaryAction, outlinedActionContent, secondaryActionContent, type GridCell } from './DetailScreen';
+import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGrid, PrimaryAction, detailActions, outlinedActionContent, secondaryActionContent, type GridCell } from './DetailScreen';
 import { PaymentsDialog } from './PaymentsDialog';
 import { StatusDialog } from './StatusDialog';
 import { StatusBadge, subscriptionCardId } from './SubscriptionList';
@@ -91,10 +91,13 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
     </DetailHero>
     <InfoGrid cells={cells} />
     <View style={styles.actions}>
-      <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })} icon={iconShapes.pencil} onPress={() => onEdit(entry.id)} />
+      {/* From medium «Modifica» and the status actions in one row, equal parts (user's request, 24 November). */}
+      <View style={compact ? styles.actions : detailActions.line}>
+      <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })} icon={iconShapes.pencil} onPress={() => onEdit(entry.id)}
+        style={!compact && detailActions.part} />
       {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). While the «from when?» sheet is up
           only the pressed one disappears, as every origin of a screen (user's request, 24 November). */}
-      <View style={styles.statusRow}>
+      <View style={[styles.statusRow, !compact && [detailActions.part, { flexGrow: status === 'cancelled' ? 1 : 2 }]]}>
         {status !== 'cancelled' && <Button mode="outlined" textColor={colors.error} style={styles.half} contentStyle={outlinedActionContent} disabled={!canChange || busy}
           accessibilityLabel={t("Annulla abbonamento")} icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
           onPress={() => void change('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
@@ -104,6 +107,7 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
           : <Button mode="contained-tonal" style={styles.half} contentStyle={secondaryActionContent} disabled={!canChange || busy} loading={busy}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
             onPress={() => void change('active')}>{t("Riattiva")}</Button>}
+      </View>
       </View>
       {!canChange && <Text variant="bodySmall" style={[styles.center, { color: muted }]}>
         {t("Per cambiare stato serve la connessione con la sincronizzazione completata.")}</Text>}

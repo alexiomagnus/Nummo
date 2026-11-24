@@ -9,7 +9,8 @@ import type { FundMonth } from '../../domain/funds';
 import { useI18n } from '../../i18n/I18nProvider';
 import { positiveColor } from '../../theme/theme';
 import { radius, spacing } from '../../theme/tokens';
-import { InfoGroup, PrimaryAction, outlinedActionContent, secondaryActionContent } from '../history/DetailScreen';
+import { InfoGroup, PrimaryAction, detailActions, outlinedActionContent, secondaryActionContent } from '../history/DetailScreen';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
 
@@ -48,6 +49,8 @@ export function FundDetail(props: FundDetailProps) {
 function FundContent({ item, monthLabel, isDefault, tracksBalance, canWrite, onEdit, onAdd, onArchive, remove }: FundDetailProps) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
+  // From medium the actions share one row in equal parts (user's request, 24 November).
+  const wide = useSizeClass() !== 'compact';
   const { fund } = item;
   const forecast = item.kind === 'future';
   const spentNow = forecast ? item.forecastSpent : item.spent;
@@ -101,19 +104,21 @@ function FundContent({ item, monthLabel, isDefault, tracksBalance, canWrite, onE
     {/* Actions as on the other screens: full-width pills, the main one first. */}
     <ScreenActionsContext.Provider value>
       <View style={styles.actions}>
+        <View style={wide ? detailActions.line : styles.actions}>
         {fund.archived ? <>
-          <PrimaryAction label={t("Ripristina")} icon={iconShapes.archive} onPress={() => onArchive(false)} />
-          <DeleteAction labeled disabled={!canWrite} name={fund.name} blocked={remove.blocked} title={remove.title} description={remove.description}
-            onDelete={remove.onDelete} />
+          <PrimaryAction label={t("Ripristina")} icon={iconShapes.archive} onPress={() => onArchive(false)} style={wide && detailActions.part} />
+          <View style={wide ? detailActions.part : undefined}><DeleteAction labeled disabled={!canWrite} name={fund.name} blocked={remove.blocked} title={remove.title} description={remove.description}
+            onDelete={remove.onDelete} /></View>
         </> : <>
-          <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: fund.name })} icon={iconShapes.pencil} onPress={onEdit} />
-          <View style={styles.row}>
+          <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: fund.name })} icon={iconShapes.pencil} onPress={onEdit} style={wide && detailActions.part} />
+          <View style={[styles.row, wide && [detailActions.part, { flexGrow: tracksBalance ? 2 : 1 }]]}>
             {tracksBalance && <Button mode="contained-tonal" disabled={!canWrite} style={styles.half} contentStyle={secondaryActionContent} accessibilityLabel={t("Aggiungi denaro a {p0}", { p0: fund.name })}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />} onPress={onAdd}>{t("Aggiungi denaro")}</Button>}
             <Button mode="outlined" disabled={!canWrite} style={styles.half} contentStyle={outlinedActionContent} onPress={() => onArchive(true)}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.archive} size={size} color={color} />}>{t("Archivia")}</Button>
           </View>
         </>}
+        </View>
         {!canWrite && <Text variant="bodySmall" style={[muted, styles.center]}>{t("Le modifiche ai fondi richiedono la connessione e dati sincronizzati.")}</Text>}
       </View>
     </ScreenActionsContext.Provider>

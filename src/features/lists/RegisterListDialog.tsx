@@ -65,7 +65,7 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         {bought.length === 0 ? t("Nessun prodotto spuntato: la spesa conterrà solo il totale.")
           : t("Verrà creata una sola spesa con {p0} di {p1} prodotti acquistati. La lista sarà archiviata.", { p0: bought.length, p1: items.length })}</Text>
-      <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}
+      <ExpenseFields dense values={draft} errors={errors} categories={categories} disabled={busy}
         extra={fundChoices.length > 0 ? <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}
           onChange={(fundId) => { setDraft((d) => ({ ...d, fundId })); setErrors((e) => ({ ...e, fundId: undefined })); }} /> : undefined}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />

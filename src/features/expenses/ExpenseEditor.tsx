@@ -89,9 +89,9 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
   return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }}>
     <Dialog.Title>{record.recurrence ? t("Modifica serie") : t("Modifica spesa")}</Dialog.Title>
     <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-      {/* A single expense fills the screen: the description grows into the room left above the actions (user's request, 24 November:
-          «ottimizzare la visualizzazione per occupare lo spazio»); a series has more below and keeps it at its usual height. */}
-      <ExpenseFields grow={!series} values={draft} errors={errors} categories={categories} disabled={busy}
+      {/* The denser fields of the editors (as TemplateEditor): a two-line description. A description grown to fill the screen was
+          tried on 24 November and withdrawn the same evening, on request («la sezione descrizione è troppo grande»). */}
+      <ExpenseFields dense values={draft} errors={errors} categories={categories} disabled={busy}
         extra={fundChoices.length > 0 ? <View style={{ gap: spacing.xs }}>
           <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}
             onChange={(fundId) => { setDraft((d) => ({ ...d, fundId })); setErrors((e) => ({ ...e, fundId: undefined })); }} />
@@ -140,6 +140,6 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingVertical: spacing.sm, gap: spacing.lg },
+  content: { paddingVertical: spacing.sm, gap: spacing.lg },
   renewals: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.lg },
 });
