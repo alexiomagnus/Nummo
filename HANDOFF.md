@@ -125,7 +125,7 @@ Su richiesta.
   con 2 in meno per il bordo da 1 dei pulsanti con contorno: misurati 56/56/56 all'esterno).
 - Verifica: `npm run check` 595/595. Chromium headless con touch emulato a 390×844: i dieci passaggi del dettaglio di una spesa come
   prima; foglio di Nuova lista: trascinamento corto dal titolo → torna su, trascinamento dal campo del nome → chiuso; altezze dei
-  pulsanti del fondo a 1440×900. Committato e inviato.
+  pulsanti del fondo a 1440×900. Commit `10f3f67`, pubblicato su Hosting (bundle online `index-d394291d…` identico all'export).
 
 ## Dettagli su smartphone: intero, ridotto, chiuso — 24 novembre 2026
 
@@ -148,7 +148,7 @@ visualizzazione e decidere se ingrandirla o chiuderla»; poi «procedi con la tu
   in giù → ridotto; contenuto in su da ridotto → intero; colpo veloce → ridotto, un altro → chiuso; maniglia → ridotto, tocco sopra →
   chiuso; tocco su Indietro → chiuso; nessun errore JS. Nel simulatore il dito «si ferma» circa 50 ms prima di sollevarsi: i colpi
   provati con passi più ampi. **Da provare sul telefono** (Android nell'app e in Chrome, iPhone): sensibilità del colpo, conflitto con
-  lo scorrimento del contenuto, rimbalzo di iOS. Committato e inviato.
+  lo scorrimento del contenuto, rimbalzo di iOS. Commit `10f3f67`, pubblicato su Hosting.
 
 ## Schermi a scorrimento (scelto tra tre prove) — 24 novembre 2026
 
