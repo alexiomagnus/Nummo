@@ -135,7 +135,8 @@ di quel giorno e la verifica su `d196dc9`.
   scuro, 390×844 e 1440×900: livello 390×844 / 1440×900 dentro `#root`, foglio da 203 / 216 alto 641 / 684 con angoli 28/28/0, video
   `cover` a 1920×1080 nativi, pulsanti 48/72/48, focus su «Torna indietro», `theme-color` #0B0A08; Escape → livello chiuso, dialogo
   al passo «Scegli»; «Scatta» → foto nell'anteprima e «Scansiona»; nessun errore JS. **Non provati:** torcia reale (Chrome Android),
-  iPhone, app Android (WebView), galleria aperta dalla fotocamera su telefono. Non committato.
+  iPhone, app Android (WebView), galleria aperta dalla fotocamera su telefono. Committato in `b231eeb`, inviato e pubblicato su
+  Hosting su richiesta (bundle `index-050698b4…` identico byte per byte).
 
 ## Notifiche: forma uniforme, tocco con ripiego, iOS solo dalla Home, modello assetlinks — 24 novembre 2026
 
