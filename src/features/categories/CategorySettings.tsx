@@ -7,7 +7,7 @@ import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
 import { categoryNameError, maxCategoryNameLength, type Category, type CategoryIcon, type CategoryUsage } from '../../domain/category';
 import { clipToLength, searchPolicy } from '../../domain/policy';
-import { DeleteAction } from '../../components/DeleteAction';
+import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { decorativeIcon, leadingIcon } from '../../components/FieldIcon';
@@ -21,8 +21,9 @@ type Props = {
   error: string | null;
   ready: boolean;
   notify: (message: string) => void;
-  // «Ripristina le categorie predefinite»: adds back the defaults missing by name.
-  onAddDefaults?: () => void;
+  // «Ripristina le categorie predefinite» (24 November, on request): deletes every category not in use and adds back the defaults
+  // missing by name, after a confirmation that says how many go and how many stay. Resolves with whether it was done.
+  onResetDefaults?: () => Promise<boolean>;
   // Expenses and subscriptions per category; null while they are not loaded (deleting waits: a used category is never deleted).
   usage: ReadonlyMap<string, CategoryUsage> | null;
   canAddDefaults: boolean;
@@ -32,7 +33,7 @@ type Props = {
   onUpdate: (id: string, name: string, icon: CategoryIcon | null, expected: Category) => boolean | Promise<boolean>;
 };
 
-export function CategorySettings({ categories, error, ready, notify, onAddDefaults, canAddDefaults, usage, onCreate, onDelete, onUpdate }: Props) {
+export function CategorySettings({ categories, error, ready, notify, onResetDefaults, canAddDefaults, usage, onCreate, onDelete, onUpdate }: Props) {
   const { t } = useI18n();
   const theme = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -57,6 +58,15 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
   const [choosingIcon, setChoosingIcon] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Category | null>(null);
+  const [resetting, setResetting] = useState(false);
+  // What the reset does, said before it happens.
+  const resetText = () => {
+    const kept = categories.filter((category) => inUse(category.id)).length;
+    const removed = categories.length - kept;
+    const goes = removed === 0 ? t("Nessuna categoria da eliminare.") : removed === 1 ? t("Si elimina 1 categoria non usata.") : t("Si eliminano {p0} categorie non usate.", { p0: removed });
+    const stays = kept === 0 ? '' : kept === 1 ? t("1 categoria resta perché la usano spese o abbonamenti.") : t("{p0} categorie restano perché le usano spese o abbonamenti.", { p0: kept });
+    return [goes, stays, t("Poi tornano le categorie predefinite che mancano. L’operazione non può essere annullata.")].filter(Boolean).join(' ');
+  };
   const create = async () => {
     const validationError = categoryNameError(name, categories);
     setNameError(validationError);
@@ -71,11 +81,16 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
   };
 
   const shown = filter ? categories.filter((category) => searchKey(category.label).includes(searchKey(filter))) : categories;
-  // Creation: name, icon, add on one row; on phones the name takes the whole first row and «Icona» and «Aggiungi» share the
-  // next one in halves (user's request, 22 November: the name field was too narrow). The icon grid opens only on demand.
+  // Creation: name, icon, add on one row; on phones the name and «Icona» on the first row, «Aggiungi» below at full width (user's
+  // request, 24 November; from 22 November the name had a row of its own and the two buttons shared the next in halves). The icon
+  // grid opens only on demand.
+  const iconButton = <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}
+    icon={({ size, color }) => <SvgIcon shape={choosingIcon ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
+    accessibilityLabel={t("Icona della categoria, facoltativa")} style={styles.create} contentStyle={styles.createContent}>{t("Icona")}</Button>;
+  const addButton = <Button mode="contained" style={[styles.create, compact && styles.addCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>;
   const createForm = (
     <View style={styles.createPanel}>
-      <View style={[styles.createRow, compact && styles.createRowCompact]}>
+      <View style={styles.createRow}>
         <View style={[styles.nameField, compact && styles.nameFieldCompact]}>
           <TextInput outlineStyle={inputOutline} label={t("Nuova categoria")} accessibilityLabel={t("Nome della nuova categoria, obbligatorio")} mode="outlined" value={name}
             onChangeText={(value) => { setName(clipToLength(value, maxCategoryNameLength)); setNameError(null); }}
@@ -83,13 +98,9 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
             left={icon ? decorativeIcon(() => <CategoryGlyph icon={icon} size={24} />) : undefined} />
           {nameError && <HelperText type="error" accessibilityRole="alert">{t(nameError)}</HelperText>}
         </View>
-        <View style={styles.createButtons}>
-          <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}
-            icon={({ size, color }) => <SvgIcon shape={choosingIcon ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
-            accessibilityLabel={t("Icona della categoria, facoltativa")} style={[styles.create, compact && styles.createCompact]} contentStyle={styles.createContent}>{t("Icona")}</Button>
-          <Button mode="contained" style={[styles.create, compact && styles.createCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>
-        </View>
+        {compact ? iconButton : <View style={styles.createButtons}>{iconButton}{addButton}</View>}
       </View>
+      {compact && addButton}
       {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={!ready} />}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
@@ -126,10 +137,14 @@ export function CategorySettings({ categories, error, ready, notify, onAddDefaul
             );
           })}
         </View>
-        {/* Always offered, with or without categories (user's request, 22 November): it adds back only the defaults missing by name. */}
-        {/* Same look as «Ripristina predefiniti» of Settings (user's request, 22 November): pill, label in `secondary`. */}
-        {onAddDefaults && <View style={compact ? undefined : styles.start}><Button mode="outlined" textColor={theme.colors.secondary} style={styles.restore} disabled={!canAddDefaults} onPress={onAddDefaults}
+        {/* Always offered, with or without categories (user's request, 22 November); since 24 November it deletes the categories not in
+            use and brings back the defaults, after a warning (user's request). Same look as «Ripristina predefiniti» of Settings: pill,
+            label in `secondary`. */}
+        {onResetDefaults && <View style={compact ? undefined : styles.start}><Button mode="outlined" textColor={theme.colors.secondary} style={styles.restore}
+          disabled={!canAddDefaults || usage === null} onPress={() => setResetting(true)}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>{t("Ripristina le categorie predefinite")}</Button></View>}
+        {onResetDefaults && <DeleteDialog visible={resetting} name={t("le categorie")} title={t("Ripristinare le categorie predefinite?")}
+          description={resetText()} confirmLabel={t("Ripristina")} onDismiss={() => setResetting(false)} onConfirm={onResetDefaults} />}
         {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
         {editing && <CategoryEditor record={editing} categories={categories} ready={ready} error={error}
           onSave={async (nextName, nextIcon) => {
@@ -145,12 +160,11 @@ const styles = StyleSheet.create({
   root: { gap: spacing.lg },
   createPanel: { gap: spacing.md },
   createRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: spacing.md },
-  // Phones: the name alone on the first row, at full width; «Icona» and «Aggiungi» below, in equal halves.
-  createRowCompact: { flexDirection: 'column', alignItems: 'stretch', flexWrap: 'nowrap' },
-  nameFieldCompact: { flexGrow: 0, flexBasis: 'auto' },
+  // Phones: the name and «Icona» on one row (the name takes what is left), «Aggiungi» below at full width.
+  nameFieldCompact: { flexBasis: 0 },
+  addCompact: { marginTop: 0 },
   nameField: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
   createButtons: { flexDirection: 'row', gap: spacing.md },
-  createCompact: { flex: 1, marginTop: 0 },
   // Paper's outlined field is 56 dp with 6 dp reserved above its box: buttons take the same 50 dp box and offset.
   create: { marginTop: 6, height: layout.fieldBoxHeight },
   createContent: { height: '100%' },

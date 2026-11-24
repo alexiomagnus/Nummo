@@ -9,7 +9,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import type { ProtectionState } from '../../services/storageProtection';
 import type { StorageMode } from '../../services/storageMode';
-import { spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { appOnlyStandard, appWithoutAdvanced } from './ModeChoice';
 
@@ -77,7 +77,7 @@ export function StandardStorage({ protection, onChangeMode, style }: Common & { 
       {appWithoutAdvanced()
         ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t(appOnlyStandard)}</Text>
         : <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-          <Button mode="contained" style={doubleWidth(sameWidth, spacing.sm)} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
+          <Button mode="contained" style={[doubleWidth(sameWidth, spacing.sm), pill]} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
         </View>}
       <ChangeModeDialog visible={changing} target="advanced" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('advanced')} />
     </Card>
@@ -102,9 +102,9 @@ export function AdvancedStorage({ project, cache, onChangeMode, style, connected
         <InfoRow shape={iconShapes.cloudOff} label={t("Cache offline")} value={t(cache)} />
       </View>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        {connected && onDisconnect && <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.logout)} onPress={() => setDisconnecting(true)}>{t("Scollega progetto")}</Button>}
+        {connected && onDisconnect && <Button mode="outlined" {...sameWidth} style={[sameWidth.style, pill]} icon={icon(iconShapes.logout)} onPress={() => setDisconnecting(true)}>{t("Scollega progetto")}</Button>}
         {/* Alone, as wide as the two buttons of the rows below; beside «Scollega progetto», one width each. */}
-        <Button mode="contained" {...(connected && onDisconnect ? sameWidth : { style: doubleWidth(sameWidth, spacing.sm) })} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
+        <Button mode="contained" {...(connected && onDisconnect ? sameWidth : {})} style={[connected && onDisconnect ? sameWidth.style : doubleWidth(sameWidth, spacing.sm), pill]} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
       </View>
       <ChangeModeDialog visible={changing} target="standard" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('standard')} />
       {onDisconnect && <DisconnectDialog visible={disconnecting} project={project} onDismiss={() => setDisconnecting(false)} onConfirm={onDisconnect} />}
@@ -190,3 +190,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
 });
+
+// Every button of the «Archiviazione e backup» page is a pill (user's request, 24 November).
+const pill = { borderRadius: radius.pill };

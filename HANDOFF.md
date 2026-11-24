@@ -109,6 +109,15 @@ di quel giorno e la verifica su `d196dc9`.
   (`nummo-utente-medio.json`): pulsanti con raggio a pillola; nessun errore JS. **Non provati** su telefono (il poster grigio compare solo
   nella WebView/Chrome Android). Commit `665d96e`, pubblicato su Hosting.
 
+## Archiviazione a pillole, form delle Categorie, ripristino delle categorie — 24 novembre 2026
+
+Su richiesta. (1) Tutti i pulsanti di «Archiviazione e backup» a pillola (`StorageSection`, `ModeTransfer`, `BackupActions`).
+(2) Categorie su smartphone: nome e «Icona» sulla stessa riga, «Aggiungi» sotto a tutta larghezza. (3) «Ripristina le categorie
+predefinite» (scelta dell'utente: tenere quelle usate): conferma (`DeleteDialog`, «Ripristina») che dice quante se ne eliminano e
+quante restano; poi elimina una per una le categorie non usate da spese o abbonamenti (`resetCategories` in `Workspace`, stessa
+eliminazione del cestino) e aggiunge le predefinite mancanti per nome. Testi in `en.ts`. Verifica: solo `npm run check` 596/596
+(nessuna prova headless né su telefono, per il limite d'uso). Commit e pubblicazione nella stessa sessione.
+
 ## Pannelli anche in Fondi, niente Indietro nei dettagli, titolo staccato dalla maniglia — 24 novembre 2026
 
 Su richiesta (screenshot dal telefono).

@@ -67,7 +67,7 @@ export function ImportPreview({ source, plan: merge, busy, enabled, onMerge, onC
     {!mergeBlocked && missing > 0 && <Text variant="bodySmall" style={hint}>
       {missing === 1 ? t("1 riferimento a fondi o categorie mancanti.") : t("{p0} riferimenti a fondi o categorie mancanti.", { p0: missing })}</Text>}
     <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-      {!mergeBlocked && <Button disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={onMerge}>{t(mergeLabel)}</Button>}
+      {!mergeBlocked && <Button style={pill} disabled={busy || !enabled || mergeEmpty} mode="contained" icon={icon(iconShapes.upload)} onPress={onMerge}>{t(mergeLabel)}</Button>}
       {replace}
       <CancelButton disabled={busy} onPress={onCancel}>{t("Annulla")}</CancelButton>
     </View>
@@ -141,7 +141,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   };
   const offerBackup = <View style={styles.offer}>
     <Text variant="bodyMedium">{t("Vuoi prima scaricare un backup dei dati attuali?")}</Text>
-    <Button mode="contained-tonal" loading={saving} disabled={saving || savedBefore}
+    <Button mode="contained-tonal" style={pill} loading={saving} disabled={saving || savedBefore}
       icon={icon(savedBefore ? iconShapes.check : iconShapes.download)} onPress={() => void backupFirst()}>
       {savedBefore ? t("Backup scaricato") : t("Scarica backup (JSON)")}</Button>
   </View>;
@@ -169,14 +169,14 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     <View style={styles.group}>
       <Text variant="titleSmall">{t("Consulta le spese")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportCsvFile()}>{t("Esporta transazioni (CSV)")}</Button>
+        <Button {...fileAction} style={[sameWidth, pill]} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportCsvFile()}>{t("Esporta transazioni (CSV)")}</Button>
       </View>
     </View>
     <View style={styles.group}>
       <Text variant="titleSmall">{t("Backup completo")}</Text>
       <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportBackup()}>{t("Scarica backup (JSON)")}</Button>
-        <Button {...fileAction} mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
+        <Button {...fileAction} style={[sameWidth, pill]} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportBackup()}>{t("Scarica backup (JSON)")}</Button>
+        <Button {...fileAction} style={[sameWidth, pill]} mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
       </View>
     </View>
     {/* Only the expenses (user's request, 22 November): categories, funds, lists, templates and merchants stay. */}
@@ -192,7 +192,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         onMerge={() => void run(async () => {
           await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates); finish();
         })}
-        replace={<Button disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
+        replace={<Button style={pill} disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
     </View>}
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
       description={replace && t("Elementi da eliminare: {p0}. Da scrivere: {p1}.", { p0: removed, p1: written })}
@@ -231,3 +231,6 @@ const styles = StyleSheet.create({
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   preview: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.md },
 });
+
+// Every button of the «Archiviazione e backup» page is a pill (user's request, 24 November).
+const pill = { borderRadius: radius.pill };

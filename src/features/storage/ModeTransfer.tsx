@@ -11,7 +11,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import type { DataStore } from '../../services/dataStore';
 import { localDatabaseName, openLocalDatabase } from '../../services/localDatabase';
 import { createLocalStore, type LocalStore } from '../../services/localStore';
-import { spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { ImportPreview } from '../backup/BackupActions';
 import { message } from '../expenses/useRemoteExpenses';
@@ -111,9 +111,9 @@ export function ModeTransfer({ backend, enabled, shown, style }: { backend: Data
       <View style={styles.body}>
         {summary !== null && <Text variant="bodyMedium" accessibilityLiveRegion="polite">{summary}</Text>}
         <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-          <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.upload)} disabled={!enabled || busy || local.state !== 'ready'} onPress={() => void bringIn()}>
+          <Button mode="outlined" {...sameWidth} style={[sameWidth.style, pill]} icon={icon(iconShapes.upload)} disabled={!enabled || busy || local.state !== 'ready'} onPress={() => void bringIn()}>
             {t("Dal dispositivo a Firebase")}</Button>
-          <Button mode="outlined" {...sameWidth} icon={icon(iconShapes.download)} disabled={!enabled || busy || local.state === 'loading'} onPress={() => void copyOut()}>
+          <Button mode="outlined" {...sameWidth} style={[sameWidth.style, pill]} icon={icon(iconShapes.download)} disabled={!enabled || busy || local.state === 'loading'} onPress={() => void copyOut()}>
             {t("Da Firebase al dispositivo")}</Button>
         </View>
         {/* Short note under the buttons, as under «Backup completo» (user's request, 21 November: fewer words, clearer). */}
@@ -136,3 +136,6 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
 });
+
+// Every button of the «Archiviazione e backup» page is a pill (user's request, 24 November).
+const pill = { borderRadius: radius.pill };
