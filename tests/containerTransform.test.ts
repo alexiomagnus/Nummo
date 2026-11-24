@@ -45,9 +45,8 @@ test('dettaglio spesa: molla morbida, risposta pronta, nessun rimbalzo, sotto i 
 
 test('dettaglio spesa: dissolvenza incrociata, mai due contenuti pieni insieme', () => {
   const { open, close } = crossfade;
-  // Apertura: il contenuto comincia ad apparire mentre la copia c'è ancora (sovrapposte), ed è pieno subito dopo che la copia è sparita.
+  // Apertura: la copia della scheda sparisce prima che il contenuto sia pieno.
   assert.ok(open.contentIn < open.cardOut && open.cardOut < open.contentShown && open.contentShown < 1);
-  assert.ok(open.cardOut - open.contentIn >= 0.2, 'dissolvenze sovrapposte: nessun momento vuoto');
   // Chiusura: il contenuto se ne va presto (la molla ha già fatto gran parte della strada) e la scheda torna dopo.
   assert.ok(close.cardIn < close.contentOut && close.contentOut < close.cardShown && close.cardShown <= 0.4);
 });

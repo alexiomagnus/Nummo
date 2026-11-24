@@ -1590,4 +1590,7 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   per la ricomparsa dell'origine: primo fotogramma allo 0 %, buchi massimi 33–67 ms (prima 67–167). Dissolvenze sovrapposte (il contenuto
   appare dal 5 % al 40 %, la copia sparisce entro il 30 %: nessun istante con entrambe a metà), `contain: paint` sulla superficie durante il
   movimento, molla 0,95/170 (metà corsa a ~130 ms, ~600 ms in tutto, nessun rimbalzo).
+- **Ritirato il 24 novembre (su richiesta: «quasi troppo smooth», «ci mettono tanto tempo»).** Tornati alla molla 0,95/200 e alle
+  dissolvenze di prima (copia via entro il 30 %, contenuto dal 15 % al 55 %; in chiusura contenuto via entro il 20 %, copia dal 10 % al
+  35 %); tolti l'avvio dopo il primo disegno (`startAfterPaint`) e `contain: paint`; anche le pagine del menu account partono subito.
 

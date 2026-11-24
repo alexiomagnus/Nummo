@@ -85,6 +85,16 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## Animazioni degli schermi come prima del 23 sera — 24 novembre 2026
+
+- **Su richiesta** («riporta le animazioni a come stavano prima, le preferivo, adesso sono quasi troppo smooth e ho l'impressione che ci
+  mettano tanto tempo»): `theme/containerTransform.ts` e il suo test tornati a `de199c7` (molla 0,95/200, circa 550 ms; dissolvenze non
+  sovrapposte); in `ScreenLayer` tolti `startAfterPaint` e `contain: paint`; in `AppShell` l'entrata delle pagine del menu account parte
+  subito (senza i due fotogrammi di attesa). Restano tutte le altre funzioni degli schermi (barre colorate, chiusura alla navigazione,
+  livello che blocca il resto da desktop, origine nascosta).
+- **Verifica:** `npm test` e `npm run check` OK; Chromium headless 390×844 scuro: tutti gli schermi si aprono e si chiudono animati, nessuna
+  copia lasciata, nessun errore JS. Committato, inviato e pubblicato su Hosting su richiesta.
+
 ## Desktop come prima per selettori e fogli, schermi senza colori propri — 24 novembre 2026
 
 - **Su richiesta.** Prima: commit `bafadd3`, push e Hosting pubblicato (bundle `index-aba7a80c…` identico byte per byte). Poi:

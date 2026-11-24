@@ -105,8 +105,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     const node = page.current as unknown as HTMLElement | null;
     if (!changed || reduceMotion || theme.animation.scale === 0 || !node?.animate) return;
     // A page of the account menu (Impostazioni, Notifiche, Categorie…) enters more fully (user's request, 23 November): from
-    // slightly smaller and lower on the screens' soft spring, its opacity a little quicker; started once the page has been painted
-    // (a first render can take a while: the movement must not begin off screen and jump in).
+    // slightly smaller and lower on the screens' spring, its opacity a little quicker.
     if (selected !== undefined && emphasized?.(selected)) {
       const spring = springEasing(detailSpring);
       const easing = typeof CSS !== 'undefined' && CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : `cubic-bezier(${motion.enter.join(',')})`;
@@ -114,11 +113,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
         node.animate([{ transform: `translateY(${spacing.xl}px) scale(0.97)` }, { transform: 'translateY(0) scale(1)' }], { duration: spring.duration, easing, fill: 'both' }),
         node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: motion.long, easing: 'linear', fill: 'both' }),
       ];
-      moves.forEach((animation) => animation.pause());
-      let second = 0;
-      const first = requestAnimationFrame(() => { second = requestAnimationFrame(() => moves.forEach((animation) => animation.play())); });
       void Promise.all(moves.map((animation) => animation.finished)).then(() => moves.forEach((animation) => animation.cancel()), () => undefined);
-      return () => { cancelAnimationFrame(first); cancelAnimationFrame(second); moves.forEach((animation) => animation.cancel()); };
+      return () => moves.forEach((animation) => animation.cancel());
     }
     const animation = node.animate([
       { opacity: 0, transform: `translateY(${spacing.sm}px)` },

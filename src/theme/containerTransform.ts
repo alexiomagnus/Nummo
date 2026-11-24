@@ -10,9 +10,7 @@ export type Box = Readonly<{ left: number; top: number; width: number; height: n
 // Softer than the first version (M3 standard slow spatial, 0.9/300: about 450 ms), on request («ancora più smooth»): damping
 // ratio 0.95, stiffness 200. Half the way in about 115 ms, so the response to the tap is as quick, then a longer, softer
 // landing (90 % at 260 ms, settled in about 550 ms) and no overshoot at all, which a container filling the screen must not have.
-// Softened again (stiffness 170, same day, «ancora più smooth»): half the way at about 130 ms, 90 % at 280 ms, settled in about
-// 600 ms, a more even glide with the same quick response.
-export const detailSpring: Spring = { stiffness: 170, damping: 0.95 * 2 * Math.sqrt(170), mass: 1 };
+export const detailSpring: Spring = { stiffness: 200, damping: 0.95 * 2 * Math.sqrt(200), mass: 1 };
 
 // The page under the growing screen dims to this opacity of the theme's backdrop (and back), for depth while it moves;
 // once the screen covers its frame the scrim is hidden under it.
@@ -56,11 +54,9 @@ export function cardShift(card: Box, frame: Box): { x: number; y: number } {
 // (90 % at about 45 % of the time), so the two directions are timed apart instead of mirrored: opening, the card's copy is
 // gone by `cardOut` and the detail's content appears between `contentIn` and `contentShown`; closing, the content is gone
 // by `contentOut`, before the shrinking clip cuts it much, and the card's copy appears between `cardIn` and `cardShown`.
-// The two fades overlap (23 November, on request: smoother): the content starts appearing while the copy is still there, so there
-// is never a moment where both are half transparent over the bare surface (it read as a blink).
 export const crossfade = {
-  open: { cardOut: 0.3, contentIn: 0.05, contentShown: 0.4 },
-  close: { contentOut: 0.25, cardIn: 0.05, cardShown: 0.3 },
+  open: { cardOut: 0.3, contentIn: 0.15, contentShown: 0.55 },
+  close: { contentOut: 0.2, cardIn: 0.1, cardShown: 0.35 },
 } as const;
 
 const px = (value: number) => `${Math.round(value * 100) / 100}px`;
