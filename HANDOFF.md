@@ -8,7 +8,7 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
   «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
   datate), bundle online `index-b03086d6…` identico byte per byte all'export. In mezzo, dopo `a8f694f`, anche `b231eeb`, `27e46bd`,
   `00a980a`/`665d96e`/`05a5ed6`, `10f3f67`, `73b9d75`, `1ed557b`, `ca00370`, `12f68c5` (sezioni datate). Prima `a8f694f` (icona nera
@@ -39,7 +39,7 @@ di quel giorno e la verifica su `d196dc9`.
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.3` «Latest», poi 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, sei tag `android-v0.1.0`…`android-v0.3.3`. Ultimo commit di codice `8316f19`,
+- **Git.** `main` = `origin/main`, solo il ramo `main`, sei tag `android-v0.1.0`…`android-v0.3.3`. Ultimo commit di codice `35d2900`,
   inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
@@ -105,7 +105,8 @@ il denaro si aggiunge da «Aggiungi» della pagina Fondi). Premendo «Archivia»
 morbida invece di un salto: l'avatar si assesta da 0,82 e −8°, i segni («Archiviato», «Preferito») e la nuova riga di azioni salgono
 di 8/16 px in dissolvenza, sfasati di 60/120 ms, sulla molla `heroIconSpring`; nulla all'apertura né con movimento ridotto. Headless
 col backup dei casi limite (fondi con saldo) a 1440×900 e 390×844: azioni «Modifica, Archivia» → «Ripristina, Elimina» → di nuovo,
-5 e 3 animazioni in corso subito dopo il tocco, finite dopo; nessun errore JS. `npm run check` OK (599/599).
+5 e 3 animazioni in corso subito dopo il tocco, finite dopo; nessun errore JS. `npm run check` OK (599/599). Commit `35d2900`,
+pubblicato su Hosting (bundle `index-f95ce2bc…` identico all'export).
 
 ## «Modifica fondo» di nuovo con Indietro, senza trascinamento — 25 novembre 2026
 
@@ -5995,7 +5996,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (24 novembre):** tutto il codice fino a `8316f19` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (24 novembre):** tutto il codice fino a `35d2900` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
