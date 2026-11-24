@@ -167,7 +167,7 @@ di quel giorno e la verifica su `d196dc9`.
   tenui come la vecchia scheda aperta): la scheda cresce senza cambiare colore. Verificato in Chromium headless a 390×844 scuro (apertura,
   chiusura animata, nessun errore JS); `npm run check` OK. Committato in `de199c7`, inviato e pubblicato su Hosting (bundle `index-290105cc…`).
 - **Poi, su richiesta (stesso giorno):** tolto «Chiudi» da Prodotti acquistati, Storico dei pagamenti e dettagli di Analisi (basta
-  Indietro); negli schermi i pulsanti delle azioni occupano tutta la riga (`expandActions` di `AppDialog`: «Annulla» e la conferma in parti
+  Indietro); negli schermi i pulsanti delle azioni occupano tutta la riga (`expandActions` di `AppDialog`, oggi `screenActions`, che poi ha tolto anche «Annulla»: «Annulla» e la conferma in parti
   uguali, il cestino con la sua larghezza); dettaglio dell'abbonamento in una pagina senza scorrere: eroe più compatto (`dense`), dettagli
   in due colonne (`InfoGrid`) con in testa la riga «Storico dei pagamenti» (n pagamenti · totale, apre lo storico; il pulsante separato è
   tolto). Misurato in Chromium headless: nessuno scorrimento a 360×740, 375×780 e 390×844; screens-check di nuovo OK, nessun errore JS.
@@ -225,7 +225,7 @@ di quel giorno e la verifica su `d196dc9`.
   ritorno alla lista com'era). Lo screenshot citato come riferimento nella richiesta non era allegato: riferimento alle schermate esistenti.
 - **Fatto:** `features/history/ExpenseDetail.tsx` (livello Portal: su smartphone tutta l'app, da medium il pannello del contenuto;
   icona, descrizione, importo grande, esercente, segni «Lista spesa»/«In attesa di invio»; un gruppo con Data estesa, Categoria, Fondo,
-  Ripetizione se c'è, Prodotti acquistati con «Prodotti (n)»; «Modifica» a pillola), `detailMotion.ts` (geometria e molla, puri),
+  Ripetizione se c'è, Prodotti acquistati con «Prodotti (n)»; «Modifica» a pillola), `detailMotion.ts` (geometria e molla, puri; oggi `theme/containerTransform.ts`),
   `ExpenseList` (riga con chevron a destra, niente più dettagli interni né `usePresence`), stato in `Workspace`, `ListRow opens`,
   `data-app-panel` in `AppShell`, due testi nuovi IT/EN, uno tolto. Pulsante Indietro poi ingrandito su richiesta (stesso giorno): tondo
   tonale da 52 (`secondaryContainer`), freccia da 28, a ogni dimensione.
@@ -241,7 +241,7 @@ di quel giorno e la verifica su `d196dc9`.
   Non provati il cambio di stato confermato né l'eliminazione di un pagamento dal dettaglio. Committato in `9e032b8`, inviato e
   pubblicato su Hosting (bundle `index-d8345c5c…`). Decisione e motivi in `docs/architecture.md`. L'eliminazione resta nel
   dialogo di modifica (non è stato aggiunto un secondo «Elimina» nel dettaglio); non esistono note né duplicazione delle spese.
-- **Verifica:** `npm run check` OK (**590/590**: 5 test nuovi in `tests/detailMotion.test.ts`, typecheck, build demo). Chromium headless
+- **Verifica:** `npm run check` OK (**590/590**: 5 test nuovi in `tests/detailMotion.test.ts`, oggi `tests/containerTransform.test.ts`, typecheck, build demo). Chromium headless
   su `dist-demo`, Standard, file v11 importato dall'interfaccia, 390×844 chiaro e scuro, 800×1100, 1440×900 chiaro e scuro: tre spese
   aperte per dimensione con i dati giusti, ritaglio che cresce dalla scheda (≈450 ms) e torna nella scheda, chiuse con il pulsante, con
   Escape e con `history.back()`; scorrimento della lista invariato (180 → 180), focus di nuovo sulla scheda, «Modifica» apre l'editor sopra
