@@ -87,7 +87,6 @@ const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
 const accountPages: ReadonlySet<Section> = new Set(['categories', 'templates', 'backup', 'merchants', 'settings', 'notifications']);
-const isAccountPage = (section: Section) => accountPages.has(section);
 
 const startGateMs = 4000;
 
@@ -203,7 +202,7 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, back
   useRequest(settingsRequest, () => navigate('settings'));
   useRequest(notificationsRequest, () => navigate('notifications'));
   return <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
-    emphasized={isAccountPage} fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
+    fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
     actions={<><SyncChip status={status} />{topActions}</>}>
     <Sections {...props} section={section} onNavigate={navigate} onDone={finish} />
   </AppShell>;

@@ -89,6 +89,16 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## Animazione piena anche per Nuova spesa e le destinazioni — 24 novembre 2026
+
+- **Su richiesta** (screenshot del menu account e della rail: «le animazioni aggiunte a ciascuna di queste pagine voglio che le implementi
+  anche per queste pagine»): Nuova spesa, Spese, Analisi, Fondi e Liste entrano con la stessa animazione delle pagine del menu account
+  (da 24 più in basso e scala 0,97 → 1 sulla molla degli schermi 0,95/200, opacità in 300 ms, avviata subito). In `AppShell` un solo ramo,
+  tolti il prop `emphasized` e `isAccountPage` di `Workspace`. Movimento ridotto: nessuna animazione, come prima.
+- **Verifica:** `npm run check` OK (**590/590**, typecheck, build demo). Chromium headless su `dist-demo`, Standard, scuro, 1440×900 e
+  390×844: Spese, Analisi, Fondi, Liste e Nuova spesa entrano da scala 0,97 e 24 più in basso, opacità 0 → 1, ferme (`none`, 1) entro
+  700 ms; nessun errore JS. Non provato su telefono reale.
+
 ## Animazioni degli schermi come prima del 23 sera — 24 novembre 2026
 
 - **Su richiesta** («riporta le animazioni a come stavano prima, le preferivo, adesso sono quasi troppo smooth e ho l'impressione che ci
