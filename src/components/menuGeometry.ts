@@ -59,3 +59,36 @@ export function sheetGestureOwner(dx: number, dy: number, scrollTopAtStart: numb
   if (Math.abs(dx) < sheetDragSlop && Math.abs(dy) < sheetDragSlop) return 'pending';
   return dy > 0 && dy > Math.abs(dx) ? 'sheet' : 'list';
 }
+
+// ——— Detail screens with two positions on phones (user's request, 24 November) ———
+// A detail (expense, subscription, fund) dragged down does not close at once: it stops halfway, «peek», showing its top part
+// over the dimmed page, and from there it goes back up whole or down and closed. `y` is how far the screen's top edge is below
+// its open position; `height` the screen's.
+export type Detent = 'full' | 'peek';
+
+// The peek position: the top half of the screen shown in the lower half.
+export function peekOffset(height: number): number {
+  return Math.round(Math.max(0, height) / 2);
+}
+
+// Where a released drag goes. A flick (fast enough and past the slop) moves one step in its direction: down from whole to peek,
+// from peek to closed; up always to whole. Otherwise the nearest of the three positions.
+export function detentOutcome(y: number, velocity: number, height: number, from: Detent): Detent | 'dismiss' {
+  const peek = peekOffset(height);
+  const start = from === 'full' ? 0 : peek;
+  const moved = y - start;
+  if (Math.abs(moved) >= 24 && Math.abs(velocity) >= 0.5) {
+    if (velocity < 0) return 'full';
+    return from === 'full' ? 'peek' : 'dismiss';
+  }
+  const stops: [Detent | 'dismiss', number][] = [['full', 0], ['peek', peek], ['dismiss', height]];
+  return stops.reduce((best, stop) => Math.abs(stop[1] - y) < Math.abs(best[1] - y) ? stop : best)[0];
+}
+
+// Owner of a touch on the detail's content: whole, only a drag that starts with the content at its top and goes down moves the
+// screen (as the sheets' lists); in peek every mostly vertical drag does, up or down (the content is a preview there).
+export function detailGestureOwner(dx: number, dy: number, scrollTopAtStart: number, detent: Detent): 'pending' | 'sheet' | 'list' {
+  if (detent === 'full') return sheetGestureOwner(dx, dy, scrollTopAtStart);
+  if (Math.abs(dx) < sheetDragSlop && Math.abs(dy) < sheetDragSlop) return 'pending';
+  return Math.abs(dy) > Math.abs(dx) ? 'sheet' : 'list';
+}

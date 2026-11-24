@@ -158,7 +158,6 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
       setPreview({ file: file.name, data, ...await backend.previewImport(data) });
     }); }; input.click();
   };
-  const hint = { color: theme.colors.onSurfaceVariant };
   const replace = preview?.replace;
   // Replace: what goes and what is written (new or different items, merchants included).
   const removed = replace ? replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length
@@ -179,8 +178,6 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         <Button {...fileAction} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportBackup()}>{t("Scarica backup (JSON)")}</Button>
         <Button {...fileAction} mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
       </View>
-      {/* The file is the copy that survives losing this device or this project: keep it somewhere else (user's request). */}
-      <Text variant="bodySmall" style={[hint, styles.footnote]}>{t("* Salva il file su Google Drive o in un altro posto sicuro, fuori da questo dispositivo.")}</Text>
     </View>
     {/* Only the expenses (user's request, 22 November): categories, funds, lists, templates and merchants stay. */}
     <View style={styles.group}>
@@ -228,7 +225,6 @@ const styles = StyleSheet.create({
   card: { gap: spacing.xxxl },
   group: { gap: spacing.sm },
   // Note under the buttons, a little further from them than the buttons are from each other (user's request, 21 November).
-  footnote: { marginTop: spacing.sm },
   offer: { gap: spacing.md },
   lines: { gap: 2 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

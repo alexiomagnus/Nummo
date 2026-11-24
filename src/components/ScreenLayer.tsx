@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scrimOpacity, slideSpring, slideTimings, type Box } from '../theme/containerTransform';
@@ -8,7 +8,8 @@ import { overrideDocumentChrome } from '../theme/bootTheme';
 import { motion, radius, sizeClassOf, spacing, type SizeClass } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { useEscape, useFocusHandoff, useOverlayMotion } from './Overlay';
-import { recentVelocity, sheetDragOutcome, type DragSample } from './menuGeometry';
+import { useI18n } from '../i18n/I18nProvider';
+import { detailGestureOwner, detentOutcome, peekOffset, recentVelocity, sheetDragOutcome, sheetDragSlop, sheetGestureOwner, type Detent, type DragSample } from './menuGeometry';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -50,12 +51,17 @@ export type ScreenLayerProps = {
   // 23 November): handle on top instead of Back (drag it down to close), the page dimmed behind it (a tap there closes too),
   // at most 640 wide on large screens. It still grows from the element that opened it.
   sheet?: boolean;
+  // Details (expense, subscription, fund) on phones: dragged down they stop halfway («peek», the top half of the screen over the
+  // dimmed page) and from there go back up whole or down and closed (user's request, 24 November). A handle on top shows it and is
+  // also a button (shrink / expand) for who cannot drag.
+  detents?: boolean;
   children: ReactNode;
 };
 
 export type ScreenTone = { background: string; content: string; button: string; onButton: string };
 
-export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = false, onEscape, scroll = true, textEntry = false, tone, sheet = false, children }: ScreenLayerProps) {
+export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = false, onEscape, scroll = true, textEntry = false, tone, sheet = false, detents = false, children }: ScreenLayerProps) {
+  const { t } = useI18n();
   const theme = useTheme();
   const { colors } = theme;
   // A sheet stands above the dimmed page in the raised surface colour of the bottom sheets (BottomSheet in Overlay.tsx).
@@ -111,13 +117,15 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     return () => { openScreens.delete(close); };
   }, []);
 
+  const chrome = useRef<((delay: number) => void) | null>(null);
   // Opening in the commit that inserts the layer, before the first paint; closing from the cleanup, on a copy.
   useLayoutEffect(() => {
     const node = dom(root.current);
     if (!latest.current.animate || !node || typeof node.animate !== 'function') return undefined;
     let run: Run | null = slide(parts(node), node, settingsFor(node), true);
-    // Phones, a whole screen: the top bar and the navigation of the page under it go away with the opening.
-    let chrome = compact && !latest.current.sheet ? holdChrome() : null;
+    // Phones, a whole screen: the top bar and the navigation of the page under it go away with the opening (and come back while a
+    // detail is in peek, see below).
+    chrome.current = compact && !latest.current.sheet ? holdChrome() : null;
     void run.finished.then((done) => { if (done && run) { run.cancel(); run = null; } });
     return () => {
       const { animate: moving } = latest.current;
@@ -128,7 +136,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       const settings = settingsFor(node);
       run?.cancel();
       const host = document.getElementById('root');
-      if (!moving || !host || !node.isConnected) { chrome?.(0); chrome = null; return; }
+      if (!moving || !host || !node.isConnected) { chrome.current?.(0); chrome.current = null; return; }
       const copy = node.cloneNode(true) as HTMLElement;
       copy.setAttribute('inert', '');
       copy.setAttribute('aria-hidden', 'true');
@@ -137,11 +145,12 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       Object.assign(copy.style, { position: 'absolute', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`,
         zIndex: '1000', pointerEvents: 'none' });
       host.appendChild(copy);
-      // Pulled down by its handle: it goes on down from where the finger left it.
-      const back = dragged !== null ? slideDown(parts(copy), shift, dragged, scrimNow) : slide(parts(copy), copy, settings, false);
+      // Pulled down, or in peek: it goes on down from where it is.
+      const back = dragged !== null || shift !== '' ? slideDown(parts(copy), shift, dragged ?? live.surface?.getBoundingClientRect().height ?? box.height, scrimNow)
+        : slide(parts(copy), copy, settings, false);
       // The top bar and the navigation come back while it goes down.
-      chrome?.(0);
-      chrome = null;
+      chrome.current?.(0);
+      chrome.current = null;
       let ended = false;
       const end = () => { if (!ended) { ended = true; copy.remove(); } };
       void back.finished.then(end);
@@ -149,52 +158,126 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     };
   }, []);
 
-  // Sheet: drag the handle down to close (as the selectors' bottom sheets: `sheetDragOutcome`). The surface follows the finger
-  // without transition and the scrim fades with the distance; let go far or fast enough it closes, otherwise it settles back.
+  // Sheet: dragged down it closes (as the selectors' bottom sheets: `sheetDragOutcome`), from anywhere on it with a finger (user's
+  // request, 24 November: «in tutto il pannello», not only the handle; the content keeps scrolling when it is not at its top) and
+  // from the handle with a mouse. The surface follows without transition and the scrim fades with the distance; let go far or fast
+  // enough it closes, otherwise it settles back.
   const handle = useRef<ComponentRef<typeof View>>(null);
   useEffect(() => {
     const grip = dom(handle.current);
     const node = dom(root.current);
-    if (!sheet || !grip || !node) return undefined;
-    grip.style.touchAction = 'none';
-    let drag: { id: number; y: number; samples: DragSample[]; offset: number } | null = null;
-    const { surface: sheetNode, scrim } = parts(node);
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0 || !event.isPrimary || latest.current.backDisabled) return;
-      drag = { id: event.pointerId, y: event.clientY, samples: [{ t: event.timeStamp, y: event.clientY }], offset: 0 };
-      try { grip.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ }
-    };
-    const move = (event: PointerEvent) => {
-      if (!drag || event.pointerId !== drag.id || !sheetNode) return;
-      drag.offset = Math.max(0, event.clientY - drag.y);
-      drag.samples.push({ t: event.timeStamp, y: event.clientY });
-      if (drag.samples.length > 32) drag.samples.shift();
-      sheetNode.style.transform = `translateY(${drag.offset}px)`;
-      if (scrim) scrim.style.opacity = String(scrimOpacity * Math.max(0, 1 - drag.offset / Math.max(1, sheetNode.offsetHeight)));
-    };
-    const up = (event: PointerEvent, commit: boolean) => {
-      if (!drag || event.pointerId !== drag.id || !sheetNode) return;
-      const { offset, samples } = drag;
-      drag = null;
-      if (offset === 0) return;
-      if (commit && sheetDragOutcome(offset, recentVelocity([...samples, { t: event.timeStamp, y: event.clientY }]), sheetNode.offsetHeight) === 'dismiss') {
-        sheetNode.dataset.dragged = 'true';
-        latest.current.onBack();
-        return;
-      }
-      sheetNode.animate([{ transform: `translateY(${offset}px)` }, { transform: 'translateY(0px)' }], { duration: motion.medium, easing: bezier(motion.enter) });
-      sheetNode.style.transform = '';
-      if (scrim) scrim.style.opacity = '';
-    };
-    const release = (event: PointerEvent) => up(event, true);
-    const cancel = (event: PointerEvent) => up(event, false);
-    grip.addEventListener('pointerdown', down);
-    grip.addEventListener('pointermove', move);
-    grip.addEventListener('pointerup', release);
-    grip.addEventListener('pointercancel', cancel);
-    return () => { grip.removeEventListener('pointerdown', down); grip.removeEventListener('pointermove', move);
-      grip.removeEventListener('pointerup', release); grip.removeEventListener('pointercancel', cancel); };
+    const { surface: sheetNode, scrim } = node ? parts(node) : { surface: null, scrim: null };
+    if (!sheet || !node || !sheetNode) return undefined;
+    let drag: { y: number; samples: DragSample[]; offset: number } | null = null;
+    return watchDrag(node, sheetNode, grip ? [grip] : [], {
+      owner: (dx, dy, scrolled) => latest.current.backDisabled ? 'list' : sheetGestureOwner(dx, dy, scrolled ? 1 : 0),
+      begin: (y, time) => { drag = { y, samples: [{ t: time, y }], offset: 0 }; },
+      follow: (y, time) => {
+        if (!drag) return;
+        drag.offset = Math.max(0, y - drag.y);
+        drag.samples.push({ t: time, y });
+        if (drag.samples.length > 32) drag.samples.shift();
+        sheetNode.style.transform = `translateY(${drag.offset}px)`;
+        if (scrim) scrim.style.opacity = String(scrimOpacity * Math.max(0, 1 - drag.offset / Math.max(1, sheetNode.offsetHeight)));
+      },
+      finish: (y, time, commit) => {
+        if (!drag) return false;
+        const { offset, samples } = drag;
+        drag = null;
+        if (offset === 0) return false;
+        if (commit && sheetDragOutcome(offset, recentVelocity([...samples, { t: time, y }]), sheetNode.offsetHeight) === 'dismiss') {
+          sheetNode.dataset.dragged = 'true';
+          latest.current.onBack();
+          return true;
+        }
+        sheetNode.animate([{ transform: `translateY(${offset}px)` }, { transform: 'translateY(0px)' }], { duration: motion.medium, easing: bezier(motion.enter) });
+        sheetNode.style.transform = '';
+        if (scrim) scrim.style.opacity = '';
+        return true;
+      },
+    });
   }, [sheet]);
+
+  // ——— Details on phones: whole, peek, closed ———
+  const stops = detents && compact && !sheet;
+  const [detent, setDetent] = useState<Detent>('full');
+  const detentRef = useRef(detent);
+  detentRef.current = detent;
+  const topBar = useRef<ComponentRef<typeof View>>(null);
+  const scroller = useRef<ScrollViewInstance>(null);
+  // Moves the screen to a position (animated from where it is, on the opening's spring) and keeps it there with an inline transform.
+  const settle = useCallback((target: Detent, from?: number) => {
+    const node = dom(root.current);
+    const { surface: moving, scrim } = node ? parts(node) : { surface: null, scrim: null };
+    if (!moving) return;
+    const height = moving.getBoundingClientRect().height;
+    const y = target === 'peek' ? peekOffset(height) : 0;
+    const start = from ?? (target === 'peek' ? 0 : peekOffset(height));
+    const fade = (at: number) => String(detentScrim(at, height));
+    pose(moving, null, y, height, latest.current.backdrop);
+    if (scrim) scrim.style.opacity = y ? fade(y) : '';
+    if (latest.current.animate && start !== y) {
+      const spring = springEasing(slideSpring, slideTimings.precision);
+      const easing = CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : bezier(motion.enter);
+      // Corners and shadow travel with it: squared off only as it lands whole.
+      const look = (at: number) => ({ transform: `translateY(${at}px)`, borderTopLeftRadius: `${at > 0 ? slideTimings.corner : 0}px`,
+        borderTopRightRadius: `${at > 0 ? slideTimings.corner : 0}px`, boxShadow: `0px ${at > 0 ? -12 : 0}px ${at > 0 ? 32 : 0}px ${latest.current.backdrop}` });
+      moving.animate([look(start), look(y)], { duration: spring.duration, easing });
+      scrim?.animate({ opacity: [fade(start), y ? fade(y) : '0'] }, { duration: spring.duration, easing: 'linear' });
+    }
+    // In peek the page's top bar and navigation show again above the screen (dimmed); whole, they go away again.
+    if (target === 'peek') { chrome.current?.(0); chrome.current = null; } else if (!chrome.current) chrome.current = holdChrome();
+    setDetent(target);
+  }, []);
+  // The height changes (rotation, the browser's bars): peek keeps its place at half.
+  useEffect(() => { if (stops && detent === 'peek') settle('peek', undefined); }, [frame.height]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const node = dom(root.current);
+    const bar = dom(topBar.current);
+    const list = (scroller.current as { getScrollableNode?: () => unknown } | null)?.getScrollableNode?.();
+    const content = list instanceof HTMLElement ? list : null;
+    const moving = node ? parts(node).surface : null;
+    const scrim = node ? parts(node).scrim : null;
+    if (!stops || !node || !moving) return undefined;
+    let drag: { start: number; base: number; samples: DragSample[]; y: number } | null = null;
+    const height = () => moving.getBoundingClientRect().height;
+    const begin = (y: number, time: number) => {
+      moving.getAnimations().forEach((animation) => animation.cancel());
+      scrim?.getAnimations().forEach((animation) => animation.cancel());
+      const base = detentRef.current === 'peek' ? peekOffset(height()) : 0;
+      drag = { start: y, base, samples: [{ t: time, y }], y: base };
+    };
+    const follow = (y: number, time: number) => {
+      if (!drag) return;
+      drag.y = Math.max(0, drag.base + y - drag.start);
+      drag.samples.push({ t: time, y });
+      if (drag.samples.length > 32) drag.samples.shift();
+      pose(moving, scrim, drag.y, height(), latest.current.backdrop);
+    };
+    // Returns whether the screen moved, so the click that may follow is not taken by what is under the finger.
+    const finish = (y: number, time: number, commit: boolean): boolean => {
+      if (!drag) return false;
+      const { y: at, base, samples } = drag;
+      drag = null;
+      if (at === base) return false;
+      const outcome = commit ? detentOutcome(at, recentVelocity([...samples, { t: time, y }]), height(), detentRef.current) : detentRef.current;
+      if (outcome === 'dismiss') {
+        if (latest.current.backDisabled) { settle(detentRef.current, at); return true; }
+        moving.dataset.dragged = 'true';
+        latest.current.onBack();
+        return true;
+      }
+      settle(outcome, at);
+      return true;
+    };
+    if (content) content.style.overscrollBehaviorY = 'contain'; // no pull-to-refresh or scroll chaining to the page behind
+    // From anywhere on the screen with a finger (user's request, 24 November), from the top bar with a mouse.
+    const stop = watchDrag(node, moving, bar ? [bar] : [], {
+      owner: (dx, dy, scrolled) => detailGestureOwner(dx, dy, scrolled ? 1 : 0, detentRef.current),
+      begin, follow, finish,
+    });
+    return () => { stop(); if (content) content.style.overscrollBehaviorY = ''; };
+  }, [stops, settle]);
 
   // Details use the page's margins; editors keep the 24 of their blocks (Paper's Content/Actions), and the top bar lines up with them.
   const padding = !scroll ? spacing.xl : compact ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
@@ -209,6 +292,9 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       {sheet ? <Pressable {...part('scrim')} accessibilityRole="button" accessibilityLabel={backLabel} focusable={false} disabled={backDisabled} onPress={onBack}
         style={[StyleSheet.absoluteFill, styles.sheetScrim, { backgroundColor: colors.backdrop, opacity: scrimOpacity, borderRadius: frameRadius }]} />
         : <View {...part('scrim')} pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.backdrop, opacity: 0, borderRadius: frameRadius }]} />}
+      {/* In peek the dimmed page above the screen closes it at a tap, like the scrim of a sheet. */}
+      {stops && detent === 'peek' && <Pressable accessibilityRole="button" accessibilityLabel={backLabel} focusable={false} disabled={backDisabled} onPress={onBack}
+        style={[styles.catcher, { height: peekOffset(frame.height) }]} />}
       <View ref={surface} {...part('surface')} style={sheet
         ? [styles.sheet, styles.surface, { backgroundColor: background, maxHeight: Math.max(0, frame.height - (compact ? insets.top : 0) - spacing.xxxl) }]
         : [StyleSheet.absoluteFill, styles.surface, { borderRadius: frameRadius, backgroundColor: background }]}>
@@ -217,7 +303,12 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
             {/* The drag handle (user's request, 23 November: «per buttare giù la scheda»); a wide hit area around the small bar. */}
             <View ref={handle} {...part('handle')} aria-hidden style={styles.handleArea}><View style={[styles.handle, { backgroundColor: colors.onSurfaceVariant }]} /></View>
             {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={[styles.sheetTitle, tone && { color: tone.content }]}>{title}</Text>}
-          </View> : <View style={[styles.topBar, { paddingTop: (compact ? insets.top : 0) + spacing.lg, paddingLeft: padding + side, paddingRight: padding + side }]}>
+          </View> : <View ref={topBar} style={[styles.topBar, { paddingTop: (compact ? insets.top : 0) + spacing.lg, paddingLeft: padding + side, paddingRight: padding + side }]}>
+            {/* The handle of a detail on phones: shows that it can be pulled down, and shrinks or expands it at a tap. */}
+            {stops && <Pressable accessibilityRole="button" accessibilityLabel={detent === 'peek' ? t("Espandi i dettagli") : t("Riduci i dettagli")}
+              onPress={() => settle(detent === 'peek' ? 'full' : 'peek')} style={[styles.detentHandle, { top: insets.top + spacing.xs }]}>
+              <View style={[styles.handle, { backgroundColor: colors.onSurfaceVariant }]} />
+            </Pressable>}
             {/* Tonal round button, larger than a bare icon (user's request, 23 November), a little below the edge. */}
             <StateLayerPressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} disabled={backDisabled}
               layerColor={button.color} radius={radius.pill} style={[styles.back, { backgroundColor: button.background }]}>
@@ -225,7 +316,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
             </StateLayerPressable>
             {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={[styles.title, tone && { color: tone.content }]}>{title}</Text>}
           </View>}
-          {scroll ? <ScrollView style={styles.grow} keyboardShouldPersistTaps="handled" {...(size === 'expanded' ? { dataSet: { panelScroll: 'true' } } : null)}
+          {scroll ? <ScrollView ref={scroller} style={styles.grow} keyboardShouldPersistTaps="handled" {...(size === 'expanded' ? { dataSet: { panelScroll: 'true' } } : null)}
             contentContainerStyle={[styles.scroll, { paddingHorizontal: padding + side, paddingBottom: padding + insets.bottom }]}>
             <ThemeProvider theme={toned}>{children}</ThemeProvider>
           </ScrollView> : <View style={[sheet ? styles.sheetBody : styles.grow, { paddingLeft: side, paddingRight: side, paddingBottom: insets.bottom }]}><ThemeProvider theme={toned}>{children}</ThemeProvider></View>}
@@ -234,6 +325,116 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     </View>
   </>
   );
+}
+
+// Drag of a screen or a sheet. Touch: from anywhere on `surface`; the gesture goes to the screen only when `owner` says so
+// (decided once, past the slop; `scrolled`: the content under the finger is not at its top), otherwise it stays a native scroll.
+// Mouse and pen: from the `handles` (a sheet's handle, a detail's top bar), past the slop, so a click on Back stays a click. A
+// click that follows a drag at once (the browser may send it to what was under the finger) is dropped. Returns the cleanup.
+type DragOps = {
+  owner: (dx: number, dy: number, scrolled: boolean) => 'pending' | 'sheet' | 'list';
+  begin: (y: number, time: number) => void;
+  follow: (y: number, time: number) => void;
+  // Whether the screen moved.
+  finish: (y: number, time: number, commit: boolean) => boolean;
+};
+function watchDrag(root: HTMLElement, surface: HTMLElement, handles: HTMLElement[], { owner, begin, follow, finish }: DragOps): () => void {
+  const cleanups: (() => void)[] = [];
+  const listen = <K extends keyof HTMLElementEventMap>(target: HTMLElement, type: K, handler: (event: HTMLElementEventMap[K]) => void, options?: AddEventListenerOptions) => {
+    target.addEventListener(type, handler, options);
+    cleanups.push(() => target.removeEventListener(type, handler, options));
+  };
+  let swallowUntil = 0;
+  const done = (moved: boolean) => { if (moved) swallowUntil = performance.now() + 500; };
+  for (const grip of handles) {
+    const previous = grip.style.touchAction;
+    grip.style.touchAction = 'none';
+    cleanups.push(() => { grip.style.touchAction = previous; });
+    let press: { id: number; y: number; dragging: boolean } | null = null;
+    listen(grip, 'pointerdown', (event) => {
+      if (event.pointerType === 'touch' || event.button !== 0 || !event.isPrimary) return; // fingers: the touch events below
+      press = { id: event.pointerId, y: event.clientY, dragging: false };
+    });
+    listen(grip, 'pointermove', (event) => {
+      if (!press || event.pointerId !== press.id) return;
+      if (!press.dragging) {
+        if (event.clientY - press.y < sheetDragSlop && press.y - event.clientY < sheetDragSlop) return;
+        press.dragging = true;
+        begin(event.clientY, event.timeStamp);
+        try { grip.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ }
+      }
+      follow(event.clientY, event.timeStamp);
+    });
+    const end = (event: PointerEvent, commit: boolean) => {
+      if (!press || event.pointerId !== press.id) return;
+      const dragging = press.dragging;
+      press = null;
+      if (dragging) done(finish(event.clientY, event.timeStamp, commit));
+    };
+    listen(grip, 'pointerup', (event) => end(event, true));
+    listen(grip, 'pointercancel', (event) => end(event, false));
+  }
+  let touch: { id: number; x: number; y: number; scrolled: boolean; owner: 'pending' | 'sheet' | 'list' } | null = null;
+  const find = (touches: TouchList) => touch ? Array.from(touches).find((item) => item.identifier === touch?.id) : undefined;
+  listen(surface, 'touchstart', (event) => {
+    const first = event.touches[0];
+    if (event.touches.length !== 1 || !first) {
+      if (touch?.owner === 'sheet') finish(touch.y, event.timeStamp, false);
+      touch = null;
+      return;
+    }
+    touch = { id: first.identifier, x: first.clientX, y: first.clientY, scrolled: scrolledBetween(event.target, surface), owner: 'pending' };
+  }, { passive: true });
+  listen(surface, 'touchmove', (event) => {
+    const point = find(event.changedTouches);
+    if (!touch || !point || touch.owner === 'list') return;
+    if (touch.owner === 'pending') {
+      touch.owner = owner(point.clientX - touch.x, point.clientY - touch.y, touch.scrolled);
+      if (touch.owner !== 'sheet') return;
+      begin(point.clientY, event.timeStamp); // from here, so the screen does not jump by the slop
+    }
+    if (event.cancelable) event.preventDefault(); // nothing scrolls or overscrolls under a drag of the screen
+    follow(point.clientY, event.timeStamp);
+  }, { passive: false });
+  const end = (event: TouchEvent, commit: boolean) => {
+    const point = find(event.changedTouches);
+    if (!touch || !point) return;
+    const was = touch.owner;
+    touch = null;
+    if (was === 'sheet') done(finish(point.clientY, event.timeStamp, commit));
+  };
+  listen(surface, 'touchend', (event) => end(event, true));
+  listen(surface, 'touchcancel', (event) => end(event, false));
+  listen(root, 'click', (event) => {
+    if (performance.now() > swallowUntil) return;
+    swallowUntil = 0;
+    event.stopPropagation();
+    event.preventDefault();
+  }, { capture: true });
+  return () => cleanups.forEach((cleanup) => cleanup());
+}
+
+// Whether some scroll container between the touched element and the surface is scrolled away from its top.
+function scrolledBetween(target: EventTarget | null, surface: HTMLElement): boolean {
+  for (let node = target instanceof Element ? target : null; node && node !== surface; node = node.parentElement) {
+    if (node.scrollTop > 0) return true;
+  }
+  return false;
+}
+
+// A detail moved down by `y` (dragged, or in peek): the screen's edge shows as during the slide, with round top corners and a
+// shadow above it, and the page above is dimmed as under a sheet, fading only past the peek position on the way to closing.
+function detentScrim(y: number, height: number): number {
+  const peek = peekOffset(height);
+  return y <= peek ? scrimOpacity * Math.min(1, y / Math.max(1, peek)) : scrimOpacity * Math.max(0, 1 - (y - peek) / Math.max(1, height - peek));
+}
+function pose(surface: HTMLElement, scrim: HTMLElement | null, y: number, height: number, backdrop: string): void {
+  const lifted = y > 0;
+  surface.style.transform = lifted ? `translateY(${y}px)` : '';
+  surface.style.borderTopLeftRadius = lifted ? `${slideTimings.corner}px` : '';
+  surface.style.borderTopRightRadius = lifted ? `${slideTimings.corner}px` : '';
+  surface.style.boxShadow = lifted ? `0px -12px 32px ${backdrop}` : '';
+  if (scrim) scrim.style.opacity = lifted ? String(detentScrim(y, height)) : '';
 }
 
 // Every open screen, newest last. Going to another page (a destination, a page of the account menu, «Fatto») closes them all
@@ -400,6 +601,9 @@ const styles = StyleSheet.create({
   title: { flex: 1, minWidth: 0 },
   scroll: { flexGrow: 1, gap: spacing.xl, paddingTop: spacing.sm },
   sheetScrim: { cursor: 'auto' } as object,
+  catcher: { position: 'absolute', top: 0, left: 0, right: 0, cursor: 'auto' } as object,
+  // Centred on the top edge of a detail, a wide target around the small bar.
+  detentHandle: { position: 'absolute', left: '50%', marginLeft: -48, width: 96, height: 24, alignItems: 'center', justifyContent: 'center', cursor: 'grab' } as object,
   // Bottom of the frame, centred, at most 640 wide (Material 3 bottom sheet on large screens).
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 640, marginHorizontal: 'auto',
     borderTopLeftRadius: radius.dialog, borderTopRightRadius: radius.dialog },

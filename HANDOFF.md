@@ -109,6 +109,47 @@ di quel giorno e la verifica su `d196dc9`.
   (`nummo-utente-medio.json`): pulsanti con raggio a pillola; nessun errore JS. **Non provati** su telefono (il poster grigio compare solo
   nella WebView/Chrome Android). Commit `665d96e`, pubblicato su Hosting.
 
+## Trascinamento da tutto il pannello, nota su Drive tolta, pulsanti alti uguali — 24 novembre 2026
+
+Su richiesta.
+- **Trascinamento da qualunque punto** («lo swipe si potesse fare anche senza toccare la maniglia, in tutto il pannello»): dettagli
+  su smartphone e fogli (Nuova lista, Modifica lista e prodotto, selettore della data e «Da quando») si trascinano col dito da tutta
+  la superficie: `watchDrag` di `ScreenLayer` (eventi touch sulla superficie, proprietario del gesto deciso una volta oltre lo slop:
+  `sheetGestureOwner` per i fogli, `detailGestureOwner` per i dettagli; se un contenitore tra il dito e la superficie è scorso, resta
+  uno scorrimento normale, `scrolledBetween`). Col mouse dalla maniglia (fogli) o dalla barra in alto (dettagli), oltre lo slop.
+- **Tolta la nota** «* Salva il file su Google Drive o in un altro posto sicuro, fuori da questo dispositivo.» sotto «Backup completo»
+  (Archiviazione e backup); tolta anche da `en.ts`; `tests/i18n.test.ts` ammette ora un solo testo con «Google Drive» (il consiglio
+  nel dialogo del cambio di modalità).
+- **Pulsanti alti uguali** nel dettaglio del fondo: «Aggiungi denaro» e «Archivia» alti 56 come «Modifica» (prima 48); lo stesso per
+  «Annulla abbonamento», «Metti in pausa»/«Riattiva» del dettaglio dell'abbonamento (`secondaryActionContent`, `outlinedActionContent`
+  con 2 in meno per il bordo da 1 dei pulsanti con contorno: misurati 56/56/56 all'esterno).
+- Verifica: `npm run check` 595/595. Chromium headless con touch emulato a 390×844: i dieci passaggi del dettaglio di una spesa come
+  prima; foglio di Nuova lista: trascinamento corto dal titolo → torna su, trascinamento dal campo del nome → chiuso; altezze dei
+  pulsanti del fondo a 1440×900. Committato e inviato.
+
+## Dettagli su smartphone: intero, ridotto, chiuso — 24 novembre 2026
+
+Su richiesta («uno swipe solo da mobile per tirare giù la scheda e chiuderla, ma la si può anche tenere come piccola
+visualizzazione e decidere se ingrandirla o chiuderla»; poi «procedi con la tua proposta, solo per i dettagli»).
+- Solo i dettagli di spesa, abbonamento e fondo (`detents` passato da `DetailScreen` e `FundDetail`), solo su smartphone; da medium
+  nulla cambia, e nemmeno moduli, «Prossimo mese», lista aperta e fogli.
+- Tre posizioni: intero, ridotto (lo schermo scende di metà altezza, `peekOffset`, e mostra la sua parte alta sulla pagina velata;
+  angoli da 28 e ombra come durante lo scorrimento; tornano la barra in alto e la navigazione della pagina, `holdChrome` rilasciato e
+  ripreso) e chiuso. Rilascio: `detentOutcome` (`menuGeometry.ts`): un colpo veloce (≥ 0,5 px/ms e ≥ 24 px) fa un passo nella sua
+  direzione (verso l'alto sempre intero), altrimenti la posizione più vicina; i passaggi animati sulla molla dello scorrimento.
+- Dove si trascina: la barra in alto (il trascinamento parte oltre `sheetDragSlop`, così il tocco su Indietro resta un tocco; il clic
+  che segue un trascinamento entro 500 ms è scartato) e il contenuto: da intero solo se è in cima e il gesto va in giù, da ridotto in
+  entrambe le direzioni (`detailGestureOwner`, eventi touch con `overscroll-behavior: contain`).
+- In ridotto un tocco sulla pagina sopra chiude (come il velo di un foglio); Indietro/Escape chiudono da entrambe le posizioni (dal
+  ridotto lo schermo scende da dove è, `slideDown`). Maniglia in alto, anche pulsante: «Riduci i dettagli» / «Espandi i dettagli»
+  (traduzioni in `en.ts`).
+- Verifica: `npm run check` 595/595 (nuovo test delle posizioni in `tests/menuGeometry.test.ts`). Chromium headless con touch
+  emulato, 390×844, dettaglio di una spesa: barra trascinata lenta → ridotto (barre dell'app visibili); maniglia → intero; contenuto
+  in giù → ridotto; contenuto in su da ridotto → intero; colpo veloce → ridotto, un altro → chiuso; maniglia → ridotto, tocco sopra →
+  chiuso; tocco su Indietro → chiuso; nessun errore JS. Nel simulatore il dito «si ferma» circa 50 ms prima di sollevarsi: i colpi
+  provati con passi più ampi. **Da provare sul telefono** (Android nell'app e in Chrome, iPhone): sensibilità del colpo, conflitto con
+  lo scorrimento del contenuto, rimbalzo di iOS. Committato e inviato.
+
 ## Schermi a scorrimento (scelto tra tre prove) — 24 novembre 2026
 
 Su richiesta («le animazioni di chiusura continuano a non convincermi, proponimi tre tipi di aperture e chiusure sincronizzate»):

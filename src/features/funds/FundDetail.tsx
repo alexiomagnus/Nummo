@@ -9,7 +9,7 @@ import type { FundMonth } from '../../domain/funds';
 import { useI18n } from '../../i18n/I18nProvider';
 import { positiveColor } from '../../theme/theme';
 import { radius, spacing } from '../../theme/tokens';
-import { InfoGroup, PrimaryAction } from '../history/DetailScreen';
+import { InfoGroup, PrimaryAction, outlinedActionContent, secondaryActionContent } from '../history/DetailScreen';
 import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
 
@@ -39,7 +39,7 @@ export type FundDetailProps = {
 export function FundDetail(props: FundDetailProps) {
   const { t } = useI18n();
   const { fund } = props.item;
-  return <Portal><ScreenLayer key={fund.id} originId={fundCardId(fund.id)} label={t("Dettagli di {p0}", { p0: fund.name })}
+  return <Portal><ScreenLayer key={fund.id} originId={fundCardId(fund.id)} detents label={t("Dettagli di {p0}", { p0: fund.name })}
     backLabel={t("Torna ai fondi")} onBack={props.onClose} onEscape={props.onClose}>
     <FundContent {...props} />
   </ScreenLayer></Portal>;
@@ -108,9 +108,9 @@ function FundContent({ item, monthLabel, isDefault, tracksBalance, canWrite, onE
         </> : <>
           <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: fund.name })} icon={iconShapes.pencil} onPress={onEdit} />
           <View style={styles.row}>
-            {tracksBalance && <Button mode="contained-tonal" disabled={!canWrite} style={styles.half} accessibilityLabel={t("Aggiungi denaro a {p0}", { p0: fund.name })}
+            {tracksBalance && <Button mode="contained-tonal" disabled={!canWrite} style={styles.half} contentStyle={secondaryActionContent} accessibilityLabel={t("Aggiungi denaro a {p0}", { p0: fund.name })}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />} onPress={onAdd}>{t("Aggiungi denaro")}</Button>}
-            <Button mode="outlined" disabled={!canWrite} style={styles.half} onPress={() => onArchive(true)}
+            <Button mode="outlined" disabled={!canWrite} style={styles.half} contentStyle={outlinedActionContent} onPress={() => onArchive(true)}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.archive} size={size} color={color} />}>{t("Archivia")}</Button>
           </View>
         </>}

@@ -68,3 +68,28 @@ test('foglio dal basso: il trascinamento dalla lista non ruba lo scorrimento', (
   assert.equal(sheetGestureOwner(14, 10, 0), 'list'); // mostly horizontal
   assert.equal(sheetGestureOwner(-9, 9, 0), 'list'); // diagonal tie stays a scroll
 });
+
+test('dettagli su smartphone: posizioni intero, ridotto e chiuso', async () => {
+  const { detentOutcome, detailGestureOwner, peekOffset } = await import('../src/components/menuGeometry.ts');
+  const h = 800;
+  assert.equal(peekOffset(h), 400);
+  // Rilascio lento: la posizione più vicina.
+  assert.equal(detentOutcome(100, 0, h, 'full'), 'full');
+  assert.equal(detentOutcome(300, 0, h, 'full'), 'peek');
+  assert.equal(detentOutcome(650, 0, h, 'full'), 'dismiss');
+  assert.equal(detentOutcome(450, 0, h, 'peek'), 'peek');
+  assert.equal(detentOutcome(150, 0, h, 'peek'), 'full');
+  // Colpo veloce: un passo nella sua direzione, verso l'alto sempre intero.
+  assert.equal(detentOutcome(60, 1, h, 'full'), 'peek');
+  assert.equal(detentOutcome(440, 1, h, 'peek'), 'dismiss');
+  assert.equal(detentOutcome(360, -1, h, 'peek'), 'full');
+  // Sotto la soglia di 24 non è un colpo.
+  assert.equal(detentOutcome(10, 2, h, 'full'), 'full');
+  // Proprietario del gesto sul contenuto.
+  assert.equal(detailGestureOwner(0, 20, 0, 'full'), 'sheet');
+  assert.equal(detailGestureOwner(0, 20, 50, 'full'), 'list');
+  assert.equal(detailGestureOwner(0, -20, 0, 'full'), 'list');
+  assert.equal(detailGestureOwner(0, -20, 50, 'peek'), 'sheet');
+  assert.equal(detailGestureOwner(20, 5, 0, 'peek'), 'list');
+  assert.equal(detailGestureOwner(2, 3, 0, 'peek'), 'pending');
+});

@@ -12,7 +12,8 @@ import { layout, radius, spacing } from '../../theme/tokens';
 
 // Detail screen of one card of the Spese page (23 November, on request, in place of the details opened inside the card):
 // one shell for the expenses (ExpenseDetail) and the subscriptions (SubscriptionDetail), on the shared screen layer
-// (components/ScreenLayer.tsx: container transform from the card and back, Back, safe areas, panel from medium up).
+// (components/ScreenLayer.tsx: slide from the bottom, Back, safe areas, panel from medium up; on phones whole, peek or closed with a
+// drag, `detents`).
 
 type ShellProps<T> = {
   // The item shown, null when closed (the layer then closes back into its card, or fades if the card is gone).
@@ -28,7 +29,7 @@ type ShellProps<T> = {
 export function DetailScreen<T>({ value, cardId, label, backLabel, onClose, children }: ShellProps<T>) {
   if (!value) return null;
   const id = cardId(value);
-  return <Portal><ScreenLayer key={id} originId={id} label={label(value)} backLabel={backLabel} onBack={onClose} onEscape={onClose}>
+  return <Portal><ScreenLayer key={id} originId={id} detents label={label(value)} backLabel={backLabel} onBack={onClose} onEscape={onClose}>
     {children(value)}
   </ScreenLayer></Portal>;
 }
@@ -148,6 +149,11 @@ export function PrimaryAction({ label, accessibilityLabel, icon, onPress }: { la
     </View>
   );
 }
+
+// The half-width actions under «Modifica» (subscription and fund details): as tall as it outside (user's request, 24 November).
+// An outlined button draws its 1 dp border around the content, so its content is 2 shorter.
+export const secondaryActionContent = { minHeight: layout.controlHeight } as const;
+export const outlinedActionContent = { minHeight: layout.controlHeight - 2 } as const;
 
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.sm },

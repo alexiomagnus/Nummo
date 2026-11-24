@@ -13,7 +13,7 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
-import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGrid, PrimaryAction, type GridCell } from './DetailScreen';
+import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGrid, PrimaryAction, outlinedActionContent, secondaryActionContent, type GridCell } from './DetailScreen';
 import { PaymentsDialog } from './PaymentsDialog';
 import { StatusDialog } from './StatusDialog';
 import { StatusBadge, subscriptionCardId } from './SubscriptionList';
@@ -95,13 +95,13 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
       {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). While the «from when?» sheet is up
           only the pressed one disappears, as every origin of a screen (user's request, 24 November). */}
       <View style={styles.statusRow}>
-        {status !== 'cancelled' && <Button mode="outlined" textColor={colors.error} style={styles.half} disabled={!canChange || busy}
+        {status !== 'cancelled' && <Button mode="outlined" textColor={colors.error} style={styles.half} contentStyle={outlinedActionContent} disabled={!canChange || busy}
           accessibilityLabel={t("Annulla abbonamento")} icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
           onPress={() => void change('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
-        {status === 'active' ? <Button mode="outlined" style={styles.half} disabled={!canChange || busy} loading={busy}
+        {status === 'active' ? <Button mode="outlined" style={styles.half} contentStyle={outlinedActionContent} disabled={!canChange || busy} loading={busy}
           accessibilityLabel={t("Metti in pausa")} icon={({ size, color }) => <SvgIcon shape={iconShapes.pause} size={size} color={color} />}
           onPress={() => void change('paused')}>{compact ? t("Pausa") : t("Metti in pausa")}</Button>
-          : <Button mode="contained-tonal" style={styles.half} disabled={!canChange || busy} loading={busy}
+          : <Button mode="contained-tonal" style={styles.half} contentStyle={secondaryActionContent} disabled={!canChange || busy} loading={busy}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.play} size={size} color={color} />}
             onPress={() => void change('active')}>{t("Riattiva")}</Button>}
       </View>
