@@ -39,7 +39,7 @@ export function CategoryEditor({ record, categories, ready, error, onSave, close
     finally { setBusy(false); }
   };
   return <Portal>
-    <Dialog visible onDismiss={() => { if (!busy) close(); }}>
+    <Dialog visible detents fitPeek onDismiss={() => { if (!busy) close(); }}>
       <Dialog.Title>{record ? t('Modifica categoria') : t('Nuova categoria')}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>

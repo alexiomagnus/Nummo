@@ -98,6 +98,15 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## «Modifica categoria» come pannello trascinabile — 25 novembre 2026
+
+Su richiesta (screenshot di «Modifica categoria»: «poter scrollare con uno swipe verso l'alto o verso il basso, seguire le regole degli
+altri pannelli, eliminare il tasto indietro; anche abbassato poter vedere tutto»): `CategoryEditor` con `detents` e `fitPeek` di
+`AppDialog`: su smartphone intero, ridotto, chiuso, senza Indietro, e in ridotto sale quanto serve a mostrare nome, tutte le icone e
+«Salva». Headless con `nummo-utente-medio.json`: ridotto a 154 su 844 (390×844) e a 225 su 915 (412×915), niente da scorrere; nessun
+errore JS. La seconda parte della richiesta («per questa sezione tornare indietro con il tasto verde in alto, senza poter scrollare e
+senza l'icona che suggerisce di scrollare») non ha un'immagine propria: da chiarire con l'utente. `npm run check` OK (599/599).
+
 ## «Ripristina le categorie predefinite» aggiunge soltanto, predefinite segnate — 25 novembre 2026
 
 Su richiesta («deve semplicemente ripristinare le categorie standard, basta, nient'altro; eliminare eventuali funzionalità aggiunte;
