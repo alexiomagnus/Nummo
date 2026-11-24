@@ -123,6 +123,10 @@ di quel giorno e la verifica su `d196dc9`.
   `Content-Type: application/json` per quel percorso in `firebase.json` (senza il file l'avrebbe messa sull'`index.html` del rewrite) e
   il controllo del file in `scripts/deploy-hosting.ts`; `docs/notifiche-push.md` e `AGENTS.md` aggiornati. Il resto del lavoro sulle
   notifiche (sezione più sotto) resta. Per un'eventuale TWA il file vero andrà rimesso in `public/.well-known/`.
+- **Verifica:** `npm run check` OK (**596/596**), `dist-demo/` senza `.well-known`. Committato in `27e46bd`, inviato e pubblicato su
+  Hosting (bundle `index-050698b4…` invariato, identico byte per byte). Online `/.well-known/assetlinks.json` risponde ora `[]`
+  (`application/json`, `x-cache: MISS`): è la risposta predefinita di Firebase Hosting per quel percorso senza un file del sito,
+  nessuna app associata; niente più segnaposto.
 
 ## Fotocamera della scansione come livello immersivo — 24 novembre 2026
 
