@@ -117,6 +117,13 @@ di quel giorno e la verifica su `d196dc9`.
   `npm run check` OK (**596/596**, insieme alle notifiche). Committato in `a8f694f`, inviato e pubblicato su Hosting (bundle
   `index-ab8ddc12…` e icone online identici byte per byte). APK non ricompilato.
 
+## Modello assetlinks tolto — 24 novembre 2026
+
+- **Su richiesta** («togli assetlinks.json con i segnaposto e ripubblica»): tolti `public/.well-known/assetlinks.json`, la regola
+  `Content-Type: application/json` per quel percorso in `firebase.json` (senza il file l'avrebbe messa sull'`index.html` del rewrite) e
+  il controllo del file in `scripts/deploy-hosting.ts`; `docs/notifiche-push.md` e `AGENTS.md` aggiornati. Il resto del lavoro sulle
+  notifiche (sezione più sotto) resta. Per un'eventuale TWA il file vero andrà rimesso in `public/.well-known/`.
+
 ## Fotocamera della scansione come livello immersivo — 24 novembre 2026
 
 - **Su richiesta** (da riquadro centrato con «Annulla»/«Scatta» impilati a foglio immersivo ancorato in basso). Nuovo

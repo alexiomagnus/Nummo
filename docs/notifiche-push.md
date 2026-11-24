@@ -62,9 +62,10 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
 - **Suffisso del dominio**: Chrome e le WebAPK aggiungono «• dominio» all'intestazione delle notifiche Web Push, per
   sicurezza dell'origine; la pagina non può toglierlo. Lo toglierebbe solo la delega delle notifiche di una Trusted Web
   Activity (app Android TWA verificata con `/.well-known/assetlinks.json`). L'app di `android/` **non** è una TWA
-  (WebView con notifiche locali proprie, già senza suffisso): `public/.well-known/assetlinks.json` è un modello da
-  compilare (pacchetto e impronta SHA-256 del certificato di firma) solo se si pubblica una TWA; `firebase.json` lo
-  serve come `application/json` e, esistendo in `dist/`, il rewrite della SPA non lo intercetta.
+  (WebView con notifiche locali proprie, già senza suffisso). Il modello con i segnaposto aggiunto il 24 novembre è stato
+  tolto lo stesso giorno, su richiesta: per una TWA servirebbe il file vero (pacchetto e impronta SHA-256 del certificato
+  di firma) in `public/.well-known/`, che l'export di Expo copia e la CLI di Firebase carica (`**/.*` esclude solo i nomi
+  che iniziano col punto); esistendo in `dist/`, il rewrite della SPA non lo intercetta.
 
 ### File
 
@@ -74,7 +75,6 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
 | `src/services/pushNotifications.ts` | Supporto, service worker, permesso, sottoscrizione, invio orari, prove, apertura da notifica. |
 | `src/features/notifications/usePushNotifications.ts` | Stato nella pagina e sincronizzazione degli orari. |
 | `public/sw.js` | Notifiche (push, tocco, rinvio, rinnovo) e pagina offline di Nummo (solo navigazioni fallite, mai l'app, il bundle o dati; nessun avvio offline). |
-| `public/.well-known/assetlinks.json` | Modello di Digital Asset Links per un'eventuale TWA, con segnaposto. |
 | `push-service/` | Servizio di invio: `service.ts` (API e invio, SQL), `webPush.ts` (RFC 8291/8292 con WebCrypto), `worker.ts` (Cloudflare), `local.ts` (Node, prove), `keys.ts`. |
 
 Nessuna dipendenza npm aggiunta: cifratura e firma usano WebCrypto; in locale l'archivio è `node:sqlite`.
