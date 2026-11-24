@@ -137,7 +137,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // On phones and tablets there is no lighter panel (desktop only): the page sits on the plain background.
   const panelBg = !showPanel ? colors.background : panelColor(colors);
   const panelTheme = useMemo(() => ({ ...theme, colors: { ...colors, background: panelBg } }), [theme, colors, panelBg]);
-  const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: padding, marginBottom: padding };
+  // 16 around the panel on the right and below (32 until 24 November: a larger panel, user's request).
+  const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: spacing.lg, marginBottom: spacing.lg };
   // The scroller fills the rounded panel, which clips it: content scrolls out of view at the panel's own edge, never at
   // a line inside it. The scrollbar would run straight through the corners (browsers do not bend it to the radius):
   // `data-panel-scroll` lets GlobalStyle stop its track a corner radius short of both ends.

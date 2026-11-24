@@ -98,6 +98,12 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Pannello del contenuto più ampio da desktop — 24 novembre 2026
+
+Su richiesta («da desktop aumentare un po' lo spazio della card, nel caso diminuire lo spazio dei bottoni a sinistra»): drawer da 248 a
+208 (`layout.drawerWidth`), margine del pannello a destra e in basso da 32 a 16 (`AppShell`). A 1440×900 il pannello passa da 1160×792 a
+1216×808; nessuna voce del drawer tagliata. `npm run check` OK (598/598).
+
 ## Descrizione degli editor più bassa, azioni su una riga da desktop — 24 novembre 2026
 
 - **Su segnalazione** («terribile, la sezione descrizione è troppo grande»): tolta la Descrizione che cresceva fino alle azioni

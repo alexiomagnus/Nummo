@@ -76,7 +76,8 @@ export const paperRoundness = radius.control / 5;
 export const layout = {
   floatingBar: 64, // compact floating navigation pill / round action
   railWidth: 80,
-  drawerWidth: 248,
+  // 208 since 24 November (248 before): more room for the content panel (user's request).
+  drawerWidth: 208,
   topBarHeight: 64,
   // Dialogs.
   maxForm: 560,
