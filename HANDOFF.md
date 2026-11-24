@@ -107,7 +107,7 @@ di quel giorno e la verifica su `d196dc9`.
   template di `nummo-template-v11.json`) clic sul testo della riga → nulla, sulla matita → «Modifica template», hover solo sulla matita;
   fotocamera finta: video a opacità 0 finché `readyState` < 4, poi 1 (circa 180 ms); dettaglio di «Affitto» e di un fondo
   (`nummo-utente-medio.json`): pulsanti con raggio a pillola; nessun errore JS. **Non provati** su telefono (il poster grigio compare solo
-  nella WebView/Chrome Android). Committato e inviato.
+  nella WebView/Chrome Android). Commit `665d96e`, pubblicato su Hosting.
 
 ## Schermi a scorrimento (scelto tra tre prove) — 24 novembre 2026
 
@@ -134,8 +134,8 @@ questa»), tolte le altre due e i segni di prova.
 - `theme/containerTransform.ts`: `slideTimings`, `slideSpring`.
 - Verifica: `npm run check` 594/594 (tolti i test del container transform, aggiunti quelli dello scorrimento); registrato anche il
   foglio di Nuova lista a 390×844; registrazione headless rallentata (0,3×) del dettaglio di una spesa a 1440×900 e 390×844 e,
-  durante le prove, dei tre schermi di Fondi: nessun errore JS. Non provato su dispositivi reali né nel tema chiaro. Committato e
-  inviato.
+  durante le prove, dei tre schermi di Fondi: nessun errore JS. Non provato su dispositivi reali né nel tema chiaro. Commit
+  `05a5ed6`, pubblicato su Hosting (`npm run deploy:hosting`, bundle online `index-daac10be…` identico all'export locale).
 
 ## Schermi: chiusura senza coda, apertura e chiusura più rapide — 24 novembre 2026
 
