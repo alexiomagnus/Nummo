@@ -8,8 +8,9 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `d196dc9` (24 novembre, su richiesta: animazioni degli schermi come prima della
-  levigatura in più; bundle online `index-5d17f911…` identico byte per byte). Prima `695a5c4` (24 novembre: selettori e fogli da desktop come prima,
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `32a276f` (24 novembre, su richiesta: animazione piena anche per Nuova spesa
+  e le destinazioni; bundle online `index-4572a2bf…` identico byte per byte). Prima `d196dc9` (animazioni degli schermi come prima della
+  levigatura in più; bundle `index-5d17f911…`). Prima `695a5c4` (24 novembre: selettori e fogli da desktop come prima,
   schermi nei colori della pagina, data senza scorrimento), pubblicato con `npm run deploy:hosting` dall'albero principale pulito (al
   secondo tentativo: il primo si è fermato su un errore di rete della API di Hosting): «Deploy complete!», bundle online
   `index-609f9367…` identico byte per byte. Comprende tutto il codice fino a `695a5c4`. Prima `bafadd3` (24 novembre, bundle
@@ -19,7 +20,7 @@ di quel giorno e la verifica su `d196dc9`.
   chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
   invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
   99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
-- **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `d196dc9` (animazioni degli schermi come prima),
+- **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `32a276f` (animazione piena per tutte le pagine), `d196dc9` (animazioni degli schermi come prima),
   `695a5c4` (selettori e fogli da desktop come prima), `bafadd3` (schermi dei fondi e della lista, chiusura alla navigazione).
 - **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
@@ -31,7 +32,7 @@ di quel giorno e la verifica su `d196dc9`.
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.2` «Latest», poi 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `d196dc9`,
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `32a276f`,
   inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
@@ -97,7 +98,8 @@ di quel giorno e la verifica su `d196dc9`.
   tolti il prop `emphasized` e `isAccountPage` di `Workspace`. Movimento ridotto: nessuna animazione, come prima.
 - **Verifica:** `npm run check` OK (**590/590**, typecheck, build demo). Chromium headless su `dist-demo`, Standard, scuro, 1440×900 e
   390×844: Spese, Analisi, Fondi, Liste e Nuova spesa entrano da scala 0,97 e 24 più in basso, opacità 0 → 1, ferme (`none`, 1) entro
-  700 ms; nessun errore JS. Non provato su telefono reale.
+  700 ms; nessun errore JS. Non provato su telefono reale. Committato in `32a276f`, inviato e pubblicato su Hosting (bundle
+  `index-4572a2bf…` identico byte per byte).
 
 ## Animazioni degli schermi come prima del 23 sera — 24 novembre 2026
 
@@ -5473,7 +5475,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (24 novembre):** tutto il codice fino a `d196dc9` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (24 novembre):** tutto il codice fino a `32a276f` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
