@@ -117,6 +117,8 @@ Due strade:
   La chiave resta salvata solo in questo browser (una per servizio) e la foto viene inviata al servizio scelto solo dopo il consenso.
   Nessuna lettura sul dispositivo (OCR rimosso il 21 novembre 2026).
 - **Nuova spesa** con importo, data, descrizione, categoria ed **Esercente** facoltativo (suggerimenti dagli esercenti già usati, più frequenti e recenti per primi; «amazon» e «AMAZON» sono lo stesso esercente; pagina **Esercenti** dal menu account per rinominarli, unirli o eliminarli, togliendoli dalle spese); **Spese** con ricerca, filtri, modifica ed eliminazione.
+- **Link per compilare Nuova spesa** (vedi [sotto](#link-per-compilare-nuova-spesa)): un indirizzo come `…/#nuova?importo=12,50&descrizione=Bar`
+  apre Nuova spesa con i campi già compilati, per un'automazione del telefono dopo un pagamento; si salva sempre e solo con «Salva».
 - **Abbonamenti** settimanali, mensili e annuali, con prove gratuite, variazioni di prezzo, pausa/annullamento e cambi di frequenza futuri che conservano i pagamenti maturati.
 - **Categorie** personalizzabili, con 39 icone selezionabili in tre stili, e **Analisi** con totali e grafici.
 - **Fondi e budget** facoltativi: un fondo è un gruppo di spese (nome, colore, icona) con ricarica mensile e budget mensile facoltativi; la pagina Fondi mostra la spesa del mese e i budget, «Aggiungi»/«Trasferisci» per i fondi con saldo e, aprendo un fondo, solo i totali del mese (aggiunte, trasferimenti, ricariche, speso). Nessuna cifra di saldo mostrata.
@@ -142,6 +144,32 @@ Due strade:
 - **Notifiche** configurabili: promemoria per il backup JSON (Standard) e riepilogo periodico delle spese, come notifiche di
   sistema anche ad app chiusa (Web Push, con servizio di invio da configurare) o, in mancanza, come avvisi dentro l'app.
 - **Due modalità di archiviazione**: Standard (sul dispositivo, senza account, backup JSON manuale) e Avanzata (Firestore, con sincronizzazione dell'SDK). Solo web; vedi i [limiti](#installazione-come-pwa).
+
+### Link per compilare Nuova spesa
+
+Aggiungi all'indirizzo di Nummo `#nuova?` e i campi da compilare, separati da `&`:
+
+| Parametro | Esempio | Note |
+| --- | --- | --- |
+| `importo` | `12,50`, `12.50`, `€ 1.234,56` | Simboli di valuta e spazi ignorati; separatore delle migliaia riconosciuto. |
+| `descrizione` | `Bar` | Al massimo 100 caratteri, come nel campo. |
+| `esercente` | `Bar Sport` | Al massimo 30 caratteri, come nel campo. |
+| `data` | `2026-11-24`, `24/11/2026` | Vuota = oggi, come sempre. |
+| `categoria` | `Alimentari` | Nome di una categoria esistente (maiuscole indifferenti); mai creata dal link. |
+| `fondo` | `Casa`, `Nessuno` | Nome di un fondo attivo, oppure `Nessuno`. |
+
+Esempio: `https://<il tuo sito>/#nuova?importo=4,20&descrizione=Colazione&esercente=Bar%20Sport&categoria=Alimentari`
+(spazi e caratteri speciali codificati come in ogni indirizzo: `%20` o `+` per lo spazio).
+
+- Il link **propone soltanto**: apre Nuova spesa, compila i campi indicati (sostituendo quello che contenevano, lasciando gli altri) e
+  aspetta «Salva», con la validazione di sempre. Un valore che non si può usare (importo illeggibile, categoria o fondo che non esiste,
+  parametro sconosciuto) viene lasciato fuori e un avviso lo dice.
+- Funziona in entrambe le modalità; se serve prima l'accesso o lo sblocco, i campi si compilano subito dopo. L'indirizzo viene ripulito
+  appena letto: ricaricare la pagina o tornare indietro non compila di nuovo. I valori restano nel dispositivo: nessun server li riceve.
+- **iPhone (Comandi rapidi):** automazione personale «Transazione» (Wallet) → azione «Testo» con il link, inserendo come variabili
+  l'importo e l'esercente della transazione → «Apri URL». **Android:** Tasker o MacroDroid, sulla notifica della banca, con un'azione
+  «Apri URL» (o «Browse URL») sul link. Il link si apre nel browser, non nell'app Android di Nummo (che non riceve link esterni): in Standard i dati del browser e
+  quelli dell'app sono archivi separati.
 
 Stato: progetto personale con rilasci Hosting documentati in [HANDOFF.md](HANDOFF.md).
 Le verifiche automatiche e in Chromium emulato sono distinte dai collaudi su dispositivi reali, ancora da completare. Non è presente una licenza:

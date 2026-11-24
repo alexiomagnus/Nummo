@@ -1,6 +1,6 @@
 import { useI18n } from '../../i18n/I18nProvider';
 import { existingCategory } from '../categories/preferredCategories';
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding } from '../../components/Button';
@@ -24,6 +24,7 @@ import { useReceiptAi } from '../receipts/aiSettings';
 import type { RankedMerchant } from '../../domain/merchant';
 import { draftOfTemplate, templateOptionalFields, type TemplateFill, type TemplateRecord } from '../../domain/template';
 import { TemplatePicker } from '../templates/TemplatePicker';
+import { resolvePrefill, type PrefillLink } from '../../domain/prefillLink';
 
 // `fundChoices`: funds that can pay a new expense (active ones); none = the fund field is not shown.
 // Categories are created only in the Categories page, never from this form.
@@ -35,6 +36,8 @@ type Props = {
   merchants?: readonly RankedMerchant[];
   // Saved templates, given only when they are turned on (Templates page): the button beside the scan fills the form from one.
   templates?: readonly TemplateRecord[];
+  // The last prefill link opened (`#nuova?…`): its fields are filled once, when the form's data is ready.
+  prefill?: PrefillLink | null;
 };
 
 
@@ -42,7 +45,7 @@ export const ExpenseForm = memo(ExpenseFormView);
 
 const noMerchants: readonly RankedMerchant[] = [];
 
-function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '', merchants = noMerchants, templates }: Props) {
+function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, defaultCategoryId = '', merchants = noMerchants, templates, prefill = null }: Props) {
   const { t } = useI18n();
   const haptic = useHaptics();
   const { colors } = useTheme();
@@ -120,6 +123,20 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     setTemplateFill(optional.fill);
     update({ description: filled.description, categoryId: existingCategory(template.category_id, categories), fundId, ...optional.patch });
   };
+  // A prefill link fills only the fields it carries (replacing what they held) and never saves: «Salva» stays the user's.
+  // Category and fund are matched by name when the data is ready; values that cannot be used are left out and said.
+  const prefilled = useRef<PrefillLink | null>(null);
+  useEffect(() => {
+    if (!prefill || prefill === prefilled.current || !enabled) return;
+    prefilled.current = prefill;
+    const { patch, ignored } = resolvePrefill(prefill, categories, funds);
+    if (Object.keys(patch).length > 0) {
+      setTemplateId('');
+      setTemplateFill({});
+      update(patch);
+    }
+    if (ignored > 0) notify("Alcuni valori del link non sono stati usati: controlla i campi prima di salvare.");
+  }, [prefill, enabled]);
   // Leaving a field empty is not an error yet: missing values are reported on save.
   const validateField = (field: BaseField) => {
     if (!current[field].trim()) return;

@@ -47,6 +47,8 @@ import { message } from '../expenses/useRemoteExpenses';
 import { NotificationsPage } from '../notifications/NotificationsPage';
 import { useNotifications, type LocalArchive } from '../notifications/useNotifications';
 import { onNotificationOpened, type OpenedNotification } from '../../services/pushNotifications';
+import { onPrefillLink } from '../../services/prefillLink';
+import type { PrefillLink } from '../../domain/prefillLink';
 import { getDatabase } from '../../services/firebase';
 import { createFirestoreStore } from '../../services/firestoreStore';
 import type { DataStore } from '../../services/dataStore';
@@ -396,6 +398,10 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     if (next.kind === 'renewal') { setListView('subscriptions'); onNavigate('list'); return; }
     setOpened(next); onNavigate('notifications');
   }), [onNavigate]);
+  // A prefill link (`#nuova?importo=…`, domain/prefillLink.ts): «Nuova spesa» opens and the form fills the fields once its data
+  // is ready. Each link is a new object, so the same link opened twice fills the form twice.
+  const [prefill, setPrefill] = useState<PrefillLink | null>(null);
+  useEffect(() => onPrefillLink((link) => { setPrefill(link); onNavigate('expense'); }), [onNavigate]);
   const detailShown = section === 'list' && listView === 'expenses' && !starting ? detailItem : null;
   useEffect(() => { if (detailId && !detailShown) setDetailId(null); }, [detailId, detailShown]);
   const funds = fundState.funds;
@@ -437,7 +443,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
       <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
         <ExpenseForm categories={categoryState.categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
-          defaultCategoryId={preferred.expense} store={formStore} merchants={merchants}
+          defaultCategoryId={preferred.expense} store={formStore} merchants={merchants} prefill={prefill}
           templates={dashboardPreferences.templatesEnabled ? templateState.templates : undefined} />
       </div>
     </View>

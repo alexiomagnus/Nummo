@@ -1596,3 +1596,17 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   dissolvenze di prima (copia via entro il 30 %, contenuto dal 15 % al 55 %; in chiusura contenuto via entro il 20 %, copia dal 10 % al
   35 %); tolti l'avvio dopo il primo disegno (`startAfterPaint`) e `contain: paint`; anche le pagine del menu account partono subito.
 
+## Link per compilare Nuova spesa — 24 novembre 2026
+
+- **Su richiesta** (idea concordata il 15 novembre, in `TODO.md`). `#nuova?importo=…&descrizione=…&esercente=…&data=…&categoria=…&fondo=…`
+  apre Nuova spesa con quei campi compilati, per le automazioni del telefono dopo un pagamento. Mai un salvataggio: il link propone, l'utente
+  preme «Salva» con la validazione di sempre (stessa regola della scansione dello scontrino).
+- **Hash, non query:** l'export statico è servito per ogni percorso e il frammento non arriva mai a Hosting né nei log; parametri in
+  italiano come `?notifica=`. Regole pure in `domain/prefillLink.ts` (lettura, importo con separatori delle migliaia e simboli di valuta,
+  data ISO o GG/MM/AAAA, categoria e fondo per nome con la normalizzazione dei nomi di categoria, testi tagliati al limite del campo);
+  `services/prefillLink.ts` legge l'indirizzo all'avvio e a ogni `hashchange`, lo ripulisce subito con `replaceState` (un ricaricamento o
+  Indietro non ricompilano) e trattiene il link finché il workspace non lo ascolta (accesso, scelta della modalità, sblocco).
+- **Bozza:** il link sostituisce solo i campi che porta e lascia gli altri; a freddo la bozza è sempre vuota (vive solo in memoria).
+  Categoria e fondo si risolvono quando i dati del modulo sono pronti (`enabled` di `ExpenseForm`); valori inutilizzabili e parametri
+  sconosciuti non bloccano nulla, un solo avviso. Nessuna categoria, fondo o esercente creato dal link; nessun dato verso server.
+

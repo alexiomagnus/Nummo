@@ -5,17 +5,6 @@ ogni voce si implementa solo su richiesta, una alla volta.
 
 ## Da fare
 
-### Link di precompilazione di «Nuova spesa» (proposto il 15 novembre 2026)
-
-- Un indirizzo come `https://…/#nuova?importo=12,50&descrizione=Bar` apre Nuova spesa con i campi già compilati;
-  l'utente controlla e preme **Salva**. Mai salvataggi automatici.
-- Uso tipico: un'automazione del telefono dopo un pagamento (iPhone: Comandi rapidi, automazione «Transazione» di
-  Wallet; Android: Tasker/MacroDroid sulla notifica della banca) apre il link con importo ed esercente.
-- Da definire: parametri ammessi (importo, descrizione, data, categoria per nome?), validazione con le regole del
-  modulo, comportamento se c'è già una bozza, modalità Standard e Avanzata, pulizia dell'indirizzo dopo la lettura,
-  guida breve per configurare l'automazione.
-- Nessun dato passa da server o servizi esterni.
-
 ### Un unico Firebase per tutti gli utenti — soluzione «c» (proposta il 15 novembre 2026)
 
 - Oggi l'Avanzata è BYOF: chi apre il sito pubblicato entra nel progetto del proprietario e, se non è il proprietario,

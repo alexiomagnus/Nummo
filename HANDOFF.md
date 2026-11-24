@@ -84,11 +84,29 @@ di quel giorno e la verifica su `d196dc9`.
   promozione delle 21:11 che ha prodotto l'attuale `emulator-data/`. Le altre cartelle citate nelle sezioni storiche sono state tolte il
   22 novembre. AVD `Pixel_8` dell'emulatore con un PIN di blocco sconosciuto: per le prove usare `Medium_Phone_API_37.0` (Android 17).
   Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
-- **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
+- **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (Firebase unico per tutti; il link di precompilazione è implementato il 24
+  novembre, vedi la sezione datata, non ancora pubblicato).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): prove su iPhone dopo l'audit mobile e sul Pixel 8 (sopra);
   Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
+
+## Link per compilare Nuova spesa — 24 novembre 2026
+
+- **Su richiesta** («implementa il link di precompilazione di Nuova spesa», idea di `TODO.md` del 15 novembre, ora tolta da lì).
+  `#nuova?importo=…&descrizione=…&esercente=…&data=…&categoria=…&fondo=…` apre Nuova spesa con quei campi compilati; si salva solo
+  con «Salva». Scelte prese senza domande (da confermare con l'utente se non vanno): parametri in italiano; importo con simboli di valuta
+  e separatori delle migliaia («€ 1.234,56», «1,234.56», «1.234» = 1234); data ISO o GG/MM/AAAA; categoria e fondo per nome (maiuscole e
+  spazi indifferenti; `fondo=Nessuno` = «Nessun fondo»), mai creati; descrizione ed esercente tagliati al limite del campo (100 e 30);
+  il link sostituisce solo i campi che porta e azzera la scelta del template; valori inutilizzabili o parametri sconosciuti → lasciati
+  fuori e un avviso «Alcuni valori del link non sono stati usati…»; indirizzo ripulito subito (un ricaricamento non ricompila); a pagina
+  aperta un cambio di hash riporta a Nuova spesa. File: `domain/prefillLink.ts`, `services/prefillLink.ts`, `Workspace`, `ExpenseForm`
+  (`prefill`), voce nella Guida, `tests/prefillLink.test.ts`, README (tabella dei parametri e automazioni iPhone/Android), architettura.
+- **Verifica:** `npm run check` OK (**594/594**). Chromium headless su `dist-demo`, Standard, scuro, 390×844 e 1440×900: link a freddo →
+  importo «1234,56», descrizione, esercente, data 20 nov 2026, categoria Alimentari, indirizzo `/`, avviso per il parametro sconosciuto;
+  da Analisi `location.hash = '#nuova?importo=5'` → Nuova spesa con importo 5 e il resto conservato; «Salva» → spesa in Spese con
+  esercente «Bar Sport»; ricaricamento → modulo vuoto; nessun errore JS. **Non provati:** Avanzata (accesso prima del link), blocco
+  dell'app acceso, automazioni reali su iPhone e Android. Non pubblicato su Hosting.
 
 ## «Template» apre uno schermo come «Scansiona scontrino» — 24 novembre 2026
 
