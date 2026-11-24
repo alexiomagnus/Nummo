@@ -8,8 +8,9 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `1ad74ad` (24 novembre, su richiesta: «Template» apre uno schermo come la
-  scansione; bundle online `index-39223863…` identico byte per byte). Prima `32a276f` (animazione piena anche per Nuova spesa e le
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `2d3feed` (24 novembre, su richiesta: link per compilare Nuova spesa;
+  bundle online `index-62e94e98…` identico byte per byte). Prima `1ad74ad` («Template» apre uno schermo come la
+  scansione; bundle `index-39223863…`). Prima `32a276f` (animazione piena anche per Nuova spesa e le
   destinazioni; bundle `index-4572a2bf…`). Prima `d196dc9` (animazioni degli schermi come prima della
   levigatura in più; bundle `index-5d17f911…`). Prima `695a5c4` (24 novembre: selettori e fogli da desktop come prima,
   schermi nei colori della pagina, data senza scorrimento), pubblicato con `npm run deploy:hosting` dall'albero principale pulito (al
@@ -21,7 +22,7 @@ di quel giorno e la verifica su `d196dc9`.
   chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
   invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
   99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
-- **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `1ad74ad` («Template» come schermo), `32a276f` (animazione piena per tutte le pagine), `d196dc9` (animazioni degli schermi come prima),
+- **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `2d3feed` (link per compilare Nuova spesa), `1ad74ad` («Template» come schermo), `32a276f` (animazione piena per tutte le pagine), `d196dc9` (animazioni degli schermi come prima),
   `695a5c4` (selettori e fogli da desktop come prima), `bafadd3` (schermi dei fondi e della lista, chiusura alla navigazione).
 - **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
@@ -33,7 +34,7 @@ di quel giorno e la verifica su `d196dc9`.
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.2` «Latest», poi 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `1ad74ad`,
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `2d3feed`,
   inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
@@ -84,8 +85,8 @@ di quel giorno e la verifica su `d196dc9`.
   promozione delle 21:11 che ha prodotto l'attuale `emulator-data/`. Le altre cartelle citate nelle sezioni storiche sono state tolte il
   22 novembre. AVD `Pixel_8` dell'emulatore con un PIN di blocco sconosciuto: per le prove usare `Medium_Phone_API_37.0` (Android 17).
   Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
-- **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (Firebase unico per tutti; il link di precompilazione è implementato il 24
-  novembre, vedi la sezione datata, non ancora pubblicato).
+- **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (Firebase unico per tutti; il link di precompilazione è implementato e pubblicato il 24
+  novembre, vedi la sezione datata).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): prove su iPhone dopo l'audit mobile e sul Pixel 8 (sopra);
   Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
@@ -106,7 +107,8 @@ di quel giorno e la verifica su `d196dc9`.
   importo «1234,56», descrizione, esercente, data 20 nov 2026, categoria Alimentari, indirizzo `/`, avviso per il parametro sconosciuto;
   da Analisi `location.hash = '#nuova?importo=5'` → Nuova spesa con importo 5 e il resto conservato; «Salva» → spesa in Spese con
   esercente «Bar Sport»; ricaricamento → modulo vuoto; nessun errore JS. **Non provati:** Avanzata (accesso prima del link), blocco
-  dell'app acceso, automazioni reali su iPhone e Android. Non pubblicato su Hosting.
+  dell'app acceso, automazioni reali su iPhone e Android. Committato in `2d3feed`, inviato e pubblicato su Hosting (bundle
+  `index-62e94e98…` identico byte per byte).
 
 ## «Template» apre uno schermo come «Scansiona scontrino» — 24 novembre 2026
 
@@ -5512,7 +5514,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (24 novembre):** tutto il codice fino a `1ad74ad` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (24 novembre):** tutto il codice fino a `2d3feed` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
