@@ -98,6 +98,14 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## «Aggiungi denaro» intero anche a metà schermo — 24 novembre 2026
+
+Su richiesta (screenshot di «Aggiungi denaro» ridotto, con la Nota e una parte dei campi sotto il bordo): `MovementDialog` con `fitPeek`,
+come il selettore della data: in ridotto il pannello sale quanto serve a mostrare tutto il modulo. Headless a 390×844 col backup dei
+casi limite: «Aggiungi denaro» ridotto a 310 (Entrata/Spostamento, Importo, Fondo, Data, Nota e «Aggiungi» visibili, niente da
+scorrere), «Trasferisci tra fondi» a 238. Lo screenshot delle transazioni di Analisi con il pulsante Indietro è della versione
+precedente a `651d93e` (in headless quella pubblicata non lo ha). `npm run check` OK (598/598).
+
 ## Modifica serie in una schermata su smartphone — 24 novembre 2026
 
 Su richiesta («far entrare tutta la pagina senza doverla scrollare, è poco lo spazio superato»): nel riquadro «Rinnovi» di
