@@ -1,11 +1,12 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 23 novembre 2026
+## Stato corrente — 24 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, dal più recente, sono cronaca delle singole fasi
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novembre, l'elenco dei commit e la storia delle release Android,
-prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre».
+prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
+di quel giorno e la verifica su `d196dc9`.
 
 - **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `d196dc9` (24 novembre, su richiesta: animazioni degli schermi come prima della
   levigatura in più; bundle online `index-5d17f911…` identico byte per byte). Prima `695a5c4` (24 novembre: selettori e fogli da desktop come prima,
@@ -18,7 +19,9 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
   invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
   99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
-- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `d196dc9`, `695a5c4` e `bafadd3` (24 novembre), `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
+- **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `d196dc9` (animazioni degli schermi come prima),
+  `695a5c4` (selettori e fogli da desktop come prima), `bafadd3` (schermi dei fondi e della lista, chiusura alla navigazione).
+- **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
   vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
 - **App Android: 0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
@@ -46,7 +49,7 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
+- **Verifiche (ultime).** Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
   visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
   menu ancorato su desktop, nessun errore JS. Su `f74ff3a`: `assembleDebug assembleRelease` OK. `test:emulator` **24/24** l'ultima volta su
@@ -5460,7 +5463,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (23 novembre):** tutto il codice fino a `d196dc9` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (24 novembre):** tutto il codice fino a `d196dc9` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
