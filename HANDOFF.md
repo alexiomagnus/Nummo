@@ -98,6 +98,13 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Icona di Periodo e Grafico anche su smartphone — 24 novembre 2026
+
+Su richiesta: in Analisi su smartphone i campi Periodo e Grafico mostrano l'icona della voce scelta (`iconOnPhones`). Perché «Ultimi
+12 mesi» resti intero a metà riga, con l'icona il campo ha padding 8 e spazi 4 (`fieldTight` di `MenuSelect`) e le icone delle voci
+sono da 20. Headless a 360×740 e 390×844 (campi da 162 e 177): «Ultimi 12 mesi» e «Ciambella» interi, icone presenti; `npm run check`
+OK (598/598).
+
 ## Pannello del contenuto più ampio da desktop — 24 novembre 2026
 
 Su richiesta («da desktop aumentare un po' lo spazio della card, nel caso diminuire lo spazio dei bottoni a sinistra»): drawer da 248 a

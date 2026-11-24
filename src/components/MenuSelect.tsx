@@ -70,6 +70,9 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
   const [contentWidth, setContentWidth] = useState(0);
   // On phones the leading icon is dropped to leave room for the value, unless `iconOnPhones`.
   const showIcon = !compact || iconOnPhones;
+  // Phones with the icon in a half-width field (Periodo and Grafico of Analisi, user's request of 24 November): tighter padding and
+  // gaps, so that «Ultimi 12 mesi» stays whole beside its icon at 360 px.
+  const tight = compact && Boolean(iconOnPhones) && !large;
   const current = options.find((option) => option.value === value);
   const rows = options.map((option) => (
     <StateLayerPressable key={option.value} layerColor={colors.onSurface} accessibilityRole="menuitem" style={styles.item}
@@ -86,9 +89,9 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
       <View ref={anchorRef}>
         <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
-          onPress={openMenu} style={[styles.field, large && styles.fieldLarge, large && compact && styles.fieldLargeCompact, { borderColor: colors.outline }]}>
+          onPress={openMenu} style={[styles.field, large && styles.fieldLarge, large && compact && styles.fieldLargeCompact, tight && styles.fieldTight, { borderColor: colors.outline }]}>
           {/* The chosen option's own icon when it has one (e.g. the fund avatar), otherwise the field's icon. */}
-          {showIcon && <View style={styles.fieldIcon}>{current?.icon ?? <SvgIcon shape={icon} size={large ? 24 : 20} color={colors.onSurfaceVariant} />}</View>}
+          {showIcon && <View style={[styles.fieldIcon, tight && styles.fieldIconTight]}>{current?.icon ?? <SvgIcon shape={icon} size={large ? 24 : 20} color={colors.onSurfaceVariant} />}</View>}
           <View style={styles.text}>
             <Text variant={large ? 'labelMedium' : 'labelSmall'} style={{ color: colors.onSurfaceVariant }}>{label}</Text>
             <Text variant={large ? 'bodyLarge' : 'bodyMedium'} numberOfLines={1}>{current?.label ?? ''}</Text>
@@ -126,6 +129,8 @@ const styles = StyleSheet.create({
   fieldLarge: { height: layout.fieldBoxHeight, paddingHorizontal: spacing.lg },
   // Phones: two large fields share a row, so the chevron and padding stay as in the standard field.
   fieldLargeCompact: { paddingHorizontal: spacing.md },
+  fieldTight: { paddingHorizontal: spacing.sm, gap: spacing.xs },
+  fieldIconTight: { width: 20, marginRight: 0 },
   text: { flex: 1, minWidth: 0 },
   // Rows fit the field width; long labels shrink while the check keeps its fixed slot.
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl, minHeight: 48, minWidth: 0, paddingHorizontal: spacing.lg },

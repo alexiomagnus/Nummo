@@ -82,10 +82,10 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
   const fundSelect = fundFilterShown && <FundFilter funds={funds} value={fundFilter} onChange={changeFund} large={false}
     style={styles.fundSelectWide} />;
   // A screen of their own at every size (MenuSelect `panel`, ChoiceScreen), each choice with its icon.
-  const choiceIcon = (shape: string) => <SvgIcon shape={shape} size={24} color={theme.colors.onSurfaceVariant} />;
-  const periodSelect = <MenuSelect panel label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.half}
+  const choiceIcon = (shape: string) => <SvgIcon shape={shape} size={20} color={theme.colors.onSurfaceVariant} />;
+  const periodSelect = <MenuSelect panel iconOnPhones label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.half}
     onChange={(value) => changePeriod(value)} options={periods.map((value) => ({ value, label: t(periodLabels[value]), icon: choiceIcon(periodIcons[value]) }))} />;
-  const chartTypeSelect = <MenuSelect panel label={t("Grafico")} icon={iconShapes.chart} value={chart} style={styles.half}
+  const chartTypeSelect = <MenuSelect panel iconOnPhones label={t("Grafico")} icon={iconShapes.chart} value={chart} style={styles.half}
     onChange={(value) => changeChart(value)} options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]), icon: choiceIcon(chartIcons[value]) }))} />;
 
   return (
