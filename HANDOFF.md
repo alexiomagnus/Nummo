@@ -8,8 +8,9 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `89c776d` (24 novembre, su richiesta: testi di README e Guida; bundle online
-  `index-3bd84bf7…` identico byte per byte). Prima `2d3feed` (link per compilare Nuova spesa; bundle `index-62e94e98…`). Prima `1ad74ad` («Template» apre uno schermo come la
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `a8f694f` (24 novembre, su richiesta: icona nera con logo bianco, transizione lista ↔ dettaglio, con le
+  notifiche uniformi di `e58ce41`; bundle online `index-ab8ddc12…` identico byte per byte). Prima `89c776d` (testi di README e Guida;
+  bundle `index-3bd84bf7…`). Prima `2d3feed` (link per compilare Nuova spesa; bundle `index-62e94e98…`). Prima `1ad74ad` («Template» apre uno schermo come la
   scansione; bundle `index-39223863…`). Prima `32a276f` (animazione piena anche per Nuova spesa e le
   destinazioni; bundle `index-4572a2bf…`). Prima `d196dc9` (animazioni degli schermi come prima della
   levigatura in più; bundle `index-5d17f911…`). Prima `695a5c4` (24 novembre: selettori e fogli da desktop come prima,
@@ -22,7 +23,7 @@ di quel giorno e la verifica su `d196dc9`.
   chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
   invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
   99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
-- **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `89c776d` (testo della Guida sui fondi), `2d3feed` (link per compilare Nuova spesa), `1ad74ad` («Template» come schermo), `32a276f` (animazione piena per tutte le pagine), `d196dc9` (animazioni degli schermi come prima),
+- **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `a8f694f` (icona, transizione del dettaglio) con `e58ce41` (notifiche), `89c776d` (testo della Guida sui fondi), `2d3feed` (link per compilare Nuova spesa), `1ad74ad` («Template» come schermo), `32a276f` (animazione piena per tutte le pagine), `d196dc9` (animazioni degli schermi come prima),
   `695a5c4` (selettori e fogli da desktop come prima), `bafadd3` (schermi dei fondi e della lista, chiusura alla navigazione).
 - **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
@@ -34,7 +35,7 @@ di quel giorno e la verifica su `d196dc9`.
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.2` «Latest», poi 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `89c776d`,
+- **Git.** `main` = `origin/main`, solo il ramo `main`, cinque tag `android-v0.1.0`…`android-v0.3.2`. Ultimo commit di codice `a8f694f`,
   inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
@@ -103,6 +104,8 @@ di quel giorno e la verifica su `d196dc9`.
   «Nummo» copriva il pulsante Indietro a 20–60 ms in chiusura; dopo nessuno dei tre. Chiusura seguita da scorrimento a 60 ms: copia tolta
   entro 150 ms, scheda opaca. Barra e navigazione: 0 da aperto, 1 dopo, anche con Modifica sopra il dettaglio; da desktop mai nascoste.
   Nessun errore JS. **Non provato su telefono reale** (gesto Indietro di iOS/Android). Movimento ridotto invariato (istantaneo).
+  `npm run check` OK (**596/596**, insieme alle notifiche). Committato in `a8f694f`, inviato e pubblicato su Hosting (bundle
+  `index-ab8ddc12…` e icone online identici byte per byte). APK non ricompilato.
 
 ## Notifiche: forma uniforme, tocco con ripiego, iOS solo dalla Home, modello assetlinks — 24 novembre 2026
 
@@ -124,7 +127,8 @@ di quel giorno e la verifica su `d196dc9`.
   - Documenti: `docs/notifiche-push.md` (anche la riga superata «nessun gestore `fetch`»), `AGENTS.md`.
 - **Verifica:** `npm run check` OK (**596/596**, typecheck, build demo; `dist-demo/.well-known/assetlinks.json` presente). Nuovi
   test in `tests/serviceWorker.test.ts` e `tests/androidApp.test.ts`. **Non provati:** notifiche reali nel browser, su Android e iPhone.
-  Non committato, non pubblicato.
+  Committato in `e58ce41`, inviato e pubblicato su Hosting con `a8f694f` (bundle `index-ab8ddc12…`; online `sw.js` identico e
+  `/.well-known/assetlinks.json` servito come `application/json`, ancora il modello con i segnaposto).
 
 ## Testi superati di README e Guida — 24 novembre 2026
 
@@ -5556,7 +5560,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (24 novembre):** tutto il codice fino a `89c776d` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (24 novembre):** tutto il codice fino a `a8f694f` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
