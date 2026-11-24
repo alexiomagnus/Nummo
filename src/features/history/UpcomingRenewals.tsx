@@ -46,10 +46,9 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
         </View>
         <SvgIcon shape={iconShapes.chevronRight} size={24} color={colors.onPrimaryContainer} />
       </StateLayerPressable>
-      {/* The screen keeps the card's colour (user's request, 23 November): the card turns into it without a change of colour. */}
+      {/* The page's own colours, like every other screen (user's request, 24 November; the card's colour from the 23rd). */}
       {open && <Portal><ScreenLayer originId={cardId} label={t("Prossimo mese")} backLabel={t("Torna agli abbonamenti")}
-        onBack={() => setOpen(false)} onEscape={() => setOpen(false)}
-        tone={{ background: colors.primaryContainer, content: colors.onPrimaryContainer, button: colors.primary, onButton: colors.onPrimary }}>
+        onBack={() => setOpen(false)} onEscape={() => setOpen(false)}>
         <RenewalsContent renewals={renewals} categories={categories} soon={soon} count={count} days={days} />
       </ScreenLayer></Portal>}
     </View>
@@ -60,15 +59,16 @@ function RenewalsContent({ renewals, categories, soon, count, days }: Props & { 
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
   // Everything in the card's tones: text on its container colour, the icon tile as on the card, dividers as the old open card.
-  const tone = { color: colors.onPrimaryContainer };
+  const tone = { color: colors.onSurface };
+  const muted = { color: colors.onSurfaceVariant };
   return <>
     <View style={styles.hero}>
-      <View style={[styles.heroTile, { backgroundColor: colors.primary }]}>
-        <SvgIcon shape={iconShapes.calendar} size={36} color={colors.onPrimary} />
+      <View style={[styles.heroTile, { backgroundColor: colors.primaryContainer }]}>
+        <SvgIcon shape={iconShapes.calendar} size={36} color={colors.onPrimaryContainer} />
       </View>
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={[tone, styles.center]}>{t("Prossimo mese")}</Text>
       <Text variant="displaySmall" style={[tone, styles.amount, styles.bold, styles.center]}>{formatAmount(soon)}</Text>
-      <Text variant="bodyLarge" style={[tone, styles.center]}>{t("{p0} entro {p1} giorni", { p0: count, p1: days })}</Text>
+      <Text variant="bodyLarge" style={[muted, styles.center]}>{t("{p0} entro {p1} giorni", { p0: count, p1: days })}</Text>
     </View>
     <View role="list">
       {renewals.map(({ occurrence, previous }, index) => {
@@ -78,13 +78,13 @@ function RenewalsContent({ renewals, categories, soon, count, days }: Props & { 
           changed && t("da {p0}", { p0: formatAmount(previous) })].filter(Boolean).join(' · ');
         return (
           <View key={occurrence.key} role="listitem">
-            {index > 0 && <View style={[styles.divider, { backgroundColor: colors.onPrimaryContainer }]} />}
+            {index > 0 && <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />}
             <View style={styles.row}>
-              <View aria-hidden style={styles.rowIcon}>{category?.icon ? <CategoryGlyph icon={category.icon} size={24} color={colors.onPrimaryContainer} />
-                : <SvgIcon shape={iconShapes.tag} size={24} color={colors.onPrimaryContainer} />}</View>
+              <View aria-hidden style={styles.rowIcon}>{category?.icon ? <CategoryGlyph icon={category.icon} size={24} color={colors.onSurfaceVariant} />
+                : <SvgIcon shape={iconShapes.tag} size={24} color={colors.onSurfaceVariant} />}</View>
               <View style={styles.text}>
                 <Text variant="titleMedium" numberOfLines={2} style={[tone, styles.strong]}>{occurrence.description}</Text>
-                <Text variant="bodyMedium" style={tone}>{details}</Text>
+                <Text variant="bodyMedium" style={muted}>{details}</Text>
               </View>
               <Text variant="titleLarge" style={[tone, listRowStyles.amount]}>{formatAmount(occurrence.amount_minor)}</Text>
             </View>
@@ -112,5 +112,5 @@ const styles = StyleSheet.create({
   bold: { fontWeight: '700' },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingVertical: spacing.md, paddingHorizontal: spacing.xs },
   rowIcon: { width: 28, alignItems: 'center', justifyContent: 'center' },
-  divider: { height: StyleSheet.hairlineWidth, opacity: 0.25 },
+  divider: { height: StyleSheet.hairlineWidth },
 });

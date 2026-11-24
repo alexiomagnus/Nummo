@@ -16,25 +16,23 @@ export function PaymentsDialog({ description, payments, total, canRemove, onRemo
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
   const count = payments.length === 1 ? t("1 pagamento") : t("{p0} pagamenti", { p0: payments.length });
-  // The screen keeps the colour of the history row it opens from: the tonal secondary colour of «Scansiona scontrino»
-  // (user's request, 23 November).
-  return <Portal><AppDialog visible onDismiss={onClose}
-    tone={{ background: colors.secondaryContainer, content: colors.onSecondaryContainer, button: colors.secondary, onButton: colors.onSecondary }}>
+  // The page's own colours, like every other screen (user's request, 24 November; the row's tonal colour from the 23rd).
+  return <Portal><AppDialog visible onDismiss={onClose}>
     <AppDialog.Title>{t("Storico dei pagamenti")}</AppDialog.Title>
     <AppDialog.Content style={styles.intro}>
-      <Text variant="bodyMedium" style={{ color: colors.onSecondaryContainer }}>{`${description} · ${count} · ${formatAmount(total)}`}</Text>
-      {!canRemove && payments.length > 0 && <Text variant="bodySmall" style={{ color: colors.onSecondaryContainer }}>
+      <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{`${description} · ${count} · ${formatAmount(total)}`}</Text>
+      {!canRemove && payments.length > 0 && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
         {t("Per eliminare un pagamento serve la connessione con la sincronizzazione completata.")}</Text>}
     </AppDialog.Content>
     <AppDialog.ScrollArea style={styles.area}><ScrollView>
-      {payments.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSecondaryContainer }}>{t("Nessun pagamento.")}</Text>}
+      {payments.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Nessun pagamento.")}</Text>}
       <View role="list" accessibilityLabel={t("Storico dei pagamenti")}>
         {payments.map((payment, index) => {
           const date = formatDate(payment.date);
           return (
             <View key={payment.key} role="listitem">
-              {/* Soft dividers in the screen's ink, as on the «Prossimo mese» screen. */}
-              {index > 0 && <View style={[styles.divider, { backgroundColor: colors.onSecondaryContainer }]} />}
+              {/* Hairline dividers between the payments. */}
+              {index > 0 && <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />}
               <View style={styles.row}>
               <Text variant="bodyLarge" style={styles.date}>{date}</Text>
               <Text variant="bodyLarge" style={listRowStyles.amount}>{formatAmount(payment.amount_minor)}</Text>
@@ -57,5 +55,5 @@ const styles = StyleSheet.create({
   area: { minHeight: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52 },
   date: { flex: 1, minWidth: 0 },
-  divider: { height: StyleSheet.hairlineWidth, opacity: 0.25 },
+  divider: { height: StyleSheet.hairlineWidth },
 });

@@ -83,6 +83,19 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## Desktop come prima per selettori e fogli, schermi senza colori propri — 24 novembre 2026
+
+- **Su richiesta.** Prima: commit `bafadd3`, push e Hosting pubblicato (bundle `index-aba7a80c…` identico byte per byte). Poi:
+  (1) `SelectField` di nuovo con il menu ancorato da medium (foglio solo su smartphone); (2) «Prossimo mese» e «Storico dei pagamenti»
+  nei colori della pagina (tolto `tone`; la riga «Storico dei pagamenti» resta nel colore tonale secondario); (3) da medium, con uno schermo
+  aperto il resto dell'app non si tocca (livello trasparente in `ScreenLayer`, come il velo dei dialoghi di prima); (4) selettore della data
+  da desktop: la data scelta come titolo accanto a Indietro, senza il blocco «Seleziona data» grande, così il mese intero entra; (5) da
+  medium ogni `variant="sheet"` è uno schermo che riempie il pannello (Nuova lista, Modifica lista/prodotto, «Da quando»); (6) nel dettaglio
+  di un abbonamento sparisce solo il pulsante premuto («Annulla» o «Pausa»), non tutti e due.
+- **Verifica:** `npm run check` OK. Chromium headless 1440×900 scuro: Nuova lista 1160×792 = pannello; data senza scorrimento (ultima
+  settimana a 523, «OK» a 788); clic sulla rail con la data aperta → nessun cambio di pagina, schermo ancora aperto; Categoria → menu
+  ancorato. 390×844 scuro: data come foglio senza scorrimento, «Pausa» toccato → opacità 0, «Annulla» 1; nessun errore JS.
+
 ## Navigazione che chiude gli schermi, pagine del menu animate, lista come schermo, selettori come fogli — 23 novembre 2026
 
 - **Su richiesta:** (1) con uno schermo aperto (es. la data da desktop) e poi Impostazioni dal menu, si vedono le Impostazioni:

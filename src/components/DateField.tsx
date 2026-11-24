@@ -67,13 +67,16 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
   return (
     <Portal>
       <Dialog variant={sheet ? 'sheet' : 'screen'} visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
+        {/* Full screen (from medium): the chosen date is the title beside Back, so the whole month fits the panel without scrolling
+            (user's request, 24 November: the last week was cut under «OK»). */}
+        {!sheet && <Dialog.Title><Text variant="titleLarge" style={styles.headlineText}>{headlineFormat(locale).format(new Date(`${picked}T00:00:00Z`))}</Text></Dialog.Title>}
         <Dialog.ScrollArea style={styles.scrollArea}>
           <ScrollView keyboardShouldPersistTaps="handled">
-            <View style={styles.headline} accessibilityLiveRegion="polite">
+            {sheet && <View style={styles.headline} accessibilityLiveRegion="polite">
               <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Seleziona data")}</Text>
               <Text variant="headlineMedium" style={styles.headlineText}>{headlineFormat(locale).format(new Date(`${picked}T00:00:00Z`))}</Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
+            </View>}
+            {sheet && <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />}
             <View style={styles.body}>
               <Calendar selected={picked} month={month} minDate={minDate} maxDate={maxDate} onMonth={setMonth} onPick={setPicked} />
             </View>

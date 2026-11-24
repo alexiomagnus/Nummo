@@ -213,7 +213,11 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
   // Details use the page's margins; editors keep the 24 of their blocks (Paper's Content/Actions), and the top bar lines up with them.
   const padding = !scroll ? spacing.xl : compact ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
   const side = compact ? Math.max(insets.left, insets.right) : 0;
-  return (
+  return (<>
+    {/* From medium the screen covers only the content panel: a transparent layer over the rest (navigation, top bar, account menu)
+        keeps them from being pressed while it is open, as the dialogs' scrim did (user's request, 24 November: opening Settings or
+        other panels from under a screen gave display problems). */}
+    {!compact && <View aria-hidden style={[StyleSheet.absoluteFill, styles.blocker]} />}
     <View ref={root} role="dialog" aria-modal aria-label={label} {...part('root')}
       style={[styles.root, { left: frame.left, top: frame.top, width: frame.width, height: frame.height }]}>
       {sheet ? <Pressable {...part('scrim')} accessibilityRole="button" accessibilityLabel={backLabel} focusable={false} disabled={backDisabled} onPress={onBack}
@@ -244,6 +248,7 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
         <View {...part('ghosts')} aria-hidden pointerEvents="none" style={StyleSheet.absoluteFill} />
       </View>
     </View>
+  </>
   );
 }
 
@@ -444,6 +449,7 @@ function measureFrame(size: SizeClass): Box {
 
 const styles = StyleSheet.create({
   root: { position: 'absolute' },
+  blocker: { cursor: 'default' } as object,
   surface: { overflow: 'hidden' },
   content: { flex: 1 },
   grow: { flex: 1, minHeight: 0 },

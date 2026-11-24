@@ -8,6 +8,7 @@ import { dialogColor } from '../theme/theme';
 import { layout, motion, radius, spacing } from '../theme/tokens';
 import { Scrim, useEscape, useFocusHandoff, useOverlayMotion, usePresence } from './Overlay';
 import { ScreenLayer, type ScreenTone } from './ScreenLayer';
+import { useSizeClass } from '../theme/useSizeClass';
 import { CancelButton, dialogActionPair } from './Button';
 import { ScreenActionsContext } from './screenActions';
 import { noScrollEdges, scrollEdges, type ScrollEdges } from './scrollEdges';
@@ -48,6 +49,10 @@ function AppDialogRoot(props: Props) {
 // Back, Escape and the system Back dismiss it, unless `dismissable` is false (an operation running).
 function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = false, label, tone, variant, children }: Props) {
   const { t } = useI18n();
+  // A sheet only on phones; from medium every screen fills the content panel (user's request, 24 November: Nuova lista and the
+  // «from when?» of a subscription as a sheet in the middle of a desktop page did not please).
+  const compact = useSizeClass() === 'compact';
+  const sheet = variant === 'sheet' && compact;
   let title: ReactNode;
   const blocks: ReactNode[] = [];
   Children.toArray(children).forEach((child) => {
@@ -64,8 +69,8 @@ function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = 
   });
   const dismiss = () => { if (dismissable && onDismiss) onDismiss(); };
   return <ScreenLayer label={label ?? (typeof title === 'string' ? title : t("Indietro"))} title={title} backLabel={t("Indietro")} onBack={dismiss} backDisabled={!dismissable}
-    onEscape={() => { if (!dismissable || !onDismiss) return false; onDismiss(); }} scroll={false} textEntry={focusTextEntry} tone={tone} sheet={variant === 'sheet'}>
-    <View testID={testID} style={variant === 'sheet' ? screenStyles.sheetBody : screenStyles.body}>{blocks}</View>
+    onEscape={() => { if (!dismissable || !onDismiss) return false; onDismiss(); }} scroll={false} textEntry={focusTextEntry} tone={tone} sheet={sheet}>
+    <View testID={testID} style={sheet ? screenStyles.sheetBody : screenStyles.body}>{blocks}</View>
   </ScreenLayer>;
 }
 

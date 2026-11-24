@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'rea
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
-import { BottomSheet } from './Overlay';
+import { AnchoredMenu, BottomSheet, type MenuAnchor } from './Overlay';
 import { decorativeIcon } from './FieldIcon';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -33,13 +33,15 @@ type Props<T extends string> = {
 export function SelectField<T extends string>({ label, options, value, onChange, error, disabled, trigger, triggerStyle, menuMinWidth = 0 }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  // The bottom sheet at every size (user's request, 23 November: «stessa visualizzazione anche da desktop»; the anchored menu from
-  // medium is no longer used here). `menuMinWidth` stays in the props for the callers but has no effect.
-  void menuMinWidth;
+  const compact = useSizeClass() === 'compact';
   const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState<MenuAnchor>({ x: 0, y: 0, width: 0, height: 0 });
   const anchorRef = useRef<ComponentRef<typeof Pressable>>(null);
   const triggerRef = useRef<ComponentRef<typeof View>>(null);
-  const openMenu = () => setOpen(true);
+  const openMenu = () => {
+    if (compact) { setOpen(true); return; }
+    (trigger ? triggerRef.current : anchorRef.current)?.measureInWindow((x, y, width, height) => { setAnchor({ x, y, width, height }); setOpen(true); });
+  };
   const closeMenu = () => setOpen(false);
   const current = options.find((option) => option.value === value);
   const rows = options.map((option) => {
@@ -73,7 +75,9 @@ export function SelectField<T extends string>({ label, options, value, onChange,
             right={decorativeIcon(({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />, false)} />
         </div>
       </Pressable>}
-      <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
+      {compact
+        ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
+        : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={Math.max(anchor.width, menuMinWidth)} label={label} contentStyle={styles.menu}>{rows}</AnchoredMenu>}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
   );
