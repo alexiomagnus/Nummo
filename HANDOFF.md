@@ -113,7 +113,8 @@ di quel giorno e la verifica su `d196dc9`.
 
 Su richiesta (screenshot dal telefono, «Eliminare l'esercente Amazon?»): in `DeleteDialog` (`DeleteAction.tsx`) «Annulla», e «Chiudi»
 quando l'eliminazione è bloccata, sono a pillola (`radius.pill`) come «Elimina» sotto, con il loro contorno; vale per ogni conferma
-di eliminazione. `npm run check` 596/596.
+di eliminazione. `npm run check` 596/596. Commit `73b9d75`, pubblicato su Hosting (bundle online `index-5b145579…` identico
+all'export, insieme alle due sezioni seguenti).
 
 ## Rilascio secondo la lunghezza, «Apri a metà schermo» spento di base — 24 novembre 2026
 
