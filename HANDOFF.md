@@ -124,7 +124,7 @@ Su richiesta (screenshot dal telefono).
 - Verifica: `npm run check` 596/596; headless con touch a 390×844: titolo 22 sotto la maniglia (Scansiona, Nuovo fondo, Aggiungi
   denaro, Trasferisci), nessun Indietro nel dettaglio di una spesa e nei pannelli, i tre schermi di Fondi trascinati giù di 300 vanno a
   metà; nessun errore JS. Altezze della conferma di eliminazione non misurate in headless (stessa correzione dei pulsanti del fondo,
-  misurata il 24). Committato e inviato.
+  misurata il 24). Commit `1ed557b`, pubblicato su Hosting (bundle online `index-ec8f0b2f…` identico all'export).
 
 ## «Annulla» a pillola nella conferma di eliminazione — 24 novembre 2026
 
