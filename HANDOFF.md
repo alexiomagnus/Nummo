@@ -51,7 +51,7 @@ di quel giorno e la verifica su `d196dc9`.
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
+- **Verifiche (ultime).** Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
   visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
   menu ancorato su desktop, nessun errore JS. Su `f74ff3a`: `assembleDebug assembleRelease` OK. `test:emulator` **24/24** l'ultima volta su
@@ -73,8 +73,7 @@ di quel giorno e la verifica su `d196dc9`.
      dell'account con «Esci» senza scorrimento.
   5. Rimasti dal 21 novembre: menu «immagine» al tocco prolungato, modifica spesa a 360–412 px, revisione dello scontrino su telefono reale.
 - **Da verificare su dispositivo (storico):** «Carica foto» e scansione con l'AI da telefono; blocco dello zoom con due dita; ritocchi mobile
-  del 17 novembre su iPhone e scheda AI con Gemini reale; icona dell'app (cache del launcher); tastiera automatica di Nuova lista/Nuovo fondo
-  (su iOS probabilmente non si apre). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
+  del 17 novembre su iPhone e scheda AI con Gemini reale; icona dell'app (cache del launcher). Notifiche: consegna reale ad app chiusa (orario scelto, fuso diverso da Roma, rinnovi) non verificata.
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
   separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser; il
   pulsante tondo della barra mobile anima la larghezza in JS (un ricalcolo del layout per fotogramma per 250 ms, nessun artefatto visto).
@@ -88,8 +87,8 @@ di quel giorno e la verifica su `d196dc9`.
 - **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (precompilazione via link, Firebase unico per tutti).
 - **Cosa resta aperto** (dettagli in «Prossime attività», in fondo al file): prove su iPhone dopo l'audit mobile e sul Pixel 8 (sopra);
   Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
-  Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
-  fondo su telefono reale.
+  Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
+  non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
 ## «Template» apre uno schermo come «Scansiona scontrino» — 24 novembre 2026
 
@@ -5365,7 +5364,8 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
 
 ## Git
 
-- **Superata dallo «Stato corrente»:** `main` contiene ora il rilascio del 10 novembre; i punti seguenti sono storici.
+- **Superata dallo «Stato corrente»:** i punti seguenti sono storici (HEAD `b97758d`, 305 test, 9–10 novembre). Stato Git, ultimo
+  commit di codice e numero dei test attuali sono nello «Stato corrente» in apertura (al 24 novembre: `1ad74ad`, 590/590).
 
 - **Ritocco integrato in `b97758d`:** rimossa l'icona di spunta dal pulsante «Registra spesa» nel dettaglio
   lista (`ListsPage.tsx`). `npm run check` OK: typecheck, 305/305 test e build demo; resa browser non ricontrollata.
@@ -5419,8 +5419,11 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 - **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
   orario e fuso scelti dall'utente. Nell'app Android (dalla 0.3.0) le stesse notifiche come notifiche locali dell'app (`Reminders.kt`).
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
-  tastiera virtuale gestita, transizioni con riduzione movimento; vibrazione breve (5/4 ms dal 22 novembre) solo su dispositivi touch,
-  nella barra mobile, in Analisi e su «Salva»/«Crea», interruttore «Vibrazione» (assente su desktop); pagina offline di Nummo dal service worker (nessun avvio offline).
+  tastiera virtuale gestita, transizioni con riduzione movimento; dal 23 novembre dialoghi e dettagli come schermi cresciuti
+  dall'elemento toccato (container transform, `ScreenLayer`), fogli dal basso su smartphone per i moduli brevi, schermi di dettaglio di
+  spese, abbonamenti e fondi, cambio chiaro/scuro animato; vibrazione **solo nell'app Android** (dal 23 novembre, un solo effetto `tap` =
+  HEAVY_CLICK dalla 0.3.2) nella barra mobile, in Analisi, sui segmenti Spese/Abbonamenti e della ricorrenza e su «Salva»/«Crea»;
+  interruttore «Vibrazione» solo nell'app (nel browser né vibrazione né interruttore); pagina offline di Nummo dal service worker (nessun avvio offline).
 - **Collaudo:** `docs/testing/` con cinque backup fittizi (template ed esercente v11 dal 23 novembre, casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
   esercenti v10) e guida ai risultati attesi; spese standard, prove gratuite e cambio di frequenza sono stati spostati in
   `tests/fixtures/` (solo test automatici, commit `302b24e`).
@@ -5501,7 +5504,7 @@ screen reader, concorrenza tra due dispositivi.
    collaudo sui dati reali e sul Pixel 8 (elenco storico in `IMPLEMENTATION_PLAN.md`, redatto il 10 novembre su `ab7a72a`).
    Già fatti: Escape in `AppDialog` e riallineamento README/architettura (12 novembre).
 
-1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, senza `templates`),
+1. **Collaudo produzione e compatibilità:** le Rules sono state pubblicate il 16 novembre (allineate a `f9c4d8f`, allora senza `templates`, aggiunti il 21 novembre),
    poi la sera con `skipped_payments` (`1dbb396`), con gli esercenti (`f5411fb`), il 20 novembre con le 24 ID icona storiche
    (`ad5aa73`), il 21 novembre con i template (`817a2f1`) e il 22 novembre con l'importo massimo 999.999.999,99 € (`17632af`), i cambi di stato fino a 40 (`f57b1b9`), i limiti degli abbonamenti
    (`f4691aa`), i piani dei fondi fino a 120 voci (`17ebce0`) e i prodotti per lista fino a 500 (`48361b9`). Da verificare ricaricando l'app: caricamento, sincronizzazione, pagina
