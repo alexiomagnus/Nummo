@@ -8,7 +8,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { FundMonth } from '../../domain/funds';
 import { useI18n } from '../../i18n/I18nProvider';
 import { positiveColor } from '../../theme/theme';
-import { spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { InfoGroup, PrimaryAction } from '../history/DetailScreen';
 import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
@@ -132,5 +132,6 @@ const styles = StyleSheet.create({
   number: { fontVariant: ['tabular-nums'] },
   actions: { gap: spacing.sm },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  half: { flexGrow: 1, flexBasis: 140 },
+  // Pill-shaped like «Modifica» above them, as in the subscription's detail (user's request, 24 November).
+  half: { flexGrow: 1, flexBasis: 140, borderRadius: radius.pill },
 });

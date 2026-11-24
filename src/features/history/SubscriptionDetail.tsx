@@ -10,7 +10,7 @@ import type { SubscriptionSummary } from '../../domain/history';
 import { recurrenceLabels } from '../../domain/recurrence';
 import type { SubscriptionStatus } from '../../domain/subscription';
 import { useI18n } from '../../i18n/I18nProvider';
-import { spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
 import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGrid, PrimaryAction, type GridCell } from './DetailScreen';
@@ -119,5 +119,6 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   actions: { gap: spacing.sm },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  half: { flexGrow: 1, flexBasis: 140 },
+  // Pill-shaped like «Modifica» above them (user's request, 24 November).
+  half: { flexGrow: 1, flexBasis: 140, borderRadius: radius.pill },
 });

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Text } from 'react-native-paper';
 import { useEscape } from '../../components/Overlay';
@@ -29,6 +29,7 @@ type Props = {
 export function CameraViewfinder({ videoRef, ready, torch, galleryDisabled, onShoot, onGallery, onClose }: Props) {
   const { t } = useI18n();
   const back = useRef<HTMLButtonElement>(null);
+  const [playing, setPlaying] = useState(false);
   useEscape(true, onClose);
 
   useLayoutEffect(() => (typeof document === 'undefined' ? undefined : overrideDocumentChrome(document, c.background, true)), []);
@@ -51,7 +52,10 @@ export function CameraViewfinder({ videoRef, ready, torch, galleryDisabled, onSh
         </RoundButton>}
       </div>
       <div style={styles.sheet}>
-        <video ref={videoRef} autoPlay playsInline muted aria-label={t("Anteprima della fotocamera")} style={styles.video} />
+        {/* Hidden until the first frame plays, with an empty poster: before that the Android WebView paints its default poster
+            (a grey play button) over the sheet (user's report, 24 November). */}
+        <video ref={videoRef} autoPlay playsInline muted poster={blankPoster} onPlaying={() => setPlaying(true)}
+          aria-label={t("Anteprima della fotocamera")} style={playing ? styles.video : { ...styles.video, opacity: 0 }} />
         <div aria-hidden="true" style={styles.handle} />
         <div style={styles.hintRow} aria-live="polite">
           <div style={styles.hint}>
@@ -75,6 +79,9 @@ export function CameraViewfinder({ videoRef, ready, torch, galleryDisabled, onSh
     host,
   );
 }
+
+// A 1×1 transparent GIF: replaces the WebView's default video poster.
+const blankPoster = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 function RoundButton({ ref, label, pressed, disabled = false, onPress, style, children }: {
   ref?: RefObject<HTMLButtonElement | null>; label: string; pressed?: boolean; disabled?: boolean; onPress: () => void; style: CSSProperties; children: ReactNode;

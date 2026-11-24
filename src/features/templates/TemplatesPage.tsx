@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, Text, useTheme } from 'react-native-paper';
+import { HelperText, IconButton, Text, useTheme } from 'react-native-paper';
 import { Button, DangerButton } from '../../components/Button';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
@@ -72,11 +72,11 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
               const details = [category?.label ?? t("Categoria eliminata"), template.fund_id ? fundNames.get(template.fund_id) ?? t("Fondo eliminato") : null,
                 template.merchant].filter(Boolean).join(' · ');
               return <ListRow key={template.id} icon={category?.icon ?? null} title={template.description} subtitle={details} divider={index < remote.templates.length - 1}
-                pressLabel={t("Modifica {p0}", { p0: template.description })} onPress={() => setEditing(template)}
                 trailing={<View style={styles.trailing}>
                   {template.amount_minor !== null && <Text variant="titleMedium" style={listRowStyles.amount}>{formatAmount(template.amount_minor)}</Text>}
-                  {/* The whole row opens the editor; the pencil only tells that it can be edited (user's request, 21 November); 28 dp in the 44 box (24 looked small, user's request of 21 November). */}
-                  <View aria-hidden style={[styles.edit, { borderColor: colors.outline }]}><SvgIcon shape={iconShapes.pencil} size={28} color={colors.onSurfaceVariant} /></View>
+                  {/* Only the pencil opens the editor, as in Liste (user's request, 24 November: the whole row was one button). */}
+                  <IconButton style={styles.editButton} accessibilityLabel={t("Modifica {p0}", { p0: template.description })}
+                    onPress={() => setEditing(template)} icon={pencilIcon} />
                 </View>} />;
             })}</View>}
           {/* Every template at once (user's request, 22 November); Nuova spesa and the saved expenses are not touched. */}
@@ -100,6 +100,8 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
   );
 }
 
+const pencilIcon = ({ size, color }: { size: number; color: string }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />;
+
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   sections: { width: '100%', gap: layout.sectionGap },
@@ -111,5 +113,6 @@ const styles = StyleSheet.create({
   createLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   removeAll: { alignSelf: 'flex-start', marginTop: spacing.sm },
-  edit: { width: 44, height: 44, borderRadius: radius.button, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  // Same as the pencil of the products in Liste.
+  editButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
 });
