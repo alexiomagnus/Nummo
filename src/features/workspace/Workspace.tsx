@@ -63,6 +63,7 @@ import type { FundChoice } from '../funds/FundField';
 import { monthOf, monthOverview } from '../../domain/funds';
 import { ListsPage } from '../lists/ListsPage';
 import { useBackLayer } from '../../components/BackNavigation';
+import { closeAllScreens } from '../../components/ScreenLayer';
 import { backLevels } from '../../theme/backStack';
 import { useRemoteLists, type RemoteLists } from '../lists/useRemoteLists';
 import { TemplatesPage } from '../templates/TemplatesPage';
@@ -86,6 +87,7 @@ const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
 const accountPages: ReadonlySet<Section> = new Set(['categories', 'templates', 'backup', 'merchants', 'settings', 'notifications']);
+const isAccountPage = (section: Section) => accountPages.has(section);
 
 const startGateMs = 4000;
 
@@ -173,6 +175,8 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, back
   const { t } = useI18n();
   const [{ section, returnTo, trail }, setNavigation] = useState<{ section: Section; returnTo: Section; trail: Trail<Section> }>({ section: 'expense', returnTo: 'list', trail: [] });
   const navigate = useCallback((next: Section) => {
+    // Screens opened on the current page (a detail, an editor, the date picker) close before another page shows.
+    closeAllScreens();
     // Let React yield during a first, expensive page render so touch feedback can keep running.
     startTransition(() => setNavigation((previous) => previous.section === next ? previous : { section: next,
       returnTo: accountPages.has(next) && !accountPages.has(previous.section) ? previous.section : previous.returnTo,
@@ -180,6 +184,7 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, back
   }, []);
   // «Fatto» of an account page: the page it was opened from, as a step back when that is the previous page (pageTrail.ts).
   const finish = useCallback(() => {
+    closeAllScreens();
     startTransition(() => setNavigation((previous) => { const step = done(previous.trail, previous.section, previous.returnTo);
       return { section: step.to, returnTo: previous.returnTo, trail: step.trail }; }));
   }, []);
@@ -198,7 +203,7 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, back
   useRequest(settingsRequest, () => navigate('settings'));
   useRequest(notificationsRequest, () => navigate('notifications'));
   return <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
-    fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
+    emphasized={isAccountPage} fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
     actions={<><SyncChip status={status} />{topActions}</>}>
     <Sections {...props} section={section} onNavigate={navigate} onDone={finish} />
   </AppShell>;

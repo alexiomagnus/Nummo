@@ -1,7 +1,6 @@
 import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
-import { ActivityIndicator, HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
-import { useBackLayer } from '../../components/BackNavigation';
+import { ActivityIndicator, HelperText, IconButton, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding, DangerButton } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
@@ -17,12 +16,15 @@ import { amountInputFits, parseAmountMinor, type ExpenseData } from '../../domai
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listState, progress, type ListState } from '../../domain/shoppingList';
 import { useI18n } from '../../i18n/I18nProvider';
-import { backLevels } from '../../theme/backStack';
 import { transition } from '../../theme/motion';
 import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { FundChoice } from '../funds/FundField';
 import { ItemEditor, ListEditor } from './ListDialogs';
+import { ScreenLayer } from '../../components/ScreenLayer';
+
+// DOM id of each list card: the origin and destination of the open list's screen.
+const listCardId = (id: string) => `list-card-${id}`;
 import { RegisterListDialog } from './RegisterListDialog';
 import type { RemoteLists } from './useRemoteLists';
 
@@ -55,8 +57,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
   const [editing, setEditing] = useState<SyncedList | 'new' | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [confirmArchived, setConfirmArchived] = useState(false);
-  // Back on an open list returns to the overview, as «Torna alle liste» does.
-  useBackLayer(openId !== null, backLevels.detail, () => setOpenId(null), openId);
+  // An open list is a screen above the overview (23 November, on request): Back, Escape and its back button close it.
   const expenseIds = useMemo(() => new Set(expenses.map((e) => e.id)), [expenses]);
   const sorted = useMemo(() => [...remote.lists].sort((a, b) => b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id)), [remote.lists]);
   const active = sorted.filter((l) => l.expense_id === null);
@@ -81,21 +82,13 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
       return done;
     }} />;
 
-  if (open) return <>
-    <ListDetail key={open.id} list={open} items={remote.itemsFor(open.id)} state={listState(open, expenseIds)} remote={remote} categories={categories}
-      expense={open.expense_id ? expenses.find((e) => e.id === open.expense_id) : undefined}
-      fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={canRegister} notify={notify}
-      onBack={() => setOpenId(null)} onEdit={() => setEditing(open)} onOpen={setOpenId} />
-    {editor}
-  </>;
-
   const card = (list: SyncedList) => {
     const items = remote.itemsFor(list.id);
     const { done, total } = progress(items);
     const state = listState(list, expenseIds);
     const category = categories.find((c) => c.id === list.category_id);
     return (
-      <View key={list.id} role="listitem">
+      <View key={list.id} nativeID={listCardId(list.id)} role="listitem">
         <StateLayerPressable layerColor={colors.onSurface} radius={radius.card} onPress={() => setOpenId(list.id)} accessibilityRole="button"
           accessibilityLabel={t("Apri {p0}, {p1} di {p2} acquistati", { p0: list.name, p1: done, p2: total })}
           style={[styles.card, { borderColor: colors.outlineVariant }]}>
@@ -156,7 +149,15 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
           return true;
         }} />
       {editor}
-    </View>
+          {/* The open list, as a screen grown from its card; the overview stays under it, untouched. */}
+      {open && <Portal><ScreenLayer key={open.id} originId={listCardId(open.id)} label={open.name} title={open.name}
+        backLabel={t("Torna alle liste")} onBack={() => setOpenId(null)} onEscape={() => setOpenId(null)}>
+        <ListDetail key={open.id} list={open} items={remote.itemsFor(open.id)} state={listState(open, expenseIds)} remote={remote} categories={categories}
+          expense={open.expense_id ? expenses.find((e) => e.id === open.expense_id) : undefined}
+          fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={canRegister} notify={notify}
+          onBack={() => setOpenId(null)} onEdit={() => setEditing(open)} onOpen={setOpenId} />
+      </ScreenLayer></Portal>}
+</View>
   );
 }
 
@@ -244,11 +245,6 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
 
   return (
     <View style={styles.root}>
-      <View style={styles.detailTop}>
-        <IconButton accessibilityLabel={t("Torna alle liste")} onPress={onBack} style={styles.back}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.chevronLeft} size={size} color={color} />} />
-        <PageHeader title={list.name} style={styles.grow} />
-      </View>
       {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
 
       {/* Progress and list actions share one row, so a long name never pushes the actions off a phone screen. */}
@@ -388,8 +384,6 @@ const styles = StyleSheet.create({
   headerButtonLabel: { fontSize: 15, fontWeight: '600', letterSpacing: 0.1 },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', width: '100%', borderRadius: radius.pill, transformOrigin: 'left center' } as ViewStyle,
-  detailTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  back: { marginLeft: -spacing.sm },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginRight: -spacing.xs },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   summary: { gap: spacing.sm },

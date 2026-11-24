@@ -17,20 +17,41 @@ export function applyDocumentTheme(doc: Document, background: string, dark: bool
   root.style.colorScheme = dark ? 'dark' : 'light';
   root.style.setProperty('--nummo-boot-bg', background);
   root.style.backgroundColor = background;
-  const chrome = () => {
-    const tags = Array.from(doc.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
-    const meta = tags[0] ?? doc.head.appendChild(Object.assign(doc.createElement('meta'), { name: 'theme-color' }));
-    tags.slice(1).forEach((tag) => tag.remove());
-    meta.removeAttribute('media');
-    meta.content = background;
-    // Android app: the status and navigation bars take the same colour, with icons readable on it (in Chrome they keep the
-    // manifest's fixed colour). Never an error for the page.
-    const bridge = androidBridge(doc.defaultView);
-    const color = systemBarsColor(background);
-    if (bridge && color) try { bridge.setSystemBars(color, dark); } catch { /* app gone */ }
-  };
+  pageChrome = { background, dark };
+  const chrome = () => paintChrome(doc, chromeOverrides.at(-1) ?? { background, dark });
   if (chromeHold) chromeHold.pending = chrome;
   else chrome();
+}
+
+// theme-color (Chrome's address bar, the installed app's status bar) and, in the Android app, the status and navigation bars,
+// with icons readable on the colour (in Chrome they keep the manifest's fixed colour). Never an error for the page.
+function paintChrome(doc: Document, { background, dark }: { background: string; dark: boolean }) {
+  const tags = Array.from(doc.head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
+  const meta = tags[0] ?? doc.head.appendChild(Object.assign(doc.createElement('meta'), { name: 'theme-color' }));
+  tags.slice(1).forEach((tag) => tag.remove());
+  meta.removeAttribute('media');
+  meta.content = background;
+  const bridge = androidBridge(doc.defaultView);
+  const color = systemBarsColor(background);
+  if (bridge && color) try { bridge.setSystemBars(color, dark); } catch { /* app gone */ }
+}
+
+// A full screen in a colour of its own on a phone (the payment history, «Prossimo mese»: ScreenLayer `tone`) takes the bars
+// with it, then gives them back (user's report, 23 November: a dark status bar above a green screen in the Android app).
+// The most recent override wins; `release` returns to the one below it, or to the page's colour.
+let pageChrome: { background: string; dark: boolean } | null = null;
+const chromeOverrides: { background: string; dark: boolean }[] = [];
+export function overrideDocumentChrome(doc: Document, background: string, dark: boolean): () => void {
+  const entry = { background, dark };
+  chromeOverrides.push(entry);
+  if (!chromeHold) paintChrome(doc, entry);
+  return () => {
+    const index = chromeOverrides.indexOf(entry);
+    if (index < 0) return;
+    chromeOverrides.splice(index, 1);
+    const top = chromeOverrides.at(-1) ?? pageChrome;
+    if (top && !chromeHold) paintChrome(doc, top);
+  };
 }
 
 // Browser and system bars during the light ↔ dark reveal (themeTransition.ts). The page shows the old theme until the

@@ -97,7 +97,7 @@ test('overlay: su touch nessun campo di testo riceve il focus all\'apertura, sul
   assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text' }, false), true, 'tastiera fisica e mouse');
   assert.equal(initialFocusAllowed({ tagName: 'BUTTON' }, true), true, 'voci di menu e pulsanti restano il primo focus');
   assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text', readOnly: true }, true), true);
-  assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text' }, true, true), true, 'Nuova lista e Nuovo fondo: tastiera subito');
+  assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text' }, true, true), false, 'Nuova lista e Nuovo fondo: niente tastiera da sola su smartphone (23 novembre)');
   assert.equal(initialFocusAllowed({ tagName: 'INPUT', type: 'text' }, false, true), true);
 });
 

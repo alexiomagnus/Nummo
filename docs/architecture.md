@@ -1583,4 +1583,11 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
 - **Più morbida:** molla 0,95/200 (prima 0,9/300): metà strada in circa 115 ms come prima, atterraggio più lungo (circa 550 ms), nessun
   rimbalzo; velo del fondo del tema sulla pagina (0,32) mentre lo schermo cresce; contenuto che entra da 0,94 di scala centrato
   sull'origine; `will-change` durante il movimento. Niente ombra: `clip-path` la taglierebbe.
+- **Ancora più fluida (stesso giorno, su richiesta: «non mi sembrano così lineari»).** Misurato fotogramma per fotogramma con la CPU
+  rallentata 4× (Chromium headless, 390×844): le animazioni partivano nel commit che monta lo schermo, quindi il loro orologio correva
+  mentre il browser disponeva e disegnava (70–170 ms senza fotogrammi) e il primo fotogramma visibile era già al 10–20 % della corsa.
+  Ora sono create in pausa sul primo fotogramma e avviate dopo due `requestAnimationFrame` (`startAfterPaint`), in apertura, in chiusura e
+  per la ricomparsa dell'origine: primo fotogramma allo 0 %, buchi massimi 33–67 ms (prima 67–167). Dissolvenze sovrapposte (il contenuto
+  appare dal 5 % al 40 %, la copia sparisce entro il 30 %: nessun istante con entrambe a metà), `contain: paint` sulla superficie durante il
+  movimento, molla 0,95/170 (metà corsa a ~130 ms, ~600 ms in tutto, nessun rimbalzo).
 

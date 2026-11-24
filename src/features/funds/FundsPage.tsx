@@ -1,11 +1,11 @@
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
-import { DeleteAction } from '../../components/DeleteAction';
 import { Reveal } from '../../components/Reveal';
 import { SelectField } from '../../components/SelectField';
+import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { parseSyncedExpense, type SyncedExpense, type SyncedFund } from '../../domain/firestore';
 import {
@@ -15,10 +15,10 @@ import {
 import type { ExpenseRecord } from '../../domain/contract';
 import { useI18n } from '../../i18n/I18nProvider';
 import { radius, spacing } from '../../theme/tokens';
-import { positiveColor } from '../../theme/theme';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
+import { FundDetail, fundCardId } from './FundDetail';
 import { FundEditor } from './FundEditor';
 import { MovementDialog } from './MovementDialog';
 import type { RemoteFunds } from './useRemoteFunds';
@@ -52,7 +52,8 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const [moving, setMoving] = useState<{ kind: MovementKind; to?: string } | null>(null);
   const [assigning, setAssigning] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
-  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+  // The fund whose screen is open (FundDetail), by ID: it follows the month shown and closes if the fund is deleted.
+  const [detailId, setDetailId] = useState<string | null>(null);
   const { funds, movements } = remote;
   const sources = useMemo(() => ({ funds, movements, expenses }), [funds, movements, expenses]);
   // A fund with expenses (subscriptions too) or movements is never deleted (it is archived): the delete dialog says why, with
@@ -91,7 +92,8 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const monthLabel = formatDate(`${month}-01`, { month: 'long', year: 'numeric' });
   const forecast = overview.kind === 'future';
   const muted = { color: colors.onSurfaceVariant };
-  const toggle = (id: string) => setOpen((all) => { const next = new Set(all); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const detail = detailId ? overview.funds.find((item) => item.fund.id === detailId) ?? null : null;
+  useEffect(() => { if (detailId && !detail) setDetailId(null); }, [detailId, detail]);
 
   const archive = async (fund: SyncedFund, value: boolean) => {
     const { id: _id, created_at: _c, revision: _r, updated_at: _u, ...data } = fund;
@@ -164,11 +166,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       </View>}
 
       <View role="list" accessibilityLabel={t("Fondi")} style={styles.list}>
-        {active.map((item) => <FundCard key={item.fund.id} item={item} open={open.has(item.fund.id)} onToggle={() => toggle(item.fund.id)}
-          isDefault={item.fund.id === defaultFundId} canWrite={canWrite} tracksBalance={balanceFunds.has(item.fund.id)}
-          onEdit={() => setEditing(item.fund as SyncedFund)}
-          onArchive={() => void archive(item.fund as SyncedFund, true)}
-          onAdd={() => setMoving({ kind: 'income', to: item.fund.id })} />)}
+        {active.map((item) => <FundCard key={item.fund.id} item={item} isDefault={item.fund.id === defaultFundId} onOpen={setDetailId} />)}
       </View>
 
       {showArchivedFunds && archived.length > 0 && <View style={styles.list}>
@@ -176,28 +174,18 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           icon={({ size, color }) => <SvgIcon shape={showArchived ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>
           {t("Fondi archiviati ({p0})", { p0: archived.length })}</Button>
         {showArchived && <Reveal role="list" accessibilityLabel={t("Fondi archiviati")} style={styles.list}>
-          {archived.map((item) => (
-            <View key={item.fund.id} role="listitem" {...{ dataSet: { wholeRow: 'true' } }} style={[styles.card, { borderColor: colors.outlineVariant }]}>
-              <View style={styles.cardHeader}>
-                <FundAvatar fund={item.fund} />
-                <View style={styles.grow}>
-                  <Text variant="titleMedium">{item.fund.name}</Text>
-                  <Text variant="bodySmall" style={muted}>{t("Archiviato")}</Text>
-                </View>
-              </View>
-              <View style={styles.cardActions}>
-                <Button mode="text" disabled={!canWrite} onPress={() => void archive(item.fund as SyncedFund, false)}>{t("Ripristina")}</Button>
-                {/* Archived funds have no edit dialog: «Elimina» stays on the card; a fund in use says why it cannot go (22 November). */}
-                <DeleteAction labeled disabled={!canWrite} name={item.fund.name} blocked={usageText(item.fund.id, true)}
-                  title={usageText(item.fund.id) ? t("Il fondo {p0} è in uso", { p0: item.fund.name }) : t("Eliminare il fondo {p0}?", { p0: item.fund.name })}
-                  description={t("Il fondo non ha spese collegate. L’operazione non può essere annullata.")}
-                  onDelete={() => removeIfUnused(item.fund as SyncedFund)} />
-              </View>
-            </View>
-          ))}
+          {archived.map((item) => <FundCard key={item.fund.id} item={item} isDefault={false} onOpen={setDetailId} />)}
         </Reveal>}
       </View>}
 
+      {/* Before the editors: opened from the fund's screen, their screens mount later and stay above it. */}
+      {detail && <FundDetail item={detail} monthLabel={monthLabel} isDefault={detail.fund.id === defaultFundId}
+        tracksBalance={balanceFunds.has(detail.fund.id)} canWrite={canWrite} onClose={() => setDetailId(null)}
+        onEdit={() => setEditing(detail.fund as SyncedFund)} onAdd={() => setMoving({ kind: 'income', to: detail.fund.id })}
+        onArchive={(value) => void archive(detail.fund as SyncedFund, value)}
+        remove={{ blocked: usageText(detail.fund.id, true),
+          title: usageText(detail.fund.id) ? t("Il fondo {p0} è in uso", { p0: detail.fund.name }) : t("Eliminare il fondo {p0}?", { p0: detail.fund.name }),
+          description: t("Il fondo non ha spese collegate. L’operazione non può essere annullata."), onDelete: () => removeIfUnused(detail.fund as SyncedFund) }} />}
       {editing && <FundEditor record={editing === 'new' ? undefined : editing} funds={funds} ready={canWrite} error={remote.error}
         onSave={async (data) => {
           const saved = editing === 'new' ? await remote.createFund(data) : await remote.updateFund(editing, data);
@@ -222,82 +210,42 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   );
 }
 
-type CardProps = {
-  // Fund that keeps a balance: offers «Aggiungi denaro».
-  tracksBalance: boolean;
-  item: FundMonth; open: boolean; isDefault: boolean; canWrite: boolean;
-  onToggle: () => void; onEdit: () => void; onArchive: () => void; onAdd: () => void;
-};
-
-function FundCard({ tracksBalance, item, open, isDefault, canWrite, onToggle, onEdit, onArchive, onAdd }: CardProps) {
+// A fund's card: avatar, name, the month's spending and the budget; a tap opens its screen (FundDetail, 23 November, on request),
+// where the month's summary and the actions are. Archived funds open theirs too (Ripristina, Elimina).
+function FundCard({ item, isDefault, onOpen }: { item: FundMonth; isDefault: boolean; onOpen: (id: string) => void }) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
   const { fund } = item;
   const muted = { color: colors.onSurfaceVariant };
   const forecast = item.kind === 'future';
-  const detailsId = `fund-${fund.id}`;
   const spentNow = forecast ? item.forecastSpent : item.spent;
-  // The month in a few totals, always the same rows (never the list of expenses or movements). Money in (additions, recharges,
-  // transfers received) is «+» in green, money out (transfers sent, subscriptions, expenses) «−» in red, a zero is plain; the total
-  // spent closes the summary in bold, unsigned. Future months show what is expected.
-  const positive = positiveColor(colors);
-  const total = (label: string, value: number, tone: 'in' | 'out' | 'total') => {
-    const strong = tone === 'total';
-    const sign = value === 0 ? '' : tone === 'in' ? '+' : tone === 'out' ? '\u2212' : '';
-    const color = strong ? colors.onSurface : value === 0 ? colors.onSurfaceVariant : tone === 'in' ? positive : colors.error;
-    return (
-      <View style={styles.line} role="listitem" aria-label={`${label}: ${sign}${formatAmount(value)}`}>
-        <Text variant={strong ? 'titleSmall' : 'bodyMedium'} style={[styles.grow, strong ? styles.strong : muted]}>{label}</Text>
-        <Text variant={strong ? 'titleSmall' : 'bodyMedium'} style={[styles.number, styles.strong, { color }]}>{sign}{formatAmount(value)}</Text>
-      </View>
-    );
-  };
+  const caption = fund.archived ? t("Archiviato") : forecast ? t("previsti") : t("speso nel mese");
   return (
-    <View role="listitem" {...{ dataSet: { wholeRow: 'true' } }} style={[styles.card, { borderColor: colors.outlineVariant }]}>
-      <View style={styles.cardHeader}>
-        <FundAvatar fund={fund} />
-        <View style={styles.grow}>
-          <View style={styles.nameRow}>
-            <Text variant="titleMedium" numberOfLines={2} style={styles.shrink}>{fund.name}</Text>
-            {isDefault && <View style={[styles.badge, { backgroundColor: colors.secondaryContainer }]}>
-              <SvgIcon shape={iconShapes.star} size={14} color={colors.onSecondaryContainer} />
-              <Text variant="labelSmall" style={{ color: colors.onSecondaryContainer }}>{t("Preferito")}</Text>
-            </View>}
+    <View role="listitem" nativeID={fundCardId(fund.id)} {...{ dataSet: { wholeRow: 'true' } }} style={[styles.card, { borderColor: colors.outlineVariant }]}>
+      <StateLayerPressable onPress={() => onOpen(fund.id)} accessibilityRole="button" aria-haspopup="dialog" layerColor={colors.onSurface} radius={radius.card - 1}
+        accessibilityLabel={t("Apri i dettagli di {p0}, {p1}", { p0: fund.name, p1: fund.archived ? t("Archiviato") : `${formatAmount(spentNow)} ${caption}` })}
+        style={styles.cardPress}>
+        <View style={styles.cardHeader}>
+          <FundAvatar fund={fund} />
+          <View style={styles.grow}>
+            <View style={styles.nameRow}>
+              <Text variant="titleMedium" numberOfLines={2} style={styles.shrink}>{fund.name}</Text>
+              {isDefault && <View style={[styles.badge, { backgroundColor: colors.secondaryContainer }]}>
+                <SvgIcon shape={iconShapes.star} size={14} color={colors.onSecondaryContainer} />
+                <Text variant="labelSmall" style={{ color: colors.onSecondaryContainer }}>{t("Preferito")}</Text>
+              </View>}
+            </View>
+            {fund.archived && <Text variant="bodySmall" style={muted}>{t("Archiviato")}</Text>}
           </View>
+          {!fund.archived && <View style={styles.balance}>
+            <Text variant="titleLarge" style={styles.number}>{formatAmount(spentNow)}</Text>
+            <Text variant="labelSmall" style={muted}>{caption}</Text>
+          </View>}
+          <SvgIcon shape={iconShapes.chevronRight} size={24} color={colors.onSurfaceVariant} />
         </View>
-        <View style={styles.balance}>
-          <Text variant="titleLarge" style={styles.number}>{formatAmount(spentNow)}</Text>
-          <Text variant="labelSmall" style={muted}>{forecast ? t("previsti") : t("speso nel mese")}</Text>
-        </View>
-      </View>
-      {item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
-        spent={spentNow} budget={item.budget} state={item.state} forecast={forecast} />}
-      <View style={styles.cardActions}>
-        <Button mode="text" aria-expanded={open} aria-controls={open ? detailsId : undefined} onPress={onToggle}
-          icon={({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>
-          {open ? t("Nascondi riepilogo") : t("Riepilogo del mese")}</Button>
-        <View style={styles.spacer} />
-        {tracksBalance && <IconButton disabled={!canWrite} accessibilityLabel={t("Aggiungi denaro a {p0}", { p0: fund.name })} onPress={onAdd}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />} />}
-        <IconButton disabled={!canWrite} accessibilityLabel={t("Modifica {p0}", { p0: fund.name })} onPress={onEdit}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} />
-      </View>
-      {open && <Reveal nativeID={detailsId} role="group" accessibilityLabel={t("Dettagli di {p0}", { p0: fund.name })} style={[styles.details, { borderColor: colors.outlineVariant }]}>
-        <View role="list" accessibilityLabel={t("Riepilogo del mese")}>
-          {total(t("Entrata"), item.income, 'in')}
-          {/* The month's recharge: received or still due within the month (forecast for future months). */}
-          {total(t("Ricarica mensile"), item.recharges + item.forecastRecharges, 'in')}
-          {total(t("Trasferimenti ricevuti"), item.transfersIn, 'in')}
-          {total(t("Trasferimenti inviati"), item.transfersOut, 'out')}
-          {total(t("Abbonamenti"), item.subscriptions, 'out')}
-          {total(t("Spese"), item.singles, 'out')}
-          {total(forecast ? t("Spesa totale prevista") : t("Spesa totale"), spentNow, 'total')}
-        </View>
-        <View style={styles.cardActions}>
-          <Button mode="text" disabled={!canWrite} onPress={onArchive}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.archive} size={size} color={color} />}>{t("Archivia")}</Button>
-        </View>
-      </Reveal>}
+        {!fund.archived && item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
+          spent={spentNow} budget={item.budget} state={item.state} forecast={forecast} />}
+      </StateLayerPressable>
     </View>
   );
 }
@@ -348,7 +296,8 @@ const styles = StyleSheet.create({
   empty: { borderRadius: radius.card, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
   notice: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderWidth: 1, borderRadius: radius.card, padding: spacing.lg },
   list: { gap: spacing.md },
-  card: { borderWidth: 1, borderRadius: radius.card, padding: spacing.lg, gap: spacing.md },
+  card: { borderWidth: 1, borderRadius: radius.card },
+  cardPress: { padding: spacing.lg, gap: spacing.md },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 2 },

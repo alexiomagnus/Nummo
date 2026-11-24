@@ -6,6 +6,8 @@ import { Animated, Easing, ScrollView, StyleSheet, View, type LayoutChangeEvent,
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layerTransition } from '../theme/motion';
+import { detailSpring } from '../theme/containerTransform';
+import { springEasing } from '../theme/themeTransition';
 import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
 import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt, slotWithHysteresis } from './navIndicator';
 import { panelColor } from '../theme/theme';
@@ -30,6 +32,8 @@ type Props<T extends string> = {
   fab?: { label: string; icon: string; target: T };
   // Without navigation (sign-in, guide): makes the brand a button, e.g. back to the sign-in.
   brand?: { label: string; onPress: () => void };
+  // Pages that open with the fuller entrance (the account menu's pages): see the page animation below.
+  emphasized?: (value: T) => boolean;
   children: ReactNode;
 };
 
@@ -65,7 +69,7 @@ const keyboardFieldMargin = spacing.xl;
 
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
 // standing drawer (expanded). The content scrolls inside the shell, nothing is position: fixed.
-export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, brand, children }: Props<T>) {
+export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, brand, emphasized, children }: Props<T>) {
   const theme = useTheme();
   const { colors } = theme;
   const size = useSizeClass();
@@ -100,6 +104,22 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     previousSection.current = selected;
     const node = page.current as unknown as HTMLElement | null;
     if (!changed || reduceMotion || theme.animation.scale === 0 || !node?.animate) return;
+    // A page of the account menu (Impostazioni, Notifiche, Categorie…) enters more fully (user's request, 23 November): from
+    // slightly smaller and lower on the screens' soft spring, its opacity a little quicker; started once the page has been painted
+    // (a first render can take a while: the movement must not begin off screen and jump in).
+    if (selected !== undefined && emphasized?.(selected)) {
+      const spring = springEasing(detailSpring);
+      const easing = typeof CSS !== 'undefined' && CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : `cubic-bezier(${motion.enter.join(',')})`;
+      const moves = [
+        node.animate([{ transform: `translateY(${spacing.xl}px) scale(0.97)` }, { transform: 'translateY(0) scale(1)' }], { duration: spring.duration, easing, fill: 'both' }),
+        node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: motion.long, easing: 'linear', fill: 'both' }),
+      ];
+      moves.forEach((animation) => animation.pause());
+      let second = 0;
+      const first = requestAnimationFrame(() => { second = requestAnimationFrame(() => moves.forEach((animation) => animation.play())); });
+      void Promise.all(moves.map((animation) => animation.finished)).then(() => moves.forEach((animation) => animation.cancel()), () => undefined);
+      return () => { cancelAnimationFrame(first); cancelAnimationFrame(second); moves.forEach((animation) => animation.cancel()); };
+    }
     const animation = node.animate([
       { opacity: 0, transform: `translateY(${spacing.sm}px)` },
       { opacity: 1, transform: 'translateY(0)' },

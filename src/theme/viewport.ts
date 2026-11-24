@@ -45,7 +45,11 @@ export function isTextEntry(element: FocusTarget): boolean {
 // text field would bring up the on-screen keyboard over half of the dialog before the user has chosen a field.
 // `textEntry` lifts that rule for the few dialogs whose whole purpose is to type a name (Nuova lista, Nuovo fondo).
 export function initialFocusAllowed(element: FocusTarget, touchFirst: boolean, textEntry = false): boolean {
-  return textEntry || !(touchFirst && isTextEntry(element));
+  // On touch-first devices a text field is never focused on opening, not even in creation screens (user's request,
+  // 23 November: Nuova lista and Nuovo fondo no longer bring up the keyboard by themselves); `textEntry` only picks the
+  // field with a physical keyboard and mouse.
+  void textEntry;
+  return !(touchFirst && isTextEntry(element));
 }
 
 // `update` hides navigation immediately; `onConfirmedChange` permits layout changes only after viewport confirmation.

@@ -92,8 +92,9 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
     <InfoGrid cells={cells} />
     <View style={styles.actions}>
       <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })} icon={iconShapes.pencil} onPress={() => onEdit(entry.id)} />
-      {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). */}
-      <View style={styles.statusRow}>
+      {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). Both hidden while the «from when?»
+          sheet opened from one of them is up (user's request, 23 November); they keep their place. */}
+      <View style={[styles.statusRow, asking !== null && styles.hidden]} aria-hidden={asking !== null || undefined}>
         {status !== 'cancelled' && <Button mode="outlined" textColor={colors.error} style={styles.half} disabled={!canChange || busy}
           accessibilityLabel={t("Annulla abbonamento")} icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
           onPress={() => void change('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
@@ -119,4 +120,5 @@ const styles = StyleSheet.create({
   actions: { gap: spacing.sm },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   half: { flexGrow: 1, flexBasis: 140 },
+  hidden: { opacity: 0 },
 });

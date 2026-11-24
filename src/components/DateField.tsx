@@ -9,6 +9,7 @@ import { leadingIcon } from './FieldIcon';
 import { expensePolicy, todayInRome } from '../domain/policy';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
+import { useSizeClass } from '../theme/useSizeClass';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
 const monthFormat = (locale: string) => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -49,6 +50,9 @@ export function DateField({ value, error, disabled, name, label, minDate = expen
 // Material 3 modal date picker: headline with the pending date, month grid, Annulla / OK. Days outside the allowed
 // range are disabled; the default remains 2000-01-01 … today for ordinary expenses.
 function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfirm }: { visible: boolean; value: string; minDate: string; maxDate: string; onDismiss: () => void; onConfirm: (date: string) => void }) {
+  // A sheet on phones; from medium the whole content panel, as before (user's request, 23 November: the sheet in the middle of
+  // a desktop page did not please).
+  const sheet = useSizeClass() === 'compact';
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const today = todayInRome();
@@ -62,7 +66,7 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
   }
   return (
     <Portal>
-      <Dialog variant="sheet" visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
+      <Dialog variant={sheet ? 'sheet' : 'screen'} visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
         <Dialog.ScrollArea style={styles.scrollArea}>
           <ScrollView keyboardShouldPersistTaps="handled">
             <View style={styles.headline} accessibilityLiveRegion="polite">

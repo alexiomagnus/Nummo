@@ -83,6 +83,53 @@ prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre); tastiera automatica di Nuova lista/Nuovo
   fondo su telefono reale.
 
+## Navigazione che chiude gli schermi, pagine del menu animate, lista come schermo, selettori come fogli — 23 novembre 2026
+
+- **Su richiesta:** (1) con uno schermo aperto (es. la data da desktop) e poi Impostazioni dal menu, si vedono le Impostazioni:
+  `closeAllScreens` (registro degli schermi aperti in `ScreenLayer`) chiamato da `navigate` e `finish` di `Workspace`; (2) la lista aperta
+  in Liste è uno schermo cresciuto dalla scheda (titolo = nome della lista, tolta l'intestazione con Indietro della pagina e il suo
+  `useBackLayer`); (3) Impostazioni, Notifiche, Categorie, Templates, Archiviazione e backup, Esercenti entrano con un'animazione più piena
+  (`emphasized` di `AppShell`: traslazione 24 → 0 e scala 0,97 → 1 sulla molla degli schermi, opacità in 300 ms, avviata dopo due
+  fotogrammi); «Esci» invariato; (4) `SelectField` usa il foglio dal basso anche da desktop; (5) nel dettaglio di un abbonamento «Annulla»
+  e «Pausa» spariscono (opacità 0) mentre è aperto il foglio «Da quando».
+- **Verifica:** Chromium headless 390×844 e 1440×900 scuro: data aperta → Impostazioni dal menu → nessuno schermo, pagina animata (opacità
+  0,17 → 1, scala 0,974 → 1); lista aperta e chiusa dalla scheda; Categoria come foglio (640 di larghezza da desktop); riga di stato a
+  opacità 0 col foglio di pausa; nessun errore JS. `npm run check` OK. Committato e inviato (vedi `git log`), pubblicato su Hosting il 24 novembre.
+
+## Transizioni degli schermi più fluide — 23 novembre 2026
+
+- **Su richiesta** («rendile ancora più smooth, non mi sembrano così lineari»). Causa misurata (CPU 4×, 390×844): l'animazione partiva
+  prima che lo schermo fosse disegnato, quindi il primo fotogramma era già al 10–20 % e mancavano fino a 170 ms di fotogrammi. Ora
+  `startAfterPaint` in `ScreenLayer` (animazioni in pausa sul primo fotogramma, avviate dopo due fotogrammi; anche chiusura, discesa del
+  foglio e ricomparsa dell'origine), dissolvenze sovrapposte (`crossfade` in `containerTransform.ts`, test aggiornato), `contain: paint`
+  durante il movimento, molla 0,95/170. Misura dopo: primo fotogramma allo 0 % entro 8–42 ms, buchi massimi 33–67 ms (prima 67–167), nessun
+  errore JS; suite degli schermi di nuovo OK. `npm run check` OK. **Da sentire su telefono reale.** Committato e inviato (vedi `git log`), pubblicato su Hosting il 24 novembre.
+
+## Niente tastiera da sola, barre colorate, data a schermo intero da desktop — 23 novembre 2026
+
+- **Su richiesta/segnalazione dell'utente (screenshot dall'app Android):** (1) su smartphone nessun campo prende il focus all'apertura, nemmeno
+  in Nuova lista e Nuovo fondo (`initialFocusAllowed` di `viewport.ts` ignora `textEntry` su touch; con tastiera fisica e mouse il nome resta
+  selezionato; test aggiornato); (2) gli schermi colorati («Prossimo mese», «Storico dei pagamenti») lasciavano scure la barra di stato e
+  quella di navigazione dell'app: ora `ScreenLayer` con `tone` su smartphone colora `theme-color` e le barre di sistema dell'app con
+  `overrideDocumentChrome` (nuovo in `bootTheme.ts`, pila di override, rilasciato alla chiusura, rispetta il blocco del cambio tema);
+  (3) il selettore della data come foglio non piaceva da desktop: foglio solo su smartphone, da medium di nuovo schermo intero del pannello.
+- **Verifica:** `npm test` OK (590/590). Chromium headless 390×844 e 1440×900 scuro: `theme-color` #1D533B («Prossimo mese») e #2C4B58
+  (storico) da aperti, di nuovo #0F1512 dopo; Nuova lista su smartphone con il focus sul foglio (nessun campo), da desktop sul nome; data
+  da desktop a schermo intero (OK largo 1112). **Non provato nell'app Android reale** (barre di sistema via ponte). Committato e inviato (vedi `git log`), pubblicato su Hosting il 24 novembre.
+
+## Schede dei fondi come schermi — 23 novembre 2026
+
+- **Su richiesta** («fai diventare schermi anche le schede dei fondi»). `features/funds/FundDetail.tsx`: lo schermo del fondo (stesso
+  `ScreenLayer`, cresce dalla scheda `fund-card-<id>` e vi torna): icona grande, nome, «Preferito»/«Archiviato», spesa del mese (o prevista)
+  con il mese della pagina, barra del budget, «Riepilogo del mese» (gli stessi sette totali con segni e colori di prima) in un gruppo,
+  azioni a pillola: «Modifica», poi «Aggiungi denaro» (solo con dati di saldo) e «Archivia»; per un fondo archiviato «Ripristina» e
+  «Elimina» rosso (con il motivo se è in uso). La scheda in `FundsPage` è ora una superficie toccabile (icona, nome, spesa del mese, budget,
+  chevron): tolti «Riepilogo del mese»/«Nascondi riepilogo», il «+» e la matita della scheda e i pulsanti della scheda archiviata. Testi:
+  «Torna ai fondi» nuovo, «Nascondi riepilogo» tolto.
+- **Verifica:** Chromium headless 390×844 scuro con `nummo-test-casi-limite-2026-11-08.json`: scheda → schermo (origine vuota da aperto,
+  di nuovo visibile dopo), «Modifica fondo» sopra lo schermo e ritorno, Escape chiude tutto, nessun errore JS; `npm run check` OK.
+  Non provati nel browser «Aggiungi denaro» e «Archivia»/«Ripristina» dallo schermo, né un fondo archiviato. Committato e inviato (vedi `git log`), pubblicato su Hosting il 24 novembre.
+
 ## Pannelli come schermi, transizione più morbida — 23 novembre 2026
 
 - **Poi, su richiesta (stesso giorno):** lo schermo «Prossimo mese» ha il colore della scheda (`tone` di `ScreenLayer`: fondo

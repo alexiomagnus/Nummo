@@ -4,6 +4,7 @@ import { Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cardClip, cardShift, contentScale, crossfade, detailSpring, fullClip, scrimOpacity, usableCard, type Box } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
+import { overrideDocumentChrome } from '../theme/bootTheme';
 import { motion, radius, sizeClassOf, spacing, type SizeClass } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { useEscape, useFocusHandoff, useOverlayMotion } from './Overlay';
@@ -96,8 +97,22 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
     return () => { window.removeEventListener('resize', update); globalThis.visualViewport?.removeEventListener('resize', update); };
   }, []);
 
+  // A coloured screen covering the whole phone screen colours the system bars too (bootTheme.ts), until it closes.
+  useLayoutEffect(() => {
+    if (!tone || !compact || sheet || typeof document === 'undefined') return undefined;
+    return overrideDocumentChrome(document, tone.background, theme.dark);
+  }, [tone?.background, compact, sheet, theme.dark]);
+
   useEscape(true, onEscape);
   useFocusHandoff(true, true, surface, textEntry);
+  // Closed together when the app goes to another page (closeAllScreens).
+  const latestEscape = useRef(onEscape);
+  latestEscape.current = onEscape;
+  useEffect(() => {
+    const close = () => { latestEscape.current(); };
+    openScreens.add(close);
+    return () => { openScreens.delete(close); };
+  }, []);
 
   // Opening in the commit that inserts the layer, before the first paint; closing from the cleanup, on a copy.
   useLayoutEffect(() => {
@@ -141,9 +156,10 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
       void back.finished.then(remove);
       // The element comes back as the screen lands on it (its copy fades in at the same time), not before.
       const target = originId ? pickOrigin(originId) : origin?.isConnected ? origin : null;
-      target?.animate([{ opacity: 0 }, { opacity: 0, offset: dragged !== null ? 0.3 : crossfade.close.cardShown }, { opacity: 1 }],
+      const reappear = target?.animate([{ opacity: 0 }, { opacity: 0, offset: dragged !== null ? 0.3 : crossfade.close.cardShown }, { opacity: 1 }],
         { duration: back.duration, easing: 'linear' });
-      setTimeout(remove, back.duration + 400);
+      if (reappear) startAfterPaint([reappear]);
+      setTimeout(remove, back.duration + 1500);
     };
   }, []);
 
@@ -229,6 +245,14 @@ export function ScreenLayer({ label, originId, title, backLabel, onBack, backDis
       </View>
     </View>
   );
+}
+
+// Every open screen, newest last. Going to another page (a destination, a page of the account menu, «Fatto») closes them all
+// first (user's report, 23 November: the date picker stayed above Settings opened from the account menu on desktop). Each
+// closes as its own Back/Escape would; one that refuses (an operation running) stays.
+const openScreens = new Set<() => void>();
+export function closeAllScreens(): void {
+  [...openScreens].reverse().forEach((close) => close());
 }
 
 // ——— origin: the element that opened the screen ———
@@ -354,16 +378,31 @@ function play({ surface, content, ghostHost, scrim }: Parts, found: Origin | nul
     if (rest > 0) animations.push(scrim.animate({ opacity: opening ? [0, rest] : [from?.scrim ?? rest, 0] }, options));
   }
   for (const node of [surface, content]) node?.style.setProperty('will-change', 'clip-path, transform, opacity');
+  // Paint containment while it moves: what changes inside does not repaint the page behind.
+  surface?.style.setProperty('contain', 'paint');
+  startAfterPaint(animations);
   let cancelled = false;
   const cancel = () => {
     cancelled = true;
     animations.forEach((animation) => animation.cancel());
     ghost?.remove();
     for (const node of [surface, content]) node?.style.removeProperty('will-change');
+    surface?.style.removeProperty('contain');
     if (content) content.style.transformOrigin = '';
   };
   const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => !cancelled, () => false);
   return { finished, cancel, duration };
+}
+
+// The animations are created paused on their first frame and start only once the browser has painted that frame (two
+// animation frames). Started at once, their clock ran while the new screen was still being laid out and painted (70–170 ms
+// with the CPU slowed 4×, as on a mid-range phone), so the first frame shown was already 10–20 % of the way: a jump, then the
+// movement (user's report, 23 November: «non mi sembrano così lineari»).
+function startAfterPaint(animations: Animation[]) {
+  animations.forEach((animation) => animation.pause());
+  requestAnimationFrame(() => requestAnimationFrame(() => animations.forEach((animation) => {
+    if (animation.playState === 'paused') animation.play();
+  })));
 }
 
 // A sheet pulled down by its handle leaves downwards from where it is, the scrim fading with it.
@@ -373,6 +412,7 @@ function slideDown({ surface, scrim }: Parts, transform: string, height: number,
   const options = { duration, easing: bezier(motion.exitEasing), fill: 'both' as const };
   if (surface) animations.push(surface.animate({ transform: [transform || 'translateY(0px)', `translateY(${height}px)`] }, options));
   if (scrim) animations.push(scrim.animate({ opacity: [scrimFrom, 0] }, options));
+  startAfterPaint(animations);
   const finished = Promise.all(animations.map((animation) => animation.finished)).then(() => true, () => false);
   return { finished, cancel: () => animations.forEach((animation) => animation.cancel()), duration };
 }
