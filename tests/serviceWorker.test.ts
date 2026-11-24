@@ -8,7 +8,8 @@ import vm from 'node:vm';
 function load(registered = 'https://nummo.example/sw.js?push=https%3A%2F%2Fpush.example%2F&key=BKEY') {
   const listeners: Record<string, (event: any) => void> = {};
   const shown: { title: string; options: any }[] = [];
-  const windows: { url: string; focused: boolean; messages: unknown[] }[] = [];
+  type FakeWindow = { url: string; focused: boolean; messages: unknown[]; postMessage?: (m: unknown) => void; navigate?: (url: string) => Promise<unknown> };
+  const windows: FakeWindow[] = [];
   const opened: string[] = [];
   const fetches: { url: string; body: any }[] = [];
   const self: any = {
@@ -21,7 +22,8 @@ function load(registered = 'https://nummo.example/sw.js?push=https%3A%2F%2Fpush.
     },
     clients: {
       claim: async () => {},
-      matchAll: async () => windows.map((w) => ({ url: w.url, postMessage: (m: unknown) => w.messages.push(m), focus: async () => { w.focused = true; } })),
+      matchAll: async () => windows.map((w) => ({ url: w.url, focused: w.focused, navigate: w.navigate,
+        postMessage: w.postMessage ?? ((m: unknown) => { w.messages.push(m); }), focus: async () => { w.focused = true; } })),
       openWindow: async (url: string) => { opened.push(url); },
     },
   };
@@ -35,7 +37,8 @@ function load(registered = 'https://nummo.example/sw.js?push=https%3A%2F%2Fpush.
   };
   return { dispatch, shown, windows, opened, fetches };
 }
-const push = (data: unknown) => ({ data: { json: () => { if (data === 'bad') throw new Error('x'); return data; } } });
+const push = (data: unknown) => ({ data: { json: () => { if (data === 'bad') throw new Error('x'); return data; }, text: () => 'bad' } });
+const textPush = (text: string) => ({ data: { json: () => JSON.parse(text), text: () => text } });
 
 test('service worker: testi in italiano e inglese, nome di Nummo, niente immagine grande, un solo avviso per tipo', async () => {
   const sw = load();
@@ -57,8 +60,10 @@ test('service worker: testi in italiano e inglese, nome di Nummo, niente immagin
   assert.equal(summary!.options.badge, '/icons/badge-96.png');
   assert.equal(backup!.title, 'Backup reminder');
   assert.deepEqual(JSON.parse(JSON.stringify(backup!.options.actions.map((a: { title: string }) => a.title))), ['Remind me in 3 days']);
-  // An unreadable message still shows something (browsers require it), without inventing content.
-  assert.equal(other!.title, 'Nummo');
+  // An unreadable message still shows something (browsers require it), without inventing content. No title repeats
+  // «Nummo»: the system already names the app in the header.
+  assert.equal(other!.title, 'Nuovo avviso');
+  assert.ok(sw.shown.every((shown) => !shown.title.includes('Nummo')));
   assert.equal(other!.options.body, 'Tocca per aprire Nummo.');
   // No amount or category ever appears: the payload has none.
   assert.ok(!sw.shown.some((n) => /€|\d+,\d\d/.test(n.options.body)));
@@ -203,4 +208,40 @@ test('service worker: articolo eliso davanti a 1, 8 e 11 («dall’8», «all’
     'Un abbonamento si rinnova l’1 dicembre. Tocca per vedere i rinnovi.',
     'Your summary for November 8 – November 14 is ready. Tap to see it.',
   ]);
+});
+
+test('service worker: messaggi non JSON letti con indulgenza, data.url sempre di Nummo', async () => {
+  const sw = load();
+  await sw.dispatch('push', textPush('backup'));
+  await sw.dispatch('push', textPush('qualcosa'));
+  await sw.dispatch('push', textPush('[1,2]'));
+  await sw.dispatch('push', { data: null });
+  await sw.dispatch('push', push({ kind: 'summary', lang: 'it', from: '2026-11-09', to: '2026-11-15' }));
+  const [backup, text, array, empty, summary] = sw.shown;
+  assert.equal(backup!.title, 'Promemoria backup');
+  assert.equal(text!.title, 'Nuovo avviso');
+  assert.equal(array!.title, 'Nuovo avviso');
+  assert.equal(empty!.title, 'Nuovo avviso');
+  assert.equal(backup!.options.data.url, 'https://nummo.example/?notifica=backup');
+  assert.equal(empty!.options.data.url, 'https://nummo.example/?notifica=other');
+  assert.equal(summary!.options.data.url, 'https://nummo.example/?notifica=summary&dal=2026-11-09&al=2026-11-15');
+  assert.equal(typeof summary!.options.timestamp, 'number');
+  assert.equal(summary!.options.renotify, false);
+});
+
+test('service worker: il tocco usa data.url solo se di Nummo, e naviga solo se il messaggio non arriva', async () => {
+  const notification = (data: unknown) => ({ data, close: () => {} });
+  const foreign = load();
+  await foreign.dispatch('notificationclick', { action: '', notification: notification({ kind: 'backup', url: 'https://evil.example/?x' }) });
+  assert.deepEqual(foreign.opened, ['https://nummo.example/?notifica=backup']);
+  // A window whose message cannot be delivered is navigated to the notification's page instead; the focused one first.
+  const sw = load();
+  const navigated: string[] = [];
+  sw.windows.push({ url: 'https://nummo.example/', focused: false, messages: [] },
+    { url: 'https://nummo.example/', focused: true, messages: [], postMessage: () => { throw new Error('closed'); },
+      navigate: async (url: string) => { navigated.push(url); return { focus: async () => {} }; } });
+  await sw.dispatch('notificationclick', { action: '', notification: notification({ kind: 'summary', from: '2026-11-09', to: '2026-11-15' }) });
+  assert.deepEqual(navigated, ['https://nummo.example/?notifica=summary&dal=2026-11-09&al=2026-11-15']);
+  assert.deepEqual(sw.opened, []);
+  assert.deepEqual(sw.windows[0]!.messages, []);
 });

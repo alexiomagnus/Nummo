@@ -92,6 +92,28 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Notifiche: forma uniforme, tocco con ripiego, iOS solo dalla Home, modello assetlinks — 24 novembre 2026
+
+- **Su richiesta** (audit e standardizzazione delle notifiche push). Scelte dell'utente: `icon` resta il PNG trasparente
+  (niente icona ripetuta a destra su Android); con una finestra aperta il tocco resta un messaggio, `navigate` solo come ripiego.
+  - `public/sw.js`: titolo del ripiego «Nuovo avviso»/«New notice» (prima «Nummo»); `data.url` (`/?notifica=…&dal=…&al=…`) in ogni
+    notifica; push non JSON letto come testo (nome di un tipo → quel tipo), errore nel mostrare → notifica generica; tocco: finestra
+    in primo piano per prima, messaggio, `navigate(data.url)` solo se il messaggio non arriva, poi `openWindow`; `data.url` di
+    un'altra origine ignorato. Cache offline invariata (nessun file della pagina offline cambiato).
+  - `src/services/pushNotifications.ts`: `isStandalone`; su iPhone/iPad `needs-install` fuori dalla Home anche se la scheda espone
+    le API push; permesso già negato → `denied` senza richiesta; errori del service worker e di `getSubscription`/`unsubscribe`
+    classificati come «browser»; una sola sottoscrizione per browser (riuso con la stessa chiave, come prima).
+  - `public/.well-known/assetlinks.json` (modello con segnaposto `REPLACE_WITH_…`), `firebase.json` (`Content-Type:
+    application/json`, cache 1 h), `deploy:hosting` richiede il file in `dist/`. La CLI di Firebase lo include già (`**/.*` esclude solo
+    nomi che iniziano col punto, provato con il suo `listFiles`); l'export di Expo lo copia. **Attenzione:** il prossimo
+    `deploy:hosting` pubblica il modello con i segnaposto (innocuo, nessuna app lo verifica). Serve solo a una TWA: l'app di
+    `android/` è una WebView con notifiche locali, già senza «• dominio»; per le WebAPK di Chrome il suffisso non si toglie.
+  - Manifest già conforme (`name`/`short_name` «Nummo», `standalone`, `start_url`/`scope` `/`, icone `any` e `maskable` separate): invariato.
+  - Documenti: `docs/notifiche-push.md` (anche la riga superata «nessun gestore `fetch`»), `AGENTS.md`.
+- **Verifica:** `npm run check` OK (**596/596**, typecheck, build demo; `dist-demo/.well-known/assetlinks.json` presente). Nuovi
+  test in `tests/serviceWorker.test.ts` e `tests/androidApp.test.ts`. **Non provati:** notifiche reali nel browser, su Android e iPhone.
+  Non committato, non pubblicato.
+
 ## Testi superati di README e Guida — 24 novembre 2026
 
 - **Su richiesta.** README, «Notifiche»: tolto «o, in mancanza, come avvisi dentro l'app» (non esistono dal 15 novembre); ora cita

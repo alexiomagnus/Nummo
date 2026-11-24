@@ -14,7 +14,7 @@ const texts = {
     renewal: { title: 'Rinnovo in arrivo', body: 'Un abbonamento si rinnova {date}. Tocca per vedere i rinnovi.' },
     test: { title: 'Notifica push di prova', body: 'Arrivata dal servizio di notifiche: funzionano anche ad app chiusa.' },
     local: { title: 'Notifica di prova', body: 'Così appariranno le notifiche di Nummo su questo dispositivo.' },
-    other: { title: 'Nummo', body: 'Tocca per aprire Nummo.' },
+    other: { title: 'Nuovo avviso', body: 'Tocca per aprire Nummo.' },
     snooze: 'Ricordamelo tra 3 giorni', months: ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'],
   },
   en: {
@@ -23,7 +23,7 @@ const texts = {
     renewal: { title: 'Upcoming renewal', body: 'A subscription renews {date}. Tap to see your renewals.' },
     test: { title: 'Test push notification', body: 'Delivered by the notification service: they work even with the app closed.' },
     local: { title: 'Test notification', body: 'This is how Nummo notifications look on this device.' },
-    other: { title: 'Nummo', body: 'Tap to open Nummo.' },
+    other: { title: 'New notice', body: 'Tap to open Nummo.' },
     snooze: 'Remind me in 3 days', months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   },
 };
@@ -42,9 +42,21 @@ const period = (lang, from, to) => lang === 'it'
   : `for ${day(lang, from)} – ${day(lang, to)}`;
 const on = (lang, date) => lang === 'it' ? `${elided(date) ? 'l’' : 'il '}${day(lang, date)}` : `on ${day(lang, date)}`;
 
+const kinds = ['backup', 'summary', 'renewal', 'test', 'local'];
+// The page a tap opens: Nummo with the reminder in the query (read once and removed by the app, pushNotifications.ts).
+function targetUrl(kind, from, to) {
+  const url = new URL('/', self.location.origin);
+  url.searchParams.set('notifica', kind);
+  if (from && to) { url.searchParams.set('dal', from); url.searchParams.set('al', to); }
+  return url.href;
+}
+
+// Titles never repeat «Nummo»: the system already shows the app's name in the notification header.
 function notification(data) {
   const lang = data && data.lang === 'en' ? 'en' : 'it';
-  const kind = data && ['backup', 'summary', 'renewal', 'test', 'local'].includes(data.kind) ? data.kind : 'other';
+  const kind = data && kinds.includes(data.kind) ? data.kind : 'other';
+  const from = civil(data && data.from) ? data.from : null;
+  const to = civil(data && data.to) ? data.to : null;
   const t = texts[lang];
   let body = t[kind].body;
   if (kind === 'summary') {
@@ -63,10 +75,11 @@ function notification(data) {
       // right of the text, and when it is missing Chrome draws a grey circle with the site's initial instead: so `icon` is a
       // fully transparent image, which leaves nothing visible there (no app icon repeated, no placeholder).
       body, lang, icon: blankIcon, badge: '/icons/badge-96.png',
-      // One notification per kind: a newer one replaces the older instead of piling up.
+      // One notification per kind: a newer one replaces the older in place instead of piling up, silently (no second
+      // sound or vibration for an updated reminder); only the tests alert again, so a repeated test is noticed.
       tag: `nummo-${kind}`, renotify: kind === 'test' || kind === 'local', timestamp: Date.now(),
       actions: kind === 'backup' ? [{ action: 'snooze', title: t.snooze }] : [],
-      data: { kind, from: civil(data && data.from) ? data.from : null, to: civil(data && data.to) ? data.to : null },
+      data: { kind, from, to, url: targetUrl(kind, from, to) },
     },
   };
 }
@@ -107,11 +120,23 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Every push must show a notification (browsers require it): an unreadable message shows the generic one.
+// What a push carries: the JSON object of the push service ({ kind, lang, from?, to? }). Anything else is read as
+// leniently as possible: a text holding JSON, or just the name of a kind («backup»); otherwise nothing (generic text).
+function readPush(message) {
+  if (!message) return null;
+  try {
+    const value = message.json();
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+  } catch { /* not JSON: try the text */ }
+  let text = '';
+  try { text = String(message.text() || '').trim(); } catch { return null; }
+  return kinds.includes(text) ? { kind: text } : null;
+}
+// Every push must show a notification (browsers require it): an unreadable message shows the generic one, and so does
+// a failure while showing the real one.
 self.addEventListener('push', (event) => {
-  let data = null;
-  try { data = event.data ? event.data.json() : null; } catch { data = null; }
-  event.waitUntil(show(data));
+  const data = readPush(event.data);
+  event.waitUntil(show(data).catch(() => show(null)));
 });
 
 // The local visual test of the settings page: same code path as a real push, but nothing leaves the device.
@@ -139,7 +164,10 @@ async function post(path, body) {
   await fetch(new URL(path, pushService), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: subscription.toJSON(), ...body }) });
 }
 
-// Tap: the app opens on the page of that reminder, reusing a window already open on Nummo when there is one.
+// Tap, the same on phones and computers: the app opens on the page of that reminder, reusing a window already open on
+// Nummo when there is one (the focused one first). That window gets a message and moves to the page by itself, without
+// a reload (drafts and state stay); only when the message cannot be delivered it is navigated to `data.url`, and with
+// no usable window a new one opens there.
 self.addEventListener('notificationclick', (event) => {
   const data = event.notification.data || {};
   event.notification.close();
@@ -147,19 +175,30 @@ self.addEventListener('notificationclick', (event) => {
     event.waitUntil(Promise.all([recordSnooze(new Date().toISOString()), post('v1/snooze', {}).catch(() => {})]));
     return;
   }
-  const message = { type: 'nummo-notification', kind: data.kind, from: data.from, to: data.to };
-  const url = new URL('/', self.location.origin);
-  url.searchParams.set('notifica', data.kind || 'other');
-  if (data.from && data.to) { url.searchParams.set('dal', data.from); url.searchParams.set('al', data.to); }
+  const kind = kinds.includes(data.kind) ? data.kind : 'other';
+  const from = civil(data.from) ? data.from : null;
+  const to = civil(data.to) ? data.to : null;
+  // Only an address of this origin: a notification never sends the user elsewhere.
+  let url = targetUrl(kind, from, to);
+  try { if (typeof data.url === 'string' && new URL(data.url).origin === self.location.origin) url = new URL(data.url).href; } catch { /* rebuilt above */ }
+  const message = { type: 'nummo-notification', kind, from, to };
   event.waitUntil((async () => {
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const open = windows.find((client) => new URL(client.url).origin === self.location.origin);
+    const windows = (await self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .filter((client) => { try { return new URL(client.url).origin === self.location.origin; } catch { return false; } });
+    const open = windows.find((client) => client.focused) || windows[0];
     if (open) {
-      open.postMessage(message);
-      try { await open.focus(); } catch { /* focus not allowed: the message still navigates */ }
-      return;
+      let delivered = true;
+      try { open.postMessage(message); } catch { delivered = false; }
+      let target = open;
+      if (!delivered && typeof open.navigate === 'function') {
+        try { target = await open.navigate(url); } catch { target = null; }
+      }
+      if (target) {
+        try { await target.focus(); } catch { /* focus not allowed: the page still moves */ }
+        return;
+      }
     }
-    await self.clients.openWindow(url.href);
+    await self.clients.openWindow(url);
   })());
 });
 

@@ -25,17 +25,26 @@ const browser = (env: Env = {}) => ({ win: env.window ?? (typeof window === 'und
 // iPhone and iPad offer Web Push only to an app added to the Home Screen (iOS/iPadOS 16.4+).
 export function isAppleMobile(nav: Navigator | undefined): boolean {
   if (!nav) return false;
-  return /iPad|iPhone|iPod/.test(nav.userAgent) || (nav.userAgent.includes('Macintosh') && nav.maxTouchPoints > 1);
+  const agent = nav.userAgent ?? '';
+  return /iPad|iPhone|iPod/.test(agent) || (agent.includes('Macintosh') && nav.maxTouchPoints > 1);
+}
+// Opened as an installed app (Home Screen on iOS, WebAPK or installed desktop app elsewhere), not in a browser tab.
+export function isStandalone(win: Window | undefined, nav: Navigator | undefined): boolean {
+  if (!win || !nav) return false;
+  try {
+    if (win.matchMedia?.('(display-mode: standalone)').matches) return true;
+  } catch { /* matchMedia unusable: the iOS flag below */ }
+  return (nav as Navigator & { standalone?: boolean }).standalone === true;
 }
 export function pushSupport(env: Env = {}, configured = pushConfig !== null): PushSupport {
   const { win, nav } = browser(env);
   if (androidNotifications(win)) return 'supported';
   if (!win || !nav) return 'unsupported';
+  // On iPhone and iPad the permission is asked only from the app added to the Home Screen, never from a Safari tab, even
+  // where a tab exposes the push objects: there the request would fail silently or subscribe a tab that never receives.
+  if (isAppleMobile(nav) && !isStandalone(win, nav)) return 'needs-install';
   const capable = 'serviceWorker' in nav && 'PushManager' in win && 'Notification' in win && win.isSecureContext;
-  if (!capable) {
-    const standalone = win.matchMedia?.('(display-mode: standalone)').matches || (nav as Navigator & { standalone?: boolean }).standalone === true;
-    return isAppleMobile(nav) && !standalone ? 'needs-install' : 'unsupported';
-  }
+  if (!capable) return 'unsupported';
   return configured ? 'supported' : 'unconfigured';
 }
 
@@ -54,11 +63,14 @@ const sameKey = (a: ArrayBuffer | null, b: Uint8Array): boolean => {
 export const serviceWorkerUrl = (config: { url: string; key: string } | null = pushConfig): string =>
   config ? `/sw.js?push=${encodeURIComponent(config.url)}&key=${config.key}` : '/sw.js';
 
+// Failures of the browser itself (service worker, its push service), told apart from those of Nummo's push service.
+const browserFailure = (error: unknown) => Object.assign(new Error('push-browser'), { stage: 'browser', cause: error });
+
 let registration: Promise<ServiceWorkerRegistration> | null = null;
 function register(): Promise<ServiceWorkerRegistration> {
   registration ??= navigator.serviceWorker.register(serviceWorkerUrl(), { scope: '/' })
     .then(() => navigator.serviceWorker.ready)
-    .catch((error) => { registration = null; throw error; });
+    .catch((error) => { registration = null; throw browserFailure(error); });
   return registration;
 }
 
@@ -87,18 +99,21 @@ export async function enablePush(lang: string, jobs: readonly PushJob[]): Promis
     if (outcome !== 'ok') return outcome === 'unavailable' ? 'denied' : 'off';
     return android.scheduleNotifications(lang, JSON.stringify(jobs)) ? 'active' : appStatus(android.notificationStatus());
   }
-  const permission = await Notification.requestPermission();
+  // Already refused: asking again would show nothing (browsers do not prompt twice), so say so without a request.
+  if (Notification.permission === 'denied') return 'denied';
+  const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
   if (permission !== 'granted') return permission === 'denied' ? 'denied' : 'off';
   const reg = await register();
   const key = toKey(pushConfig!.key);
-  let subscription = await reg.pushManager.getSubscription();
-  // A subscription made with another key (service changed) cannot receive our messages: replace it.
-  if (subscription && !sameKey(subscription.options.applicationServerKey, key)) { await subscription.unsubscribe(); subscription = null; }
-  // The browser registers with its own push service (Google, Mozilla, Apple…): failures there are not ours.
-  if (!subscription) {
-    try { subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }); }
-    catch (error) { throw Object.assign(new Error('push-browser'), { stage: 'browser', cause: error }); }
-  }
+  // The browser registers with its own push service (Google, Mozilla, Apple…): failures there are not ours. One
+  // subscription per browser: an existing one with our key is reused, never doubled.
+  let subscription: PushSubscription | null;
+  try {
+    subscription = await reg.pushManager.getSubscription();
+    // A subscription made with another key (service changed) cannot receive our messages: replace it.
+    if (subscription && !sameKey(subscription.options.applicationServerKey, key)) { await subscription.unsubscribe(); subscription = null; }
+    subscription ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+  } catch (error) { throw browserFailure(error); }
   try { await call('PUT', 'v1/subscription', { subscription: subscription.toJSON(), lang, jobs }); }
   catch (error) {
     // Not registered with the push service: nothing would arrive, so the device must not look subscribed.

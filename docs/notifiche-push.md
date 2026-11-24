@@ -48,7 +48,23 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
   al massimo 5; dispositivi non più aperti da 120 giorni → dimenticati. `pushsubscriptionchange` → il service worker
   si reiscrive e sposta i promemoria (`/v1/renew`).
 - **Tocco**: apre Nummo sulla pagina Notifiche (con il riepilogo del periodo, o il promemoria backup con Esporta /
-  Ricordamelo tra 3 giorni), riusando una finestra già aperta se c'è.
+  Ricordamelo tra 3 giorni), riusando una finestra già aperta se c'è (prima quella in primo piano): le arriva un messaggio
+  e cambia pagina da sola, senza ricaricare (bozze e stato restano); solo se il messaggio non si può consegnare la finestra
+  va all'indirizzo `data.url` della notifica (`/?notifica=…&dal=…&al=…`, sempre dell'origine di Nummo), senza finestre
+  se ne apre una nuova lì. Uguale su telefono e computer (24 novembre).
+- **Forma della notifica** (24 novembre, su richiesta): il titolo non ripete mai «Nummo», che il sistema mostra già
+  nell'intestazione (il ripiego per un messaggio illeggibile è «Nuovo avviso»); `badge` = `/icons/badge-96.png`
+  (silhouette bianca su trasparente, per la barra di stato di Android); `icon` resta di proposito un PNG trasparente
+  (con l'icona dell'app Android la ripeterebbe a destra del testo, senza `icon` Chrome disegna un cerchio grigio con
+  l'iniziale: scelta confermata il 24 novembre); `tag` per tipo, `renotify` solo per le prove (un promemoria
+  aggiornato sostituisce il precedente in silenzio), `timestamp`, `data` = `{ kind, from, to, url }`. Un push che non è
+  JSON si legge come testo: il nome di un tipo («backup») vale quel tipo, il resto mostra il testo generico.
+- **Suffisso del dominio**: Chrome e le WebAPK aggiungono «• dominio» all'intestazione delle notifiche Web Push, per
+  sicurezza dell'origine; la pagina non può toglierlo. Lo toglierebbe solo la delega delle notifiche di una Trusted Web
+  Activity (app Android TWA verificata con `/.well-known/assetlinks.json`). L'app di `android/` **non** è una TWA
+  (WebView con notifiche locali proprie, già senza suffisso): `public/.well-known/assetlinks.json` è un modello da
+  compilare (pacchetto e impronta SHA-256 del certificato di firma) solo se si pubblica una TWA; `firebase.json` lo
+  serve come `application/json` e, esistendo in `dist/`, il rewrite della SPA non lo intercetta.
 
 ### File
 
@@ -57,7 +73,8 @@ App (Standard o Avanzata)                Servizio push di Nummo               Se
 | `src/domain/pushSchedule.ts` | Orari di consegna (puro, testato in `tests/pushSchedule.test.ts`). |
 | `src/services/pushNotifications.ts` | Supporto, service worker, permesso, sottoscrizione, invio orari, prove, apertura da notifica. |
 | `src/features/notifications/usePushNotifications.ts` | Stato nella pagina e sincronizzazione degli orari. |
-| `public/sw.js` | Solo notifiche: nessun gestore `fetch`, nessuna cache (nessuna promessa di avvio offline). |
+| `public/sw.js` | Notifiche (push, tocco, rinvio, rinnovo) e pagina offline di Nummo (solo navigazioni fallite, mai l'app, il bundle o dati; nessun avvio offline). |
+| `public/.well-known/assetlinks.json` | Modello di Digital Asset Links per un'eventuale TWA, con segnaposto. |
 | `push-service/` | Servizio di invio: `service.ts` (API e invio, SQL), `webPush.ts` (RFC 8291/8292 con WebCrypto), `worker.ts` (Cloudflare), `local.ts` (Node, prove), `keys.ts`. |
 
 Nessuna dipendenza npm aggiunta: cifratura e firma usano WebCrypto; in locale l'archivio è `node:sqlite`.

@@ -144,6 +144,13 @@ test('app Android: notifiche di sistema dall\'app (0.3.0), senza servizio push n
   const win = { NummoAndroid: notifications } as unknown as Window & typeof globalThis;
   assert.equal(pushSupport({ window: win, navigator: {} as Navigator }, false), 'supported');
   assert.equal(pushSupport({ window: {} as Window & typeof globalThis, navigator: { userAgent: '' } as Navigator }, false), 'unsupported');
+  // iPhone: only from the app added to the Home Screen, even if a Safari tab exposes the push objects.
+  const iphone = { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', maxTouchPoints: 5, serviceWorker: {} } as unknown as Navigator;
+  const tab = { PushManager: {}, Notification: {}, isSecureContext: true, matchMedia: () => ({ matches: false }) } as unknown as Window & typeof globalThis;
+  const home = { ...tab, matchMedia: () => ({ matches: true }) } as unknown as Window & typeof globalThis;
+  assert.equal(pushSupport({ window: tab, navigator: iphone }, true), 'needs-install');
+  assert.equal(pushSupport({ window: home, navigator: iphone }, true), 'supported');
+  assert.equal(pushSupport({ window: tab, navigator: { ...iphone, standalone: true } as Navigator }, true), 'supported');
   const scope: { nummoAndroidResult?: (id: string, outcome: string) => void } = {};
   for (const outcome of ['ok', 'cancelled', 'unavailable'] as const) {
     const result = requestNotificationsOnDevice(notifications, scope);

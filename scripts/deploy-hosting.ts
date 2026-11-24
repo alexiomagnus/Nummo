@@ -26,7 +26,8 @@ if (project.startsWith('demo-')) fail('il progetto è un progetto demo: non si p
 
 const build = spawnSync(process.execPath, ['scripts/build-cloud.ts'], { stdio: 'inherit' });
 if (build.status !== 0) fail('build:cloud non riuscita (nulla è stato pubblicato).');
-for (const required of ['dist/index.html', 'dist/manifest.webmanifest', 'dist/icons/icon-512.png']) {
+// assetlinks.json must be a real file in dist/: a missing one would be answered by the SPA rewrite with index.html.
+for (const required of ['dist/index.html', 'dist/manifest.webmanifest', 'dist/icons/icon-512.png', 'dist/.well-known/assetlinks.json']) {
   if (!existsSync(required)) fail(`${required} assente da dist/: build incompleta.`);
 }
 
