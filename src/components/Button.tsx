@@ -3,6 +3,7 @@ import { screenActionStyles, useScreenActions } from './screenActions';
 import { StyleSheet } from 'react-native';
 import { Button as PaperButton, useTheme } from 'react-native-paper';
 import { layout, radius, spacing } from '../theme/tokens';
+import { dangerColors } from '../theme/palette';
 import { useSizeClass } from '../theme/useSizeClass';
 
 // The one button of the app: Paper's button with a 48 dp touch height. Corner radius comes from the
@@ -78,9 +79,9 @@ export function DangerButton({ style, ...rest }: Omit<ComponentProps<typeof Pape
   const danger = useDangerColors();
   return <Button {...rest} mode="contained" buttonColor={danger.fill} textColor={danger.ink} style={[style, dangerStyle]} />;
 }
-// A real red in both themes: `error` in light; in dark M3's `error` is a pale salmon, so the deep `errorContainer` with its ink.
+// A real red in both themes, a little softer than the pure roles (`dangerColors` in palette.ts).
 export function useDangerColors(): { fill: string; ink: string } {
   const { colors, dark } = useTheme();
-  return dark ? { fill: colors.errorContainer, ink: colors.onErrorContainer } : { fill: colors.error, ink: colors.onError };
+  return dangerColors(colors, dark);
 }
 const dangerStyle = StyleSheet.create({ pill: { borderRadius: radius.pill, borderWidth: 0 } }).pill;

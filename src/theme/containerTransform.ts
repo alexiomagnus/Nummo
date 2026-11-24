@@ -22,3 +22,8 @@ export const scrimOpacity = 0.32;
 // (scale `pageScale`); they go down on the accelerating curve in `close` ms while the page comes forward again.
 export const slideTimings = { close: 280, pageScale: 0.96, corner: 28, precision: 0.004 } as const;
 export const slideSpring: Spring = { stiffness: 220, damping: 0.95 * 2 * Math.sqrt(220), mass: 1 };
+// The icon tile of a detail settling in as the screen arrives (user's request, 24 November: «una piccola animazione iniziale per
+// l'icona, molto soft e clean in stile Material 3 Expressive»): a spatial spring with a small overshoot (damping ratio 0.75), from a
+// smaller, slightly turned tile; its opacity on a short curve of its own; started a little after the screen.
+export const heroIconSpring: Spring = { stiffness: 380, damping: 0.75 * 2 * Math.sqrt(380), mass: 1 };
+export const heroIconEntry = { delay: 120, fade: 180, scale: 0.6, turn: -10 } as const;

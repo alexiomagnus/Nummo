@@ -94,6 +94,79 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Scelte su schermi propri, icone di Periodo e Grafico, icona dei dettagli animata, «Apri a metà schermo» tolto — 24 novembre 2026
+
+- **Su richiesta** (screenshot):
+  1. **Icona dei dettagli** di spesa e abbonamento (`DetailHero`) più grande: 84 (prima 72), compatta 64 (prima 56), glifo 48/38;
+     entrata morbida all'apertura (`heroIconSpring` di `containerTransform.ts`: molla 380 con rapporto 0,75, da 0,6 e −10°, opacità
+     in 180 ms, dopo 120 ms; nulla con movimento ridotto).
+  2. **Categoria e Fondo** (`SelectField` `panel`) e i **filtri** Fondo, Ordina, Categoria di Spese e Periodo, Grafico di Analisi
+     (`MenuSelect` `panel`): un nuovo `ChoiceScreen` (`components/ChoiceScreen.tsx`) al posto del menu ancorato da desktop e del foglio
+     su smartphone. Da medium lo schermo del pannello con Indietro e le voci arrotondate; su smartphone il pannello a tre posizioni
+     aperto a metà. «Fuso» (Impostazioni) e «Ora» (Notifiche) restano col menu.
+     Poi, su richiesta, anche Categorie preferite («Nuova spesa», «Nuove liste») e Fondo preferito delle Impostazioni, «Modello» della
+     scheda AI e «Categoria predefinita» di Nuova/Modifica lista (`SelectField panel`; headless a 1440×900: dentro Nuova lista lo schermo
+     di scelta si apre sopra, la voce scelta torna nel campo, Escape chiude uno schermo alla volta).
+  3. **Icone per ogni voce** di Periodo (`calendarToday`, `calendarPrevious`, `calendarQuarter`, `calendarYear`) e Grafico (`donut`,
+     `bars`, `blocks`), nuove forme in `SvgIcon.tsx`.
+  4. **«Apri a metà schermo» tolto**: interruttore, preferenza `halfScreens` (un valore salvato si ignora, test aggiornato),
+     `HalfScreensContext` (era fornito da `App.tsx`), testi in `en.ts`. Si aprono a metà solo i pannelli con `opensHalf` (Template e
+     ogni `ChoiceScreen`); gli altri interi.
+- **Verifica:** `npm run check` OK (**598/598**). Chromium headless con `nummo-utente-medio.json`: a 1440×900 Categoria, Fondo,
+  Periodo, Grafico, Ordina e Categoria di Spese aprono uno schermo sul pannello (1160×792) con le voci, scelta di «Barre» applicata;
+  a 360×740 riquadro dell'icona 84 (spesa) e 64 (abbonamento), animazione in corso all'apertura e finita dopo, dettaglio
+  dell'abbonamento ancora senza scorrimento; nessun errore JS. Non provato su telefono. Non committato.
+
+## Modifica spesa e serie più ordinate, «Prossimo mese» trascinabile, «Elimina» più tenue — 24 novembre 2026
+
+- **Su richiesta** (screenshot dal telefono), cinque punti:
+  1. **Modifica spesa** occupa lo spazio: per una spesa singola la Descrizione cresce fino alle azioni (`grow` di `ExpenseFields`,
+     contenuto di `ExpenseEditor` con `flexGrow: 1`; l'area scrivibile cresce con il contorno). Per una serie resta alta come prima.
+  2. **«Prossimo mese»** (`UpcomingRenewals`): su smartphone `detents` come i dettagli (intero, ridotto, chiuso), niente Indietro.
+  3. **Modifica serie**, parte inferiore: un riquadro «Rinnovi» (`elevation.level2`, angoli da 16, `ThemeProvider` col suo colore per
+     le tacche delle etichette) con in testa `NextRenewalRow` (riquadro col calendario, «Prossimo rinnovo» e la data, l'importo a
+     destra in grassetto) al posto della riga «Prossimo rinnovo (data): importo», poi prova gratuita, Frequenza, e le scelte sul nuovo
+     prezzo solo quando servono (`PriceChangeField` non mostra più titolo né riga, e niente se non c'è niente). Chiavi «Prezzo dei
+     rinnovi» e «Prossimo rinnovo (» tolte da `en.ts`, «Rinnovi» aggiunta.
+  4. **«Elimina» più tenue** ovunque (`dangerColors` di `palette.ts`, usato da `useDangerColors`): chiaro `#B1393C` (prima `#A3161A`),
+     scuro `#85171E` circa (prima `#93000A`); test di contrasto in `tests/theme.test.ts`.
+  5. **«Prossimo mese»**: il riepilogo in testa in un riquadro nel colore della scheda (`primaryContainer`, testo
+     `onPrimaryContainer`, riquadro dell'icona `primary` come sulla scheda).
+- **Verifica:** `npm run check` OK (**598/598**). Chromium headless con touch a 390×844, Standard con `nummo-utente-medio.json`
+  importato dall'interfaccia, scuro e chiaro: «Prossimo mese» senza Indietro, trascinato giù → ridotto a 422; Modifica spesa con la
+  Descrizione alta 266 (area scrivibile compresa) fino alle azioni; Modifica serie (Affitto, Spotify in prova) col riquadro
+  «Rinnovi», con «Annuale» la data «Primo rinnovo con la nuova frequenza» e la nota dentro il riquadro, tacche delle etichette del
+  colore del riquadro; «Elimina» più tenue; nessun errore JS. Non provato su telefono. Non committato.
+
+## Categoria, Fondo e Template a metà di base, calendario intero in ridotto — 24 novembre 2026
+
+- **Su richiesta** (screenshot dal telefono): «quando abbasso il pannello si dovrebbe comunque vedere il calendario completo»;
+  Categoria e Fondo «di base non aprire tutto il pannello», «stessa cosa per template».
+- `ScreenLayer`: `opensHalf` (il pannello si apre sempre in ridotto su smartphone, qualunque sia «Apri a metà schermo») passato da
+  `SelectField` `panel` (Categoria, Fondo) e da `TemplatePicker` (`AppDialog` `opensHalf`); `fitPeek` (la posizione ridotta mostra
+  tutto il contenuto: altezza della superficie − area visibile dello scroller + contenuto, `contentNeed`) per il selettore della data
+  (`DateField`). Regola pura `fittedPeek` in `menuGeometry.ts` (mai sotto metà, mai sopra il 15 % dello schermo); `detentOutcome`,
+  velo e area del tocco sopra usano la posizione ridotta data. Ricalcolata all'apertura, al cambio di altezza e quando il contenuto
+  cresce (mese da sei settimane: sale e non riscende nella stessa apertura, così non salta a ogni mese). Il selettore della data si apre
+  ancora a metà o intero secondo l'interruttore. Test in `tests/menuGeometry.test.ts`.
+- **Verifica:** `npm run check` OK (**597/597**). Chromium headless con touch a 390×844, Standard vuota, scuro: interruttore spento →
+  Categoria aperta a 422 (metà); data aperta intera, trascinata giù → ridotto a 225, ultima riga dei giorni a 753 sopra «OK» (764);
+  interruttore acceso → data aperta a 225; novembre (6 settimane) → ottobre, settembre: resta a 225; nessun errore JS. Fondo (serve un
+  fondo) e Template (servono template) non provati in headless: stesso codice di Categoria/`AppDialog`. Non provato su telefono. Non
+  committato.
+
+## «Scansiona» fuori dallo schermo dopo la scelta della foto — 24 novembre 2026
+
+- **Su segnalazione** (screenshot dal telefono): in «Scansiona scontrino», dopo aver scattato o caricato la foto, il pulsante
+  «Scansiona» non si vedeva (solo un pezzetto sopra la barra dei gesti). Causa: `ScanReceiptDialog` passa a «Scansiona» lo stile
+  `equal` (`flex: 1`, metà riga accanto ad «Annulla»); negli schermi le azioni sono una colonna, dove `flex: 1` = base 0 e
+  restringibile: il contenitore del pulsante era alto 0 e il pulsante sbordava sotto lo schermo (820–876 su 844).
+- **Correzione** generale in `AppDialog` (`screenStyles.full`: `flexShrink: 0`, `flexBasis: 'auto'`): ogni azione di uno schermo o
+  foglio ha la sua altezza naturale qualunque stile di riga le passi il dialogo.
+- **Verifica:** `npm run check` OK (596/596). Chromium headless con touch a 390×844, Standard, scuro, scansione accesa (chiave
+  finta, nessuna richiesta all'AI), foto caricata dalla galleria: intero → «Scansiona» a 764–820 (24 sopra il bordo); a metà schermo →
+  foto scorrevole con il bordo, «Scansiona» visibile in fondo; nessun errore JS. Non provato su telefono. Non committato.
+
 ## Matita dei Templates, pulsanti a pillola nei dettagli, poster della fotocamera — 24 novembre 2026
 
 - **Su richiesta.** (1) Templates: la riga non è più un pulsante; solo la matita a destra apre la modifica, `IconButton` 48×48 senza

@@ -19,7 +19,7 @@ export function PreferredFundCard({ funds, value, onChange }: {
   const current = funds.some((fund) => fund.id === value) ? value : none;
   return (
     <Card title={t("Fondo preferito")} style={{ width: '100%' }}>
-      <SelectField label={t("Nuova spesa")} options={options} value={current} onChange={(next) => onChange(next === none ? '' : next)} />
+      <SelectField panel label={t("Nuova spesa")} options={options} value={current} onChange={(next) => onChange(next === none ? '' : next)} />
     </Card>
   );
 }

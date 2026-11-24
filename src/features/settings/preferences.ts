@@ -18,16 +18,16 @@ export type ChartType = (typeof chartTypes)[number];
 // on 21 November 2026: a value saved before the 16 November removal applies again.
 // `haptics`: short vibration on the phone navigation bar, the Analisi charts, «Salva», «Crea» and the Spese/Abbonamenti views (on by default; does nothing where the
 // browser cannot vibrate).
-// `halfScreens`: on phones Template, Scansiona scontrino, the date picker, Categoria and Fondo open in peek, half the screen (user's
-// request, 24 November; off by default since the same day, on request: by default they open whole). Both ways they can be dragged between whole, peek and closed.
+// `halfScreens` («Apri a metà schermo», 24 November) is gone the same day, on request: the panels that open in peek do so by
+// themselves (ScreenLayer `opensHalf`); a saved value is ignored.
 // `avatarRing` (a ring switch around the account picture, 22 November) is gone the same day: the ring now marks the Advanced
 // mode by itself; a saved value is ignored.
-export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; haptics: boolean; halfScreens: boolean; timeFormat: TimeFormat; timeZone: string };
+export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; haptics: boolean; timeFormat: TimeFormat; timeZone: string };
 export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
 // `colorMode`: «Palette» by default since 22 November (user's request; before «Monocolore»). A saved choice stays.
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'palette', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, halfScreens: false, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'palette', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -51,7 +51,6 @@ export function parsePreferences(raw: string | null): Preferences {
     showArchivedFunds: typeof o.showArchivedFunds === 'boolean' ? o.showArchivedFunds : defaultPreferences.showArchivedFunds,
     templatesEnabled: typeof o.templatesEnabled === 'boolean' ? o.templatesEnabled : defaultPreferences.templatesEnabled,
     haptics: typeof o.haptics === 'boolean' ? o.haptics : defaultPreferences.haptics,
-    halfScreens: typeof o.halfScreens === 'boolean' ? o.halfScreens : defaultPreferences.halfScreens,
     timeFormat: oneOf(timeFormats, o.timeFormat, defaultPreferences.timeFormat),
     timeZone: parseTimeZoneChoice(o.timeZone),
   };

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, type ComponentRef, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button } from '../../components/Button';
 import { Portal, Text, useTheme } from 'react-native-paper';
@@ -8,6 +8,9 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { CategoryIcon } from '../../domain/category';
 import { cardFill } from '../../theme/theme';
+import { heroIconEntry, heroIconSpring } from '../../theme/containerTransform';
+import { springEasing } from '../../theme/themeTransition';
+import { useReducedMotion } from '../../theme/useSizeClass';
 import { layout, radius, spacing } from '../../theme/tokens';
 
 // Detail screen of one card of the Spese page (23 November, on request, in place of the details opened inside the card):
@@ -38,11 +41,27 @@ export function DetailScreen<T>({ value, cardId, label, backLabel, onClose, chil
 // `dense`: a smaller icon tile and tighter gaps, for a screen that must fit one page on a phone (the subscription's detail).
 export function DetailHero({ icon, title, amount, muted, dense, children }: { icon: CategoryIcon | null; title: string; amount: string; muted?: boolean; dense?: boolean; children?: ReactNode }) {
   const { colors } = useTheme();
+  const reduced = useReducedMotion();
+  const tile = useRef<ComponentRef<typeof View>>(null);
+  // Once, when the screen opens (see `heroIconSpring`); nothing with reduced motion.
+  useLayoutEffect(() => {
+    const node = tile.current as unknown as HTMLElement | null;
+    if (reduced || !node || typeof node.animate !== 'function') return undefined;
+    const spring = springEasing(heroIconSpring);
+    const easing = typeof CSS !== 'undefined' && CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : 'cubic-bezier(0.2, 0, 0, 1)';
+    const { delay, fade, scale, turn } = heroIconEntry;
+    const moves = [
+      node.animate({ transform: [`scale(${scale}) rotate(${turn}deg)`, 'scale(1) rotate(0deg)'] }, { duration: spring.duration, delay, easing, fill: 'backwards' }),
+      node.animate({ opacity: [0, 1] }, { duration: fade, delay, easing: 'cubic-bezier(0.2, 0, 0, 1)', fill: 'backwards' }),
+    ];
+    return () => moves.forEach((move) => move.cancel());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <View style={[styles.hero, dense && styles.denseHero]}>
-      <View style={[styles.heroTile, dense && styles.denseTile, { backgroundColor: colors.primaryContainer }]}>
-        {icon ? <CategoryGlyph icon={icon} size={dense ? 32 : 40} color={colors.onPrimaryContainer} />
-          : <SvgIcon shape={iconShapes.tag} size={dense ? 28 : 36} color={colors.onPrimaryContainer} />}
+      {/* A little larger since 24 November (user's request): 84 (64 dense), glyph 48 (38). */}
+      <View ref={tile} style={[styles.heroTile, dense && styles.denseTile, { backgroundColor: colors.primaryContainer }]}>
+        {icon ? <CategoryGlyph icon={icon} size={dense ? 38 : 48} color={colors.onPrimaryContainer} />
+          : <SvgIcon shape={iconShapes.tag} size={dense ? 34 : 42} color={colors.onPrimaryContainer} />}
       </View>
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={styles.center}>{title}</Text>
       <Text variant="displaySmall" style={[styles.amount, { color: muted ? colors.onSurfaceVariant : colors.onSurface }]}>{amount}</Text>
@@ -157,9 +176,9 @@ export const outlinedActionContent = { minHeight: layout.controlHeight - 2 } as 
 
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.sm },
-  heroTile: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  heroTile: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   denseHero: { gap: spacing.xs, paddingBottom: 0 },
-  denseTile: { width: 56, height: 56, borderRadius: 28, marginBottom: spacing.xs },
+  denseTile: { width: 64, height: 64, borderRadius: 32, marginBottom: spacing.xs },
   gridRow: { flexDirection: 'row' },
   cell: { flex: 1, flexBasis: 0, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 60,
     paddingVertical: spacing.sm, paddingHorizontal: spacing.md },

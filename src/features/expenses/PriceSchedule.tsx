@@ -150,11 +150,11 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
   const amount = parseAmountMinor(typed);
   const changed = amount !== null && amount !== shownAmount;
   const scheduled = changes.filter((change) => change.index >= next.index);
+  // The next renewal and its price are in NextRenewalRow, at the top of the «Rinnovi» group: here only what there is to choose or
+  // review (user's request, 24 November: the bottom of «Modifica serie» was not tidy), nothing when there is nothing.
+  if (!(changed && next.index > 0) && scheduled.length === 0) return null;
   return (
     <View style={styles.group}>
-      <Text variant="titleSmall">{t("Prezzo dei rinnovi")}</Text>
-      <Text variant="bodySmall" style={muted}>
-        {t("Prossimo rinnovo (")}{formatLongDate(next.date, locale)}): {formatAmount(shownAmount)}</Text>
       {changed && next.index > 0 && (
         <View style={styles.group} role="group" aria-label={t("Da quando vale il nuovo importo")}>
           <Text variant="labelLarge" style={muted}>{t("Il nuovo importo vale")}</Text>
@@ -181,8 +181,31 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
   );
 }
 
+// The next renewal of a series at a glance, at the top of the «Rinnovi» group of «Modifica serie»: calendar tile, «Prossimo rinnovo»
+// and its date, the price on the right (user's request, 24 November, in place of a small line «Prossimo rinnovo (date): price»).
+export function NextRenewalRow({ date, amount }: { date: string; amount: number }) {
+  const { t, locale, formatAmount } = useI18n();
+  const { colors } = useTheme();
+  return (
+    <View style={styles.next} role="group" aria-label={`${t("Prossimo rinnovo")}: ${formatLongDate(date, locale)}, ${formatAmount(amount)}`}>
+      <View aria-hidden style={[styles.nextTile, { backgroundColor: colors.secondaryContainer }]}>
+        <SvgIcon shape={iconShapes.calendar} size={22} color={colors.onSecondaryContainer} />
+      </View>
+      <View aria-hidden style={styles.nextText}>
+        <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Prossimo rinnovo")}</Text>
+        <Text variant="bodyLarge" numberOfLines={1}>{formatLongDate(date, locale)}</Text>
+      </View>
+      <Text aria-hidden variant="titleMedium" style={styles.nextAmount}>{formatAmount(amount)}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
+  next: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  nextTile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
+  nextText: { flex: 1, minWidth: 0 },
+  nextAmount: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   fields: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   // Amount and stepper side by side when both fit (≥ 2 × 240 + gap), stacked on phones.
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', columnGap: spacing.xl, rowGap: spacing.md },

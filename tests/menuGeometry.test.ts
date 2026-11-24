@@ -95,3 +95,18 @@ test('dettagli su smartphone: posizioni intero, ridotto e chiuso', async () => {
   assert.equal(detailGestureOwner(20, 5, 0, 'peek'), 'list');
   assert.equal(detailGestureOwner(2, 3, 0, 'peek'), 'pending');
 });
+
+test('pannello adattato al contenuto (calendario): ridotto alto quanto serve, mai sotto metà né fino in cima', async () => {
+  const { detentOutcome, fittedPeek } = await import('../src/components/menuGeometry.ts');
+  const h = 800;
+  assert.equal(fittedPeek(h, 600), 200, 'il contenuto intero resta visibile');
+  assert.equal(fittedPeek(h, 300), 400, 'un contenuto corto resta a metà');
+  assert.equal(fittedPeek(h, 790), 120, 'sopra resta sempre il 15 % della pagina');
+  assert.equal(fittedPeek(h, 0), 400, 'senza misura: metà');
+  // Le soglie seguono la posizione ridotta data.
+  assert.equal(detentOutcome(150, 0, h, 'full', 200), 'peek');
+  assert.equal(detentOutcome(200, 0, h, 'full', 200), 'dismiss');
+  assert.equal(detentOutcome(230, 0, h, 'peek', 200), 'peek');
+  assert.equal(detentOutcome(280, 0, h, 'peek', 200), 'dismiss');
+  assert.equal(detentOutcome(120, 0, h, 'peek', 200), 'full');
+});

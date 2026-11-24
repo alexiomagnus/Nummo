@@ -90,9 +90,9 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
             icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
         {/* Secondary filters: they sit side by side under the search on phones, in the same line on wider pages. */}
         <View style={compact ? styles.selectsCompact : styles.selects}>
-          <MenuSelect label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
+          <MenuSelect panel label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
             onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
-          <MenuSelect label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
+          <MenuSelect panel label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
             onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
         </View>
       </View>

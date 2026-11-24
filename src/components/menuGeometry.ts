@@ -71,12 +71,22 @@ export function peekOffset(height: number): number {
   return Math.round(Math.max(0, height) / 2);
 }
 
+// The peek position of a panel that shows all its content when lowered (the date picker: user's request, 24 November, «quando
+// abbasso il pannello si dovrebbe comunque vedere il calendario completo»): as high as `need` (the height its content takes), never
+// lower than half and never higher than `fitMargin` of the screen, so some of the page always shows above it and peek stays peek.
+export const fitMargin = 0.15;
+export function fittedPeek(height: number, need: number): number {
+  const half = peekOffset(height);
+  if (!(need > 0)) return half;
+  return Math.round(Math.min(half, Math.max(Math.max(0, height) * fitMargin, height - need)));
+}
+
 // Where a released drag goes, by its length (user's request, 24 November: «se lo swipe è più lungo chiude l'intera pagina, se è più
 // corto la tiene aperta a metà»). From whole: past half the screen it closes; a shorter deliberate drag down (at least `deliberate`,
 // or a flick) leaves it at half; less than that it stays whole. From half: a deliberate drag or a flick down closes, up opens it
 // whole; less than that it stays at half.
-export function detentOutcome(y: number, velocity: number, height: number, from: Detent): Detent | 'dismiss' {
-  const peek = peekOffset(height);
+// `peek`: where peek is (half by default; higher for a panel fitted to its content, `fittedPeek`).
+export function detentOutcome(y: number, velocity: number, height: number, from: Detent, peek = peekOffset(height)): Detent | 'dismiss' {
   const deliberate = Math.min(64, Math.max(0, height) * 0.1);
   const moved = y - (from === 'full' ? 0 : peek);
   const flick = Math.abs(moved) >= 24 && Math.abs(velocity) >= 0.5;

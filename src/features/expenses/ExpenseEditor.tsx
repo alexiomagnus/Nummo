@@ -2,8 +2,8 @@ import { paymentStart } from '../../domain/trial';
 import { TrialField } from './TrialField';
 import { useI18n } from '../../i18n/I18nProvider';
 import { useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { HelperText, Portal, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { CancelButton, ConfirmButton, dialogActionsRow, dialogActionPair } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
@@ -14,9 +14,9 @@ import { todayInRome } from '../../domain/policy';
 import { amountText } from '../../domain/receipt';
 import { nextRenewal, type PriceChange, type PriceScope } from '../../domain/pricing';
 import { isRecurrence, recurrenceAt, type Recurrence } from '../../domain/recurrence';
-import { spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { ExpenseFields } from './ExpenseFields';
-import { PriceChangeField } from './PriceSchedule';
+import { NextRenewalRow, PriceChangeField } from './PriceSchedule';
 import { FrequencyField } from './FrequencyField';
 import type { ExpenseStore } from './expenseStore';
 import { FundField, noFund, type FundChoice } from '../funds/FundField';
@@ -28,7 +28,10 @@ import type { RankedMerchant } from '../../domain/merchant';
 // cleared (an empty field removes it from the expense; the merchant itself stays for the suggestions).
 export function ExpenseEditor({ record, categories, store, close, fundChoices = [], listNote, merchants = [] }: { record: ExpenseRecord; categories: readonly Category[]; store: ExpenseStore; close: () => void; fundChoices?: readonly FundChoice[]; listNote?: 'linked' | 'unlinked'; merchants?: readonly RankedMerchant[] }) {
   const { t, locale } = useI18n();
-  const { colors } = useTheme();
+  const theme = useTheme();
+  const { colors } = theme;
+  // The «Rinnovi» group's colour is also the background of its outlined fields' label notches.
+  const groupTheme = useMemo(() => ({ ...theme, colors: { ...theme.colors, background: theme.colors.elevation.level2 } }), [theme]);
   const today = todayInRome();
   // For a series the amount field is the price of the next renewal; the first payment's price stays untouched.
   const shownAmount = useMemo(() => currentPrice(record, today), [record, today]);
@@ -85,8 +88,10 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
   };
   return <Portal><Dialog visible onDismiss={() => { if (!busy && !deleting) close(); }}>
     <Dialog.Title>{record.recurrence ? t("Modifica serie") : t("Modifica spesa")}</Dialog.Title>
-    <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingVertical: spacing.sm, gap: spacing.lg }}>
-      <ExpenseFields values={draft} errors={errors} categories={categories} disabled={busy}
+    <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+      {/* A single expense fills the screen: the description grows into the room left above the actions (user's request, 24 November:
+          «ottimizzare la visualizzazione per occupare lo spazio»); a series has more below and keeps it at its usual height. */}
+      <ExpenseFields grow={!series} values={draft} errors={errors} categories={categories} disabled={busy}
         extra={fundChoices.length > 0 ? <View style={{ gap: spacing.xs }}>
           <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}
             onChange={(fundId) => { setDraft((d) => ({ ...d, fundId })); setErrors((e) => ({ ...e, fundId: undefined })); }} />
@@ -94,15 +99,22 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant,
           onChange: (merchant) => { setMerchantTouched(true); setDraft((d) => ({ ...d, merchant })); setErrors((e) => ({ ...e, merchant: undefined })); } }}
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
+      {/* Everything about the renewals in one group, apart from the expense's fields (user's request, 24 November: the bottom of
+          «Modifica serie» was not tidy nor easy to read at a glance): the next renewal and its price first, then the free trial, the frequency,
+          the choices about a new price. */}
+      {series && <ThemeProvider theme={groupTheme}><View style={[styles.renewals, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label={t("Rinnovi")}>
+      <Text variant="titleMedium">{t("Rinnovi")}</Text>
+      {next && <NextRenewalRow date={next.date} amount={shownAmount} />}
       {record.first_payment_date && <TrialField existing enabled firstPaymentDate={draft.firstPaymentDate} startDate={draft.date || today}
         locked={record.first_payment_date <= today} disabled={busy} error={errors.firstPaymentDate}
         onChange={(patch) => { setDraft((d) => ({ ...d, ...patch })); setErrors((e) => ({ ...e, firstPaymentDate: undefined })); }} />}
-      {series && currentFrequency && frequency && <FrequencyField value={frequency} current={currentFrequency} next={nextSaved} firstDate={firstDate} tomorrow={tomorrow}
+      {currentFrequency && frequency && <FrequencyField value={frequency} current={currentFrequency} next={nextSaved} firstDate={firstDate} tomorrow={tomorrow}
         pending={savedCalendar.find((change) => nextSaved !== null && change.index === nextSaved.index) ?? null} error={frequencyError ?? undefined} disabled={busy}
         onChange={(patch) => { if (patch.frequency) setFrequency(patch.frequency); if (patch.firstDate) setFirstDate(patch.firstDate); setFrequencyError(null); }} />}
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
         start={paymentStart({ expense_date: record.expense_date, ...(draft.trial ? { first_payment_date: draft.firstPaymentDate } : {}) })} recurrence={recurrence} calendar={calendar} disabled={busy} onScope={setScope}
         onRemove={(change) => setChanges((all) => all.filter((item) => item !== change))} />}
+      </View></ThemeProvider>}
       {listNote && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, paddingHorizontal: spacing.md }}>
         {t("Spesa registrata da una lista: i prodotti acquistati restano invariati.")}</Text>}
       {priceError && <HelperText type="error" accessibilityRole="alert">{t(priceError)}</HelperText>}
@@ -126,3 +138,8 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
     <View style={dialogActionPair}><CancelButton narrowOnPhone disabled={busy || deleting} onPress={close}>{t("Annulla")}</CancelButton><ConfirmButton narrowOnPhone disabled={busy || deleting} loading={busy && !deleting} onPress={() => void save()}>{t("Salva")}</ConfirmButton></View></Dialog.Actions>
   </Dialog></Portal>;
 }
+
+const styles = StyleSheet.create({
+  content: { flexGrow: 1, paddingVertical: spacing.sm, gap: spacing.lg },
+  renewals: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.lg },
+});

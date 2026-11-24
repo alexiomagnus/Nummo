@@ -1,11 +1,11 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { inputOutline, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { AnchoredMenu, BottomSheet, type MenuAnchor } from './Overlay';
-import { ScreenLayer } from './ScreenLayer';
+import { ChoiceScreen } from './ChoiceScreen';
 import { decorativeIcon } from './FieldIcon';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -18,8 +18,8 @@ type Props<T extends string> = {
   onChange: (value: T) => void;
   error?: string;
   disabled?: boolean;
-  // Phones: the choices in a panel with three positions (ScreenLayer `detents` `panel`: peek or whole as chosen in Settings, drag
-  // from anywhere, no Back) instead of the bottom sheet; user's request, 24 November, for Categoria and Fondo of Nuova spesa.
+  // The choices on a screen of their own (ChoiceScreen): on phones a panel with three positions opening in peek, from medium a screen
+  // over the content panel instead of the menu under the field (user's requests, 24 November, for Categoria and Fondo).
   panel?: boolean;
 };
 
@@ -36,7 +36,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
   const [anchor, setAnchor] = useState<MenuAnchor>({ x: 0, y: 0, width: 0, height: 0 });
   const anchorRef = useRef<ComponentRef<typeof Pressable>>(null);
   const openMenu = () => {
-    if (compact) { setOpen(true); return; }
+    if (compact || panel) { setOpen(true); return; }
     anchorRef.current?.measureInWindow((x, y, width, height) => { setAnchor({ x, y, width, height }); setOpen(true); });
   };
   const closeMenu = () => setOpen(false);
@@ -67,10 +67,8 @@ export function SelectField<T extends string>({ label, options, value, onChange,
             right={decorativeIcon(({ size, color }) => <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />, false)} />
         </div>
       </Pressable>
-      {compact && panel
-        ? open && <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={closeMenu} onEscape={closeMenu} detents="panel">
-          <View role="menu" aria-label={label} style={styles.panelRows}>{rows}</View>
-        </ScreenLayer></Portal>
+      {panel
+        ? open && <ChoiceScreen label={label} options={options} value={value} selectedSuffix={t(", selezionata")} onChoose={onChange} onClose={closeMenu} />
         : compact
         ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
         : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={anchor.width} label={label} contentStyle={styles.menu}>{rows}</AnchoredMenu>}
@@ -89,6 +87,4 @@ const styles = StyleSheet.create({
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { flex: 1 },
   check: { width: 20, height: 20 },
-  // Rows edge to edge of the panel, as in the bottom sheet (the screen's own side margins are cancelled).
-  panelRows: { marginHorizontal: -spacing.md },
 });

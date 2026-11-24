@@ -6,7 +6,7 @@ import { Button } from '../../components/Button';
 import { chartTypes, type ChartType, type DashboardPreferences } from '../settings/preferences';
 import { Card } from '../../components/Card';
 import { MenuSelect } from '../../components/MenuSelect';
-import { iconShapes } from '../../components/SvgIcon';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { layout, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
@@ -28,6 +28,9 @@ import { CategoryLegend } from './CategoryLegend';
 import { donutLegendWidth, donutMaxSize } from './donutLayout';
 
 const chartLabels: Record<ChartType, string> = { donut: 'Ciambella', blocks: 'Blocchi', bars: 'Barre' };
+// An icon for each choice of Periodo and Grafico (user's request, 24 November).
+const chartIcons: Record<ChartType, string> = { donut: iconShapes.donut, blocks: iconShapes.blocks, bars: iconShapes.bars };
+const periodIcons: Record<Period, string> = { month: iconShapes.calendarToday, 'previous-month': iconShapes.calendarPrevious, quarter: iconShapes.calendarQuarter, year: iconShapes.calendarYear };
 
 // Existing validated 12-colour palette (shared with the funds); slots come from `categoryColorSlots` (distinct up to 12 used categories); labels disambiguate repeats beyond that.
 const palette = chartPalette;
@@ -78,11 +81,12 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
 
   const fundSelect = fundFilterShown && <FundFilter funds={funds} value={fundFilter} onChange={changeFund} large={false}
     style={styles.fundSelectWide} />;
-  // A sheet from the bottom on phones, a menu below the field from medium width (MenuSelect).
-  const periodSelect = <MenuSelect label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.half}
-    onChange={(value) => changePeriod(value)} options={periods.map((value) => ({ value, label: t(periodLabels[value]) }))} />;
-  const chartTypeSelect = <MenuSelect label={t("Grafico")} icon={iconShapes.chart} value={chart} style={styles.half}
-    onChange={(value) => changeChart(value)} options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]) }))} />;
+  // A screen of their own at every size (MenuSelect `panel`, ChoiceScreen), each choice with its icon.
+  const choiceIcon = (shape: string) => <SvgIcon shape={shape} size={24} color={theme.colors.onSurfaceVariant} />;
+  const periodSelect = <MenuSelect panel label={t("Periodo")} icon={iconShapes.calendar} value={period} style={styles.half}
+    onChange={(value) => changePeriod(value)} options={periods.map((value) => ({ value, label: t(periodLabels[value]), icon: choiceIcon(periodIcons[value]) }))} />;
+  const chartTypeSelect = <MenuSelect panel label={t("Grafico")} icon={iconShapes.chart} value={chart} style={styles.half}
+    onChange={(value) => changeChart(value)} options={chartTypes.map((value) => ({ value, label: t(chartLabels[value]), icon: choiceIcon(chartIcons[value]) }))} />;
 
   return (
     <View style={styles.layout}>

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,7 +9,7 @@ import { motion, radius, sizeClassOf, spacing, type SizeClass } from '../theme/t
 import { useSizeClass } from '../theme/useSizeClass';
 import { useEscape, useFocusHandoff, useOverlayMotion } from './Overlay';
 import { useI18n } from '../i18n/I18nProvider';
-import { detailGestureOwner, detentOutcome, peekOffset, recentVelocity, sheetDragOutcome, sheetDragSlop, sheetGestureOwner, type Detent, type DragSample } from './menuGeometry';
+import { detailGestureOwner, detentOutcome, fittedPeek, peekOffset, recentVelocity, sheetDragOutcome, sheetDragSlop, sheetGestureOwner, type Detent, type DragSample } from './menuGeometry';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
@@ -57,19 +57,23 @@ export type ScreenLayerProps = {
   // No Back button on phones with three positions (user's request, 24 November: it closes by dragging, the handle, a tap above, the
   // system Back). `panel` (user's request, 24 November: Template, Scansiona scontrino, the date, Categoria and Fondo, Nuovo fondo and
   // the fund movements): the same three positions, but in peek the screen gets shorter instead of only moving down, so its scroll area
-  // and its actions at the bottom fit the visible half; it opens in peek or
-  // whole as chosen in Settings (`HalfScreensContext`, whole by default). A text field focused in peek opens it whole.
+  // and its actions at the bottom fit the visible half; it opens whole, or in peek with `opensHalf`. A text field focused in peek opens
+  // it whole. («Apri a metà schermo» of Settings, 24 November, is gone the same day on request.)
   detents?: boolean | 'panel';
+  // A panel that opens in peek on phones (user's request, 24 November: Categoria, Fondo and Template «di base non aprire tutto il
+  // pannello»; then every ChoiceScreen).
+  opensHalf?: boolean;
+  // A panel whose peek shows all its content, higher than half if needed (`fittedPeek`; the date picker: the whole month stays in
+  // view when lowered, user's request of 24 November). Measured at opening and again when the content changes height (a month
+  // with six weeks).
+  fitPeek?: boolean;
   children: ReactNode;
 };
 
-// «Apri a metà schermo» (Settings, `halfScreens` in nummo.preferences.v1, off by default): whether the `panel` screens open in peek on
-// phones.
-export const HalfScreensContext = createContext(false);
 
 export type ScreenTone = { background: string; content: string; button: string; onButton: string };
 
-export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = false, onEscape, scroll = true, textEntry = false, tone, sheet = false, detents = false, children }: ScreenLayerProps) {
+export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = false, onEscape, scroll = true, textEntry = false, tone, sheet = false, detents = false, opensHalf = false, fitPeek = false, children }: ScreenLayerProps) {
   const { t } = useI18n();
   const theme = useTheme();
   const { colors } = theme;
@@ -92,10 +96,23 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   // Three positions on phones (details and panels: see `detents`); a panel may open in peek.
   const stops = Boolean(detents) && compact && !sheet;
   const fit = detents === 'panel';
-  const halfScreens = useContext(HalfScreensContext);
-  const [detent, setDetent] = useState<Detent>(() => stops && fit && halfScreens ? 'peek' : 'full');
+  const [detent, setDetent] = useState<Detent>(() => stops && fit && opensHalf ? 'peek' : 'full');
   const detentRef = useRef(detent);
   detentRef.current = detent;
+  // Where peek is: half the screen, or as high as the content needs (`fitPeek`, measured).
+  const [fitted, setFitted] = useState<number | null>(null);
+  const fittedRef = useRef<number | null>(null);
+  const peekAt = (height: number) => fittedRef.current ?? peekOffset(height);
+  // `rise`: only ever higher than now (a month with one week more raises it; one less leaves it, so it does not jump at every month).
+  const fitTo = (node: HTMLElement | null, height: number, rise = false): number => {
+    const need = fitPeek && fit && stops && node ? contentNeed(parts(node).surface) : 0;
+    const found = need > 0 ? fittedPeek(height, need) : null;
+    const now = fittedRef.current;
+    const next = rise && now !== null && (found === null || found > now) ? now : found;
+    fittedRef.current = next;
+    setFitted(next);
+    return next ?? peekOffset(height);
+  };
   const latest = useRef({ frame, frameRadius, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled, fit });
   latest.current = { frame, frameRadius, backdrop: colors.backdrop, animate, sheet, onBack, backDisabled, fit };
   // A sheet slides by its own height (measured: it is as tall as its content).
@@ -141,10 +158,12 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const half = detentRef.current === 'peek';
     const { surface: opened, scrim: dimmed } = node ? parts(node) : { surface: null, scrim: null };
     const whole = latest.current.frame.height;
-    if (half && opened) pose(opened, dimmed, peekOffset(whole), whole, latest.current.backdrop, true);
+    // Measured whole, before it is put in peek.
+    const peek = fitTo(node, whole);
+    if (half && opened) pose(opened, dimmed, peek, whole, latest.current.backdrop, true, peek);
     if (!latest.current.animate || !node || typeof node.animate !== 'function') return undefined;
     const opening = settingsFor(node);
-    let run: Run | null = slide(parts(node), node, half ? { ...opening, frame: { ...opening.frame, height: whole - peekOffset(whole) }, sheet: true } : opening, true);
+    let run: Run | null = slide(parts(node), node, half ? { ...opening, frame: { ...opening.frame, height: whole - peek }, sheet: true } : opening, true);
     // Phones, a whole screen: the top bar and the navigation of the page under it go away with the opening (and come back while it is
     // in peek, see below).
     chrome.current = compact && !latest.current.sheet && !half ? holdChrome() : null;
@@ -230,11 +249,12 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const { surface: moving, scrim } = node ? parts(node) : { surface: null, scrim: null };
     if (!moving) return;
     const height = latest.current.frame.height;
-    const y = target === 'peek' ? peekOffset(height) : 0;
+    const peek = peekAt(height);
+    const y = target === 'peek' ? peek : 0;
     const sizing = latest.current.fit;
-    const start = from ?? (target === 'peek' ? 0 : peekOffset(height));
-    const fade = (at: number) => String(detentScrim(at, height));
-    pose(moving, null, y, height, latest.current.backdrop, sizing);
+    const start = from ?? (target === 'peek' ? 0 : peek);
+    const fade = (at: number) => String(detentScrim(at, height, peek));
+    pose(moving, null, y, height, latest.current.backdrop, sizing, peek);
     if (scrim) scrim.style.opacity = y ? fade(y) : '';
     if (latest.current.animate && start !== y) {
       const spring = springEasing(slideSpring, slideTimings.precision);
@@ -249,8 +269,28 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     if (target === 'peek') { chrome.current?.(0); chrome.current = null; } else if (!chrome.current) chrome.current = holdChrome();
     setDetent(target);
   }, []);
-  // The height changes (rotation, the browser's bars): peek keeps its place at half.
-  useEffect(() => { if (stops && detent === 'peek') settle('peek', undefined); }, [frame.height]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The height changes (rotation, the browser's bars): peek keeps its place (half, or fitted again to the content).
+  useEffect(() => {
+    if (!stops) return;
+    const before = peekAt(frame.height);
+    fitTo(dom(root.current), frame.height);
+    if (detentRef.current === 'peek') settle('peek', before);
+  }, [frame.height]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A fitted panel follows its content upwards: a month with one week more raises peek (never lowered while open).
+  useEffect(() => {
+    const node = dom(root.current);
+    const surfaceNode = node ? parts(node).surface : null;
+    const scrollerNode = surfaceNode ? findScroller(surfaceNode) : null;
+    const inner = scrollerNode?.firstElementChild;
+    if (!fitPeek || !fit || !stops || !node || !inner || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => {
+      const before = peekAt(latest.current.frame.height);
+      const next = fitTo(node, latest.current.frame.height, true);
+      if (next !== before && detentRef.current === 'peek') settle('peek', before);
+    });
+    observer.observe(inner);
+    return () => observer.disconnect();
+  }, [fitPeek, fit, stops]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const node = dom(root.current);
     const bar = dom(topBar.current);
@@ -264,7 +304,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const begin = (y: number, time: number) => {
       moving.getAnimations().forEach((animation) => animation.cancel());
       scrim?.getAnimations().forEach((animation) => animation.cancel());
-      const base = detentRef.current === 'peek' ? peekOffset(height()) : 0;
+      const base = detentRef.current === 'peek' ? peekAt(height()) : 0;
       drag = { start: y, base, samples: [{ t: time, y }], y: base };
     };
     const follow = (y: number, time: number) => {
@@ -272,7 +312,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       drag.y = Math.max(0, drag.base + y - drag.start);
       drag.samples.push({ t: time, y });
       if (drag.samples.length > 32) drag.samples.shift();
-      pose(moving, scrim, drag.y, height(), latest.current.backdrop, latest.current.fit);
+      pose(moving, scrim, drag.y, height(), latest.current.backdrop, latest.current.fit, peekAt(height()));
     };
     // Returns whether the screen moved, so the click that may follow is not taken by what is under the finger.
     const finish = (y: number, time: number, commit: boolean): boolean => {
@@ -280,7 +320,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       const { y: at, base, samples } = drag;
       drag = null;
       if (at === base) return false;
-      const outcome = commit ? detentOutcome(at, recentVelocity([...samples, { t: time, y }]), height(), detentRef.current) : detentRef.current;
+      const outcome = commit ? detentOutcome(at, recentVelocity([...samples, { t: time, y }]), height(), detentRef.current, peekAt(height())) : detentRef.current;
       if (outcome === 'dismiss') {
         if (latest.current.backDisabled) { settle(detentRef.current, at); return true; }
         moving.dataset.dragged = 'true';
@@ -320,7 +360,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
         : <View {...part('scrim')} pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.backdrop, opacity: 0, borderRadius: frameRadius }]} />}
       {/* In peek the dimmed page above the screen closes it at a tap, like the scrim of a sheet. */}
       {stops && detent === 'peek' && <Pressable accessibilityRole="button" accessibilityLabel={backLabel} focusable={false} disabled={backDisabled} onPress={onBack}
-        style={[styles.catcher, { height: peekOffset(frame.height) }]} />}
+        style={[styles.catcher, { height: fitted ?? peekOffset(frame.height) }]} />}
       <View ref={surface} {...part('surface')} style={sheet
         ? [styles.sheet, styles.surface, { backgroundColor: background, maxHeight: Math.max(0, frame.height - (compact ? insets.top : 0) - spacing.xxxl) }]
         : [StyleSheet.absoluteFill, styles.surface, { borderRadius: frameRadius, backgroundColor: background }]}>
@@ -450,19 +490,31 @@ function scrolledBetween(target: EventTarget | null, surface: HTMLElement): bool
 
 // A detail moved down by `y` (dragged, or in peek): the screen's edge shows as during the slide, with round top corners and a
 // shadow above it, and the page above is dimmed as under a sheet, fading only past the peek position on the way to closing.
-function detentScrim(y: number, height: number): number {
-  const peek = peekOffset(height);
+function detentScrim(y: number, height: number, peek = peekOffset(height)): number {
   return y <= peek ? scrimOpacity * Math.min(1, y / Math.max(1, peek)) : scrimOpacity * Math.max(0, 1 - (y - peek) / Math.max(1, height - peek));
 }
 // `sizing` (a panel): the top edge moves and the screen gets shorter, instead of a transform of the whole screen.
-function pose(surface: HTMLElement, scrim: HTMLElement | null, y: number, height: number, backdrop: string, sizing = false): void {
+function pose(surface: HTMLElement, scrim: HTMLElement | null, y: number, height: number, backdrop: string, sizing = false, peek = peekOffset(height)): void {
   const lifted = y > 0;
   if (sizing) surface.style.top = lifted ? `${y}px` : '';
   else surface.style.transform = lifted ? `translateY(${y}px)` : '';
   surface.style.borderTopLeftRadius = lifted ? `${slideTimings.corner}px` : '';
   surface.style.borderTopRightRadius = lifted ? `${slideTimings.corner}px` : '';
   surface.style.boxShadow = lifted ? `0px -12px 32px ${backdrop}` : '';
-  if (scrim) scrim.style.opacity = lifted ? String(detentScrim(y, height)) : '';
+  if (scrim) scrim.style.opacity = lifted ? String(detentScrim(y, height, peek)) : '';
+}
+
+// The scroller of a panel: its first descendant that scrolls vertically (the ScrollView inside the dialog's scroll area).
+function findScroller(surface: HTMLElement): HTMLElement | null {
+  return [...surface.querySelectorAll<HTMLElement>('*')].find((node) => /^(auto|scroll)$/.test(getComputedStyle(node).overflowY)) ?? null;
+}
+// The height a panel takes to show all its content: its own height, less what its scroller shows, plus what its scroller holds.
+// The same whether the panel is whole (spare room in the scroller) or in peek (content cut): the rest (bars, actions) is fixed.
+function contentNeed(surface: HTMLElement | null): number {
+  const scroller = surface ? findScroller(surface) : null;
+  const inner = scroller?.firstElementChild;
+  if (!surface || !scroller || !inner) return 0;
+  return surface.getBoundingClientRect().height - scroller.clientHeight + inner.getBoundingClientRect().height;
 }
 
 // Every open screen, newest last. Going to another page (a destination, a page of the account menu, «Fatto») closes them all

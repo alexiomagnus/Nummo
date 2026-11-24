@@ -47,6 +47,15 @@ export const iconShapes = {
   filter: '<path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z"/>',
   settings: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/>',
   calendar: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4"/>',
+  // Periods of Analisi (user's request, 24 November): today's day marked, the previous month, three and twelve months.
+  calendarToday: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4"/><rect x="8" y="13" width="3.5" height="3.5" rx="1" fill="currentColor" stroke="none"/>',
+  calendarPrevious: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4M15 15H9m2.5-2.5L9 15l2.5 2.5"/>',
+  calendarQuarter: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4M8.5 15h.01M12 15h.01M15.5 15h.01" stroke-width="2.6"/>',
+  calendarYear: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4"/><path d="M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01M15.5 17h.01" stroke-width="2.4"/>',
+  // Chart types of Analisi: donut, bars (horizontal, longest first, as drawn), blocks (treemap).
+  donut: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 4v4.5m6.9 7.5-3.9-2.2"/>',
+  bars: '<path d="M5 6.5h13M5 12h9M5 17.5h5" stroke-width="3"/>',
+  blocks: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 4v16m0-7h8m-4 0v7"/>',
   wallet: '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M16 13.5h1.5"/>',
   swap: '<path d="M4 8h14m-3-3 3 3-3 3M20 16H6m3-3-3 3 3 3"/>',
   archive: '<rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V8.5M10 12h4"/>',

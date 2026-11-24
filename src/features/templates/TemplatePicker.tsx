@@ -50,7 +50,7 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
         {/* The arrow says it is a choice, not an action. */}
         <SvgIcon shape={iconShapes.chevronDown} size={20} color={color} />
       </StateLayerPressable>
-      {open && <Portal><AppDialog visible detents onDismiss={() => setOpen(false)}>
+      {open && <Portal><AppDialog visible detents opensHalf onDismiss={() => setOpen(false)}>
         <AppDialog.Title>{t("Template")}</AppDialog.Title>
         <AppDialog.ScrollArea style={styles.area}><ScrollView>
           <View role="list" accessibilityLabel={t("Template")} style={styles.list}>

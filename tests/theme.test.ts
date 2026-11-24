@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { accents, buildScheme, cardColor, dialogColors, mixColors, positiveColors } from '../src/theme/palette.ts';
+import { accents, buildScheme, cardColor, contrastRatio, dangerColors, dialogColors, mixColors, positiveColors } from '../src/theme/palette.ts';
 import { sizeClassOf, type Scheme } from '../src/theme/tokens.ts';
 
 // WCAG 2.x relative luminance and contrast ratio.
@@ -78,4 +78,13 @@ test('verde delle entrate: contrasto almeno 4,5:1 su ogni superficie, per ogni a
 
 test('classi di finestra: compact < 600 ≤ medium < 1024 ≤ expanded', () => {
   assert.deepEqual([320, 599, 600, 1023, 1024, 1600].map(sizeClassOf), ['compact', 'compact', 'medium', 'medium', 'expanded', 'expanded']);
+});
+
+test('«Elimina» rosso più tenue: testo leggibile (≥ 4,5:1) e diverso dal ruolo puro, in entrambi i temi', () => {
+  for (const dark of [false, true]) {
+    const scheme = buildScheme('mint', 'palette', dark);
+    const { fill, ink } = dangerColors(scheme, dark);
+    assert.ok(contrastRatio(fill, ink) >= 4.5, `${dark ? 'scuro' : 'chiaro'}: ${fill} / ${ink}`);
+    assert.notEqual(fill, dark ? scheme.errorContainer : scheme.error);
+  }
 });

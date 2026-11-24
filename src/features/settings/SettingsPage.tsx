@@ -182,9 +182,6 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
           {/* Only in the Android app: never in the browser (23 November, on request). */}
           {vibrationAvailable && <SwitchRow label={t("Vibrazione")} supporting={t(vibrationNote)}
             value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />}
-          {/* After «Vibrazione» (user's request, 24 November). */}
-          <SwitchRow label={t("Apri a metà schermo")} supporting={t("Su smartphone le schede si aprono a metà: trascinale in su per ingrandirle.")}
-            value={preferences.halfScreens} onChange={(halfScreens) => onChange({ halfScreens })} />
         </Card>
         <AppLockCard requirePin={lockPin} />
         {archiveSections}

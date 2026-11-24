@@ -46,9 +46,11 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
         </View>
         <SvgIcon shape={iconShapes.chevronRight} size={24} color={colors.onPrimaryContainer} />
       </StateLayerPressable>
-      {/* The page's own colours, like every other screen (user's request, 24 November; the card's colour from the 23rd). */}
+      {/* The page's own colours, like every other screen (user's request, 24 November; the card's colour from the 23rd), with the
+          summary in the card's colour. On phones it is dragged like the details (whole, peek, closed) and has no Back button (user's
+          request, 24 November). */}
       {open && <Portal><ScreenLayer originId={cardId} label={t("Prossimo mese")} backLabel={t("Torna agli abbonamenti")}
-        onBack={() => setOpen(false)} onEscape={() => setOpen(false)}>
+        onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents>
         <RenewalsContent renewals={renewals} categories={categories} soon={soon} count={count} days={days} />
       </ScreenLayer></Portal>}
     </View>
@@ -58,17 +60,19 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
 function RenewalsContent({ renewals, categories, soon, count, days }: Props & { count: string }) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
-  // Everything in the card's tones: text on its container colour, the icon tile as on the card, dividers as the old open card.
+  // The list in the page's colours; the summary on top in the colours of the card it was opened from (container, its ink, the icon
+  // tile as on the card), so the screen keeps the colour of the card (user's request, 24 November).
   const tone = { color: colors.onSurface };
   const muted = { color: colors.onSurfaceVariant };
+  const card = { color: colors.onPrimaryContainer };
   return <>
-    <View style={styles.hero}>
-      <View style={[styles.heroTile, { backgroundColor: colors.primaryContainer }]}>
-        <SvgIcon shape={iconShapes.calendar} size={36} color={colors.onPrimaryContainer} />
+    <View style={[styles.hero, { backgroundColor: colors.primaryContainer }]}>
+      <View style={[styles.heroTile, { backgroundColor: colors.primary }]}>
+        <SvgIcon shape={iconShapes.calendar} size={32} color={colors.onPrimary} />
       </View>
-      <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={[tone, styles.center]}>{t("Prossimo mese")}</Text>
-      <Text variant="displaySmall" style={[tone, styles.amount, styles.bold, styles.center]}>{formatAmount(soon)}</Text>
-      <Text variant="bodyLarge" style={[muted, styles.center]}>{t("{p0} entro {p1} giorni", { p0: count, p1: days })}</Text>
+      <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={[card, styles.center]}>{t("Prossimo mese")}</Text>
+      <Text variant="displaySmall" style={[card, styles.amount, styles.bold, styles.center]}>{formatAmount(soon)}</Text>
+      <Text variant="bodyLarge" style={[card, styles.soft, styles.center]}>{t("{p0} entro {p1} giorni", { p0: count, p1: days })}</Text>
     </View>
     <View role="list">
       {renewals.map(({ occurrence, previous }, index) => {
@@ -106,8 +110,10 @@ const styles = StyleSheet.create({
   // Same separator as the «Totale» card of Spese.
   figures: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: spacing.md },
   figureDivider: { width: 1, height: 20, alignSelf: 'center', opacity: 0.4 },
-  hero: { alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.sm },
-  heroTile: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  hero: { alignItems: 'center', gap: spacing.sm, borderRadius: radius.dialog, paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  // The card's tile, larger.
+  heroTile: { width: 64, height: 64, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  soft: { opacity: 0.85 },
   center: { textAlign: 'center' },
   bold: { fontWeight: '700' },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingVertical: spacing.md, paddingHorizontal: spacing.xs },

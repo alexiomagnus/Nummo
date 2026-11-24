@@ -24,8 +24,8 @@ export function PreferredCategoriesCard({ categories, value, onChange }: {
   return (
     <Card title={t("Categorie preferite")} style={styles.section}>
       <View style={styles.fields}>
-        <SelectField label={t("Nuova spesa")} options={options} value={existingCategory(value.expense, categories) || none} onChange={pick('expense')} />
-        <SelectField label={t("Nuove liste")} options={options} value={existingCategory(value.list, categories) || none} onChange={pick('list')} />
+        <SelectField panel label={t("Nuova spesa")} options={options} value={existingCategory(value.expense, categories) || none} onChange={pick('expense')} />
+        <SelectField panel label={t("Nuove liste")} options={options} value={existingCategory(value.list, categories) || none} onChange={pick('list')} />
       </View>
     </Card>
   );

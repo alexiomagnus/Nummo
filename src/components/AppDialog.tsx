@@ -30,6 +30,9 @@ type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dism
   // On phones: a panel with three positions, opening in peek or whole as chosen in Settings, no Back button (ScreenLayer `detents`
   // `panel`; user's request, 24 November: Template, Scansiona scontrino, the date picker).
   detents?: boolean;
+  // With `detents`: always open in peek (Template), or a peek that shows all the content (the date picker). See ScreenLayer.
+  opensHalf?: boolean;
+  fitPeek?: boolean;
   children: ReactNode;
 };
 
@@ -50,7 +53,7 @@ function AppDialogRoot(props: Props) {
 // Editors and content panels as screens: Title goes into the top bar beside Back, the other blocks (Content, ScrollArea)
 // fill the screen and Actions sit at its bottom, above the safe area (and above the keyboard: the screen shrinks with it).
 // Back, Escape and the system Back dismiss it, unless `dismissable` is false (an operation running).
-function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = false, label, tone, variant, detents = false, children }: Props) {
+function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = false, label, tone, variant, detents = false, opensHalf = false, fitPeek = false, children }: Props) {
   const { t } = useI18n();
   // A sheet only on phones; from medium every screen fills the content panel (user's request, 24 November: Nuova lista and the
   // «from when?» of a subscription as a sheet in the middle of a desktop page did not please).
@@ -72,7 +75,7 @@ function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = 
   });
   const dismiss = () => { if (dismissable && onDismiss) onDismiss(); };
   return <ScreenLayer label={label ?? (typeof title === 'string' ? title : t("Indietro"))} title={title} backLabel={t("Indietro")} onBack={dismiss} backDisabled={!dismissable}
-    onEscape={() => { if (!dismissable || !onDismiss) return false; onDismiss(); }} scroll={false} textEntry={focusTextEntry} tone={tone} sheet={sheet} detents={detents && !sheet ? 'panel' : false}>
+    onEscape={() => { if (!dismissable || !onDismiss) return false; onDismiss(); }} scroll={false} textEntry={focusTextEntry} tone={tone} sheet={sheet} detents={detents && !sheet ? 'panel' : false} opensHalf={opensHalf} fitPeek={fitPeek}>
     <View testID={testID} style={sheet ? screenStyles.sheetBody : screenStyles.body}>{blocks}</View>
   </ScreenLayer>;
 }
@@ -180,7 +183,9 @@ const screenStyles = StyleSheet.create({
   // would take the free space before the auto margin and leave the buttons under the fields).
   // A column: each action as wide as the screen, Elimina above the confirmation.
   actions: { marginTop: 'auto', flexGrow: 0, flexWrap: 'nowrap', flexDirection: 'column', alignItems: 'stretch', gap: spacing.md },
-  full: { flexGrow: 0, alignSelf: 'stretch', alignItems: 'stretch', marginRight: 0, marginLeft: 0 },
+  // Natural height whatever the dialog passed for its row layout: a `flex: 1` (equal halves in a row) in this column would mean
+  // basis 0 and shrinkable, a zero-height box with the button spilling below the screen («Scansiona», 24 November).
+  full: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', alignSelf: 'stretch', alignItems: 'stretch', marginRight: 0, marginLeft: 0 },
 });
 
 const styles = StyleSheet.create({

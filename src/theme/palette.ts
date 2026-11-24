@@ -152,6 +152,14 @@ export function mixColors(a: string, b: string, weight: number): string {
   return `#${[0, 1, 2].map((i) => Math.round(channel(a, i) * weight + channel(b, i) * (1 - weight)).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
 }
 
+// Fill and ink of the red «Elimina» pills (DangerButton). A real red in both themes: `error` in light; in dark M3's `error` is a pale
+// salmon, so the deep `errorContainer` with its ink. Both a little softer than the pure roles (user's request, 24 November: «il rosso
+// del tasto elimina fallo leggermente più tenue»): light towards white, dark towards a neutral grey, the ink still ≥ 4.5:1.
+export function dangerColors(scheme: Pick<Scheme, 'error' | 'onError' | 'errorContainer' | 'onErrorContainer'>, dark: boolean): { fill: string; ink: string } {
+  return dark ? { fill: mixColors(scheme.errorContainer, '#5A5A5A', 0.75), ink: scheme.onErrorContainer }
+    : { fill: mixColors(scheme.error, '#FFFFFF', 0.85), ink: scheme.onError };
+}
+
 // Fill of the expense and subscription cards (filled M3 card, tinted with the primary): light only, 23 November, user's request
 // («le schede delle spese colorate»). null in dark, where the cards stay outlined.
 export const cardColor = (scheme: Scheme, dark: boolean): string | null =>
