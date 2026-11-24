@@ -1602,6 +1602,12 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   di 70 ms invece di 90 (in tutto circa 450 ms invece di 640); il fondo del contenitore, vuoto dopo il contenuto, si scioglie tra il 35 % e il
   70 % (`surfaceGone`): attorno alla copia della scheda, già piena, la pagina ricompare in dissolvenza invece che a scatto. Più rapida anche
   l'entrata delle pagine, che usa la stessa molla.
+- **Schermi a scorrimento (24 novembre, su richiesta).** Tre coppie apertura/chiusura provate sui pulsanti di Fondi (trasformazione
+  sincronizzata con il contenuto che segue il contenitore, zoom con dissolvenza dal centro del pulsante, scorrimento verticale); scelto lo
+  scorrimento e applicato a tutti gli schermi interi: sale dal basso su una molla 0,95/220 senza rimbalzo con angoli superiori e ombra che
+  si appianano all'arrivo, la pagina sotto arretra a 0,96 e si scurisce; ridiscende in 280 ms con la curva accelerata. Lo stesso giorno
+  anche i fogli (salgono della propria altezza, velo che resta, pagina ferma) e il container transform è stato tolto dal codice;
+  l'entrata delle pagine (menu account e destinazioni) è invariata.
 
 ## Link per compilare Nuova spesa — 24 novembre 2026
 

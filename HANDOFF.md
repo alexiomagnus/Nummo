@@ -94,6 +94,49 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Matita dei Templates, pulsanti a pillola nei dettagli, poster della fotocamera — 24 novembre 2026
+
+- **Su richiesta.** (1) Templates: la riga non è più un pulsante; solo la matita a destra apre la modifica, `IconButton` 48×48 senza
+  contorno come quella dei prodotti in Liste (prima tutta la riga, con una matita decorativa in un riquadro con contorno).
+  (2) Dettaglio dell'abbonamento: «Annulla abbonamento», «Metti in pausa» e «Riattiva» a pillola (`radius.pill`) come «Modifica»;
+  poi, sempre su richiesta, anche «Aggiungi denaro» e «Archivia» del dettaglio del fondo.
+- **Su segnalazione** (screenshot dall'app Android): all'apertura della fotocamera della scansione la WebView mostrava il suo poster
+  predefinito (grigio con il tasto play) durante «Avvio della fotocamera…». `CameraViewfinder`: `poster` GIF trasparente 1×1 e video a
+  opacità 0 fino a `onPlaying`. Correzione solo web: arriva all'app con la pubblicazione, senza un nuovo APK.
+- **Verifica:** `npm run check` OK (**597/597**). Chromium headless su `dist-demo`, Standard, scuro, 390×844 e 1440×900: Templates (9
+  template di `nummo-template-v11.json`) clic sul testo della riga → nulla, sulla matita → «Modifica template», hover solo sulla matita;
+  fotocamera finta: video a opacità 0 finché `readyState` < 4, poi 1 (circa 180 ms); dettaglio di «Affitto» e di un fondo
+  (`nummo-utente-medio.json`): pulsanti con raggio a pillola; nessun errore JS. **Non provati** su telefono (il poster grigio compare solo
+  nella WebView/Chrome Android). Committato e inviato.
+
+## Schermi a scorrimento (scelto tra tre prove) — 24 novembre 2026
+
+Su richiesta («le animazioni di chiusura continuano a non convincermi, proponimi tre tipi di aperture e chiusure sincronizzate»):
+provate tre coppie sui pulsanti di Fondi (trasformazione sincronizzata, zoom con dissolvenza, scorrimento verticale); scelto lo
+scorrimento, rifinito («più carino e smooth») e applicato a **tutti gli schermi interi** («sostituisci le vecchie animazioni con
+questa»), tolte le altre due e i segni di prova.
+- `ScreenLayer.tsx` (`slide`): lo schermo sale dal bordo inferiore del suo riquadro (pannello da medium, tutta l'app su smartphone)
+  su `slideSpring` 0,95/220 (circa 470 ms, 90 % a 245 ms, senza rimbalzo), con angoli superiori da 28 e un'ombra sopra il bordo
+  (colore `backdrop`) che si appianano all'arrivo: nel tema scuro schermo e pagina hanno lo stesso colore e senza il bordo non si
+  vedeva. La pagina sotto (`[role=main]`) arretra a 0,96 attorno al centro della parte in vista e si scurisce (velo 0,32). Ridiscende in
+  280 ms con la curva accelerata, di nuovo con angoli e ombra, mentre la pagina torna a 1 (non quando gli schermi si chiudono per un
+  cambio di pagina, `closeAllScreens`: lì entra la nuova pagina). L'animazione della pagina si annulla appena finita. L'elemento
+  premuto resta visibile (prima spariva finché lo schermo era aperto).
+- Invariati, su richiesta: l'entrata delle pagine del menu account e delle destinazioni della barra (animazione della pagina in
+  `AppShell`, `detailSpring`).
+- Anche i fogli dal basso (`variant="sheet"`: Nuova lista, Modifica lista e prodotto, selettore della data e «Da quando» su
+  smartphone), su segnalazione dello stesso giorno: salgono della propria altezza (più l'ombra) sulla stessa molla e ridiscendono;
+  ombra sopra il bordo, angoli sempre da 28, velo che resta finché sono aperti, pagina sotto ferma (resta visibile sopra il foglio);
+  il trascinamento della maniglia invariato (`slideDown`). Il vecchio container transform non ha più utenti ed è stato tolto
+  (`play`, origine, copia della scheda, `cardClip`/`usableCard`/`crossfade`/`closeLead`/`closePrecision`/`contentScale` e i loro
+  test); `originId` resta accettata da `ScreenLayer` ma non usata (la passano ancora quattro chiamanti, tra cui `FundDetail.tsx`,
+  che ha modifiche aperte di un'altra sessione).
+- `theme/containerTransform.ts`: `slideTimings`, `slideSpring`.
+- Verifica: `npm run check` 594/594 (tolti i test del container transform, aggiunti quelli dello scorrimento); registrato anche il
+  foglio di Nuova lista a 390×844; registrazione headless rallentata (0,3×) del dettaglio di una spesa a 1440×900 e 390×844 e,
+  durante le prove, dei tre schermi di Fondi: nessun errore JS. Non provato su dispositivi reali né nel tema chiaro. Committato e
+  inviato.
+
 ## Schermi: chiusura senza coda, apertura e chiusura più rapide — 24 novembre 2026
 
 Su richiesta («le animazioni non sono ancora perfette, in particolar modo la chiusura»; «leggermente più veloci»). Registrazione
