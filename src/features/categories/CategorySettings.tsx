@@ -5,9 +5,9 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
-import { categoryNameError, maxCategoryNameLength, type Category, type CategoryIcon, type CategoryUsage } from '../../domain/category';
+import { categoryNameError, isDefaultCategory, maxCategoryNameLength, type Category, type CategoryIcon, type CategoryUsage } from '../../domain/category';
 import { clipToLength, searchPolicy } from '../../domain/policy';
-import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
+import { DeleteAction } from '../../components/DeleteAction';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { decorativeIcon, leadingIcon } from '../../components/FieldIcon';
@@ -21,9 +21,9 @@ type Props = {
   error: string | null;
   ready: boolean;
   notify: (message: string) => void;
-  // «Ripristina le categorie predefinite» (24 November, on request): deletes every category not in use and adds back the defaults
-  // missing by name, after a confirmation that says how many go and how many stay. Resolves with whether it was done.
-  onResetDefaults?: () => Promise<boolean>;
+  // «Ripristina le categorie predefinite»: adds back the default categories missing by name, nothing else (user's request, 25
+  // November).
+  onResetDefaults?: () => Promise<void>;
   // Expenses and subscriptions per category; null while they are not loaded (deleting waits: a used category is never deleted).
   usage: ReadonlyMap<string, CategoryUsage> | null;
   canAddDefaults: boolean;
@@ -58,15 +58,6 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
   const [choosingIcon, setChoosingIcon] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Category | null>(null);
-  const [resetting, setResetting] = useState(false);
-  // What the reset does, said before it happens.
-  const resetText = () => {
-    const kept = categories.filter((category) => inUse(category.id)).length;
-    const removed = categories.length - kept;
-    const goes = removed === 0 ? t("Nessuna categoria da eliminare.") : removed === 1 ? t("Si elimina 1 categoria non usata.") : t("Si eliminano {p0} categorie non usate.", { p0: removed });
-    const stays = kept === 0 ? '' : kept === 1 ? t("1 categoria resta perché la usano spese o abbonamenti.") : t("{p0} categorie restano perché le usano spese o abbonamenti.", { p0: kept });
-    return [goes, stays, t("Poi tornano le categorie predefinite che mancano. L’operazione non può essere annullata.")].filter(Boolean).join(' ');
-  };
   const create = async () => {
     const validationError = categoryNameError(name, categories);
     setNameError(validationError);
@@ -125,6 +116,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
             const isEditing = editing?.id === category.id;
             return (
               <ListRow key={category.id} divider={index < shown.length - 1} icon={category.icon} title={category.label}
+                subtitle={isDefaultCategory(category.label, t) ? t("Predefinita") : undefined}
                 trailing={<>
                   <IconButton icon={({ size, color }) => <SvgIcon shape={iconShapes.pencil} size={size} color={color} />} style={listRowStyles.iconButton}
                     disabled={!ready} selected={isEditing} aria-haspopup="dialog" aria-expanded={isEditing} accessibilityLabel={t("Modifica {p0}", { p0: category.label })}
@@ -137,14 +129,12 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
             );
           })}
         </View>
-        {/* Always offered, with or without categories (user's request, 22 November); since 24 November it deletes the categories not in
-            use and brings back the defaults, after a warning (user's request). Same look as «Ripristina predefiniti» of Settings: pill,
+        {/* Always offered, with or without categories (user's request, 22 November): adds back the default categories missing by name,
+            nothing else, without a confirmation (user's request, 25 November). Same look as «Ripristina predefiniti» of Settings: pill,
             label in `secondary`. */}
         {onResetDefaults && <View style={compact ? undefined : styles.start}><Button mode="outlined" textColor={theme.colors.secondary} style={styles.restore}
-          disabled={!canAddDefaults || usage === null} onPress={() => setResetting(true)}
+          disabled={!canAddDefaults || busy} onPress={() => { setBusy(true); void onResetDefaults().finally(() => setBusy(false)); }}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>{t("Ripristina le categorie predefinite")}</Button></View>}
-        {onResetDefaults && <DeleteDialog visible={resetting} name={t("le categorie")} title={t("Ripristinare le categorie predefinite?")}
-          description={resetText()} confirmLabel={t("Ripristina")} onDismiss={() => setResetting(false)} onConfirm={onResetDefaults} />}
         {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
         {editing && <CategoryEditor record={editing} categories={categories} ready={ready} error={error}
           onSave={async (nextName, nextIcon) => {

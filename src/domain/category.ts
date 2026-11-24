@@ -113,6 +113,14 @@ export function categoryUsage(records: readonly { category_id: string | null; re
   return usage;
 }
 
+// A default category, recognised by its name (case and spaces ignored), in Italian or in the current language (`translate`): the
+// Categories page marks it «Predefinita» (user's request, 25 November).
+export function isDefaultCategory(label: string, translate: (label: string) => string): boolean {
+  const key = (value: string) => normalizeCategoryName(value).toLowerCase();
+  const name = key(label);
+  return defaultCategories.some((category) => key(category.label) === name || key(translate(category.label)) === name);
+}
+
 // «Ripristina le categorie predefinite»: the defaults (named in the current language by `translate`) whose name no category
 // has yet, compared like the unique names (case and spaces ignored). Existing categories are never changed or removed.
 export function missingDefaultCategories(existing: readonly { label: string }[], translate: (label: string) => string): { label: string; icon: CategoryIcon }[] {

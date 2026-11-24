@@ -98,6 +98,17 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## «Ripristina le categorie predefinite» aggiunge soltanto, predefinite segnate — 25 novembre 2026
+
+Su richiesta («deve semplicemente ripristinare le categorie standard, basta, nient'altro; eliminare eventuali funzionalità aggiunte;
+segnare in qualche modo quelle standard»): tolti la conferma (`DeleteDialog`) e l'eliminazione delle categorie non usate
+(`resetCategories` in `Workspace`) del 24 novembre; il pulsante chiama `addDefaults`, che aggiunge le predefinite mancanti per nome
+(«Categorie predefinite aggiunte.» o «Le categorie predefinite ci sono già.»). Nella pagina Categorie le predefinite hanno la riga
+«Predefinita» (`isDefaultCategory` di `domain/category.ts`: nome in italiano o nella lingua corrente, maiuscole e spazi ignorati; test in
+`tests/seedDefaults.test.ts`). Tolte da `en.ts` 12 chiavi non più usate, aggiunta «Predefinita». Headless a 390×844 con
+`nummo-utente-medio.json`: cinque predefinite segnate; eliminata «Shopping», il pulsante la riaggiunge senza dialogo e le altre 14
+restano; di nuovo → «ci sono già». `npm run check` OK (**599/599**).
+
 ## Navigazione libera con uno schermo aperto da desktop, drawer a 224 — 25 novembre 2026
 
 - **Su segnalazione** (screenshot di «Aggiungi denaro» da desktop): con uno schermo aperto la navigazione, «Nuova spesa» e il menu

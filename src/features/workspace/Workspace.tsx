@@ -352,34 +352,14 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     if (!usage || (used && used.expenses + used.subscriptions > 0)) { notify("La categoria è in uso: non è stata eliminata."); return false; }
     return categoryState.deleteCategory(id);
   };
-  // Seeding and «Ripristina le categorie predefinite»: only the defaults missing by name are added, the rest is never touched.
+  // Seeding and «Ripristina le categorie predefinite»: only the defaults missing by name are added, the rest is never touched (user's
+  // request, 25 November: «deve semplicemente ripristinare le categorie standard, nient'altro»; on 24 November it also deleted the
+  // categories not in use, after a confirmation: withdrawn).
   const addDefaults = async () => {
     const missing = missingDefaultCategories(categoryState.categories, t);
     if (missing.length === 0) { notify("Le categorie predefinite ci sono già."); return; }
     await backend.importRecords([], missing.map((c) => ({ ...c, id: crypto.randomUUID() })))
       .then(() => notify("Categorie predefinite aggiunte.")).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
-  };
-  // «Ripristina le categorie predefinite» (user's request, 24 November, after the confirmation in CategorySettings): every category
-  // not used by expenses or subscriptions is deleted (the same deletion as the trash can, one after the other), the used ones stay
-  // (user's choice: no expense loses its category), then the defaults missing by name come back. Lists and templates that pointed
-  // to a deleted category show it as missing, as after any deletion.
-  const resetCategories = async (): Promise<boolean> => {
-    const usage = latestUsage.current;
-    if (!usage) { notify("Le spese non sono ancora caricate: riprova tra poco."); return false; }
-    const used = (id: string) => { const u = usage.get(id); return Boolean(u && u.expenses + u.subscriptions > 0); };
-    const kept = categoryState.categories.filter((category) => used(category.id));
-    for (const category of categoryState.categories.filter((c) => !used(c.id))) {
-      if (!(await categoryState.deleteCategory(category.id))) { notify("Ripristino interrotto: alcune categorie non sono state eliminate."); return false; }
-    }
-    const missing = missingDefaultCategories(kept, t);
-    try {
-      if (missing.length) await backend.importRecords([], missing.map((c) => ({ ...c, id: crypto.randomUUID() })));
-      notify("Categorie predefinite ripristinate.");
-      return true;
-    } catch {
-      notify("Categorie predefinite non aggiunte: verifica la connessione.");
-      return false;
-    }
   };
   // A new account (empty archive confirmed by the server) starts with the default categories, once per browser.
   const seedAttempted = useRef(false);
@@ -522,7 +502,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         usage={usedCategories} onCreate={categoryState.createCategory} onDelete={removeCategory} onUpdate={categoryState.updateCategory}
         notify={notify}
-        onResetDefaults={resetCategories} canAddDefaults={synchronized && categoryState.ready} />
+        onResetDefaults={addDefaults} canAddDefaults={synchronized && categoryState.ready} />
     </>}
   </>;
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { categoryUsage, defaultCategories, isCategoryIcon, missingDefaultCategories } from '../src/domain/category.ts';
+import { categoryUsage, defaultCategories, isCategoryIcon, isDefaultCategory, missingDefaultCategories } from '../src/domain/category.ts';
 import { shouldSeedDefaultCategories } from '../src/features/workspace/seedDefaults.ts';
 
 const part = { ready: true, count: 0, fromCache: false, pending: false };
@@ -45,4 +45,12 @@ test('categoria in uso: spese e abbonamenti contati per categoria, senza categor
   assert.deepEqual(usage.get('b'), { expenses: 0, subscriptions: 1 });
   assert.equal(usage.get('c'), undefined);
   assert.equal(usage.size, 2);
+});
+
+test('categorie predefinite riconosciute per nome, in italiano o nella lingua corrente', () => {
+  const english = (label: string) => ({ Alimentari: 'Groceries', Trasporti: 'Transport' } as Record<string, string>)[label] ?? label;
+  assert.equal(isDefaultCategory(' alimentari ', english), true);
+  assert.equal(isDefaultCategory('GROCERIES', english), true);
+  assert.equal(isDefaultCategory('Trasporti', english), true);
+  assert.equal(isDefaultCategory('Casa', english), false);
 });
