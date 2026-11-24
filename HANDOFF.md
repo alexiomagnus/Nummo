@@ -8,8 +8,11 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `a8f694f` (24 novembre, su richiesta: icona nera con logo bianco, transizione lista ↔ dettaglio, con le
-  notifiche uniformi di `e58ce41`; bundle online `index-ab8ddc12…` identico byte per byte). Prima `89c776d` (testi di README e Guida;
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
+  «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
+  datate), bundle online `index-b03086d6…` identico byte per byte all'export. In mezzo, dopo `a8f694f`, anche `b231eeb`, `27e46bd`,
+  `00a980a`/`665d96e`/`05a5ed6`, `10f3f67`, `73b9d75`, `1ed557b`, `ca00370`, `12f68c5` (sezioni datate). Prima `a8f694f` (icona nera
+  con logo bianco, transizione lista ↔ dettaglio, con le notifiche uniformi di `e58ce41`; bundle online `index-ab8ddc12…`). Prima `89c776d` (testi di README e Guida;
   bundle `index-3bd84bf7…`). Prima `2d3feed` (link per compilare Nuova spesa; bundle `index-62e94e98…`). Prima `1ad74ad` («Template» apre uno schermo come la
   scansione; bundle `index-39223863…`). Prima `32a276f` (animazione piena anche per Nuova spesa e le
   destinazioni; bundle `index-4572a2bf…`). Prima `d196dc9` (animazioni degli schermi come prima della
@@ -36,7 +39,7 @@ di quel giorno e la verifica su `d196dc9`.
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.3` «Latest», poi 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, sei tag `android-v0.1.0`…`android-v0.3.3`. Ultimo commit di codice `a8f694f`,
+- **Git.** `main` = `origin/main`, solo il ramo `main`, sei tag `android-v0.1.0`…`android-v0.3.3`. Ultimo commit di codice `1c5d647`,
   inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
@@ -54,7 +57,8 @@ di quel giorno e la verifica su `d196dc9`.
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
+- **Verifiche (ultime).** Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
+  nelle sezioni datate. Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
   visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
   menu ancorato su desktop, nessun errore JS. Su `f74ff3a`: `assembleDebug assembleRelease` OK. `test:emulator` **24/24** l'ultima volta su
@@ -115,7 +119,7 @@ di quel giorno e la verifica su `d196dc9`.
 - **Verifica:** `npm run check` OK (**598/598**). Chromium headless con `nummo-utente-medio.json`: a 1440×900 Categoria, Fondo,
   Periodo, Grafico, Ordina e Categoria di Spese aprono uno schermo sul pannello (1160×792) con le voci, scelta di «Barre» applicata;
   a 360×740 riquadro dell'icona 84 (spesa) e 64 (abbonamento), animazione in corso all'apertura e finita dopo, dettaglio
-  dell'abbonamento ancora senza scorrimento; nessun errore JS. Non provato su telefono. Non committato.
+  dell'abbonamento ancora senza scorrimento; nessun errore JS. Non provato su telefono. Commit `1c5d647`, pubblicato.
 
 ## Modifica spesa e serie più ordinate, «Prossimo mese» trascinabile, «Elimina» più tenue — 24 novembre 2026
 
@@ -136,7 +140,7 @@ di quel giorno e la verifica su `d196dc9`.
   importato dall'interfaccia, scuro e chiaro: «Prossimo mese» senza Indietro, trascinato giù → ridotto a 422; Modifica spesa con la
   Descrizione alta 266 (area scrivibile compresa) fino alle azioni; Modifica serie (Affitto, Spotify in prova) col riquadro
   «Rinnovi», con «Annuale» la data «Primo rinnovo con la nuova frequenza» e la nota dentro il riquadro, tacche delle etichette del
-  colore del riquadro; «Elimina» più tenue; nessun errore JS. Non provato su telefono. Non committato.
+  colore del riquadro; «Elimina» più tenue; nessun errore JS. Non provato su telefono. Commit `1c5d647`, pubblicato.
 
 ## Categoria, Fondo e Template a metà di base, calendario intero in ridotto — 24 novembre 2026
 
@@ -152,8 +156,7 @@ di quel giorno e la verifica su `d196dc9`.
 - **Verifica:** `npm run check` OK (**597/597**). Chromium headless con touch a 390×844, Standard vuota, scuro: interruttore spento →
   Categoria aperta a 422 (metà); data aperta intera, trascinata giù → ridotto a 225, ultima riga dei giorni a 753 sopra «OK» (764);
   interruttore acceso → data aperta a 225; novembre (6 settimane) → ottobre, settembre: resta a 225; nessun errore JS. Fondo (serve un
-  fondo) e Template (servono template) non provati in headless: stesso codice di Categoria/`AppDialog`. Non provato su telefono. Non
-  committato.
+  fondo) e Template (servono template) non provati in headless: stesso codice di Categoria/`AppDialog`. Non provato su telefono. Commit `1c5d647`, pubblicato.
 
 ## «Scansiona» fuori dallo schermo dopo la scelta della foto — 24 novembre 2026
 
@@ -165,7 +168,7 @@ di quel giorno e la verifica su `d196dc9`.
   foglio ha la sua altezza naturale qualunque stile di riga le passi il dialogo.
 - **Verifica:** `npm run check` OK (596/596). Chromium headless con touch a 390×844, Standard, scuro, scansione accesa (chiave
   finta, nessuna richiesta all'AI), foto caricata dalla galleria: intero → «Scansiona» a 764–820 (24 sopra il bordo); a metà schermo →
-  foto scorrevole con il bordo, «Scansiona» visibile in fondo; nessun errore JS. Non provato su telefono. Non committato.
+  foto scorrevole con il bordo, «Scansiona» visibile in fondo; nessun errore JS. Non provato su telefono. Commit `1c5d647`, pubblicato.
 
 ## Matita dei Templates, pulsanti a pillola nei dettagli, poster della fotocamera — 24 novembre 2026
 
@@ -5868,7 +5871,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (24 novembre):** tutto il codice fino a `a8f694f` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (24 novembre):** tutto il codice fino a `1c5d647` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
