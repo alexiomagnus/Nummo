@@ -13,7 +13,7 @@ export function ProductsDialog({ description, products, onClose }: {
   const { t } = useI18n();
   const { colors } = useTheme();
   const count = products.length === 1 ? t("1 prodotto") : t("{p0} prodotti", { p0: products.length });
-  return <Portal><AppDialog visible onDismiss={onClose}>
+  return <Portal><AppDialog visible detents onDismiss={onClose}>
     <AppDialog.Title>{t("Prodotti acquistati")}</AppDialog.Title>
     <AppDialog.Content>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{`${description} · ${count}`}</Text>

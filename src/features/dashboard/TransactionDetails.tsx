@@ -26,7 +26,7 @@ export function TransactionDetails({ title, items, categories, funds = [], onClo
   const mixed = new Set(items.map((item) => item.category_id ?? '')).size > 1;
   const total = items.reduce((sum, item) => sum + item.amount_minor, 0);
   const count = items.length === 1 ? t('1 transazione') : t('{p0} transazioni', { p0: items.length });
-  return <Portal><AppDialog visible onDismiss={onClose}>
+  return <Portal><AppDialog visible detents onDismiss={onClose}>
     <AppDialog.Title>{title}</AppDialog.Title>
     <AppDialog.Content>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>

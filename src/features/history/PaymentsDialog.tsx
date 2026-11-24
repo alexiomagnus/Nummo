@@ -17,7 +17,7 @@ export function PaymentsDialog({ description, payments, total, canRemove, onRemo
   const { colors } = useTheme();
   const count = payments.length === 1 ? t("1 pagamento") : t("{p0} pagamenti", { p0: payments.length });
   // The page's own colours, like every other screen (user's request, 24 November; the row's tonal colour from the 23rd).
-  return <Portal><AppDialog visible onDismiss={onClose}>
+  return <Portal><AppDialog visible detents onDismiss={onClose}>
     <AppDialog.Title>{t("Storico dei pagamenti")}</AppDialog.Title>
     <AppDialog.Content style={styles.intro}>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{`${description} · ${count} · ${formatAmount(total)}`}</Text>

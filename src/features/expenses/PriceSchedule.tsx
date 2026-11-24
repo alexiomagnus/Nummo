@@ -203,7 +203,7 @@ export function NextRenewalRow({ date, amount }: { date: string; amount: number 
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   next: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  nextTile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
+  nextTile: { width: 40, height: 40, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   nextText: { flex: 1, minWidth: 0 },
   nextAmount: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   fields: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },

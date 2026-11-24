@@ -98,6 +98,21 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Modifica serie in una schermata su smartphone — 24 novembre 2026
+
+Su richiesta («far entrare tutta la pagina senza doverla scrollare, è poco lo spazio superato»): nel riquadro «Rinnovi» di
+`ExpenseEditor` tolto il titolo visibile (resta il nome accessibile del gruppo), padding e spazi da 16 a 12, riquadro dell'icona di
+`NextRenewalRow` da 44 a 40: il riquadro passa da 200 a 144. Headless con «Affitto»: a 390×844 prima sforava di 18, ora entra con 38 di
+margine; a 412×915 entrava già; a 360×740 sfora ancora (134: lì serve scorrere). `npm run check` OK (598/598).
+
+## Transazioni di Analisi, Prodotti e Storico dei pagamenti trascinabili — 24 novembre 2026
+
+Su richiesta (screenshot delle transazioni di «Servizi digitali»: «poterla abbassare e alzare con uno swipe, seguire le regole delle
+altre sezioni ed eliminare il tasto indietro»): `TransactionDetails`, e per coerenza gli altri due schermi di sola consultazione
+`ProductsDialog` e `PaymentsDialog`, con `detents` di `AppDialog`: su smartphone intero, metà, chiuso, trascinati da qualunque punto,
+senza Indietro; aperti interi; da medium invariati. Headless a 390×844 (transazioni di una categoria): aperto intero senza Indietro, giù
+corto → metà (422), su → intero, giù lungo → chiuso; nessun errore JS. `npm run check` OK (598/598).
+
 ## Icona di Periodo e Grafico anche su smartphone — 24 novembre 2026
 
 Su richiesta: in Analisi su smartphone i campi Periodo e Grafico mostrano l'icona della voce scelta (`iconOnPhones`). Perché «Ultimi

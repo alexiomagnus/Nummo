@@ -101,9 +101,9 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
         onChange={(field, value) => { setDraft((d) => ({ ...d, [field]: value })); setErrors((e) => ({ ...e, [field]: undefined })); }} onBlur={() => {}} />
       {/* Everything about the renewals in one group, apart from the expense's fields (user's request, 24 November: the bottom of
           «Modifica serie» was not tidy nor easy to read at a glance): the next renewal and its price first, then the free trial, the frequency,
-          the choices about a new price. */}
+          the choices about a new price. No visible title, tighter padding (user's request, 24 November: the whole series editor in one
+          screen on a phone); the group keeps its accessible name. */}
       {series && <ThemeProvider theme={groupTheme}><View style={[styles.renewals, { backgroundColor: colors.elevation.level2 }]} role="group" aria-label={t("Rinnovi")}>
-      <Text variant="titleMedium">{t("Rinnovi")}</Text>
       {next && <NextRenewalRow date={next.date} amount={shownAmount} />}
       {record.first_payment_date && <TrialField existing enabled firstPaymentDate={draft.firstPaymentDate} startDate={draft.date || today}
         locked={record.first_payment_date <= today} disabled={busy} error={errors.firstPaymentDate}
@@ -141,5 +141,5 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
 
 const styles = StyleSheet.create({
   content: { paddingVertical: spacing.sm, gap: spacing.lg },
-  renewals: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.lg },
+  renewals: { borderRadius: radius.card, padding: spacing.md, gap: spacing.md },
 });
