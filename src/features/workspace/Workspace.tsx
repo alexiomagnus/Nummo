@@ -176,8 +176,9 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, back
   const { t } = useI18n();
   const [{ section, returnTo, trail }, setNavigation] = useState<{ section: Section; returnTo: Section; trail: Trail<Section> }>({ section: 'expense', returnTo: 'list', trail: [] });
   const navigate = useCallback((next: Section) => {
-    // Screens opened on the current page (a detail, an editor, the date picker) close before another page shows.
-    closeAllScreens();
+    // Screens opened on the current page (a detail, an editor, the date picker) close before another page shows; one that cannot
+    // close (an operation running) keeps the page where it is.
+    if (!closeAllScreens()) return;
     // Let React yield during a first, expensive page render so touch feedback can keep running.
     startTransition(() => setNavigation((previous) => previous.section === next ? previous : { section: next,
       returnTo: accountPages.has(next) && !accountPages.has(previous.section) ? previous.section : previous.returnTo,
@@ -185,7 +186,7 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, back
   }, []);
   // «Fatto» of an account page: the page it was opened from, as a step back when that is the previous page (pageTrail.ts).
   const finish = useCallback(() => {
-    closeAllScreens();
+    if (!closeAllScreens()) return;
     startTransition(() => setNavigation((previous) => { const step = done(previous.trail, previous.section, previous.returnTo);
       return { section: step.to, returnTo: previous.returnTo, trail: step.trail }; }));
   }, []);

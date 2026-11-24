@@ -145,7 +145,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   const latestEscape = useRef(onEscape);
   latestEscape.current = onEscape;
   useEffect(() => {
-    const close = () => { latestEscape.current(); };
+    const close = () => latestEscape.current() !== false;
     openScreens.add(close);
     return () => { openScreens.delete(close); };
   }, []);
@@ -349,10 +349,9 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   const padding = !scroll ? spacing.xl : compact ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
   const side = compact ? Math.max(insets.left, insets.right) : 0;
   return (<>
-    {/* From medium the screen covers only the content panel: a transparent layer over the rest (navigation, top bar, account menu)
-        keeps them from being pressed while it is open, as the dialogs' scrim did (user's request, 24 November: opening Settings or
-        other panels from under a screen gave display problems). */}
-    {!compact && <View aria-hidden style={[StyleSheet.absoluteFill, styles.blocker]} />}
+    {/* From medium the screen covers only the content panel: the navigation, the top bar and the account menu around it stay
+        usable, and going to another page closes the open screens first (closeAllScreens), so the new page shows at once (user's
+        request, 25 November; a transparent layer kept them from being pressed from 24 November). */}
     <View ref={root} role="dialog" aria-modal aria-label={label} {...part('root')}
       style={[styles.root, { left: frame.left, top: frame.top, width: frame.width, height: frame.height }]}>
       {sheet ? <Pressable {...part('scrim')} accessibilityRole="button" accessibilityLabel={backLabel} focusable={false} disabled={backDisabled} onPress={onBack}
@@ -519,12 +518,17 @@ function contentNeed(surface: HTMLElement | null): number {
 
 // Every open screen, newest last. Going to another page (a destination, a page of the account menu, «Fatto») closes them all
 // first (user's report, 23 November: the date picker stayed above Settings opened from the account menu on desktop). Each
-// closes as its own Back/Escape would; one that refuses (an operation running) stays.
-const openScreens = new Set<() => void>();
+// closes as its own Back/Escape would; one that refuses (an operation running) stays, and then the navigation does not happen
+// (false): the page would change unseen under the screen (user's report, 25 November).
+const openScreens = new Set<() => boolean>();
 let screensClosedForNavigation = -Infinity;
-export function closeAllScreens(): void {
+export function closeAllScreens(): boolean {
   if (openScreens.size) screensClosedForNavigation = performance.now();
-  [...openScreens].reverse().forEach((close) => close());
+  let closed = true;
+  for (const close of [...openScreens].reverse()) {
+    if (!close()) { closed = false; break; }
+  }
+  return closed;
 }
 
 // ——— the app's chrome on phones ———
@@ -676,7 +680,6 @@ const handleClearance = spacing.xs + 24 + spacing.md;
 
 const styles = StyleSheet.create({
   root: { position: 'absolute' },
-  blocker: { cursor: 'default' } as object,
   surface: { overflow: 'hidden' },
   content: { flex: 1 },
   grow: { flex: 1, minHeight: 0 },

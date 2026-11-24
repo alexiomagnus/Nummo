@@ -98,6 +98,19 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Navigazione libera con uno schermo aperto da desktop, drawer a 224 — 25 novembre 2026
+
+- **Su segnalazione** (screenshot di «Aggiungi denaro» da desktop): con uno schermo aperto la navigazione, «Nuova spesa» e il menu
+  dell'account non rispondevano (il livello trasparente del 24 novembre in `ScreenLayer`). Tolto: ora un clic su un'altra pagina
+  chiude gli schermi aperti e mostra subito la pagina (`navigate`/`finish` di `Workspace` con `closeAllScreens`); se uno schermo
+  rifiuta di chiudersi (operazione in corso) `closeAllScreens` restituisce `false` e la pagina non cambia sotto di lui. Vale per ogni
+  schermo (editor, dettagli, schermi di scelta, selettore della data).
+- **Su richiesta:** drawer da 208 a 224 (`layout.drawerWidth`), pannello 16 più stretto (a 1440×900: 1200 di larghezza).
+- **Verifica:** `npm run check` OK (598/598). Headless a 1440×900 col mouse: da «Nuovo fondo» clic su Spese → schermo chiuso, pagina
+  Spese; dal dettaglio di una spesa clic su «Nuova spesa» → chiuso, Nuova spesa; da «Nuovo fondo» il menu dell'account si apre sopra
+  lo schermo e «Impostazioni» chiude lo schermo e apre la pagina; nessun errore JS. Il caso dello schermo che rifiuta non è provato
+  in headless.
+
 ## Descrizione degli editor su tre righe — 24 novembre 2026
 
 Su richiesta («ingrandisci un po' di più la descrizione»): negli editor (spesa, serie, template, registrazione di una lista) la
