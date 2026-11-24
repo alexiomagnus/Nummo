@@ -25,7 +25,7 @@ export function TemplateEditor({ template, categories, fundChoices, merchants, e
     <Dialog visible onDismiss={() => { if (!deleting) close(); }}>
       <Dialog.Title>{t("Modifica template")}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-        <TemplateFields form={form} dense />
+        <TemplateFields form={form} dense editor />
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </ScrollView></Dialog.ScrollArea>
       {/* Buttons as direct children of Dialog.Actions (it clones each one): never a Fragment. */}

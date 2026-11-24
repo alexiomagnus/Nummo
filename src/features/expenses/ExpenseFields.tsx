@@ -35,6 +35,9 @@ type Props = {
   merchant?: { value: string; merchants: readonly RankedMerchant[]; error?: string; onChange: (value: string) => void };
   // Templates: no date field (22 November, on request); the amount takes the whole first row.
   withoutDate?: boolean;
+  // The editors (expense, series, template, list): with `dense`, a three-line description (104) instead of two (user's request,
+  // 24 November: «ingrandisci un po' di più la descrizione»); the desktop new-expense page and the receipt review keep two.
+  editor?: boolean;
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
@@ -42,7 +45,7 @@ type Props = {
 // Shared by the new-expense form and the edit dialog, so both look and validate alike: one column,
 // amount (the prominent field) + date on the first row (also on phones, where they share it in halves), then description, merchant (optional), category and `extra` (repeat).
 // Every other field is required; the screen does not star them one by one.
-export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, fund, fundBelow = false, merchant, withoutDate = false, onChange, onBlur }: Props) {
+export function ExpenseFields({ values, errors, categories, dataState = 'ready', disabled, dense = false, extra, fund, fundBelow = false, merchant, withoutDate = false, editor = false, onChange, onBlur }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const length = Array.from(values.description).length;
@@ -74,7 +77,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       </View>
       <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
-          multiline numberOfLines={dense ? 2 : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription]}
+          multiline numberOfLines={dense ? (editor ? 3 : 2) : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription, dense && editor && styles.editorDescription]}
           onChangeText={(value) => onChange('description', clipToLength(value, expensePolicy.maxDescriptionLength))} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {/* The counter appears with the first character: in the flow it pushed every field below, and «Salva» with them,
@@ -126,6 +129,7 @@ const styles = StyleSheet.create({
   layout: { gap: spacing.lg },
   denseLayout: { gap: spacing.md },
   denseDescription: { minHeight: 80 },
+  editorDescription: { minHeight: 104 },
   // Phones with Fondo on its own row: the room it takes comes from here, so «Salva» stays whole above the navigation.
   shortDescription: { minHeight: 96 },
   denseExtra: { marginTop: 0 },

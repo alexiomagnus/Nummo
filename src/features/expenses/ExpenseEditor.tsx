@@ -91,7 +91,7 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
     <Dialog.ScrollArea style={{ minHeight: 0, paddingHorizontal: spacing.xl }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
       {/* The denser fields of the editors (as TemplateEditor): a two-line description. A description grown to fill the screen was
           tried on 24 November and withdrawn the same evening, on request («la sezione descrizione è troppo grande»). */}
-      <ExpenseFields dense values={draft} errors={errors} categories={categories} disabled={busy}
+      <ExpenseFields dense editor values={draft} errors={errors} categories={categories} disabled={busy}
         extra={fundChoices.length > 0 ? <View style={{ gap: spacing.xs }}>
           <FundField choices={fundChoices} value={draft.fundId} error={errors.fundId} disabled={busy}
             onChange={(fundId) => { setDraft((d) => ({ ...d, fundId })); setErrors((e) => ({ ...e, fundId: undefined })); }} />

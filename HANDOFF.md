@@ -98,6 +98,13 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Descrizione degli editor su tre righe — 24 novembre 2026
+
+Su richiesta («ingrandisci un po' di più la descrizione»): negli editor (spesa, serie, template, registrazione di una lista) la
+Descrizione passa da 80 (due righe) a 104 (tre righe) a ogni dimensione (`editor` di `ExpenseFields`, passato anche da
+`TemplateFields`); la Nuova spesa da desktop e la revisione dello scontrino (`dense` senza `editor`) restano a due righe. Headless:
+Modifica serie entra ancora senza scorrere a 390×844 (margine 14) e a 1440×900 (46). `npm run check` OK (598/598).
+
 ## «Aggiungi denaro» intero anche a metà schermo — 24 novembre 2026
 
 Su richiesta (screenshot di «Aggiungi denaro» ridotto, con la Nota e una parte dei campi sotto il bordo): `MovementDialog` con `fitPeek`,
