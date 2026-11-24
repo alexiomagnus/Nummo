@@ -93,6 +93,15 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## App Android 0.3.3: icona nera con logo bianco — 24 novembre 2026
+
+- **Su richiesta.** Solo la versione (versionCode 6, `versionName` 0.3.3, commit `6e3ebd0`): l'icona era già in `colors.xml` (`a8f694f`).
+  Release compilata in una worktree pulita su `6e3ebd0` (rimossa con la copia della chiave): `apksigner verify` OK, certificato
+  `00b1c85c…0fcf` (lo stesso delle versioni precedenti: si aggiorna sopra la 0.3.2), `aapt2`: `icon_background` `#ff000000`,
+  `icon_foreground` `#ffffffff`. File: `android/app/build/outputs/apk/release/nummo-0.3.3.apk` (ignorato da Git) e `.sha256`
+  (`52277a55…0f53`). **Non** installato su emulatore o telefono; **nessuna** release GitHub né tag `android-v0.3.3` (da fare solo su
+  richiesta). Il sito non cambia.
+
 ## Icona nera con logo bianco; transizione lista ↔ dettaglio senza sovrapposizioni — 24 novembre 2026
 
 - **Icona (su richiesta):** fondo nero e logo bianco per favicon, icone del manifest, `apple-touch-icon` e app Android (`colors.xml`);
