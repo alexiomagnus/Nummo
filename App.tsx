@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { StyleSheet, View, useColorScheme } from 'react-native';
-import { ActivityIndicator, IconButton, PaperProvider, Text, useTheme } from 'react-native-paper';
+import { IconButton, PaperProvider, Text, useTheme } from 'react-native-paper';
+import { Spinner } from './src/components/Spinner';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountMenu } from './src/components/AccountMenu';
 import { AppShell } from './src/components/AppShell';
@@ -335,7 +336,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
           {settingsOpen && renderSettings(() => setSettingsOpen(false))}
           {!settingsOpen && connectOpen && connectTarget && <FirebaseConnect target={connectTarget} connected={customFirebaseConfig}
             site={siteFirebase} signedIn={false} onCancel={() => setConnectOpen(false)} />}
-          {!settingsOpen && !connectOpen && session.status === 'loading' && <View style={styles.center}><ActivityIndicator accessibilityLabel={t("Caricamento della sessione")} /></View>}
+          {!settingsOpen && !connectOpen && session.status === 'loading' && <View style={styles.center}><Spinner label={t("Caricamento della sessione")} /></View>}
           {!settingsOpen && !connectOpen && session.status === 'signed-out' && <SignIn error={session.error} onSignIn={session.signIn} onChangeMode={() => onChangeMode(null)}
             firebase={connectTarget ? { connected: customFirebaseConfig?.projectId ?? null, onOpen: () => setConnectOpen(true) } : undefined} />}
         </AppShell>

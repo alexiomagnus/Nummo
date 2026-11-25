@@ -179,7 +179,6 @@ export const viewfinderColors = {
   controlActive: '#FFFFFF',
   onControlActive: '#0B0A08',
   ring: 'rgba(255, 255, 255, 0.42)',
-  handle: 'rgba(255, 255, 255, 0.5)',
   badge: 'rgba(11, 10, 8, 0.55)',
   shade: 'rgba(11, 10, 8, 0.62)',
 } as const;

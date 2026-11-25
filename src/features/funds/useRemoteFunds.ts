@@ -35,6 +35,10 @@ export function useRemoteFunds(backend: DataStore) {
   };
   return {
     funds, movements, error: visibleError(errors), ready: fundsReady && movementsReady,
+    // The funds alone, for the new-expense form (the fund field), which uses no movement. At start an empty collection is
+    // never delivered from the device's cache, only by the server: most archives have no movements, and waiting for them
+    // kept the form covered until the server answered on every start (25 November).
+    fundsReady,
     sync: { fromCache: fundSync.fromCache || movementSync.fromCache, pending: fundSync.pending || movementSync.pending },
     clearError: () => setErrors(actionCleared),
     createFund: (data: FundData) => mutate(() => backend.saveFund(crypto.randomUUID(), data)),

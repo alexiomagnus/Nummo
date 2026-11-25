@@ -37,7 +37,8 @@ type Props = {
   withoutDate?: boolean;
   // The editors (expense, series, template, list): with `dense`, a three-line description (104) instead of two (user's request,
   // 24 November: «ingrandisci un po' di più la descrizione»); the desktop new-expense page and the receipt review keep two.
-  editor?: boolean;
+  // 'tall': four lines (128), only «Modifica spesa» of a one-off expense, which has room to spare (user's request, 25 November).
+  editor?: boolean | 'tall';
   onChange: (field: BaseField, value: string) => void;
   onBlur: (field: BaseField) => void;
 };
@@ -77,7 +78,7 @@ export function ExpenseFields({ values, errors, categories, dataState = 'ready',
       </View>
       <View>
         <TextInput outlineStyle={inputOutline} label={t("Descrizione")} value={values.description} mode="outlined" error={Boolean(errors.description)}
-          multiline numberOfLines={dense ? (editor ? 3 : 2) : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription, dense && editor && styles.editorDescription]}
+          multiline numberOfLines={dense ? (editor === 'tall' ? 4 : editor ? 3 : 2) : fundBelow ? 3 : 4} style={[styles.description, dense && styles.denseDescription, fundBelow && styles.shortDescription, dense && editor && styles.editorDescription, dense && editor === 'tall' && styles.tallDescription]}
           onChangeText={(value) => onChange('description', clipToLength(value, expensePolicy.maxDescriptionLength))} onBlur={() => onBlur('description')}
           accessibilityLabel={t("Descrizione, obbligatoria")} readOnly={disabled} aria-disabled={disabled} contentStyle={styles.text} />
         {/* The counter appears with the first character: in the flow it pushed every field below, and «Salva» with them,
@@ -130,6 +131,7 @@ const styles = StyleSheet.create({
   denseLayout: { gap: spacing.md },
   denseDescription: { minHeight: 80 },
   editorDescription: { minHeight: 104 },
+  tallDescription: { minHeight: 128 },
   // Phones with Fondo on its own row: the room it takes comes from here, so «Salva» stays whole above the navigation.
   shortDescription: { minHeight: 96 },
   denseExtra: { marginTop: 0 },

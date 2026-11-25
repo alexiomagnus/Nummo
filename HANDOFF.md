@@ -98,6 +98,35 @@ di quel giorno e la verifica su `d196dc9`.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Avvio più rapido in Avanzata, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro — 25 novembre 2026
+
+- **Su segnalazione** (video dell'apertura dell'app sul telefono, 4G): splash, ~0,4 s di nero, poi barra e rotellina per ~2 s; l'icona di
+  sincronizzazione passava da «caricamento» a «sincronizzato» senza mai «Dati dalla cache». **Causa dimostrata** (emulatore Android
+  `Medium_Phone_API_37.0` con l'app di debug, build `emulator` con cache persistente, backup `nummo-utente-medio.json` = 196 spese, 3
+  fondi, **0 movimenti**): a freddo spese e categorie arrivano dalla cache, ma una collezione **vuota** non viene mai consegnata dalla
+  cache, solo dal server; la copertura aspettava `fundState.ready` = fondi **e movimenti**, quindi il server a ogni avvio. Il modulo non
+  usa i movimenti: ora modulo e copertura aspettano i soli fondi (`fundsReady` di `useRemoteFunds`; lo stato di sincronizzazione e la
+  pagina Fondi usano ancora entrambi). Misure: AVD a freddo, copertura tolta a ~1790 ms invece di ~2100–2370 ms (server locale; su
+  rete mobile la differenza è l'intera connessione a Firestore); Chromium CPU ×4, 4g: modulo visibile ~1930 invece di ~2330 ms.
+- **Rotellina dell'avvio in CSS** (`components/Spinner.tsx`, in `StartupWorkspace`, nella copertura del modulo e nel caricamento della
+  sessione): l'`ActivityIndicator` di Paper sul web anima in JS a ogni fotogramma (profilo CPU: ~40 % del thread principale durante
+  l'avvio con CPU ×4). CPU occupata nei primi 4 s da ~3020 a ~2800 ms (mediana di 3).
+- **Resta, non correggibile dall'app:** al riavvio Firebase Auth rinnova il token (se scaduto) e rilegge l'account, due richieste in
+  serie, prima di annunciare l'utente; Firestore non legge nemmeno la cache prima. Resta anche il caso di chi non ha **alcun fondo**: la
+  collezione vuota fa aspettare il server (il campo Fondo non deve comparire in ritardo); non toccato.
+- **App Android (sorgente, non rilasciata):** `MainActivity.holdSplash` trattiene il primo fotogramma (e quindi la splash di sistema)
+  fino a `onPageCommitVisible`, al massimo 1,5 s; la WebView prende lo sfondo dell'ultimo tema salvato invece del nero. `assembleDebug`
+  OK e avvio a freddo provato sull'AVD (pagina regolare); sull'AVD la splash è quasi nera e senza icona, quindi l'assenza del nero va
+  confermata sul Pixel 8. Serve una nuova versione (0.3.4) per arrivare al telefono.
+- **Su richiesta** (screenshot di Modifica serie): tolto il riquadro colorato «Rinnovi» (prossimo rinnovo, frequenza, prezzi ora nel
+  flusso del modulo, gruppo accessibile invariato) e le righe «I pagamenti già effettuati restano invariati…» e «Nessun pagamento è
+  ancora stato effettuato…» di `FrequencyField` (chiavi tolte da `en.ts`). Visto nella WebView dell'AVD con «Internet fibra», Mese e Anno.
+- **Su richiesta** (screenshot): «Storico dei pagamenti» (`PaymentsDialog`) e «Aggiungi denaro»/«Trasferisci tra fondi» (`MovementDialog`)
+  di nuovo schermi con Indietro, senza maniglia né trascinamento (tolti `detents`/`fitPeek`); in «Modifica spesa» di una spesa singola la
+  Descrizione su quattro righe, alta 128 (`editor="tall"` di `ExpenseFields`; serie, template e liste restano a 104); nel mirino della
+  fotocamera tolta la maniglia decorativa che invitava a trascinare (e il colore `handle` di `viewfinderColors`).
+- **Verifica:** `npm run check` OK (**599/599**). Emulatori, server e config temporanei rimossi.
+
 ## Dettaglio del fondo: niente «Aggiungi denaro», transizione su Archivia/Ripristina — 25 novembre 2026
 
 Su richiesta (screenshot del dettaglio di un fondo da desktop): tolto «Aggiungi denaro» da `FundDetail` (e le prop `onAdd`/`tracksBalance`;

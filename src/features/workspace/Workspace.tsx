@@ -3,7 +3,8 @@ import { useI18n } from '../../i18n/I18nProvider';
 import { Activity, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
+import { Spinner } from '../../components/Spinner';
 import { Button } from '../../components/Button';
 import { AppShell, type Destination } from '../../components/AppShell';
 import { Card } from '../../components/Card';
@@ -150,8 +151,9 @@ export function DataWorkspace({ backend, scope: uid, storageNote, topActions, on
   const status = describeSync({ ready, online, pending, cached, error, local });
   // The first screen waits for what it needs (both first snapshots, usable categories) so it does not appear
   // piece by piece. Released for good by an error or after a few seconds: never a permanent block (offline, slow link).
+  // Movements are not needed by the form: only the funds themselves gate it (useRemoteFunds, `fundsReady`).
   const [released, setReleased] = useState(false);
-  const dataReady = ready && hasUsableCategorySnapshot(categoryState);
+  const dataReady = store.ready && categoryState.ready && fundState.fundsReady && hasUsableCategorySnapshot(categoryState);
   useEffect(() => {
     if (released) return;
     if (dataReady || error) { setReleased(true); return; }
@@ -240,7 +242,7 @@ export function StartupWorkspace({ topActions }: { topActions?: ReactNode }) {
           centres short pages vertically, so a bare spinner would put the title mid-screen and make it jump when the form
           replaces this placeholder (issue #5). */}
       <View style={styles.grow}>
-        <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>
+        <View style={styles.startingOverlay}><Spinner label={t("Caricamento dei dati")} /></View>
       </View>
     </AppShell>
   );
@@ -280,13 +282,13 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const fundChoices = useMemo(() => fundSummary.funds.filter((item) => !item.fund.archived).map(choiceOf), [fundSummary]);
   const fundNames = useMemo(() => new Map(fundState.funds.map((fund) => [fund.id, fund.name])), [fundState.funds]);
   const editorFundChoices = editing ? fundSummary.funds.filter((item) => !item.fund.archived || item.fund.id === editing.fund_id).map(choiceOf) : [];
-  const fundsError = fundState.ready ? null : fundState.error;
+  const fundsError = fundState.fundsReady ? null : fundState.error;
   // Releasing the startup cover after 4 seconds enables navigation, not incomplete form controls.
   const formLoading = starting || (!store.error && !categoryState.error && !fundsError &&
-    !(store.ready && hasUsableCategorySnapshot(categoryState) && fundState.ready));
+    !(store.ready && hasUsableCategorySnapshot(categoryState) && fundState.fundsReady));
   const usableCategories = hasUsableCategorySnapshot(categoryState);
-  const formStore = useMemo(() => ({ ...store, ready: store.ready && usableCategories && fundState.ready,
-    error: store.error || categoryState.error || fundsError }), [store, usableCategories, fundState.ready, categoryState.error, fundsError]);
+  const formStore = useMemo(() => ({ ...store, ready: store.ready && usableCategories && fundState.fundsReady,
+    error: store.error || categoryState.error || fundsError }), [store, usableCategories, fundState.fundsReady, categoryState.error, fundsError]);
   // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
   const oneOff = useMemo(() => occurrences.filter((item) => item.recurrence === null), [occurrences]);
   const edit = useCallback((id: string) => setEditing(store.expenses.find((r) => r.id === id) ?? null), [store.expenses]);
@@ -440,10 +442,10 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     {backend.kind === 'firestore' && backendMode === 'hybrid' && firestoreEmulator && (
       <HybridConnectionNotice waiting={!synchronized && !error} endpoint={firestoreEmulator} />
     )}
-    {starting && section !== 'expense' && <View style={styles.starting}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
+    {starting && section !== 'expense' && <View style={styles.starting}><Spinner label={t("Caricamento dei dati")} /></View>}
     {/* The form stays mounted at full size (labels measured, draft kept, title in place) while the first data arrives; it is only invisible. */}
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
-      {formLoading && section === 'expense' && <View style={styles.startingOverlay}><ActivityIndicator accessibilityLabel={t("Caricamento dei dati")} /></View>}
+      {formLoading && section === 'expense' && <View style={styles.startingOverlay}><Spinner label={t("Caricamento dei dati")} /></View>}
       <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
         <ExpenseForm categories={categoryState.categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
           defaultCategoryId={preferred.expense} store={formStore} merchants={merchants} prefill={prefill}

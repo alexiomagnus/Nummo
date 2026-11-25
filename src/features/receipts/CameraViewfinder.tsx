@@ -56,7 +56,6 @@ export function CameraViewfinder({ videoRef, ready, torch, galleryDisabled, onSh
             (a grey play button) over the sheet (user's report, 24 November). */}
         <video ref={videoRef} autoPlay playsInline muted poster={blankPoster} onPlaying={() => setPlaying(true)}
           aria-label={t("Anteprima della fotocamera")} style={playing ? styles.video : { ...styles.video, opacity: 0 }} />
-        <div aria-hidden="true" style={styles.handle} />
         <div style={styles.hintRow} aria-live="polite">
           <div style={styles.hint}>
             <Text variant="bodySmall" style={{ color: c.onMedia, textAlign: 'center' }}>
@@ -100,7 +99,6 @@ const styles = {
   sheet: { position: 'relative', flex: '1 1 auto', minHeight: 0, backgroundColor: c.sheet, overflow: 'hidden',
     borderTopLeftRadius: radius.dialog, borderTopRightRadius: radius.dialog },
   video: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
-  handle: { position: 'absolute', top: 8, left: '50%', width: 38, height: 4, marginLeft: -19, borderRadius: 2, backgroundColor: c.handle },
   // Centred in a full-width row (not `left: 50%`, which would leave the badge half the width and wrap it on three lines).
   hintRow: { position: 'absolute', top: 24, left: 16, right: 16, display: 'flex', justifyContent: 'center', pointerEvents: 'none' },
   hint: { maxWidth: 480, boxSizing: 'border-box', padding: '8px 14px', borderRadius: radius.pill, backgroundColor: c.badge, ...blur(10) },

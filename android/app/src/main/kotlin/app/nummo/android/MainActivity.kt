@@ -10,8 +10,10 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.webkit.PermissionRequest
@@ -44,6 +46,8 @@ class MainActivity : Activity() {
     var awayForResult = false
     private var backCallback: OnBackInvokedCallback? = null
     private var notificationRequest: String? = null
+    // The page has drawn its first frame (onPageCommitVisible): until then the system splash stays (see holdSplash).
+    private var pageVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,10 +74,28 @@ class MainActivity : Activity() {
             WindowInsets.CONSUMED
         }
         val saved = getSharedPreferences(barsPreferences, MODE_PRIVATE)
-        applyBars(saved.getInt("color", getColor(R.color.start_background)), saved.getBoolean("dark", true))
+        val startColor = saved.getInt("color", getColor(R.color.start_background))
+        applyBars(startColor, saved.getBoolean("dark", true))
+        // Before the page paints, the WebView shows the last background of the app instead of its own black.
+        webView.setBackgroundColor(startColor)
+        holdSplash()
         bridge = NummoBridge(this)
         configure(webView)
         if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) webView.loadUrl(startUrl(intent))
+    }
+
+    // The system splash leaves at the activity's first frame, which used to be an empty (black) WebView while the page was
+    // still loading (25 November, from a recording of the start). The first frame now waits for the page's own first
+    // frame, at most splashLimitMs: a page that cannot load (offline, server down) still shows its error.
+    private fun holdSplash() {
+        val started = SystemClock.uptimeMillis()
+        root.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (!pageVisible && SystemClock.uptimeMillis() - started < splashLimitMs) return false
+                root.viewTreeObserver.removeOnPreDrawListener(this)
+                return true
+            }
+        })
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -93,6 +115,10 @@ class MainActivity : Activity() {
                 if (isOurs(request.url)) return false
                 openOutside(request.url)
                 return true
+            }
+
+            override fun onPageCommitVisible(view: WebView, url: String?) {
+                pageVisible = true
             }
 
             // Also for the page's own history entries (pushState, back, forward): Back is the app's while it can go back.
@@ -343,5 +369,6 @@ class MainActivity : Activity() {
         const val requestCamera = 3
         const val requestNotifications = 4
         const val barsPreferences = "systemBars"
+        const val splashLimitMs = 1500L
     }
 }

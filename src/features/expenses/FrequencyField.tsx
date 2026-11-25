@@ -37,13 +37,10 @@ export function FrequencyField({ value, current, next, firstDate, tomorrow, pend
     <RecurrencePicker value={value} disabled={disabled} onChange={(frequency) => onChange({ frequency })} />
     {pending && <Text variant="bodySmall" style={muted}>
       {t("Cambio già programmato: dal {p0}, {p1}.", { p0: formatLongDate(pending.start, locale), p1: t(recurrenceLabels[pending.recurrence]).toLocaleLowerCase(locale) })}</Text>}
-    {changed && next.index > 0 && <>
-      <DateField name={t("Primo rinnovo con la nuova frequenza")} label={t("Primo rinnovo con la nuova frequenza")} value={firstDate}
-        minDate={tomorrow} maxDate={maxFirstPaymentDate} error={Boolean(error)} disabled={disabled}
-        onChange={(date) => onChange({ firstDate: date || todayInRome() })} />
-      <Text variant="bodySmall" style={muted}>{t("I pagamenti già effettuati restano invariati: la nuova frequenza vale dai rinnovi successivi.")}</Text>
-    </>}
-    {changed && next.index === 0 && <Text variant="bodySmall" style={muted}>{t("Nessun pagamento è ancora stato effettuato: la nuova frequenza vale dal primo pagamento.")}</Text>}
+    {/* No explanatory lines under the choice (user's request, 25 November): payments already made never change. */}
+    {changed && next.index > 0 && <DateField name={t("Primo rinnovo con la nuova frequenza")} label={t("Primo rinnovo con la nuova frequenza")} value={firstDate}
+      minDate={tomorrow} maxDate={maxFirstPaymentDate} error={Boolean(error)} disabled={disabled}
+      onChange={(date) => onChange({ firstDate: date || todayInRome() })} />}
     {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
   </View>;
 }

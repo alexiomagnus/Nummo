@@ -61,7 +61,7 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
   const fromBalance = balances.get(from) ?? 0;
   const value = parseMoneyMinor(amount);
   return <Portal>
-    <Dialog visible detents fitPeek onDismiss={() => { if (!busy) close(); }}>
+    <Dialog visible onDismiss={() => { if (!busy) close(); }}>
       <Dialog.Title>{kind === 'income' ? t("Aggiungi denaro") : t("Trasferisci tra fondi")}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
