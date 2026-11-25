@@ -8,7 +8,7 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `19efbd5` (25 novembre: avvio più rapido in Avanzata, rotellina CSS, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro; bundle `index-a1c0f188…`). Prima `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
   «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
   datate), bundle online `index-b03086d6…` identico byte per byte all'export. In mezzo, dopo `a8f694f`, anche `b231eeb`, `27e46bd`,
   `00a980a`/`665d96e`/`05a5ed6`, `10f3f67`, `73b9d75`, `1ed557b`, `ca00370`, `12f68c5` (sezioni datate). Prima `a8f694f` (icona nera
@@ -31,15 +31,14 @@ di quel giorno e la verifica su `d196dc9`.
 - **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
   vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
-- **App Android: 0.3.3** (`6e3ebd0`, versionCode 6, 24 novembre: solo l'icona nera con logo bianco), release GitHub «Latest», non ancora
-  installata. Prima **0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
+- **App Android: 0.3.4** (`5b3f8a1`, versionCode 7, 25 novembre: splash trattenuta fino al primo disegno della pagina, niente nero), release GitHub «Latest», non ancora installata. Prima **0.3.3** (`6e3ebd0`, versionCode 6, 24 novembre: solo l'icona nera con logo bianco). Prima **0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
   intensità confermata. Funzioni: WebView del sito con ponte nativo (vibrazione anche in silenzioso e Non disturbare, barre di sistema del
   colore dell'app, sblocco con `BiometricPrompt`, salvataggio dei file), Avanzata con l'accesso Google del telefono (dalla 0.2.0),
   notifiche come notifiche locali dell'app (dalla 0.3.0). Da fare dall'utente: copiare altrove la chiave di firma
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
-- **Release GitHub** (repository privato): `android-v0.3.3` «Latest», poi 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
+- **Release GitHub** (repository privato): `android-v0.3.4` «Latest», poi 0.3.3, 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, sei tag `android-v0.1.0`…`android-v0.3.3`. Ultimo commit di codice `35d2900`,
+- **Git.** `main` = `origin/main`, solo il ramo `main`, sette tag `android-v0.1.0`…`android-v0.3.4`. Ultimo commit di codice `5b3f8a1`,
   inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
@@ -125,7 +124,11 @@ di quel giorno e la verifica su `d196dc9`.
   di nuovo schermi con Indietro, senza maniglia né trascinamento (tolti `detents`/`fitPeek`); in «Modifica spesa» di una spesa singola la
   Descrizione su quattro righe, alta 128 (`editor="tall"` di `ExpenseFields`; serie, template e liste restano a 104); nel mirino della
   fotocamera tolta la maniglia decorativa che invitava a trascinare (e il colore `handle` di `viewfinderColors`).
-- **Verifica:** `npm run check` OK (**599/599**). Emulatori, server e config temporanei rimossi.
+- **Verifica:** `npm run check` OK (**599/599**). Emulatori, server e config temporanei rimossi. Commit `19efbd5`, pubblicato su Hosting
+  (bundle `index-a1c0f188…` identico all'export). Le schermate di Storico, Aggiungi denaro, Modifica spesa e mirino non sono state
+  riviste in headless dopo la modifica.
+- **App Android 0.3.4** (`5b3f8a1`, versionCode 7): `assembleRelease`, firma `00b1c85c…0fcf` verificata con `apksigner`; release GitHub
+  `android-v0.3.4` «Latest» con `nummo-0.3.4.apk` e `.sha256`. Non ancora installata sul telefono.
 
 ## Dettaglio del fondo: niente «Aggiungi denaro», transizione su Archivia/Ripristina — 25 novembre 2026
 
