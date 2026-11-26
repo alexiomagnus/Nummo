@@ -18,11 +18,11 @@ import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
 
 // Screen of one fund (23 November, on request: «fai diventare schermi anche le schede dei fondi»), in place of the summary
-// opened inside the card and of the card's own buttons. The same screen layer and container transform as the expenses
-// (components/ScreenLayer.tsx): it grows from the card and goes back into it. The month is the one shown by the page; the
+// opened inside the card and of the card's own buttons. The same screen layer as the expenses (components/ScreenLayer.tsx):
+// it slides up from the bottom and back down. The month is the one shown by the page; the
 // figures are the same as before (the month's summary, never a list of expenses or movements, no balance).
 
-// DOM id of each fund card (FundsPage): the origin and destination of the transform.
+// DOM id of each fund card (FundsPage), a stable hook for checks in the browser.
 export const fundCardId = (id: string) => `fund-card-${id}`;
 
 export type FundDetailProps = {
@@ -40,7 +40,7 @@ export type FundDetailProps = {
 export function FundDetail(props: FundDetailProps) {
   const { t } = useI18n();
   const { fund } = props.item;
-  return <Portal><ScreenLayer key={fund.id} originId={fundCardId(fund.id)} detents label={t("Dettagli di {p0}", { p0: fund.name })}
+  return <Portal><ScreenLayer key={fund.id} detents label={t("Dettagli di {p0}", { p0: fund.name })}
     backLabel={t("Torna ai fondi")} onBack={props.onClose} onEscape={props.onClose}>
     <FundContent {...props} />
   </ScreenLayer></Portal>;

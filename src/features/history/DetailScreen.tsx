@@ -19,9 +19,9 @@ import { layout, radius, spacing } from '../../theme/tokens';
 // drag, `detents`).
 
 type ShellProps<T> = {
-  // The item shown, null when closed (the layer then closes back into its card, or fades if the card is gone).
+  // The item shown, null when closed (the layer then slides back down).
   value: T | null;
-  // DOM id of the element around the item's card in the list: the origin and the destination of the transform.
+  // DOM id of the element around the item's card in the list: the layer's key, so another item opens a new screen.
   cardId: (value: T) => string;
   label: (value: T) => string;
   backLabel: string;
@@ -32,7 +32,7 @@ type ShellProps<T> = {
 export function DetailScreen<T>({ value, cardId, label, backLabel, onClose, children }: ShellProps<T>) {
   if (!value) return null;
   const id = cardId(value);
-  return <Portal><ScreenLayer key={id} originId={id} detents label={label(value)} backLabel={backLabel} onBack={onClose} onEscape={onClose}>
+  return <Portal><ScreenLayer key={id} detents label={label(value)} backLabel={backLabel} onBack={onClose} onEscape={onClose}>
     {children(value)}
   </ScreenLayer></Portal>;
 }

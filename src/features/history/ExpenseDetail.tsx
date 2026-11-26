@@ -12,10 +12,10 @@ import { FundAvatar, NoFundAvatar } from '../funds/FundAvatar';
 import { DetailHero, DetailMarks, DetailMerchant, DetailScreen, InfoGroup, InfoRow, Mark, PrimaryAction } from './DetailScreen';
 import { ProductsDialog } from './ProductsDialog';
 
-// Detail screen of one expense of the Spese list (shell, transform and Back in DetailScreen.tsx). Modifica opens the usual
+// Detail screen of one expense of the Spese list (shell and Back in DetailScreen.tsx). Modifica opens the usual
 // editor above it; deleting stays in the editor (no second way with its own logic).
 
-// DOM id of the element around each card of the list (ExpenseList): the origin and the destination of the transform.
+// DOM id of the element around each card of the list (ExpenseList), a stable hook for checks in the browser.
 export const expenseCardId = (expenseId: string) => `expense-card-${expenseId}`;
 
 export type ExpenseDetailValue = {

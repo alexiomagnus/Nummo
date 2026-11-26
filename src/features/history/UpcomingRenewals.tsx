@@ -17,8 +17,8 @@ const dateFormat = (locale: string) => dateTimeFormat(locale, { day: 'numeric', 
 type Props = { renewals: readonly Renewal[]; categories: readonly Category[]; soon: number; days: number };
 
 // Forecast, kept apart from the spending list: these payments have not happened yet, so they are not in the totals, the
-// dashboard or the exports. A prominent summary card; a tap opens the renewals on a screen of their own, grown from the
-// card (23 November, on request: in place of the list opened inside the card).
+// dashboard or the exports. A prominent summary card; a tap opens the renewals on a screen of their own, sliding up from
+// the bottom (23 November, on request: in place of the list opened inside the card).
 const cardId = 'upcoming-renewals-card';
 
 export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
@@ -49,7 +49,7 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
       {/* The page's own colours, like every other screen (user's request, 24 November; the card's colour from the 23rd), with the
           summary in the card's colour. On phones it is dragged like the details (whole, peek, closed) and has no Back button (user's
           request, 24 November). */}
-      {open && <Portal><ScreenLayer originId={cardId} label={t("Prossimo mese")} backLabel={t("Torna agli abbonamenti")}
+      {open && <Portal><ScreenLayer label={t("Prossimo mese")} backLabel={t("Torna agli abbonamenti")}
         onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents>
         <RenewalsContent renewals={renewals} categories={categories} soon={soon} count={count} days={days} />
       </ScreenLayer></Portal>}

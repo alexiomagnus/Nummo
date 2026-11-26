@@ -1639,3 +1639,47 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   intero è aperto, barra in alto e navigazione (`data-app-chrome` di `AppShell`) sfumano in 150 ms con l'apertura e tornano in 250 ms dopo
   la scomparsa del contenuto (`holdChrome`, contatore per gli schermi impilati; solo Web Animations, nessun render dello shell).
 
+
+## Schermi a scorrimento al posto del container transform — 24 novembre 2026
+
+- **Decisione dell'utente**, tra tre coppie di apertura e chiusura provate sui pulsanti di Fondi (trasformazione sincronizzata, zoom con
+  dissolvenza, scorrimento verticale): lo **scorrimento**, per tutti gli schermi interi e poi anche per i fogli.
+- `ScreenLayer` (`slide`): lo schermo sale dal bordo inferiore del suo riquadro (pannello da medium, tutta l'app su smartphone) su
+  `slideSpring` 0,95/220 (circa 470 ms, senza rimbalzo), con angoli superiori da 28 e un'ombra sopra il bordo che si appianano all'arrivo
+  (nel tema scuro schermo e pagina hanno lo stesso colore); la pagina sotto (`[role=main]`) arretra a 0,96 e si scurisce. Ridiscende in
+  280 ms con la curva accelerata, salvo quando gli schermi si chiudono per un cambio di pagina (`closeAllScreens`). I fogli salgono della
+  propria altezza, con il velo che resta finché sono aperti e la pagina ferma.
+- **L'elemento premuto resta visibile**: con il container transform spariva finché lo schermo era aperto. Il container transform (ritaglio
+  dalla scheda, copia dell'origine, dissolvenze incrociate, `closeLead`/`closePrecision`/`cardClip`/`crossfade` e i loro test) è stato
+  tolto in `05a5ed6`; la prop `originId`, rimasta accettata ma non letta, è stata tolta il 26 novembre. Gli `nativeID` delle schede restano
+  solo come agganci per le prove nel browser. `theme/containerTransform.ts` conserva il nome per `slideSpring`, `slideTimings` e le molle
+  delle icone dei dettagli.
+
+## Pannelli a tre posizioni su smartphone — 24–25 novembre 2026
+
+- **Decisione dell'utente:** su smartphone i dettagli (spesa, abbonamento, fondo, «Prossimo mese») e i pannelli (`detents` di
+  `AppDialog`: Template, Scansiona scontrino, data, Categoria, Fondo, Prodotti, transazioni di Analisi, «Modifica categoria») hanno tre
+  posizioni, intero, ridotto e chiuso, e si trascinano col dito da qualunque punto quando il contenuto è in cima; da medium nulla cambia.
+- Rilascio **secondo la lunghezza** (`detentOutcome` di `menuGeometry.ts`), non per posizione più vicina: da intero oltre metà schermo
+  chiude, un trascinamento più corto ma voluto (`deliberate` = min(64, 10 % dell'altezza)) o un colpo lascia a metà; da metà giù chiude e
+  su riapre intero. Nei pannelli il ridotto accorcia lo schermo (`top`) invece di spostarlo, così azioni e area scorrevole restano visibili;
+  `fitPeek` lo alza quanto serve a mostrare tutto il contenuto.
+- Nessun pulsante Indietro su smartphone in questi schermi: si chiudono trascinando, con la maniglia, con un tocco sopra o con l'Indietro
+  di sistema. L'interruttore «Apri a metà schermo» (`halfScreens`) è durato un giorno: Categoria, Fondo e «Template» si aprono sempre a
+  metà (`opensHalf`), gli altri interi.
+- **Eccezioni scelte il 25 novembre:** «Modifica fondo»/«Nuovo fondo» (`FundEditor`), «Aggiungi denaro»/«Trasferisci» (`MovementDialog`)
+  e lo «Storico dei pagamenti» (`PaymentsDialog`) sono tornati schermi normali con Indietro, senza trascinamento.
+
+## Avvio in Avanzata, navigazione da desktop con uno schermo aperto, splash Android — 25 novembre 2026
+
+- **Copertura d'avvio sui soli fondi.** Firestore, a freddo, non consegna dalla cache una collezione **vuota**: arriva solo dal server.
+  La copertura del modulo aspettava fondi **e movimenti** (`fundState.ready`), e chi non ha movimenti aspettava il server a ogni avvio.
+  Il modulo non usa i movimenti: modulo e copertura aspettano `fundsReady` di `useRemoteFunds`; stato di sincronizzazione e pagina Fondi
+  usano ancora entrambi. Resta il caso di chi non ha alcun fondo (il campo Fondo non deve comparire in ritardo) e il rinnovo del token
+  di Firebase Auth all'avvio, non correggibile dall'app.
+- **Rotellina in CSS** (`components/Spinner.tsx`) nell'avvio e nelle coperture: l'`ActivityIndicator` di Paper sul web anima in JS a
+  ogni fotogramma (circa il 40 % del thread principale durante l'avvio con CPU ×4).
+- **Navigazione libera da desktop.** Il livello trasparente che da medium bloccava navigazione e menu dell'account con uno schermo aperto
+  è tolto: cambiare pagina chiude prima gli schermi (`closeAllScreens`), e se uno rifiuta (operazione in corso) la pagina non cambia.
+- **Splash Android** (app 0.3.4): `MainActivity.holdSplash` trattiene il primo fotogramma fino a `onPageCommitVisible` (al massimo
+  1,5 s) e la WebView prende lo sfondo dell'ultimo tema salvato: niente fotogramma nero tra splash e pagina (confermato sul Pixel 8).

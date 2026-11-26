@@ -27,8 +27,8 @@ type Props = {
 // fills the form (not the tertiary container: in mono mode it is the neutral surface variant, which looks disabled). The
 // button never changes once a template is chosen (user's request, 21 November): always the template icon and «Template»;
 // the choice shows in the filled fields and as the selected entry of the list.
-// The choices open in a screen grown from the button, like «Scansiona scontrino» (user's request, 24 November: same
-// animation and behaviour, starting from the Template button, in Template's colours: the selected row and its check in the
+// The choices open in a screen, like «Scansiona scontrino» (user's request, 24 November: same
+// animation and behaviour, in Template's colours: the selected row and its check in the
 // primary container/primary), instead of the sheet (phones) and menu (from medium) of the other selects.
 export function TemplatePicker({ templates, categories, value, onChange, disabled, style }: Props) {
   const { t, formatAmount } = useI18n();

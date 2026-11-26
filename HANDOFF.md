@@ -1,12 +1,12 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 24 novembre 2026
+## Stato corrente — 26 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, dal più recente, sono cronaca delle singole fasi
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novembre, l'elenco dei commit e la storia delle release Android,
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
-di quel giorno e la verifica su `d196dc9`.
+di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, l'app 0.3.4 e il riallineamento dei documenti.
 
 - **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `19efbd5` (25 novembre: avvio più rapido in Avanzata, rotellina CSS, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro; bundle `index-a1c0f188…`). Prima `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
   «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
@@ -56,7 +56,7 @@ di quel giorno e la verifica su `d196dc9`.
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
+- **Verifiche (ultime).** 26 novembre, dopo il riallineamento dei documenti e la rimozione di `originId`: `npm run check` OK (**599/599**). Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
   nelle sezioni datate. Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
   visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
@@ -68,7 +68,7 @@ di quel giorno e la verifica su `d196dc9`.
      cambio chiaro/scuro; Indietro a scorrimento; blocco (Safari può chiedere un tocco: c'è «Sblocca»).
   1. Colori del tema chiaro su telefono (ogni colore, Palette e Monocolore; anello in Avanzata). Tastiera lenta alla prima apertura: chiedere
      se nell'app o in Chrome, quanto presto dopo l'apertura, Standard o Avanzata (misure nella sezione datata «Colori degli accenti…»).
-  2. App 0.3.2 sul Pixel 8: Notifiche → «Attiva notifiche di sistema», primo promemoria all'orario scelto dopo ore a schermo spento e in
+  2. App 0.3.4 (installata) sul Pixel 8: Notifiche → «Attiva notifiche di sistema», primo promemoria all'orario scelto dopo ore a schermo spento e in
      Non disturbare, tocco sulla notifica; Avanzata con l'accesso Google reale, uscita e nuovo accesso; vibrazione su legenda e grafici di
      Analisi e sul trascinamento della barra; cambio tema (le barre di Android hanno un solo colore: quella in basso può cambiare poco prima
      del cerchio).
@@ -96,6 +96,23 @@ di quel giorno e la verifica su `d196dc9`.
   Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
+
+## Riallineamento documentale, `originId` tolto — 26 novembre 2026
+
+Su richiesta, dopo un confronto tra documenti e codice:
+- **AGENTS.md:** dal 24 novembre (`05a5ed6`, schermi a scorrimento) l'elemento da cui si apre uno schermo **resta visibile**; la frase
+  che lo diceva nascosto (`outermost`) contraddiceva quella sullo scorrimento ed è corretta. Le frasi al presente su schermi che
+  «crescono» dal pulsante («Template») o dalla scheda (lista aperta in Liste, dettaglio del fondo) ora dicono che salgono dal basso; la
+  descrizione del container transform del dettaglio è ridotta a una nota storica (nomi tolti: `closeLead`, `closePrecision`,
+  `surfaceGone`, `pickOrigin`, `originId`).
+- **Codice:** tolta la prop `originId` di `ScreenLayer`, non letta da nessuno dal 24 novembre, e il suo passaggio in `DetailScreen`,
+  `FundDetail`, `UpcomingRenewals` e `ListsPage`; nessun cambio di comportamento. Gli `nativeID` delle schede (`expense-card-<id>`,
+  `subscription-card-<id>`, `fund-card-<id>`, `list-card-<id>`, `upcoming-renewals-card`) restano come agganci per le prove nel browser;
+  `cardId` di `DetailScreen` resta come `key` dello schermo. Commenti aggiornati di conseguenza.
+- **docs/architecture.md:** aggiunte le decisioni del 25 novembre (vedi lì).
+- **Ambiente:** nella radice c'era una cartella vuota `firebase-export-1795689723022UKHHE1/` (26 novembre, 11:42, export di emulatore),
+  non toccata.
+- **Verifica:** `npm run check` OK (**599/599**). Non pubblicato.
 
 ## Avvio più rapido in Avanzata, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro — 25 novembre 2026
 

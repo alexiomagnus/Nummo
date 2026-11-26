@@ -29,9 +29,6 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 export type ScreenLayerProps = {
   // Accessible name of the screen.
   label: string;
-  // DOM id of the card the screen belongs to. Unused since the slide (24 November): nothing grows from it any more; still accepted
-  // from the callers, to be removed with them.
-  originId?: string;
   // Title in the top bar, beside Back (editors); details put their own heading in the content.
   title?: ReactNode;
   backLabel: string;
@@ -49,7 +46,7 @@ export type ScreenLayerProps = {
   tone?: ScreenTone;
   // A bottom sheet as tall as its content instead of the whole screen (short forms: Nuova lista, a product; user's request,
   // 23 November): handle on top instead of Back (drag it down to close), the page dimmed behind it (a tap there closes too),
-  // at most 640 wide on large screens. It still grows from the element that opened it.
+  // at most 640 wide on large screens. It slides up from the bottom like the screens.
   sheet?: boolean;
   // Details (expense, subscription, fund) on phones: dragged down they stop halfway («peek», the top half of the screen over the
   // dimmed page) and from there go back up whole or down and closed (user's request, 24 November). A handle on top shows it and is
@@ -562,7 +559,7 @@ function holdChrome(): (delay: number) => void {
   };
 }
 
-// ——— the transform ———
+// ——— the slide ———
 
 type Parts = { surface: HTMLElement | null; scrim: HTMLElement | null };
 // `duration`: the whole run in ms.

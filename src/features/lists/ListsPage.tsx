@@ -23,7 +23,7 @@ import type { FundChoice } from '../funds/FundField';
 import { ItemEditor, ListEditor } from './ListDialogs';
 import { ScreenLayer } from '../../components/ScreenLayer';
 
-// DOM id of each list card: the origin and destination of the open list's screen.
+// DOM id of each list card, a stable hook for checks in the browser.
 const listCardId = (id: string) => `list-card-${id}`;
 import { RegisterListDialog } from './RegisterListDialog';
 import type { RemoteLists } from './useRemoteLists';
@@ -149,8 +149,8 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
           return true;
         }} />
       {editor}
-          {/* The open list, as a screen grown from its card; the overview stays under it, untouched. */}
-      {open && <Portal><ScreenLayer key={open.id} originId={listCardId(open.id)} label={open.name} title={open.name}
+          {/* The open list, as a screen sliding up from the bottom; the overview stays under it, untouched. */}
+      {open && <Portal><ScreenLayer key={open.id} label={open.name} title={open.name}
         backLabel={t("Torna alle liste")} onBack={() => setOpenId(null)} onEscape={() => setOpenId(null)}>
         <ListDetail key={open.id} list={open} items={remote.itemsFor(open.id)} state={listState(open, expenseIds)} remote={remote} categories={categories}
           expense={open.expense_id ? expenses.find((e) => e.id === open.expense_id) : undefined}

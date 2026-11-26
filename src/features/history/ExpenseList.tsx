@@ -150,8 +150,8 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
 }
 
 // Stable props let appending a page leave existing rows alone. A tap opens the expense's detail screen (ExpenseDetail,
-// 23 November, on request: it replaced the details opened inside the card); the element around the card carries the id
-// the detail grows from and shrinks back into.
+// 23 November, on request: it replaced the details opened inside the card); the element around the card carries a stable
+// id (`expenseCardId`), a hook for checks in the browser.
 const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, category, products, merchant, pending,
   shortDates, months, amounts, onOpen }: {
   item: Occurrence; index: number; heading: boolean; summary: { count: number; total: number };

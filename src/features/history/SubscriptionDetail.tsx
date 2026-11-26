@@ -19,7 +19,7 @@ import { StatusDialog } from './StatusDialog';
 import { StatusBadge, subscriptionCardId } from './SubscriptionList';
 
 // Detail screen of one subscription (recurring series) of the Spese page, «Abbonamenti» view (23 November, on request:
-// the same screen as the expenses, in place of the details opened inside the card). Shell, transform and Back in
+// the same screen as the expenses, in place of the details opened inside the card). Shell and Back in
 // DetailScreen.tsx. The actions of the old details live here: payment history (a dialog, a payment can be removed there),
 // Modifica, cancel and pause/resume (pause and cancellation ask «from when?» first, resuming acts at once).
 
@@ -95,8 +95,8 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
       <View style={compact ? styles.actions : detailActions.line}>
       <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: entry.description })} icon={iconShapes.pencil} onPress={() => onEdit(entry.id)}
         style={!compact && detailActions.part} />
-      {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). While the «from when?» sheet is up
-          only the pressed one disappears, as every origin of a screen (user's request, 24 November). */}
+      {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). The pressed one stays visible
+          while the «from when?» sheet is up, as every origin of a screen since the slide (24 November). */}
       <View style={[styles.statusRow, !compact && [detailActions.part, { flexGrow: status === 'cancelled' ? 1 : 2 }]]}>
         {status !== 'cancelled' && <Button mode="outlined" textColor={colors.error} style={styles.half} contentStyle={outlinedActionContent} disabled={!canChange || busy}
           accessibilityLabel={t("Annulla abbonamento")} icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
