@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text as Span, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { releaseNoteBlocks, type NoteSpan } from '../../domain/appUpdate';
+import { releaseNoteBlocks, releaseSummary, type NoteSpan } from '../../domain/appUpdate';
 import { spacing } from '../../theme/tokens';
 
 // The notes of a release (GitHub Markdown, release body) in the app's type: headings in titleSmall, items with a small primary
@@ -13,9 +13,7 @@ export function ReleaseNotes({ notes, summary = false }: { notes: string; summar
   const blocks = useMemo(() => {
     const all = releaseNoteBlocks(notes);
     if (!summary) return all;
-    const next = all.findIndex((block, index) => index > 0 && block.kind === 'heading');
-    const first = (next < 0 ? all : all.slice(0, next)).filter((block) => block.kind !== 'heading' && block.kind !== 'paragraph');
-    return first.slice(0, 3);
+    return releaseSummary(all);
   }, [notes, summary]);
   return (
     <View style={styles.root}>

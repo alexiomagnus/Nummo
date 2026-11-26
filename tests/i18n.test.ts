@@ -74,7 +74,6 @@ test('grafici: tradurre solo aggregati sintetici, mai categorie dell’utente', 
   assert.equal(seriesLabel({ key: 'user-category', label: 'Altre categorie' }, t), 'Altre categorie');
   assert.equal(t('Mostra dettaglio di Altre ({p0})').includes('Other'), true);
   for (const [it, en] of [['Ciambella', 'Donut'], ['Blocchi', 'Blocks'], ['Barre', 'Bars'],
-    ['Tocca una barra per vedere i dettagli della categoria.', 'Tap a bar to see the category details.'],
     ['Tocca una sezione per vedere i dettagli della categoria.', 'Tap a segment to see the category details.']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);

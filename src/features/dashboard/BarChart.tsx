@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { IconTile } from '../../components/ListRow';
+import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import { barTransition } from '../../theme/motion';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
@@ -44,6 +45,7 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
               <IconTile icon={icons.get(series.key) ?? null} size={40} />
               <Text variant="titleMedium" numberOfLines={1} style={styles.label}>{name}</Text>
               <Text variant="titleMedium" style={styles.amount}>{amount}</Text>
+              <SvgIcon shape={iconShapes.chevronRight} size={24} color={theme.colors.onSurfaceVariant} />
             </View>
             <View style={styles.meter}>
               <View style={[styles.track, { backgroundColor: colors.grid }]} aria-hidden>
@@ -58,7 +60,6 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
         </View>;
       })}
     </View>
-    <Text variant="bodyMedium" style={[styles.hint, { color: colors.muted }]}>{t('Tocca una barra per vedere i dettagli della categoria.')}</Text>
   </View>;
 }
 
@@ -67,7 +68,6 @@ const styles = StyleSheet.create({
   list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   full: { width: '100%' },
   half: { width: `calc(50% - ${spacing.md / 2}px)` } as ViewStyle,
-  hint: { marginTop: spacing.sm },
   // The box of the grouped rows and cards of the other pages: dialog corner and a 1 px outline on every size (user's request, 27 November).
   card: { padding: spacing.lg, gap: spacing.md, borderWidth: 1, borderRadius: radius.dialog, overflow: 'hidden' },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

@@ -655,7 +655,6 @@ export const english: Readonly<Record<string, string>> = {
   "1 transazione": "1 transaction",
   "Seleziona il blocco per vederne le transazioni.": "Select the block to see its transactions.",
   "Tocca un blocco per vedere i dettagli della categoria.": "Tap a block to see the category details.",
-  "Tocca una barra per vedere i dettagli della categoria.": "Tap a bar to see the category details.",
   "Tocca una sezione per vedere i dettagli della categoria.": "Tap a segment to see the category details.",
   "Importazione bloccata: {p0} elementi diversi dai dati salvati. Nessuna modifica.": "Import blocked: {p0} items differ from your saved data. Nothing changed.",
   "Sostituzione interrotta: alcuni dati potrebbero essere già eliminati. Riprova con lo stesso file.": "Replacement interrupted: some data may already be deleted. Try again with the same file.",

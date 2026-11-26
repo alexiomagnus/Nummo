@@ -150,6 +150,18 @@ export function releaseNoteBlocks(markdown: string): NoteBlock[] {
   return blocks.filter((block) => block.spans.length > 0);
 }
 
+// The short «what's new»: at most three items of the first section. That is the items before the first heading or, when there are
+// none (the notes often open with an introductory paragraph and then «## Novità»), those under the first heading up to the next one.
+export function releaseSummary(blocks: readonly NoteBlock[]): NoteBlock[] {
+  const items = (list: readonly NoteBlock[]) => list.filter((block) => block.kind === 'bullet' || block.kind === 'number');
+  const firstHeading = blocks.findIndex((block) => block.kind === 'heading');
+  const before = firstHeading < 0 ? blocks : blocks.slice(0, firstHeading);
+  const after = firstHeading < 0 ? [] : blocks.slice(firstHeading + 1);
+  const nextHeading = after.findIndex((block) => block.kind === 'heading');
+  const section = items(before).length > 0 ? items(before) : items(nextHeading < 0 ? after : after.slice(0, nextHeading));
+  return section.slice(0, 3);
+}
+
 // Progress of a download, 0–1; without a known total it stays unknown (null).
 export function downloadProgress(received: number, total: number): number | null {
   if (!(total > 0) || !(received >= 0)) return null;

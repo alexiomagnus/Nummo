@@ -88,15 +88,15 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
     const sign = value === 0 ? '' : tone === 'in' ? '+' : '−';
     const color = value === 0 ? colors.onSurfaceVariant : tone === 'in' ? positive : colors.error;
     return (
-      <View key={key} style={styles.line} role="listitem" aria-label={`${label}: ${sign}${formatAmount(value)}`}>
+      <View key={key} style={[styles.line, !wide && styles.linePhone]} role="listitem" aria-label={`${label}: ${sign}${formatAmount(value)}`}>
         <Text variant="bodyLarge" style={[styles.grow, muted]}>{label}</Text>
         <Text variant="bodyLarge" style={[styles.number, styles.strong, { color }]}>{sign}{formatAmount(value)}</Text>
       </View>
     );
   };
   return <>
-    <View style={styles.hero}>
-      <View ref={avatarRef}><FundAvatar fund={fund} size={72} /></View>
+    <View style={[styles.hero, !wide && styles.heroPhone]}>
+      <View ref={avatarRef}><FundAvatar fund={fund} size={wide ? 72 : 56} /></View>
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={styles.center}>{fund.name}</Text>
       <Text variant="displaySmall" style={[styles.amount, styles.center]}>{formatAmount(spentNow)}</Text>
       <Text variant="bodyMedium" style={[muted, styles.center]}>
@@ -116,7 +116,7 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
       spent={spentNow} budget={item.budget} state={item.state} forecast={forecast} />}
     {/* Two blocks under a title (user's request, 27 November): what came in and what went out. The total spent is no longer a row: it is
         the big number on top (it was the same figure twice). Every row stays, zeros included. */}
-    <View role="list" accessibilityLabel={t("Riepilogo del mese")} style={styles.blocks}>
+    <View role="list" accessibilityLabel={t("Riepilogo del mese")} style={[styles.blocks, !wide && styles.blocksPhone]}>
       <View style={styles.block}>
         <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[muted, styles.blockTitle]}>{t("Entrate")}</Text>
         <InfoGroup rows={[
@@ -164,10 +164,14 @@ const styles = StyleSheet.create({
   amount: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   marks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
   badge: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, borderRadius: 999, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  // On phones everything is a little tighter so that «Archivia» is on the first screen without scrolling (user's request, 27 November).
+  heroPhone: { gap: spacing.xs, paddingBottom: 0 },
   blocks: { gap: spacing.lg },
+  blocksPhone: { gap: spacing.md },
   block: { gap: spacing.sm },
   blockTitle: { paddingHorizontal: spacing.sm },
   line: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
+  linePhone: { minHeight: 44, paddingVertical: spacing.xs },
   grow: { flex: 1, minWidth: 0 },
   strong: { fontWeight: '600' },
   number: { fontVariant: ['tabular-nums'] },

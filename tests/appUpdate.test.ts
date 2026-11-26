@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   availableUpdate, compareVersions, downloadProgress, parseVersion, readRelease, readReleases, readUpdateCheckState,
-  releaseNoteBlocks, updateCheckDue, updateCheckInterval,
+  releaseNoteBlocks, releaseSummary, updateCheckDue, updateCheckInterval,
 } from '../src/domain/appUpdate.ts';
 import { fetchReleases, lastUpdateCheck, ReleasesError, saveUpdateCheck } from '../src/services/appUpdate.ts';
 import {
@@ -186,4 +186,12 @@ test('app Android: permesso di installare e installazione, una risposta per rich
   assert.equal(await installed, 'cancelled');
   const throwing = { ...bridge, updateInstall: () => { throw new Error('x'); } };
   assert.equal(await installUpdateOnDevice(throwing, scope), 'error');
+});
+
+test('the short «Novità» skips an introductory paragraph and stops at the second heading', () => {
+  const notes = 'Intro line.\n\n## Novità\n- one\n- two\n- three\n- four\n\n## Già presenti\n- old';
+  assert.deepEqual(releaseSummary(releaseNoteBlocks(notes)).map((block) => block.spans[0]?.text), ['one', 'two', 'three']);
+  assert.deepEqual(releaseSummary(releaseNoteBlocks('## Novità\n- a\n## Altro\n- b')).map((block) => block.spans[0]?.text), ['a']);
+  assert.deepEqual(releaseSummary(releaseNoteBlocks('- x\n- y')).map((block) => block.spans[0]?.text), ['x', 'y']);
+  assert.deepEqual(releaseSummary(releaseNoteBlocks('Only text.')), []);
 });
