@@ -44,12 +44,12 @@ function systemScheme(dark: boolean): Scheme {
     surfaceContainerLowest: toneOf(n1, 100), surfaceContainerLow: toneOf(n1, 96), surfaceContainer: toneOf(n1, 94),
     surfaceContainerHigh: toneOf(n1, 92), surfaceContainerHighest: toneOf(n1, 90),
   };
-  // Calibrated against Morphe's Material You (27 November, on request, from two screenshots): the dark cards take a little of the
+  // Calibrated against Morphe's Material You (27 November, on request, from two screenshots): the dark cards take a little (20 %) of the
   // accent (the neutral palette alone left them grey) and the selected tile is a quieter, less orange brown than tone 30.
-  const warm = (t: number) => mixColors(toneOf(n1, t), toneOf(a1, t), 0.15);
+  const warm = (t: number) => mixColors(toneOf(n1, t), toneOf(a1, t), 0.8); // `weight` is the first colour's: 20 % accent
   return {
     ...common,
-    primary: toneOf(a1, 80), onPrimary: toneOf(a1, 20), primaryContainer: mixColors(toneOf(a1, 26), toneOf(a2, 26), 0.8), onPrimaryContainer: toneOf(a1, 90),
+    primary: toneOf(a1, 80), onPrimary: toneOf(a1, 20), primaryContainer: mixColors(mixColors(toneOf(a1, 26), toneOf(a2, 26), 0.8), toneOf(n2, 26), 0.7), onPrimaryContainer: toneOf(a1, 90),
     secondary: toneOf(a2, 80), onSecondary: toneOf(a2, 20), secondaryContainer: toneOf(a2, 30), onSecondaryContainer: toneOf(a2, 90),
     tertiary: toneOf(a3, 80), onTertiary: toneOf(a3, 20), tertiaryContainer: toneOf(a3, 30), onTertiaryContainer: toneOf(a3, 90),
     background: toneOf(n1, 6), onBackground: toneOf(n1, 90), surface: toneOf(n1, 6), onSurface: toneOf(n1, 90),
