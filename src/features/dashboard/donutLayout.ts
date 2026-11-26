@@ -1,6 +1,6 @@
-export const donutMaxSize = 340;
+// A little larger since 27 November (340 before, on request): the legend is always below it, never beside.
+export const donutMaxSize = 400;
 export const donutMaxAmountFont = 40;
-export const donutLegendWidth = 360;
 
 // The text box is a square inscribed inside the hole, with breathing room.
 // Scale the ring on narrow surfaces so its inner radius can never turn negative.

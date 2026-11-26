@@ -25,7 +25,6 @@ import { DonutChart, type ChartColors } from './charts';
 import { categoryPresentation, categoryPercent as percent } from './categoryPresentation';
 import { chartPalette } from '../../theme/chartPalette';
 import { CategoryLegend } from './CategoryLegend';
-import { donutLegendWidth, donutMaxSize } from './donutLayout';
 
 const chartLabels: Record<ChartType, string> = { donut: 'Ciambella', blocks: 'Blocchi', bars: 'Barre' };
 // An icon for each choice of Periodo and Grafico (user's request, 24 November).
@@ -133,8 +132,6 @@ type CategoryChartProps = { chart: 'donut' | 'blocks'; data: Breakdown; others: 
 const CategoryChart = memo(function CategoryChart({ chart, data, others, categories, colors, sideBySide, onOpen }: CategoryChartProps) {
   const { t } = useI18n();
   const theme = useTheme();
-  const [chartWidth, setChartWidth] = useState(0);
-  const chartSideBySide = chartWidth >= donutMaxSize + donutLegendWidth + spacing.lg;
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const activeIndex = data.series.findIndex((series) => series.key === activeKey);
   const active = activeIndex < 0 ? null : activeIndex;
@@ -147,22 +144,17 @@ const CategoryChart = memo(function CategoryChart({ chart, data, others, categor
     <CategoryLegend series={data.series} others={others} categories={categories} total={data.total}
       colors={colors} active={active} onActive={setActive} onOpen={onOpen} compact />
   </View>;
+  // The legend is always under the donut, in the same box as under the blocks (two columns when wide; user's request, 27 November).
   return <View style={styles.chartRow}>
-    <View onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
-      style={[styles.chartRow, chartSideBySide && styles.row]}>
-      <View style={styles.chartCol}><View style={!sideBySide ? { width: '100%', maxWidth: 280, alignSelf: 'center' } : undefined}>
+    <View style={styles.chartCol}>
+      <View style={{ width: '100%', maxWidth: sideBySide ? 400 : 320, alignSelf: 'center' }}>
         <DonutChart data={data} colors={colors} active={active} onActive={setActive} />
       </View>
       {active !== null && <Button mode="text" onPress={() => onOpen(data.series[active]!.key)}>{t('Mostra transazioni')}</Button>}
-      {/* Legend below the chart (phones): the hint sits right under the donut, before the legend. */}
-      {active === null && !chartSideBySide && <Text variant="bodyMedium" style={[muted, styles.donutHintBelow]}>{donutHint}</Text>}
-      </View>
-      <View style={chartSideBySide ? styles.legendCol : undefined}>
-        <CategoryLegend series={data.series} others={others} categories={categories} total={data.total}
-          colors={colors} active={active} onActive={setActive} onOpen={onOpen} />
-      </View>
+      {active === null && <Text variant="bodyMedium" style={[muted, styles.donutHintBelow]}>{donutHint}</Text>}
     </View>
-    {active === null && chartSideBySide && <Text variant="bodyMedium" style={[muted, styles.donutHint]}>{donutHint}</Text>}
+    <CategoryLegend series={data.series} others={others} categories={categories} total={data.total}
+      colors={colors} active={active} onActive={setActive} onOpen={onOpen} compact />
   </View>;
 });
 
@@ -175,12 +167,9 @@ const styles = StyleSheet.create({
   half: { flex: 1, minWidth: 0 },
   total: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   chartRow: { gap: spacing.lg },
-  donutHint: { marginTop: spacing.xxl },
   // Clear space from the donut (plus the column gap), so the hint reads as a caption rather than part of the chart.
   donutHintBelow: { textAlign: 'center', marginTop: spacing.lg },
-  row: { flexDirection: 'row', alignItems: 'flex-start' },
-  chartCol: { flex: 1, minWidth: 0, gap: spacing.sm },
-  legendCol: { width: donutLegendWidth, flexShrink: 0 },
+  chartCol: { minWidth: 0, gap: spacing.sm },
   summary: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
   metric: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
 });

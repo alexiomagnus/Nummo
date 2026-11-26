@@ -86,12 +86,10 @@ const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, 
       onPress={() => { haptic(); if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
       style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.elevation.level3 }, styles.compactCorner, selectionFill]}>
-      {/* A tile in the category's colour (soft fill, the glyph on it): colour and icon in one place, matching the chart; a series
-          without an icon («Altre», «Senza categoria») shows the plain colour square. */}
-      <View style={styles.tile}>
-        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: seriesColor(item, colors), opacity: 0.24 }]} />
-        {icon ? <CategoryGlyph icon={icon} size={24} color={theme.colors.onSurface} /> : <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />}
-      </View>
+      {/* The category's colour as a small square (the key to the chart) and its icon, with no coloured tile around the icon
+          (user's request, 27 November). A series without an icon keeps the square alone. */}
+      <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />
+      <View style={styles.icon}>{icon && <CategoryGlyph icon={icon} size={24} color={theme.colors.onSurfaceVariant} />}</View>
       <Text variant="bodyMedium" numberOfLines={compact ? 1 : undefined} style={compact ? styles.compactLabel : styles.label}>{seriesLabel(item, t)}</Text>
       {compact ? <>
         {/* Fixed right-aligned columns: amounts and shares line up from row to row. */}
@@ -118,7 +116,6 @@ const styles = StyleSheet.create({
   compactCorner: { borderRadius: radius.control },
   // The compact legend is one box like the grouped rows of the other pages (user's request, 27 November).
   box: { borderWidth: 1, borderRadius: radius.dialog, padding: spacing.sm, overflow: 'hidden' },
-  tile: { width: 40, height: 40, borderRadius: radius.tile, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   sharePill: { flexShrink: 0, minWidth: 48, alignItems: 'center', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   compactLabel: { flex: 1, minWidth: 0 },
   amountColumn: { flexShrink: 0, minWidth: 88 },
