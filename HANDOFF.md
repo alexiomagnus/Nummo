@@ -117,6 +117,15 @@ dell'utente: valgono come 26 novembre.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Schermi interi per fondo e «Prossimo mese», «Tutte le operazioni», riquadri coerenti — 27 novembre 2026
+
+Su richiesta, commit `685dfe6`, pubblicato solo su Hosting (Rules invariate; «Deploy complete!»; bundle non confrontato con l'export). `npm run check` OK (617/617); non provato su dispositivo.
+- Dettaglio del fondo e «Prossimo mese»: schermi interi con Indietro, senza le tre posizioni (`detents` tolto); restano solo i pannelli.
+- Fondi: «Entrate e spostamenti» ridotto al pulsante «Tutte le operazioni» (schermo con tutti i movimenti, eliminabili); titoli senza maiuscolo (`plain` di `ListGroup`), «I tuoi fondi» sopra le schede; schede dei fondi e delle liste nel riquadro dei gruppi di righe (angoli 28, `elevation.level1`); «Liste/Fondi archiviati» con `QuietToggle`.
+- Analisi: legenda in riquadro con tessera colorata, pillola della quota, selezione neutra.
+- Lista scontrini: impostazioni AI nascondibili. Aggiornamento Android: schermata ridotta (versione e «Installata: X», senza note).
+- Commento di `AppShell.tsx` sistemato (niente più `wholeRows.ts`).
+
 ## Icona nera piatta (app 0.3.7), niente sfumatura in fondo alla pagina, categorie predefinite senza messaggio — 26 novembre 2026, sera
 
 Su richiesta:
