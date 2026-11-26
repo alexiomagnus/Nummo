@@ -5,9 +5,9 @@ import type { Preferences } from '../features/settings/preferences';
 
 // Builds the Paper theme from the tokens. Paper has no surface-container roles, so they are
 // exposed through its `elevation` levels: level1 = Container Low … level5 = Highest.
-export function createTheme(dark: boolean, reduceMotion = false, preferences?: Pick<Preferences, 'accent' | 'colorMode' | 'font'>): MD3Theme {
+export function createTheme(dark: boolean, reduceMotion = false, preferences?: Pick<Preferences, 'accent' | 'colorMode' | 'font'> & { amoled?: boolean }): MD3Theme {
   const base = dark ? MD3DarkTheme : MD3LightTheme;
-  const s = buildScheme(preferences?.accent ?? 'blue', preferences?.colorMode ?? 'mono', dark);
+  const s = buildScheme(preferences?.accent ?? 'blue', preferences?.colorMode ?? 'mono', dark, preferences?.amoled ?? false);
   const colors = {
     ...base.colors,
     // Page panel: a touch lighter than the background (lowest container in light, low in dark).

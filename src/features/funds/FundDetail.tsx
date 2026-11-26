@@ -29,6 +29,8 @@ export type FundDetailProps = {
   item: FundMonth;
   monthLabel: string;
   isDefault: boolean;
+  // The fund holds money (opening balance, monthly recharge or a transfer, `hasBalanceData`): only then the month has a «Totale».
+  hasBalance: boolean;
   canWrite: boolean;
   onClose: () => void;
   onEdit: () => void;
@@ -46,7 +48,7 @@ export function FundDetail(props: FundDetailProps) {
   </ScreenLayer></Portal>;
 }
 
-function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive, remove }: FundDetailProps) {
+function FundContent({ item, monthLabel, isDefault, hasBalance, canWrite, onEdit, onArchive, remove }: FundDetailProps) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
   // Archiving or restoring changes the screen in place (the «Archiviato» mark, the actions): a soft transition instead of a jump (user's
@@ -94,6 +96,10 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
       </View>
     );
   };
+  // «Totale» (user's request, 27 November): what came in this month (opening balance in the fund's first month, entrata, recharge,
+  // transfers received) minus what went out (subscriptions, expenses, transfers sent); a loss reads red. Only for a fund with money.
+  const received = item.initial + item.income + item.recharges + item.forecastRecharges + item.transfersIn;
+  const net = received - (spentNow + item.transfersOut);
   return <>
     <View style={[styles.hero, !wide && styles.heroPhone]}>
       <View ref={avatarRef}><FundAvatar fund={fund} size={wide ? 72 : 56} /></View>
@@ -120,6 +126,8 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
       <View style={styles.block}>
         <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[{ color: colors.primary }, styles.blockTitle]}>{t("Entrate")}</Text>
         <InfoGroup rows={[
+          // The opening balance only counts in the month the fund starts.
+          ...(item.initial > 0 ? [total('initial', t("Saldo iniziale"), item.initial, 'in')] : []),
           total('income', t("Entrata"), item.income, 'in'),
           // The month's recharge: received or still due within the month (forecast for future months).
           total('recharge', t("Ricarica mensile"), item.recharges + item.forecastRecharges, 'in'),
@@ -134,6 +142,10 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
           total('out', t("Trasferimenti inviati"), item.transfersOut, 'out'),
         ]} />
       </View>
+      {hasBalance && <View style={styles.block}>
+        <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[{ color: colors.primary }, styles.blockTitle]}>{t("Totale")}</Text>
+        <InfoGroup rows={[total('net', t("Bilancio del mese"), Math.abs(net), net < 0 ? 'out' : 'in')]} />
+      </View>}
     </View>
     {/* Actions as on the other screens: full-width pills, the main one first. */}
     <ScreenActionsContext.Provider value>

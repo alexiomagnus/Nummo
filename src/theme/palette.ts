@@ -3,7 +3,9 @@
 // other hues, so selected states, chips and icon tiles read as a small multi-colour palette.
 import { schemes, type Scheme } from './tokens.ts';
 
-export const accents = ['blue', 'mint', 'violet', 'rose', 'amber', 'graphite'] as const;
+// «Grigio» (id `graphite`, kept so a saved choice still reads) is first and the default since 27 November (user's request): a
+// neutral grey, no hue at all.
+export const accents = ['graphite', 'blue', 'mint', 'violet', 'rose', 'amber'] as const;
 export type Accent = (typeof accents)[number];
 export type ColorMode = 'mono' | 'palette';
 
@@ -14,13 +16,13 @@ export const dialogColors = (scheme: Scheme, dark: boolean) => ({
 });
 
 export const accentLabels: Record<Accent, string> = {
-  mint: 'Menta', blue: 'Blu', violet: 'Viola', rose: 'Rosa', amber: 'Ambra', graphite: 'Grafite',
+  mint: 'Menta', blue: 'Blu', violet: 'Viola', rose: 'Rosa', amber: 'Ambra', graphite: 'Grigio',
 };
 
-// Hue (°) and saturation multiplier; graphite is a nearly neutral blue-grey.
+// Hue (°) and saturation multiplier; graphite is a pure neutral grey (no saturation).
 const accentSpec: Record<Accent, { hue: number; sat: number }> = {
   mint: { hue: 153, sat: 1 }, blue: { hue: 215, sat: 1 }, violet: { hue: 268, sat: 0.9 },
-  rose: { hue: 342, sat: 0.95 }, amber: { hue: 36, sat: 1 }, graphite: { hue: 215, sat: 0.14 },
+  rose: { hue: 342, sat: 0.95 }, amber: { hue: 36, sat: 1 }, graphite: { hue: 0, sat: 0 },
 };
 
 function hex(h: number, s: number, l: number): string {
@@ -121,7 +123,14 @@ const swatchContrast = 3.1;
 
 // Mint + mono is the original identity and keeps its hand-tuned values. In mono mode the tertiary
 // roles are the neutral surface-variant pair, so icon tiles stay tonal; in palette mode they carry a hue.
-export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
+// AMOLED (dark only): the page and the surfaces under the cards are true black, so the pixels of an OLED screen are off; the
+// first container is half way to black, the others keep their steps.
+function amoledOf(scheme: Scheme): Scheme {
+  return { ...scheme, background: '#000000', surface: '#000000', surfaceContainerLowest: '#000000',
+    surfaceContainerLow: mixColors(scheme.surfaceContainerLow, '#000000', 0.5) };
+}
+
+export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean, amoled = false): Scheme {
   const scheme = accent === 'mint' && mode === 'mono' ? { ...schemes[dark ? 'dark' : 'light'] } : generate(accent, mode, dark);
   if (mode === 'mono') {
     scheme.tertiary = scheme.secondary;
@@ -129,7 +138,7 @@ export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean): Sch
     scheme.tertiaryContainer = scheme.surfaceVariant;
     scheme.onTertiaryContainer = scheme.onSurfaceVariant;
   }
-  return scheme;
+  return dark && amoled ? amoledOf(scheme) : scheme;
 }
 
 // WCAG 2.x contrast ratio of two #RRGGBB colours.

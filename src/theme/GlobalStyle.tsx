@@ -11,9 +11,9 @@ import { observeScrolling, observeViewportHeight, observeViewportTop, scrollingA
 // is available from the first render), visible keyboard focus, dynamic
 // viewport height (virtual keyboard friendly), reduced motion and the browser/system bar colour
 // (`theme-color` follows `colors.background`, the colour of the top bar and navigation bar).
-type Props = { mode: BootTheme['mode']; accent: Accent; colorMode: ColorMode };
+type Props = { mode: BootTheme['mode']; accent: Accent; colorMode: ColorMode; amoled?: boolean };
 
-export function GlobalStyle({ mode, accent, colorMode }: Props) {
+export function GlobalStyle({ mode, accent, colorMode, amoled = false }: Props) {
   const { colors, dark, fonts } = useTheme();
   const family = fonts.bodyMedium.fontFamily;
   const glass = glassOf(colors);
@@ -148,8 +148,8 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
   }, [colors.background, colors.primary, colors.error, colors.outline, glass.glass, glass.glassBorder, dark, family]);
   // The next start paints this scheme's background before the bundle runs (boot script in index.html).
   useEffect(() => {
-    try { localStorage.setItem(bootThemeKey, JSON.stringify(makeBootTheme({ theme: mode, accent, colorMode }))); } catch { /* storage denied */ }
-  }, [mode, accent, colorMode]);
+    try { localStorage.setItem(bootThemeKey, JSON.stringify(makeBootTheme({ theme: mode, accent, colorMode, amoled }))); } catch { /* storage denied */ }
+  }, [mode, accent, colorMode, amoled]);
   useEffect(() => {
     const root = document.documentElement;
     // Height and top of the visible part of the page: #root (index.html) and the lock screen cover exactly that area.

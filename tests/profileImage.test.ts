@@ -83,7 +83,7 @@ test('immagine del profilo: una chiave per la Standard e una per account in Avan
 
 test('anello dell’Avanzata: colore dell’app di base, sei colori, valori estranei ignorati', () => {
   assert.equal(profileRingKeyFor('uid-1'), 'nummo.profileRing.v1.uid-1');
-  assert.deepEqual(profileRings, ['app', 'blue', 'mint', 'violet', 'rose', 'amber', 'graphite']);
+  assert.deepEqual(profileRings, ['app', 'graphite', 'blue', 'mint', 'violet', 'rose', 'amber']);
   assert.equal(parseProfileRing(null), 'app');
   assert.equal(parseProfileRing('rose'), 'rose');
   for (const raw of ['', 'red', '"rose"', '#ff0000', 'APP']) assert.equal(parseProfileRing(raw), 'app', raw);

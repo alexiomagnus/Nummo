@@ -72,9 +72,9 @@ export function holdDocumentChrome(): () => void {
   };
 }
 
-export function makeBootTheme(preferences: { theme: BootTheme['mode']; accent: Accent; colorMode: ColorMode }): BootTheme {
+export function makeBootTheme(preferences: { theme: BootTheme['mode']; accent: Accent; colorMode: ColorMode; amoled?: boolean }): BootTheme {
   const light = buildScheme(preferences.accent, preferences.colorMode, false);
-  const dark = buildScheme(preferences.accent, preferences.colorMode, true);
+  const dark = buildScheme(preferences.accent, preferences.colorMode, true, preferences.amoled ?? false);
   const ink = (scheme: typeof light): BootInk => ({
     primary: scheme.primary, onPrimary: scheme.onPrimary, onSurface: scheme.onSurface, onSurfaceVariant: scheme.onSurfaceVariant,
   });

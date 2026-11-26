@@ -189,7 +189,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
         }} />}
 
       {/* Before the editors: opened from the fund's screen, their screens mount later and stay above it. */}
-      {detail && <FundDetail item={detail} monthLabel={monthLabel} isDefault={detail.fund.id === defaultFundId}
+      {detail && <FundDetail item={detail} monthLabel={monthLabel} isDefault={detail.fund.id === defaultFundId} hasBalance={balanceFunds.has(detail.fund.id)}
         canWrite={canWrite} onClose={() => setDetailId(null)}
         onEdit={() => setEditing(detail.fund as SyncedFund)}
         onArchive={(value) => void archive(detail.fund as SyncedFund, value)}

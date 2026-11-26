@@ -69,8 +69,8 @@ export default function App() {
   const reduceMotion = useReducedMotion();
   const [preferences, updatePreferences, resetPreferences] = usePreferences();
   const dark = preferences.theme === 'system' ? systemScheme === 'dark' : preferences.theme === 'dark';
-  const { accent, colorMode, font } = preferences;
-  const theme = useMemo(() => createTheme(dark, reduceMotion, { accent, colorMode, font }), [dark, reduceMotion, accent, colorMode, font]);
+  const { accent, colorMode, font, amoled } = preferences;
+  const theme = useMemo(() => createTheme(dark, reduceMotion, { accent, colorMode, font, amoled }), [dark, reduceMotion, accent, colorMode, font, amoled]);
   // A change that turns light into dark or back (top-bar button, «Tema» in Settings) is revealed by a circle from the
   // control (themeTransition.ts); every other change, «Sistema» included when it keeps the same look, applies at once.
   const changePreferences = useCallback((change: Partial<Preferences>) => {
@@ -87,7 +87,7 @@ export default function App() {
         <HapticsProvider enabled={preferences.haptics}>
         <SafeAreaProvider initialMetrics={safeArea}>
           <PaperProvider theme={theme}>
-            <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} />
+            <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} amoled={amoled} />
             <Root dark={dark} onToggleTheme={() => changePreferences({ theme: dark ? 'light' : 'dark' })}
               preferences={preferences} onChangePreferences={changePreferences} onResetPreferences={resetPreferences} />
             {/* Android app only: once a day, «Aggiornamento disponibile» when GitHub has a newer release (features/update). */}

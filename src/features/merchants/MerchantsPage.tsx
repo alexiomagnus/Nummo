@@ -45,9 +45,6 @@ export function MerchantsPage({ merchants, backend, canWrite, notify }: Props) {
   };
   return (
     <View style={styles.root}>
-      <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-        {t("Sono i nomi che Nummo ti propone mentre scrivi l’Esercente. Si aggiungono da soli quando salvi una spesa con un esercente nuovo.")}
-      </Text>
       {merchants.length > 0 && (
         <TextInput outlineStyle={inputOutline} label={t("Cerca esercente")} accessibilityLabel={t("Cerca esercente")} mode="outlined" value={filter}
           onChangeText={(value) => setFilter(clipToLength(value, searchPolicy.maxQueryLength))} autoCorrect={false} left={leadingIcon(iconShapes.search)}

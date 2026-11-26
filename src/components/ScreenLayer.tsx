@@ -12,9 +12,9 @@ import { isTextEntry, revealFocusedField } from '../theme/viewport';
 import { useI18n } from '../i18n/I18nProvider';
 import { detailGestureOwner, detentOutcome, fittedPeek, peekOffset, recentVelocity, sheetDragOutcome, sheetDragSlop, sheetGestureOwner, type Detent, type DragSample } from './menuGeometry';
 import { StateLayerPressable } from './StateLayerPressable';
-import { SvgIcon, iconShapes } from './SvgIcon';
-import { Orbs } from './Orbs';
 import { glassOf } from '../theme/theme';
+import { Orbs } from './Orbs';
+import { SvgIcon, iconShapes } from './SvgIcon';
 
 // A full screen of the app (23 November, on request): the detail of an expense or a subscription and every editor or content
 // panel that used to be a centred dialog (AppDialog without `variant="alert"`). A layer of the shared overlay level (Paper
@@ -85,9 +85,8 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   const toned = useMemo(() => tone ? { ...theme, colors: { ...theme.colors, background: tone.background, surface: tone.background,
     onBackground: tone.content, onSurface: tone.content, onSurfaceVariant: tone.content } }
     : sheet ? { ...theme, colors: { ...theme.colors, background } } : theme, [theme, tone?.background, tone?.content, sheet, background]);
-  // Back: a round glass button (26 November, on request, after Morphe), or the tone's own colours on a coloured screen.
-  const glass = glassOf(colors);
-  const button = tone ? { background: tone.button, color: tone.onButton, border: tone.button } : { background: glass.glass, color: colors.onSurface, border: glass.glassBorder };
+  // Back: a round tonal button in the secondary container (green in the default palette; 27 November, on request: the glass one went), or the tone's own colours on a coloured screen.
+  const button = tone ? { background: tone.button, color: tone.onButton, border: tone.button } : { background: colors.secondaryContainer, color: colors.onSecondaryContainer, border: colors.secondaryContainer };
   const size = useSizeClass();
   const compact = size === 'compact';
   const insets = useSafeAreaInsets();
@@ -389,8 +388,8 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       <View ref={surface} {...part('surface')} style={sheet
         ? [styles.sheet, styles.surface, { backgroundColor: background, maxHeight: Math.max(0, frame.height - (compact ? insets.top : 0) - spacing.xxxl) }]
         : [StyleSheet.absoluteFill, styles.surface, { borderRadius: frameRadius, backgroundColor: background }]}>
-        {/* The circles of the app's background, behind a whole screen too (not on a sheet or a coloured screen). */}
-        {!sheet && !tone && <Orbs color={glass.orb} />}
+        {/* The circles of the app's background behind a whole screen (not on a sheet, a coloured screen or a phone panel: those are plain, like the choice panels). */}
+        {!sheet && !tone && !stops && <Orbs color={glassOf(colors).orb} />}
         <View {...part('content')} style={sheet ? styles.sheetContent : styles.content}>
           {sheet ? <View style={[styles.sheetTop, { paddingLeft: padding + side, paddingRight: padding + side }]}>
             {/* The drag handle (user's request, 23 November: «per buttare giù la scheda»); a wide hit area around the small bar. */}

@@ -113,6 +113,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
           <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
         </OptionRow>
         <RowDivider />
+        <ToggleRow icon={iconShapes.moon} title={t("Modalità AMOLED")} subtitle={t("Nel tema scuro lo sfondo è nero puro: consuma meno sugli schermi OLED.")}
+          value={preferences.amoled} onChange={(amoled) => onChange({ amoled })} />
+        <RowDivider />
         <OptionRow icon={iconShapes.palette} title={t("Colore")}>
           <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
           <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
