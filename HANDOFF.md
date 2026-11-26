@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Modifica fondo» e azioni a due su una riga (smartphone) — 27 novembre 2026
+
+Segnalazione: in «Modifica fondo» (411×914, app 0.3.12) «Elimina» e «Salva» impilati occupavano tanto spazio che i campi (Budget mensile) restavano tagliati nell'area scorrevole. `ScreenDialog` (`AppDialog.tsx`): con **due** azioni (dopo lo scarto di «Annulla») stanno su una riga a parti uguali anche su smartphone, con tre o più resta la colonna. Vale per tutti gli schermi con Elimina + conferma (spesa, template, prodotto, serie, lista…), non solo per il fondo. Non misurato su dispositivo.
+
 ## «Archivia» visibile nel dettaglio del fondo su smartphone — 27 novembre 2026
 
 Segnalazione: su 411×914 dp (app 0.3.12, la pagina ora disegna anche sotto la barra di stato) «Archivia» era tagliato in fondo. Causa: due pillole impilate (Modifica, poi Archivia) oltre al resto dello schermo. Ora `FundDetail` le mette su una riga a parti uguali anche su smartphone (come già da medium e come Modifica/Annulla/Pausa degli abbonamenti): circa 64 dp in meno. Non misurato su dispositivo né in Chromium; su schermi più bassi (360×740) il dettaglio resta scorrevole.

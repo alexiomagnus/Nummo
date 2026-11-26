@@ -67,8 +67,11 @@ function ScreenDialog({ onDismiss, dismissable = true, testID, focusTextEntry = 
     if (isValidElement<{ children?: ReactNode; style?: StyleProp<ViewStyle> }>(child) && child.type === Dialog.Title) { title = child.props.children; return; }
     if (isValidElement<{ style?: StyleProp<ViewStyle>; children?: ReactNode }>(child) && child.type === Dialog.Actions) {
       // From medium, two or more actions share one row in equal parts, Elimina first and the confirmation last (user's request,
-      // 24 November: «per risparmiare spazio, almeno su desktop, bottone elimina e salva sulla stessa riga»); on phones a column.
-      const inRow = !compact;
+      // 24 November: «per risparmiare spazio, almeno su desktop, bottone elimina e salva sulla stessa riga»); on phones, two actions too (27 November), more a column.
+      // On phones too, but only for two (27 November, on request: a column of two pills left the fields of «Modifica fondo» a few
+      // lines tall on a 411×914 screen); three or more stay a column.
+      const count = screenActions(child.props.children, dismissable, false).length;
+      const inRow = !compact || count === 2;
       const actions = screenActions(child.props.children, dismissable, inRow);
       if (actions.length === 0) return;
       blocks.push(cloneElement(child as ReactElement<{ style?: StyleProp<ViewStyle>; children?: ReactNode }>,
