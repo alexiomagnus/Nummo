@@ -133,7 +133,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
           {t("Liste archiviate ({p0})", { p0: archived.length })}</Button>
         {showArchived && <Reveal role="list" accessibilityLabel={t("Liste archiviate")} style={styles.list}>{archived.map(card)}</Reveal>}
         {/* All the archived lists at once (user's request, 22 November); their expenses stay in Spese with the products. */}
-        {showArchived && <DangerButton style={styles.start}
+        {showArchived && <DangerButton style={compact ? styles.full : styles.start}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />} onPress={() => setConfirmArchived(true)}>
           {t("Elimina le liste archiviate")}</DangerButton>}
       </View>}
@@ -376,6 +376,8 @@ const styles = StyleSheet.create({
   avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   grow: { flex: 1, minWidth: 0 },
   start: { alignSelf: 'flex-start' },
+  // «Elimina le liste archiviate» as wide as the section on phones (user's request, 26 November).
+  full: { alignSelf: 'stretch' },
   // Title and lists are one block: `lg` between them instead of the page's section gap.
   overviewHeader: { marginBottom: spacing.lg - layout.sectionGap },
   headerButton: { flexShrink: 0 },
