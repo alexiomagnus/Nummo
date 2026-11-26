@@ -72,27 +72,27 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
   };
 
   const shown = filter ? categories.filter((category) => searchKey(category.label).includes(searchKey(filter))) : categories;
-  // Creation: name, icon, add on one row; on phones the name and «Icona» on the first row, «Aggiungi» below at full width (user's
+  // Creation: at every size the name and «Icona» (narrower) on the first row, «Aggiungi» below at full width (user's request, 27 November); on phones the name and «Icona» on the first row, «Aggiungi» below at full width (user's
   // request, 24 November; from 22 November the name had a row of its own and the two buttons shared the next in halves). The icon
   // grid opens only on demand.
   const iconButton = <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}
     icon={({ size, color }) => <SvgIcon shape={choosingIcon ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
-    accessibilityLabel={t("Icona della categoria, facoltativa")} style={styles.create} contentStyle={styles.createContent}>{t("Icona")}</Button>;
-  const addButton = <Button mode="contained" style={[styles.create, styles.addPill, compact && styles.addCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>;
+    accessibilityLabel={t("Icona della categoria, facoltativa")} style={[styles.create, !compact && styles.iconWide]} contentStyle={styles.createContent}>{t("Icona")}</Button>;
+  const addButton = <Button mode="contained" style={[styles.create, styles.addPill, styles.addCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>;
   const createForm = (
     <View style={styles.createPanel}>
       <View style={styles.createRow}>
-        <View style={[styles.nameField, compact && styles.nameFieldCompact]}>
+        <View style={[styles.nameField, styles.nameFieldCompact]}>
           <TextInput outlineStyle={inputOutline} label={t("Nuova categoria")} accessibilityLabel={t("Nome della nuova categoria, obbligatorio")} mode="outlined" value={name}
             onChangeText={(value) => { setName(clipToLength(value, maxCategoryNameLength)); setNameError(null); }}
             onSubmitEditing={create} error={Boolean(nameError)} disabled={!ready}
             left={icon ? decorativeIcon(() => <CategoryGlyph icon={icon} size={24} />) : undefined} />
           {nameError && <HelperText type="error" accessibilityRole="alert">{t(nameError)}</HelperText>}
         </View>
-        {compact ? iconButton : <View style={styles.createButtons}>{iconButton}{addButton}</View>}
+        {iconButton}
       </View>
-      {compact && addButton}
       {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={!ready} />}
+      {addButton}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </View>
   );
@@ -154,10 +154,10 @@ const styles = StyleSheet.create({
   nameFieldCompact: { flexBasis: 0 },
   addCompact: { marginTop: 0 },
   addPill: { borderRadius: radius.pill },
-  nameField: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
-  createButtons: { flexDirection: 'row', gap: spacing.md },
+  nameField: { flexGrow: 1, flexBasis: '100%', minWidth: 0 },
   // Paper's outlined field is 56 dp with 6 dp reserved above its box: buttons take the same 50 dp box and offset.
   create: { marginTop: 6, height: layout.fieldBoxHeight },
+  iconWide: { minWidth: 160 },
   createContent: { height: '100%' },
   empty: { gap: spacing.sm },
   start: { alignSelf: 'flex-start', marginTop: spacing.sm },
