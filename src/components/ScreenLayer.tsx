@@ -131,6 +131,18 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     globalThis.visualViewport?.addEventListener('resize', update);
     return () => { window.removeEventListener('resize', update); globalThis.visualViewport?.removeEventListener('resize', update); };
   }, []);
+  // The panel also moves without the window changing: the desktop drawer collapses or opens («Comprimi») and the panel grows or shrinks
+  // (user's report, 27 November: the open screen kept the old place and covered half the list). The panel itself is observed.
+  useEffect(() => {
+    const panel = size === 'compact' ? null : document.querySelector('[data-app-panel]');
+    if (!panel || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => setFrame((now) => {
+      const next = measureFrame(size);
+      return next.left === now.left && next.top === now.top && next.width === now.width && next.height === now.height ? now : next;
+    }));
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, [size]);
 
   // A coloured screen covering the whole phone screen colours the system bars too (bootTheme.ts), until it closes.
   useLayoutEffect(() => {

@@ -97,6 +97,8 @@ export function ModeTransfer({ backend, enabled, shown }: { backend: DataStore; 
   // No counts when the device has data (user's request, 22 November): only what keeps a button disabled is said.
   const summary = local.state === 'absent' ? t("Nessun dato sul dispositivo.")
     : local.state === 'error' ? t(local.message) : null;
+  // The last row (the hairline and its space) only when there is something to say: a message, a preview or an error.
+  const hasBody = summary !== null || preview !== null || status !== '';
   return (
     <ListGroup label={t("Dati della modalità Standard")}>
       <ActionRow icon={iconShapes.upload} title={t("Dal dispositivo a Firebase")} subtitle={t("Aggiungi a questo progetto i dati del dispositivo.")}
@@ -104,8 +106,8 @@ export function ModeTransfer({ backend, enabled, shown }: { backend: DataStore; 
       <RowDivider />
       <ActionRow icon={iconShapes.download} tone="secondary" title={t("Da Firebase al dispositivo")} subtitle={t("Copia su questo dispositivo i dati del progetto.")}
         disabled={!enabled || busy || local.state === 'loading'} onPress={() => void copyOut()} />
-      <RowDivider />
-      <RowBody>
+      {hasBody && <RowDivider />}
+      {hasBody && <RowBody>
         {summary !== null && <Text variant="bodyMedium" accessibilityLiveRegion="polite">{summary}</Text>}
         {/* Few words (user's request, 22 November): the direction in the title, then only what is added; nothing to add →
             one sentence and «Chiudi». */}
@@ -115,7 +117,7 @@ export function ModeTransfer({ backend, enabled, shown }: { backend: DataStore; 
           emptyText={preview.direction === 'in' ? "Firebase ha già tutti i dati del dispositivo." : "Il dispositivo ha già tutti i dati di Firebase."}
           blockedTitle="Impossibile unire i dati" />}
         {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}
-      </RowBody>
+      </RowBody>}
     </ListGroup>
   );
 }
