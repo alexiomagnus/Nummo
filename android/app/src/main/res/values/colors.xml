@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- The launcher icon (public/icons/icon.svg) and the first frame before the page paints its own theme. -->
-    <color name="icon_background">#0D1A3E</color>
-    <color name="icon_foreground">#F3F6FC</color>
+    <color name="icon_background">#171717</color>
+    <color name="icon_foreground">#FAFAF7</color>
     <color name="start_background">#0F1115</color>
 </resources>

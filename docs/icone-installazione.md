@@ -33,11 +33,18 @@ senza ombra né filo sul bordo (a quelle misure li impastavano). Android: `ic_la
 la luce radiale), `icon_background` `#0D1A3E` (anche primo fotogramma), `ic_launcher_foreground.xml` = logo e ombra a scala 0,6,
 `icon_foreground` `#F3F6FC`; `icon_shape` e `icon_stem` tolti (serve un nuovo APK).
 
+**26 novembre 2026, sera, su richiesta («#FAFAF7 · #171717, la n di bianco e il background nero»):** fondo pieno `#171717` e logo
+`#FAFAF7`, piatti: tolti sfumatura, luce, filo sul bordo e ombra. Stesse forme e scale (`icon.svg` 0,8; `icon-192`/`icon-512` 0,72 con
+angoli trasparenti; maskable 0,5 e Apple 0,62, quadrati pieni RGB). PNG resi con `rsvg-convert` da SVG temporanei, poi senza canale alpha
+con `ffmpeg -pix_fmt rgb24` per maskable e Apple. Android: `ic_launcher_background.xml` a colore pieno (`icon_background` `#171717`;
+il primo fotogramma resta `start_background`), `ic_launcher_foreground.xml` senza ombra, `icon_foreground` `#FAFAF7` (serve un nuovo APK). Invariati
+`icon-monochrome.svg`, `ic_launcher_monochrome.xml`, `badge-96.png` e l'icona delle notifiche.
+
 ## Asset e scopi
 
 | Asset in `public/icons/` | Uso |
 | --- | --- |
-| `icon.svg` | Favicon a colori (dal 26 novembre logo a 0,8, senza ombra né filo, per le schede), prima simbolo scalato a 0,72, fondo «squircle» (dal 21 novembre più squadrato: punti di controllo a 4 unità dagli angoli su 64, prima 10) |
+| `icon.svg` | Favicon a colori (dal 26 novembre logo a 0,8, per le schede; dalla sera fondo `#171717` e logo `#FAFAF7` pieni), prima simbolo scalato a 0,72, fondo «squircle» (dal 21 novembre più squadrato: punti di controllo a 4 unità dagli angoli su 64, prima 10) |
 | `icon-192.png`, `icon-512.png` | Manifest `any`, installazione/splash secondo il browser: **RGBA con angoli trasparenti** (stessa forma di `icon.svg`, resa con Chromium headless a sfondo trasparente). Prima erano quadrati opachi, e i launcher desktop li mostravano squadrati |
 | `icon-maskable-512.png` | Manifest `maskable`, sfondo pieno e simbolo centrale |
 | `apple-touch-icon.png` | Collegamento Apple, 180×180 |

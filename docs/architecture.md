@@ -1743,3 +1743,12 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   silenziosa. Il permesso «installa app sconosciute» lo concede l'utente nelle impostazioni di Android.
 - **Compatibilità:** metodi del ponte facoltativi. La 0.3.5 conosce la propria versione ma non scarica: «Aggiorna» apre la release su
   GitHub; la 0.3.4 e precedenti non vedono nulla. Il primo passaggio alla 0.3.6 si installa a mano.
+
+## Nessuna sfumatura sulla riga tagliata in fondo alla pagina — 26 novembre 2026
+
+- **Su richiesta** («elimina la sfumatura… sia da mobile che desktop»): tolto il meccanismo del 21 novembre che, a ogni dimensione con
+  navigazione, dissolveva verso il bordo la riga tagliata dal fondo della pagina (`theme/wholeRows.ts`, maschera CSS `[data-whole-rows]
+  [data-clipped]`, `dataSet.wholeRow` di `ListRow`, intestazioni dei mesi in Spese e schede dei fondi) e la portava in vista al tocco.
+  Ora la riga tagliata resta com'è, nitida e premibile; il bordo del pannello (desktop) o della pagina la taglia come ogni altro contenuto.
+  Con il meccanismo è andato anche lo scorrimento automatico di una riga cresciuta oltre il fondo: i dettagli oggi si aprono in schermi
+  propri, non dentro la riga.

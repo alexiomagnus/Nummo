@@ -115,6 +115,23 @@ dell'utente: valgono come 26 novembre.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Icona nera piatta (app 0.3.7), niente sfumatura in fondo alla pagina, categorie predefinite senza messaggio — 26 novembre 2026, sera
+
+Su richiesta:
+- **Sfumatura in fondo alla pagina tolta** (smartphone e desktop): la riga tagliata dal bordo inferiore non si dissolve più e resta
+  premibile. Rimossi `theme/wholeRows.ts`, il suo test, la maschera CSS di `GlobalStyle` e `dataSet.wholeRow` (`ListRow`, mesi di Spese,
+  schede dei fondi); lo scroller della pagina ha `data-page-scroll` (lo usa `scripts/check-keyboard.mjs` al posto di `data-whole-rows`).
+- **App Android 0.3.7** (versionCode 10): solo la nuova icona.
+- **Categorie predefinite:** la creazione automatica al primo accesso (`seedDefaults`) non mostra più «Categorie predefinite aggiunte.»
+  (`addDefaults(true)` in `Workspace.tsx`); un errore è ancora segnalato. Il pulsante «Ripristina le categorie predefinite» conferma come
+  prima (chiamato con `() => addDefaults()`, così l'argomento resta `false`).
+- **Icona:** fondo pieno `#171717` e «n» `#FAFAF7`, piatti (tolti sfumatura navy, luce, filo e ombra): `icon.svg`, i quattro PNG
+  (maskable e Apple RGB senza alpha), Android `ic_launcher_background.xml` a colore pieno e `ic_launcher_foreground.xml` senza ombra
+  (`icon_background`/`icon_foreground` in `colors.xml`). Dettagli in `docs/icone-installazione.md`. **Serve un nuovo APK** perché l'icona
+  dell'app Android cambi; le web app installate la aggiornano quando il browser rilegge il manifest.
+- Verifiche: `npm run check` OK (**619/619**), `./gradlew assembleDebug` OK (risorse valide); anteprime della maskable e di `icon-512`
+  controllate. **Non provato:** messaggio al primo accesso con un archivio vuoto reale, icona su telefono e nel launcher.
+
 ## Aggiornamenti dell'app Android dalle GitHub Releases (app 0.3.6) — 26 novembre 2026
 
 Su richiesta. Analisi: l'app è una WebView del sito con ponte nativo; il sito non può installare APK, quindi serve codice nativo nuovo
