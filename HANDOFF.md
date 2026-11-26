@@ -126,6 +126,12 @@ Su richiesta, commit `685dfe6`, pubblicato solo su Hosting (Rules invariate; «D
 - Lista scontrini: impostazioni AI nascondibili. Aggiornamento Android: schermata ridotta (versione e «Installata: X», senza note).
 - Commento di `AppShell.tsx` sistemato (niente più `wholeRows.ts`).
 
+## Legende senza tessere colorate, ciambella più grande, Android 0.3.8 — 27 novembre 2026
+
+Su richiesta, commit `3a0358a`, Hosting pubblicato («Deploy complete!», Rules invariate). `npm run check` OK (617/617); non provato su dispositivo.
+- Legenda di Analisi: quadratino del colore e icona senza tessera colorata; sempre sotto ciambella e blocchi, nel riquadro dei gruppi di righe (due colonne da 720 px); ciambella fino a 400 (`donutMaxSize`).
+- **App Android 0.3.8** (versionCode 11, solo il numero: nessuna modifica nativa dalla 0.3.7), release GitHub `android-v0.3.8` «Latest» (APK firmata `nummo-0.3.8.apk`, 9 238 420 byte, SHA-256 `c4f18bb8…b59a`, uguale al `digest` dell'API; certificato `00b1c85c…0fcf` verificato con `apksigner` sul file locale, non riscaricato; tag annotato su `3a0358a`). Non ancora installata dall'utente: una 0.3.7 deve riceverla dall'app stessa.
+
 ## Icona nera piatta (app 0.3.7), niente sfumatura in fondo alla pagina, categorie predefinite senza messaggio — 26 novembre 2026, sera
 
 Su richiesta:
