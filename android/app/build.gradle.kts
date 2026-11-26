@@ -37,8 +37,10 @@ android {
         applicationId = "app.nummo.android"
         minSdk = 30
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.3.5"
+        versionCode = 9
+        versionName = "0.3.6"
+        // Releases with the APKs (Updater.kt; the same repository as src/domain/appUpdate.ts): tags `android-vX.Y.Z`, asset `nummo-X.Y.Z.apk` (+ `.apk.sha256`).
+        buildConfigField("String", "UPDATE_REPOSITORY", quoted("alexiomagnus/Nummo"))
     }
 
     signingConfigs {

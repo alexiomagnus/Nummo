@@ -46,6 +46,7 @@ class MainActivity : Activity() {
     var awayForResult = false
     private var backCallback: OnBackInvokedCallback? = null
     private var notificationRequest: String? = null
+    private var installPermissionRequest: String? = null
     // The page has drawn its first frame (onPageCommitVisible): until then the system splash stays (see holdSplash).
     private var pageVisible = false
 
@@ -80,6 +81,9 @@ class MainActivity : Activity() {
         webView.setBackgroundColor(startColor)
         holdSplash()
         bridge = NummoBridge(this)
+        Updater.attach(this)
+        // A downloaded update already installed (or stale) is deleted at a fresh start.
+        if (savedInstanceState == null) Thread { runCatching { Updater.cleanStale(applicationContext) } }.start()
         configure(webView)
         if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) webView.loadUrl(startUrl(intent))
     }
@@ -218,6 +222,31 @@ class MainActivity : Activity() {
         requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), requestNotifications)
     }
 
+    // «Install unknown apps» for Nummo (updates, Updater.kt): Android's own settings page; ok if allowed on the way back.
+    fun allowUpdateInstalls(id: String) {
+        if (packageManager.canRequestPackageInstalls()) { deliver(id, "ok"); return }
+        installPermissionRequest?.let { deliver(it, "cancelled") }
+        installPermissionRequest = id
+        try {
+            awayForResult = true
+            startActivityForResult(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")), requestInstallPermission)
+        } catch (_: ActivityNotFoundException) {
+            awayForResult = false
+            installPermissionRequest = null
+            deliver(id, "unavailable")
+        }
+    }
+
+    // Android's confirmation of an update (PackageInstaller), in front of the app: the page stays «visible» meanwhile.
+    fun showInstallConfirmation(confirmation: Intent) {
+        try {
+            awayForResult = true
+            startActivityForResult(confirmation, requestInstall)
+        } catch (_: ActivityNotFoundException) {
+            awayForResult = false
+        }
+    }
+
     fun openNotificationSettings() {
         try {
             startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName))
@@ -294,6 +323,13 @@ class MainActivity : Activity() {
                 val uri = data?.data
                 if (resultCode == RESULT_OK && uri != null && bytes != null) writeFile(uri, bytes)
             }
+            requestInstallPermission -> {
+                val id = installPermissionRequest
+                installPermissionRequest = null
+                if (id != null) deliver(id, if (packageManager.canRequestPackageInstalls()) "ok" else "cancelled")
+            }
+            // The installer's answer comes through UpdateReceiver; here only the page's «visible» state ends.
+            requestInstall -> Unit
             else -> @Suppress("DEPRECATION") super.onActivityResult(requestCode, resultCode, data)
         }
     }
@@ -358,6 +394,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        Updater.detach(this)
         root.removeView(webView)
         webView.destroy()
         super.onDestroy()
@@ -368,6 +405,8 @@ class MainActivity : Activity() {
         const val requestSave = 2
         const val requestCamera = 3
         const val requestNotifications = 4
+        const val requestInstallPermission = 5
+        const val requestInstall = 6
         const val barsPreferences = "systemBars"
         const val splashLimitMs = 1500L
     }

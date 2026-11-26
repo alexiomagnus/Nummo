@@ -42,7 +42,11 @@ const signInMethods = ['googleProject', 'googleSignIn', 'googleSignOut'] as cons
 const notificationMethods = ['notificationStatus', 'requestNotifications', 'scheduleNotifications', 'disableNotifications',
   'testNotification', 'takeSnoozes', 'openNotificationSettings'] as const;
 
-type Scope = { NummoAndroid?: unknown; nummoAndroidResult?: (id: string, outcome: string, value?: unknown) => void };
+type Scope = {
+  NummoAndroid?: unknown;
+  nummoAndroidResult?: (id: string, outcome: string, value?: unknown) => void;
+  nummoAndroidUpdate?: (id: string, received: unknown, total: unknown) => void;
+};
 
 // The bridge only if every method is there (an older app, or a page object of that name, is ignored).
 export function androidBridge(scope: unknown = globalThis): AndroidBridge | undefined {
@@ -86,6 +90,97 @@ export function androidAppVersion(scope: unknown = globalThis): AndroidAppVersio
     return typeof name === 'string' && /^\d{1,4}(\.\d{1,4}){0,3}$/.test(name) && Number.isSafeInteger(code) && (code as number) > 0
       ? { name, code: code as number } : null;
   } catch { return null; }
+}
+
+// Optional too (version 0.3.6, 27 November, on request): updates of the app from the repository's GitHub Releases
+// (Updater.kt). The app downloads the APK of a release (only from this repository's downloads), checks its SHA-256 when the
+// release gives one, its package, its version and that it is signed with the same key as the installed app, then hands it to
+// Android's installer, which always asks the user to confirm. Android's «install unknown apps» permission for Nummo is
+// asked by opening its settings page. An older app (0.3.5) has none of this: the page opens the release on GitHub instead.
+export type AndroidUpdater = {
+  canInstallUpdates(): boolean;
+  allowUpdateInstalls(id: string): void;
+  updateDownload(id: string, url: string, sha256: string, sha256Url: string, size: number): void;
+  updateCancel(id: string): void;
+  updateInstall(id: string): void;
+};
+const updaterMethods = ['canInstallUpdates', 'allowUpdateInstalls', 'updateDownload', 'updateCancel', 'updateInstall'] as const;
+
+export function androidUpdater(scope: unknown = globalThis): (AndroidBridge & AndroidUpdater) | undefined {
+  const bridge = androidBridge(scope);
+  if (!bridge) return undefined;
+  const record = bridge as unknown as Record<string, unknown>;
+  return updaterMethods.every((name) => typeof record[name] === 'function') ? bridge as AndroidBridge & AndroidUpdater : undefined;
+}
+
+// Why a download failed (Updater.kt): network, integrity (SHA-256 differs), signature (another key), package (another app),
+// version (not newer than the installed one), storage (no room), or anything else.
+export type UpdateFailure = 'network' | 'integrity' | 'signature' | 'package' | 'version' | 'storage' | 'error';
+const failures: readonly UpdateFailure[] = ['network', 'integrity', 'signature', 'package', 'version', 'storage', 'error'];
+export type UpdateDownloadResult = { outcome: 'ok' } | { outcome: 'cancelled' } | { outcome: 'error'; reason: UpdateFailure };
+export type UpdateDownload = { url: string; sha256: string | null; sha256Url: string | null; size: number };
+
+const progressListeners = new Map<string, (received: number, total: number) => void>();
+function listenProgress(scope: unknown): void {
+  const target = scope as Scope;
+  target.nummoAndroidUpdate ??= (id, received, total) => {
+    if (typeof received === 'number' && typeof total === 'number') progressListeners.get(id)?.(received, total);
+  };
+}
+
+// Downloads and verifies the APK; progress through `window.nummoAndroidUpdate(id, received, total)`, the end through
+// `nummoAndroidResult(id, outcome, reason)`. Aborting cancels the download (the partial file is deleted by the app).
+export function downloadUpdateOnDevice(bridge: AndroidUpdater, request: UpdateDownload, onProgress: (received: number, total: number) => void,
+  signal?: AbortSignal, scope: unknown = globalThis): Promise<UpdateDownloadResult> {
+  listen(scope);
+  listenProgress(scope);
+  if (signal?.aborted) return Promise.resolve({ outcome: 'cancelled' });
+  counter += 1;
+  const id = `update-${counter}`;
+  return new Promise((resolve) => {
+    const finish = (result: UpdateDownloadResult) => {
+      progressListeners.delete(id);
+      signal?.removeEventListener('abort', abort);
+      resolve(result);
+    };
+    const abort = () => {
+      if (!pending.delete(id)) return;
+      try { bridge.updateCancel(id); } catch { /* already finished */ }
+      finish({ outcome: 'cancelled' });
+    };
+    progressListeners.set(id, onProgress);
+    pending.set(id, (outcome, value) => {
+      if (outcome === 'ok') finish({ outcome: 'ok' });
+      else if (outcome === 'cancelled') finish({ outcome: 'cancelled' });
+      else finish({ outcome: 'error', reason: failures.includes(value as UpdateFailure) ? value as UpdateFailure : 'error' });
+    });
+    signal?.addEventListener('abort', abort);
+    try { bridge.updateDownload(id, request.url, request.sha256 ?? '', request.sha256Url ?? '', request.size); }
+    catch { pending.delete(id); finish({ outcome: 'error', reason: 'error' }); }
+  });
+}
+
+// Android's settings page «install unknown apps» for Nummo: ok = allowed on the way back, cancelled = still not allowed.
+export function allowUpdateInstallsOnDevice(bridge: AndroidUpdater, scope: unknown = globalThis): Promise<AndroidOutcome> {
+  listen(scope);
+  counter += 1;
+  const id = `install-permission-${counter}`;
+  return new Promise((resolve) => {
+    pending.set(id, (outcome) => resolve(outcome));
+    try { bridge.allowUpdateInstalls(id); } catch { pending.delete(id); resolve('error'); }
+  });
+}
+
+// Hands the verified APK to Android's installer, which asks the user to confirm. A confirmed update replaces the app (and
+// closes it): the page gets no answer then. cancelled = the user declined, unavailable = no permission or no verified file.
+export function installUpdateOnDevice(bridge: AndroidUpdater, scope: unknown = globalThis): Promise<AndroidOutcome> {
+  listen(scope);
+  counter += 1;
+  const id = `install-${counter}`;
+  return new Promise((resolve) => {
+    pending.set(id, (outcome) => resolve(outcome));
+    try { bridge.updateInstall(id); } catch { pending.delete(id); resolve('error'); }
+  });
 }
 
 // Bar colours: only a plain `#RRGGBB` reaches the app (the theme's backgrounds always are).

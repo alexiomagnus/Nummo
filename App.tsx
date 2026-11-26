@@ -10,6 +10,7 @@ import { Button } from './src/components/Button';
 import { Card } from './src/components/Card';
 import { IconStyleProvider } from './src/components/CategoryGlyph';
 import { HapticsProvider } from './src/components/Haptics';
+import { AppUpdateCheck } from './src/features/update/AppUpdateCheck';
 import { useOverlayMotion, usePresence } from './src/components/Overlay';
 import { ThemeIcon } from './src/components/ThemeIcon';
 import { SvgIcon, iconShapes } from './src/components/SvgIcon';
@@ -89,6 +90,8 @@ export default function App() {
             <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} />
             <Root dark={dark} onToggleTheme={() => changePreferences({ theme: dark ? 'light' : 'dark' })}
               preferences={preferences} onChangePreferences={changePreferences} onResetPreferences={resetPreferences} />
+            {/* Android app only: once a day, «Aggiornamento disponibile» when GitHub has a newer release (features/update). */}
+            <AppUpdateCheck />
             <AppLockScreen />
           </PaperProvider>
         </SafeAreaProvider>

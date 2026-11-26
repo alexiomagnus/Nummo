@@ -116,6 +116,28 @@ class NummoBridge(private val activity: MainActivity) {
         activity.runOnUiThread { activity.openNotificationSettings() }
     }
 
+    // Updates from the repository's GitHub Releases (Updater.kt, 0.3.6): may Nummo install apps (Android's «install unknown
+    // apps»), its settings page (answer ok when allowed on the way back), download and verify an APK (progress through
+    // `window.nummoAndroidUpdate`, the end through `nummoAndroidResult(id, outcome, reason)`), cancel it, install it (Android
+    // asks the user to confirm).
+    @JavascriptInterface
+    fun canInstallUpdates(): Boolean = activity.packageManager.canRequestPackageInstalls()
+
+    @JavascriptInterface
+    fun allowUpdateInstalls(id: String) {
+        activity.runOnUiThread { activity.allowUpdateInstalls(id) }
+    }
+
+    @JavascriptInterface
+    fun updateDownload(id: String, url: String, sha256: String, sha256Url: String, size: Double) =
+        Updater.download(activity, id, url, sha256, sha256Url, size.toLong())
+
+    @JavascriptInterface
+    fun updateCancel(id: String) = Updater.cancel(id)
+
+    @JavascriptInterface
+    fun updateInstall(id: String) = Updater.install(activity, id)
+
     private fun start(id: String) {
         val signal = CancellationSignal()
         prompts[id] = signal

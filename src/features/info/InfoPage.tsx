@@ -10,6 +10,11 @@ import { androidAppVersion } from '../../services/androidApp';
 import { backLevels } from '../../theme/backStack';
 import { radius, spacing } from '../../theme/tokens';
 import { Guide } from '../session/Guide';
+import { ReleaseNotesDialog } from '../update/ReleaseNotesDialog';
+import { UpdateDialog } from '../update/UpdateDialog';
+import { useAppUpdate, type UpdateCheck } from '../update/useAppUpdate';
+import type { AppRelease } from '../../domain/appUpdate';
+import { Spinner } from '../../components/Spinner';
 
 // The creator's profile and the repository of the app (user's request, 26 November).
 export const creatorName = 'alexiomagnus';
@@ -41,6 +46,7 @@ export function InfoPage({ onGuideChange }: { onGuideChange?: (open: boolean) =>
   return (
     <View style={styles.root}>
       <Hero version={version} />
+      {version && <Updates />}
       <Group label={t("Progetto")}>
         <Row icon={iconShapes.info} tile={[colors.primaryContainer, colors.onPrimaryContainer]} title={t("Cos'è Nummo?")}
           subtitle={t("Le funzioni principali, dove sono i tuoi dati e gli avvisi")} label={t("Apri la guida Cos'è Nummo")}
@@ -60,6 +66,55 @@ export function InfoPage({ onGuideChange }: { onGuideChange?: (open: boolean) =>
       </Group>
     </View>
   );
+}
+
+// «Aggiornamenti» (27 November, on request; only in the Android app, which has a version to compare): «Controlla
+// aggiornamenti» asks GitHub at once (the automatic check waits 24 hours between two) and opens «Aggiornamento disponibile» or
+// says the app is up to date; «Note di rilascio» shows the notes of the last releases.
+function Updates() {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const { installed, check, releases, run, load } = useAppUpdate();
+  const [offer, setOffer] = useState<AppRelease | null>(null);
+  const [notes, setNotes] = useState(false);
+  const [notesFailed, setNotesFailed] = useState(false);
+  const checking = check.kind === 'checking';
+  const verify = async () => {
+    const result = await run();
+    if (result.kind === 'available') setOffer(result.release);
+  };
+  const openNotes = async () => {
+    setNotes(true);
+    setNotesFailed(false);
+    if (releases) return;
+    const found = await load();
+    if (typeof found === 'string') setNotesFailed(true);
+  };
+  return (
+    <Group label={t("Aggiornamenti")}>
+      <Row icon={iconShapes.sync} tile={[colors.primaryContainer, colors.onPrimaryContainer]} title={t("Controlla aggiornamenti")}
+        subtitle={checkText(t, check, installed)} label={t("Controlla se è disponibile una nuova versione dell'app")}
+        busy={checking} onPress={() => { void verify(); }} />
+      <Divider style={styles.divider} />
+      <Row icon={iconShapes.receipt} tile={[colors.secondaryContainer, colors.onSecondaryContainer]} title={t("Note di rilascio")}
+        subtitle={t("Le novità delle ultime versioni dell'app")} label={t("Apri le note di rilascio")}
+        onPress={() => { void openNotes(); }} />
+      {installed && <UpdateDialog release={offer} installed={installed} onClose={() => setOffer(null)} />}
+      <ReleaseNotesDialog visible={notes} releases={releases} failed={notesFailed} installed={installed}
+        onRetry={() => { void openNotes(); }} onClose={() => setNotes(false)} />
+    </Group>
+  );
+}
+
+function checkText(t: ReturnType<typeof useI18n>['t'], check: UpdateCheck, installed: string | null): string {
+  switch (check.kind) {
+    case 'checking': return t("Controllo in corso…");
+    case 'current': return t("Hai l'ultima versione ({p0})", { p0: installed ?? '' });
+    case 'available': return t("Disponibile la versione {p0}", { p0: check.release.version });
+    case 'failed': return check.reason === 'limited' ? t("GitHub ha limitato le richieste: riprova più tardi")
+      : check.reason === 'offline' ? t("Controllo non riuscito: sei offline?") : t("Controllo non riuscito: riprova più tardi");
+    default: return t("Cerca una nuova versione su GitHub");
+  }
 }
 
 // The big card at the top: the version in large figures, its first number in the main colour (Android app), or the mark.
@@ -98,20 +153,21 @@ function Group({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-type RowProps = { icon: string; tile: readonly [string, string]; title: string; subtitle: string; label: string } &
+type RowProps = { icon: string; tile: readonly [string, string]; title: string; subtitle: string; label: string; busy?: boolean } &
   ({ href: string; onPress?: undefined } | { onPress: () => void; href?: undefined });
 
-function Row({ icon, tile, title, subtitle, label, href, onPress }: RowProps) {
+function Row({ icon, tile, title, subtitle, label, href, onPress, busy = false }: RowProps) {
   const { colors } = useTheme();
   return (
     <StateLayerPressable layerColor={colors.onSurface} accessibilityLabel={label} role={href ? 'link' : 'button'}
-      onPress={onPress} {...(href ? linkProps(href) : null)} style={styles.row}>
+      disabled={busy} aria-busy={busy} onPress={onPress} {...(href ? linkProps(href) : null)} style={styles.row}>
       <View style={[styles.tile, { backgroundColor: tile[0] }]}><SvgIcon shape={icon} size={22} color={tile[1]} /></View>
       <View style={styles.text}>
         <Text variant="titleMedium" numberOfLines={1}>{title}</Text>
-        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{subtitle}</Text>
+        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }} {...({ 'aria-live': 'polite' } as object)}>{subtitle}</Text>
       </View>
-      <SvgIcon shape={href ? iconShapes.externalLink : iconShapes.chevronRight} size={20} color={colors.onSurfaceVariant} />
+      {busy ? <Spinner size={20} label={title} />
+        : <SvgIcon shape={href ? iconShapes.externalLink : iconShapes.chevronRight} size={20} color={colors.onSurfaceVariant} />}
     </StateLayerPressable>
   );
 }

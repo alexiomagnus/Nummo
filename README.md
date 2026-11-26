@@ -348,9 +348,32 @@ cd android
 
 L'app mostra sempre il sito pubblicato: le novità dell'interfaccia arrivano con `npm run deploy:hosting`, senza reinstallarla.
 
-Gli APK firmati sono nelle **Releases** di GitHub, una per versione dell'app, con tag `android-v<versione>` sul commit da cui sono
-compilati (APK e il suo SHA-256): `gh release create android-v0.3.2 nummo-0.3.2.apk nummo-0.3.2.apk.sha256 --verify-tag`. Il
-repository è privato: per scaricarli serve l'accesso a GitHub. I rilasci del sito non hanno tag.
+Gli APK firmati sono nelle **Releases** di GitHub (repository pubblico), una per versione dell'app, con tag `android-v<versione>`
+sul commit da cui sono compilati. I rilasci del sito non hanno tag.
+
+### Aggiornamenti dall'app (dalla 0.3.6)
+
+L'app controlla le Releases una volta ogni 24 ore all'apertura (API pubblica di GitHub, senza token né backend) e, se c'è una
+versione più recente di quella installata, propone «Aggiornamento disponibile» con le note della release, «Più tardi» e
+«Aggiorna». Da menu account → **Info** → «Aggiornamenti» si controlla subito («Controlla aggiornamenti») e si leggono le note delle
+ultime versioni («Note di rilascio»). «Aggiorna» scarica l'APK dentro l'app con una barra di avanzamento, lo verifica (SHA-256 della
+release, stesso pacchetto, versione più alta, **stessa chiave di firma**) e lo passa all'installatore di Android, che chiede sempre la
+conferma; la prima volta Android chiede anche di consentire a Nummo di installare app («Consenti da questa fonte»). I dati restano:
+un aggiornamento conserva l'archivio dell'app. L'app 0.3.5 (e precedenti) non sa scaricare da sola: il suo «Aggiorna» apre la
+pagina della release su GitHub; dalla 0.3.4 in giù non conosce la propria versione e non propone nulla.
+
+Perché una release sia vista dagli aggiornamenti, pubblicala così:
+
+1. alza `versionCode` (sempre) e `versionName` in `android/app/build.gradle.kts`; la versione è solo numerica (`0.3.7`);
+2. compila con la **stessa chiave** (`./gradlew assembleRelease`) e rinomina l'APK in `nummo-<versione>.apk`;
+3. calcola l'impronta: `sha256sum nummo-<versione>.apk > nummo-<versione>.apk.sha256`;
+4. crea la release, pubblicata (non bozza né pre-release) e marcata come «Latest», con tag `android-v<versione>` già inviato:
+   `gh release create android-v<versione> nummo-<versione>.apk nummo-<versione>.apk.sha256 --verify-tag --title "Nummo Android <versione>" --notes-file note.md`.
+
+Il corpo della release (Markdown: titoli `##`, elenchi, **grassetto**, `codice`) è il testo mostrato come «Novità». Una release con
+un altro tag, senza `nummo-<versione>.apk` o con un nome di file diverso viene ignorata. GitHub fornisce da sé lo SHA-256 dell'APK
+(`digest`); il file `.sha256` resta come riserva. Una release non può far installare un APK firmato con un'altra chiave, né una
+versione precedente: Android e l'app la rifiutano.
 
 ## Sicurezza e responsabilità
 
