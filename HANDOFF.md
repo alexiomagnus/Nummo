@@ -86,8 +86,11 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
   separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser; il
   pulsante tondo della barra mobile anima la larghezza in JS (un ricalcolo del layout per fotogramma per 250 ms, nessun artefatto visto).
-- **Ambiente.** Il 23 novembre era attivo un runner hybrid dell'utente (PID 6588, `dev-hybrid.ts --clear`, con il suo lock,
-  `.nummo-hybrid-6588.json` e la sessione `hybrid-NBhDrA`): stato del momento, non toccato. In `.firebase/` restano, per scelta dell'utente,
+- **Ambiente.** Il 26 novembre (verificato dopo le 12:20) è attivo un runner hybrid dell'utente: PID 45058 (`node scripts/dev-hybrid.ts`),
+  avviato alle 10:53 UTC, con `.firebase/hybrid.lock`, `.nummo-hybrid-45058.json` e la sessione `hybrid-xWmKHo`: stato del momento, non
+  toccato. Il PID 6588 del 23 novembre è superato. In `.firebase/` restano anche `hybrid-B5HtbF` (sessione del 25 novembre interrotta
+  senza export, `export` vuota; vedi la sezione datata sulla sessione hybrid interrotta) e `hybrid-NBhDrA` (sessione del 23 novembre, solo
+  `cli-config`), non toccate. Restano, per scelta dell'utente,
   `hybrid-hRM9mM/previous` (copia del 16 novembre), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
   `hosting.*.cache` (della CLI); `hybrid-vtMRe6/previous` è la copia dell'archivio locale delle 17:11 del 22 novembre, lasciata dalla
   promozione delle 21:11 che ha prodotto l'attuale `emulator-data/`. Le altre cartelle citate nelle sezioni storiche sono state tolte il
