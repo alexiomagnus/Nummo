@@ -40,9 +40,10 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.5` «Latest», poi 0.3.4, 0.3.3, 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, otto tag `android-v0.1.0`…`android-v0.3.5`. Ultimi commit di codice `96886d7`
-  («Lista scontrini») e `4b0f777` (lavoro della sessione parallela), 26 novembre, inviati e pubblicati; prima `26b0901` (lock hybrid, solo
-  sviluppo) e `c4301b9` (`originId` tolto). Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
+- **Git.** `main` = `origin/main`, solo il ramo `main`, otto tag `android-v0.1.0`…`android-v0.3.5`. Ultimi commit di codice, 26 novembre,
+  tutti inviati e pubblicati: `6f32d22` (pagina «Info», app 0.3.5), `adb4768` (Esercente in vista con la tastiera), `222e0f4` («Elimina
+  le liste archiviate» a tutta larghezza), `446f4e8` (Categoria intera su smartphone), `96886d7` («Lista scontrini») e `4b0f777` (lavoro
+  della sessione parallela); prima `26b0901` (lock hybrid, solo sviluppo) e `c4301b9` (`originId` tolto). Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
   L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
@@ -59,7 +60,8 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** Su `96886d7` (26 novembre, albero pulito): `npm run check` OK (**605/605**, typecheck, build demo); `test:emulator` **25/25** (porte temporanee). 26 novembre, dopo il riallineamento dei documenti e la rimozione di `originId`: `npm run check` OK (**599/599**). Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
+- **Verifiche (ultime).** 26 novembre, dopo il backup di collaudo v12 (vedi la sezione datata): `npm run check` OK (**607/607**). Su `31ea15a`
+  (codice di `6f32d22`, albero pulito): `npm run check` OK (**606/606**, typecheck, build demo). Su `96886d7` (26 novembre, albero pulito): `npm run check` OK (**605/605**, typecheck, build demo); `test:emulator` **25/25** (porte temporanee). 26 novembre, dopo il riallineamento dei documenti e la rimozione di `originId`: `npm run check` OK (**599/599**). Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
   nelle sezioni datate. Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
   visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
@@ -102,6 +104,23 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
+
+## Documenti riallineati, backup di collaudo v12 — 26 novembre 2026
+
+Su richiesta, dopo un confronto tra documenti e codice (su `31ea15a`, `npm run check` OK, 606/606):
+- **Backup di collaudo v12** `docs/testing/nummo-scontrini-v12.json` (prefisso `V12`, generato con `makeBackup`, identico a un export):
+  6 spese, 3 categorie, 1 fondo, 3 esercenti, **5 scontrini** (spesa corretta dopo il salvataggio, nessun prodotto, esercente e data non
+  letti, totale non letto, 500 prodotti con il primo di 60 caratteri, i tre servizi AI) e una spesa senza scontrino. Casi, valori al
+  26 novembre e passi del collaudo in `docs/testing/README.md`; test `collaudo v12` in `tests/testingBackups.test.ts` (lettura, export
+  identico, ordine di Lista scontrini, totali, piano di unione, conflitto su uno scontrino, rifiuto come v11 e senza la spesa).
+- **Collaudo dall'interfaccia eseguito** (su richiesta, Chromium headless, esiti in `docs/testing/README.md`): Standard su `dist-demo/`
+  e Avanzata con emulatori demo propri (porte 39199/39380, config temporanea `.nummo-collaudo-v12.json` tolta, processi propri fermati;
+  la sessione hybrid dell'utente, PID 45058, non toccata). Tutto come atteso, nessun errore JS; Rules accettano i 500 prodotti e i
+  valori nulli. Non provati: CSV, telefono reale, inglese, tema scuro.
+- **Documenti:** AGENTS.md («Archiviazione e backup» sotto «Lista scontrini»; nomi dei gruppi della pagina Info); README (backup v12);
+  qui «Stato corrente» (Git, verifiche) e «Funzionalità implementate» (backup v12, schermi che salgono dal basso, Lista scontrini,
+  Esercenti, Info, sei backup di collaudo). Le citazioni di v11 in `docs/architecture.md` sono storiche e restano.
+- **Verifica:** `npm run check` OK (**607/607**, typecheck, build demo). Commit su richiesta, non inviato né pubblicato (solo documenti e test).
 
 ## Pagina «Info», «Elimina le liste archiviate» a tutta larghezza, Esercente in vista con la tastiera — 26 novembre 2026
 
@@ -6049,7 +6068,7 @@ Questo file descrive il checkout: risultati emulati non certificano cloud, dispo
   icone, predefiniti, avvio. I titoli dei commit non descrivono interamente il contenuto.
 - `.nummo-hybrid-*.json` è ora coperto da `.gitignore` e nessun file del genere è tracciato (verificato il 14 novembre).
 
-## Funzionalità implementate (riscontro nel codice, riallineato il 21 novembre)
+## Funzionalità implementate (riscontro nel codice, riallineato il 26 novembre)
 
 Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
 
@@ -6076,17 +6095,20 @@ Riepilogo sintetico; il dettaglio stabile è in `AGENTS.md`.
   filtro «Fondo».
 - **Archiviazione e backup** (menu account, sotto Categorie): stato e cambio della modalità, in Avanzata passaggio dei dati tra le due
   modalità («Dal dispositivo a Firebase», «Da Firebase al dispositivo», solo unione), CSV di sola consultazione, JSON
-  `nummo-backup` **v11** (con i template) unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
+  `nummo-backup` **v12** (con i template e gli scontrini scansionati) unico ripristino (lettori storici), unione senza sovrascritture con nomi dei conflitti, sostituzione confermata
   (dal 22 novembre il dialogo propone di scaricare prima un backup completo, mai una copia automatica); «Elimina tutte le spese».
 - **Notifiche:** solo di sistema via Web Push (servizio `push-service/`), promemoria backup (solo Standard), riepilogo spese, rinnovi;
   orario e fuso scelti dall'utente. Nell'app Android (dalla 0.3.0) le stesse notifiche come notifiche locali dell'app (`Reminders.kt`).
 - **Shell/UI:** Material 3 adattiva, quattro destinazioni + «Nuova spesa», temi/tinte, IT/EN senza rimontare sessione o bozze,
-  tastiera virtuale gestita, transizioni con riduzione movimento; dal 23 novembre dialoghi e dettagli come schermi cresciuti
-  dall'elemento toccato (container transform, `ScreenLayer`), fogli dal basso su smartphone per i moduli brevi, schermi di dettaglio di
+  tastiera virtuale gestita, transizioni con riduzione movimento; dal 23 novembre dialoghi e dettagli come schermi (`ScreenLayer`), che
+  dal 24 novembre salgono dal basso (il container transform dall'elemento toccato è stato tolto), fogli dal basso su smartphone per i moduli brevi, schermi di dettaglio di
   spese, abbonamenti e fondi, cambio chiaro/scuro animato; vibrazione **solo nell'app Android** (dal 23 novembre, un solo effetto `tap` =
   HEAVY_CLICK dalla 0.3.2) nella barra mobile, in Analisi, sui segmenti Spese/Abbonamenti e della ricorrenza e su «Salva»/«Crea»;
   interruttore «Vibrazione» solo nell'app (nel browser né vibrazione né interruttore); pagina offline di Nummo dal service worker (nessun avvio offline).
-- **Collaudo:** `docs/testing/` con cinque backup fittizi (template ed esercente v11 dal 23 novembre, casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
+- **Lista scontrini, Esercenti, Info** (menu account): scontrini scansionati salvati con la spesa (solo i dati letti, mai la foto;
+  dettaglio ed eliminazione del solo scontrino) e scheda AI in testa (dal 26 novembre); esercenti con il numero di spese, rinomina, unione
+  ed eliminazione (dal 22 novembre); pagina Info con la versione nell'app Android, la Guida, il creatore e i link GitHub (dal 26 novembre).
+- **Collaudo:** `docs/testing/` con sei backup fittizi (scontrini scansionati v12 dal 26 novembre, template ed esercente v11 dal 23 novembre, casi limite dell'8 novembre, utente medio v6, pagamenti eliminati v9,
   esercenti v10) e guida ai risultati attesi; spese standard, prove gratuite e cambio di frequenza sono stati spostati in
   `tests/fixtures/` (solo test automatici, commit `302b24e`).
 
@@ -6172,7 +6194,8 @@ screen reader, concorrenza tra due dispositivi.
    (`f4691aa`), i piani dei fondi fino a 120 voci (`17ebce0`) e i prodotti per lista fino a 500 (`48361b9`). Da verificare ricaricando l'app: caricamento, sincronizzazione, pagina
    Templates, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
    serve autorizzazione. ID icona eliminati: chiuso (vedi «Problemi aperti»); resta facoltativa la verifica sui dati reali.
-2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`):
+2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`), compreso il nuovo v12
+   (scontrini scansionati: collaudato il 26 novembre in Standard e Avanzata, resta il CSV):
    unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino,
    sospensione della ricarica (interruttore «Ricarica mensile» del modulo del fondo), dialoghi Fondi/Liste a 320 px e in landscape,
    CSV in foglio di calcolo reale. Le eccezioni di budget non si creano più dall'interfaccia: arrivano solo da un backup e

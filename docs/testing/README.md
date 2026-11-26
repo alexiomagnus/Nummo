@@ -1,14 +1,15 @@
 # Backup di collaudo
 
-Cinque file JSON fittizi da importare a mano, preferibilmente nella demo locale (`npm run emulators`, `emulators:seed`,
-`dev:demo`) o in un archivio Standard di prova: casi limite (v5), utente medio (v6), pagamenti eliminati (v9), esercenti (v10)
-e template (v11). Nomi di categorie, fondi, descrizioni e template hanno prefissi distinti (`TEST`, `Medio ·`, `V9`, `V10`, `V11`):
-i file si possono unire allo stesso archivio senza conflitti tra loro (gli esercenti di v10 e v11 hanno nomi diversi).
+Sei file JSON fittizi da importare a mano, preferibilmente nella demo locale (`npm run emulators`, `emulators:seed`,
+`dev:demo`) o in un archivio Standard di prova: casi limite (v5), utente medio (v6), pagamenti eliminati (v9), esercenti (v10),
+template (v11) e scontrini scansionati (v12). Nomi di categorie, fondi, descrizioni e template hanno prefissi distinti (`TEST`,
+`Medio ·`, `V9`, `V10`, `V11`, `V12`): i file si possono unire allo stesso archivio senza conflitti tra loro (gli esercenti uguali
+tra file, come «Esselunga» o «Q8», hanno lo stesso nome e si riconoscono come lo stesso esercente).
 
 ## Casi limite (backup v5)
 
 File: [`nummo-test-casi-limite-2026-11-08.json`](nummo-test-casi-limite-2026-11-08.json).
-Dati interamente fittizi, formato storico `nummo-backup` **v5**, leggibile dal client corrente (backup v11):
+Dati interamente fittizi, formato storico `nummo-backup` **v5**, leggibile dal client corrente (backup v12):
 89 spese/serie, 15 categorie, 6 fondi, 2 movimenti, 4 liste con 112 prodotti. Circa 76 kB.
 Non è compatibile con versioni dell’app che leggono solo backup v1/v2/v3.
 
@@ -272,6 +273,64 @@ Dichiarato v10, lo stesso file è rifiutato («L’esercente nei template richie
   senza importo` tiene 9,99. Da modulo vuoto il risultato è quello della tabella.
 - **Non provati:** smartphone reale, inglese, CSV in un foglio di calcolo.
 
+## Scontrini scansionati (backup v12)
+
+File: [`nummo-scontrini-v12.json`](nummo-scontrini-v12.json), backup **v12** (26 novembre 2026), dati fittizi, prefisso `V12`,
+generato con `makeBackup` (identico a un export). Serve a collaudare la pagina **Lista scontrini** e il ripristino degli scontrini
+senza una chiave AI: 6 spese singole, 3 categorie, 1 fondo (`V12 · Quotidiano`, budget 400,00 € da ottobre), 3 esercenti
+(Brico Center, Esselunga, Q8), **5 scontrini**, ognuno con l'ID della sua spesa.
+
+| Scontrino (spesa) | Caso | Atteso in Lista scontrini e nel dettaglio |
+| --- | --- | --- |
+| Esselunga 24 nov., 27,80 € (`V12 Spesa corretta dopo`, 25,00 €) | spesa corretta dopo il salvataggio; nessun prodotto | lo scontrino resta a 27,80 € (non segue la spesa); «Nessun prodotto letto», senza pulsante dei prodotti |
+| Esselunga 22 nov., 87,45 € (`V12 Spesa grande`) | 12 prodotti con accenti, virgolette e `;`, sconto 3,20 €, Claude | «12 prodotti», sconto, prodotti in ordine nello schermo dei prodotti |
+| Q8 15 nov., 60,00 € (`V12 Carburante`) | un solo prodotto, Google Gemini | «1 prodotto» |
+| Esercente non letto, 34,90 € (`V12 Ferramenta`, spesa con esercente Brico Center) | esercente e data non letti, OpenAI | titolo «Esercente non letto», «Data non letta» nella riga e «Non letta» nel dettaglio; ordinato col giorno del salvataggio (8 nov.) |
+| Esercente non letto, 30 ott. (`V12 Scorta di fine mese`, 1.234,56 €) | totale non letto, sconto 15,00 €, **500 prodotti** (limite), il primo di 60 caratteri | nessun importo nella riga, «Totale non letto» attenuato nel dettaglio; lo schermo dei prodotti scorre fino a `V12 Articolo 500` |
+
+`V12 Mercato senza scontrino` (12,00 €) non ha scontrino: non compare nella pagina. Ordine della pagina (dal più recente): come
+la tabella.
+
+Valori calcolati con il dominio al **26 novembre 2026**, su archivio contenente solo questo file:
+
+- **Totali:** 6 spese, **1.453,91 €** (ottobre 1.234,56 · novembre **219,35 €**); fondo `V12 · Quotidiano` a ottobre
+  **1.234,56 €** su 400,00 € (superato), a novembre **124,45 €**.
+- **Anteprima dell'unione** su archivio vuoto: 6 spese, 3 categorie, 1 fondo, 3 esercenti, **5 scontrini**, nessun conflitto.
+  Seconda unione: nulla da aggiungere.
+
+**Collaudo dall'interfaccia** (passi):
+
+1. **Unisci ai dati esistenti** in Standard; poi menu account → **Lista scontrini**: i cinque scontrini nell'ordine della tabella,
+   con i casi della tabella (anche con la scansione spenta: la pagina mostra comunque gli scontrini).
+2. Dettaglio di ogni scontrino: data, spesa collegata con la categoria, sconto, servizio AI, «Prodotti letti».
+3. **Elimina scontrino** su `V12 Carburante`: la spesa resta in Spese, lo scontrino sparisce; unire di nuovo il file lo riporta.
+4. Eliminare la spesa `V12 Ferramenta` da Spese: sparisce anche il suo scontrino. «Elimina tutte le spese» (dopo la proposta del
+   backup) svuota anche Lista scontrini; categorie, fondo ed esercenti restano.
+5. Esportare il JSON: v12 con gli stessi 5 scontrini, identico al file a parte `exported_at` (se nulla è stato cambiato); il CSV non
+   contiene scontrini.
+6. In Avanzata (demo/emulatore, Rules del checkout): l'unione deve essere accettata, compresi i 500 prodotti e i valori `null`;
+   sul server `receipts/{id spesa}` con i prodotti uniti da `\n`.
+
+Dichiarato v11, lo stesso file è rifiutato («Gli scontrini richiedono un backup versione 12 o successiva.»); senza la spesa di uno
+scontrino è rifiutato («Scontrini nel backup senza la loro spesa.»); uno scontrino cambiato nell'archivio blocca l'unione come
+conflitto: tutto coperto dal test.
+
+**Collaudo eseguito (26 novembre 2026)** su export demo in Chromium headless a 1280×900, italiano, tema chiaro, nessun errore JS.
+
+- **Standard** (`dist-demo/`, archivio nuovo con le cinque categorie predefinite): passi 1–5 con il risultato atteso. Anteprima
+  «6 spese · 3 categorie · 1 fondo · 3 esercenti · 5 scontrini», seconda unione «Niente da aggiungere»; Lista scontrini nell'ordine e
+  con le righe della tabella; dettagli come in tabella (27,80 € con «Nessun prodotto letto» e senza pulsante, sconto 3,20 € e i 12
+  prodotti con accenti e virgolette, «Data non letta»/«Non letta», «Totale non letto»); lo schermo dei 500 prodotti contiene il primo
+  di 60 caratteri e `V12 Articolo 500`. «Elimina scontrino» su Q8: la spesa resta, Spese mostra 1453,91 € (novembre 219,35 €);
+  l'unione successiva propone «1 scontrino» e lo riporta. Eliminata `V12 Ferramenta` dalla modifica, il suo scontrino sparisce;
+  «Elimina tutte le spese» (backup proposto, non scaricato) lascia «Nessuno scontrino.», con categorie, fondo ed esercenti. Export
+  JSON v12: fondi, esercenti, scontrini e spese identici al file, in più solo le cinque categorie predefinite.
+- **Avanzata** (emulatori demo propri su porte dedicate, export costruito per quelle porte, proprietario demo): stessi risultati;
+  unione accettata dalle Rules per i 5 scontrini (letti via REST: 500 prodotti uniti da `\n`, `merchant`, `date`, `total_minor` e
+  `discount_minor` nulli dove previsto), seconda unione senza aggiunte, export identico come sopra; dopo «Elimina tutte le spese» sul
+  server 0 spese e 0 scontrini. A 390×844 (smartphone emulato) lista e dettaglio senza scorrimento orizzontale.
+- **Non provati:** il CSV (passo 5), smartphone reale, inglese, tema scuro.
+
 ## Fixture dei test automatici
 
 I backup usati solo dai test di regressione sono in `tests/fixtures/`, non qui: spese standard (v5, lettore storico),
@@ -322,7 +381,7 @@ Osservazioni del collaudo, **corrette lo stesso giorno** e riverificate nella de
 ripristino contano gli esercenti («12 esercenti»; conferma «Elementi da eliminare: N. Da scrivere: M.»); al 61° pagamento eliminato
 la conferma si chiude e il messaggio compare sopra il dialogo; nel modulo di modifica l'importo usa il separatore della lingua.
 
-I file v9, v10 e v11 di questa cartella sono verificati da `tests/testingBackups.test.ts`: lettura, export identico (a parte il numero
+I file v9, v10, v11 e v12 di questa cartella sono verificati da `tests/testingBackups.test.ts`: lettura, export identico (a parte il numero
 di versione per il v9), i valori delle tabelle qui sopra al 20 novembre 2026, piano di unione e CSV. Se si cambiano i file o le
 regole di calcolo, aggiornare insieme file, test e tabelle.
 Il file dei casi limite qui sopra resta **v5** di proposito: esercita il lettore storico anche dall'interfaccia.
