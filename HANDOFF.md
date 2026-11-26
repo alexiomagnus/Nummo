@@ -173,6 +173,7 @@ Su richiesta (screenshot dal telefono):
   - **Verifica:** typecheck OK; `npm test` **605/605** (a metà giornata 588/600: i test falliti venivano da lavoro non mio sugli
     scontrini archiviati, poi completato). Quel lavoro è di un'altra sessione (nummo-78, «Lista scontrini», su richiesta dell'utente),
     non committato: nell'albero non va annullato; al commit ognuno mette in stage solo i propri file. Nessuna schermata vista in headless né sul telefono.
+- **Pubblicazione:** `446f4e8` (Categoria intera su smartphone, «Senza fondo» prima, schermata Frequenza più semplice) inviato e pubblicato su Hosting con `npm run deploy:hosting` («Deploy complete!»; bundle non confrontato byte per byte). Rules invariate.
 - **Ancora il 26 novembre, su richiesta:** tolta la riga «Prossimo rinnovo: …» dal riquadro della schermata Frequenza; nel filtro
   Fondo «Senza fondo» prima di «Tutti i fondi» (`FundFilter`); «Categoria» su smartphone si apre intera e non a metà (`whole`, filtro di
   Spese e campo del modulo; Fondo e Template restano a metà). `npm test` 605/605; non visto sul telefono.
