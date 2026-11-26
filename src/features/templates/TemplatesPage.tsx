@@ -88,11 +88,11 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
                 </View>
               </View>;
             })}</View>}
-          {/* Every template at once (user's request, 22 November); Nuova spesa and the saved expenses are not touched. */}
-          {remote.templates.length > 0 && <><RowDivider />
-            <RowBody><DangerButton disabled={!remote.ready || !enabled} style={styles.removeAll} onPress={() => setConfirmAll(true)}
-              icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</DangerButton></RowBody></>}
         </ListGroup>
+        {/* Every template at once (user's request, 22 November); Nuova spesa and the saved expenses are not touched. Outside the
+            group, no card of its own around it (27 November, on request). */}
+        {remote.templates.length > 0 && <DangerButton disabled={!remote.ready || !enabled} style={styles.removeAll} onPress={() => setConfirmAll(true)}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</DangerButton>}
       </View>
       <DeleteDialog visible={confirmAll} name={t("tutti i template")}
         title={remote.templates.length === 1 ? t("Eliminare 1 template?") : t("Eliminare {p0} template?", { p0: remote.templates.length })}
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   templateRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 72, paddingVertical: spacing.sm, paddingLeft: spacing.lg, paddingRight: spacing.sm },
   templateText: { flex: 1, minWidth: 0, gap: 2 },
   // The whole width of the group, as the other pill actions of the page.
-  removeAll: { alignSelf: 'stretch' },
+  removeAll: { alignSelf: 'stretch', marginTop: -(layout.sectionGap - spacing.md) },
   // Same as the pencil of the products in Liste.
   editButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
 });

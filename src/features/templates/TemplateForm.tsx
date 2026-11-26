@@ -25,8 +25,10 @@ type Options = {
 export function useTemplateForm({ categories, fundChoices, merchants, initial, onSubmit }: Options) {
   const funds = fundChoices.map((choice) => choice.fund);
   // «Nessun fondo» is an explicit choice, like in the expense form; an edited template without a fund already made it.
+  // A new template starts on «Nessun fondo» (27 November, on request: the fund is not compulsory, so nothing has to be chosen).
+  const blank = (): TemplateDraft => ({ ...newTemplateDraft(), fundId: noFund });
   const start = (): TemplateDraft => {
-    if (!initial) return newTemplateDraft();
+    if (!initial) return blank();
     const draft = draftOfTemplate(initial);
     return { ...draft, fundId: initial.fund_id === null ? noFund : draft.fundId };
   };
@@ -43,7 +45,7 @@ export function useTemplateForm({ categories, fundChoices, merchants, initial, o
     // the save, and «Nuova spesa» never takes it from a template.
     const result = validateTemplateDraft({ ...draft, date: todayInRome(), fundId: draft.fundId === noFund ? '' : draft.fundId }, categories, funds, { fundChosen: draft.fundId !== '' });
     if (!result.ok) { setErrors(result.errors); return; }
-    if (onSubmit(result.data) && !initial) { setDraft(newTemplateDraft()); setErrors({}); setFormKey((key) => key + 1); }
+    if (onSubmit(result.data) && !initial) { setDraft(blank()); setErrors({}); setFormKey((key) => key + 1); }
   };
   return { draft, errors, update, submit, formKey, categories, fundChoices, merchants };
 }

@@ -1207,7 +1207,6 @@ export const english: Readonly<Record<string, string>> = {
   "1 scontrino": "1 receipt",
   "{p0} scontrini": "{p0} receipts",
   "Scontrini scansionati": "Scanned receipts",
-  "Quando salvi una spesa compilata con Scansiona scontrino, qui restano i dati letti: esercente, data, totale e prodotti. La foto non viene conservata.": "When you save an expense filled in with Scan receipt, the data read stays here: merchant, date, total and products. The photo is not kept.",
   "Nessuno scontrino.": "No receipts.",
   "Data non letta": "Date not read",
   "Esercente non letto": "Merchant not read",

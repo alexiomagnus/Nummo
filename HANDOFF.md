@@ -1,5 +1,13 @@
 # HANDOFF — Nummo
 
+## Lista scontrini, Templates: nota tolta, fondo non obbligatorio, «Elimina tutti» fuori dalla scheda — 27 novembre 2026
+
+Su richiesta, dalle immagini dell'utente. **Non ancora in commit né su Hosting.** `npm run check` 629/629; non provato a vista.
+
+- **«Lista scontrini»**: tolta la nota «Quando salvi una spesa compilata con Scansiona scontrino, qui restano i dati letti…» (e la sua traduzione). Un errore di caricamento, se c'è, si vede ancora in una scheda a parte.
+- **Nuovo template** (`TemplateForm.tsx`): il campo Fondo parte da «Nessun fondo» (come Categoria parte da «Nessuna categoria») e dopo «Crea» torna lì; prima restava vuoto e il salvataggio chiedeva di scegliere (`fundId` di `validateTemplateDraft`, regola di dominio invariata, ora non raggiungibile dal modulo). Nessun «facoltativo» scritto.
+- **Templates, elenco**: «Elimina tutti i template» non è più una scheda con contorno in coda al gruppo ma il pulsante rosso a pillola libero sotto il gruppo (a tutta larghezza, come «Elimina le liste archiviate» su smartphone). Se la parte contestata era anche altro dell'elenco (righe, sottotitolo «categoria · fondo · esercente»), chiedere.
+
 ## Scala dell'interfaccia e icona dell'app (app 0.3.14) — 27 novembre 2026
 
 Su richiesta, sul modello di «Aspetto» di Morphe. **Pubblicato**: commit `e344432` su `main`, Hosting `nummo-6b6e2` («Deploy complete!», Rules invariate), release GitHub `android-v0.3.14` «Latest» (`nummo-0.3.14.apk` 9 246 024 byte, SHA-256 `aa88ea7a…c21a` uguale al `digest` dell'API, certificato `00b1c85c…0fcf` verificato con `apksigner`, versionCode 17; tag annotato). Non ancora installata dall'utente: serve la 0.3.14 per l'icona e per la scala nell'app. `npm run check` 629/629 (tre test nuovi in `tests/uiScale.test.ts`), `assembleDebug` e `assembleRelease` OK.

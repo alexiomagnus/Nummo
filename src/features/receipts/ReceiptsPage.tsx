@@ -51,13 +51,8 @@ export function ReceiptsPage({ remote, expenses, categories }: Props) {
       <ReceiptAiCard />
       {/* The same grouped rows as «Info» (27 November, on request). */}
       <ListGroup icon={iconShapes.receipt} label={t("Scontrini scansionati")}>
-        <RowBody>
-          <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-            {t("Quando salvi una spesa compilata con Scansiona scontrino, qui restano i dati letti: esercente, data, totale e prodotti. La foto non viene conservata.")}
-          </Text>
-          {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
-        </RowBody>
-        <Divider />
+        {/* The note about what is kept (the data read, never the photo) is gone (27 November, on request); only an error is shown here. */}
+        {remote.error && <RowBody><HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText></RowBody>}
         {remote.ready && remote.receipts.length === 0 && <StatusRow icon={iconShapes.receipt} tone="secondary" title={t("Nessuno scontrino.")} />}
         <View role="list" accessibilityLabel={t("Scontrini scansionati")}>
           {remote.receipts.map((r, index) => {
