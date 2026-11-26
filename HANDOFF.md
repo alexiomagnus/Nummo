@@ -1,8 +1,12 @@
 # HANDOFF — Nummo
 
-## Barra di stato sotto il vetro (app 0.3.12) — 27 novembre 2026
+## Importazione CSV, barra di stato sotto il vetro (app 0.3.12) — 27 novembre 2026
 
-Su richiesta: in Morphe anche la fascia della barra di stato è sfocata. Nativo (`MainActivity.kt`): padding superiore della radice a 0, inset in dp al ponte (`topInset`) e a `window.nummoAndroidInsets`. Web: `useInsets` (`src/theme/insets.ts`) sostituisce `useSafeAreaInsets` in `AppShell`, `ScreenLayer`, `Overlay`, `AppDialog`; la barra in alto degli smartphone aveva già `paddingTop: insets.top` e vetro. Versione 0.3.12 (versionCode 15) alzata, **non** rilasciata né pubblicata su Hosting. Verifiche: `npm run check` (622/622), `assembleDebug` OK. **Non provata sul telefono**: da controllare barra in alto, schermi interi con Indietro, dialoghi, menu dell'account e snackbar con l'inset reale; con APK vecchia il valore è 0. Da fare su richiesta: Hosting, `assembleRelease`, release `android-v0.3.12`.
+Su richiesta, pubblicati: commit `f80bcd4` su `main`, Hosting `nummo-6b6e2` («Deploy complete!», Rules invariate), release GitHub `android-v0.3.12` «Latest» (`nummo-0.3.12.apk`, 9 240 892 byte, SHA-256 `5d403bd3…ee44` uguale al `digest` dell'API, certificato `00b1c85c…0fcf` verificato con `apksigner`; versionCode 15; tag annotato).
+
+- **Importazione CSV** (prima solo consultazione): riga «Importa transazioni (CSV)» in «Archiviazione e backup»; `domain/csvImport.ts` legge il CSV esportato (separatore `;`, `,` o tab, BOM, apostrofo delle formule, importi `1.234,56`, date ISO o g/m/aaaa) e produce solo spese singole. ID e `created_at` derivati dalla riga: lo stesso file due volte non aggiunge nulla, righe identiche restano due spese. Categorie per nome (nuove senza icona), fondi solo se esistono (altrimenti spesa senza fondo e avviso), esercenti per chiave, ricorrenza ignorata. Passa dalla stessa anteprima e unione del JSON (`previewImport`/`importRecords`, mai sostituzione). Righe non valide saltate con numero di riga. Limite 20.000 righe e 5 MB. Test in `tests/csvImport.test.ts`; non provata con file reali né nella suite emulatori.
+- **Barra di stato** (app 0.3.12): padding superiore della WebView a 0, inset al ponte (`topInset`, `window.nummoAndroidInsets`), `useInsets` (`theme/insets.ts`) al posto di `useSafeAreaInsets` in `AppShell`, `ScreenLayer`, `Overlay`, `AppDialog`. Con l'APK precedente vale 0. **Non provata sul telefono**: controllare barra in alto, schermi con Indietro, dialoghi, menu dell'account, snackbar, leggibilità delle icone di sistema.
+- Verifiche: `npm run check` 626/626, `assembleDebug` e `assembleRelease` OK; `test:emulator` non eseguito (nessun cambio a Rules o accesso dati).
 
 ## Stato corrente — 27 novembre 2026 (aggiornamento)
 
