@@ -9,6 +9,7 @@ import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { radius, spacing } from '../../theme/tokens';
 import { useReducedMotion, useSizeClass } from '../../theme/useSizeClass';
+import { csvToImport } from '../../domain/csvImport';
 import { conflictPreview, exportCsv, makeBackup, parseBackup, type ImportData, type ImportPlan } from '../../domain/backup';
 import { androidBridge } from '../../services/androidApp';
 import type { DataStore } from '../../services/dataStore';
@@ -87,7 +88,7 @@ export async function downloadBackup(backend: DataStore): Promise<string> {
   download('nummo-backup.json', makeBackup(await backend.exportSnapshot(), at), 'application/json');
   return at.toISOString();
 }
-type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: ImportPlan };
+type Preview = { file: string; data: ImportData; merge: ImportPlan; replace: ImportPlan; csv?: boolean };
 
 // `onBackupDownloaded`: told when a full backup download has started (Standard mode: it resets the backup reminder).
 export function BackupActions({ backend, enabled, onBackupDownloaded }: { backend: DataStore; enabled: boolean; onBackupDownloaded?: (at: string) => void }) {
@@ -97,6 +98,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const notify = useSnackbar();
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
+  const [csvNote, setCsvNote] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
   const [confirmWipe, setConfirmWipe] = useState(false);
@@ -141,12 +143,33 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
       icon={icon(savedBefore ? iconShapes.check : iconShapes.download)} onPress={() => void backupFirst()}>
       {savedBefore ? t("Backup scaricato") : t("Scarica backup (JSON)")}</Button>
   </View>;
+  // CSV import (user's request, 27 November): one-off expenses only, merged like a backup (nothing overwritten, no replace).
+  const pickCsv = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv,text/csv';
+    input.onchange = () => { void run(async () => {
+      setPreview(null); setCsvNote('');
+      const file = input.files?.[0]; if (!file) return;
+      if (file.size > maxFileBytes) throw new Error("File troppo grande (massimo 5 MB).");
+      const data = await backend.exportSnapshot();
+      const result = csvToImport(await file.text(), data);
+      if (result.data.expenses.length === 0) throw new Error(result.skipped.length ? "Nessuna riga del file si può importare." : "Il file non contiene righe.");
+      const notes: string[] = [];
+      if (result.skipped.length) {
+        const first = result.skipped[0]!;
+        notes.push(t("{p0} righe non importate (riga {p1}: {p2})", { p0: result.skipped.length, p1: first.line, p2: t(first.reason) }));
+      }
+      if (result.unknownFunds.length) notes.push(t("Fondi non trovati, spese importate senza fondo: {p0}", { p0: result.unknownFunds.slice(0, 3).join(', ') }));
+      notes.push(t("Ogni riga diventa una spesa singola, anche se ripetuta."));
+      setCsvNote(notes.join(' '));
+      setPreview({ file: file.name, data: result.data, csv: true, ...await backend.previewImport(result.data) });
+    }); }; input.click();
+  };
   const pick = () => {
     const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json';
     input.onchange = () => { void run(async () => {
-      setPreview(null);
+      setPreview(null); setCsvNote('');
       const file = input.files?.[0]; if (!file) return;
-      if (file.name.toLowerCase().endsWith('.csv')) throw new Error("Il CSV serve solo a consultare le spese e non si può importare: usa un backup JSON.");
+      if (file.name.toLowerCase().endsWith('.csv')) throw new Error("Per importare un CSV usa «Importa transazioni (CSV)».");
       if (file.size > maxFileBytes) throw new Error("File troppo grande (massimo 5 MB).");
       let json: unknown;
       try { json = JSON.parse(await file.text()); } catch { throw new Error("Il file non è un backup JSON valido."); }
@@ -160,7 +183,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     + replace.removeMovementIds.length + replace.removeListIds.length + replace.removeMerchantIds.length + replace.removeTemplateIds.length + replace.removeReceiptIds.length : 0;
   const written = replace ? replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length
     + replace.addMovements.length + replace.addLists.length + replace.addMerchants.length + replace.addTemplates.length + replace.addReceipts.length : 0;
-  const finish = () => { setPreview(null); notify("Importazione completata."); };
+  const finish = () => { setPreview(null); setCsvNote(''); notify("Importazione completata."); };
   // Two tiles of the page's grid (27 November, on request: the card of loose buttons was redone as grouped rows, like «Info»).
   // «Elimina tutte le spese» stays the red pill of every deletion.
   return <>
@@ -171,18 +194,22 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
       <ActionRow icon={iconShapes.upload} tone="secondary" title={t("Importa backup (JSON)")} subtitle={t("Aggiungi o sostituisci i dati da un file.")}
         disabled={!enabled || busy} onPress={pick} />
       <RowDivider />
+      <ActionRow icon={iconShapes.upload} tone="tertiary" title={t("Importa transazioni (CSV)")} subtitle={t("Aggiungi le spese da un foglio di calcolo.")}
+        disabled={!enabled || busy} onPress={pickCsv} />
+      <RowDivider />
       <ActionRow icon={iconShapes.list} tone="tertiary" title={t("Esporta transazioni (CSV)")} subtitle={t("Per consultarle in un foglio di calcolo.")}
         disabled={!enabled || busy} onPress={() => void exportCsvFile()} />
       {(preview || status !== '') && <>
         <RowDivider />
         <RowBody>
           {preview && <View ref={previewRef}>
-            <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => setPreview(null)}
+            <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => { setPreview(null); setCsvNote(''); }}
               onMerge={() => void run(async () => {
                 await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates, preview.data.receipts); finish();
               })}
-              replace={<Button style={pill} disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
+              replace={preview.csv ? undefined : <Button style={pill} disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
           </View>}
+          {preview && csvNote !== '' && <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{csvNote}</Text>}
           {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}
         </RowBody>
       </>}

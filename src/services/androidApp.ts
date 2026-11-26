@@ -272,3 +272,37 @@ export function requestNotificationsOnDevice(bridge: AndroidNotifications, scope
     try { bridge.requestNotifications(id); } catch { pending.delete(id); resolve('error'); }
   });
 }
+
+// Height of the status bar in CSS pixels (app 0.3.12, 27 November, on request): the app no longer pads the WebView at the top,
+// so the page draws under the status bar (blurred glass top bar, as in Morphe) and pads its own bar with this value. Optional
+// bridge method plus `window.nummoAndroidInsets(top)` when it changes; 0 in a browser and in an older app (nothing changes).
+export function parseTopInset(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 200 ? value : 0;
+}
+
+export function androidTopInset(scope: unknown = globalThis): number {
+  const bridge = androidBridge(scope) as unknown as { topInset?: unknown } | undefined;
+  if (!bridge || typeof bridge.topInset !== 'function') return 0;
+  try { return parseTopInset((bridge.topInset as () => unknown)()); } catch { return 0; }
+}
+
+type InsetScope = { nummoAndroidInsets?: (top: unknown) => void };
+const insetListeners = new Set<() => void>();
+let topInsetValue: number | undefined;
+
+export function currentTopInset(): number {
+  topInsetValue ??= androidTopInset();
+  return topInsetValue;
+}
+
+export function subscribeTopInset(listener: () => void, scope: unknown = globalThis): () => void {
+  const target = scope as InsetScope;
+  target.nummoAndroidInsets ??= (top) => {
+    const next = parseTopInset(top);
+    if (next === topInsetValue) return;
+    topInsetValue = next;
+    insetListeners.forEach((notify) => notify());
+  };
+  insetListeners.add(listener);
+  return () => { insetListeners.delete(listener); };
+}

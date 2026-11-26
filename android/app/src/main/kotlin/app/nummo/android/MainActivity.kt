@@ -50,6 +50,14 @@ class MainActivity : Activity() {
     // The page has drawn its first frame (onPageCommitVisible): until then the system splash stays (see holdSplash).
     private var pageVisible = false
 
+    // Height of the status bar (and cutout) in dp = CSS pixels, read by the page through `topInset` and pushed when it changes.
+    var topInsetDp = 0f
+        private set
+
+    fun sendTopInset() {
+        if (::webView.isInitialized) webView.evaluateJavascript("window.nummoAndroidInsets&&window.nummoAndroidInsets($topInsetDp)", null)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
@@ -71,7 +79,14 @@ class MainActivity : Activity() {
         root.setOnApplyWindowInsetsListener { view, insets ->
             val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
             val keyboard = insets.getInsets(WindowInsets.Type.ime())
-            view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, keyboard.bottom))
+            // No top padding (0.3.12, 27 November, on request): the page draws under the status bar, where its blurred glass top
+            // bar extends (as in Morphe); the inset goes to the page, which pads its own top bar with it.
+            view.setPadding(bars.left, 0, bars.right, maxOf(bars.bottom, keyboard.bottom))
+            val top = bars.top / resources.displayMetrics.density
+            if (top != topInsetDp) {
+                topInsetDp = top
+                sendTopInset()
+            }
             WindowInsets.CONSUMED
         }
         val saved = getSharedPreferences(barsPreferences, MODE_PRIVATE)
@@ -123,6 +138,7 @@ class MainActivity : Activity() {
 
             override fun onPageCommitVisible(view: WebView, url: String?) {
                 pageVisible = true
+                sendTopInset()
             }
 
             // Also for the page's own history entries (pushState, back, forward): Back is the app's while it can go back.

@@ -11,7 +11,7 @@ import { parseTemplate, sameTemplate, type TemplateRecord } from './template.ts'
 import { parseScannedReceipt, sameScannedReceipt, type ScannedReceipt } from './scannedReceipt.ts';
 
 // Two distinct outputs:
-// - CSV: a read-only table of the spending (one row per occurrence up to today) for spreadsheets. Never imported.
+// - CSV: a read-only table of the spending (one row per occurrence up to today) for spreadsheets. Imported only as single expenses (csvImport.ts).
 // - JSON: the only backup/restore format, versioned so that later schema changes can migrate older files.
 
 // `budget`: the general monthly budget schedule (issue #7); absent or empty = none. `merchants`: absent or empty = none.

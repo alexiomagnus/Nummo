@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Barra di stato sotto il vetro (app 0.3.12) — 27 novembre 2026
+
+Su richiesta: in Morphe anche la fascia della barra di stato è sfocata. Nativo (`MainActivity.kt`): padding superiore della radice a 0, inset in dp al ponte (`topInset`) e a `window.nummoAndroidInsets`. Web: `useInsets` (`src/theme/insets.ts`) sostituisce `useSafeAreaInsets` in `AppShell`, `ScreenLayer`, `Overlay`, `AppDialog`; la barra in alto degli smartphone aveva già `paddingTop: insets.top` e vetro. Versione 0.3.12 (versionCode 15) alzata, **non** rilasciata né pubblicata su Hosting. Verifiche: `npm run check` (622/622), `assembleDebug` OK. **Non provata sul telefono**: da controllare barra in alto, schermi interi con Indietro, dialoghi, menu dell'account e snackbar con l'inset reale; con APK vecchia il valore è 0. Da fare su richiesta: Hosting, `assembleRelease`, release `android-v0.3.12`.
+
 ## Stato corrente — 27 novembre 2026 (aggiornamento)
 
 Sezione più recente; il resto del file è cronaca. Commit di questa sessione, tutti su `main` e pubblicati su Hosting dopo `npm run check` (622/622, poi 621 dopo la rimozione di un test): `f38377f` (animazione dello sfondo, Material You, «Grigio», AMOLED, bilancio del fondo) e `7d01962` (Nuova spesa senza scorrere, anelli più lenti, matita a filo, spazio sopra «Elimina le liste archiviate»); Hosting `nummo-6b6e2` con Rules invariate («Deploy complete!», bundle non confrontato con l'export). Pubblicati con il commit successivo (stesso giorno, Hosting): pulsanti dei dialoghi di modalità uguali, «Colore dell'anello» tolto, più spazio sotto gli avatar del profilo, icona a impronta (`fingerprint`) per «Blocca con impronta o viso».

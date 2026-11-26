@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { Text, ThemeProvider, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useInsets } from '../theme/insets';
 import { scrimOpacity, slideSpring, slideTimings, type Box } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
 import { overrideDocumentChrome } from '../theme/bootTheme';
@@ -89,7 +89,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   const button = tone ? { background: tone.button, color: tone.onButton, border: tone.button } : { background: colors.secondaryContainer, color: colors.onSecondaryContainer, border: colors.secondaryContainer };
   const size = useSizeClass();
   const compact = size === 'compact';
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const animate = useOverlayMotion();
   const [frame, setFrame] = useState<Box>(() => measureFrame(size));
   const root = useRef<ComponentRef<typeof View>>(null);

@@ -381,7 +381,7 @@ versione precedente: Android e l'app la rifiutano.
 - **Avanzata**: l'accesso è riservato all'UID in `config/owner`, creato solo dalla Console: l'app non può nominare il proprietario, nemmeno per un progetto collegato dall'app.
 - Le regole in `firestore.rules` sono la vera protezione dei dati (la `apiKey` è pubblica). Pubblicale prima dell'uso e non usare la modalità test.
 - `.env.local`, `.env.production.local`, `.firebaserc` ed `emulator-data/` sono ignorati da Git: non versionarli e non pubblicarli. Non inserire chiavi di servizio nel frontend.
-- **Backup**: da menu account → «Archiviazione e backup» scarichi il backup JSON (il CSV serve solo a consultare le spese e non ripristina nulla); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
+- **Backup**: da menu account → «Archiviazione e backup» scarichi il backup JSON (il CSV serve a consultare le spese e, importandolo, ad aggiungerne di nuove come spese singole; non ripristina il resto); fallo con regolarità e conservalo fuori dal sito. Firestore non è un backup.
 - Cache su disco (`EXPO_PUBLIC_FIRESTORE_CACHE=persistent`): contiene dati personali finché resti connesso; «Esci» (in Archiviazione e backup) la cancella e ricarica la pagina sulla scelta della modalità (se un'altra scheda di Nummo è aperta la cancellazione non riesce e la cache resta fino a un'uscita successiva con una sola scheda). Su un dispositivo condiviso esci sempre.
 - Costi, quote, fatturazione e conformità del progetto Firebase sono a tuo carico. Il software è fornito senza garanzie.
 

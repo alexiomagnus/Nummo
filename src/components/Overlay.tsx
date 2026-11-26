@@ -2,7 +2,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Portal, Surface, Text, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useInsets } from '../theme/insets';
 import { transitions } from '../theme/motion';
 import { withAlpha } from '../theme/palette';
 import { glassOf } from '../theme/theme';
@@ -148,7 +148,7 @@ export function AnchoredMenu({ visible, onDismiss, anchor, width, align = 'start
   const animate = useOverlayMotion();
   const { mounted, shown } = usePresence(visible, motion.fade, animate);
   const container = useRef<ComponentRef<typeof View>>(null);
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const screen = useWindowDimensions();
   useEscape(visible, onDismiss);
   useFocusHandoff(visible, shown, container);
@@ -210,7 +210,7 @@ export function BottomSheet({ visible, onDismiss, title, children }: { visible: 
   const headerRef = useCallback((node: unknown) => setNodes((n) => ({ ...n, header: domNode(node) })), []);
   const listRef = useCallback((node: unknown) => setNodes((n) => ({ ...n, list: domNode(node) })), []);
   const scrimRef = useCallback((node: unknown) => setNodes((n) => ({ ...n, scrim: domNode(node) })), []);
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const { height } = useWindowDimensions();
   useEscape(visible, onDismiss);
   useFocusHandoff(visible, shown, container);

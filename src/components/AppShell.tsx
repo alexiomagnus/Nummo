@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { flushSync } from 'react-dom';
 import { Animated, Easing, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useInsets } from '../theme/insets';
 import { layerTransition, transitions } from '../theme/motion';
 import { detailSpring } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
@@ -115,7 +115,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     void Promise.all(moves.map((animation) => animation.finished)).then(() => moves.forEach((animation) => animation.cancel()), () => undefined);
     return () => moves.forEach((animation) => animation.cancel());
   }, [selected, reduceMotion, theme.animation.scale]);
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const scroller = useRef<ScrollViewInstance>(null);
   // The page goes back to its top when `selected` changes (layout effect above), whoever changed it; a tap on the destination
   // already shown takes it back to its top too, as before.

@@ -68,6 +68,10 @@ class NummoBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun appVersion(): String = "{\"name\":\"${BuildConfig.VERSION_NAME}\",\"code\":${BuildConfig.VERSION_CODE}}"
 
+    // Status bar height in CSS pixels (0.3.12, 27 November, on request): the page extends its glass top bar under it.
+    @JavascriptInterface
+    fun topInset(): Float = activity.topInsetDp
+
     // Material You (0.3.11, 27 November, on request): the system's tonal palettes (Android 12+, taken from the wallpaper) as JSON
     // `{"a1":{"0":"#FFFFFF",…,"1000":"#000000"},"a2":…,"a3":…,"n1":…,"n2":…}`; "" before Android 12. The page validates it.
     @JavascriptInterface

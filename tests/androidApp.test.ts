@@ -169,3 +169,16 @@ test('app Android: versione dell’app solo dal ponte 0.3.5, validata; altrove n
   assert.equal(androidAppVersion(withVersion('non json')), null);
   assert.equal(androidAppVersion({ NummoAndroid: { ...fakeBridge().bridge, appVersion: () => { throw new Error('x'); } } }), null);
 });
+
+test('top inset of the app: validated, 0 without the method or outside the app', async () => {
+  const { androidTopInset, parseTopInset } = await import('../src/services/androidApp.ts');
+  assert.equal(parseTopInset(24), 24);
+  assert.equal(parseTopInset(-1), 0);
+  assert.equal(parseTopInset(NaN), 0);
+  assert.equal(parseTopInset('24'), 0);
+  assert.equal(androidTopInset({}), 0);
+  const full = { haptic() {}, setSystemBars() {}, saveFile() {}, canAuthenticate: () => false, authenticate() {}, cancelAuthentication() {} };
+  assert.equal(androidTopInset({ NummoAndroid: full }), 0);
+  assert.equal(androidTopInset({ NummoAndroid: { ...full, topInset: () => 28.5 } }), 28.5);
+  assert.equal(androidTopInset({ NummoAndroid: { ...full, topInset: () => { throw new Error('x'); } } }), 0);
+});

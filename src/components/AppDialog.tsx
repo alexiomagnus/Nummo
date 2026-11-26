@@ -2,7 +2,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import { Children, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ComponentRef, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import { Dialog, Surface, ThemeProvider, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useInsets } from '../theme/insets';
 import { transitions } from '../theme/motion';
 import { dialogColor } from '../theme/theme';
 import { layout, motion, radius, spacing } from '../theme/tokens';
@@ -110,7 +110,7 @@ function AlertDialog({ visible = false, onDismiss, dismissable = true, testID, s
   const { t } = useI18n();
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const background = dialogColor(theme.colors);
   const modalTheme = useMemo(() => ({ ...theme, colors: { ...theme.colors, background } }), [theme, background]);
   const animate = useOverlayMotion();
