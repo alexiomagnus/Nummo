@@ -192,13 +192,10 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   return (
     <View style={styles.page}>
     <View style={[styles.form, desktop && styles.formDesktop]}>
-      {/* The fields in one grouped box, like the other pages (user's request, 27 November). */}
-      <ListGroup label={t("Dettagli della spesa")}><RowBody>
-      {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. No message
-          when the fields are filled (removed on request, 17 November): the filled fields speak for themselves. */}
       {/* «Scansiona scontrino» and «Template» share the first row (user's request, 21 November: the Template field above the
           repeat pushed «Salva» under the navigation on phones); without the scan, Template takes its place. At every size each
-          is half of the row (user's request, 23 November, for desktop too: the whole row, exactly the same length). */}
+          is half of the row. Outside any box, no outline (user's request, 27 November). A scan only fills the fields after a review:
+          saving stays on «Salva». */}
       {(scanEnabled || templateShown) && <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
         {scanEnabled && <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={styles.scanHalf}
           compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
@@ -209,16 +206,20 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
           style={styles.scanHalf} />}
         {!(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
       </View>}
+      {/* The fields in one grouped box, like the other pages, with its label on every size (user's request, 27 November). */}
+      <ListGroup label={t("Dettagli della spesa")}><RowBody tight={desktop}>
       {/* Templates turned on but none saved yet: the button cannot appear, so say why. */}
       {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il pulsante Template compare quando crei un template nella pagina Templates.")}</Text>}
       {scanEnabled && scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={(patch, read) => { update(patch); setScanned(read); }} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
-        extra={repeat} fund={fundField ?? undefined} fundBelow={size === 'compact'}
+        fund={fundField ?? undefined} fundBelow={size === 'compact'}
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       </RowBody></ListGroup>
+      {/* «Ricorrente» in a box of its own, apart from the fields (user's request, 27 November). */}
+      <ListGroup><RowBody tight={desktop}>{repeat}</RowBody></ListGroup>
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{t(submission.message)}</HelperText>

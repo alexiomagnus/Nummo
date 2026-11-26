@@ -55,7 +55,7 @@ export function ReceiptAiCard() {
         value={enabled} onChange={(value) => ai.change({ enabled: value })} />
       <RowDivider />
       <ActionRow icon={shown ? iconShapes.chevronUp : iconShapes.chevronDown} tone="secondary" title={shown ? t("Nascondi le impostazioni") : t("Mostra le impostazioni")}
-        onPress={() => setShown((value) => !value)} />
+        onPress={() => setShown((value) => !value)} arrow={false} />
       {shown && <>
       <RowDivider />
       {/* Greyed out (M3 disabled opacity) and unreachable while the scan is off. Same grouped-rows language as «Info» and

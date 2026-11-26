@@ -50,14 +50,14 @@ function RowContent({ icon, tone = 'primary', title, subtitle, trailing }: Conte
 }
 
 // Pressable row. `busy` shows a spinner in place of the chevron (the action is running); `disabled` dims it.
-export function ActionRow({ label, disabled, busy, busyLabel, onPress, ...content }: Content & { label?: string; busyLabel?: string; disabled?: boolean; busy?: boolean; onPress: () => void }) {
+export function ActionRow({ label, disabled, busy, busyLabel, onPress, arrow = true, ...content }: Content & { label?: string; busyLabel?: string; disabled?: boolean; busy?: boolean; onPress: () => void; arrow?: boolean }) {
   const { colors } = useTheme();
   return (
     <StateLayerPressable layerColor={colors.onSurface} role="button" accessibilityLabel={label ?? content.title} disabled={disabled || busy}
       onPress={onPress} style={styles.row}>
       <RowContent {...content} trailing={busy
         ? <Spinner size={20} label={busyLabel ?? content.title} />
-        : <SvgIcon shape={iconShapes.chevronRight} size={20} color={colors.onSurfaceVariant} />} />
+        : arrow ? <SvgIcon shape={iconShapes.chevronRight} size={20} color={colors.onSurfaceVariant} /> : undefined} />
     </StateLayerPressable>
   );
 }
@@ -96,7 +96,7 @@ export function OptionRow({ children, ...content }: Content & { children: ReactN
 }
 
 // Content under the rows inside the surface (a preview, a note): padded like a row.
-export const RowBody = ({ children }: { children: ReactNode }) => <View style={styles.body}>{children}</View>;
+export const RowBody = ({ children, tight = false }: { children: ReactNode; tight?: boolean }) => <View style={[styles.body, tight && styles.bodyTight]}>{children}</View>;
 
 // The groups of a page, one under the other.
 export function ListGrid({ children }: { children: ReactNode }) {
@@ -131,4 +131,5 @@ const styles = StyleSheet.create({
   option: { padding: spacing.lg, gap: spacing.md },
   optionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   body: { padding: spacing.lg, gap: spacing.md },
+  bodyTight: { padding: spacing.md },
 });
