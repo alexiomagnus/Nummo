@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import { defaultProfileRing, noProfileImage, parseProfileImage, parseProfileRing, profileImageKeyFor, profileRingKeyFor, serializeProfileImage, serializeProfileRing, type ProfileImage, type ProfileRing } from './profileImage';
+import { noProfileImage, parseProfileImage, profileImageKeyFor, serializeProfileImage, type ProfileImage } from './profileImage';
 
 // Shared by the account button and the Settings card (picture and, in the Advanced mode, the ring's colour), and between tabs (the `storage` event). `scope`: `local`
 // (Standard) or the UID (Advanced, see `profileImageKeyFor`). One parsed value per key and raw string, so
@@ -43,22 +43,4 @@ export function useProfileImage(scope: string): ProfileImage {
   const key = profileImageKeyFor(scope);
   const read = useCallback(() => snapshot(key), [key]);
   return useSyncExternalStore(subscribe, read, () => noProfileImage);
-}
-
-// The ring's colour (Advanced mode, `scope` = UID): same storage rules as the picture.
-export function saveProfileRing(ring: ProfileRing, scope: string): boolean {
-  const key = profileRingKeyFor(scope);
-  const raw = serializeProfileRing(ring);
-  try {
-    if (raw === null) globalThis.localStorage?.removeItem(key);
-    else globalThis.localStorage?.setItem(key, raw);
-  } catch { return false; }
-  for (const listener of listeners) listener();
-  return true;
-}
-
-export function useProfileRing(scope: string): ProfileRing {
-  const key = profileRingKeyFor(scope);
-  const read = useCallback(() => parseProfileRing(readRaw(key)), [key]);
-  return useSyncExternalStore(subscribe, read, () => defaultProfileRing);
 }

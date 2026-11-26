@@ -125,8 +125,8 @@ function DisconnectDialog({ visible, project, onDismiss, onConfirm }: { visible:
   const title = t("Scollegare il progetto?");
   return (
     <DialogFrame visible={visible} title={title} label={title} onDismiss={() => { if (!busy) { setError(null); onDismiss(); } }} actions={<>
-      <CancelButton disabled={busy} onPress={() => { setError(null); onDismiss(); }}>{t("Annulla")}</CancelButton>
-      <ConfirmButton disabled={busy} loading={busy} onPress={() => {
+      <CancelButton style={styles.equal} disabled={busy} onPress={() => { setError(null); onDismiss(); }}>{t("Annulla")}</CancelButton>
+      <ConfirmButton style={styles.equal} disabled={busy} loading={busy} onPress={() => {
         setBusy(true); setError(null);
         void onConfirm().then((failure) => { if (failure) { setError(failure); setBusy(false); } });
       }}>{t("Scollega")}</ConfirmButton>
@@ -146,9 +146,9 @@ function ChangeModeDialog({ visible, target, onDismiss, onConfirm }: { visible: 
   const title = target === 'advanced' ? t("Passare alla modalità Avanzata?") : t("Passare alla modalità Standard?");
   return (
     <DialogFrame visible={visible} title={title} label={title} onDismiss={onDismiss} actions={<>
-      <CancelButton onPress={onDismiss}>{t("Annulla")}</CancelButton>
+      <CancelButton style={styles.equal} onPress={onDismiss}>{t("Annulla")}</CancelButton>
       {/* The app's primary colour (user's request, 22 November): nothing is deleted, only the archive opened changes. */}
-      <ConfirmButton onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</ConfirmButton>
+      <ConfirmButton style={styles.equal} onPress={() => { onDismiss(); onConfirm(); }}>{t("Cambia modalità")}</ConfirmButton>
     </>}>
       <Text variant="bodyMedium" style={muted}>{target === 'advanced'
         ? t("I dati di questo dispositivo restano qui. Dopo l’accesso puoi portarli nel tuo Firebase: Archiviazione e backup → «Dal dispositivo a Firebase».")
@@ -162,6 +162,8 @@ const styles = StyleSheet.create({
   container: { flexShrink: 1, minHeight: 0 },
   scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0 },
   dialogBody: { paddingHorizontal: spacing.xl, gap: spacing.md },
+  // The two buttons of a mode or project dialog the same length (user's request, 27 November); in the phone column they stay full width.
+  equal: { flex: 1 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
 });

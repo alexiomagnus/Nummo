@@ -1105,8 +1105,6 @@ export const english: Readonly<Record<string, string>> = {
   "Scrivi il nome dell’esercente.": "Type the merchant's name.",
   "Il nome non può contenere a capo o tabulazioni.": "The name cannot contain line breaks or tabs.",
   "Operazione interrotta: alcune spese sono già aggiornate. Riprova per completarla.": "Operation interrupted: some expenses are already updated. Try again to complete it.",
-  "Colore dell'anello": "Ring colour",
-  "Colore dell'app": "App colour",
   "Foto di Google": "Google photo",
   "Nessuna immagine": "No picture",
   "Avatar {p0}": "Avatar {p0}",

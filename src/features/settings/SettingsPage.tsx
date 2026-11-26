@@ -25,8 +25,8 @@ import { useSizeClass } from '../../theme/useSizeClass';
 import { ProfileImageCard, localProfileScope, type ProfileScope } from './ProfileImageCard';
 import { AppLockCard } from '../lock/AppLock';
 import { resetAppLockDelay } from '../lock/appLockStore';
-import { defaultProfileRing, noProfileImage } from './profileImage';
-import { saveProfileImage, saveProfileRing } from './useProfileImage';
+import { noProfileImage } from './profileImage';
+import { saveProfileImage } from './useProfileImage';
 
 // Read once: only in the Android app (23 November, on request), where the vibration is Android's touch feedback.
 const vibrationAvailable = hasHaptics();
@@ -78,7 +78,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   // preferences, the profile picture and, with an archive open, its preferred categories and fund. The receipt scan moved to
   // «Lista scontrini» (26 November, on request) and is no longer reset from here.
   // The app lock is the exception: only its delay goes back to the default, since turning it off asks for the fingerprint.
-  const resetAll = () => { onReset(); resetAppLockDelay(); if (profile) { saveProfileImage(noProfileImage, profile.scope); if (profile.scope !== localProfileScope) saveProfileRing(defaultProfileRing, profile.scope); } onResetArchive?.(); };
+  const resetAll = () => { onReset(); resetAppLockDelay(); if (profile) saveProfileImage(noProfileImage, profile.scope); onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
   const sizeClass = useSizeClass();

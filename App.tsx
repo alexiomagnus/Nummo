@@ -32,8 +32,7 @@ import { DataWorkspace, RemoteWorkspace, StartupWorkspace, type StorageSlot } fr
 import { ModeChoice } from './src/features/storage/ModeChoice';
 import { useBackLayer } from './src/components/BackNavigation';
 import { ProfileAvatar, StandardAvatar, accountAvatarSize, type ProfileScope } from './src/features/settings/ProfileImageCard';
-import { useProfileImage, useProfileRing } from './src/features/settings/useProfileImage';
-import { profileRingColor } from './src/features/settings/profileImage';
+import { useProfileImage } from './src/features/settings/useProfileImage';
 import { AppLockScreen, useLockRecovery } from './src/features/lock/AppLock';
 import { disableAppLock } from './src/features/lock/appLockStore';
 import { backLevels } from './src/theme/backStack';
@@ -269,8 +268,8 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   </>;
   // The picture chosen for this account in Settings (since 22 November); nothing chosen: the Google photo, as before.
   const chosenAvatar = useProfileImage(session.status === 'signed-in' ? session.user.uid : 'local');
-  // The ring marks the Advanced mode; its colour is chosen in Settings (22 November), the app's main colour by default.
-  const ringColor = profileRingColor(useProfileRing(session.status === 'signed-in' ? session.user.uid : 'local'), accentSwatchColor(theme.colors), theme.dark);
+  // The ring marks the Advanced mode, always in the app's colour (the choice of another one went on 27 November, on request).
+  const ringColor = accentSwatchColor(theme.colors);
   const advancedSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) =>
     renderSettings(onDone, archiveSections, onResetArchive, session.status === 'signed-in' ? { scope: session.user.uid, googlePhoto: session.user.photoURL } : undefined);
   const account = session.status === 'signed-in'

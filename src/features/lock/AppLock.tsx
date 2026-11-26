@@ -283,7 +283,7 @@ export function AppLockCard({ requirePin = false }: { requirePin?: boolean }) {
   const missing = available === false && !settings.enabled;
   return (
     <ListGroup icon={iconShapes.lock} label={t("Blocco dell’app")}>
-      <ToggleRow icon={iconShapes.lock} title={t("Blocca con impronta o viso")} value={settings.enabled} disabled={busy || missing || available === null}
+      <ToggleRow icon={iconShapes.fingerprint} title={t("Blocca con impronta o viso")} value={settings.enabled} disabled={busy || missing || available === null}
         subtitle={missing ? t("Questo browser non offre impronta, viso o PIN del dispositivo alle app web.")
           : t("All’apertura e quando torni nell’app chiede impronta, viso o il PIN del dispositivo.")}
         onChange={(on) => void toggle(on)} />

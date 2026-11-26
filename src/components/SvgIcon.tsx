@@ -8,6 +8,7 @@ export function SvgIcon({ shape, size, color }: { shape: string; size: number; c
 }
 
 export const iconShapes = {
+  fingerprint: '<path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M2 16h.01M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/>',
   circle: '<circle cx="12" cy="12" r="8"/>',
   rings: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" stroke-width="2.6"/>',
   sparkles: '<path d="M10 4l1.8 4.7L16.5 10.5l-4.7 1.8L10 17l-1.8-4.7L3.5 10.5l4.7-1.8L10 4Z"/><path d="M18 14l.9 2.1 2.1.9-2.1.9L18 20l-.9-2.1-2.1-.9 2.1-.9L18 14Z"/>',

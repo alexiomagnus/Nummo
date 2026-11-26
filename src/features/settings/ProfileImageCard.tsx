@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
-import { HelperText, Text, useTheme } from 'react-native-paper';
+import { HelperText, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
 import { ListGroup, RowBody } from '../../components/ActionList';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
@@ -10,10 +10,9 @@ import { fillTransition } from '../../theme/motion';
 import { motion, radius, spacing } from '../../theme/tokens';
 import { prepareAvatar } from '../receipts/image';
 import { profileAvatarLabels, profileAvatars, profileAvatarSvg } from './profileAvatars';
-import { accentLabels } from '../../theme/palette';
 import { accentSwatchColor } from '../../theme/theme';
-import { maxPhotoLength, noProfileImage, profileRingColor, profileRings, type ProfileImage, type ProfileRing } from './profileImage';
-import { saveProfileImage, saveProfileRing, useProfileImage, useProfileRing } from './useProfileImage';
+import { maxPhotoLength, noProfileImage, type ProfileImage } from './profileImage';
+import { saveProfileImage, useProfileImage } from './useProfileImage';
 
 // Size of the account button's picture, and of every choice in the card, so that a choice looks exactly like the button
 // (user's report, 22 November); the preview is twice as large.
@@ -73,14 +72,10 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
   const { t } = useI18n();
   const { colors, dark } = useTheme();
   const image = useProfileImage(scope);
-  const ringChoice = useProfileRing(scope);
-  const ringColor = profileRingColor(ringChoice, accentSwatchColor(colors), dark);
+  const ringColor = accentSwatchColor(colors);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const chooseRing = (next: ProfileRing) => {
-    setError(saveProfileRing(next, scope) ? null : 'Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.');
-  };
   const choose = (next: ProfileImage) => {
     setError(saveProfileImage(next, scope) ? null : 'Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.');
   };
@@ -112,22 +107,6 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
         {profileAvatars.map((avatar) => option(avatar, t("Avatar {p0}", { p0: t(profileAvatarLabels[avatar]) }),
           image.kind === 'avatar' && image.avatar === avatar, { kind: 'avatar', avatar }, () => choose({ kind: 'avatar', avatar })))}
       </View>
-      {/* Advanced mode only: the colour of the ring (user's request, 22 November). The app's colour first (default), then the
-          six accents of «Colore»; each swatch shows the colour the ring takes in the current scheme. */}
-      {ring && <View style={styles.ringChoice}>
-        <Text variant="titleSmall" nativeID="profile-ring-label">{t("Colore dell'anello")}</Text>
-        <View style={styles.options} role="radiogroup" aria-labelledby="profile-ring-label">
-          {profileRings.map((choice) => {
-            const selected = choice === ringChoice;
-            const label = choice === 'app' ? t("Colore dell'app") : t(accentLabels[choice]);
-            return <StateLayerPressable key={choice} layerColor={colors.onSurface} radius={radius.pill} accessibilityRole="radio" aria-checked={selected}
-              accessibilityLabel={`${label}${selected ? t(", selezionato") : ''}`} {...({ title: label } as object)} onPress={() => chooseRing(choice)}
-              style={[styles.option, fillTransition, { borderColor: selected ? colors.onSurface : 'transparent' }]}>
-              <View style={[styles.swatch, { backgroundColor: profileRingColor(choice, accentSwatchColor(colors), dark) }]} />
-            </StateLayerPressable>;
-          })}
-        </View>
-      </View>}
       <View style={styles.actions}>
         <Button mode="outlined" loading={busy} disabled={busy} onPress={() => input.current?.click()}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.image} size={size} color={color} />}>
@@ -154,8 +133,7 @@ const styles = StyleSheet.create({
   // The selection of an avatar looks like that of «Colore dell'anello» (user's request, 22 November): the same onSurface ring
   // (white on dark, dark on light) with the same 6 between ring and picture: 36 + 2 × 6 + 2 × 2 = 52.
   avatarOption: { width: accountAvatarSize + 2 * 6 + 2 * 2, height: accountAvatarSize + 2 * 6 + 2 * 2 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  ringChoice: { gap: spacing.sm },
-  swatch: { width: 32, height: 32, borderRadius: radius.pill },
+  // Room between the avatars and «Carica una foto» (27 November, on request).
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
   helper: { paddingHorizontal: 0 },
 });
