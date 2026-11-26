@@ -7,7 +7,8 @@ import { cartOutlineColor, iconRamp, type IconRamp } from '../theme/iconPalette.
 
 export const iconStyles = ['minimal', 'colorful', 'pixel'] as const;
 export type IconStyle = (typeof iconStyles)[number];
-export const defaultIconStyle: IconStyle = 'minimal';
+// «Colorato» by default since 27 November (user's request; «Minimale» before): a saved choice is kept.
+export const defaultIconStyle: IconStyle = 'colorful';
 // Source (Italian) texts of the settings; translated at the UI boundary and checked by tests/i18n.test.ts.
 export const iconStyleText: Record<IconStyle, { label: string }> = {
   minimal: { label: 'Minimale' },

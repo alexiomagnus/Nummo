@@ -12,6 +12,18 @@ logo menta (`#97D8BB`), per desktop e mobile. Rigenerati con `rsvg-convert` da S
 `icon-monochrome.svg`, `badge-96.png` e la piccola icona delle notifiche Android (la tinge il sistema). Un'app web già installata
 aggiorna l'icona quando il browser rilegge il manifest (su Android può richiedere giorni).
 
+**27 novembre 2026, su richiesta:** fondo blu notte in sfumatura verticale (`#34476F` in alto, `#1B2642` in basso) con un filo
+chiaro (bianco al 14 %) sul bordo della squircle, logo bianco, sul modello di un'icona fornita dall'utente. Rigenerati con `rsvg-convert`:
+`icon.svg` (stessa forma, scala 0,72), `icon-192.png` e `icon-512.png` (angoli trasparenti), `icon-maskable-512.png` (quadrato pieno con la
+sola sfumatura, scala 0,5) e `apple-touch-icon.png` (quadrato pieno, scala 0,62). App Android: sfondo `drawable/ic_launcher_background.xml`
+(stessa sfumatura), `icon_background` `#1B2642` (serve un nuovo APK). Invariati `icon-monochrome.svg`, `badge-96.png` e l'icona delle notifiche.
+
+**27 novembre 2026, poco dopo, su richiesta («più in stile Material 3 Expressive»):** sullo stesso fondo una forma «cookie» a nove lobi
+(`#3E5A92` al 75 %, raggio 22,5 su 64) dietro il logo, logo a scala 0,6 con l'asta `#A9C4F2`, l'arco bianco e un'ombra leggera (`#0B1226`
+al 35 %, 1,6 unità in basso). Maskable: tutto a scala 0,8 (forma dentro il cerchio sicuro del 40 %); Apple: scala 0,95. Android:
+`ic_launcher_foreground.xml` con forma e logo (colori `icon_shape`, `icon_stem`, `icon_foreground`), nuovo `ic_launcher_monochrome.xml` (il
+solo logo, per le icone a tema: con la forma la silhouette sarebbe un disco). Scelta fra quattro varianti in anteprima (la B).
+
 ## Asset e scopi
 
 | Asset in `public/icons/` | Uso |

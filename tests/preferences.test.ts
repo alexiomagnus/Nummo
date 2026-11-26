@@ -57,11 +57,12 @@ test('dashboard: scelte Blocchi già salvate conservate, Barre selezionabile sen
   assert.equal(bars.language, 'en');
 });
 
-test('icone: predefinito minimale, vecchie preferenze e valori invalidi tornano minimale', () => {
-  assert.equal(defaultPreferences.iconStyle, 'minimal');
-  assert.equal(parsePreferences('{"theme":"dark","language":"en"}').iconStyle, 'minimal');
-  assert.equal(parsePreferences('{"iconStyle":"neon","theme":"dark"}').iconStyle, 'minimal');
-  assert.equal(parsePreferences('{"iconStyle":null}').iconStyle, 'minimal');
+test('icone: predefinito colorato, valori invalidi tornano colorato, una scelta salvata resta', () => {
+  assert.equal(defaultPreferences.iconStyle, 'colorful');
+  assert.equal(parsePreferences('{"theme":"dark","language":"en"}').iconStyle, 'colorful');
+  assert.equal(parsePreferences('{"iconStyle":"neon","theme":"dark"}').iconStyle, 'colorful');
+  assert.equal(parsePreferences('{"iconStyle":null}').iconStyle, 'colorful');
+  assert.equal(parsePreferences('{"iconStyle":"minimal"}').iconStyle, 'minimal');
 });
 test('icone: lo stile colorato sopravvive al salvataggio e non altera le altre scelte', () => {
   const saved = { ...defaultPreferences, iconStyle: 'colorful' as const, theme: 'dark' as const, language: 'en' as const, dashboardChart: 'bars' as const };

@@ -33,7 +33,7 @@ test('icone: il markup colorato è composto solo da forme chiuse e da ruoli colo
 });
 
 test('stile minimale: identico al set originale, il colore resta a chi disegna', () => {
-  assert.equal(defaultIconStyle, 'minimal');
+  assert.equal(defaultIconStyle, 'colorful');
   assert.deepEqual([...iconStyles], ['minimal', 'colorful', 'pixel']);
   for (const icon of categoryIcons) for (const dark of [false, true]) {
     assert.deepEqual(resolveCategoryGlyph('minimal', icon, dark), { shape: zoomed(categoryGlyphs[icon]), color: null }, icon);

@@ -105,6 +105,23 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Icona in stile Material 3 Expressive, icone delle categorie «Colorato» di base — 27 novembre 2026
+
+Su richiesta, dopo la sezione sotto:
+- **Icona:** sullo stesso fondo blu notte una forma «cookie» a nove lobi tonale dietro il logo, asta azzurra e arco bianco con ombra leggera (scelta fra quattro varianti in anteprima; dettagli in `docs/icone-installazione.md`). PNG rigenerati; Android con `ic_launcher_foreground.xml` nuovo e `ic_launcher_monochrome.xml` separato (solo logo). `./gradlew assembleDebug` OK (risorse valide); APK **non** installato né rilasciato.
+- **Stile delle icone di categoria:** `defaultIconStyle` = `colorful` (prima `minimal`); una scelta salvata resta (`tests/preferences.test.ts` aggiornato).
+
+## Icona blu notte, «Blu» primo colore e predefinito — 27 novembre 2026
+
+Su richiesta (icona di riferimento blu notte con logo bianco; pallini «Blu» come prima palette e predefinita):
+- **Icona:** nuova `public/icons/icon.svg` (squircle in sfumatura `#34476F` → `#1B2642`, filo chiaro sul bordo, logo bianco a 0,72) e PNG rigenerati con `rsvg-convert` (dettagli in `docs/icone-installazione.md`). App Android: sfondo a sfumatura `drawable/ic_launcher_background.xml`, `icon_background` `#1B2642`: **serve un nuovo APK** (non compilato). PWA installate: aggiornamento quando il browser rilegge il manifest.
+- **Colore:** `accents` con `blue` primo, `defaultPreferences.accent` = `blue` (e ripiego di `theme.ts`); chi ha già una scelta salvata la conserva (anche Menta). Colori statici d'avvio (`index.html`, `offline.html`, `background_color` del manifest, `start_background` Android) presi dallo schema Blu; `theme_color` `#121212` invariato. Cache offline `nummo-offline-v2` (test aggiornato).
+- `npm test` OK (608/608). Anteprima dell'icona controllata a 256 px; **non provata** nel browser installato né sul telefono. Non committato né pubblicato.
+
+## «Entrate e spostamenti» in Fondi, con eliminazione — 27 novembre 2026
+
+Su richiesta. In fondo alla pagina Fondi (`MovementsSection.tsx`, sotto i fondi) l'elenco delle entrate e dei trasferimenti **del mese mostrato**, dal più recente (`movementsInMonth` in `domain/funds.ts`, test aggiunto): icona, fondo (o «da → a»), tipo · data · nota, importo (entrate con «+» verde) e cestino con `DeleteAction`; conferma che dice che il saldo cambia e le spese no. `useRemoteFunds.removeMovement` → `DataStore.removeMovement` (già presente in entrambe le implementazioni, già coperto dai test e dalle Rules, che permettono `delete`): nessun cambio di Rules, schema o backup. Le ricariche non compaiono (calcolate dal piano). L'eliminazione richiede `canWrite` come le altre operazioni dei fondi. Cambiata una regola dichiarata («i movimenti non si eliminano dall'interfaccia», «mai l'elenco dei movimenti»): `AGENTS.md` aggiornato. `npm test` OK (608/608); prova in Chromium headless a 390×844 con il backup `docs/testing/nummo-test-casi-limite-2026-11-08.json` importato (2 voci → eliminato un trasferimento → 1). **Non provato**: desktop, tema chiaro, Avanzata (`test:emulator` non rieseguito), altri mesi. Un movimento di un mese diverso da quello mostrato non si vede finché non si cambia mese. Non committato né pubblicato.
+
 ## Impostazioni, Notifiche e Templates a gruppi di righe — 27 novembre 2026
 
 Su richiesta (modello: «Lista scontrini»): le tre pagine usano `ListGroup`/`ToggleRow`/`RowBody`/`RowDivider` di `ActionList.tsx`, **una colonna a ogni dimensione** (le due colonne delle Impostazioni da desktop sono tolte). Nuovo `OptionRow` (riquadro tonale, titolo e controllo sotto) e icone `globe`, `clock`, `typeIcon`, `palette`.
