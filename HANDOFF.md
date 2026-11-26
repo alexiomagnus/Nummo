@@ -31,7 +31,7 @@ di quel giorno e la verifica su `d196dc9`.
 - **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
   vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
-- **App Android: 0.3.4** (`5b3f8a1`, versionCode 7, 25 novembre: splash trattenuta fino al primo disegno della pagina, niente nero), release GitHub «Latest», non ancora installata. Prima **0.3.3** (`6e3ebd0`, versionCode 6, 24 novembre: solo l'icona nera con logo bianco). Prima **0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
+- **App Android: 0.3.4** (`5b3f8a1`, versionCode 7, 25 novembre: splash trattenuta fino al primo disegno della pagina, niente nero), release GitHub «Latest», installata dall'utente sul Pixel 8 il 26 novembre (nero sparito). Prima **0.3.3** (`6e3ebd0`, versionCode 6, 24 novembre: solo l'icona nera con logo bianco). Prima **0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
   intensità confermata. Funzioni: WebView del sito con ponte nativo (vibrazione anche in silenzioso e Non disturbare, barre di sistema del
   colore dell'app, sblocco con `BiometricPrompt`, salvataggio dei file), Avanzata con l'accesso Google del telefono (dalla 0.2.0),
   notifiche come notifiche locali dell'app (dalla 0.3.0). Da fare dall'utente: copiare altrove la chiave di firma
@@ -128,7 +128,8 @@ di quel giorno e la verifica su `d196dc9`.
   (bundle `index-a1c0f188…` identico all'export). Le schermate di Storico, Aggiungi denaro, Modifica spesa e mirino non sono state
   riviste in headless dopo la modifica.
 - **App Android 0.3.4** (`5b3f8a1`, versionCode 7): `assembleRelease`, firma `00b1c85c…0fcf` verificata con `apksigner`; release GitHub
-  `android-v0.3.4` «Latest» con `nummo-0.3.4.apk` e `.sha256`. Non ancora installata sul telefono.
+  `android-v0.3.4` «Latest» con `nummo-0.3.4.apk` e `.sha256`. **Installata dall'utente sul Pixel 8 il 26 novembre: il fotogramma nero
+  dopo la splash non c'è più** (confermato dall'utente).
 
 ## Dettaglio del fondo: niente «Aggiungi denaro», transizione su Archivia/Ripristina — 25 novembre 2026
 
