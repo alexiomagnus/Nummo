@@ -74,6 +74,20 @@ export function androidNotifications(scope: unknown = globalThis): (AndroidBridg
   return notificationMethods.every((name) => typeof record[name] === 'function') ? bridge as AndroidBridge & AndroidNotifications : undefined;
 }
 
+// Optional too (version 0.3.5): the app's version for the «Info» page. Only the APK has one to show; an app without the method
+// (0.3.4 and earlier), a browser or an installed web app give null. Validated: a short dotted name and a positive build number.
+export type AndroidAppVersion = { name: string; code: number };
+export function androidAppVersion(scope: unknown = globalThis): AndroidAppVersion | null {
+  const bridge = androidBridge(scope) as (AndroidBridge & { appVersion?: unknown }) | undefined;
+  if (!bridge || typeof bridge.appVersion !== 'function') return null;
+  try {
+    const value: unknown = JSON.parse(String((bridge.appVersion as () => unknown).call(bridge)));
+    const { name, code } = (value ?? {}) as { name?: unknown; code?: unknown };
+    return typeof name === 'string' && /^\d{1,4}(\.\d{1,4}){0,3}$/.test(name) && Number.isSafeInteger(code) && (code as number) > 0
+      ? { name, code: code as number } : null;
+  } catch { return null; }
+}
+
 // Bar colours: only a plain `#RRGGBB` reaches the app (the theme's backgrounds always are).
 export function systemBarsColor(color: string): string | null {
   return /^#[0-9A-Fa-f]{6}$/.test(color) ? color : null;

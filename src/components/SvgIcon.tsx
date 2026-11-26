@@ -83,5 +83,10 @@ export const iconShapes = {
   shrink: '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
   // Torch of the camera (receipt scan): a lightning bolt.
   flash: '<path d="M13 3 5 13.5h6L10 21l9-11h-6l1-7Z"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4.5M12 8h.01"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.1M12 17h.01"/>',
+  externalLink: '<path d="M14 4h6v6M10 14 20 4M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>',
+  pullRequest: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5V20M13 6h3a2 2 0 0 1 2 2v7.5M15.5 3.5 13 6l2.5 2.5"/>',
+  bug: '<rect x="7" y="7" width="10" height="13" rx="5"/><path d="M9 7.5V7a3 3 0 0 1 6 0v.5M12 11v9M7 12H3M21 12h-4M7.5 17 4 19M16.5 17l3.5 2M7.5 9 4 7M16.5 9 20 7"/>',
   copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
 } as const;

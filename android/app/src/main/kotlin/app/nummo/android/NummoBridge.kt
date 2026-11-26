@@ -63,6 +63,11 @@ class NummoBridge(private val activity: MainActivity) {
         activity.runOnUiThread { prompts.remove(id)?.cancel() }
     }
 
+    // The app's own version for the «Info» page (0.3.5, 26 November, on request): the browser and the installed web app have
+    // none to show. JSON `{"name":"0.3.5","code":8}`, validated by the page.
+    @JavascriptInterface
+    fun appVersion(): String = "{\"name\":\"${BuildConfig.VERSION_NAME}\",\"code\":${BuildConfig.VERSION_CODE}}"
+
     // Google sign-in (GoogleSignIn.kt): the project the app is registered with ("" without a client ID: Standard only),
     // the token through `window.nummoAndroidResult(id, outcome, idToken)`, and the account forgotten after «Esci».
     @JavascriptInterface

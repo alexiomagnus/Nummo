@@ -193,16 +193,17 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
   const [receiptsRequest, setReceiptsRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const [merchantsRequest, setMerchantsRequest] = useState(0);
+  const [infoRequest, setInfoRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
   const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar />} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
     onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenReceipts={() => setReceiptsRequest((n) => n + 1)} onOpenBackup={openBackup}
-    onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} />;
+    onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} onOpenInfo={() => setInfoRequest((n) => n + 1)} />;
   return (
     <>
       <View style={styles.fill}>
         <DataWorkspace backend={store} scope="local" storageNote={t('Spese e categorie salvate su questo dispositivo.')}
-          onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} receiptsRequest={receiptsRequest} backupRequest={backupRequest} merchantsRequest={merchantsRequest} settingsRequest={settingsRequest}
+          onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} receiptsRequest={receiptsRequest} backupRequest={backupRequest} merchantsRequest={merchantsRequest} infoRequest={infoRequest} settingsRequest={settingsRequest}
           notificationsRequest={notificationsRequest} localArchive={store}
           renderSettings={renderSettings}
           storage={<StandardStorage protection={protection} onChangeMode={onChangeMode} style={styles.wide} />}
@@ -235,6 +236,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const [receiptsRequest, setReceiptsRequest] = useState(0);
   const [backupRequest, setBackupRequest] = useState(0);
   const [merchantsRequest, setMerchantsRequest] = useState(0);
+  const [infoRequest, setInfoRequest] = useState(0);
   const session = useSession(!configMissing);
   // «Esci» goes back to the first screen (Standard / Avanzata), not to the sign-in screen (user's request, 21 November).
   const signOut = () => { if (session.status === 'signed-in') session.signOut(() => onChangeMode(null)); };
@@ -263,7 +265,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
     ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} ring={ringColor} busy={session.busy} onSignOut={signOut}
       avatar={chosenAvatar.kind === 'none' ? undefined : <ProfileAvatar image={chosenAvatar} size={accountAvatarSize} />} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenReceipts={() => setReceiptsRequest((n) => n + 1)}
-      onOpenBackup={openBackup} onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} /> : null;
+      onOpenBackup={openBackup} onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} onOpenInfo={() => setInfoRequest((n) => n + 1)} /> : null;
 
   // Startup: while Auth restores the session and the first data load, the workspace shell shows loading status.
   // No duplicate form with fake empty data. Only when the previous visit
@@ -317,7 +319,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
       {signedIn && !denied ? (
         <View style={styles.fill} pointerEvents={session.busy ? 'none' : 'auto'}>
           <RemoteWorkspace key={session.user.uid} uid={session.user.uid} storageNote={storageNote}
-            onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} receiptsRequest={receiptsRequest} backupRequest={backupRequest} merchantsRequest={merchantsRequest}
+            onReleased={() => setReleasedUid(session.user.uid)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} receiptsRequest={receiptsRequest} backupRequest={backupRequest} merchantsRequest={merchantsRequest} infoRequest={infoRequest}
             settingsRequest={settingsRequest} notificationsRequest={notificationsRequest} renderSettings={advancedSettings}
             storage={storage()}
             dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { androidBridge, androidGoogleSignIn, androidNotifications, authenticateOnDevice, googleSignInOnDevice, inAndroidApp, requestNotificationsOnDevice, systemBarsColor, type AndroidBridge } from '../src/services/androidApp.ts';
+import { androidAppVersion, androidBridge, androidGoogleSignIn, androidNotifications, authenticateOnDevice, googleSignInOnDevice, inAndroidApp, requestNotificationsOnDevice, systemBarsColor, type AndroidBridge } from '../src/services/androidApp.ts';
 import { pushSupport } from '../src/services/pushNotifications.ts';
 import { signInError } from '../src/features/session/signInError.ts';
 import { createHaptics, hapticGap, hasHaptics } from '../src/theme/haptics.ts';
@@ -157,4 +157,15 @@ test('app Android: notifiche di sistema dall\'app (0.3.0), senza servizio push n
     scope.nummoAndroidResult!(asked.at(-1)!, outcome);
     assert.equal(await result, outcome);
   }
+});
+
+test('app Android: versione dell’app solo dal ponte 0.3.5, validata; altrove nessuna', () => {
+  const withVersion = (value: unknown) => ({ NummoAndroid: { ...fakeBridge().bridge, appVersion: () => value } });
+  assert.deepEqual(androidAppVersion(withVersion('{"name":"0.3.5","code":8}')), { name: '0.3.5', code: 8 });
+  assert.equal(androidAppVersion({ NummoAndroid: fakeBridge().bridge }), null, 'app 0.3.4 e precedenti: nessun metodo');
+  assert.equal(androidAppVersion({}), null, 'browser e web app installata');
+  assert.equal(androidAppVersion(withVersion('{"name":"<b>1</b>","code":8}')), null);
+  assert.equal(androidAppVersion(withVersion('{"name":"0.3.5","code":0}')), null);
+  assert.equal(androidAppVersion(withVersion('non json')), null);
+  assert.equal(androidAppVersion({ NummoAndroid: { ...fakeBridge().bridge, appVersion: () => { throw new Error('x'); } } }), null);
 });

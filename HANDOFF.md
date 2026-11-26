@@ -103,6 +103,28 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Pagina «Info», «Elimina le liste archiviate» a tutta larghezza, Esercente in vista con la tastiera — 26 novembre 2026
+
+Su richiesta:
+- **Pagina «Info»** (`features/info/InfoPage.tsx`), ultima voce del menu account dopo Esercenti (prima di «Esci»), `infoRequest`,
+  ridisegnata sul modello di uno screenshot dell'utente: riquadro grande in testa con la **versione solo nell'app Android** (cifre
+  grandi, la prima in `primary`, «Versione 0.3.5 · Build 8»), nel browser e nella web app il logo al posto del numero; gruppi
+  «Progetto» («Cos'è Nummo?», la `Guide` al posto della pagina, Indietro torna a Info), «Creatore» (foto GitHub 192×192 copiata in
+  `public/images/creator.jpg`, nome, «Profilo GitHub»), «Sviluppo» («Contribuisci» → `/Nummo/compare`, «Segnala problema» →
+  `/Nummo/issues/new`), link veri in nuova scheda. Icone nuove in `SvgIcon`: `info`, `help`, `externalLink`, `pullRequest`, `bug`.
+  **Attenzione:** il repository è **privato** (verificato con `gh`): per chi non è collaboratore «Contribuisci» e «Segnala problema»
+  portano a una pagina 404 di GitHub.
+- **App Android 0.3.5** (versionCode 8): solo il metodo `appVersion` del ponte (JSON nome + build, `androidAppVersion` lo valida;
+  test in `tests/androidApp.test.ts`). `assembleDebug assembleRelease` OK; **non installata né pubblicata** come release GitHub. Con
+  la 0.3.4 installata la pagina Info mostra il logo, non la versione.
+- **«Elimina le liste archiviate»** a tutta larghezza su smartphone (`222e0f4`, pubblicato).
+- **Esercente nascosto dalla tastiera** in Modifica spesa/serie (`adb4768`, pubblicato): lo schermo si accorcia un render dopo il
+  viewport, quando la shell ha già portato il campo in vista; `ScreenLayer` lo riporta in vista dopo il nuovo `frame.height`
+  (`revealFocusedField` di `viewport.ts`, condiviso con `AppShell`). **Da provare sul telefono** (causa non riprodotta).
+- **Verifica:** `npm run check` OK (**606/606**). Headless su `dist-demo` (Standard, 390×844, 390×1300 e 1280×860, chiaro e scuro, con
+  un ponte Android finto per la versione): voce nel menu, pagina, link (`target=_blank`, `rel=noopener noreferrer`), guida e ritorno
+  con Indietro; nessun errore JS. Non provato nell'app Android reale.
+
 ## «Lista scontrini»: scheda AI spostata, scontrini scansionati salvati con la spesa — 26 novembre 2026
 
 Su richiesta (screenshot del menu account e della scheda «Analisi scontrini con AI»), lavoro della sessione `nummo-78` (in parallelo a
