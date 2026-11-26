@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## App Android 0.3.13 — 27 novembre 2026
+
+Su richiesta: versione 0.3.13 (versionCode 16), solo il numero (nessuna modifica nativa dalla 0.3.12). Release GitHub `android-v0.3.13` «Latest»: `nummo-0.3.13.apk` 9 240 896 byte, SHA-256 `10655076…f0fa`, certificato `00b1c85c…0fcf` verificato con `apksigner`. Le modifiche web dopo la 0.3.12 (CSV, saldo iniziale, dettaglio del fondo, azioni su una riga) erano già su Hosting. Non ancora installata dall'utente.
+
 ## «Modifica fondo» e azioni a due su una riga (smartphone) — 27 novembre 2026
 
 Segnalazione: in «Modifica fondo» (411×914, app 0.3.12) «Elimina» e «Salva» impilati occupavano tanto spazio che i campi (Budget mensile) restavano tagliati nell'area scorrevole. `ScreenDialog` (`AppDialog.tsx`): con **due** azioni (dopo lo scarto di «Annulla») stanno su una riga a parti uguali anche su smartphone, con tre o più resta la colonna. Vale per tutti gli schermi con Elimina + conferma (spesa, template, prodotto, serie, lista…), non solo per il fondo. Non misurato su dispositivo.
