@@ -50,6 +50,7 @@ export function FundEditor({ record, funds, ready, error, onSave, close, remove 
   const [budgetOn, setBudgetOn] = useState(recurring !== null);
   const [budgetAmount, setBudgetAmount] = useState(recurring !== null ? amountText(recurring) : '');
   const recharge = record ? currentRecharge(record) : null;
+  const [initialOn, setInitialOn] = useState(Boolean(record && record.initial_minor > 0));
   const [initial, setInitial] = useState(record && record.initial_minor > 0 ? amountText(record.initial_minor) : '');
   const [rechargeOn, setRechargeOn] = useState(Boolean(recharge?.active));
   const [rechargeAmount, setRechargeAmount] = useState(recharge ? amountText(recharge.amount_minor) : '');
@@ -60,6 +61,7 @@ export function FundEditor({ record, funds, ready, error, onSave, close, remove 
   const keptExceptions = (record?.budget_exceptions ?? []).filter((c) => c.month >= monthOf(today)).length;
   // A switch turned on reveals its amount: bring it wholly into view instead of leaving it under the bottom edge.
   const reduced = useReducedMotion();
+  const initialFields = useRevealOnEnable(initialOn, reduced);
   const rechargeFields = useRevealOnEnable(rechargeOn, reduced);
   const budgetFields = useRevealOnEnable(budgetOn, reduced);
 
@@ -70,8 +72,8 @@ export function FundEditor({ record, funds, ready, error, onSave, close, remove 
     if (nameError) next.name = nameError;
     const budgetMinor = parseAmountMinor(budgetAmount);
     if (budgetOn && budgetMinor === null) next.budgetAmount = budgetAmount.trim() ? 'Importo non valido (es. 12,50).' : 'Inserisci l’importo del budget.';
-    // Empty initial balance = 0.
-    const initialMinor = initial.trim() === '' ? 0 : parseMoneyMinor(initial, true);
+    // Switch off or empty = no initial balance (0).
+    const initialMinor = !initialOn || initial.trim() === '' ? 0 : parseMoneyMinor(initial, true);
     if (initialMinor === null) next.initial = 'Importo non valido (es. 12,50).';
     const rechargeMinor = parseAmountMinor(rechargeAmount);
     const day = /^\d{1,2}$/.test(rechargeDay.trim()) ? Number(rechargeDay) : 0;
@@ -118,12 +120,15 @@ export function FundEditor({ record, funds, ready, error, onSave, close, remove 
               {icon ? t("Cambia icona") : t("Scegli un'icona")}</Button>
             {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={blocked} />}
           </View>
-          <View>
-            <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Saldo iniziale (facoltativo)")} value={initial} inputMode="decimal" placeholder="0,00"
-              readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.initial)} left={leadingIcon(iconShapes.euro)}
-              accessibilityLabel={t("Saldo iniziale in euro, facoltativo")}
-              onChangeText={(value) => { setInitial(value); setErrors({ ...errors, initial: undefined }); }} />
-            {field('initial')}
+          <View style={styles.section}>
+            <SwitchRow label={t("Saldo iniziale")} supporting={t("Il denaro già presente nel fondo quando lo crei.")}
+              value={initialOn} disabled={blocked} onChange={setInitialOn} />
+            {initialOn && <View ref={initialFields}>
+              <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo del saldo iniziale")} value={initial} inputMode="decimal" placeholder="0,00"
+                readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.initial)} left={leadingIcon(iconShapes.euro)}
+                onChangeText={(value) => { setInitial(value); setErrors({ ...errors, initial: undefined }); }} />
+              {field('initial')}
+            </View>}
           </View>
           <View style={styles.section}>
             <SwitchRow label={t("Ricarica mensile")} supporting={t("Denaro aggiunto al fondo ogni mese, ad esempio una paghetta o uno stipendio.")}

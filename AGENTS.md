@@ -245,7 +245,7 @@ strip-types, import `.ts` nei moduli testati direttamente; niente enum o paramet
   (`recharges`, `budgets`, `budget_exceptions`), nel backup come array. Spese senza `fund_id` = «Senza fondo», assegnate solo su richiesta
   esplicita; un fondo con movimenti o spese si archivia, non si elimina. «Elimina» (22 novembre, su richiesta) sta nel dialogo «Modifica fondo» (`remove` di `FundEditor`, riga di Annulla/Salva come negli altri dialoghi di modifica) e, per i fondi archiviati, nella loro scheda; è sempre presente: per un fondo usato il dialogo dice «Lo usano n spese e n movimenti…» con solo «Chiudi» (`blocked`), e la conferma ricontrolla sui dati più recenti.
 - Fondi (interfaccia, 16 novembre): fondi e budget sempre facoltativi, nessun passaggio obbligato in Nuova spesa («Nessun fondo» di base,
-  `resolveFund`). Modulo: nome, colore, icona, «Saldo iniziale (facoltativo)», «Ricarica mensile», «Budget mensile».
+  `resolveFund`). Modulo: nome, colore, icona, interruttore «Saldo iniziale» (con l'importo sotto, 27 novembre, su richiesta; prima un campo «Saldo iniziale (facoltativo)»), «Ricarica mensile», «Budget mensile».
   Aggiungi/Trasferisci solo tra fondi attivi con dati di saldo; una ricarica attivata o spostata a un giorno già passato parte dal mese dopo
   (`setRecharge`). Nessun saldo mostrato (né «Disponibile ora», né «Saldo disponibile» in Nuova spesa); la scheda espansa dà solo i totali
   del mese, mai elenchi; i movimenti si eliminano dallo schermo «Tutte le operazioni» (dal 26 novembre, su richiesta; prima non si eliminavano dall'interfaccia). I dati di saldo esistenti non si eliminano. Budget generale: **rimosso dall'interfaccia** il 16 novembre (su richiesta: niente card né pulsante «Budget» in Fondi, niente

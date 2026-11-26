@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Saldo iniziale» come interruttore — 27 novembre 2026
+
+Su richiesta: in `FundEditor` il campo «Saldo iniziale (facoltativo)» è l'interruttore «Saldo iniziale» (acceso se il fondo ha già un saldo iniziale) con sotto «Importo del saldo iniziale»; spento = saldo 0. Nessuna parola «facoltativo» nella sezione. `npm run check` 626/626; non provato a vista. Commit, push e Hosting come richiesto.
+
 ## Importazione CSV, barra di stato sotto il vetro (app 0.3.12) — 27 novembre 2026
 
 Su richiesta, pubblicati: commit `f80bcd4` su `main`, Hosting `nummo-6b6e2` («Deploy complete!», Rules invariate), release GitHub `android-v0.3.12` «Latest» (`nummo-0.3.12.apk`, 9 240 892 byte, SHA-256 `5d403bd3…ee44` uguale al `digest` dell'API, certificato `00b1c85c…0fcf` verificato con `apksigner`; versionCode 15; tag annotato).

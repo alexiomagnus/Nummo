@@ -40,7 +40,7 @@ linguaggio. Decisioni:
 Su richiesta (opzione 3 tra: lasciare i fondi come gruppi di spesa, mostrare sempre Aggiungi/Trasferisci, saldo per fondo).
 Rivede in parte la #7: un fondo resta di base un gruppo di spese, ma il modulo offre saldo iniziale (alla `start_date`, oggi
 per i nuovi) e ricarica mensile, facoltativi. *Aggiornamento dello stesso giorno, su richiesta:* tolto l'interruttore «Tieni
-traccia del saldo»; «Saldo iniziale (facoltativo)» è sempre visibile, seguito dagli interruttori Ricarica mensile e Budget mensile. **Nessun nuovo campo**: un flag avrebbe richiesto Rules,
+traccia del saldo»; «Saldo iniziale» è un interruttore (dal 27 novembre; prima un campo sempre visibile), seguito dagli interruttori Ricarica mensile e Budget mensile. **Nessun nuovo campo**: un flag avrebbe richiesto Rules,
 decoder, backup e pubblicazione Rules prima di poter scrivere in Avanzata. Il saldo esiste finché il fondo ha saldo iniziale,
 ricariche o movimenti (`hasBalanceData`); ricariche e movimenti già registrati restano (spegnere la ricarica la sospende da ora),
 perché quei dati non si cancellano né si riscrivono nel passato. Aggiungi/Trasferisci
