@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { glassSurface } from '../../theme/theme';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
@@ -15,7 +16,7 @@ import {
 } from '../../domain/funds';
 import type { ExpenseRecord } from '../../domain/contract';
 import { useI18n } from '../../i18n/I18nProvider';
-import { radius, spacing } from '../../theme/tokens';
+import { groupGap, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { BudgetMeter } from './BudgetMeter';
 import { FundAvatar } from './FundAvatar';
@@ -153,13 +154,13 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
       </View>
       {!canWrite && <Text variant="bodySmall" style={muted}>{t("Le modifiche ai fondi richiedono la connessione e dati sincronizzati.")}</Text>}
 
-      {funds.length === 0 && remote.ready && <View style={[styles.empty, { backgroundColor: colors.elevation.level1 }]}>
+      {funds.length === 0 && remote.ready && <View style={[styles.empty, glassSurface(colors)]}>
         <SvgIcon shape={iconShapes.wallet} size={32} color={colors.primary} />
         <Text variant="titleMedium">{t("Nessun fondo")}</Text>
         <Text variant="bodyMedium" style={muted}>{t("I fondi sono facoltativi: Nummo funziona normalmente anche senza.")}</Text>
       </View>}
 
-      {funds.length > 0 && orphans.length > 0 && <View style={[styles.notice, { borderColor: colors.outlineVariant }]}>
+      {funds.length > 0 && orphans.length > 0 && <View style={[styles.notice, glassSurface(colors)]}>
         <View style={styles.grow}>
           <Text variant="titleSmall">{orphans.length === 1 ? t("Una spesa senza fondo") : t("{p0} spese senza fondo", { p0: orphans.length })}</Text>
           <Text variant="bodyMedium" style={muted}>{t("Restano valide. Nel mese mostrato: {p0}.", { p0: formatAmount(overview.unassigned.spent) })}</Text>
@@ -230,8 +231,8 @@ function FundCard({ item, isDefault, onOpen }: { item: FundMonth; isDefault: boo
   const spentNow = forecast ? item.forecastSpent : item.spent;
   const caption = fund.archived ? t("Archiviato") : forecast ? t("previsti") : t("speso nel mese");
   return (
-    <View role="listitem" nativeID={fundCardId(fund.id)} style={[styles.card, { borderColor: colors.outlineVariant, backgroundColor: colors.elevation.level1 }]}>
-      <StateLayerPressable onPress={() => onOpen(fund.id)} accessibilityRole="button" aria-haspopup="dialog" layerColor={colors.onSurface} radius={radius.dialog - 1}
+    <View role="listitem" nativeID={fundCardId(fund.id)} {...{ dataSet: { glassItem: 'true' } }} style={[styles.card, glassSurface(colors)]}>
+      <StateLayerPressable onPress={() => onOpen(fund.id)} accessibilityRole="button" aria-haspopup="dialog" layerColor={colors.onSurface}
         accessibilityLabel={t("Apri i dettagli di {p0}, {p1}", { p0: fund.name, p1: fund.archived ? t("Archiviato") : `${formatAmount(spentNow)} ${caption}` })}
         style={styles.cardPress}>
         <View style={styles.cardHeader}>
@@ -274,7 +275,7 @@ function AssignDialog({ funds, orphans, ready, error, defaultFundId, onAssign, c
       <Dialog.Content style={styles.dialogContent}>
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
           {t("{p0} spese registrate senza fondo (di cui {p1} ricorrenti) verranno assegnate al fondo scelto. Importi, date e categorie non cambiano.", { p0: orphans.length, p1: series })}</Text>
-        <SelectField label={t("Fondo")} value={fundId} disabled={busy || !ready} onChange={setFundId}
+        <SelectField panel whole label={t("Fondo")} value={fundId} disabled={busy || !ready} onChange={setFundId}
           options={funds.map((fund) => ({ value: fund.id, label: fund.name, icon: <FundAvatar fund={fund} size={24} /> }))} />
         <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{t("Puoi sempre cambiare il fondo di una singola spesa dalla sua modifica.")}</Text>
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
@@ -295,21 +296,22 @@ const styles = StyleSheet.create({
   monthBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
   monthTitle: { alignItems: 'center', minWidth: 160 },
   capitalize: { textTransform: 'capitalize' },
-  highlight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 96, borderRadius: radius.card,
+  highlight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 96, borderRadius: radius.group,
     paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
   highlightIcon: { width: 48, height: 48, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   highlightText: { flex: 1, minWidth: 0, gap: 2 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   actionsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   actionsTablet: { gap: spacing.xs },
-  empty: { borderRadius: radius.card, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
-  notice: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderWidth: 1, borderRadius: radius.card, padding: spacing.lg },
-  list: { gap: spacing.md },
+  empty: { borderRadius: radius.group, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
+  notice: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderRadius: radius.group, padding: spacing.lg },
+  // Fund cards of the glass language: one group, 3 apart (GlobalStyle, `data-glass-item`).
+  list: { gap: groupGap },
   // Heading above the fund cards, as written; the root's gap is wider than the title needs to its cards.
   listTitle: { paddingHorizontal: spacing.sm, marginBottom: -spacing.sm },
   // The same box as the grouped rows of the other pages (ListGroup: dialog corner, level-1 fill, 1 px outline), so the cards and
   // «Tutte le operazioni» read as one family (user's request, 27 November).
-  card: { borderWidth: 1, borderRadius: radius.dialog, overflow: 'hidden' },
+  card: { borderRadius: radius.group, overflow: 'hidden' },
   cardPress: { padding: spacing.lg, gap: spacing.md },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm },

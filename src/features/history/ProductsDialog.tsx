@@ -19,16 +19,16 @@ export function ProductsDialog({ description, products, onClose }: {
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{`${description} · ${count}`}</Text>
     </AppDialog.Content>
     <AppDialog.ScrollArea style={styles.area}><ScrollView>
-      <View role="list" accessibilityLabel={t("Prodotti acquistati")}>
+      <View {...{ dataSet: { glassGroup: 'true' } }}><View role="list" accessibilityLabel={t("Prodotti acquistati")}>
         {products.map((name, index) => (
-          <View key={index} role="listitem" style={[styles.item, index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.outlineVariant }]}>
+          <View key={index} role="listitem" style={styles.item}>
             <View style={[styles.mark, { backgroundColor: colors.secondaryContainer }]}>
               <SvgIcon shape={iconShapes.check} size={18} color={colors.onSecondaryContainer} />
             </View>
             <Text variant="bodyLarge" style={styles.name}>{name}</Text>
           </View>
         ))}
-      </View>
+      </View></View>
     </ScrollView></AppDialog.ScrollArea>
     {/* No «Chiudi»: the screen's Back closes it (user's request, 23 November). */}
   </AppDialog></Portal>;
@@ -37,7 +37,7 @@ export function ProductsDialog({ description, products, onClose }: {
 const styles = StyleSheet.create({
   // Only the rows draw separators; the area's dividers appear only on an edge that hides rows (AppDialog.ScrollArea).
   area: { minHeight: 0 },
-  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingVertical: spacing.sm },
+  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
   mark: { width: 32, height: 32, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   name: { flex: 1, minWidth: 0 },
 });

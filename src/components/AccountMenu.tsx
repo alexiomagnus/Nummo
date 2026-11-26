@@ -95,7 +95,7 @@ export function AccountMenu({ email, photoURL, avatar, ring, signedIn = false, o
 }
 
 const styles = StyleSheet.create({
-  menu: { minWidth: 264, borderRadius: radius.control, paddingVertical: 0, overflow: 'hidden' },
+  menu: { minWidth: 264, borderRadius: radius.group, paddingVertical: 0, overflow: 'hidden' },
   // Size items against the account menu rather than Paper's independent width cap.
   // Edge-to-edge rows: the menu clips hover/ripple to its outer corners, including the final row.
   item: { maxWidth: '100%', borderRadius: 0, overflow: 'hidden' },

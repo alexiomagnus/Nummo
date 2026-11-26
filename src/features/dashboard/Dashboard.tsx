@@ -7,7 +7,8 @@ import { chartTypes, type ChartType, type DashboardPreferences } from '../settin
 import { Card } from '../../components/Card';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { layout, spacing } from '../../theme/tokens';
+import { groupGap, layout, radius, spacing } from '../../theme/tokens';
+import { glassSurface } from '../../theme/theme';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
 import { breakdown, effectiveFundFilter, filterByFund, allFunds, periodLabels, periods, type Breakdown, type Occurrence, type Period, type Series } from '../../domain/history';
@@ -99,12 +100,12 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
       </View>
 
       <View style={styles.summary}>
-        <View style={styles.metric}>
+        <View style={[styles.metric, glassSurface(theme.colors)]}>
           <Text variant="labelMedium" style={muted}>{t('Totale nel periodo')}</Text>
           <Text variant="headlineSmall" style={styles.total}>{formatAmount(source.total)}</Text>
           <Text variant="bodySmall" style={muted}>{formatDate(insights.from)} – {formatDate(insights.to)}</Text>
         </View>
-        <View style={styles.metric}>
+        <View style={[styles.metric, glassSurface(theme.colors)]}>
           <Text variant="labelMedium" style={muted}>{t('Transazioni')}</Text>
           <Text variant="titleLarge">{source.count}</Text>
         </View>
@@ -117,7 +118,7 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
             <CategoryChart key={`${period}|${fundFilter}`} chart={chart} data={data} others={others} categories={categories} colors={colors}
               sideBySide={sideBySide} onOpen={openCategory} />}
         </Card>}
-      {preferences.dashboardTrend && <Card><TimeChart key={period} days={insights.days} /></Card>}
+      {preferences.dashboardTrend && <Card glass><TimeChart key={period} days={insights.days} /></Card>}
       {detail && <TransactionDetails {...detail} categories={categories} funds={funds} onClose={() => setDetail(null)} />}
 
     </View>
@@ -170,6 +171,7 @@ const styles = StyleSheet.create({
   // Clear space from the donut (plus the column gap), so the hint reads as a caption rather than part of the chart.
   donutHintBelow: { textAlign: 'center', marginTop: spacing.lg },
   chartCol: { minWidth: 0, gap: spacing.sm },
-  summary: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
-  metric: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs },
+  // Two glass tiles side by side, a little apart (the connected cards of the glass language).
+  summary: { flexDirection: 'row', flexWrap: 'wrap', gap: groupGap },
+  metric: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs, padding: spacing.lg, borderRadius: radius.group },
 });

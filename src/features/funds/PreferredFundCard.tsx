@@ -1,5 +1,6 @@
 import { ListGroup, RowBody } from '../../components/ActionList';
 import { SelectField } from '../../components/SelectField';
+import { iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import { FundAvatar, NoFundAvatar } from './FundAvatar';
 import type { SyncedFund } from '../../domain/firestore';
@@ -18,7 +19,7 @@ export function PreferredFundCard({ funds, value, onChange }: {
   ];
   const current = funds.some((fund) => fund.id === value) ? value : none;
   return (
-    <ListGroup label={t("Fondo preferito")}>
+    <ListGroup icon={iconShapes.wallet} label={t("Fondo preferito")}>
       <RowBody><SelectField panel label={t("Nuova spesa")} options={options} value={current} onChange={(next) => onChange(next === none ? '' : next)} /></RowBody>
     </ListGroup>
   );

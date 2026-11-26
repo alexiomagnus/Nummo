@@ -196,7 +196,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
           repeat pushed «Salva» under the navigation on phones); without the scan, Template takes its place. At every size each
           is half of the row. In a box of its own, with the outline (user's request, 27 November). A scan only fills the fields after a review:
           saving stays on «Salva». */}
-      {(scanEnabled || templateShown) && <ListGroup><RowBody tight={desktop}><View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
+      {(scanEnabled || templateShown) && <ListGroup><RowBody tight><View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
         {scanEnabled && <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={styles.scanHalf}
           compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
           accessibilityLabel={t("Scansiona scontrino")}
@@ -207,7 +207,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
         {!(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
       </View></RowBody></ListGroup>}
       {/* The fields in one grouped box, like the other pages, with its label on every size (user's request, 27 November). */}
-      <ListGroup label={t("Dettagli della spesa")}><RowBody tight={desktop}>
+      <ListGroup icon={iconShapes.receipt} label={t("Dettagli della spesa")}><RowBody tight>
       {/* Templates turned on but none saved yet: the button cannot appear, so say why. */}
       {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il pulsante Template compare quando crei un template nella pagina Templates.")}</Text>}
       {scanEnabled && scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
@@ -218,8 +218,9 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       </RowBody></ListGroup>
-      {/* «Ricorrente» in a box of its own, apart from the fields (user's request, 27 November). */}
-      <ListGroup><RowBody tight={desktop}>{repeat}</RowBody></ListGroup>
+      {/* «Ricorrente» in a box of its own, apart from the fields (user's request, 26 November). The switch rows run flush to the card
+          (their hover layer then follows its outline) and keep their own 16 at the sides, as the options under them. */}
+      <ListGroup>{repeat}</ListGroup>
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{t(submission.message)}</HelperText>
@@ -248,7 +249,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
 
 const styles = StyleSheet.create({
   page: { width: '100%' },
-  form: { width: '100%', gap: spacing.lg },
+  form: { width: '100%', gap: spacing.md },
   formDesktop: { gap: spacing.md },
   footer: { gap: spacing.md },
   actions: { flexDirection: 'row' },

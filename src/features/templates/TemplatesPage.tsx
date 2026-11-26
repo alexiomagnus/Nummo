@@ -51,13 +51,13 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
     <View style={styles.root}>
       {/* The grouped rows of «Lista scontrini», «Info» and «Archiviazione e backup» (user's request, 27 November: Impostazioni,
           Notifiche and Templates redone like them). */}
-      <ListGroup label={t("Template")}>
+      <ListGroup icon={iconShapes.template} label={t("Template")}>
         <ToggleRow icon={iconShapes.template} title={t("Usa i template")} value={enabled} onChange={onToggle}
           subtitle={enabled ? t("In Nuova spesa compare il pulsante Template.") : t("In Nuova spesa non compare il pulsante Template.")} />
       </ListGroup>
       {/* Off: greyed out (M3 disabled opacity) and unreachable, never hidden (user's request, 21 November), like the AI card. */}
       <View style={[styles.sections, !enabled && { opacity: stateOpacity.disabled }]} aria-disabled={!enabled} {...{ inert: enabled ? undefined : true }}>
-        <ListGroup label={t("Nuovo template")}>
+        <ListGroup icon={iconShapes.plus} label={t("Nuovo template")}>
           <RowBody>
             {full ? <Text variant="bodyMedium" style={muted}>{t("Hai raggiunto il limite di {p0} template: eliminane uno per aggiungerne altri.", { p0: templatePolicy.maxTemplates })}</Text> : <>
               <TemplateFields form={form} disabled={!remote.ready || !enabled} />
@@ -66,7 +66,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
             {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
           </RowBody>
         </ListGroup>
-        <ListGroup label={remote.templates.length > 0 ? t("I tuoi template ({p0})", { p0: remote.templates.length }) : t("I tuoi template")}>
+        <ListGroup icon={iconShapes.list} label={remote.templates.length > 0 ? t("I tuoi template ({p0})", { p0: remote.templates.length }) : t("I tuoi template")}>
           {remote.templates.length === 0
             ? <StatusRow icon={iconShapes.template} tone="secondary" title={remote.ready ? t("Nessun template.") : t("Caricamento…")} />
             : <View role="list">{remote.templates.map((template, index) => {

@@ -3,7 +3,8 @@ import { useTheme } from 'react-native-paper';
 import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
 import { themeSwitchAttribute } from './themeTransition';
-import { radius } from './tokens';
+import { glassOf } from './theme';
+import { groupGap, radius } from './tokens';
 import { observeScrolling, observeViewportHeight, observeViewportTop, scrollingAttribute, stickyBottomProperty } from './viewport';
 
 // Web-only rules RN Web cannot express: the font family (the @font-face rules live in public/index.html, so the font
@@ -15,6 +16,7 @@ type Props = { mode: BootTheme['mode']; accent: Accent; colorMode: ColorMode };
 export function GlobalStyle({ mode, accent, colorMode }: Props) {
   const { colors, dark, fonts } = useTheme();
   const family = fonts.bodyMedium.fontFamily;
+  const glass = glassOf(colors);
   useLayoutEffect(() => {
     const style = document.createElement('style');
     style.id = 'nummo-global';
@@ -51,11 +53,11 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
         [data-panel-scroll]::-webkit-scrollbar-button { display: none; }
         [data-panel-scroll]::-webkit-scrollbar-track { background: transparent; margin-block: ${radius.dialog}px; }
         [data-panel-scroll]::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; border: 2px solid transparent; border-radius: 5px; }
-        /* Anchored menus (Overlay.tsx): same bar, a menu corner radius (at most radius.control) short of both ends. */
+        /* Anchored menus (Overlay.tsx): same bar, a menu corner radius (radius.group) short of both ends. */
         [data-menu-scroll] { scrollbar-width: auto; scrollbar-color: auto; }
         [data-menu-scroll]::-webkit-scrollbar { width: 10px; }
         [data-menu-scroll]::-webkit-scrollbar-button { display: none; }
-        [data-menu-scroll]::-webkit-scrollbar-track { background: transparent; margin-block: ${radius.control}px; }
+        [data-menu-scroll]::-webkit-scrollbar-track { background: transparent; margin-block: ${radius.group}px; }
         [data-menu-scroll]::-webkit-scrollbar-thumb { background: ${colors.outline}; background-clip: padding-box; border: 2px solid transparent; border-radius: 5px; }
       }
       :focus { outline: none; }
@@ -99,12 +101,51 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
            of drag handles) are more specific and win; the viewport meta and the gesture guard below do the rest. */
         * { touch-action: pan-x pan-y; }
       }
+      /* Glass language (26 November, on request, after Morphe). Grouped rows (ListGroup, data-glass-group): every direct child
+         of the group, and every item of a list inside it, is a translucent card of its own, a little apart from the next; the
+         outer corners of the group are large and the corners where two cards meet small. Radii win over the inline corners
+         of the pressable rows (StateLayerPressable sets them inline); an inline background (a selected row) still wins. */
+      [data-glass-group] > :not([role='list']), [data-glass-group] > [role='list'] > * {
+        background-color: ${glass.glass}; border: 1px solid ${glass.glassBorder}; border-radius: ${radius.groupInner}px !important; overflow: hidden;
+      }
+      [data-glass-group] > [role='list'] { gap: ${groupGap}px; }
+      [data-glass-group] > :not([role='list']):first-child, [data-glass-group] > [role='list'] > :first-child {
+        border-top-left-radius: ${radius.group}px !important; border-top-right-radius: ${radius.group}px !important;
+      }
+      [data-glass-group] > :not([role='list']):last-child, [data-glass-group] > [role='list'] > :last-child {
+        border-bottom-left-radius: ${radius.group}px !important; border-bottom-right-radius: ${radius.group}px !important;
+      }
+      /* Outlined fields are see-through: on the page the background (and its circles) shows inside them, in a card the card's
+         glass. Paper paints their box with the theme's background, which is also the patch behind the floating label: on the
+         page that is the page colour, in a card the card's colour (ListGroup), so the notch still matches. */
+      [data-testid='text-input-outline'] { background-color: transparent !important; }
+      /* Cards of a list (ListRow outlined, data-glass-item: Spese, Abbonamenti): consecutive cards form one group, broken by
+         anything else (a month heading, «Carica altre»), so the outer corners of each run are large and the inner ones small. */
+      [data-glass-item] { border-radius: ${radius.groupInner}px !important; }
+      [data-glass-item]:first-child, :not([data-glass-item]) + [data-glass-item] {
+        border-top-left-radius: ${radius.group}px !important; border-top-right-radius: ${radius.group}px !important;
+      }
+      [data-glass-item]:last-child, [data-glass-item]:has(+ :not([data-glass-item])) {
+        border-bottom-left-radius: ${radius.group}px !important; border-bottom-right-radius: ${radius.group}px !important;
+      }
+      /* Bars over the content (top bar and navigation pill on phones, screen bars): what scrolls under them is blurred. */
+      [data-glass-bar] { -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4); }
+      /* The circles behind the pages drift very slowly; still with reduced motion (the rule below stops them). */
+      @keyframes nummo-orb-drift {
+        0% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(var(--orb-dx, 24px), var(--orb-dy, -32px)) scale(1.08); }
+        100% { transform: translate(0, 0) scale(1); }
+      }
+      [data-orb] { animation: nummo-orb-drift 38s ease-in-out infinite; will-change: transform; }
+      [data-orb='1'] { --orb-dx: -28px; --orb-dy: 36px; animation-duration: 46s; }
+      [data-orb='2'] { --orb-dx: 32px; --orb-dy: 20px; animation-duration: 52s; animation-delay: -12s; }
+      [data-orb='3'] { --orb-dx: -20px; --orb-dy: -28px; animation-duration: 42s; animation-delay: -20s; }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
       }`;
     document.head.appendChild(style);
     return () => { style.remove(); };
-  }, [colors.background, colors.primary, colors.error, colors.outline, dark, family]);
+  }, [colors.background, colors.primary, colors.error, colors.outline, glass.glass, glass.glassBorder, dark, family]);
   // The next start paints this scheme's background before the bundle runs (boot script in index.html).
   useEffect(() => {
     try { localStorage.setItem(bootThemeKey, JSON.stringify(makeBootTheme({ theme: mode, accent, colorMode }))); } catch { /* storage denied */ }

@@ -100,7 +100,7 @@ export function ModeTransfer({ backend, enabled, shown }: { backend: DataStore; 
   // The last row (the hairline and its space) only when there is something to say: a message, a preview or an error.
   const hasBody = summary !== null || preview !== null || status !== '';
   return (
-    <ListGroup label={t("Dati della modalità Standard")}>
+    <ListGroup icon={iconShapes.swap} label={t("Dati della modalità Standard")}>
       <ActionRow icon={iconShapes.upload} title={t("Dal dispositivo a Firebase")} subtitle={t("Aggiungi a questo progetto i dati del dispositivo.")}
         disabled={!enabled || busy || local.state !== 'ready'} onPress={() => void bringIn()} />
       <RowDivider />

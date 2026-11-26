@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Divider, Text, useTheme } from 'react-native-paper';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+import { ListGroup } from '../../components/ActionList';
 import { useBackLayer } from '../../components/BackNavigation';
 import { Logo } from '../../components/Logo';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
@@ -8,6 +9,7 @@ import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import { androidAppVersion } from '../../services/androidApp';
 import { backLevels } from '../../theme/backStack';
+import { useReducedMotion } from '../../theme/useSizeClass';
 import { radius, spacing } from '../../theme/tokens';
 import { Guide } from '../session/Guide';
 import { ReleaseNotesDialog } from '../update/ReleaseNotesDialog';
@@ -47,20 +49,19 @@ export function InfoPage({ onGuideChange }: { onGuideChange?: (open: boolean) =>
     <View style={styles.root}>
       <Hero version={version} />
       {version && <Updates />}
-      <Group label={t("Progetto")}>
-        <Row icon={iconShapes.info} tile={[colors.primaryContainer, colors.onPrimaryContainer]} title={t("Cos'è Nummo?")}
+      <Group icon={iconShapes.info} label={t("Progetto")}>
+        <Row icon={iconShapes.info} color={colors.primary} title={t("Cos'è Nummo?")}
           subtitle={t("Le funzioni principali, dove sono i tuoi dati e gli avvisi")} label={t("Apri la guida Cos'è Nummo")}
           onPress={() => setGuide(true)} />
       </Group>
-      <Group label={t("Creatore")}>
+      <Group icon={iconShapes.user} label={t("Creatore")}>
         <Creator />
       </Group>
-      <Group label={t("Sviluppo")}>
-        <Row icon={iconShapes.pullRequest} tile={[colors.secondaryContainer, colors.onSecondaryContainer]} title={t("Contribuisci")}
+      <Group icon={iconShapes.pullRequest} label={t("Sviluppo")}>
+        <Row icon={iconShapes.pullRequest} color={colors.secondary} title={t("Contribuisci")}
           subtitle={t("Proponi una modifica con una pull request su GitHub")}
           label={t("Contribuisci con una pull request su GitHub, si apre in una nuova scheda")} href={contributeUrl} />
-        <Divider style={styles.divider} />
-        <Row icon={iconShapes.bug} tile={[colors.tertiaryContainer, colors.onTertiaryContainer]} title={t("Segnala problema")}
+        <Row icon={iconShapes.bug} color={colors.tertiary} title={t("Segnala problema")}
           subtitle={t("Apri una segnalazione (issue) su GitHub")}
           label={t("Segnala un problema su GitHub, si apre in una nuova scheda")} href={reportIssueUrl} />
       </Group>
@@ -91,12 +92,11 @@ function Updates() {
     if (typeof found === 'string') setNotesFailed(true);
   };
   return (
-    <Group label={t("Aggiornamenti")}>
-      <Row icon={iconShapes.sync} tile={[colors.primaryContainer, colors.onPrimaryContainer]} title={t("Controlla aggiornamenti")}
+    <Group icon={iconShapes.download} label={t("Aggiornamenti")}>
+      <Row icon={iconShapes.sync} color={colors.primary} title={t("Controlla aggiornamenti")}
         subtitle={checkText(t, check, installed)} label={t("Controlla se è disponibile una nuova versione dell'app")}
         busy={checking} onPress={() => { void verify(); }} />
-      <Divider style={styles.divider} />
-      <Row icon={iconShapes.receipt} tile={[colors.secondaryContainer, colors.onSecondaryContainer]} title={t("Note di rilascio")}
+      <Row icon={iconShapes.receipt} color={colors.secondary} title={t("Note di rilascio")}
         subtitle={t("Le novità delle ultime versioni dell'app")} label={t("Apri le note di rilascio")}
         onPress={() => { void openNotes(); }} />
       {installed && <UpdateDialog release={offer} installed={installed} onClose={() => setOffer(null)} />}
@@ -121,47 +121,71 @@ function checkText(t: ReturnType<typeof useI18n>['t'], check: UpdateCheck, insta
 function Hero({ version }: { version: { name: string; code: number } | null }) {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
   const ink = colors.onPrimaryContainer;
   const [first, ...rest] = version ? version.name.split('.') : [];
+  // Entry (26 November, on request): the figures (or the mark) rise and settle on a soft spring, then the name, the line and the
+  // build fade in one after the other; the discs behind drift slowly all the time (`data-orb`, CSS in GlobalStyle, still with
+  // reduced motion). Once, when the page opens; nothing with reduced motion.
+  const enter = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
+  useEffect(() => {
+    if (reduceMotion) { enter.setValue(1); return undefined; }
+    const run = Animated.timing(enter, { toValue: 1, duration: 1100, easing: Easing.out(Easing.cubic), useNativeDriver: false });
+    run.start();
+    return () => run.stop();
+  }, [enter, reduceMotion]);
+  // A step of the entry from `from` to `to` (0–1 of the whole), as opacity and a rise.
+  const step = (from: number, to: number, rise = 14) => ({
+    opacity: enter.interpolate({ inputRange: [from, to], outputRange: [0, 1], extrapolate: 'clamp' }),
+    transform: [{ translateY: enter.interpolate({ inputRange: [from, to], outputRange: [rise, 0], extrapolate: 'clamp' }) }],
+  });
+  const figures = {
+    opacity: enter.interpolate({ inputRange: [0, 0.35], outputRange: [0, 1], extrapolate: 'clamp' }),
+    transform: [
+      { scale: enter.interpolate({ inputRange: [0, 0.5, 0.75, 1], outputRange: [0.7, 1.06, 0.98, 1] }) },
+      { translateY: enter.interpolate({ inputRange: [0, 0.5], outputRange: [24, 0], extrapolate: 'clamp' }) },
+    ],
+  };
   return (
     <View style={[styles.hero, { backgroundColor: colors.primaryContainer }]}
       {...({ role: 'region', 'aria-label': version ? t("Nummo, versione {p0}", { p0: version.name }) : 'Nummo' } as object)}>
-      {/* Two soft discs behind the content, in the main colour (decoration only). */}
-      <View pointerEvents="none" style={[styles.disc, styles.discLarge, { backgroundColor: colors.primary }]} />
-      <View pointerEvents="none" style={[styles.disc, styles.discSmall, { backgroundColor: colors.primary }]} />
-      {version
-        ? <Text style={[styles.version, { color: ink }]} aria-hidden numberOfLines={1} adjustsFontSizeToFit>
-            <Text style={{ color: colors.primary }}>{first}</Text>{rest.length > 0 ? `.${rest.join('.')}` : ''}
-          </Text>
-        : <Logo size={88} color={ink} />}
-      <Text variant="headlineSmall" style={[styles.name, { color: ink }]}>Nummo</Text>
-      <Text variant="bodyLarge" style={[styles.center, { color: ink, opacity: 0.8 }]}>{t("Semplifica le tue spese.")}</Text>
-      {version && <Text variant="bodyMedium" style={[styles.build, { color: ink, opacity: 0.8 }]}>
-        {t("Versione {p0} · Build {p1}", { p0: version.name, p1: version.code })}</Text>}
+      {/* Two soft discs behind the content, in the main colour (decoration only), slowly drifting. */}
+      <View pointerEvents="none" {...({ dataSet: { orb: '1' } } as object)} style={[styles.disc, styles.discLarge, { backgroundColor: colors.primary }]} />
+      <View pointerEvents="none" {...({ dataSet: { orb: '2' } } as object)} style={[styles.disc, styles.discSmall, { backgroundColor: colors.primary }]} />
+      <Animated.View style={figures}>
+        {version
+          ? <Text style={[styles.version, { color: ink }]} aria-hidden numberOfLines={1} adjustsFontSizeToFit>
+              <Text style={{ color: colors.primary }}>{first}</Text>{rest.length > 0 ? `.${rest.join('.')}` : ''}
+            </Text>
+          : <Logo size={88} color={ink} />}
+      </Animated.View>
+      <Animated.View style={step(0.3, 0.65)}>
+        <Text variant="headlineSmall" style={[styles.name, { color: ink }]}>Nummo</Text>
+      </Animated.View>
+      <Animated.View style={step(0.45, 0.8)}>
+        <Text variant="bodyLarge" style={[styles.center, { color: ink, opacity: 0.8 }]}>{t("Semplifica le tue spese.")}</Text>
+      </Animated.View>
+      {version && <Animated.View style={step(0.6, 0.95)}>
+        <Text variant="bodyMedium" style={[styles.build, { color: ink, opacity: 0.8 }]}>
+          {t("Versione {p0} · Build {p1}", { p0: version.name, p1: version.code })}</Text>
+      </Animated.View>}
     </View>
   );
 }
 
-function Group({ label, children }: { label: string; children: ReactNode }) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.group} {...({ role: 'region', 'aria-label': label } as object)}>
-      <Text variant="labelLarge" style={[styles.label, { color: colors.onSurfaceVariant }]} accessibilityRole="header" aria-level={2}>
-        {label.toLocaleUpperCase()}</Text>
-      <View style={[styles.box, { backgroundColor: colors.elevation.level1, borderColor: colors.outlineVariant }]}>{children}</View>
-    </View>
-  );
+function Group({ label, icon, children }: { label: string; icon: string; children: ReactNode }) {
+  return <ListGroup label={label} icon={icon}>{children}</ListGroup>;
 }
 
-type RowProps = { icon: string; tile: readonly [string, string]; title: string; subtitle: string; label: string; busy?: boolean } &
+type RowProps = { icon: string; color: string; title: string; subtitle: string; label: string; busy?: boolean } &
   ({ href: string; onPress?: undefined } | { onPress: () => void; href?: undefined });
 
-function Row({ icon, tile, title, subtitle, label, href, onPress, busy = false }: RowProps) {
+function Row({ icon, color, title, subtitle, label, href, onPress, busy = false }: RowProps) {
   const { colors } = useTheme();
   return (
     <StateLayerPressable layerColor={colors.onSurface} accessibilityLabel={label} role={href ? 'link' : 'button'}
       disabled={busy} aria-busy={busy} onPress={onPress} {...(href ? linkProps(href) : null)} style={styles.row}>
-      <View style={[styles.tile, { backgroundColor: tile[0] }]}><SvgIcon shape={icon} size={22} color={tile[1]} /></View>
+      <View style={styles.icon}><SvgIcon shape={icon} size={24} color={color} /></View>
       <View style={styles.text}>
         <Text variant="titleMedium" numberOfLines={1}>{title}</Text>
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }} {...({ 'aria-live': 'polite' } as object)}>{subtitle}</Text>
@@ -198,7 +222,7 @@ function Creator() {
 
 const styles = StyleSheet.create({
   root: { gap: spacing.xl },
-  hero: { borderRadius: radius.dialog, overflow: 'hidden', alignItems: 'center', paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.xs },
+  hero: { borderRadius: radius.group, overflow: 'hidden', alignItems: 'center', paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.xs },
   disc: { position: 'absolute', borderRadius: 9999, opacity: 0.12 },
   discLarge: { width: 320, height: 320, right: -120, bottom: -160 },
   discSmall: { width: 180, height: 180, left: -70, top: -60 },
@@ -206,12 +230,8 @@ const styles = StyleSheet.create({
   name: { fontWeight: '700', textAlign: 'center', marginTop: spacing.sm },
   center: { textAlign: 'center' },
   build: { textAlign: 'center', marginTop: spacing.lg },
-  group: { gap: spacing.sm },
-  label: { letterSpacing: 0.8, paddingHorizontal: spacing.sm },
-  box: { borderRadius: radius.dialog, borderWidth: 1, overflow: 'hidden' },
-  divider: { marginLeft: 72 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 72, paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
-  tile: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 68, paddingVertical: spacing.md + 2, paddingHorizontal: 18 },
+  icon: { width: 28, alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, minWidth: 0, gap: 2 },
   creator: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, padding: spacing.lg },
   picture: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, padding: 2, overflow: 'hidden' },

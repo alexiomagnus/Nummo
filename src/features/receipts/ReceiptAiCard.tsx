@@ -50,7 +50,7 @@ export function ReceiptAiCard() {
   }, [model, list.models, recommended, t]);
   const options = aiProviders.map((value) => ({ value, label: aiProviderLabels[value] }));
   return (
-    <ListGroup label={t("Analisi scontrini con AI")}>
+    <ListGroup icon={iconShapes.flash} label={t("Analisi scontrini con AI")}>
       <ToggleRow icon={iconShapes.receipt} title={t("Scansione dello scontrino")} subtitle={t("In Nuova spesa, il pulsante Scansiona scontrino.")}
         value={enabled} onChange={(value) => ai.change({ enabled: value })} />
       <RowDivider />

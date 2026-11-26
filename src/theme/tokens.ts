@@ -67,7 +67,13 @@ export const radius = {
   nav: 16, // selected navigation item (drawer, rail, bar): 32 dp indicator = pill
   tile: 12, // icon tiles
   pill: 999, // fully rounded: segmented buttons, switch track, day cells
+  // Grouped rows and connected choices (26 November, on request, after Morphe): every row is a card of its own, the outer
+  // corners of the group large, the corners where two rows meet small.
+  group: 24,
+  groupInner: 6,
 } as const;
+// Space between the cards of one group (rows, connected choices).
+export const groupGap = 3;
 // Spread on every outlined TextInput (Paper takes the field radius from `outlineStyle`).
 export const inputOutline = { borderRadius: radius.input } as const;
 // Paper derives its radii from one `roundness` number: Button = 5×, Dialog = 7×.

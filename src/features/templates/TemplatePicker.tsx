@@ -7,9 +7,8 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import type { TemplateRecord } from '../../domain/template';
-import { useSizeClass } from '../../theme/useSizeClass';
 import { useI18n } from '../../i18n/I18nProvider';
-import { layout, radius, spacing, stateOpacity } from '../../theme/tokens';
+import { groupGap, layout, radius, spacing, stateOpacity } from '../../theme/tokens';
 import { NoFundAvatar } from '../funds/FundAvatar';
 
 type Props = {
@@ -34,7 +33,6 @@ type Props = {
 export function TemplatePicker({ templates, categories, value, onChange, disabled, style }: Props) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
-  const compact = useSizeClass() === 'compact';
   const [open, setOpen] = useState(false);
   const color = colors.primary;
   const chosen = templates.find((item) => item.id === value);
@@ -54,12 +52,12 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
       </StateLayerPressable>
       {open && <Portal><ScreenLayer label={t("Template")} title={t("Template")} backLabel={t("Indietro")} onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents="panel" opensHalf>
         {/* Same layout as the choice screens of Categoria and Fondo (user's request, 26 November), in Template's colours. */}
-        <View role="menu" aria-label={t("Template")} style={compact ? styles.edgeToEdge : styles.inset}>
+        <View role="menu" aria-label={t("Template")} {...{ dataSet: { glassGroup: 'true' } }} style={styles.list}>
           {rows.map((row) => {
             const selected = row.id === (chosen?.id ?? '');
-            return <StateLayerPressable key={row.id || 'none'} layerColor={colors.onSurface} radius={compact ? 0 : radius.control} onPress={() => choose(row.id)}
+            return <StateLayerPressable key={row.id || 'none'} layerColor={colors.onSurface} onPress={() => choose(row.id)}
               accessibilityRole="menuitem" accessibilityLabel={`${row.label}${selected ? t(", selezionata") : ''}`}
-              style={[styles.row, !compact && styles.rounded, selected && { backgroundColor: colors.primaryContainer }]}>
+              style={[styles.row, selected && { backgroundColor: colors.primaryContainer, borderColor: colors.primary }]}>
               <View style={styles.icon}>{row.icon}</View>
               <Text variant="bodyLarge" numberOfLines={2} style={[styles.name, selected && { color: colors.onPrimaryContainer }]}>{row.label}</Text>
               {row.amount !== null && <Text variant="titleMedium" style={{ color: selected ? colors.onPrimaryContainer : colors.onSurface }}>{formatAmount(row.amount)}</Text>}
@@ -83,11 +81,9 @@ const styles = StyleSheet.create({
   button: { minHeight: layout.minTouch, borderRadius: radius.button, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
   lead: { minWidth: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   label: { flexShrink: 1 },
-  // As the rows of ChoiceScreen: edge to edge on phones, rounded and apart from medium.
-  edgeToEdge: { marginHorizontal: -spacing.md },
-  inset: { gap: spacing.xs },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingHorizontal: spacing.lg },
-  rounded: { borderRadius: radius.control },
+  // As the rows of ChoiceScreen: grouped glass cards (26 November, on request, after Morphe).
+  list: { gap: groupGap },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56, paddingHorizontal: spacing.lg },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   name: { flex: 1, minWidth: 0 },
   check: { width: 20, height: 20 },

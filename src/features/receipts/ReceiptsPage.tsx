@@ -50,7 +50,7 @@ export function ReceiptsPage({ remote, expenses, categories }: Props) {
     <ListGrid>
       <ReceiptAiCard />
       {/* The same grouped rows as «Info» (27 November, on request). */}
-      <ListGroup label={t("Scontrini scansionati")}>
+      <ListGroup icon={iconShapes.receipt} label={t("Scontrini scansionati")}>
         <RowBody>
           <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
             {t("Quando salvi una spesa compilata con Scansiona scontrino, qui restano i dati letti: esercente, data, totale e prodotti. La foto non viene conservata.")}

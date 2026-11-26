@@ -11,7 +11,8 @@ Riallineato il 26 novembre sera: il lavoro del pomeriggio del 26 era stato datat
 `HANDOFF.md`, `AGENTS.md` e `docs/icone-installazione.md`); i commenti del codice dicono ancora «27 November» e restano così per scelta
 dell'utente: valgono come 26 novembre.
 
-- **Aggiornamento di allineamento (verificato sul repository).** Il riepilogo qui sotto si ferma a `3fd2b24`/0.3.7; il resto è nelle sezioni datate 27 novembre (righe 120–147). Ultimo **Hosting**: `3a0358a` (legende di Analisi), poi `1db4e9b` e il commit delle barre/dettaglio del fondo (`9184177`, `1a9e77e`), pubblicati solo su Hosting con Rules invariate, come da quelle sezioni; prima `685dfe6`. **App Android: 0.3.9** (`65d4e83`, versionCode 12, release `android-v0.3.9` «Latest»; 0.3.8 con `3a0358a`; nessuna modifica nativa dalla 0.3.7); tag `android-v0.1.0`…`android-v0.3.9`, `main` = ultimo commit `b92566d`. Verifiche: `typecheck` OK sull'albero pulito; `npm run check` ultimo 617/617 (sezioni del 27 novembre), non rieseguito in questo allineamento. «Prossimo mese» e dettaglio del fondo sono schermi interi senza `detents` (controllato in `UpcomingRenewals.tsx`); `AGENTS.md` allineato (versione Android, «Prossimo mese»). Il cambio di ordine delle sezioni (27 sopra 26 sera) è voluto.
+- **Lavoro in corso (26 novembre):** linguaggio vetro su tutta l'app, non committato: vedi la prima sezione datata.
+- **Aggiornamento di allineamento (verificato sul repository).** Stato attuale: `f9073ea`, vedi la sezione «Riallineamento a `f9073ea`». Il riepilogo qui sotto si ferma a `3fd2b24`/0.3.7; il resto è nelle sezioni datate 26 novembre (righe 120–160). Ultimo **Hosting**: `3a0358a` (legende di Analisi), poi `1db4e9b` e il commit delle barre/dettaglio del fondo (`9184177`, `1a9e77e`), pubblicati solo su Hosting con Rules invariate, come da quelle sezioni; prima `685dfe6`. **App Android: 0.3.9** (`65d4e83`, versionCode 12, release `android-v0.3.9` «Latest»; 0.3.8 con `3a0358a`; nessuna modifica nativa dalla 0.3.7); tag `android-v0.1.0`…`android-v0.3.9`, `main` = ultimo commit `b92566d`. Verifiche: `typecheck` OK sull'albero pulito; `npm run check` ultimo 617/617 (sezioni del 26 novembre), non rieseguito in questo allineamento. «Prossimo mese» e dettaglio del fondo sono schermi interi senza `detents` (controllato in `UpcomingRenewals.tsx`); `AGENTS.md` allineato (versione Android, «Prossimo mese»). Il cambio di ordine delle sezioni (27 sopra 26 sera) è voluto.
 - **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting** al riepilogo precedente: `3fd2b24` (26 novembre sera, su richiesta, con `e4c5d63`: icona nera piatta `#171717`/`#FAFAF7`, nessuna sfumatura sulla riga tagliata in fondo alla pagina, categorie predefinite senza messaggio al primo accesso; Rules invariate; «Deploy complete!», bundle online `index-2d4b1090…` e `icons/icon.svg` identici all'export; APK 0.3.7 rilasciato poi su GitHub). Prima `dbb6369` (26 novembre, su richiesta, con `9ee93b2` e `34b235e`: aggiornamenti dell'app Android dalle GitHub Releases e gruppo «Aggiornamenti» in Info, drawer del desktop comprimibile con interruttore nelle Impostazioni, Templates senza la riga introduttiva, nuova icona senza forma «cookie»; Rules invariate; «Deploy complete!», bundle online `index-6b195c19…` e `icons/icon.svg` identici all'export; APK 0.3.6 rilasciato poi su GitHub). Prima `9a41d7e` (26 novembre, su richiesta: barre di Analisi a schede, Impostazioni/Notifiche/Templates a gruppi di righe, «Entrate e spostamenti» in Fondi con eliminazione, icona Material 3 Expressive, «Blu» predefinito, icone delle categorie «Colorato» di base; Rules invariate; «Deploy complete!», bundle online `index-e19a89b6…`, `icon.svg`, `icon-512.png`, `offline.html` e `sw.js` identici all'export). Prima `4d7425d` (26 novembre, su richiesta: pagina Categorie, modulo «Nuova categoria» con nome e «Icona» sulla prima riga, griglia delle icone sotto, «Aggiungi» a tutta larghezza, a ogni dimensione; Rules invariate; «Deploy complete!», bundle `index-55cc8cb7…` della build cloud, non confrontato con l'export). Prima `78426f2` (26 novembre, su richiesta: Registra spesa con due interruttori, pannelli di scelta alti quanto le righe, protezione nell'app Android, «Lista scontrini» a gruppi, «Aggiungi denaro» come pannello, tastiera in Nuova lista; Rules invariate; «Deploy complete!», bundle non confrontato con l'export). Prima `48bc646` (26 novembre, su richiesta: «Archiviazione e backup» a righe in una colonna, «Esci» spostato lì, movimenti senza selettore, guida di Info a tutta larghezza, filtro Categoria con icona su smartphone; Rules invariate). Prima `6f32d22` (26 novembre, su richiesta: pagina «Info»; bundle online `index-3f722592…` uguale all'export, `/images/creator.jpg` servito). Prima `adb4768` (Esercente in vista con la tastiera, con `222e0f4`: «Elimina le liste archiviate» a tutta larghezza) e `446f4e8`. Prima `96886d7` (26 novembre, su richiesta, con `4b0f777`: «Lista scontrini» e scontrini scansionati salvati con la spesa; dettagli senza trascinamento, selettore Template, frequenza in uno schermo, icone di Ordina; bundle `index-8665596e…` identico all'export). Prima `c4301b9` (26 novembre: solo `originId` tolto e commenti, nessun cambio di comportamento; bundle `index-3fba4cb1…` identico all'export). Prima `19efbd5` (25 novembre: avvio più rapido in Avanzata, rotellina CSS, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro; bundle `index-a1c0f188…`). Prima `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
   «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
   datate), bundle online `index-b03086d6…` identico byte per byte all'export. In mezzo, dopo `a8f694f`, anche `b231eeb`, `27e46bd`,
@@ -117,6 +118,74 @@ dell'utente: valgono come 26 novembre.
   Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
+
+## Hover allineato al contorno delle schede — 26 novembre 2026, notte
+
+Su segnalazione («Ricorrente»: l'hover del mouse non segue il contorno). Non committato. Controllo automatico nel DOM su tutte le
+pagine e su vari schermi (390×844 e 1366×820): per ogni elemento premibile largo quanto la sua scheda, l'hover deve riempire la scheda
+(ritagliato dai suoi angoli), essere una fascia a filo ai lati, o essere rientrato uguale con angolo = angolo della scheda − rientro.
+Corretti i tre casi trovati:
+
+- Righe con interruttore dentro una scheda (Nuova spesa: «Ricorrente», «Prova gratuita», «Prezzo promozionale»): `ListGroup` fornisce
+  il contesto `useInCard` (falso di nuovo dentro `RowBody`) e `SwitchRow` diventa una fascia a filo senza angoli propri; la scheda
+  «Ricorrente» non ha più i 4 px sopra e sotto. Fuori dalle schede (editor dei fondi, registrazione della lista, scansione) invariata.
+- Legenda di Analisi: angolo delle righe 15 (= 24 − 1 − 8 di padding), prima 20; vale anche per il riempimento della riga scelta.
+- Checklist di Liste (anche in «Registra spesa»): la zona di spunta è a filo sopra, sotto e a sinistra, senza angoli propri (prima una
+  pillola da 20 rientrata di 3 px).
+- «Prossimo mese»: livello di hover con l'angolo della scheda (24), prima 28.
+
+Verifiche: `npm run check` OK (620/620); hover reale del mouse fotografato su «Prezzo promozionale» e sulla checklist.
+
+## Pannello «Modello» che sobbalza, pagine aperte già scorse — 26 novembre 2026, notte
+
+Su segnalazione (video del pannello «Modello» di «Lista scontrini» sul Pixel 8, versione pubblicata; e «a volte apro una pagina e
+la barra di scorrimento è già abbassata»). **Non ancora committato né pubblicato**, insieme al linguaggio vetro.
+
+- **Pannello che sobbalza** (`ScreenLayer`, pannelli `fitPeek="shrink"`: le scelte aperte a metà): `contentNeed` misurava il
+  contenuto dello scroller, che però si allunga fino a riempire il pannello (`flexGrow`). Il pannello si sposta animando `top`, quindi
+  durante l'animazione di assestamento il `ResizeObserver` leggeva un'altezza intermedia, ne ricavava una nuova posizione e
+  rilanciava l'animazione: un inseguimento senza fine di qualche pixel (nel video, 2–3 px a ogni fotogramma). Ora la misura è
+  l'altezza naturale del contenuto (dal primo all'ultimo figlio più il padding, `naturalHeight`), che non dipende dal pannello, e le
+  differenze sotto il pixel non producono un nuovo assestamento. Effetto collaterale corretto: «shrink» non accorciava mai il pannello
+  (390×844, Fondo di Nuova spesa: ora a y=515 alto quanto le righe, prima sempre a metà, y=422). Nel browser headless il vecchio
+  sobbalzo non si riproduce (il `ResizeObserver` arriva ad animazione finita); da riprovare sul telefono.
+- **Pagine aperte già scorse** (`AppShell`): lo scroller della pagina è uno solo e tornava in cima solo al tocco di una destinazione
+  della barra; aprendo una pagina dal menu dell'account, con «Fatto», con Indietro o dal logo restava la posizione della pagina
+  precedente. Ora torna in cima a ogni cambio di `selected`, nel `useLayoutEffect` dell'animazione della pagina (stesso commit, prima
+  del disegno); il tocco sulla destinazione già aperta la riporta in cima come prima. Misurato in headless: vecchia versione Notifiche
+  da Impostazioni scorsa 617, Categorie da Spese 798, Indietro su Spese 2000; nuova 0 in tutti i casi.
+
+## Linguaggio vetro su tutta l'app, dopo Morphe — 26 novembre 2026
+
+Su richiesta (tre schermate dell'app Android Morphe: «tutta Nummo con questo stile… quasi liquid glass», rivedere ogni pagina e
+correggere gli errori di visualizzazione). **Non ancora committato né pubblicato.** Decisioni in `docs/architecture.md`, convenzione
+in `AGENTS.md` («Linguaggio vetro»).
+
+- Token: `glassColors`/`withAlpha` (`palette.ts`), `glassOf`/`glassSurface` (`theme.ts`), `radius.group`/`groupInner`, `groupGap`,
+  `shapeMorph` (`motion.ts`). Sfondo a cerchi `components/Orbs.tsx` (shell e schermi interi).
+- Componenti: `ActionList` (intestazioni con icona, righe in schede separate, icone senza riquadro, `RowDivider` vuoto),
+  `M3Switch` (✓/✕), `SegmentedButtons` e `ChoiceChips` (pulsanti connessi, scelta a pillola, senza spunta), `ListRow outlined`
+  (vetro, raggruppate), `Card glass`, `ChoiceScreen` e selettore Template (schede raggruppate), menu ancorati (vetro sfocato),
+  `ScreenLayer` (cerchi, Indietro in vetro), `AppShell` (barre sopra la pagina su smartphone con sfocatura, pannello desktop
+  traslucido, drawer/rail con l'indicatore della pillola).
+- Pagine riviste una per una (screenshot headless 390×844 scuro e chiaro, 834×1112, 1366×820, con il backup di collaudo
+  «utente medio»): Nuova spesa, Spese/Abbonamenti e dettagli, Analisi (riepilogo a due tile, legenda, barre, blocchi, andamento),
+  Fondi, Liste (anche la checklist aperta), menu account, Impostazioni, Notifiche, Categorie, Templates, Lista scontrini,
+  Archiviazione e backup, Esercenti, Info (ora sugli stessi `ListGroup`), Prossimo mese, Storico dei pagamenti, Prodotti, Note di
+  rilascio (raggi).
+- Errori di visualizzazione corretti: `RowBody tight` non stringeva mai in verticale (`padding` perde contro `paddingVertical` in RN);
+  in Nuova spesa con i fondi «Salva» finiva 12 px sotto la navigazione a 390×844: ora entra senza scorrere, 32 px sopra la pillola
+  (scheda «Ricorrente» senza padding laterale proprio, distanza tra blocchi 12 su telefono, schede compatte); i campi con contorno
+  erano rettangoli opachi sopra lo sfondo: ora trasparenti con la tacca giusta.
+- Verifiche: `npm run check` OK (**620/620**, typecheck, build demo; +2 test di contrasto dei colori vetro e `withAlpha`).
+  `test:emulator` non rieseguito: `DataStore`, Rules e servizi invariati. Da provare su telefono: fluidità della sfocatura nella
+  WebView dell'app Android e in Safari iOS, cerchi animati con la batteria, Nuova spesa con la tastiera (barre sopra la pagina).
+  Lo screenshot headless a volte non disegna la sfocatura della barra in alto al primo fotogramma dopo uno scorrimento (verificato:
+  dopo un secondo scorrimento c'è); non è un problema del codice.
+
+## Riallineamento a `f9073ea` — 26 novembre 2026, sera
+
+Verificato sul repository: `main` = `origin/main` = `f9073ea`, albero pulito. Dopo `b92566d` (Android 0.3.9): `bd10cf4` (Hosting, `fb047ca`), `bea73ab` (Hosting, `651f691`), `41a84fd` (Nuova spesa in riquadri separati, riga scansione/template fuori da ogni riquadro, nessun chevron sulla riga dell'interruttore AI) e `f9073ea` (riga scansione/template di nuovo nel suo riquadro con contorno). **`41a84fd` e `f9073ea` non risultano pubblicati su Hosting** (nessuna nota in merito). Verifiche: `typecheck` e `npm run check` OK (**618/618**, build demo); `test:emulator`/`test:hybrid` non rieseguiti. Android invariato (0.3.9, nessuna modifica nativa). Il runner hybrid PID 199921 è ancora attivo. `package.json` resta `0.1.0` (versione web non usata; l'app Android ha la sua). Le righe di questo riepilogo in testa che citano `3fd2b24`/0.3.7 e 617/617 sono superate da questa sezione.
 
 ## Gruppi di righe ovunque, barra con contorno, drawer animato — 27 novembre 2026
 

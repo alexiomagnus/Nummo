@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { accents, buildScheme, cardColor, contrastRatio, dangerColors, dialogColors, mixColors, positiveColors } from '../src/theme/palette.ts';
+import { accents, buildScheme, cardColor, contrastRatio, dangerColors, dialogColors, glassColors, mixColors, positiveColors, withAlpha } from '../src/theme/palette.ts';
 import { sizeClassOf, type Scheme } from '../src/theme/tokens.ts';
 
 // WCAG 2.x relative luminance and contrast ratio.
@@ -87,4 +87,33 @@ test('«Elimina» rosso più tenue: testo leggibile (≥ 4,5:1) e diverso dal ru
     assert.ok(contrastRatio(fill, ink) >= 4.5, `${dark ? 'scuro' : 'chiaro'}: ${fill} / ${ink}`);
     assert.notEqual(fill, dark ? scheme.errorContainer : scheme.error);
   }
+});
+
+// Glass language (26 November, after Morphe): translucent cards over a background of soft circles.
+test('vetro: testi leggibili sulle schede e sui cerchi, contorno visibile, colori validi', () => {
+  const hex = /^#[0-9A-F]{6}$/;
+  for (const dark of [false, true]) for (const mode of ['mono', 'palette'] as const) for (const accent of accents) {
+    const s = buildScheme(accent, mode, dark);
+    const glass = glassColors(s, dark);
+    for (const key of ['glassSolid', 'glassBorder', 'orb'] as const) assert.match(glass[key], hex, `${accent}/${mode}/${dark}: ${key}`);
+    assert.match(glass.glass, /^#[0-9A-F]{8}$/);
+    assert.match(glass.glassBar, /^#[0-9A-F]{8}$/);
+    // Text on a card (its opaque equivalent) and on a circle of the background.
+    for (const ground of [glass.glassSolid, glass.orb, s.background]) {
+      assert.ok(contrastRatio(s.onSurface, ground) >= 4.5, `${accent}/${mode}/${dark}: onSurface su ${ground}`);
+      assert.ok(contrastRatio(s.onSurfaceVariant, ground) >= 4.5, `${accent}/${mode}/${dark}: onSurfaceVariant su ${ground}`);
+      assert.ok(contrastRatio(s.primary, ground) >= 3, `${accent}/${mode}/${dark}: primary su ${ground}`);
+    }
+    // The circles are a hint, not a shape: close to the background.
+    assert.ok(contrastRatio(glass.orb, s.background) < 1.35, `${accent}/${mode}/${dark}: cerchi troppo marcati`);
+    // The hairline of a card shows on the background.
+    assert.ok(contrastRatio(glass.glassBorder, s.background) >= 1.4, `${accent}/${mode}/${dark}: contorno invisibile`);
+  }
+});
+
+test('withAlpha: aggiunge il canale alfa a un colore #RRGGBB', () => {
+  assert.equal(withAlpha('#102030', 1), '#102030FF');
+  assert.equal(withAlpha('#102030', 0), '#10203000');
+  assert.equal(withAlpha('#102030', 0.5), '#10203080');
+  assert.equal(withAlpha('#10203040', 1), '#102030FF');
 });

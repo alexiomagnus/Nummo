@@ -1,6 +1,7 @@
 import { seriesLabel } from './seriesLabel';
 import { useI18n } from '../../i18n/I18nProvider';
 import { useState } from 'react';
+import { glassSurface } from '../../theme/theme';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -78,7 +79,7 @@ export function BlockChart({ data, colors, active, onActive, percent, onOpen }: 
         })}
       </View>
       {/* Fixed-height details: name, amount, share and transactions of the previewed or selected category. */}
-      <View style={[styles.panel, { backgroundColor: theme.colors.elevation.level1 }]} aria-live="polite">
+      <View style={[styles.panel, glassSurface(theme.colors)]} aria-live="polite">
         {focus ? <>
           <View style={styles.panelHeader}>
             <View style={[styles.swatch, { backgroundColor: seriesColor(focus, colors) }]} />
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   tile: { position: 'absolute', overflow: 'hidden' },
   chart: { gap: spacing.md },
   // Tall enough for the selected state (header, facts, link): previews and selections never move the legend below.
-  panel: { minHeight: 132, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm, justifyContent: 'center' },
+  panel: { minHeight: 132, borderRadius: radius.group, padding: spacing.lg, gap: spacing.sm, justifyContent: 'center' },
   panelHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   swatch: { width: 14, height: 14, borderRadius: 3 },
   facts: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.lg, rowGap: spacing.xs },

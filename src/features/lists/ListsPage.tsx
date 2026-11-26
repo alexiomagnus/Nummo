@@ -1,4 +1,5 @@
 import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { glassSurface } from '../../theme/theme';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { ActivityIndicator, HelperText, IconButton, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button, compactIconPadding, DangerButton } from '../../components/Button';
@@ -18,7 +19,7 @@ import type { SyncedList, SyncedListItem } from '../../domain/firestore';
 import { itemNameError, listState, progress, type ListState } from '../../domain/shoppingList';
 import { useI18n } from '../../i18n/I18nProvider';
 import { transition } from '../../theme/motion';
-import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
+import { groupGap, inputOutline, layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { FundChoice } from '../funds/FundField';
 import { ItemEditor, ListEditor } from './ListDialogs';
@@ -89,10 +90,10 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
     const state = listState(list, expenseIds);
     const category = categories.find((c) => c.id === list.category_id);
     return (
-      <View key={list.id} nativeID={listCardId(list.id)} role="listitem">
-        <StateLayerPressable layerColor={colors.onSurface} radius={radius.dialog - 1} onPress={() => setOpenId(list.id)} accessibilityRole="button"
+      <View key={list.id} nativeID={listCardId(list.id)} role="listitem" {...{ dataSet: { glassItem: 'true' } }} style={[styles.cardBox, glassSurface(colors)]}>
+        <StateLayerPressable layerColor={colors.onSurface} onPress={() => setOpenId(list.id)} accessibilityRole="button"
           accessibilityLabel={t("Apri {p0}, {p1} di {p2} acquistati", { p0: list.name, p1: done, p2: total })}
-          style={[styles.card, { borderColor: colors.outlineVariant, backgroundColor: colors.elevation.level1 }]}>
+          style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={[styles.avatar, { backgroundColor: state === 'active' ? colors.secondaryContainer : colors.surfaceVariant }]}>
               {category?.icon ? <CategoryGlyph icon={category.icon} size={22} color={colors.onSecondaryContainer} />
@@ -120,7 +121,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
           icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{t("Nuova lista")}</Button>} />
       {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
       {!remote.ready && !remote.error && <View style={styles.loading}><ActivityIndicator accessibilityLabel={t("Caricamento delle liste")} /></View>}
-      {remote.ready && remote.lists.length === 0 && <View style={[styles.empty, { backgroundColor: colors.elevation.level1 }]}>
+      {remote.ready && remote.lists.length === 0 && <View style={[styles.empty, glassSurface(colors)]}>
         <SvgIcon shape={iconShapes.checklist} size={32} color={colors.primary} />
         <Text variant="titleMedium">{t("Nessuna lista")}</Text>
         <Text variant="bodyMedium" style={muted}>{t("Prepara la lista prima di uscire, spunta i prodotti mentre fai la spesa e registra il totale come una sola spesa.")}</Text>
@@ -288,11 +289,12 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
       </View>}
 
       {items.length === 0 ? <Text variant="bodyMedium" style={muted}>{editable ? t("La lista è vuota: aggiungi il primo prodotto.") : t("Nessun prodotto.")}</Text>
-        : <View role="list" accessibilityLabel={t("Prodotti di {p0}", { p0: list.name })}>
+        // The products as grouped glass rows (26 November, on request, after Morphe): each a card of its own, 3 apart.
+        : <View {...{ dataSet: { glassGroup: 'true' } }}><View role="list" accessibilityLabel={t("Prodotti di {p0}", { p0: list.name })}>
           {shownItems.map((item, index) => (
             <ItemRow key={item.id} item={item} editable={editable} last={index === items.length - 1} onToggle={toggleItem} onEdit={setEditingItem} />
           ))}
-        </View>}
+        </View></View>}
 
       {editable && <View style={styles.checkout}>
         <View style={styles.addRow}>
@@ -334,8 +336,8 @@ const ItemRow = memo(function ItemRow({ item, editable, last, onToggle, onEdit }
   const { t } = useI18n();
   const { colors } = useTheme();
   return (
-    <View role="listitem" style={[styles.itemRow, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant }]}>
-      <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} disabled={!editable} accessibilityRole="checkbox" aria-checked={item.checked}
+    <View role="listitem" style={styles.itemRow}>
+      <StateLayerPressable layerColor={colors.onSurface} disabled={!editable} accessibilityRole="checkbox" aria-checked={item.checked}
         aria-disabled={!editable || undefined} accessibilityLabel={item.name} style={styles.check} onPress={() => onToggle(item)}>
         <View style={[styles.box, item.checked ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.onSurfaceVariant }, !editable && styles.dim]}>
           {item.checked && <SvgIcon shape={iconShapes.check} size={16} color={colors.onPrimary} />}
@@ -367,11 +369,13 @@ const ListTotalField = memo(function ListTotalField({ value, error, onChange, on
 
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
-  list: { gap: spacing.md },
+  // List cards of the glass language: one group, 3 apart (GlobalStyle, `data-glass-item`).
+  list: { gap: groupGap },
   loading: { alignItems: 'center', padding: spacing.xxl },
-  empty: { borderRadius: radius.dialog, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
+  empty: { borderRadius: radius.group, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
   // The box of the grouped rows (dialog corner, level-1 fill, 1 px outline), like the fund cards (user's request, 27 November).
-  card: { borderWidth: 1, borderRadius: radius.dialog, padding: spacing.lg, gap: spacing.md, overflow: 'hidden' },
+  cardBox: { borderRadius: radius.group, overflow: 'hidden' },
+  card: { padding: spacing.lg, gap: spacing.md },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   grow: { flex: 1, minWidth: 0 },
@@ -395,7 +399,9 @@ const styles = StyleSheet.create({
   addButton: { marginTop: 6, height: layout.fieldBoxHeight },
   addContent: { height: '100%' },
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: 56 },
-  check: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: layout.minTouch, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
+  // Flush with its card on the left, top and bottom (the card clips the hover layer to its own corners: 26 November, on request,
+  // a rounded pill a few pixels inside the card did not follow its outline); the pencil button closes it on the right.
+  check: { flex: 1, minWidth: 0, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: layout.minTouch, paddingLeft: spacing.lg, paddingRight: spacing.sm, paddingVertical: spacing.sm },
   box: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   dim: { opacity: 0.6 },
   iconButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },

@@ -56,7 +56,7 @@ export function MerchantsPage({ merchants, backend, canWrite, notify }: Props) {
       )}
       {merchants.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun esercente.")}</Text>}
       {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
-      {shown.length > 0 && <ListGroup label={t("Esercenti")}><View role="list">
+      {shown.length > 0 && <ListGroup icon={iconShapes.store} label={t("Esercenti")}><View role="list">
         {shown.map((m, index) => (
           <ListRow key={m.id} icon={null} iconless divider={index < shown.length - 1} title={m.name} subtitle={uses(m)}
             trailing={<>
@@ -98,7 +98,7 @@ function RenameDialog({ merchant, merchants, backend, notify, close }: { merchan
     finally { setBusy(false); }
   };
   return <Portal>
-    <Dialog visible onDismiss={() => { if (!busy) close(); }}>
+    <Dialog detents opensHalf fitPeek="shrink" visible onDismiss={() => { if (!busy) close(); }}>
       <Dialog.Title>{t("Modifica esercente")}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>

@@ -2,10 +2,10 @@ import { useI18n } from '../i18n/I18nProvider';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { selectionFill } from '../theme/motion';
-import { radius, spacing } from '../theme/tokens';
+import { shapeMorph } from '../theme/motion';
+import { glassOf } from '../theme/theme';
+import { groupGap, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
-import { SvgIcon, iconShapes } from './SvgIcon';
 
 export type Choice<T extends string> = { value: T; label: string; icon?: ReactNode };
 type Props<T extends string> = {
@@ -16,31 +16,36 @@ type Props<T extends string> = {
   allowDeselect?: boolean;
   label?: string;
   disabled?: boolean;
-  // Selected chips show a check instead of their own icon (default). Off: the icon stays.
-  showCheck?: boolean;
 };
 
-// Material 3 filter chips used as a single-choice group: selected = secondary container + check.
-export function ChoiceChips<T extends string>({ options, value, onChange, allowDeselect, label, disabled, showCheck = true }: Props<T>) {
+// A single choice among a few (Lingua, Tema, Carattere, Servizio AI…), as the connected tiles of Morphe's «Modalità tema»
+// (26 November, on request, in place of the wrapping filter chips with a check): equal tiles side by side, a little apart, the
+// outer corners of the row rounded and the inner ones small; the selected tile becomes a pill filled with the primary container
+// and outlined in the primary. An option's icon sits above its label. Long labels wrap on two lines, never cut.
+export function ChoiceChips<T extends string>({ options, value, onChange, allowDeselect, label, disabled }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  // 44 dp everywhere (48+ with the touch slop).
-  const height = 44;
+  const glass = glassOf(colors);
+  const last = options.length - 1;
   return (
     <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel={label}>
-      {options.map((option) => {
+      {options.map((option, index) => {
         const selected = option.value === value;
-        const color = selected ? colors.onSecondaryContainer : colors.onSurfaceVariant;
+        const color = selected ? colors.onPrimaryContainer : colors.onSurface;
+        const corners = selected ? { borderRadius: radius.pill } : {
+          borderTopLeftRadius: index === 0 ? radius.group : radius.groupInner, borderBottomLeftRadius: index === 0 ? radius.group : radius.groupInner,
+          borderTopRightRadius: index === last ? radius.group : radius.groupInner, borderBottomRightRadius: index === last ? radius.group : radius.groupInner,
+        };
         return (
-          <StateLayerPressable key={option.value} layerColor={color} radius={radius.button} disabled={disabled} hitSlop={{ top: 2, bottom: 2 }}
+          <StateLayerPressable key={option.value} layerColor={color} disabled={disabled} hitSlop={{ top: 2, bottom: 2 }}
             onPress={() => onChange(selected && allowDeselect ? '' : option.value)}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled}
             accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}
-            style={[styles.chip, { minHeight: height }, selected
-              ? { backgroundColor: colors.secondaryContainer, borderColor: colors.secondaryContainer }
-              : { borderColor: colors.outlineVariant }, selectionFill]}>
-            {selected && showCheck ? <SvgIcon shape={iconShapes.check} size={18} color={color} /> : option.icon}
-            <Text variant="labelLarge" style={[styles.label, { color }]}>{option.label}</Text>
+            style={[styles.chip, corners, option.icon ? styles.withIcon : null, selected
+              ? { backgroundColor: colors.primaryContainer, borderColor: colors.primary }
+              : { backgroundColor: glass.glass, borderColor: glass.glassBorder }, shapeMorph]}>
+            {option.icon}
+            <Text variant="labelLarge" style={[styles.label, { color, fontWeight: selected ? '700' : '500' }]}>{option.label}</Text>
           </StateLayerPressable>
         );
       })}
@@ -49,10 +54,9 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
 }
 
 const styles = StyleSheet.create({
-  list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    paddingHorizontal: spacing.lg, borderRadius: radius.button, borderWidth: 1,
-  },
-  label: { flexShrink: 1 },
+  list: { flexDirection: 'row', gap: groupGap },
+  chip: { flex: 1, minWidth: 0, minHeight: 48, alignItems: 'center', justifyContent: 'center', gap: spacing.xs,
+    paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, borderWidth: 1 },
+  withIcon: { minHeight: 64 },
+  label: { textAlign: 'center' },
 });

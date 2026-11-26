@@ -81,7 +81,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
     accessibilityLabel={t("Icona della categoria, facoltativa")} style={[styles.create, !compact && styles.iconWide]} contentStyle={styles.createContent}>{t("Icona")}</Button>;
   const addButton = <Button mode="contained" style={[styles.create, styles.addPill, styles.addCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>;
   const createForm = (
-    <ListGroup label={t("Nuova categoria")}><RowBody><View style={styles.createPanel}>
+    <ListGroup icon={iconShapes.plus} label={t("Nuova categoria")}><RowBody><View style={styles.createPanel}>
       <View style={styles.createRow}>
         <View style={[styles.nameField, styles.nameFieldCompact]}>
           <TextInput outlineStyle={inputOutline} label={t("Nuova categoria")} accessibilityLabel={t("Nome della nuova categoria, obbligatorio")} mode="outlined" value={name}
@@ -112,7 +112,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
             <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna categoria.")}</Text>
           </View>
         )}
-        {shown.length > 0 && <ListGroup label={t("Categorie")}><View role="list">
+        {shown.length > 0 && <ListGroup icon={iconShapes.tag} label={t("Categorie")}><View role="list">
           {shown.map((category, index) => {
             const isEditing = editing?.id === category.id;
             return (

@@ -165,6 +165,28 @@ export function dangerColors(scheme: Pick<Scheme, 'error' | 'onError' | 'errorCo
 export const cardColor = (scheme: Scheme, dark: boolean): string | null =>
   dark ? null : mixColors(scheme.primaryContainer, scheme.surfaceContainerLowest, 0.5);
 
+// #RRGGBB plus an alpha channel (0–1) as #RRGGBBAA.
+export const withAlpha = (color: string, alpha: number): string =>
+  `${color.slice(0, 7)}${Math.round(Math.min(Math.max(alpha, 0), 1) * 255).toString(16).padStart(2, '0').toUpperCase()}`;
+
+// The «glass» language of the whole app (26 November, on request, after Morphe on Android): translucent surfaces with a visible
+// hairline over a background of large soft circles. `glass` is the fill of cards and grouped rows (the circles show through a
+// little), `glassSolid` the same fill as an opaque colour over the plain background (the background Paper gives to outlined fields
+// inside a card: their label notch and inner fill then match the card), `glassBorder` their outline, `glassBar` the fill of the
+// blurred bars (top bar, navigation pill), `orb` the colour of the circles behind everything.
+export type GlassColors = { glass: string; glassSolid: string; glassBorder: string; glassBar: string; orb: string };
+export function glassColors(scheme: Scheme, dark: boolean): GlassColors {
+  const card = dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
+  const alpha = dark ? 0.78 : 0.72;
+  return {
+    glass: withAlpha(card, alpha),
+    glassSolid: mixColors(card, scheme.background, alpha),
+    glassBorder: dark ? mixColors(scheme.outline, scheme.background, 0.42) : mixColors(scheme.outline, scheme.background, 0.3),
+    glassBar: withAlpha(dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest, dark ? 0.72 : 0.68),
+    orb: mixColors(scheme.primaryContainer, scheme.background, dark ? 0.2 : 0.3),
+  };
+}
+
 // Semantic green for money coming in (additions, recharges), the counterpart of `error` for money going out. Fixed, not tied to
 // the accent: the meaning must not change with the chosen colour. Contrast ≥ 4.5:1 on every surface (tests/theme.test.ts).
 export const positiveColors = { light: '#18692C', dark: '#7DD992' } as const;

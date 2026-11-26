@@ -32,6 +32,10 @@ export const fillTransition = transition(['background-color', 'border-color', 'c
 // left two half-selected items, or the new label colour on the old fill, when switching quickly (21 November).
 export const selectionFill = transition(['opacity']);
 
+// Connected choices (segments, chips): the fill switches at once like `selectionFill`, the corners morph from the small inner
+// corner to a pill on the selected one (M3 Expressive shape morph, as in Morphe).
+export const shapeMorph = transitions([['border-radius', motion.medium], ['opacity', motion.short]]);
+
 // Quicker fade for state layers so press feedback feels immediate (hover and release still ease out).
 export const layerTransition = transition(['opacity'], 100);
 

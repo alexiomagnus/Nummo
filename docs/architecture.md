@@ -11,6 +11,30 @@ Analisi usa Barre complete (preferenza legacy `ranking` → `bars`), Ciambella s
 l'andamento consente di leggere data/importo, senza aprire le transazioni giornaliere. Prevalgono codice e
 convenzioni aggiornate in `AGENTS.md`; lo stato operativo e i limiti delle prove sono in `HANDOFF.md`.
 
+## Linguaggio vetro su tutta l'app (dopo Morphe) — 26 novembre 2026
+
+Su richiesta (riferimento: tre schermate dell'app Android Morphe, «quasi liquid glass»), la GUI di ogni pagina è stata portata a un solo
+linguaggio. Decisioni:
+
+- **Colori derivati, non nuovi**: `glassColors` di `palette.ts` ricava riempimento, contorno, barre e cerchi dallo schema di ogni
+  accento e tema; nessun hex nuovo. Testato: testo `onSurface`/`onSurfaceVariant` ≥ 4,5:1 sulle schede e sui cerchi, cerchi entro
+  1,35:1 dallo sfondo, contorno ≥ 1,4:1.
+- **Gruppi via CSS, non via React**: le righe di un gruppo non sanno la loro posizione (figli condizionali, Fragment, componenti
+  intermedi); le regole `data-glass-group`/`data-glass-item` di `GlobalStyle` assegnano gli angoli per posizione e per adiacenza
+  (`:first-child`, `+`, `:has(+ …)`), così ogni pagina eredita il disegno senza contare i figli. I raggi hanno `!important` perché i
+  pulsanti li mettono in linea; un riempimento in linea (scelta attiva) resta prioritario.
+- **Sfocatura solo sulle barre** (barra in alto e pillola su smartphone, menu): `backdrop-filter` su molte schede costerebbe troppo
+  nella WebView; le schede sono traslucide senza sfocatura. Perché la sfocatura abbia qualcosa sotto, su smartphone le due barre sono
+  sopra la pagina, che ne conserva lo spazio come padding e `scroll-padding`; la logica della tastiera (spazio della navigazione tenuto
+  finché il viewport non conferma) è invariata, applicata al padding invece che al flusso.
+- **Campi trasparenti**: Paper colora riquadro e tacca dell'etichetta con `background` del tema; il riquadro diventa trasparente via
+  CSS e `ListGroup` imposta `background` = colore della scheda, quindi la tacca coincide sia sulla pagina sia nelle schede.
+- **Selezione per forma**: segmenti e scelte senza spunta; la scelta attiva cambia forma (pillola) oltre che colore, come in M3
+  Expressive, quindi non si affida al solo colore.
+- Sostituisce, per coerenza, alcune scelte puntuali precedenti: schede di Spese piene e colorate nel tema chiaro (23 novembre), righe
+  a tutto bordo negli schermi di scelta su smartphone (26 novembre), pulsante Indietro in `secondaryContainer` (23 novembre), etichette
+  dei gruppi in maiuscolo, riquadri tonali delle icone nelle righe.
+
 ## Saldo facoltativo per fondo — 15 novembre 2026
 
 Su richiesta (opzione 3 tra: lasciare i fondi come gruppi di spesa, mostrare sempre Aggiungi/Trasferisci, saldo per fondo).

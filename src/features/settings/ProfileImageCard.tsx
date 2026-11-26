@@ -99,7 +99,7 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
     </StateLayerPressable>
   );
   return (
-    <ListGroup label={t("Immagine del profilo")}>
+    <ListGroup icon={iconShapes.face} label={t("Immagine del profilo")}>
       <RowBody>
       <View style={styles.current}>
         <View style={[styles.ring, fillTransition, { borderColor: ring ? ringColor : 'transparent' }]}>

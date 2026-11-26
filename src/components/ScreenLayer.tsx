@@ -13,6 +13,8 @@ import { useI18n } from '../i18n/I18nProvider';
 import { detailGestureOwner, detentOutcome, fittedPeek, peekOffset, recentVelocity, sheetDragOutcome, sheetDragSlop, sheetGestureOwner, type Detent, type DragSample } from './menuGeometry';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
+import { Orbs } from './Orbs';
+import { glassOf } from '../theme/theme';
 
 // A full screen of the app (23 November, on request): the detail of an expense or a subscription and every editor or content
 // panel that used to be a centred dialog (AppDialog without `variant="alert"`). A layer of the shared overlay level (Paper
@@ -83,7 +85,9 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   const toned = useMemo(() => tone ? { ...theme, colors: { ...theme.colors, background: tone.background, surface: tone.background,
     onBackground: tone.content, onSurface: tone.content, onSurfaceVariant: tone.content } }
     : sheet ? { ...theme, colors: { ...theme.colors, background } } : theme, [theme, tone?.background, tone?.content, sheet, background]);
-  const button = tone ? { background: tone.button, color: tone.onButton } : { background: colors.secondaryContainer, color: colors.onSecondaryContainer };
+  // Back: a round glass button (26 November, on request, after Morphe), or the tone's own colours on a coloured screen.
+  const glass = glassOf(colors);
+  const button = tone ? { background: tone.button, color: tone.onButton, border: tone.button } : { background: glass.glass, color: colors.onSurface, border: glass.glassBorder };
   const size = useSizeClass();
   const compact = size === 'compact';
   const insets = useSafeAreaInsets();
@@ -107,7 +111,9 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const need = fitPeek && fit && stops && node ? contentNeed(parts(node).surface) : 0;
     const found = need > 0 ? fittedPeek(height, need, fitPeek === 'shrink') : null;
     const now = fittedRef.current;
-    const next = rise && now !== null && (found === null || found > now) ? now : found;
+    const kept = rise && now !== null && (found === null || found > now) ? now : found;
+    // Under a pixel apart is the same place: keep it (no re-render, no new settle).
+    const next = kept !== null && now !== null && Math.abs(kept - now) < 1 ? now : kept;
     fittedRef.current = next;
     setFitted(next);
     return next ?? peekOffset(height);
@@ -305,7 +311,8 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const observer = new ResizeObserver(() => {
       const before = peekAt(latest.current.frame.height);
       const next = fitTo(node, latest.current.frame.height, fitPeek !== 'shrink');
-      if (next !== before && detentRef.current === 'peek') settle('peek', before);
+      // Below a pixel it is rounding, not new content: no new settle (each one animates and is observed again).
+      if (Math.abs(next - before) >= 1 && detentRef.current === 'peek') settle('peek', before);
     });
     observer.observe(inner);
     return () => observer.disconnect();
@@ -382,6 +389,8 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       <View ref={surface} {...part('surface')} style={sheet
         ? [styles.sheet, styles.surface, { backgroundColor: background, maxHeight: Math.max(0, frame.height - (compact ? insets.top : 0) - spacing.xxxl) }]
         : [StyleSheet.absoluteFill, styles.surface, { borderRadius: frameRadius, backgroundColor: background }]}>
+        {/* The circles of the app's background, behind a whole screen too (not on a sheet or a coloured screen). */}
+        {!sheet && !tone && <Orbs color={glass.orb} />}
         <View {...part('content')} style={sheet ? styles.sheetContent : styles.content}>
           {sheet ? <View style={[styles.sheetTop, { paddingLeft: padding + side, paddingRight: padding + side }]}>
             {/* The drag handle (user's request, 23 November: «per buttare giù la scheda»); a wide hit area around the small bar. */}
@@ -395,7 +404,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
             </Pressable>}
             {/* Tonal round button, larger than a bare icon (user's request, 23 November), a little below the edge. */}
             {!stops && <StateLayerPressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} disabled={backDisabled}
-              layerColor={button.color} radius={radius.pill} style={[styles.back, { backgroundColor: button.background }]}>
+              layerColor={button.color} radius={radius.pill} style={[styles.back, { backgroundColor: button.background, borderColor: button.border }]}>
               <SvgIcon shape={iconShapes.chevronLeft} size={28} color={button.color} />
             </StateLayerPressable>}
             {title !== undefined && <Text variant="titleLarge" accessibilityRole="header" aria-level={1} numberOfLines={2} style={[styles.title, tone && { color: tone.content }]}>{title}</Text>}
@@ -528,11 +537,24 @@ function findScroller(surface: HTMLElement): HTMLElement | null {
 }
 // The height a panel takes to show all its content: its own height, less what its scroller shows, plus what its scroller holds.
 // The same whether the panel is whole (spare room in the scroller) or in peek (content cut): the rest (bars, actions) is fixed.
+// The scroll content grows to fill the screen (flexGrow), so its own box depends on the panel's height: measured from it, a panel
+// fitted to its content fed its own size back (user's video, 26 November: the «Modello» panel bobbed up and down by a few pixels
+// for ever, each settle animation re-measuring a height in between). The content's natural height is the span of its children
+// plus its padding, which does not depend on the panel.
 function contentNeed(surface: HTMLElement | null): number {
   const scroller = surface ? findScroller(surface) : null;
   const inner = scroller?.firstElementChild;
-  if (!surface || !scroller || !inner) return 0;
-  return surface.getBoundingClientRect().height - scroller.clientHeight + inner.getBoundingClientRect().height;
+  if (!surface || !scroller || !(inner instanceof HTMLElement)) return 0;
+  return surface.getBoundingClientRect().height - scroller.clientHeight + naturalHeight(inner);
+}
+function naturalHeight(inner: HTMLElement): number {
+  const children = [...inner.children].filter((child) => child.getClientRects().length > 0);
+  const style = getComputedStyle(inner);
+  const padding = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+  if (children.length === 0) return padding;
+  const top = Math.min(...children.map((child) => child.getBoundingClientRect().top));
+  const bottom = Math.max(...children.map((child) => child.getBoundingClientRect().bottom));
+  return bottom - top + padding;
 }
 
 // Every open screen, newest last. Going to another page (a destination, a page of the account menu, «Fatto») closes them all
@@ -703,7 +725,7 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   grow: { flex: 1, minHeight: 0 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingBottom: spacing.sm },
-  back: { width: 52, height: 52, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  back: { width: 52, height: 52, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', flexShrink: 0, borderWidth: 1 },
   title: { flex: 1, minWidth: 0 },
   scroll: { flexGrow: 1, gap: spacing.xl, paddingTop: spacing.sm },
   sheetScrim: { cursor: 'auto' } as object,

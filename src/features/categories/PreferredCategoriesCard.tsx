@@ -1,6 +1,7 @@
 import { ListGroup, RowBody } from '../../components/ActionList';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { SelectField } from '../../components/SelectField';
+import { iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import { useI18n } from '../../i18n/I18nProvider';
 import { NoFundAvatar } from '../funds/FundAvatar';
@@ -20,7 +21,7 @@ export function PreferredCategoriesCard({ categories, value, onChange }: {
   ];
   const pick = (field: keyof PreferredCategories) => (next: string) => onChange({ ...value, [field]: next === none ? '' : next });
   return (
-    <ListGroup label={t("Categorie preferite")}>
+    <ListGroup icon={iconShapes.star} label={t("Categorie preferite")}>
       <RowBody>
         <SelectField panel label={t("Nuova spesa")} options={options} value={existingCategory(value.expense, categories) || none} onChange={pick('expense')} />
         <SelectField panel label={t("Nuove liste")} options={options} value={existingCategory(value.list, categories) || none} onChange={pick('list')} />

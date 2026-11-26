@@ -7,7 +7,7 @@ import type { Category } from '../../domain/category';
 import { barTransition } from '../../theme/motion';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { useI18n } from '../../i18n/I18nProvider';
-import { cardFill } from '../../theme/theme';
+import { glassSurface } from '../../theme/theme';
 import { radius, spacing } from '../../theme/tokens';
 import { rankCategories, type RankingRow } from './insights';
 import { seriesColor, type ChartColors } from './charts';
@@ -37,10 +37,10 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
         return <View key={series.key} role="listitem" style={twoColumns ? styles.half : styles.full}>
           {/* One tonal card per category: icon, name and amount on top; below, the bar (length against the largest
               category) and the share of the total in a fixed pill, so the shares line up from card to card. */}
-          <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={radius.dialog - 1}
+          <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={radius.group - 1}
             onPress={() => onOpen(series.key)}
             accessibilityLabel={[name, amount, share].filter(Boolean).join(', ')}
-            style={[styles.card, { backgroundColor: cardFill(theme.colors) ?? theme.colors.elevation.level1, borderColor: cardFill(theme.colors) ?? theme.colors.outlineVariant }]}>
+            style={[styles.card, glassSurface(theme.colors)]}>
             <View style={styles.header}>
               <IconTile icon={icons.get(series.key) ?? null} size={40} />
               <Text variant="titleMedium" numberOfLines={1} style={styles.label}>{name}</Text>
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   full: { width: '100%' },
   half: { width: `calc(50% - ${spacing.md / 2}px)` } as ViewStyle,
   // The box of the grouped rows and cards of the other pages: dialog corner and a 1 px outline on every size (user's request, 27 November).
-  card: { padding: spacing.lg, gap: spacing.md, borderWidth: 1, borderRadius: radius.dialog, overflow: 'hidden' },
+  card: { padding: spacing.lg, gap: spacing.md, borderRadius: radius.group, overflow: 'hidden' },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   label: { flex: 1, minWidth: 0 },
   amount: { flexShrink: 0, fontWeight: '700', fontVariant: ['tabular-nums'] },

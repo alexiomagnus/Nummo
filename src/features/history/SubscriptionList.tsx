@@ -89,13 +89,11 @@ function SubscriptionRow({ summary, category, formatDate, onOpen }: {
   // « | » with an en space on each side (about twice a normal space): a little more room between the two facts (22 November).
   const subtitle = [frequency, when].filter(Boolean).join('\u2002|\u2002');
   return (
-    <View nativeID={subscriptionCardId(entry.id)}>
-      <ListRow outlined dense opens icon={category?.icon ?? null} title={entry.description} subtitle={subtitle}
+      <ListRow nativeID={subscriptionCardId(entry.id)} outlined dense opens icon={category?.icon ?? null} title={entry.description} subtitle={subtitle}
         meta={<View style={styles.meta}><StatusBadge status={status} inTrial={inTrial} /></View>}
         pressLabel={t("Apri i dettagli di {p0}, {p1}", { p0: entry.description, p1: [inTrial ? t('In prova gratuita') : t(statusLabels[status]), frequency, when].filter(Boolean).join(', ') })}
         onPress={() => onOpen(entry.id)}
         trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount, status !== 'active' && { color: colors.onSurfaceVariant }]}>{formatAmount(amount_minor)}</Text>} />
-    </View>
   );
 }
 

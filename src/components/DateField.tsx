@@ -67,7 +67,7 @@ function DatePickerDialog({ visible, value, minDate, maxDate, onDismiss, onConfi
   }
   return (
     <Portal>
-      <Dialog detents fitPeek visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
+      <Dialog detents opensHalf fitPeek visible={visible} onDismiss={onDismiss} style={styles.dialog} label={t("Seleziona data")}>
         {/* Full screen (from medium): the chosen date is the title beside Back, so the whole month fits the panel without scrolling
             (user's request, 24 November: the last week was cut under «OK»). */}
         {!sheet && <Dialog.Title><Text variant="titleLarge" style={styles.headlineText}>{headlineFormat(locale).format(new Date(`${picked}T00:00:00Z`))}</Text></Dialog.Title>}

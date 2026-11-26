@@ -10,6 +10,7 @@ import { selectionFill } from '../../theme/motion';
 import { useI18n } from '../../i18n/I18nProvider';
 import { otherCategoriesKey, type Series } from '../../domain/history';
 import { radius, spacing } from '../../theme/tokens';
+import { glassSurface } from '../../theme/theme';
 import { categoryPercent } from './categoryPresentation';
 import { seriesColor, type ChartColors } from './charts';
 import { seriesLabel } from './seriesLabel';
@@ -30,8 +31,8 @@ function columnsOf<T>(items: readonly T[], count: number): T[][] {
 export function CategoryLegend({ series, others, categories, total, colors, active, onActive, showSeries = true, onOpen, compact = false }: Props) {
   const { t } = useI18n();
   const theme = useTheme();
-  // One box for every legend (under the blocks and beside or under the donut), like the grouped rows of the other pages.
-  const box = [styles.box, { backgroundColor: theme.colors.elevation.level1, borderColor: theme.colors.outlineVariant }];
+  // One glass card for every legend (under the blocks and the donut), like the cards of the other pages.
+  const box = [styles.box, glassSurface(theme.colors)];
   const [expanded, setExpanded] = useState(false);
   const [width, setWidth] = useState(0);
   const columns = compact && width >= twoColumnsFrom ? 2 : 1;
@@ -82,10 +83,10 @@ const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, 
     <Text variant="labelMedium" style={[styles.number, { color: theme.colors.onSecondaryContainer }]}>{categoryPercent(item.total, total)}</Text>
   </View>;
   return <View nativeID={selectable ? `dashboard-category-${item.key}` : undefined} role="listitem">
-    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={radius.control}
+    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={rowCorner}
       onPress={() => { haptic(); if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
-      style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.elevation.level3 }, styles.compactCorner, selectionFill]}>
+      style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.primaryContainer }, styles.compactCorner, selectionFill]}>
       {/* The category's colour as a small square (the key to the chart) and its icon, with no coloured tile around the icon
           (user's request, 27 November). A series without an icon keeps the square alone. */}
       <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />
@@ -103,6 +104,10 @@ const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, 
   </View>;
 });
 
+// Rows sit in the legend box with its padding (spacing.sm): their corner is the box's inner corner minus that padding, so the hover
+// layer and the selected fill follow the box's outline (26 November, on request: they were 20, a little rounder than the box).
+const rowCorner = radius.group - 1 - spacing.sm;
+
 const styles = StyleSheet.create({
   legend: { gap: spacing.sm, minWidth: 0 },
   // With wrap, alignItems centres within each line; alignContent centres the lines in the minimum row height.
@@ -113,9 +118,9 @@ const styles = StyleSheet.create({
   compactRow: { minHeight: 56, paddingVertical: spacing.xs, flexWrap: 'nowrap', gap: spacing.md },
   // Rounded like the tile it holds plus its padding (concentric); the selected row lifts to a neutral level, so it does not clash with the
   // tonal share pill or the category colours (user's request, 27 November).
-  compactCorner: { borderRadius: radius.control },
+  compactCorner: { borderRadius: rowCorner },
   // The compact legend is one box like the grouped rows of the other pages (user's request, 27 November).
-  box: { borderWidth: 1, borderRadius: radius.dialog, padding: spacing.sm, overflow: 'hidden' },
+  box: { borderRadius: radius.group, padding: spacing.sm, overflow: 'hidden' },
   sharePill: { flexShrink: 0, minWidth: 48, alignItems: 'center', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   compactLabel: { flex: 1, minWidth: 0 },
   amountColumn: { flexShrink: 0, minWidth: 88 },

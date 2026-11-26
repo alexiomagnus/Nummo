@@ -31,7 +31,7 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
   const tone = { color: colors.onPrimaryContainer };
   return (
     <View nativeID={cardId} style={[styles.card, { backgroundColor: colors.primaryContainer }]}>
-      <StateLayerPressable onPress={() => setOpen(true)} layerColor={colors.onPrimaryContainer} radius={radius.dialog}
+      <StateLayerPressable onPress={() => setOpen(true)} layerColor={colors.onPrimaryContainer} radius={radius.group}
         accessibilityRole="button" aria-haspopup="dialog" accessibilityLabel={t("Prossimo mese, {p0} entro {p1} giorni", { p0: formatAmount(soon), p1: days })}
         style={styles.header}>
         <View style={[styles.tile, { backgroundColor: colors.primary }]}>
@@ -77,15 +77,14 @@ function RenewalsContent({ renewals, categories, soon, count, days }: Props & { 
       <Text variant="displaySmall" style={[card, styles.amount, styles.bold, styles.center]}>{formatAmount(soon)}</Text>
       <Text variant="bodyLarge" style={[card, styles.soft, styles.center]}>{t("{p0} entro {p1} giorni", { p0: count, p1: days })}</Text>
     </View>
-    <View role="list">
-      {renewals.map(({ occurrence, previous }, index) => {
+    <View {...{ dataSet: { glassGroup: 'true' } }}><View role="list">
+      {renewals.map(({ occurrence, previous }) => {
         const category = categories.find((c) => c.id === occurrence.category_id);
         const changed = occurrence.amount_minor !== previous;
         const details = [dateFormat(locale).format(new Date(`${occurrence.date}T00:00:00Z`)),
           changed && t("da {p0}", { p0: formatAmount(previous) })].filter(Boolean).join(' · ');
         return (
           <View key={occurrence.key} role="listitem">
-            {index > 0 && <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />}
             <View style={styles.row}>
               <View aria-hidden style={styles.rowIcon}>{category?.icon ? <CategoryGlyph icon={category.icon} size={24} color={colors.onSurfaceVariant} />
                 : <SvgIcon shape={iconShapes.tag} size={24} color={colors.onSurfaceVariant} />}</View>
@@ -98,13 +97,13 @@ function RenewalsContent({ renewals, categories, soon, count, days }: Props & { 
           </View>
         );
       })}
-    </View>
+    </View></View>
   </>;
 }
 
 const styles = StyleSheet.create({
   // Same footprint as a subscription row (ListRow outlined: radius, side padding, height with the status badge).
-  card: { borderRadius: radius.dialog },
+  card: { borderRadius: radius.group },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
   tile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, minWidth: 0 },
@@ -113,13 +112,13 @@ const styles = StyleSheet.create({
   // Same separator as the «Totale» card of Spese.
   figures: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: spacing.md },
   figureDivider: { width: 1, height: 20, alignSelf: 'center', opacity: 0.4 },
-  hero: { alignItems: 'center', gap: spacing.sm, borderRadius: radius.dialog, paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  hero: { alignItems: 'center', gap: spacing.sm, borderRadius: radius.group, paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   // The card's tile, larger.
   heroTile: { width: 64, height: 64, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   soft: { opacity: 0.85 },
   center: { textAlign: 'center' },
   bold: { fontWeight: '700' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingVertical: spacing.md, paddingHorizontal: spacing.xs },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
   rowIcon: { width: 28, alignItems: 'center', justifyContent: 'center' },
   divider: { height: StyleSheet.hairlineWidth },
 });

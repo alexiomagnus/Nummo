@@ -4,6 +4,8 @@ import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type Styl
 import { Portal, Surface, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { transitions } from '../theme/motion';
+import { withAlpha } from '../theme/palette';
+import { glassOf } from '../theme/theme';
 import { motion, radius, spacing } from '../theme/tokens';
 import { useReducedMotion } from '../theme/useSizeClass';
 import { initialFocusAllowed } from '../theme/viewport';
@@ -176,7 +178,9 @@ export function AnchoredMenu({ visible, onDismiss, anchor, width, align = 'start
         <View ref={container} role="menu" aria-label={label} pointerEvents={visible ? 'auto' : 'none'}
           style={[{ opacity: shown ? 1 : 0, transform: [{ translateY: shown ? 0 : offset }, { scale: shown ? 1 : 0.96 }],
             transformOrigin: below ? 'top' : 'bottom' } as ViewStyle, shown ? menuEnter : menuExit]}>
-          <Surface elevation={2} style={[styles.menu, { backgroundColor: colors.elevation.level2, maxHeight: place.maxHeight }, contentStyle]}>
+          {/* Blurred glass with a hairline, like the bars (26 November, on request, after Morphe). */}
+          <Surface elevation={2} {...{ dataSet: { glassBar: 'true' } }}
+            style={[styles.menu, { backgroundColor: withAlpha(colors.elevation.level2, 0.86), borderColor: glassOf(colors).glassBorder, maxHeight: place.maxHeight }, contentStyle]}>
             {/* `menuScroll`: GlobalStyle stops the scrollbar track a corner radius short of both ends (user's request, 22 November:
                 the rounded corners cut the bar). */}
             <ScrollView style={{ maxHeight: Math.max(0, place.maxHeight) }} keyboardShouldPersistTaps="handled" {...menuScrollMark}>{children}</ScrollView>
@@ -369,7 +373,7 @@ const styles = StyleSheet.create({
   menuBox: { position: 'absolute' },
   // No inner padding: rows run edge to edge and the rounded menu clips them, so a hover/selected highlight covers the
   // whole row and takes the menu's own corners on the first and last row.
-  menu: { borderRadius: radius.control, overflow: 'hidden' },
+  menu: { borderRadius: radius.group, borderWidth: 1, overflow: 'hidden' },
   sheet: {
     position: 'absolute', bottom: 0, alignSelf: 'center', width: '100%', maxWidth: 640,
     borderTopLeftRadius: radius.dialog, borderTopRightRadius: radius.dialog, overflow: 'hidden',

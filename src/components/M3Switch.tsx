@@ -6,13 +6,12 @@ import { motion, radius } from '../theme/tokens';
 import { useReducedMotion } from '../theme/useSizeClass';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
-// Material 3 switch (visual only: the parent row owns press handling and accessibility).
-// Fully rounded track and circular handle. Spec: 52×32 track; handle 16 px off / 24 px on with a check icon; outlined track when off.
-// The handle is always 24 px: it is scaled (16/24 off) and translated, so the animation uses transform only (no layout);
-// the track colours cross-fade with a CSS transition.
-const OFF_SCALE = 16 / 24;
+// Material 3 switch with icons (visual only: the parent row owns press handling and accessibility), as in Morphe (26 November,
+// on request): 52×32 track, a 24 px handle in both states, a check when on and a cross when off, so the state reads from the
+// shape too. Off: outlined, nearly transparent track, handle in the outline colour; on: filled track, light handle.
+// The handle only moves (transform), the colours cross-fade with a CSS transition.
 export function M3Switch({ value, disabled }: { value: boolean; disabled?: boolean }) {
-  const theme = useTheme();
+  const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
   const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
   useEffect(() => {
@@ -21,21 +20,20 @@ export function M3Switch({ value, disabled }: { value: boolean; disabled?: boole
     }).start();
   }, [value, progress, reduceMotion]);
 
-  // Handle box (24 px) sits at x = 0 / 20 inside the 48 px content area (track 52 minus the 2 px borders); centres 16 and 36 from the track edge.
+  // Handle box (24 px) at x = 0 / 20 inside the 48 px content area (track 52 minus the 2 px borders).
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 20] });
-  const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [OFF_SCALE, 1] });
   return (
     <View accessible={false} importantForAccessibility="no-hide-descendants"
       style={[styles.track, fillTransition, {
-        backgroundColor: value ? theme.colors.primary : theme.colors.surfaceVariant,
-        borderColor: value ? theme.colors.primary : theme.colors.outline,
+        backgroundColor: value ? colors.primary : 'transparent',
+        borderColor: value ? colors.primary : colors.outline,
         opacity: disabled ? 0.38 : 1,
       }]}>
-      <Animated.View style={[styles.handle, {
-        backgroundColor: value ? theme.colors.onPrimary : theme.colors.outline,
-        transform: [{ translateX }, { scale }],
+      <Animated.View style={[styles.handle, fillTransition, {
+        backgroundColor: value ? colors.onPrimary : colors.outline,
+        transform: [{ translateX }],
       }]}>
-        {value && <SvgIcon shape={iconShapes.check} size={16} color={theme.colors.primary} />}
+        <SvgIcon shape={value ? iconShapes.check : iconShapes.close} size={16} color={value ? colors.primary : colors.surfaceVariant} />
       </Animated.View>
     </View>
   );

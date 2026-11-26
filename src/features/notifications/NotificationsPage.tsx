@@ -77,7 +77,7 @@ function SystemNotifications({ push }: { push: PushState }) {
     {pushTests && waiting && line(t("Chiudi Nummo ora: entro circa un minuto arriverà una notifica push dal servizio. Se arriva, le notifiche funzionano anche ad app chiusa."))}
   </>;
   return (
-    <ListGroup label={t("Notifiche di sistema")}>
+    <ListGroup icon={iconShapes.bell} label={t("Notifiche di sistema")}>
       <RowBody>{body}</RowBody>
     </ListGroup>
   );
@@ -95,7 +95,7 @@ function OpenedSummary({ notifications, from, to, onClose }: { notifications: No
   // Seen: not offered again as an in-app notice.
   useEffect(() => { notifications.closeSummary({ from, to }); }, [from, to]);
   return (
-    <ListGroup label={t("Riepilogo spese")}>
+    <ListGroup icon={iconShapes.chart} label={t("Riepilogo spese")}>
       <RowBody>
         <Text variant="bodyMedium" style={muted}>{(() => {
           const dates = { p0: formatDate(from), p1: formatDate(to) };
@@ -128,7 +128,7 @@ function ReminderTime({ hour, timeFormat, timeZone, onChange }: { hour: number; 
   // The zone is named only when it is not the device's own (a chosen one): the usual case stays a plain «alle 9:00».
   const zoneNote = timeZone !== autoTimeZone && timeZone !== deviceTimeZone() ? timeZoneCity(timeZone) : null;
   return (
-    <ListGroup label={t("Orario delle notifiche")}>
+    <ListGroup icon={iconShapes.clock} label={t("Orario delle notifiche")}>
       <OptionRow icon={iconShapes.clock} title={t("Ora di arrivo")} subtitle={t("Vale per promemoria, riepiloghi e rinnovi.")}>
         <SegmentedButtons label={t("Orario delle notifiche")} value={choice ?? ''} onChange={(next) => onChange(reminderPresets[next as TimeChoice])}
           options={(['morning', 'lunch', 'evening'] as const).map((value) => ({ value, label: labels[value] }))} />
@@ -136,7 +136,7 @@ function ReminderTime({ hour, timeFormat, timeZone, onChange }: { hour: number; 
       </OptionRow>
       <RowDivider />
       <OptionRow icon={iconShapes.pencil} tone="secondary" title={t("Altra ora")} subtitle={t("Scegli un’ora diversa da quelle sopra.")}>
-        <MenuSelect label={t("Ora")} icon={iconShapes.clock} value={String(hour)} onChange={(value) => onChange(Number(value))}
+        <MenuSelect panel whole label={t("Ora")} icon={iconShapes.clock} value={String(hour)} onChange={(value) => onChange(Number(value))}
           options={hours.map((value) => ({ value: String(value), label: time(value) }))} />
       </OptionRow>
     </ListGroup>
@@ -177,7 +177,7 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
         <OpenedSummary notifications={notifications} from={opened.from} to={opened.to} onClose={onCloseOpened} />}
       <SystemNotifications push={notifications.push} />
       <ReminderTime hour={p.reminderHour} timeFormat={timeFormat} timeZone={timeZone} onChange={(reminderHour) => change({ reminderHour })} />
-      {backupReminders && <ListGroup label={t("Promemoria backup")}>
+      {backupReminders && <ListGroup icon={iconShapes.database} label={t("Promemoria backup")}>
         <ToggleRow icon={iconShapes.database} title={t("Attiva promemoria backup")} value={p.backupEnabled} onChange={(backupEnabled) => change({ backupEnabled })}
           subtitle={t("Solo se i dati sono cambiati dall’ultimo backup.")} />
         <RowDivider />
@@ -195,13 +195,13 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
           </View>}
         </RowBody>
       </ListGroup>}
-      <ListGroup label={t("Riepilogo spese")}>
+      <ListGroup icon={iconShapes.chart} label={t("Riepilogo spese")}>
         <ToggleRow icon={iconShapes.chart} title={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })}
           subtitle={t("Un riepilogo delle tue spese del periodo appena concluso.")} />
         <RowDivider />
         <RowBody>{frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.summaryEnabled, false)}</RowBody>
       </ListGroup>
-      <ListGroup label={t("Rinnovi degli abbonamenti")}>
+      <ListGroup icon={iconShapes.calendar} label={t("Rinnovi degli abbonamenti")}>
         <ToggleRow icon={iconShapes.calendar} title={t("Avvisa prima dei rinnovi")} value={p.renewalEnabled} onChange={(renewalEnabled) => change({ renewalEnabled })}
           subtitle={t("Una notifica il giorno prima del rinnovo di un abbonamento attivo.")} />
       </ListGroup>

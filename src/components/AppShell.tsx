@@ -10,7 +10,8 @@ import { detailSpring } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
 import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
 import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt, slotWithHysteresis } from './navIndicator';
-import { panelColor } from '../theme/theme';
+import { glassOf, panelColor } from '../theme/theme';
+import { withAlpha } from '../theme/palette';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { batchKeyboardReports, observeViewportShrink, revealFocusedField, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
 import { readDrawerFolded, writeDrawerFolded } from '../services/drawerState';
@@ -18,6 +19,7 @@ import { useHaptics } from './Haptics';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
 import { iconShapes, SvgIcon } from './SvgIcon';
+import { Orbs } from './Orbs';
 
 export type Destination<T extends string = string> = { value: T; label: string; icon: string };
 
@@ -95,6 +97,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   useLayoutEffect(() => {
     const changed = previousSection.current !== selected;
     previousSection.current = selected;
+    // Every page opens at its top, however it was reached (navigation, a page of the account menu, «Fatto», Back, the brand): the
+    // page scroller is shared, and it was reset only by a tap on the navigation, so a page opened from the account menu or with
+    // «Fatto» started where the previous one had been scrolled (user's report, 26 November). Before the paint, in the same commit.
+    if (changed) scroller.current?.scrollTo({ y: 0, animated: false });
     const node = page.current as unknown as HTMLElement | null;
     if (!changed || reduceMotion || theme.animation.scale === 0 || !node?.animate) return;
     // Every page enters fully: first the account menu's pages (Impostazioni, Notifiche, Categorie…, user's request, 23
@@ -111,9 +117,11 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   }, [selected, reduceMotion, theme.animation.scale]);
   const insets = useSafeAreaInsets();
   const scroller = useRef<ScrollViewInstance>(null);
+  // The page goes back to its top when `selected` changes (layout effect above), whoever changed it; a tap on the destination
+  // already shown takes it back to its top too, as before.
   const select = useCallback((value: T) => {
+    if (value === previousSection.current) scroller.current?.scrollTo({ y: 0, animated: false });
     onSelect?.(value);
-    scroller.current?.scrollTo({ y: 0, animated: false });
   }, [onSelect]);
   const hasNav = Boolean(destinations?.length);
   // Desktop: the drawer folds to icons only (user's request, 27 November), giving the panel the room. Remembered in this browser (services/drawerState.ts).
@@ -127,6 +135,12 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const barBottom = floatingBarBottomSpace(insets.bottom, spacing.md, iPhone);
   const barHeight = layout.floatingBar + spacing.md + barBottom;
   const showFab = bottomBar && fab && selected !== fab.target;
+  // Phones: the top bar and the navigation float over the page, which scrolls under them (blurred glass, as in Morphe: 26 November,
+  // on request); the page keeps their room as padding. The navigation keeps its room while it is visible and, as before, while the
+  // keyboard is not yet confirmed (the target under the finger must not move between press and release).
+  const overlayBars = size === 'compact';
+  const navRoom = navMounted && (bottomBar || (keyboard && !keyboardConfirmed));
+  const topRoom = layout.topBarHeight + insets.top;
   const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
   const compact = size === 'compact';
   const expanded = size === 'expanded';
@@ -134,22 +148,35 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // Inside the panel, `background` is the panel colour so outlined-field label notches and sticky bars blend in.
   // On phones and tablets there is no lighter panel (desktop only): the page sits on the plain background.
   const panelBg = !showPanel ? colors.background : panelColor(colors);
+  const glass = glassOf(colors);
   const panelTheme = useMemo(() => ({ ...theme, colors: { ...colors, background: panelBg } }), [theme, colors, panelBg]);
   // 16 around the panel on the right and below (32 until 24 November: a larger panel, user's request).
-  const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: spacing.lg, marginBottom: spacing.lg };
+  // The panel is glass too: the circles of the background show through it a little.
+  const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: glass.glassBorder };
   // The scroller fills the rounded panel, which clips it: content scrolls out of view at the panel's own edge, never at
   // a line inside it. The scrollbar would run straight through the corners (browsers do not bend it to the radius):
   // `data-panel-scroll` lets GlobalStyle stop its track a corner radius short of both ends.
   // A row cut by the bottom edge stays as it is, plain and usable: the fade that hinted at more below (21 November)
   // was removed on 26 November, on request, on every size.
   // `pageScroll` only names the page scroller for the manual checks (scripts/check-keyboard.mjs).
+  // Fields and focus brought into view (keyboard, Tab) stop below the floating top bar and above the floating navigation.
+  useLayoutEffect(() => {
+    const node = (scroller.current as unknown as { getScrollableNode?: () => HTMLElement } | null)?.getScrollableNode?.();
+    if (!node?.style) return;
+    node.style.scrollPaddingTop = overlayBars ? `${topRoom}px` : '';
+    node.style.scrollPaddingBottom = overlayBars && navRoom ? `${barHeight}px` : '';
+  }, [overlayBars, topRoom, navRoom, barHeight]);
   const scrollMarks = hasNav ? { dataSet: showPanel ? { panelScroll: 'true', pageScroll: 'true' } : { pageScroll: 'true' } } : null;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>
+      <Orbs color={glass.orb} />
       <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom}>
-      {/* `appChrome`: faded out on phones while a whole screen is open (ScreenLayer, holdChrome). */}
-      <View role="banner" {...{ dataSet: { appChrome: 'true' } }} style={[styles.topBar, { backgroundColor: colors.background, paddingTop: insets.top, paddingHorizontal: padding, height: layout.topBarHeight + insets.top }]}>
+      {/* `appChrome`: faded out on phones while a whole screen is open (ScreenLayer, holdChrome). On phones a blurred glass bar
+          over the page; elsewhere in the flow, on the background. */}
+      <View role="banner" {...{ dataSet: overlayBars ? { appChrome: 'true', glassBar: 'true' } : { appChrome: 'true' } }}
+        style={[styles.topBar, overlayBars ? [styles.overlayTop, { backgroundColor: withAlpha(colors.background, 0.62), left: insets.left, right: insets.right }] : null,
+          { paddingTop: insets.top, paddingHorizontal: padding, height: topRoom }]}>
         {fab && hasNav ? (
           // The brand leads to the primary screen (new expense); on it, it does nothing.
           <StateLayerPressable layerColor="transparent" accessibilityRole="button" accessibilityLabel={`Nummo, ${fab.label}`}
@@ -175,9 +202,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} folded={drawerToggle && drawerFolded} onToggle={drawerToggle ? toggleDrawer : undefined} />}
           {/* `appPanel`: the area a page-level layer covers from medium up (the expense detail, ExpenseDetail.tsx). */}
-          <View {...{ dataSet: { appPanel: 'true' } }} style={[styles.scroll, panel, styles.panelClip, { backgroundColor: panelBg }]}>
+          <View {...{ dataSet: { appPanel: 'true' } }} style={[styles.scroll, panel, styles.panelClip, { backgroundColor: showPanel ? withAlpha(panelBg, 0.7) : 'transparent' }]}>
           <ScrollView ref={scroller} style={styles.scroll} {...scrollMarks} keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ flexGrow: 1, padding, paddingBottom: padding + (bottomBar ? 0 : insets.bottom) }}>
+            contentContainerStyle={{ flexGrow: 1, padding, paddingTop: padding + (overlayBars ? topRoom : 0),
+              paddingBottom: padding + (overlayBars ? (navRoom ? barHeight : insets.bottom) : bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
               <KeyboardContext.Provider value={keyboard}>
               <View ref={page} role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
@@ -204,6 +232,7 @@ type NavProps<T extends string> = { destinations: readonly Destination<T>[]; sel
 function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomSpace, fab, reserveFab, hidden, reserveSpace }: NavProps<T> & { bottomSpace: number; reserveFab: boolean; hidden: boolean; reserveSpace: boolean }) {
   const { t } = useI18n();
   const { colors, fonts } = useTheme();
+  const glass = glassOf(colors);
   const reduceMotion = useReducedMotion();
   // Phone only (this bar), in the Android app: a short vibration on every press of a destination or of the round action, and
   // the same one while a finger dragged along the pill enters another destination (see useSlidingIndicator). «Vibrazione» in Settings.
@@ -258,9 +287,11 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
     <View aria-hidden={hidden} {...{ inert: hidden ? true : undefined, dataSet: { appChrome: 'true' } }} pointerEvents={hidden ? 'none' : 'auto'}
       onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
       style={[styles.floating, { paddingBottom: bottomSpace, paddingHorizontal: barSide }, hidden && (reserveSpace ? { opacity: 0 } : styles.hidden)]}>
-      <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level1 }]}>
+      {/* Blurred glass pill over the page, which scrolls under it (26 November, on request, after Morphe). */}
+      <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} {...{ dataSet: { glassBar: 'true' } }}
+        style={[styles.pill, { backgroundColor: glass.glassBar }]}>
         {/* Hairline outline drawn as an overlay, so the border does not change the geometry the indicator is measured on. */}
-        <View pointerEvents="none" style={[styles.pillOutline, { borderColor: colors.outlineVariant }]} />
+        <View pointerEvents="none" style={[styles.pillOutline, { borderColor: glass.glassBorder }]} />
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
             the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}
         {indicator && <Animated.View pointerEvents="none" style={[styles.indicator, indicator.style, { backgroundColor: colors.primaryContainer, borderColor: colors.primary }]} />}
@@ -467,7 +498,7 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
   const { colors } = useTheme();
   const fabIcon = useIconSource(fab?.icon);
   return (
-    <ScrollView role="navigation" aria-label={t("Sezioni")} style={[styles.rail, { backgroundColor: colors.background }]}
+    <ScrollView role="navigation" aria-label={t("Sezioni")} style={styles.rail}
       contentContainerStyle={styles.railContent} keyboardShouldPersistTaps="handled">
       {fab && (
         <FAB mode="flat" icon={fabIcon} accessibilityLabel={fab.label}
@@ -480,9 +511,9 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
           <StateLayerPressable key={item.value} layerColor="transparent" accessibilityRole="button"
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)} style={styles.railItem}>
             {(state) => <>
-            <View style={[styles.railIndicator, active && { backgroundColor: colors.secondaryContainer }]}>
+            <View style={[styles.railIndicator, active && { backgroundColor: colors.primaryContainer, borderColor: colors.primary }]}>
               <HoverLayer state={state} color={colors.onSurface} />
-              <SvgIcon shape={item.icon} size={24} color={active ? colors.onSecondaryContainer : colors.onSurfaceVariant} />
+              <SvgIcon shape={item.icon} size={24} color={active ? colors.onPrimaryContainer : colors.onSurfaceVariant} />
             </View>
             <Text variant="labelMedium" numberOfLines={1} style={{ color: active ? colors.onSurface : colors.onSurfaceVariant, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
             </>}
@@ -516,7 +547,7 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab, folde
     return () => move.cancel();
   }, [folded, reduced]);
   return (
-    <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, folded && styles.drawerFolded, drawerMotion, { backgroundColor: colors.background }]}>
+    <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, folded && styles.drawerFolded, drawerMotion]}>
       <View ref={fabRef} style={styles.drawerFabBox}>
       {fab && (folded ? (
         <FAB mode="flat" icon={fabIcon} accessibilityLabel={fab.label} onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
@@ -529,11 +560,11 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab, folde
       </View>
       {destinations.map((item) => {
         const active = item.value === selected;
-        const color = active ? colors.onSecondaryContainer : colors.onSurfaceVariant;
+        const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
         return (
-          <StateLayerPressable key={item.value} layerColor={color} accessibilityRole="button" radius={radius.nav}
+          <StateLayerPressable key={item.value} layerColor={color} accessibilityRole="button" radius={radius.pill}
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
-            style={[styles.drawerItem, active && { backgroundColor: colors.secondaryContainer }]}>
+            style={[styles.drawerItem, { borderColor: active ? colors.primary : 'transparent' }, active && { backgroundColor: colors.primaryContainer }]}>
             <SvgIcon shape={item.icon} size={24} color={color} />
             <Text variant="titleSmall" numberOfLines={1} aria-hidden={folded} style={[styles.drawerLabel, labelMotion, { color, fontWeight: active ? '700' : '500', opacity: folded ? 0 : 1 }]}>{item.label}</Text>
           </StateLayerPressable>
@@ -542,7 +573,7 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab, folde
       {onToggle && <>
       {/* At the foot, a row like the destinations (same height, shape and colours), so it reads as part of the menu. */}
       <StateLayerPressable layerColor={colors.onSurfaceVariant} accessibilityRole="button" accessibilityLabel={toggleLabel} aria-expanded={!folded}
-        radius={radius.nav} onPress={onToggle} style={[styles.drawerItem, styles.drawerToggle]}>
+        radius={radius.pill} onPress={onToggle} style={[styles.drawerItem, styles.drawerToggle, { borderColor: 'transparent' }]}>
         <SvgIcon shape={folded ? iconShapes.chevronRight : iconShapes.chevronLeft} size={24} color={colors.onSurfaceVariant} />
         <Text variant="titleSmall" numberOfLines={1} aria-hidden={folded} style={[styles.drawerLabel, labelMotion, { color: colors.onSurfaceVariant, fontWeight: '500', opacity: folded ? 0 : 1 }]}>{t('Comprimi')}</Text>
       </StateLayerPressable>
@@ -552,7 +583,8 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab, folde
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, minWidth: 0, width: '100%' },
+  root: { flex: 1, minWidth: 0, width: '100%', overflow: 'hidden' },
+  overlayTop: { position: 'absolute', top: 0, zIndex: 2 },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm,
   },
@@ -566,7 +598,8 @@ const styles = StyleSheet.create({
   panelClip: { overflow: 'hidden' },
   // The page always fills the panel, on any monitor: no width cap or centred column.
   content: { width: '100%', flexGrow: 1, gap: spacing.xl },
-  floating: { flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.xs },
+  // Over the bottom of the page (which keeps its room as padding, see AppShell).
+  floating: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 2, flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md, paddingHorizontal: spacing.xs },
   // display: none also removes it from the accessibility tree and the Tab order while the keyboard is open.
   hidden: { display: 'none' },
   pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: pillPadding, gap: pillGap },
@@ -580,7 +613,7 @@ const styles = StyleSheet.create({
   railContent: { paddingTop: spacing.lg, paddingBottom: spacing.lg, alignItems: 'center', gap: spacing.lg + 4 },
   railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.button },
   railItem: { width: layout.railWidth - spacing.sm, alignItems: 'center', gap: spacing.xs, paddingVertical: 4 },
-  railIndicator: { overflow: 'hidden', width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
+  railIndicator: { overflow: 'hidden', width: 56, height: 32, borderRadius: radius.pill, borderWidth: 1, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.lg + 4, overflow: 'hidden' },
   drawerFabBox: { alignSelf: 'stretch' },
   drawerLabel: { flexShrink: 0, whiteSpace: 'nowrap' } as object,
@@ -588,5 +621,5 @@ const styles = StyleSheet.create({
   drawerFolded: { width: layout.railWidth },
   drawerToggle: { marginTop: 'auto' },
   drawerFabFolded: { alignSelf: 'flex-start', marginLeft: 0, marginTop: 0, marginBottom: 0 },
-  drawerItem: { height: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, overflow: 'hidden' },
+  drawerItem: { height: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, overflow: 'hidden', borderWidth: 1 },
 });

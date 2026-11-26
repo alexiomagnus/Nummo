@@ -71,12 +71,12 @@ export function MovementDialog({ funds, balances, kind, to: initialTo, ready, er
             {errors.amount && <HelperText type="error" accessibilityRole="alert">{t(errors.amount)}</HelperText>}
           </View>
           {kind === 'transfer' && <View style={styles.field}>
-            <SelectField label={t("Dal fondo")} value={from} options={options} disabled={blocked} error={errors.from}
+            <SelectField panel whole label={t("Dal fondo")} value={from} options={options} disabled={blocked} error={errors.from}
               onChange={(next) => { setFrom(next); setErrors({ ...errors, from: undefined, to: undefined }); }} />
             {value !== null && from && value > fromBalance && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
               {t("Il fondo di origine scenderà sotto zero ({p0}).", { p0: formatAmount(fromBalance - value) })}</Text>}
           </View>}
-          <SelectField label={kind === 'transfer' ? t("Al fondo") : t("Fondo")} value={to} options={options} disabled={blocked} error={errors.to}
+          <SelectField panel whole label={kind === 'transfer' ? t("Al fondo") : t("Fondo")} value={to} options={options} disabled={blocked} error={errors.to}
             onChange={(next) => { setTo(next); setErrors({ ...errors, to: undefined }); }} />
           <DateField value={date} disabled={blocked} name={t("Data del movimento")} onChange={setDate} />
           <View>

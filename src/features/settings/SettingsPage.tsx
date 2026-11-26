@@ -87,7 +87,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
       {/* The grouped rows of «Lista scontrini» and «Info» (user's request, 27 November), one column at every size: each setting is a
           row with a tonal tile and its choices under it. */}
       {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} />}
-      <ListGroup label={t("Lingua e ora")}>
+      <ListGroup icon={iconShapes.globe} label={t("Lingua e ora")}>
         <OptionRow icon={iconShapes.globe} title={t("Lingua")}>
           <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
             value={preferences.language} onChange={(language) => language && onChange({ language })} />
@@ -104,11 +104,11 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             onChange={(value) => { if (value === 'auto') onChange({ timeZone: autoTimeZone }); else if (value) onChange({ timeZone: device }); }} />
           {preferences.timeZone === autoTimeZone
             ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Fuso orario: {p0}", { p0: device.replace(/_/g, ' ') })}</Text>
-            : <MenuSelect label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
+            : <MenuSelect panel whole label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
                 onChange={(timeZone) => onChange({ timeZone })} />}
         </OptionRow>
       </ListGroup>
-      <ListGroup label={t("Aspetto")}>
+      <ListGroup icon={iconShapes.palette} label={t("Aspetto")}>
         <OptionRow icon={iconShapes.moon} title={t("Tema")}>
           <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
         </OptionRow>
@@ -161,7 +161,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
           </View>
         </OptionRow>
       </ListGroup>
-      <ListGroup label={t("Funzionalità")}>
+      <ListGroup icon={iconShapes.settings} label={t("Funzionalità")}>
         <ToggleRow icon={iconShapes.chart} title={t("Mostra andamento nel tempo")} subtitle={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}
           onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
         <RowDivider />

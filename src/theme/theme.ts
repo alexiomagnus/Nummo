@@ -1,5 +1,5 @@
 import { MD3DarkTheme, MD3LightTheme, configureFonts, type MD3Theme } from 'react-native-paper';
-import { accentSwatches, buildScheme, cardColor, dialogColors, positiveColors } from './palette';
+import { accentSwatches, buildScheme, cardColor, dialogColors, glassColors, positiveColors, type GlassColors } from './palette';
 import { paperRoundness, typefaces } from './tokens';
 import type { Preferences } from '../features/settings/preferences';
 
@@ -17,6 +17,7 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
     // The accent as shown, not read (avatar ring «Colore dell'app»): see accentSwatches.
     accentSwatch: accentSwatches(preferences?.accent ?? 'blue', 'mono', dark)[0]!,
     ...dialogColors(s, dark),
+    ...glassColors(s, dark),
   };
   return {
     ...base,
@@ -49,5 +50,12 @@ export const dialogColor = (colors: object): string => (colors as { dialog: stri
 export const cardFill = (colors: object): string | null => (colors as { card?: string | null }).card ?? null;
 // Reads the custom `accentSwatch` colour (the current accent where it is only shown), see accentSwatches in palette.ts.
 export const accentSwatchColor = (colors: object): string => (colors as { accentSwatch: string }).accentSwatch;
+// Reads the custom glass colours (cards, grouped rows, bars, background circles), see glassColors in palette.ts.
+export const glassOf = (colors: object): GlassColors => colors as GlassColors;
+// One surface of the glass language: translucent fill and hairline outline (cards, grouped rows, list cards).
+export const glassSurface = (colors: object) => {
+  const glass = glassOf(colors);
+  return { backgroundColor: glass.glass, borderColor: glass.glassBorder, borderWidth: 1 } as const;
+};
 // Reads the custom `positive` colour (money coming in), see palette.ts.
 export const positiveColor = (colors: object): string => (colors as { positive: string }).positive;

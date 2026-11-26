@@ -164,7 +164,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   // Two tiles of the page's grid (27 November, on request: the card of loose buttons was redone as grouped rows, like «Info»).
   // «Elimina tutte le spese» stays the red pill of every deletion.
   return <>
-    <ListGroup label={t("Backup")}>
+    <ListGroup icon={iconShapes.download} label={t("Backup")}>
       <ActionRow icon={iconShapes.download} title={t("Scarica backup (JSON)")} subtitle={t("Una copia completa dei tuoi dati.")}
         disabled={!enabled || busy} onPress={() => void exportBackup()} />
       <RowDivider />
@@ -188,7 +188,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
       </>}
     </ListGroup>
     {/* Only the expenses (user's request, 22 November): categories, funds, lists, templates and merchants stay. */}
-    <ListGroup label={t("Elimina le spese")}>
+    <ListGroup icon={iconShapes.trash} label={t("Elimina le spese")}>
       {/* One block (user's request, 27 November): what stays, in a line, and the button under it; no icon tile and no hairline between them. */}
       <RowBody>
         <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{t("Restano categorie, fondi, liste ed esercenti.")}</Text>

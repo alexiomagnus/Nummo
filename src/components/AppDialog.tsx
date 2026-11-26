@@ -33,7 +33,7 @@ type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dism
   detents?: boolean;
   // With `detents`: always open in peek (Template), or a peek that shows all the content (the date picker). See ScreenLayer.
   opensHalf?: boolean;
-  fitPeek?: boolean;
+  fitPeek?: boolean | 'shrink';
   children: ReactNode;
 };
 

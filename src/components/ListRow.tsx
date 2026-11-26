@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { cardFill } from '../theme/theme';
-import { layout, radius, spacing } from '../theme/tokens';
+import { glassSurface } from '../theme/theme';
+import { groupGap, layout, radius, spacing } from '../theme/tokens';
 import type { CategoryIcon } from '../domain/category';
 import { CategoryGlyph, useIconStyle } from './CategoryGlyph';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -34,9 +34,11 @@ type Props = {
   trailing?: ReactNode;
   // Hairline under the row; off for the last row of a group so dividers only sit between items.
   divider?: boolean;
-  // A card of its own instead of the hairline divider: outlined in dark, filled with the tinted `card` colour in light
-  // (23 November, user's request), the border then taking the fill's colour so the size does not change.
+  // A glass card of its own instead of the hairline divider (26 November, on request, after Morphe): consecutive outlined rows
+  // read as one group, 3 apart, the outer corners large and the inner ones small (GlobalStyle, `data-glass-item`).
   outlined?: boolean;
+  // DOM id of the row (Spese, Abbonamenti: the detail screen finds the card it opened from).
+  nativeID?: string;
   // Below the row, inside the same divider (inline editor).
   children?: ReactNode;
   // Expandable row: the whole main area is one button (no nested buttons), the children stay outside it; with
@@ -55,9 +57,8 @@ type Props = {
 
 // The one list row of the app (Spese, Categorie): icon tile, title + subtitle, trailing slot, hairline divider.
 // Every row has the same minimum height and centres its content vertically.
-export function ListRow({ icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, opens, dense, subtitleExtra, subtitleBelow, iconless }: Props) {
+export function ListRow({ nativeID, icon, title, subtitle, meta, trailing, divider = true, outlined, children, onPress, pressLabel, expanded, controls, opens, dense, subtitleExtra, subtitleBelow, iconless }: Props) {
   const { colors } = useTheme();
-  const fill = outlined ? cardFill(colors) : null;
   const expandable = onPress !== undefined && expanded !== undefined;
   const opening = onPress !== undefined && opens === true && !expandable;
   const content = <>
@@ -82,17 +83,18 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
       </View>}
     </View>}
   </>;
-  // Outlined rows keep their padding inside the target, so the hover/pressed layer fills the outline exactly: inner
-  // radius = outline radius − border width, square bottom while an expanded panel continues below it.
+  // Outlined rows keep their padding inside the target, so the hover/pressed layer fills the card (clipped by its corners),
+  // square bottom while an expanded panel continues below it.
   // The padding moves inside the target with the minimum height, so the row keeps its previous height.
   const inset = outlined && [styles.outlinedMain, { minHeight: (dense ? denseHeight : rowHeight) + 2 * spacing.xs }];
   const hasChildren = children !== undefined && children !== null && children !== false;
   return (
-    <View role="listitem" style={outlined ? [styles.row, styles.outlined, fill ? { borderColor: fill, backgroundColor: fill } : { borderColor: colors.outlineVariant, backgroundColor: colors.elevation.level1 }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
-      {onPress ? <StateLayerPressable onPress={onPress} layerColor={colors.onSurface} radius={outlined ? innerRadius : radius.control}
+    <View role="listitem" nativeID={nativeID} {...(outlined ? { dataSet: { glassItem: 'true' } } : null)}
+      style={outlined ? [styles.row, styles.outlined, glassSurface(colors)] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
+      {onPress ? <StateLayerPressable onPress={onPress} layerColor={colors.onSurface} radius={outlined ? 0 : radius.control}
         bottomRadius={outlined && hasChildren ? 0 : undefined} accessibilityRole="button"
         accessibilityLabel={pressLabel} aria-expanded={expanded} aria-controls={controls} aria-haspopup={opening ? 'dialog' : undefined} style={[styles.main, dense && styles.dense, outlined ? inset : styles.pressable]}>{content}</StateLayerPressable>
-        : <View style={[styles.main, dense && styles.dense, inset]}>{content}</View>}
+        : <View style={[styles.main, dense && styles.dense, inset, !outlined && styles.plainMain]}>{content}</View>}
       {hasChildren && (outlined ? <View style={styles.outlinedChildren}>{children}</View> : children)}
     </View>
   );
@@ -107,18 +109,19 @@ export const listRowStyles = StyleSheet.create({
 const rowHeight = 56;
 const denseHeight = 52;
 const outlineWidth = 1;
-// The corner of the grouped rows and cards of the other pages (27 November, on request: Spese, Fondi and Liste read as one family).
-const innerRadius = radius.dialog - outlineWidth;
 
 const styles = StyleSheet.create({
   row: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.xs, gap: spacing.sm },
   noDivider: { borderBottomWidth: 0 },
-  outlined: { borderWidth: outlineWidth, borderBottomWidth: outlineWidth, borderRadius: radius.dialog, paddingVertical: 0, gap: 0, marginBottom: spacing.sm, overflow: 'hidden' },
+  outlined: { borderWidth: outlineWidth, borderBottomWidth: outlineWidth, borderRadius: radius.group, paddingVertical: 0, gap: 0, marginBottom: groupGap, overflow: 'hidden' },
   outlinedMain: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   // No gap and no side padding: a divider drawn at the top of the children spans the hover layer edge to edge and
   // starts exactly where it ends. The children pad their own content (spacing.md, like the row).
   outlinedChildren: { paddingBottom: spacing.xs },
   pressable: { paddingHorizontal: spacing.xs },
+  // A plain row (no press target) inside a grouped card: the text starts where the group's label does (18), the action buttons
+  // (48 wide, their own margin) end closer to the edge.
+  plainMain: { paddingLeft: 18, paddingRight: spacing.xs },
   dense: { minHeight: denseHeight },
   main: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: rowHeight },
   text: { flex: 1, minWidth: 0 },

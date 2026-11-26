@@ -194,13 +194,11 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
           <Text variant="labelLarge" style={[styles.amount, { color: theme.colors.onSurfaceVariant }]}>{formatAmount(summary.total)}</Text>
         </View>
       )}
-      <View nativeID={expenseCardId(item.expenseId)}>
-        <ListRow outlined dense opens icon={category?.icon ?? null} title={item.description} subtitle={shortDate}
+      <ListRow nativeID={expenseCardId(item.expenseId)} outlined dense opens icon={category?.icon ?? null} title={item.description} subtitle={shortDate}
           meta={marks || undefined} subtitleExtra={merchantMark}
           pressLabel={t("Apri i dettagli di {p0}, {p1}", { p0: item.description, p1: (merchant ? `${shortDate}, ${merchant}` : shortDate) + (pending ? `, ${t("In attesa di invio")}` : '') })}
           onPress={onOpen ? () => onOpen(item.expenseId) : undefined}
           trailing={<Text variant="titleMedium" style={[listRowStyles.amount, styles.rowAmount]}>{formatAmount(item.amount_minor)}</Text>} />
-      </View>
     </Fragment>
   );
 });
@@ -230,7 +228,7 @@ const styles = StyleSheet.create({
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
   start: { alignSelf: 'flex-start' },
   // Total of the filtered results, same footprint and tone as the «Prossimo mese» card of the subscriptions view.
-  total: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, borderRadius: radius.dialog,
+  total: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, borderRadius: radius.group,
     paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
   totalTile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   totalText: { flex: 1, minWidth: 0 },

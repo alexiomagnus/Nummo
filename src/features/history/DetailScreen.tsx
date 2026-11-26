@@ -7,11 +7,10 @@ import { ScreenLayer } from '../../components/ScreenLayer';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { CategoryIcon } from '../../domain/category';
-import { cardFill } from '../../theme/theme';
 import { heroIconEntry, heroIconSpring } from '../../theme/containerTransform';
 import { springEasing } from '../../theme/themeTransition';
 import { useReducedMotion } from '../../theme/useSizeClass';
-import { layout, radius, spacing } from '../../theme/tokens';
+import { groupGap, layout, radius, spacing } from '../../theme/tokens';
 
 // Detail screen of one card of the Spese page (23 November, on request, in place of the details opened inside the card):
 // one shell for the expenses (ExpenseDetail) and the subscriptions (SubscriptionDetail), on the shared screen layer
@@ -108,13 +107,12 @@ export function Mark({ icon, label, background, color }: { icon: string; label: 
   );
 }
 
-// The details: one group, rows apart by hairlines (no stack of cards); filled like the list cards in light, outlined in dark.
+// The details: grouped rows of the glass language (26 November, on request, after Morphe): each row a card of its own, a little
+// apart, the outer corners of the group large (GlobalStyle, `data-glass-group`).
 export function InfoGroup({ rows }: { rows: readonly ReactNode[] }) {
-  const { colors } = useTheme();
-  const fill = cardFill(colors);
   return (
-    <View style={[styles.group, fill ? { backgroundColor: fill, borderColor: fill } : { borderColor: colors.outlineVariant }]}>
-      {rows.map((row, index) => <View key={index} style={index > 0 && [styles.divided, { borderTopColor: colors.outlineVariant }]}>{row}</View>)}
+    <View {...{ dataSet: { glassGroup: 'true' } }} style={styles.group}>
+      {rows.map((row, index) => <View key={index}>{row}</View>)}
     </View>
   );
 }
@@ -139,17 +137,17 @@ export function InfoRow({ icon, label, value, action }: { icon: ReactNode; label
 export type GridCell = { key: string; icon: ReactNode; label: string; value: string; wide?: boolean; accent?: boolean; onPress?: () => void; accessibilityLabel?: string };
 export function InfoGrid({ cells }: { cells: readonly GridCell[] }) {
   const { colors } = useTheme();
-  const fill = cardFill(colors);
   const rows: GridCell[][] = [];
   for (const cell of cells) {
     const last = rows.at(-1);
     if (!cell.wide && last && last.length === 1 && !last[0]!.wide) last.push(cell); else rows.push([cell]);
   }
   const line = { borderColor: colors.outlineVariant };
+  // A row of the grid is a card of the group; two cells in it apart by a hairline.
   return (
-    <View style={[styles.group, fill ? { backgroundColor: fill, borderColor: fill } : { borderColor: colors.outlineVariant }]}>
-      {rows.map((row, index) => (
-        <View key={row[0]!.key} style={[styles.gridRow, index > 0 && [styles.divided, { borderTopColor: colors.outlineVariant }]]}>
+    <View {...{ dataSet: { glassGroup: 'true' } }} style={styles.group}>
+      {rows.map((row) => (
+        <View key={row[0]!.key} style={styles.gridRow}>
           {row.map((cell, column) => {
             const ink = cell.accent ? colors.onSecondaryContainer : undefined;
             const inner = <>
@@ -210,8 +208,7 @@ const styles = StyleSheet.create({
   merchantName: { flexShrink: 1, fontWeight: '600' },
   marks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
   mark: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  group: { borderWidth: 1, borderRadius: radius.control, overflow: 'hidden' },
-  divided: { borderTopWidth: StyleSheet.hairlineWidth },
+  group: { gap: groupGap },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 64, paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
   rowIcon: { width: 28, alignItems: 'center', justifyContent: 'center' },
   rowText: { flex: 1, minWidth: 0, gap: 2 },

@@ -39,7 +39,7 @@ export function StandardStorage({ protection, onChangeMode }: Common & { protect
   const kept = protection ? (app && protection === 'protected' ? appProtection : protectionText[protection]) : null;
   return (
     <>
-      <ListGroup label={t("Archiviazione")}>
+      <ListGroup icon={iconShapes.database} label={t("Archiviazione")}>
         <StatusRow icon={iconShapes.database} title={t("Su questo dispositivo")} subtitle={app ? t("I dati restano in questa app.") : t("I dati restano in questo browser.")} />
         {kept && <>
           <RowDivider />
@@ -69,7 +69,7 @@ export function AdvancedStorage({ project, cache, onChangeMode, connected = fals
   const [disconnecting, setDisconnecting] = useState(false);
   return (
     <>
-      <ListGroup label={t("Archiviazione")}>
+      <ListGroup icon={iconShapes.database} label={t("Archiviazione")}>
         <StatusRow icon={iconShapes.database} title={t("Archiviazione")} value="Firebase" />
         {project !== '' && <>
           <RowDivider />

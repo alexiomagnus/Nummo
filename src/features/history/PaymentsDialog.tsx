@@ -26,13 +26,11 @@ export function PaymentsDialog({ description, payments, total, canRemove, onRemo
     </AppDialog.Content>
     <AppDialog.ScrollArea style={styles.area}><ScrollView>
       {payments.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Nessun pagamento.")}</Text>}
-      <View role="list" accessibilityLabel={t("Storico dei pagamenti")}>
-        {payments.map((payment, index) => {
+      <View {...{ dataSet: { glassGroup: 'true' } }}><View role="list" accessibilityLabel={t("Storico dei pagamenti")}>
+        {payments.map((payment) => {
           const date = formatDate(payment.date);
           return (
             <View key={payment.key} role="listitem">
-              {/* Hairline dividers between the payments. */}
-              {index > 0 && <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />}
               <View style={styles.row}>
               <Text variant="bodyLarge" style={styles.date}>{date}</Text>
               <Text variant="bodyLarge" style={listRowStyles.amount}>{formatAmount(payment.amount_minor)}</Text>
@@ -43,7 +41,7 @@ export function PaymentsDialog({ description, payments, total, canRemove, onRemo
             </View>
           );
         })}
-      </View>
+      </View></View>
     </ScrollView></AppDialog.ScrollArea>
     {/* No «Chiudi»: the screen's Back closes it (user's request, 23 November). */}
   </AppDialog></Portal>;
@@ -53,7 +51,7 @@ const styles = StyleSheet.create({
   intro: { gap: spacing.xs },
   // Only the rows draw separators; the area's dividers appear only on an edge that hides rows (AppDialog.ScrollArea).
   area: { minHeight: 0 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingLeft: spacing.lg, paddingRight: spacing.xs },
   date: { flex: 1, minWidth: 0 },
   divider: { height: StyleSheet.hairlineWidth },
 });
