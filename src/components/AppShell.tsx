@@ -12,7 +12,7 @@ import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } f
 import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhone, pillGeometry, slotAt, slotWithHysteresis } from './navIndicator';
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
-import { batchKeyboardReports, observeViewportShrink, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
+import { batchKeyboardReports, observeViewportShrink, revealFocusedField, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
 import { observeWholeRows } from '../theme/wholeRows';
 import { useHaptics } from './Haptics';
 import { SnackbarProvider } from './SnackbarHost';
@@ -83,14 +83,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // 300 px keyboard) and what is right under it (the counter of «Descrizione») stayed covered.
   useLayoutEffect(() => {
     if (!keyboardConfirmed || typeof document === 'undefined') return undefined;
-    const reveal = () => {
-      const active = document.activeElement;
-      if (!(active instanceof HTMLElement) || active === document.body) return;
-      const previous = active.style.scrollMarginBottom;
-      active.style.scrollMarginBottom = `${keyboardFieldMargin}px`;
-      active.scrollIntoView({ block: 'nearest' });
-      active.style.scrollMarginBottom = previous;
-    };
+    const reveal = () => revealFocusedField(document, keyboardFieldMargin);
     reveal();
     return observeViewportShrink(window, reveal);
   }, [keyboardConfirmed]);

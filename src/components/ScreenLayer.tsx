@@ -8,6 +8,7 @@ import { overrideDocumentChrome } from '../theme/bootTheme';
 import { motion, radius, sizeClassOf, spacing, type SizeClass } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { useEscape, useFocusHandoff, useOverlayMotion } from './Overlay';
+import { isTextEntry, revealFocusedField } from '../theme/viewport';
 import { useI18n } from '../i18n/I18nProvider';
 import { detailGestureOwner, detentOutcome, fittedPeek, peekOffset, recentVelocity, sheetDragOutcome, sheetDragSlop, sheetGestureOwner, type Detent, type DragSample } from './menuGeometry';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -266,6 +267,14 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     if (target === 'peek') { chrome.current?.(0); chrome.current = null; } else if (!chrome.current) chrome.current = holdChrome();
     setDetent(target);
   }, []);
+  // The frame follows the keyboard one render after the viewport, so after the shell's own reveal: the screen's scroller was
+  // still tall then and the focused field (Esercente, under the description) ended up behind the keyboard. Revealed again
+  // here, once the screen has its new height (user's report, 26 November).
+  useLayoutEffect(() => {
+    if (typeof document === 'undefined') return;
+    const active = document.activeElement as HTMLElement | null;
+    if (active && isTextEntry(active)) revealFocusedField(document, spacing.xl, dom(root.current));
+  }, [frame.height]);
   // The height changes (rotation, the browser's bars): peek keeps its place (half, or fitted again to the content).
   useEffect(() => {
     if (!stops) return;

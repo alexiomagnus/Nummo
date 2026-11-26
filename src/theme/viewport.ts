@@ -173,6 +173,17 @@ export function batchKeyboardReports(commit: (state: KeyboardState) => void, que
   };
 }
 
+// Brings the focused field into view with `margin` left under it, for this scroll only (`scroll-margin-bottom`). Shared by the
+// shell (page scroller) and the screens (their own scroller, which shrinks one render after the viewport: ScreenLayer).
+export function revealFocusedField(doc: Document, margin: number, within?: Element | null): void {
+  const active = doc.activeElement;
+  if (!(active instanceof HTMLElement) || active === doc.body || (within && !within.contains(active))) return;
+  const previous = active.style.scrollMarginBottom;
+  active.style.scrollMarginBottom = `${margin}px`;
+  active.scrollIntoView({ block: 'nearest' });
+  active.style.scrollMarginBottom = previous;
+}
+
 // While the keyboard is open, call `onShrink` whenever the visible viewport gets shorter again: iOS shrinks its visual
 // viewport in steps during the keyboard animation, and a suggestion strip may shrink it later. `onShrink` runs in a
 // microtask, after every listener of that resize event (GlobalStyle's new --nummo-viewport-height included) and still
