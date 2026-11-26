@@ -231,7 +231,7 @@ function FundCard({ item, isDefault, onOpen }: { item: FundMonth; isDefault: boo
   const spentNow = forecast ? item.forecastSpent : item.spent;
   const caption = fund.archived ? t("Archiviato") : forecast ? t("previsti") : t("speso nel mese");
   return (
-    <View role="listitem" nativeID={fundCardId(fund.id)} {...{ dataSet: { wholeRow: 'true' } }} style={[styles.card, { borderColor: colors.outlineVariant }]}>
+    <View role="listitem" nativeID={fundCardId(fund.id)} style={[styles.card, { borderColor: colors.outlineVariant }]}>
       <StateLayerPressable onPress={() => onOpen(fund.id)} accessibilityRole="button" aria-haspopup="dialog" layerColor={colors.onSurface} radius={radius.card - 1}
         accessibilityLabel={t("Apri i dettagli di {p0}, {p1}", { p0: fund.name, p1: fund.archived ? t("Archiviato") : `${formatAmount(spentNow)} ${caption}` })}
         style={styles.cardPress}>

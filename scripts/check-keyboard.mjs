@@ -113,7 +113,7 @@ try {
     window.__frames = [];
     const mobile = ${mobile};
     const start = performance.now();
-    const scroller = document.querySelector('[data-whole-rows]');
+    const scroller = document.querySelector('[data-page-scroll]');
     const tick = (now) => {
       const nav = document.querySelector('[role=navigation]');
       let bar = nav;

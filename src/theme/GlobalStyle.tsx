@@ -33,12 +33,6 @@ export function GlobalStyle({ mode, accent, colorMode }: Props) {
       /* Desktop panel (AppShell): the track stops a corner radius short of both ends, so the bar runs only along the
          straight edge of the rounded panel. Track margins exist only for WebKit scrollbars, which Chromium ignores while
          scrollbar-width/color are set: reset them here. Firefox keeps the thin standard bar, clipped by the corners. */
-      /* Page scroller (AppShell): a row cut by the bottom edge fades out before the edge, a hint that more follows (wholeRows.ts). */
-      [data-whole-rows] [data-clipped] {
-        pointer-events: none;
-        -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent var(--nummo-peek, 100%));
-        mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent var(--nummo-peek, 100%));
-      }
       /* With a mouse or touchpad (any pointer but a coarse one), Chromium draws the standard bar (scrollbar-width/color) with arrow buttons at both ends: the WebKit
          bar below has none (user's request, 21 November: a cleaner bar), the same thin thumb, transparent track, and in
          dialogs the same «only while scrolling». Touch screens keep the overlay bar; Firefox keeps the standard thin one. */

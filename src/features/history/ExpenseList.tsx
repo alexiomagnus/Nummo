@@ -186,7 +186,7 @@ const ExpenseRow = memo(function ExpenseRow({ item, index, heading, summary, cat
   return (
     <Fragment key={item.key}>
       {heading && (
-        <View {...{ dataSet: { wholeRow: 'true' } }} style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
+        <View style={[styles.month, index === 0 && styles.firstMonth]} accessibilityRole="header">
           <View style={styles.monthLabel}>
             <Text variant="titleSmall" style={[styles.monthName, { color: theme.colors.primary }]}>{monthLabel(month, months, locale)}</Text>
             <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>{monthCount}</Text>

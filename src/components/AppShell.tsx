@@ -13,7 +13,6 @@ import { floatingBarBottomSpace, floatingBarSideSpace, isHorizontalDrag, isIPhon
 import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { batchKeyboardReports, observeViewportShrink, revealFocusedField, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
-import { observeWholeRows } from '../theme/wholeRows';
 import { readDrawerFolded, writeDrawerFolded } from '../services/drawerState';
 import { useHaptics } from './Haptics';
 import { SnackbarProvider } from './SnackbarHost';
@@ -141,14 +140,10 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // The scroller fills the rounded panel, which clips it: content scrolls out of view at the panel's own edge, never at
   // a line inside it. The scrollbar would run straight through the corners (browsers do not bend it to the radius):
   // `data-panel-scroll` lets GlobalStyle stop its track a corner radius short of both ends.
-  // Every size with navigation (desktop panel, tablets, phones above the floating bar): a marked row cut by the bottom
-  // edge of the page fades out towards it (`data-whole-rows`, wholeRows.ts).
-  const scrollMarks = hasNav ? { dataSet: showPanel ? { panelScroll: 'true', wholeRows: 'true' } : { wholeRows: 'true' } } : null;
-  useEffect(() => {
-    if (!hasNav || typeof document === 'undefined') return undefined;
-    const node = (scroller.current as { getScrollableNode?: () => unknown } | null)?.getScrollableNode?.();
-    return node instanceof HTMLElement ? observeWholeRows(node) : undefined;
-  }, [hasNav]);
+  // A row cut by the bottom edge stays as it is, plain and usable: the fade that hinted at more below (wholeRows.ts,
+  // 21 November) was removed on 26 November, on request, on every size.
+  // `pageScroll` only names the page scroller for the manual checks (scripts/check-keyboard.mjs).
+  const scrollMarks = hasNav ? { dataSet: showPanel ? { panelScroll: 'true', pageScroll: 'true' } : { pageScroll: 'true' } } : null;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingLeft: insets.left, paddingRight: insets.right }]}>

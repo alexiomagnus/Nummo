@@ -88,7 +88,7 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
   const inset = outlined && [styles.outlinedMain, { minHeight: (dense ? denseHeight : rowHeight) + 2 * spacing.xs }];
   const hasChildren = children !== undefined && children !== null && children !== false;
   return (
-    <View role="listitem" {...{ dataSet: { wholeRow: 'true' } }} style={outlined ? [styles.row, styles.outlined, fill ? { borderColor: fill, backgroundColor: fill } : { borderColor: dense ? colors.outlineVariant : colors.outline }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
+    <View role="listitem" style={outlined ? [styles.row, styles.outlined, fill ? { borderColor: fill, backgroundColor: fill } : { borderColor: dense ? colors.outlineVariant : colors.outline }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
       {onPress ? <StateLayerPressable onPress={onPress} layerColor={colors.onSurface} radius={outlined ? innerRadius : radius.control}
         bottomRadius={outlined && hasChildren ? 0 : undefined} accessibilityRole="button"
         accessibilityLabel={pressLabel} aria-expanded={expanded} aria-controls={controls} aria-haspopup={opening ? 'dialog' : undefined} style={[styles.main, dense && styles.dense, outlined ? inset : styles.pressable]}>{content}</StateLayerPressable>

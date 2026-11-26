@@ -365,11 +365,13 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Seeding and «Ripristina le categorie predefinite»: only the defaults missing by name are added, the rest is never touched (user's
   // request, 25 November: «deve semplicemente ripristinare le categorie standard, nient'altro»; on 24 November it also deleted the
   // categories not in use, after a confirmation: withdrawn).
-  const addDefaults = async () => {
+  // `quiet`: the automatic seeding of a new account says nothing when it succeeds (26 November, on request: the message at the first
+  // access was out of place); a failure is still reported, and the button always confirms.
+  const addDefaults = async (quiet = false) => {
     const missing = missingDefaultCategories(categoryState.categories, t);
-    if (missing.length === 0) { notify("Le categorie predefinite ci sono già."); return; }
+    if (missing.length === 0) { if (!quiet) notify("Le categorie predefinite ci sono già."); return; }
     await backend.importRecords([], missing.map((c) => ({ ...c, id: crypto.randomUUID() })))
-      .then(() => notify("Categorie predefinite aggiunte.")).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
+      .then(() => { if (!quiet) notify("Categorie predefinite aggiunte."); }).catch(() => notify("Categorie non aggiunte: verifica connessione o duplicati."));
   };
   // A new account (empty archive confirmed by the server) starts with the default categories, once per browser.
   const seedAttempted = useRef(false);
@@ -383,7 +385,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       if (localStorage.getItem(seededKey(uid))) return;
       localStorage.setItem(seededKey(uid), new Date().toISOString());
     } catch { /* Storage unavailable: the in-memory guard still prevents repeats; the explicit button remains. */ }
-    void addDefaults();
+    void addDefaults(true);
   }, [seedable]);
   // Products bought, for the expenses that registered a shopping list (shown in their details).
   const listItems = useMemo(() => new Map(store.expenses.filter((e) => e.list_id).map((e) => [e.id, e.list_items])), [store.expenses]);
@@ -514,7 +516,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}
         usage={usedCategories} onCreate={categoryState.createCategory} onDelete={removeCategory} onUpdate={categoryState.updateCategory}
         notify={notify}
-        onResetDefaults={addDefaults} canAddDefaults={synchronized && categoryState.ready} />
+        onResetDefaults={() => addDefaults()} canAddDefaults={synchronized && categoryState.ready} />
     </>}
   </>;
 }
