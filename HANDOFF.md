@@ -2,12 +2,12 @@
 
 ## Riquadro di Info, sfumatura della barra, cerchi più veloci, drawer più largo — 27 novembre 2026
 
-Su richiesta, dopo una registrazione dello schermo dell'app 0.3.13 (Pixel 8). Commit `0178913` (primi tre punti) e il successivo (drawer), su `main`, pubblicati su Hosting `nummo-6b6e2` («Deploy complete!», Rules invariate, bundle non confrontato con l'export). **Nessuna nuova APK**: nessuna modifica in `android/`, l'app 0.3.13 carica il sito. `npm run check` 626/626; nulla provato a vista né sul telefono.
+Su richiesta, dopo una registrazione dello schermo dell'app 0.3.13 (Pixel 8). Commit `0178913` (primi tre punti), su `main`, pubblicati su Hosting `nummo-6b6e2` («Deploy complete!», Rules invariate, bundle non confrontato con l'export). **Nessuna nuova APK**: nessuna modifica in `android/`, l'app 0.3.13 carica il sito. `npm run check` 626/626; nulla provato a vista né sul telefono.
 
 - **Barra in alto e dettaglio** (`ScreenLayer.tsx`): nel video, aprendo il dettaglio di una spesa la barra sfumava subito e per qualche fotogramma la scheda «Totale», rimasta sotto il vetro della barra (la pagina scorre sotto, non c'è nulla di sticky), compariva sopra la barra di stato. Ora `holdChrome(delay)` fa partire la sfumatura al 60 % della salita (`chromeFadeStart`, stima: non misurata la posizione esatta in cui lo schermo raggiunge il bordo; da ritoccare se il lampo resta). Il passaggio da ridotto a intero e la chiusura non cambiano.
 - **Riquadro di Info** (`InfoPage.tsx`, `Orbs.tsx`): segue l'animazione dello sfondo scelta in Aspetto: «Cerchi» i due dischi di prima, «Anelli»/«Spazio»/«Neve»/«Particelle» la stessa animazione su canvas in miniatura (`MotionBackdrop`, inchiostro `onPrimaryContainer`), «Nessuna» niente. `useBackgroundKind` esportato da `Orbs.tsx`; il numero di particelle ha ora un minimo di area 0,1 (era 0,6), identico sugli schermi normali.
 - **Cerchi più veloci** (`GlobalStyle.tsx`, `data-orb`): cicli da 38/46/52/42 s a 17/21/24/19 s (circa 2,2 volte), ritardi scalati; vale anche per i dischi di Info.
-- **Drawer da desktop** (`layout.drawerWidth`): 224 → 240, su richiesta («leggermente più spazio»). `AGENTS.md` aggiornato (storia: 248 fino al 24 novembre, 208 il 24, 224 fino al 27).
+- **Drawer da desktop** (`layout.drawerWidth`): 240 provato su richiesta e **annullato lo stesso giorno**, torna 224 (commit successivo). `AGENTS.md` e commenti riallineati.
 
 ## App Android 0.3.13 — 27 novembre 2026
 

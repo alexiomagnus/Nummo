@@ -82,9 +82,9 @@ export const paperRoundness = radius.control / 5;
 export const layout = {
   floatingBar: 64, // compact floating navigation pill / round action
   railWidth: 80,
-  // 240 since 27 November (user's request: a little more room for the navigation); 224 since 25 November, 208 on 24 November,
+  // 224 since 25 November (user's request: a little more room for the navigation, a little less for the panel); 240 was tried on 27 November and reverted the same day; 208 on 24 November,
   // 248 before.
-  drawerWidth: 240,
+  drawerWidth: 224,
   topBarHeight: 64,
   // Dialogs.
   maxForm: 560,
