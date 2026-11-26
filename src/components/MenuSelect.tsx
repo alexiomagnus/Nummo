@@ -47,13 +47,15 @@ type Props<T extends string> = {
   // The choices on a screen of their own (ChoiceScreen) at every size, instead of the sheet or the menu under the field (user's
   // request, 24 November, for the filters of Spese and Analisi).
   panel?: boolean;
+  // With `panel`, on phones the screen opens whole and not in peek (Categoria of Spese, user's request, 26 November).
+  whole?: boolean;
 };
 
 
 // Compact single-choice selector: a 50 dp field showing the caption and the current value. Used where chips would eat
 // too much width (sort, filters). On phones the choices open in a modal bottom sheet, as in SelectField; from medium
 // width in a Material 3 menu below the field (or above it when there is no room), which returns focus to the field.
-export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style, matchFieldWidth, large, iconOnPhones, panel = false }: Props<T>) {
+export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style, matchFieldWidth, large, iconOnPhones, panel = false, whole = false }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -113,7 +115,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
         </View>
       </View>
       {panel
-        ? open && <ChoiceScreen label={label} options={options} value={value} selectedSuffix={t(", selezionato")} onChoose={onChange} onClose={closeMenu} />
+        ? open && <ChoiceScreen label={label} options={options} value={value} selectedSuffix={t(", selezionato")} onChoose={onChange} onClose={closeMenu} whole={whole} />
         : compact
         ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
         : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={matchFieldWidth ? anchor.width : Math.max(anchor.width, contentWidth)} label={label}>{rows}</AnchoredMenu>}

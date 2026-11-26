@@ -14,14 +14,15 @@ export type Choice<T extends string> = { value: T; label: string; icon?: ReactNo
 // «un pannello a parte per coprire tutta la card» instead of a menu under the field). On phones a panel with three positions that
 // opens in peek (ScreenLayer `detents` `panel`, `opensHalf`); from medium a screen over the content panel with Back, like the date
 // picker. The chosen row is filled with `secondaryContainer` and checked; a tap chooses and closes.
-export function ChoiceScreen<T extends string>({ label, options, value, selectedSuffix, onChoose, onClose }: {
-  label: string; options: readonly Choice<T>[]; value: T | ''; selectedSuffix: string;
+// `whole`: on phones it opens whole instead of in peek (Categoria, 26 November, on request).
+export function ChoiceScreen<T extends string>({ label, options, value, selectedSuffix, onChoose, onClose, whole = false }: {
+  label: string; options: readonly Choice<T>[]; value: T | ''; selectedSuffix: string; whole?: boolean;
   onChoose: (value: T) => void; onClose: () => void;
 }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
-  return <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={onClose} onEscape={onClose} detents="panel" opensHalf>
+  return <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={onClose} onEscape={onClose} detents="panel" opensHalf={!whole}>
     <View role="menu" aria-label={label} style={compact ? styles.edgeToEdge : styles.inset}>
       {options.map((option) => {
         const selected = option.value === value;

@@ -80,20 +80,16 @@ const everyLabel: Record<Recurrence, string> = { weekly: 'Ogni settimana', month
 // yet: the frequency then replaces the saved one and the first payment stays), the chosen date otherwise.
 const calendarStart = (p: Props, renewal: { date: string }) => p.next && p.value !== p.current && p.next.index > 0 ? p.firstDate : renewal.date;
 
-// What the choice means at a glance (user's request, 26 November: the screen was too empty): the frequency in words with the next
-// renewal and its price, in the colours of the row that opened it.
+// What the choice means at a glance (user's request, 26 November: the screen was too empty): the frequency in words, under its icon.
 function FrequencyOverview(props: Props & { renewal: { date: string; amount: number } }) {
-  const { t, locale, formatAmount } = useI18n();
+  const { t } = useI18n();
   const { colors } = useTheme();
   const { tile, glyph } = useHeroIconEntry();
-  const start = calendarStart(props, props.renewal);
   return <View style={[styles.hero, { backgroundColor: colors.secondaryContainer }]}>
     <View ref={tile} style={[styles.heroTile, { backgroundColor: colors.secondary }]}>
       <View ref={glyph}><SvgIcon shape={iconShapes.rotateCcw} size={32} color={colors.onSecondary} /></View>
     </View>
     <Text variant="headlineSmall" accessibilityRole="header" aria-level={2} style={{ color: colors.onSecondaryContainer }}>{t(everyLabel[props.value])}</Text>
-    <Text variant="bodyLarge" style={{ color: colors.onSecondaryContainer }}>
-      {t("Prossimo rinnovo")}: {formatLongDate(start, locale)} · {formatAmount(props.renewal.amount)}</Text>
   </View>;
 }
 

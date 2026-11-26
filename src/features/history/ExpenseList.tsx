@@ -93,7 +93,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
         <View style={compact ? styles.selectsCompact : styles.selects}>
           <MenuSelect panel iconOnPhones label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
             onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
-          <MenuSelect panel label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
+          <MenuSelect panel whole label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
             onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
         </View>
       </View>

@@ -18,8 +18,9 @@ export function FundFilter({ funds, value, onChange, style, large = true }: {
   const { t } = useI18n();
   const { colors } = useTheme();
   const options = useMemo(() => [
-    { value: allFunds, label: t("Tutti i fondi"), icon: <SvgIcon shape={iconShapes.wallet} size={22} color={colors.onSurfaceVariant} /> },
+    // «Senza fondo» before «Tutti i fondi» (user's request, 26 November).
     { value: noFund, label: t("Senza fondo"), icon: <NoFundAvatar size={24} /> },
+    { value: allFunds, label: t("Tutti i fondi"), icon: <SvgIcon shape={iconShapes.wallet} size={22} color={colors.onSurfaceVariant} /> },
     ...[...funds].sort((a, b) => Number(a.archived) - Number(b.archived) || a.name.localeCompare(b.name))
       .map((fund) => ({ value: fund.id, label: fund.archived ? t("{p0} (archiviato)", { p0: fund.name }) : fund.name, icon: <FundAvatar fund={fund} size={24} /> })),
   ], [funds, t, colors]);
