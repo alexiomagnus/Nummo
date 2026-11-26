@@ -52,8 +52,6 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
       {/* The grouped rows of «Lista scontrini», «Info» and «Archiviazione e backup» (user's request, 27 November: Impostazioni,
           Notifiche and Templates redone like them). */}
       <ListGroup label={t("Template")}>
-        <RowBody><Text variant="bodyMedium" style={muted}>{t("Un template è una spesa già pronta, semplifica la gestione delle spese.")}</Text></RowBody>
-        <RowDivider />
         <ToggleRow icon={iconShapes.template} title={t("Usa i template")} value={enabled} onChange={onToggle}
           subtitle={enabled ? t("In Nuova spesa compare il pulsante Template.") : t("In Nuova spesa non compare il pulsante Template.")} />
       </ListGroup>

@@ -76,7 +76,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   const resetAll = () => { onReset(); resetAppLockDelay(); if (profile) { saveProfileImage(noProfileImage, profile.scope); if (profile.scope !== localProfileScope) saveProfileRing(defaultProfileRing, profile.scope); } onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
-  const phone = useSizeClass() === 'compact';
+  const sizeClass = useSizeClass();
+  const phone = sizeClass === 'compact';
+  const desktop = sizeClass === 'expanded';
   const device = deviceTimeZone();
   const zones = timeZoneChoices([device, preferences.timeZone]);
   return (
@@ -168,6 +170,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         <RowDivider />
         <ToggleRow icon={iconShapes.wallet} title={t("Mostra fondi archiviati")} subtitle={t("Nella pagina Fondi, i fondi che non usi più.")}
           value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
+        {/* Desktop only: the drawer's «Comprimi» row (27 November, on request). */}
+        {desktop && <><RowDivider /><ToggleRow icon={iconShapes.chevronLeft} title={t("Pulsante per comprimere il menu")} subtitle={t("Da computer, in fondo al menu a sinistra. Spento, il menu resta sempre aperto.")}
+          value={preferences.drawerToggle} onChange={(drawerToggle) => onChange({ drawerToggle })} /></>}
         {/* Only in the Android app: never in the browser (23 November, on request). */}
         {vibrationAvailable && <><RowDivider /><ToggleRow icon={iconShapes.flash} title={t("Vibrazione")} subtitle={t(vibrationNote)}
           value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} /></>}

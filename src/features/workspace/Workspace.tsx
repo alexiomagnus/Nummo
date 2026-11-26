@@ -213,7 +213,7 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, rece
   useRequest(settingsRequest, () => navigate('settings'));
   useRequest(notificationsRequest, () => navigate('notifications'));
   return <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
-    fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }}
+    fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }} drawerToggle={props.dashboardPreferences.drawerToggle}
     actions={<><SyncChip status={status} />{topActions}</>}>
     <Sections {...props} section={section} onNavigate={navigate} onDone={finish} />
   </AppShell>;

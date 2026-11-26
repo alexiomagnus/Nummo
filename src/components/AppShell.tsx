@@ -14,10 +14,11 @@ import { panelColor } from '../theme/theme';
 import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { batchKeyboardReports, observeViewportShrink, revealFocusedField, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
 import { observeWholeRows } from '../theme/wholeRows';
+import { readDrawerFolded, writeDrawerFolded } from '../services/drawerState';
 import { useHaptics } from './Haptics';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
-import { SvgIcon } from './SvgIcon';
+import { iconShapes, SvgIcon } from './SvgIcon';
 
 export type Destination<T extends string = string> = { value: T; label: string; icon: string };
 
@@ -30,6 +31,8 @@ type Props<T extends string> = {
   // Primary action (new expense): extended FAB on compact, FAB in the rail, extended FAB in the drawer.
   // Hidden on compact while its own screen is open. It is not part of `destinations`.
   fab?: { label: string; icon: string; target: T };
+  // Desktop drawer: offer the «Comprimi» row (default). Off, the drawer is always open, whatever was saved.
+  drawerToggle?: boolean;
   // Without navigation (sign-in, guide): makes the brand a button, e.g. back to the sign-in.
   brand?: { label: string; onPress: () => void };
   children: ReactNode;
@@ -67,7 +70,7 @@ const keyboardFieldMargin = spacing.xl;
 
 // Adaptive Material 3 shell: top app bar + navigation bar (compact), rail (medium) or
 // standing drawer (expanded). The content scrolls inside the shell, nothing is position: fixed.
-export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, brand, children }: Props<T>) {
+export function AppShell<T extends string>({ destinations, selected, onSelect, actions, fab, brand, drawerToggle = true, children }: Props<T>) {
   const theme = useTheme();
   const { colors } = theme;
   const size = useSizeClass();
@@ -114,6 +117,9 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     scroller.current?.scrollTo({ y: 0, animated: false });
   }, [onSelect]);
   const hasNav = Boolean(destinations?.length);
+  // Desktop: the drawer folds to icons only (user's request, 27 November), giving the panel the room. Remembered in this browser (services/drawerState.ts).
+  const [drawerFolded, setDrawerFolded] = useState(readDrawerFolded);
+  const toggleDrawer = useCallback(() => setDrawerFolded((value) => { writeDrawerFolded(!value); return !value; }), []);
   // Hide on touch, but keep its space until the viewport confirms the keyboard. Removing it on pointerdown would
   // clamp scrollTop near the bottom, shifting another control under the finger before pointerup/click.
   const navMounted = hasNav && size === 'compact';
@@ -172,7 +178,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
       </View>
         <View style={styles.body}>
           {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
-          {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
+          {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} folded={drawerToggle && drawerFolded} onToggle={drawerToggle ? toggleDrawer : undefined} />}
           {/* `appPanel`: the area a page-level layer covers from medium up (the expense detail, ExpenseDetail.tsx). */}
           <View {...{ dataSet: { appPanel: 'true' } }} style={[styles.scroll, panel, styles.panelClip, { backgroundColor: panelBg }]}>
           <ScrollView ref={scroller} style={styles.scroll} {...scrollMarks} keyboardShouldPersistTaps="handled"
@@ -490,29 +496,41 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
   );
 }
 
-function Drawer<T extends string>({ destinations, selected, onSelect, fab }: NavProps<T>) {
+function Drawer<T extends string>({ destinations, selected, onSelect, fab, folded, onToggle }: NavProps<T> & { folded: boolean; onToggle?: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const fabIcon = useIconSource(fab?.icon);
+  const toggleLabel = folded ? t('Espandi il menu') : t('Comprimi il menu');
   return (
-    <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, { backgroundColor: colors.background }]}>
-      {fab && (
+    <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, folded && styles.drawerFolded, { backgroundColor: colors.background }]}>
+      {fab && (folded ? (
+        <FAB mode="flat" icon={fabIcon} accessibilityLabel={fab.label} onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
+          style={[styles.railFab, styles.drawerFabFolded, { backgroundColor: colors.primaryContainer }]} />
+      ) : (
         <FAB mode="flat" customSize={60} label={fab.label} icon={fabIcon}
           accessibilityLabel={fab.label} onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
           style={[styles.drawerFab, { backgroundColor: colors.primaryContainer }]} />
-      )}
+      ))}
       {destinations.map((item) => {
         const active = item.value === selected;
         const color = active ? colors.onSecondaryContainer : colors.onSurfaceVariant;
         return (
           <StateLayerPressable key={item.value} layerColor={color} accessibilityRole="button" radius={radius.nav}
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
-            style={[styles.drawerItem, active && { backgroundColor: colors.secondaryContainer }]}>
+            style={[styles.drawerItem, folded && styles.drawerItemFolded, active && { backgroundColor: colors.secondaryContainer }]}>
             <SvgIcon shape={item.icon} size={24} color={color} />
-            <Text variant="titleSmall" style={{ color, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
+            {!folded && <Text variant="titleSmall" style={{ color, fontWeight: active ? '700' : '500' }}>{item.label}</Text>}
           </StateLayerPressable>
         );
       })}
+      {onToggle && <>
+      {/* At the foot, a row like the destinations (same height, shape and colours), so it reads as part of the menu. */}
+      <StateLayerPressable layerColor={colors.onSurfaceVariant} accessibilityRole="button" accessibilityLabel={toggleLabel} aria-expanded={!folded}
+        radius={radius.nav} onPress={onToggle} style={[styles.drawerItem, styles.drawerToggle, folded && styles.drawerItemFolded]}>
+        <SvgIcon shape={folded ? iconShapes.chevronRight : iconShapes.chevronLeft} size={24} color={colors.onSurfaceVariant} />
+        {!folded && <Text variant="titleSmall" style={{ color: colors.onSurfaceVariant, fontWeight: '500' }}>{t('Comprimi')}</Text>}
+      </StateLayerPressable>
+      </>}
     </View>
   );
 }
@@ -548,5 +566,9 @@ const styles = StyleSheet.create({
   railIndicator: { overflow: 'hidden', width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
   drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.lg + 4 },
   drawerFab: { alignSelf: 'flex-start', marginTop: spacing.md, marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.button },
+  drawerFolded: { width: layout.railWidth, alignItems: 'center', paddingHorizontal: spacing.sm },
+  drawerToggle: { marginTop: 'auto' },
+  drawerFabFolded: { alignSelf: 'center', marginLeft: 0, marginTop: 0, marginBottom: 0 },
+  drawerItemFolded: { width: 56, paddingHorizontal: 0, justifyContent: 'center' },
   drawerItem: { height: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
 });
