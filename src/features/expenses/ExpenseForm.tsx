@@ -206,15 +206,15 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
           style={styles.scanHalf} />}
         {!(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
       </View></RowBody></ListGroup>}
-      {/* The fields in one grouped box, like the other pages, with its label on every size (user's request, 27 November). */}
-      <ListGroup icon={iconShapes.receipt} label={t("Dettagli della spesa")}><RowBody tight>
+      {/* The fields in one grouped box, like the other pages, with its label from medium up: on phones it went (27 November) so «Salva spesa» fits above the navigation. */}
+      <ListGroup icon={iconShapes.receipt} label={size === 'compact' ? undefined : t("Dettagli della spesa")}><RowBody tight>
       {/* Templates turned on but none saved yet: the button cannot appear, so say why. */}
       {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il pulsante Template compare quando crei un template nella pagina Templates.")}</Text>}
       {scanEnabled && scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
         onApply={(patch, read) => { update(patch); setScanned(read); }} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
-        fund={fundField ?? undefined} fundBelow={size === 'compact'}
+        fund={fundField ?? undefined} fundBelow={size === 'compact'} inlineRow={desktop}
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
       </RowBody></ListGroup>
@@ -237,7 +237,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
           <View style={[styles.actions, { marginTop: blockGap - formGap }]}>
             <Button mode="contained" onPress={() => { haptic(); save(); }} disabled={!enabled} loading={submission.status === 'sending'}
               contentStyle={styles.button} labelStyle={styles.label} style={styles.submit}>
-              {submission.status === 'sending' ? t("In attesa di conferma…") : t("Salva")}
+              {submission.status === 'sending' ? t("In attesa di conferma…") : t("Salva spesa")}
             </Button>
           </View>
         )}

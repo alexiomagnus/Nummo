@@ -58,6 +58,7 @@ export const english: Readonly<Record<string, string>> = {
   "Animazione dello sfondo": "Background animation",
   "Animazione": "Animation",
   "Material You": "Material You",
+  "Salva spesa": "Save expense",
   "Cerchi": "Circles",
   "Anelli": "Rings",
   "Spazio": "Space",

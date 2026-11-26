@@ -71,7 +71,7 @@ function Canvas({ kind }: { kind: Background }) {
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (kind === 'rings') {
-        rings = Array.from({ length: 5 }, (_, i) => ({ x: rand(0.1, 0.9) * w, y: rand(0.1, 0.9) * h, age: i / 5, period: rand(11, 17), max: rand(0.35, 0.6) * Math.min(Math.max(w, 400), 900) }));
+        rings = Array.from({ length: 5 }, (_, i) => ({ x: rand(0.1, 0.9) * w, y: rand(0.1, 0.9) * h, age: i / 5, period: rand(24, 36), max: rand(0.35, 0.6) * Math.min(Math.max(w, 400), 900) }));
       } else {
         motes = Array.from({ length: count(kind, w, h) }, () => kind === 'snow'
           ? { x: rand(0, w), y: rand(0, h), r: rand(1.2, 4), vx: rand(-4, 4), vy: rand(14, 34), phase: rand(0, 6.28), speed: rand(0.4, 1) }

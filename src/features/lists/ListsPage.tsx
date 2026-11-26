@@ -133,7 +133,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
         <QuietToggle open={showArchived} title={t("Liste archiviate ({p0})", { p0: archived.length })} onPress={() => setShowArchived(!showArchived)} />
         {showArchived && <Reveal role="list" accessibilityLabel={t("Liste archiviate")} style={styles.list}>{archived.map(card)}</Reveal>}
         {/* All the archived lists at once (user's request, 22 November); their expenses stay in Spese with the products. */}
-        {showArchived && <DangerButton style={compact ? styles.full : styles.start}
+        {showArchived && <DangerButton style={[compact ? styles.full : styles.start, styles.archivedDelete]}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />} onPress={() => setConfirmArchived(true)}>
           {t("Elimina le liste archiviate")}</DangerButton>}
       </View>}
@@ -344,7 +344,7 @@ const ItemRow = memo(function ItemRow({ item, editable, last, onToggle, onEdit }
         </View>
         <Text variant="bodyLarge" style={[styles.grow, item.checked && { color: colors.onSurfaceVariant, textDecorationLine: 'line-through' }]}>{item.name}</Text>
       </StateLayerPressable>
-      {editable && <IconButton style={styles.iconButton} accessibilityLabel={t("Modifica {p0}", { p0: item.name })} onPress={() => onEdit(item)}
+      {editable && <IconButton style={styles.itemEdit} accessibilityLabel={t("Modifica {p0}", { p0: item.name })} onPress={() => onEdit(item)}
         icon={pencilIcon} />}
     </View>
   );
@@ -382,6 +382,8 @@ const styles = StyleSheet.create({
   start: { alignSelf: 'flex-start' },
   // «Elimina le liste archiviate» as wide as the section on phones (user's request, 26 November).
   full: { alignSelf: 'stretch' },
+  // Room between the last archived card and the red button (27 November, on request: they touched).
+  archivedDelete: { marginTop: spacing.md },
   // Title and lists are one block: `lg` between them instead of the page's section gap.
   overviewHeader: { marginBottom: spacing.lg - layout.sectionGap },
   headerButton: { flexShrink: 0 },
@@ -405,5 +407,8 @@ const styles = StyleSheet.create({
   box: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   dim: { opacity: 0.6 },
   iconButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
+  // The pencil of a product row, like its check on the left: flush with the card on the right, top and bottom, square, so the card's
+  // own corners clip the mouse's hover layer and it follows the outline (27 November, on request; it was a rounded square inside).
+  itemEdit: { margin: 0, width: layout.minTouch, height: 'auto', alignSelf: 'stretch', borderRadius: 0 },
   checkout: { gap: spacing.sm },
 });
