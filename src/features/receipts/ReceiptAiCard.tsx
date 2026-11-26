@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ActivityIndicator, HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { ListGroup, RowBody, RowDivider, ToggleRow } from '../../components/ActionList';
+import { ActionRow, ListGroup, RowBody, RowDivider, ToggleRow } from '../../components/ActionList';
 import { iconShapes } from '../../components/SvgIcon';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { SelectField } from '../../components/SelectField';
@@ -32,6 +32,8 @@ export function ReceiptAiCard() {
   // From medium: as wide as each other (the `SameWidthGroup` of «Lista scontrini»), never the whole row.
   const sameWidth = useSameWidth();
   const { enabled, provider, model } = ai.settings;
+  // The options can be hidden (user's request, 26 November); they start hidden once a service and a key are set.
+  const [shown, setShown] = useState(() => provider === 'none' || ai.apiKey === '');
   const list = useAiModels(ai.settings, enabled ? ai.apiKey : '');
   // With no model chosen yet, a fresh list proposes a small one that reads pictures; a name already written is kept.
   const { change } = ai;
@@ -51,6 +53,10 @@ export function ReceiptAiCard() {
     <ListGroup label={t("Analisi scontrini con AI")}>
       <ToggleRow icon={iconShapes.receipt} title={t("Scansione dello scontrino")} subtitle={t("In Nuova spesa, il pulsante Scansiona scontrino.")}
         value={enabled} onChange={(value) => ai.change({ enabled: value })} />
+      <RowDivider />
+      <ActionRow icon={shown ? iconShapes.chevronUp : iconShapes.chevronDown} tone="secondary" title={shown ? t("Nascondi le impostazioni") : t("Mostra le impostazioni")}
+        onPress={() => setShown((value) => !value)} />
+      {shown && <>
       <RowDivider />
       {/* Greyed out (M3 disabled opacity) and unreachable while the scan is off. Same grouped-rows language as «Info» and
           «Archiviazione e backup» (user's request, 27 November: the page looked confused). */}
@@ -82,6 +88,7 @@ export function ReceiptAiCard() {
         </View>}
       </View>
       </RowBody>
+      </>}
     </ListGroup>
   );
 }

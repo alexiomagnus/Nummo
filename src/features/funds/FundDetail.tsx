@@ -40,7 +40,7 @@ export type FundDetailProps = {
 export function FundDetail(props: FundDetailProps) {
   const { t } = useI18n();
   const { fund } = props.item;
-  return <Portal><ScreenLayer key={fund.id} detents label={t("Dettagli di {p0}", { p0: fund.name })}
+  return <Portal><ScreenLayer key={fund.id} label={t("Dettagli di {p0}", { p0: fund.name })}
     backLabel={t("Torna ai fondi")} onBack={props.onClose} onEscape={props.onClose}>
     <FundContent {...props} />
   </ScreenLayer></Portal>;

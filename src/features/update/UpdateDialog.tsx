@@ -7,11 +7,10 @@ import { screenActionStyles } from '../../components/screenActions';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { downloadProgress, type AppRelease } from '../../domain/appUpdate';
 import { useI18n } from '../../i18n/I18nProvider';
-import { dateTimeFormat, numberFormat } from '../../i18n/translate';
+import { numberFormat } from '../../i18n/translate';
 import { allowUpdateInstallsOnDevice, androidUpdater, downloadUpdateOnDevice, installUpdateOnDevice, type UpdateFailure } from '../../services/androidApp';
 import { radius, spacing } from '../../theme/tokens';
 import { openExternal } from '../session/firebaseConnection';
-import { ReleaseNotes } from './ReleaseNotes';
 
 type Phase =
   | { kind: 'offer' }
@@ -21,8 +20,7 @@ type Phase =
   | { kind: 'installing' }
   | { kind: 'failed'; reason: UpdateFailure | 'install' | 'permission' };
 
-// «Aggiornamento disponibile» (27 November, on request): a screen with the installed and the new version in a tonal hero, the
-// release notes, «Più tardi» and «Aggiorna». In an app with the updater (0.3.6+) «Aggiorna» downloads the APK inside the app
+// «Aggiornamento disponibile» (27 November, on request): a screen with the installed and the new version in a tonal hero (no notes: they are in «Note di rilascio»), «Più tardi» and «Aggiorna». In an app with the updater (0.3.6+) «Aggiorna» downloads the APK inside the app
 // with a progress bar, the app verifies it (SHA-256 when the release has one, package, newer version, same signing key) and
 // Android's installer asks the user to confirm; the «install unknown apps» permission is asked first if missing. In an older
 // app (0.3.5) «Aggiorna» opens the release on GitHub, outside the app. Back, «Più tardi» or «Annulla download» stop it.
@@ -80,7 +78,6 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
   };
 
   const megabytes = (bytes: number) => numberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(bytes / (1024 * 1024));
-  const published = current.publishedAt ? dateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }).format(new Date(current.publishedAt)) : null;
   const busy = phase.kind === 'downloading' || phase.kind === 'installing';
   const failure = phase.kind === 'failed' ? failureText(t, phase.reason) : null;
   const pill = [screenActionStyles.button];
@@ -93,19 +90,12 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
         <ScrollView contentContainerStyle={styles.content}>
           <View style={[styles.hero, { backgroundColor: colors.primaryContainer }]}
             {...({ role: 'region', 'aria-label': t("Da {p0} a {p1}", { p0: installed, p1: current.version }) } as object)}>
-            <View pointerEvents="none" style={[styles.disc, { backgroundColor: colors.primary }]} />
             <View style={[styles.badge, { backgroundColor: colors.primary }]}>
               <SvgIcon shape={iconShapes.download} size={28} color={colors.onPrimary} />
             </View>
             <Text variant="labelLarge" style={{ color: colors.onPrimaryContainer, opacity: 0.8 }}>{t("Nuova versione")}</Text>
             <Text style={[styles.version, { color: colors.onPrimaryContainer }]} numberOfLines={1} adjustsFontSizeToFit>{current.version}</Text>
-            <View style={styles.chips}>
-              <Chip label={t("Installata")} value={installed} fill={colors.surface} ink={colors.onSurface} />
-              <SvgIcon shape={iconShapes.chevronRight} size={18} color={colors.onPrimaryContainer} />
-              <Chip label={t("Nuova")} value={current.version} fill={colors.primary} ink={colors.onPrimary} />
-            </View>
-            <Text variant="bodySmall" style={[styles.center, { color: colors.onPrimaryContainer, opacity: 0.8 }]}>
-              {[published, t("{p0} MB", { p0: megabytes(current.apk.size) })].filter(Boolean).join(' · ')}</Text>
+            <Text variant="bodyMedium" style={[styles.center, { color: colors.onPrimaryContainer, opacity: 0.8 }]}>{t("Installata: {p0}", { p0: installed })}</Text>
           </View>
           {phase.kind === 'downloading' && <Progress received={phase.received} total={phase.total} megabytes={megabytes} />}
           {phase.kind === 'installing' && <Note icon={iconShapes.info} text={t("Conferma l'installazione nella finestra di Android. Nummo si chiuderà e si riaprirà aggiornato: i tuoi dati restano.")} />}
@@ -113,10 +103,6 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
           {phase.kind === 'ready' && <Note icon={iconShapes.info} text={t("Aggiornamento scaricato e verificato. Installalo quando vuoi.")} />}
           {failure && <Note icon={iconShapes.info} text={failure} error />}
           {!updater && <Note icon={iconShapes.externalLink} text={t("Questa versione dell'app non può scaricare gli aggiornamenti da sola: «Aggiorna» apre la pagina della release su GitHub, da cui scaricare il file APK.")} />}
-          <View style={styles.notes}>
-            <Text variant="titleMedium" accessibilityRole="header" aria-level={2}>{t("Novità")}</Text>
-            {current.notes.trim() ? <ReleaseNotes notes={current.notes} /> : <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Nessuna nota per questa versione.")}</Text>}
-          </View>
         </ScrollView>
       </AppDialog.ScrollArea>
       <AppDialog.Actions>
@@ -149,15 +135,6 @@ function failureText(t: ReturnType<typeof useI18n>['t'], reason: UpdateFailure |
     case 'install': return t("Android non ha installato l'aggiornamento. Riprova.");
     default: return t("Aggiornamento non riuscito. Riprova.");
   }
-}
-
-function Chip({ label, value, fill, ink }: { label: string; value: string; fill: string; ink: string }) {
-  return (
-    <View style={[styles.chip, { backgroundColor: fill }]}>
-      <Text variant="labelMedium" style={{ color: ink, opacity: 0.8 }}>{label}</Text>
-      <Text variant="labelLarge" style={[styles.bold, { color: ink }]}>{value}</Text>
-    </View>
-  );
 }
 
 // Expressive linear progress: a thick rounded track, the filled part in the main colour, percentage and megabytes.
@@ -198,12 +175,8 @@ const styles = StyleSheet.create({
   area: { paddingHorizontal: 0 },
   content: { gap: spacing.lg, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm },
   hero: { borderRadius: radius.dialog, overflow: 'hidden', alignItems: 'center', paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, gap: spacing.xs },
-  disc: { position: 'absolute', width: 260, height: 260, borderRadius: 130, right: -110, top: -120, opacity: 0.12 },
   badge: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   version: { fontSize: 56, lineHeight: 64, fontWeight: '800', letterSpacing: -1.5, textAlign: 'center' },
-  chips: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginVertical: spacing.sm },
-  chip: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6 },
-  bold: { fontWeight: '700' },
   center: { textAlign: 'center' },
   progress: { gap: spacing.sm },
   progressText: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -211,5 +184,4 @@ const styles = StyleSheet.create({
   fill: { height: '100%', borderRadius: 6 },
   note: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, borderRadius: radius.card, padding: spacing.lg },
   noteText: { flex: 1, minWidth: 0 },
-  notes: { gap: spacing.md },
 });

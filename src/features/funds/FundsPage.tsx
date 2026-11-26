@@ -3,13 +3,14 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { Button, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
+import { QuietToggle } from '../../components/ActionList';
 import { Reveal } from '../../components/Reveal';
 import { SelectField } from '../../components/SelectField';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { parseSyncedExpense, type SyncedExpense, type SyncedFund } from '../../domain/firestore';
 import {
-  addMonths, firstOverviewMonth, fundInUse, hasBalanceData, monthOf, monthOverview, movementsInMonth, unassignedExpenses,
+  addMonths, firstOverviewMonth, fundInUse, hasBalanceData, monthOf, monthOverview, unassignedExpenses,
   type FundMonth, type MonthKind, type MovementKind,
 } from '../../domain/funds';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -86,7 +87,6 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const balanceFunds = useMemo(() => new Set(funds.filter((fund) => hasBalanceData(fund, movements)).map((fund) => fund.id)), [funds, movements]);
   const movableFunds = activeFunds.filter((fund) => balanceFunds.has(fund.id));
   const balances = useMemo(() => new Map(overview.funds.map((item) => [item.fund.id, item.balance])), [overview]);
-  const monthMovements = useMemo(() => movementsInMonth(movements, month), [movements, month]);
   const orphans = useMemo(() => unassignedExpenses(expenses, funds), [expenses, funds]);
   // Earliest month with data (first fund start or oldest expense), up to one year ahead (forecasts only).
   const first = useMemo(() => firstOverviewMonth(funds, expenses, today), [funds, expenses, today]);
@@ -167,21 +167,20 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
         <Button mode="outlined" disabled={!canWrite || activeFunds.length === 0} onPress={() => setAssigning(true)}>{t("Assegna a un fondo")}</Button>
       </View>}
 
+      {active.length > 0 && <Text variant="titleMedium" accessibilityRole="header" aria-level={2} style={styles.listTitle}>{t("I tuoi fondi")}</Text>}
       <View role="list" accessibilityLabel={t("Fondi")} style={styles.list}>
         {active.map((item) => <FundCard key={item.fund.id} item={item} isDefault={item.fund.id === defaultFundId} onOpen={setDetailId} />)}
       </View>
 
       {showArchivedFunds && archived.length > 0 && <View style={styles.list}>
-        <Button mode="text" style={styles.start} aria-expanded={showArchived} onPress={() => setShowArchived(!showArchived)}
-          icon={({ size, color }) => <SvgIcon shape={showArchived ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>
-          {t("Fondi archiviati ({p0})", { p0: archived.length })}</Button>
+        <QuietToggle open={showArchived} title={t("Fondi archiviati ({p0})", { p0: archived.length })} onPress={() => setShowArchived(!showArchived)} />
         {showArchived && <Reveal role="list" accessibilityLabel={t("Fondi archiviati")} style={styles.list}>
           {archived.map((item) => <FundCard key={item.fund.id} item={item} isDefault={false} onOpen={setDetailId} />)}
         </Reveal>}
       </View>}
 
       {/* The month's incomes and transfers, each deletable (27 November, on request). */}
-      {funds.length > 0 && <MovementsSection movements={monthMovements} funds={funds} monthLabel={monthLabel} canWrite={canWrite}
+      {funds.length > 0 && <MovementsSection all={movements} funds={funds} canWrite={canWrite}
         onRemove={async (movement) => {
           const done = await remote.removeMovement(movement);
           if (done) notify(movement.kind === 'transfer' ? "Trasferimento eliminato." : "Entrata eliminata.");
@@ -231,8 +230,8 @@ function FundCard({ item, isDefault, onOpen }: { item: FundMonth; isDefault: boo
   const spentNow = forecast ? item.forecastSpent : item.spent;
   const caption = fund.archived ? t("Archiviato") : forecast ? t("previsti") : t("speso nel mese");
   return (
-    <View role="listitem" nativeID={fundCardId(fund.id)} style={[styles.card, { borderColor: colors.outlineVariant }]}>
-      <StateLayerPressable onPress={() => onOpen(fund.id)} accessibilityRole="button" aria-haspopup="dialog" layerColor={colors.onSurface} radius={radius.card - 1}
+    <View role="listitem" nativeID={fundCardId(fund.id)} style={[styles.card, { borderColor: colors.outlineVariant, backgroundColor: colors.elevation.level1 }]}>
+      <StateLayerPressable onPress={() => onOpen(fund.id)} accessibilityRole="button" aria-haspopup="dialog" layerColor={colors.onSurface} radius={radius.dialog - 1}
         accessibilityLabel={t("Apri i dettagli di {p0}, {p1}", { p0: fund.name, p1: fund.archived ? t("Archiviato") : `${formatAmount(spentNow)} ${caption}` })}
         style={styles.cardPress}>
         <View style={styles.cardHeader}>
@@ -306,7 +305,11 @@ const styles = StyleSheet.create({
   empty: { borderRadius: radius.card, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
   notice: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, borderWidth: 1, borderRadius: radius.card, padding: spacing.lg },
   list: { gap: spacing.md },
-  card: { borderWidth: 1, borderRadius: radius.card },
+  // Heading above the fund cards, as written; the root's gap is wider than the title needs to its cards.
+  listTitle: { paddingHorizontal: spacing.sm, marginBottom: -spacing.sm },
+  // The same box as the grouped rows of the other pages (ListGroup: dialog corner, level-1 fill, 1 px outline), so the cards and
+  // «Tutte le operazioni» read as one family (user's request, 27 November).
+  card: { borderWidth: 1, borderRadius: radius.dialog, overflow: 'hidden' },
   cardPress: { padding: spacing.lg, gap: spacing.md },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm },

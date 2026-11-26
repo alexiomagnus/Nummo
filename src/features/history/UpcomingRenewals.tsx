@@ -51,7 +51,7 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
           summary in the card's colour. On phones it is dragged like the details (whole, peek, closed) and has no Back button (user's
           request, 24 November). */}
       {open && <Portal><ScreenLayer label={t("Prossimo mese")} backLabel={t("Torna agli abbonamenti")}
-        onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents>
+        onBack={() => setOpen(false)} onEscape={() => setOpen(false)}>
         <RenewalsContent renewals={renewals} categories={categories} soon={soon} count={count} days={days} />
       </ScreenLayer></Portal>}
     </View>

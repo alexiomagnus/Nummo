@@ -9,7 +9,7 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { selectionFill } from '../../theme/motion';
 import { useI18n } from '../../i18n/I18nProvider';
 import { otherCategoriesKey, type Series } from '../../domain/history';
-import { shape, spacing } from '../../theme/tokens';
+import { radius, spacing } from '../../theme/tokens';
 import { categoryPercent } from './categoryPresentation';
 import { seriesColor, type ChartColors } from './charts';
 import { seriesLabel } from './seriesLabel';
@@ -27,18 +27,19 @@ function columnsOf<T>(items: readonly T[], count: number): T[][] {
   return Array.from({ length: count }, (_, i) => items.slice(i * size, (i + 1) * size)).filter((column) => column.length > 0);
 }
 
-// Selected/hovered legend rows (donut and blocks share this legend): a squarer highlight than cards and controls.
-const legendRadius = shape.md;
-
 export function CategoryLegend({ series, others, categories, total, colors, active, onActive, showSeries = true, onOpen, compact = false }: Props) {
   const { t } = useI18n();
+  const theme = useTheme();
+  // One box for every legend (under the blocks and beside or under the donut), like the grouped rows of the other pages.
+  const box = [styles.box, { backgroundColor: theme.colors.elevation.level1, borderColor: theme.colors.outlineVariant }];
   const [expanded, setExpanded] = useState(false);
   const [width, setWidth] = useState(0);
   const columns = compact && width >= twoColumnsFrom ? 2 : 1;
   const icons = useMemo(() => new Map(categories.map((category) => [category.id, category.icon] as const)), [categories]);
   // Compact table: equal columns; spacing separates rows without divider lines.
   const table = <T,>(items: readonly T[], row: (item: T) => ReactNode, label: string, id?: string) => (
-    <View nativeID={id} role="list" accessibilityLabel={label} style={styles.table}>
+    <View nativeID={id} role="list" accessibilityLabel={label}
+      style={[styles.table, box]}>
       {columnsOf(items, columns).map((column, c) => <View key={c} style={styles.column}>
         {column.map((item) => row(item))}
       </View>)}
@@ -54,14 +55,14 @@ export function CategoryLegend({ series, others, categories, total, colors, acti
     colors={colors} total={total} compact={compact} />;
   return <View style={styles.legend} onLayout={compact ? (event) => setWidth(event.nativeEvent.layout.width) : undefined}>
     {showSeries && (compact ? table(series, seriesRow, t('Legenda: categorie, importi e percentuali'))
-      : <View role="list" accessibilityLabel={t('Legenda: categorie, importi e percentuali')}>{series.map(seriesRow)}</View>)}
+      : <View role="list" accessibilityLabel={t('Legenda: categorie, importi e percentuali')} style={box}>{series.map(seriesRow)}</View>)}
     {others.length > 0 && <>
       <Button mode="text" aria-expanded={expanded} aria-controls={expanded ? 'dashboard-other-categories' : undefined}
         onPress={() => { setExpanded(!expanded); onActive(series.findIndex((item) => item.key === otherCategoriesKey)); }}>
         {expanded ? t('Nascondi dettaglio di Altre') : t('Mostra dettaglio di Altre ({p0})', { p0: others.length })}
       </Button>
       {expanded && (compact ? table(others, otherRow, t('Categorie incluse in Altre'), 'dashboard-other-categories')
-        : <View nativeID="dashboard-other-categories" role="list" accessibilityLabel={t('Categorie incluse in Altre')}>{others.map(otherRow)}</View>)}
+        : <View nativeID="dashboard-other-categories" role="list" accessibilityLabel={t('Categorie incluse in Altre')} style={box}>{others.map(otherRow)}</View>)}
     </>}
   </View>;
 }
@@ -77,22 +78,28 @@ const LegendRow = memo(function LegendRow({ item, icon, colors, total, compact, 
   const theme = useTheme();
   const haptic = useHaptics(); // like the parts of the chart (23 November, user's request): stable, the row stays memoised
   const selectable = index !== undefined;
+  const share = <View style={[styles.sharePill, { backgroundColor: theme.colors.secondaryContainer }]}>
+    <Text variant="labelMedium" style={[styles.number, { color: theme.colors.onSecondaryContainer }]}>{categoryPercent(item.total, total)}</Text>
+  </View>;
   return <View nativeID={selectable ? `dashboard-category-${item.key}` : undefined} role="listitem">
-    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={legendRadius}
+    <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={radius.control}
       onPress={() => { haptic(); if (selectable) onActive(selected ? null : index); else onOpen?.(item.key); }} aria-pressed={selectable ? selected : undefined}
       accessibilityLabel={`${seriesLabel(item, t)}: ${formatAmount(item.total)}, ${categoryPercent(item.total, total)}`}
-      style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.secondaryContainer }, selectionFill]}>
-      <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />
-      {/* Icon before the name it belongs to; the slot is kept empty for synthetic series so names stay aligned. */}
-      <View style={styles.icon}>{icon && <CategoryGlyph icon={icon} size={24} color={theme.colors.onSurfaceVariant} />}</View>
+      style={[styles.row, compact && styles.compactRow, selected && { backgroundColor: theme.colors.elevation.level3 }, styles.compactCorner, selectionFill]}>
+      {/* A tile in the category's colour (soft fill, the glyph on it): colour and icon in one place, matching the chart; a series
+          without an icon («Altre», «Senza categoria») shows the plain colour square. */}
+      <View style={styles.tile}>
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: seriesColor(item, colors), opacity: 0.24 }]} />
+        {icon ? <CategoryGlyph icon={icon} size={24} color={theme.colors.onSurface} /> : <View style={[styles.swatch, { backgroundColor: seriesColor(item, colors) }]} />}
+      </View>
       <Text variant="bodyMedium" numberOfLines={compact ? 1 : undefined} style={compact ? styles.compactLabel : styles.label}>{seriesLabel(item, t)}</Text>
       {compact ? <>
         {/* Fixed right-aligned columns: amounts and shares line up from row to row. */}
         <Text variant="bodyMedium" style={[styles.number, styles.amountColumn]}>{formatAmount(item.total)}</Text>
-        <Text variant="bodyMedium" style={[styles.number, styles.shareColumn, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
+        {share}
       </> : <View style={styles.numbers}>
         <Text variant="bodyMedium" style={styles.number}>{formatAmount(item.total)}</Text>
-        <Text variant="bodyMedium" style={[styles.number, { color: theme.colors.onSurfaceVariant }]}>{categoryPercent(item.total, total)}</Text>
+        {share}
       </View>}
     </StateLayerPressable>
   </View>;
@@ -102,13 +109,19 @@ const styles = StyleSheet.create({
   legend: { gap: spacing.sm, minWidth: 0 },
   // With wrap, alignItems centres within each line; alignContent centres the lines in the minimum row height.
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.sm,
-    minHeight: 48, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
+    minHeight: 56, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
   table: { flexDirection: 'row', alignItems: 'flex-start', columnGap: spacing.xxl },
   column: { flex: 1, minWidth: 0 },
-  compactRow: { minHeight: 44, paddingVertical: spacing.xs, flexWrap: 'nowrap', marginVertical: 2 },
+  compactRow: { minHeight: 56, paddingVertical: spacing.xs, flexWrap: 'nowrap', gap: spacing.md },
+  // Rounded like the tile it holds plus its padding (concentric); the selected row lifts to a neutral level, so it does not clash with the
+  // tonal share pill or the category colours (user's request, 27 November).
+  compactCorner: { borderRadius: radius.control },
+  // The compact legend is one box like the grouped rows of the other pages (user's request, 27 November).
+  box: { borderWidth: 1, borderRadius: radius.dialog, padding: spacing.sm, overflow: 'hidden' },
+  tile: { width: 40, height: 40, borderRadius: radius.tile, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  sharePill: { flexShrink: 0, minWidth: 48, alignItems: 'center', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   compactLabel: { flex: 1, minWidth: 0 },
   amountColumn: { flexShrink: 0, minWidth: 88 },
-  shareColumn: { flexShrink: 0, width: 40 },
   swatch: { width: 14, height: 14, borderRadius: 3 },
   icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   label: { flexGrow: 1, flexBasis: 100, minWidth: 0 },

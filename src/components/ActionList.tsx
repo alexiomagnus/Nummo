@@ -11,12 +11,14 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 // lists as «Info». A `ListGroup` is a labelled rounded surface; the groups of a page are stacked in one column, the whole width
 // of the panel, on every size (27 November, on request: side by side on desktop they looked scattered); its rows are `ActionRow` (a tonal icon tile, a title, one line of
 // explanation, a chevron: the whole row presses) or `StatusRow` (the same, not pressable).
-export function ListGroup({ label, children, footer }: { label: string; children: ReactNode; footer?: ReactNode }) {
+export function ListGroup({ label, plain = false, children, footer }: { label?: string; plain?: boolean; children: ReactNode; footer?: ReactNode }) {
   const { colors } = useTheme();
   return (
     <View style={styles.group} {...({ role: 'region', 'aria-label': label } as object)}>
-      <Text variant="labelLarge" style={[styles.label, { color: colors.onSurfaceVariant }]} accessibilityRole="header" aria-level={2}>
-        {label.toLocaleUpperCase()}</Text>
+      {label !== undefined && (plain
+        ? <Text variant="titleMedium" style={styles.plainLabel} accessibilityRole="header" aria-level={2}>{label}</Text>
+        : <Text variant="labelLarge" style={[styles.label, { color: colors.onSurfaceVariant }]} accessibilityRole="header" aria-level={2}>
+          {label.toLocaleUpperCase()}</Text>)}
       <View style={[styles.box, { backgroundColor: colors.elevation.level1, borderColor: colors.outlineVariant }]}>{children}</View>
       {footer}
     </View>
@@ -101,10 +103,25 @@ export function ListGrid({ children }: { children: ReactNode }) {
   return <View style={styles.grid}>{children}</View>;
 }
 
+// A quiet disclosure line for secondary content (archived lists and funds; 27 November, on request): no box, no tile and no arrow on the right,
+// only a small chevron and the label in the muted colour, so it does not compete with the cards above it.
+export function QuietToggle({ title, open, onPress }: { title: string; open: boolean; onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} role="button" aria-expanded={open} accessibilityLabel={title} onPress={onPress} style={styles.quiet}>
+      <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={20} color={colors.onSurfaceVariant} />
+      <Text variant="labelLarge" style={{ color: colors.onSurfaceVariant }}>{title}</Text>
+    </StateLayerPressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  quiet: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: spacing.sm, minHeight: 48, paddingHorizontal: spacing.md },
   grid: { flexDirection: 'column', alignItems: 'stretch', gap: spacing.xl },
   group: { minWidth: 0, gap: spacing.sm },
   label: { letterSpacing: 0.8, paddingHorizontal: spacing.sm },
+  // A heading as written, not in capitals (Fondi, 27 November, on request).
+  plainLabel: { paddingHorizontal: spacing.sm },
   box: { borderRadius: radius.dialog, borderWidth: 1, overflow: 'hidden' },
   divider: { marginLeft: 72 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 72, paddingVertical: spacing.md, paddingHorizontal: spacing.lg },

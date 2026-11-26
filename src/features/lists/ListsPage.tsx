@@ -5,6 +5,7 @@ import { Button, compactIconPadding, DangerButton } from '../../components/Butto
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteAction, DeleteDialog } from '../../components/DeleteAction';
 import { PageHeader } from '../../components/PageHeader';
+import { QuietToggle } from '../../components/ActionList';
 import { Reveal } from '../../components/Reveal';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -89,9 +90,9 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
     const category = categories.find((c) => c.id === list.category_id);
     return (
       <View key={list.id} nativeID={listCardId(list.id)} role="listitem">
-        <StateLayerPressable layerColor={colors.onSurface} radius={radius.card} onPress={() => setOpenId(list.id)} accessibilityRole="button"
+        <StateLayerPressable layerColor={colors.onSurface} radius={radius.dialog - 1} onPress={() => setOpenId(list.id)} accessibilityRole="button"
           accessibilityLabel={t("Apri {p0}, {p1} di {p2} acquistati", { p0: list.name, p1: done, p2: total })}
-          style={[styles.card, { borderColor: colors.outlineVariant }]}>
+          style={[styles.card, { borderColor: colors.outlineVariant, backgroundColor: colors.elevation.level1 }]}>
           <View style={styles.cardHeader}>
             <View style={[styles.avatar, { backgroundColor: state === 'active' ? colors.secondaryContainer : colors.surfaceVariant }]}>
               {category?.icon ? <CategoryGlyph icon={category.icon} size={22} color={colors.onSecondaryContainer} />
@@ -128,9 +129,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
       {active.length > 0 && <View role="list" accessibilityLabel={t("Liste attive")} style={styles.list}>{active.map(card)}</View>}
       {remote.ready && remote.lists.length > 0 && active.length === 0 && <Text variant="bodyMedium" style={muted}>{t("Nessuna lista attiva.")}</Text>}
       {showArchivedLists && archived.length > 0 && <View style={styles.list}>
-        <Button mode="text" style={styles.start} aria-expanded={showArchived} onPress={() => setShowArchived(!showArchived)}
-          icon={({ size, color }) => <SvgIcon shape={showArchived ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}>
-          {t("Liste archiviate ({p0})", { p0: archived.length })}</Button>
+        <QuietToggle open={showArchived} title={t("Liste archiviate ({p0})", { p0: archived.length })} onPress={() => setShowArchived(!showArchived)} />
         {showArchived && <Reveal role="list" accessibilityLabel={t("Liste archiviate")} style={styles.list}>{archived.map(card)}</Reveal>}
         {/* All the archived lists at once (user's request, 22 November); their expenses stay in Spese with the products. */}
         {showArchived && <DangerButton style={compact ? styles.full : styles.start}
@@ -370,8 +369,9 @@ const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   list: { gap: spacing.md },
   loading: { alignItems: 'center', padding: spacing.xxl },
-  empty: { borderRadius: radius.card, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
-  card: { borderWidth: 1, borderRadius: radius.card, padding: spacing.lg, gap: spacing.md },
+  empty: { borderRadius: radius.dialog, padding: spacing.xl, gap: spacing.sm, alignItems: 'flex-start' },
+  // The box of the grouped rows (dialog corner, level-1 fill, 1 px outline), like the fund cards (user's request, 27 November).
+  card: { borderWidth: 1, borderRadius: radius.dialog, padding: spacing.lg, gap: spacing.md, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   grow: { flex: 1, minWidth: 0 },
