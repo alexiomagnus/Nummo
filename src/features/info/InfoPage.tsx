@@ -4,6 +4,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { ListGroup } from '../../components/ActionList';
 import { useBackLayer } from '../../components/BackNavigation';
 import { Logo } from '../../components/Logo';
+import { MotionBackdrop, useBackgroundKind } from '../../components/Orbs';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
@@ -123,6 +124,7 @@ function Hero({ version }: { version: { name: string; code: number } | null }) {
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
   const ink = colors.onPrimaryContainer;
+  const background = useBackgroundKind();
   const [first, ...rest] = version ? version.name.split('.') : [];
   // Entry (26 November, on request): the figures (or the mark) rise and settle on a soft spring, then the name, the line and the
   // build fade in one after the other; the discs behind drift slowly all the time (`data-orb`, CSS in GlobalStyle, still with
@@ -150,8 +152,12 @@ function Hero({ version }: { version: { name: string; code: number } | null }) {
     <View style={[styles.hero, { backgroundColor: colors.primaryContainer }]}
       {...({ role: 'region', 'aria-label': version ? t("Nummo, versione {p0}", { p0: version.name }) : 'Nummo' } as object)}>
       {/* Two soft discs behind the content, in the main colour (decoration only), slowly drifting. */}
-      <View pointerEvents="none" {...({ dataSet: { orb: '1' } } as object)} style={[styles.disc, styles.discLarge, { backgroundColor: colors.primary }]} />
-      <View pointerEvents="none" {...({ dataSet: { orb: '2' } } as object)} style={[styles.disc, styles.discSmall, { backgroundColor: colors.primary }]} />
+      {/* The animation chosen in Settings → Aspetto: the discs for «Cerchi», the canvas ones in miniature, nothing for «Nessuna». */}
+      {background === 'circles' && <>
+        <View pointerEvents="none" {...({ dataSet: { orb: '1' } } as object)} style={[styles.disc, styles.discLarge, { backgroundColor: colors.primary }]} />
+        <View pointerEvents="none" {...({ dataSet: { orb: '2' } } as object)} style={[styles.disc, styles.discSmall, { backgroundColor: colors.primary }]} />
+      </>}
+      <MotionBackdrop ink={ink} />
       <Animated.View style={figures}>
         {version
           ? <Text style={[styles.version, { color: ink }]} aria-hidden numberOfLines={1} adjustsFontSizeToFit>

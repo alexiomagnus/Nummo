@@ -182,7 +182,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     let run: Run | null = slide(parts(node), node, half ? { ...opening, frame: { ...opening.frame, height: whole - peek }, sheet: true } : opening, true);
     // Phones, a whole screen: the top bar and the navigation of the page under it go away with the opening (and come back while it is
     // in peek, see below).
-    chrome.current = compact && !latest.current.sheet && !half ? holdChrome() : null;
+    chrome.current = compact && !latest.current.sheet && !half ? holdChrome(run.duration * chromeFadeStart) : null;
     void run.finished.then((done) => { if (done && run) { run.cancel(); run = null; } });
     return () => {
       const { animate: moving } = latest.current;
@@ -578,13 +578,16 @@ export function closeAllScreens(): boolean {
 // (user's report, 24 November). While at least one whole screen is open they fade out (marked `data-app-chrome` in AppShell),
 // with the opening, and come back with the closing of the last one, after its content has gone. Web Animations only, so the
 // shell renders nothing and keeps its own opacity (the navigation hidden for the keyboard).
+// The fade waits for the rising screen to cover the top (27 November, on request): started at once, it uncovered the page content
+// scrolled under the glass bar (the «Totale» card) over the status bar for a few frames. `chromeFadeStart` = share of the slide.
+const chromeFadeStart = 0.6;
 let chromeHolders = 0;
 let chromeFades: Animation[] = [];
-function holdChrome(): (delay: number) => void {
+function holdChrome(delay = 0): (delay: number) => void {
   chromeHolders += 1;
   if (chromeHolders === 1) {
     chromeFades = [...document.querySelectorAll<HTMLElement>('[data-app-chrome]')].map((element) =>
-      element.animate([{ opacity: 1 }, { opacity: 0 }], { duration: motion.short, easing: 'linear', fill: 'forwards' }));
+      element.animate([{ opacity: 1 }, { opacity: 0 }], { duration: motion.short, delay, easing: 'linear', fill: 'forwards' }));
   }
   let released = false;
   return (delay) => {

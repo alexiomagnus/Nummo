@@ -19,6 +19,15 @@ const orbLayout = [
 const BackgroundChoice = createContext<Background>('circles');
 export const OrbsProvider = BackgroundChoice.Provider;
 
+// The chosen animation, for a card that shows it in miniature (the Info header, 27 November, on request).
+export const useBackgroundKind = () => useContext(BackgroundChoice);
+
+// The canvas animations (not `circles`, `none`) drawn inside a small card, in the given ink: the card's own discs stand for `circles`.
+export function MotionBackdrop({ ink }: { ink: string }) {
+  const kind = useContext(BackgroundChoice);
+  return kind === 'circles' || kind === 'none' ? null : <Canvas kind={kind} ink={ink} />;
+}
+
 export function Orbs({ color }: { color: string }) {
   const kind = useContext(BackgroundChoice);
   if (kind === 'none') return null;
@@ -46,15 +55,15 @@ type Ring = { x: number; y: number; age: number; period: number; max: number };
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 const count = (kind: Background, w: number, h: number) => {
   const area = (w * h) / (390 * 800);
-  return Math.round(Math.min(kind === 'space' ? 90 : kind === 'snow' ? 46 : 54, (kind === 'space' ? 70 : kind === 'snow' ? 34 : 40) * Math.max(area, 0.6)));
+  return Math.round(Math.min(kind === 'space' ? 90 : kind === 'snow' ? 46 : 54, (kind === 'space' ? 70 : kind === 'snow' ? 34 : 40) * Math.max(area, 0.1)));
 };
 
-function Canvas({ kind }: { kind: Background }) {
+function Canvas({ kind, ink: given }: { kind: Background; ink?: string }) {
   const { colors } = useTheme();
   const host = useRef<unknown>(null);
   const reduce = useReducedMotion();
   // Light ink on dark, dark ink on light: the dots and flakes read on either background.
-  const ink = colors.onSurface;
+  const ink = given ?? colors.onSurface;
   useEffect(() => {
     const node = host.current as HTMLElement | null;
     if (!node) return;
