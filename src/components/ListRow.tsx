@@ -88,7 +88,7 @@ export function ListRow({ icon, title, subtitle, meta, trailing, divider = true,
   const inset = outlined && [styles.outlinedMain, { minHeight: (dense ? denseHeight : rowHeight) + 2 * spacing.xs }];
   const hasChildren = children !== undefined && children !== null && children !== false;
   return (
-    <View role="listitem" style={outlined ? [styles.row, styles.outlined, fill ? { borderColor: fill, backgroundColor: fill } : { borderColor: dense ? colors.outlineVariant : colors.outline }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
+    <View role="listitem" style={outlined ? [styles.row, styles.outlined, fill ? { borderColor: fill, backgroundColor: fill } : { borderColor: colors.outlineVariant, backgroundColor: colors.elevation.level1 }] : [styles.row, !divider && styles.noDivider, { borderColor: colors.outlineVariant }]}>
       {onPress ? <StateLayerPressable onPress={onPress} layerColor={colors.onSurface} radius={outlined ? innerRadius : radius.control}
         bottomRadius={outlined && hasChildren ? 0 : undefined} accessibilityRole="button"
         accessibilityLabel={pressLabel} aria-expanded={expanded} aria-controls={controls} aria-haspopup={opening ? 'dialog' : undefined} style={[styles.main, dense && styles.dense, outlined ? inset : styles.pressable]}>{content}</StateLayerPressable>
@@ -107,12 +107,13 @@ export const listRowStyles = StyleSheet.create({
 const rowHeight = 56;
 const denseHeight = 52;
 const outlineWidth = 1;
-const innerRadius = radius.control - outlineWidth;
+// The corner of the grouped rows and cards of the other pages (27 November, on request: Spese, Fondi and Liste read as one family).
+const innerRadius = radius.dialog - outlineWidth;
 
 const styles = StyleSheet.create({
   row: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.xs, gap: spacing.sm },
   noDivider: { borderBottomWidth: 0 },
-  outlined: { borderWidth: outlineWidth, borderBottomWidth: outlineWidth, borderRadius: radius.control, paddingVertical: 0, gap: 0, marginBottom: spacing.sm },
+  outlined: { borderWidth: outlineWidth, borderBottomWidth: outlineWidth, borderRadius: radius.dialog, paddingVertical: 0, gap: 0, marginBottom: spacing.sm, overflow: 'hidden' },
   outlinedMain: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   // No gap and no side padding: a divider drawn at the top of the children spans the hover layer edge to edge and
   // starts exactly where it ends. The children pad their own content (spacing.md, like the row).

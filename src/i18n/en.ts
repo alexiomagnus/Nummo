@@ -1250,6 +1250,8 @@ export const english: Readonly<Record<string, string>> = {
   "Non è stato possibile leggere le note di rilascio. Controlla la connessione.": "The release notes could not be read. Check your connection.",
   "Note di rilascio": "Release notes",
   "Nuova versione": "New version",
+  "Novità": "What's new",
+  "{p0} MB": "{p0} MB",
   "Mostra le impostazioni": "Show settings",
   "Nascondi le impostazioni": "Hide settings",
   "Installata: {p0}": "Installed: {p0}",

@@ -7,9 +7,10 @@ import { screenActionStyles } from '../../components/screenActions';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { downloadProgress, type AppRelease } from '../../domain/appUpdate';
 import { useI18n } from '../../i18n/I18nProvider';
-import { numberFormat } from '../../i18n/translate';
+import { dateTimeFormat, numberFormat } from '../../i18n/translate';
 import { allowUpdateInstallsOnDevice, androidUpdater, downloadUpdateOnDevice, installUpdateOnDevice, type UpdateFailure } from '../../services/androidApp';
 import { radius, spacing } from '../../theme/tokens';
+import { ReleaseNotes } from './ReleaseNotes';
 import { openExternal } from '../session/firebaseConnection';
 
 type Phase =
@@ -20,7 +21,7 @@ type Phase =
   | { kind: 'installing' }
   | { kind: 'failed'; reason: UpdateFailure | 'install' | 'permission' };
 
-// «Aggiornamento disponibile» (27 November, on request): a screen with the installed and the new version in a tonal hero (no notes: they are in «Note di rilascio»), «Più tardi» and «Aggiorna». In an app with the updater (0.3.6+) «Aggiorna» downloads the APK inside the app
+// «Aggiornamento disponibile» (27 November, on request): a screen with the installed and the new version in a tonal hero (a short «Novità»: three items at most; all the notes are in «Note di rilascio»), «Più tardi» and «Aggiorna». In an app with the updater (0.3.6+) «Aggiorna» downloads the APK inside the app
 // with a progress bar, the app verifies it (SHA-256 when the release has one, package, newer version, same signing key) and
 // Android's installer asks the user to confirm; the «install unknown apps» permission is asked first if missing. In an older
 // app (0.3.5) «Aggiorna» opens the release on GitHub, outside the app. Back, «Più tardi» or «Annulla download» stop it.
@@ -78,6 +79,7 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
   };
 
   const megabytes = (bytes: number) => numberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(bytes / (1024 * 1024));
+  const published = current.publishedAt ? dateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }).format(new Date(current.publishedAt)) : null;
   const busy = phase.kind === 'downloading' || phase.kind === 'installing';
   const failure = phase.kind === 'failed' ? failureText(t, phase.reason) : null;
   const pill = [screenActionStyles.button];
@@ -96,6 +98,8 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
             <Text variant="labelLarge" style={{ color: colors.onPrimaryContainer, opacity: 0.8 }}>{t("Nuova versione")}</Text>
             <Text style={[styles.version, { color: colors.onPrimaryContainer }]} numberOfLines={1} adjustsFontSizeToFit>{current.version}</Text>
             <Text variant="bodyMedium" style={[styles.center, { color: colors.onPrimaryContainer, opacity: 0.8 }]}>{t("Installata: {p0}", { p0: installed })}</Text>
+            <Text variant="bodySmall" style={[styles.center, { color: colors.onPrimaryContainer, opacity: 0.8 }]}>
+              {[published, t("{p0} MB", { p0: megabytes(current.apk.size) })].filter(Boolean).join(' · ')}</Text>
           </View>
           {phase.kind === 'downloading' && <Progress received={phase.received} total={phase.total} megabytes={megabytes} />}
           {phase.kind === 'installing' && <Note icon={iconShapes.info} text={t("Conferma l'installazione nella finestra di Android. Nummo si chiuderà e si riaprirà aggiornato: i tuoi dati restano.")} />}
@@ -103,6 +107,10 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
           {phase.kind === 'ready' && <Note icon={iconShapes.info} text={t("Aggiornamento scaricato e verificato. Installalo quando vuoi.")} />}
           {failure && <Note icon={iconShapes.info} text={failure} error />}
           {!updater && <Note icon={iconShapes.externalLink} text={t("Questa versione dell'app non può scaricare gli aggiornamenti da sola: «Aggiorna» apre la pagina della release su GitHub, da cui scaricare il file APK.")} />}
+          {current.notes.trim() !== '' && <View style={styles.notes}>
+            <Text variant="titleMedium" accessibilityRole="header" aria-level={2}>{t("Novità")}</Text>
+            <ReleaseNotes notes={current.notes} summary />
+          </View>}
         </ScrollView>
       </AppDialog.ScrollArea>
       <AppDialog.Actions>
@@ -178,6 +186,7 @@ const styles = StyleSheet.create({
   badge: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   version: { fontSize: 56, lineHeight: 64, fontWeight: '800', letterSpacing: -1.5, textAlign: 'center' },
   center: { textAlign: 'center' },
+  notes: { gap: spacing.md },
   progress: { gap: spacing.sm },
   progressText: { flexDirection: 'row', justifyContent: 'space-between' },
   track: { height: 12, borderRadius: 6, overflow: 'hidden' },

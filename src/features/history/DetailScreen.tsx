@@ -73,9 +73,9 @@ export function DetailHero({ icon, title, amount, muted, dense, children }: { ic
     <View style={[styles.hero, dense && styles.denseHero]}>
       {/* The same size for expenses and subscriptions (user's request, 25 November: the expense's took the subscription's): tile 64,
           glyph 38. */}
-      <View ref={tile} style={[styles.heroTile, dense && styles.denseTile, { backgroundColor: colors.primaryContainer }]}>
-        <View ref={glyph}>{icon ? <CategoryGlyph icon={icon} size={38} color={colors.onPrimaryContainer} />
-          : <SvgIcon shape={iconShapes.tag} size={34} color={colors.onPrimaryContainer} />}</View>
+      <View ref={tile} style={[styles.heroTile, dense && styles.denseTile, { backgroundColor: colors.secondaryContainer }]}>
+        <View ref={glyph}>{icon ? <CategoryGlyph icon={icon} size={38} color={colors.onSecondaryContainer} />
+          : <SvgIcon shape={iconShapes.tag} size={34} color={colors.onSecondaryContainer} />}</View>
       </View>
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={styles.center}>{title}</Text>
       <Text variant="displaySmall" style={[styles.amount, { color: muted ? colors.onSurfaceVariant : colors.onSurface }]}>{amount}</Text>

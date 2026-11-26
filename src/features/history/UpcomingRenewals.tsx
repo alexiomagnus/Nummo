@@ -31,7 +31,7 @@ export function UpcomingRenewals({ renewals, categories, soon, days }: Props) {
   const tone = { color: colors.onPrimaryContainer };
   return (
     <View nativeID={cardId} style={[styles.card, { backgroundColor: colors.primaryContainer }]}>
-      <StateLayerPressable onPress={() => setOpen(true)} layerColor={colors.onPrimaryContainer} radius={radius.control}
+      <StateLayerPressable onPress={() => setOpen(true)} layerColor={colors.onPrimaryContainer} radius={radius.dialog}
         accessibilityRole="button" aria-haspopup="dialog" accessibilityLabel={t("Prossimo mese, {p0} entro {p1} giorni", { p0: formatAmount(soon), p1: days })}
         style={styles.header}>
         <View style={[styles.tile, { backgroundColor: colors.primary }]}>
@@ -104,7 +104,7 @@ function RenewalsContent({ renewals, categories, soon, count, days }: Props & { 
 
 const styles = StyleSheet.create({
   // Same footprint as a subscription row (ListRow outlined: radius, side padding, height with the status badge).
-  card: { borderRadius: radius.control },
+  card: { borderRadius: radius.dialog },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
   tile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, minWidth: 0 },

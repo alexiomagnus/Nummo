@@ -6,9 +6,17 @@ import { spacing } from '../../theme/tokens';
 
 // The notes of a release (GitHub Markdown, release body) in the app's type: headings in titleSmall, items with a small primary
 // dot or their number, paragraphs; **bold** and `code` spans (plain RN Text inside: Paper's Text would impose its own colour). Links are text: nothing here opens anything.
-export function ReleaseNotes({ notes }: { notes: string }) {
+// `summary`: only the first section of the notes (up to the second heading), without its heading, at most three items: the
+// short «what's new» of the update screen (27 November, on request).
+export function ReleaseNotes({ notes, summary = false }: { notes: string; summary?: boolean }) {
   const { colors } = useTheme();
-  const blocks = useMemo(() => releaseNoteBlocks(notes), [notes]);
+  const blocks = useMemo(() => {
+    const all = releaseNoteBlocks(notes);
+    if (!summary) return all;
+    const next = all.findIndex((block, index) => index > 0 && block.kind === 'heading');
+    const first = (next < 0 ? all : all.slice(0, next)).filter((block) => block.kind !== 'heading' && block.kind !== 'paragraph');
+    return first.slice(0, 3);
+  }, [notes, summary]);
   return (
     <View style={styles.root}>
       {blocks.map((block, index) => {

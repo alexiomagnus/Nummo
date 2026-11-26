@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
   start: { alignSelf: 'flex-start' },
   // Total of the filtered results, same footprint and tone as the «Prossimo mese» card of the subscriptions view.
-  total: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, borderRadius: radius.control,
+  total: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, borderRadius: radius.dialog,
     paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
   totalTile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   totalText: { flex: 1, minWidth: 0 },
