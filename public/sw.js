@@ -89,7 +89,7 @@ const show = (data) => {
 };
 
 // The offline page and what it shows. A new name for every change of these files: the old cache is deleted on activate.
-const offlineCache = 'nummo-offline-v1';
+const offlineCache = 'nummo-offline-v2';
 const offlineFiles = ['/offline.html', '/fonts/GoogleSans-latin.woff2'];
 self.addEventListener('install', (event) => {
   // Fetched fresh (not from the HTTP cache); a failure must not stop the notifications, so it is never fatal.

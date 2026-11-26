@@ -157,10 +157,10 @@ function loadOffline() {
 test('service worker: pagina offline in cache all’installazione, vecchie cache della pagina eliminate, le altre no', async () => {
   const sw = loadOffline();
   await sw.lifecycle('install');
-  assert.deepEqual([...sw.stores.get('nummo-offline-v1')!.keys()], ['/offline.html', '/fonts/GoogleSans-latin.woff2']);
-  assert.match(sw.stores.get('nummo-offline-v1')!.get('/offline.html')!, /\(reload\)/, 'scaricata dalla rete, non dalla cache HTTP');
+  assert.deepEqual([...sw.stores.get('nummo-offline-v2')!.keys()], ['/offline.html', '/fonts/GoogleSans-latin.woff2']);
+  assert.match(sw.stores.get('nummo-offline-v2')!.get('/offline.html')!, /\(reload\)/, 'scaricata dalla rete, non dalla cache HTTP');
   await sw.lifecycle('activate');
-  assert.deepEqual([...sw.stores.keys()].sort(), ['nummo-offline-v1', 'other-cache']);
+  assert.deepEqual([...sw.stores.keys()].sort(), ['nummo-offline-v2', 'other-cache']);
 });
 
 test('service worker: rete sempre per prima; senza rete la navigazione riceve la pagina offline, il resto resta al browser', async () => {

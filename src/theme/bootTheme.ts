@@ -1,13 +1,13 @@
 // Colours the static HTML (public/index.html, inline boot script) paints before the bundle runs.
 // Written by GlobalStyle from the user's real theme, so the first frame already has the final background
-// instead of the default mint scheme. Both schemes are stored: with the «system» theme the script picks
+// instead of the default blue scheme. Both schemes are stored: with the «system» theme the script picks
 // by the device's current preference, which can differ from the one at write time.
 import { androidBridge, systemBarsColor } from '../services/androidApp.ts';
 import { buildScheme, type Accent, type ColorMode } from './palette.ts';
 
 export const bootThemeKey = 'nummo.boot-theme.v1';
 // `ink`: the few colours of the offline page (public/offline.html), per scheme; absent in values saved before 21 November,
-// when the page falls back to its static mint colours.
+// when the page falls back to its static blue colours.
 export type BootInk = Readonly<{ primary: string; onPrimary: string; onSurface: string; onSurfaceVariant: string }>;
 export type BootTheme = Readonly<{ v: 1; mode: 'system' | 'light' | 'dark'; light: string; dark: string; ink?: Readonly<{ light: BootInk; dark: BootInk }> }>;
 

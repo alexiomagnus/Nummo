@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="description" content="Nummo: inserimento rapido delle spese personali." />
     <!-- Prima del bundle: colori di `background` dello schema Menta (tokens.ts). A runtime GlobalStyle li sostituisce con un solo tag che segue il tema scelto. -->
-    <meta name="theme-color" content="#F5FBF5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0F1511" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#EDF1F8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0F1115" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
     <script id="nummo-boot">
       // Prima del bundle, solo presentazione: sfondo del tema scelto (scritto da GlobalStyle) invece dello schema
@@ -44,9 +44,9 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Nummo</title>
     <style id="expo-reset">
-      html, body { height: 100%; background: var(--nummo-boot-bg, #F5FBF5); }
-      body { overflow: hidden; margin: 0; background: var(--nummo-boot-bg, #F5FBF5); color: #171D19; }
-      @media (prefers-color-scheme: dark) { html, body { background: var(--nummo-boot-bg, #0F1511); } body { color: #DEE4DD; } }
+      html, body { height: 100%; background: var(--nummo-boot-bg, #EDF1F8); }
+      body { overflow: hidden; margin: 0; background: var(--nummo-boot-bg, #EDF1F8); color: #13161B; }
+      @media (prefers-color-scheme: dark) { html, body { background: var(--nummo-boot-bg, #0F1115); } body { color: #DBDDE1; } }
       /* clip: the app scrolls inside its own containers; a menu animating in from beyond the right edge (Paper Menu)
          must not widen the page, which Chrome on Android would then keep zoomed out. hidden is the fallback. */
       /* Fixed over the visible part of the page (GlobalStyle: --nummo-viewport-top/height). iOS shrinks only the visual

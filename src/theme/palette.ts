@@ -3,7 +3,7 @@
 // other hues, so selected states, chips and icon tiles read as a small multi-colour palette.
 import { schemes, type Scheme } from './tokens.ts';
 
-export const accents = ['mint', 'blue', 'violet', 'rose', 'amber', 'graphite'] as const;
+export const accents = ['blue', 'mint', 'violet', 'rose', 'amber', 'graphite'] as const;
 export type Accent = (typeof accents)[number];
 export type ColorMode = 'mono' | 'palette';
 

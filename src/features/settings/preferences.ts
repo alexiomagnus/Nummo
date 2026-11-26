@@ -27,7 +27,7 @@ export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode
 
 export const preferencesKey = 'nummo.preferences.v1';
 // `colorMode`: «Palette» by default since 22 November (user's request; before «Monocolore»). A saved choice stays.
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'palette', accent: 'mint', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'palette', accent: 'blue', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;

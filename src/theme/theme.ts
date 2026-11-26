@@ -7,7 +7,7 @@ import type { Preferences } from '../features/settings/preferences';
 // exposed through its `elevation` levels: level1 = Container Low … level5 = Highest.
 export function createTheme(dark: boolean, reduceMotion = false, preferences?: Pick<Preferences, 'accent' | 'colorMode' | 'font'>): MD3Theme {
   const base = dark ? MD3DarkTheme : MD3LightTheme;
-  const s = buildScheme(preferences?.accent ?? 'mint', preferences?.colorMode ?? 'mono', dark);
+  const s = buildScheme(preferences?.accent ?? 'blue', preferences?.colorMode ?? 'mono', dark);
   const colors = {
     ...base.colors,
     // Page panel: a touch lighter than the background (lowest container in light, low in dark).
@@ -15,7 +15,7 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
     positive: dark ? positiveColors.dark : positiveColors.light,
     card: cardColor(s, dark),
     // The accent as shown, not read (avatar ring «Colore dell'app»): see accentSwatches.
-    accentSwatch: accentSwatches(preferences?.accent ?? 'mint', 'mono', dark)[0]!,
+    accentSwatch: accentSwatches(preferences?.accent ?? 'blue', 'mono', dark)[0]!,
     ...dialogColors(s, dark),
   };
   return {
