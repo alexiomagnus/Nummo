@@ -78,7 +78,8 @@ function FundContent({ item, monthLabel, isDefault, hasBalance, canWrite, onEdit
       actions.animate({ opacity: [0, 1] }, { ...fade, delay: 120 }));
     return () => moves.forEach((move) => move.cancel());
   }, [item.fund.archived, reduced]);
-  // From medium the actions share one row in equal parts (user's request, 24 November).
+  // The actions share one row in equal parts, from medium (24 November) and on phones too (27 November, on request: two stacked pills
+  // pushed «Archivia» under the bottom edge on a 411×914 screen, now that the page also draws under the status bar).
   const wide = useSizeClass() !== 'compact';
   const { fund } = item;
   const forecast = item.kind === 'future';
@@ -150,15 +151,15 @@ function FundContent({ item, monthLabel, isDefault, hasBalance, canWrite, onEdit
     {/* Actions as on the other screens: full-width pills, the main one first. */}
     <ScreenActionsContext.Provider value>
       <View style={styles.actions}>
-        <View ref={actionsRef} style={wide ? detailActions.line : styles.actions}>
+        <View ref={actionsRef} style={detailActions.line}>
         {fund.archived ? <>
-          <PrimaryAction label={t("Ripristina")} icon={iconShapes.archive} onPress={() => onArchive(false)} style={wide && detailActions.part} />
-          <View style={wide ? detailActions.part : undefined}><DeleteAction labeled disabled={!canWrite} name={fund.name} blocked={remove.blocked} title={remove.title} description={remove.description}
+          <PrimaryAction label={t("Ripristina")} icon={iconShapes.archive} onPress={() => onArchive(false)} style={detailActions.part} />
+          <View style={detailActions.part}><DeleteAction labeled disabled={!canWrite} name={fund.name} blocked={remove.blocked} title={remove.title} description={remove.description}
             onDelete={remove.onDelete} /></View>
         </> : <>
-          <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: fund.name })} icon={iconShapes.pencil} onPress={onEdit} style={wide && detailActions.part} />
+          <PrimaryAction label={t("Modifica")} accessibilityLabel={t("Modifica {p0}", { p0: fund.name })} icon={iconShapes.pencil} onPress={onEdit} style={detailActions.part} />
           {/* «Aggiungi denaro» is no longer here (user's request, 25 November): money is added from the page's «Aggiungi». */}
-          <View style={[styles.row, wide && detailActions.part]}>
+          <View style={[styles.row, detailActions.part]}>
             <Button mode="outlined" disabled={!canWrite} style={styles.half} contentStyle={outlinedActionContent} onPress={() => onArchive(true)}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.archive} size={size} color={color} />}>{t("Archivia")}</Button>
           </View>
@@ -190,5 +191,5 @@ const styles = StyleSheet.create({
   actions: { gap: spacing.sm },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   // Pill-shaped like «Modifica» above them, as in the subscription's detail (user's request, 24 November).
-  half: { flexGrow: 1, flexBasis: 140, borderRadius: radius.pill },
+  half: { flexGrow: 1, flexBasis: 100, minWidth: 0, borderRadius: radius.pill },
 });

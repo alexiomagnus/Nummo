@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Archivia» visibile nel dettaglio del fondo su smartphone — 27 novembre 2026
+
+Segnalazione: su 411×914 dp (app 0.3.12, la pagina ora disegna anche sotto la barra di stato) «Archivia» era tagliato in fondo. Causa: due pillole impilate (Modifica, poi Archivia) oltre al resto dello schermo. Ora `FundDetail` le mette su una riga a parti uguali anche su smartphone (come già da medium e come Modifica/Annulla/Pausa degli abbonamenti): circa 64 dp in meno. Non misurato su dispositivo né in Chromium; su schermi più bassi (360×740) il dettaglio resta scorrevole.
+
 ## Separatore nel dettaglio del fondo — 27 novembre 2026
 
 Su richiesta: sotto l'importo di `FundDetail` «speso nel mese · novembre 2026» diventa «speso nel mese | novembre 2026» (U+2002 per lato, come le righe degli abbonamenti). Il punto in «Demo · Risparmi» è nel nome del fondo (dati dell'utente), non toccato.
