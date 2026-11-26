@@ -1703,3 +1703,43 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   come letti, servizio AI. Descrizione e categoria proposte dall'AI non si salvano: sono quelle della spesa.
 - **Formati:** Firestore con i prodotti uniti da `\n` (come i prodotti di una lista registrata); IndexedDB passo 4; backup v12.
 
+
+## Pagine del menu a gruppi di righe (`ActionList`) — 26 novembre 2026
+
+- **Su richiesta** (desktop di «Archiviazione e backup» giudicato «terribile»): un solo linguaggio per le pagine del menu account,
+  quello di «Info». `components/ActionList.tsx`: `ListGroup` (etichetta in maiuscolo, superficie `elevation.level1`, bordo
+  `radius.dialog`), `ActionRow` (riga premibile con riquadro tonale dell'icona, titolo, una riga di spiegazione, freccia, `busy`),
+  `StatusRow`, `ToggleRow`, `OptionRow`, `RowBody`, `RowDivider`, `ListGrid`. Usato da «Archiviazione e backup», Impostazioni, Notifiche,
+  Templates e «Lista scontrini».
+- **Una colonna a ogni dimensione:** gruppi affiancati da desktop sembravano sparsi; le due colonne delle Impostazioni sono state tolte.
+  `Card` con titolo non è più usata in queste pagine; `SameWidthGroup` resta solo per i due pulsanti della scheda AI di «Lista scontrini».
+- «Esci» dell'Avanzata è passato dal menu account a una riga di «Archiviazione e backup» (`AccountMenu` riceve solo `signedIn`).
+
+## Movimenti dei fondi eliminabili dall'interfaccia — 26 novembre 2026
+
+- **Su richiesta**, cambia la regola del 16 novembre («nessun elenco dei movimenti, non si eliminano dall'interfaccia»): la sezione
+  «Entrate e spostamenti» di Fondi elenca i movimenti del mese mostrato (`movementsInMonth`) e ciascuno si elimina con conferma.
+- Nessun cambio di dati: `DataStore.removeMovement` esisteva in entrambe le implementazioni e le Rules permettevano già `delete`.
+  Eliminare un movimento cambia i saldi calcolati, mai le spese; le ricariche restano calcolate dal piano e non compaiono.
+
+## Drawer comprimibile da desktop — 26 novembre 2026
+
+- **Su richiesta:** da expanded la riga «Comprimi» in fondo al drawer lo riduce alle icone (larghezza della rail, FAB tondo) e lo riapre.
+  Lo stato è di presentazione, nel browser (`nummo.drawer.v1`, `services/drawerState.ts`), mai nei dati; l'interruttore «Pulsante per
+  comprimere il menu» (`drawerToggle`, acceso di base) spento tiene il drawer sempre aperto qualunque cosa sia salvata.
+
+## App Android: aggiornamenti dalle GitHub Releases (versione 0.3.6) — 26 novembre 2026
+
+- **Su richiesta.** L'app non è sul Play Store: prima andava aggiornata scaricando l'APK a mano. Il sito non può installare APK, quindi
+  il lavoro è diviso: la **pagina** decide se c'è un aggiornamento e lo mostra, l'**app** scarica, verifica e affida l'installazione ad
+  Android.
+- **Fonte:** l'API pubblica delle release di GitHub (`api.github.com`, repository pubblico, CORS, nessun token né backend). Valida solo
+  una release pubblicata, non bozza né pre-release, con tag `android-v<versione>` e asset `nummo-<versione>.apk` scaricabile dai download
+  del repository (`domain/appUpdate.ts`); SHA-256 dal `digest` dell'asset o da `.apk.sha256`. Controllo all'avvio al massimo ogni 24 ore
+  (`nummo.appUpdate.v1`, solo l'ora) e da «Controlla aggiornamenti» in Info.
+- **Verifiche nell'app** (`Updater.kt`, solo API di piattaforma: `HttpURLConnection`, `MessageDigest`, `PackageInstaller`): URL dei
+  download del repository fissato a build (`UPDATE_REPOSITORY`), SHA-256, stesso pacchetto, `versionCode` più alto, stessa chiave di firma
+  (`hasSigningCertificate`). Poi `PackageInstaller` con `USER_ACTION_REQUIRED`: Android chiede sempre conferma, mai un'installazione
+  silenziosa. Il permesso «installa app sconosciute» lo concede l'utente nelle impostazioni di Android.
+- **Compatibilità:** metodi del ponte facoltativi. La 0.3.5 conosce la propria versione ma non scarica: «Aggiorna» apre la release su
+  GitHub; la 0.3.4 e precedenti non vedono nulla. Il primo passaggio alla 0.3.6 si installa a mano.

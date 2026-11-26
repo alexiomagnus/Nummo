@@ -12,19 +12,19 @@ logo menta (`#97D8BB`), per desktop e mobile. Rigenerati con `rsvg-convert` da S
 `icon-monochrome.svg`, `badge-96.png` e la piccola icona delle notifiche Android (la tinge il sistema). Un'app web già installata
 aggiorna l'icona quando il browser rilegge il manifest (su Android può richiedere giorni).
 
-**27 novembre 2026, su richiesta:** fondo blu notte in sfumatura verticale (`#34476F` in alto, `#1B2642` in basso) con un filo
+**26 novembre 2026, su richiesta:** fondo blu notte in sfumatura verticale (`#34476F` in alto, `#1B2642` in basso) con un filo
 chiaro (bianco al 14 %) sul bordo della squircle, logo bianco, sul modello di un'icona fornita dall'utente. Rigenerati con `rsvg-convert`:
 `icon.svg` (stessa forma, scala 0,72), `icon-192.png` e `icon-512.png` (angoli trasparenti), `icon-maskable-512.png` (quadrato pieno con la
 sola sfumatura, scala 0,5) e `apple-touch-icon.png` (quadrato pieno, scala 0,62). App Android: sfondo `drawable/ic_launcher_background.xml`
 (stessa sfumatura), `icon_background` `#1B2642` (serve un nuovo APK). Invariati `icon-monochrome.svg`, `badge-96.png` e l'icona delle notifiche.
 
-**27 novembre 2026, poco dopo, su richiesta («più in stile Material 3 Expressive»):** sullo stesso fondo una forma «cookie» a nove lobi
+**26 novembre 2026, poco dopo, su richiesta («più in stile Material 3 Expressive»):** sullo stesso fondo una forma «cookie» a nove lobi
 (`#3E5A92` al 75 %, raggio 22,5 su 64) dietro il logo, logo a scala 0,6 con l'asta `#A9C4F2`, l'arco bianco e un'ombra leggera (`#0B1226`
 al 35 %, 1,6 unità in basso). Maskable: tutto a scala 0,8 (forma dentro il cerchio sicuro del 40 %); Apple: scala 0,95. Android:
 `ic_launcher_foreground.xml` con forma e logo (colori `icon_shape`, `icon_stem`, `icon_foreground`), nuovo `ic_launcher_monochrome.xml` (il
 solo logo, per le icone a tema: con la forma la silhouette sarebbe un disco). Scelta fra quattro varianti in anteprima (la B).
 
-**27 novembre 2026, ancora su richiesta:** tolta la forma «cookie»; fondo blu navy in sfumatura diagonale (`#2E4C8C` in alto a sinistra,
+**26 novembre 2026, ancora su richiesta:** tolta la forma «cookie»; fondo blu navy in sfumatura diagonale (`#2E4C8C` in alto a sinistra,
 `#1B3068` al centro, `#0D1A3E` in basso a destra) con una luce morbida dall'angolo in alto a sinistra (bianco radiale al 14 %), filo chiaro
 sul bordo (bianco al 16 %), «n» di un solo colore in bianco non puro `#F3F6FC` con un'ombra leggera (`#050B1E` al 30 %, 2 unità in basso),
 nessuna forma geometrica. Provati lo stesso giorno, su richiesta, un azzurro grigio (`#97B2D8`), un celeste e un blu vivo (`#5B9BFF` → `#1A47B8`): scartati. PNG alle stesse
@@ -37,7 +37,7 @@ la luce radiale), `icon_background` `#0D1A3E` (anche primo fotogramma), `ic_laun
 
 | Asset in `public/icons/` | Uso |
 | --- | --- |
-| `icon.svg` | Favicon a colori (dal 27 novembre logo a 0,8, senza ombra né filo, per le schede), prima simbolo scalato a 0,72, fondo «squircle» (dal 21 novembre più squadrato: punti di controllo a 4 unità dagli angoli su 64, prima 10) |
+| `icon.svg` | Favicon a colori (dal 26 novembre logo a 0,8, senza ombra né filo, per le schede), prima simbolo scalato a 0,72, fondo «squircle» (dal 21 novembre più squadrato: punti di controllo a 4 unità dagli angoli su 64, prima 10) |
 | `icon-192.png`, `icon-512.png` | Manifest `any`, installazione/splash secondo il browser: **RGBA con angoli trasparenti** (stessa forma di `icon.svg`, resa con Chromium headless a sfondo trasparente). Prima erano quadrati opachi, e i launcher desktop li mostravano squadrati |
 | `icon-maskable-512.png` | Manifest `maskable`, sfondo pieno e simbolo centrale |
 | `apple-touch-icon.png` | Collegamento Apple, 180×180 |

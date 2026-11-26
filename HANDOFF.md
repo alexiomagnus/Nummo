@@ -1,14 +1,17 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 27 novembre 2026
+## Stato corrente — 26 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, dal più recente, sono cronaca delle singole fasi
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
 rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novembre, l'elenco dei commit e la storia delle release Android,
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, l'app 0.3.4 e il riallineamento dei documenti.
+Riallineato il 26 novembre sera: il lavoro del pomeriggio del 26 era stato datato per errore «27 novembre» nei documenti (corretto in
+`HANDOFF.md`, `AGENTS.md` e `docs/icone-installazione.md`); i commenti del codice dicono ancora «27 November» e restano così per scelta
+dell'utente: valgono come 26 novembre.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `dbb6369` (27 novembre, su richiesta, con `9ee93b2` e `34b235e`: aggiornamenti dell'app Android dalle GitHub Releases e gruppo «Aggiornamenti» in Info, drawer del desktop comprimibile con interruttore nelle Impostazioni, Templates senza la riga introduttiva, nuova icona senza forma «cookie»; Rules invariate; «Deploy complete!», bundle online `index-6b195c19…` e `icons/icon.svg` identici all'export; APK 0.3.6 rilasciato poi su GitHub). Prima `9a41d7e` (27 novembre, su richiesta: barre di Analisi a schede, Impostazioni/Notifiche/Templates a gruppi di righe, «Entrate e spostamenti» in Fondi con eliminazione, icona Material 3 Expressive, «Blu» predefinito, icone delle categorie «Colorato» di base; Rules invariate; «Deploy complete!», bundle online `index-e19a89b6…`, `icon.svg`, `icon-512.png`, `offline.html` e `sw.js` identici all'export). Prima `4d7425d` (27 novembre, su richiesta: pagina Categorie, modulo «Nuova categoria» con nome e «Icona» sulla prima riga, griglia delle icone sotto, «Aggiungi» a tutta larghezza, a ogni dimensione; Rules invariate; «Deploy complete!», bundle `index-55cc8cb7…` della build cloud, non confrontato con l'export). Prima `78426f2` (27 novembre, su richiesta: Registra spesa con due interruttori, pannelli di scelta alti quanto le righe, protezione nell'app Android, «Lista scontrini» a gruppi, «Aggiungi denaro» come pannello, tastiera in Nuova lista; Rules invariate; «Deploy complete!», bundle non confrontato con l'export). Prima `48bc646` (27 novembre, su richiesta: «Archiviazione e backup» a righe in una colonna, «Esci» spostato lì, movimenti senza selettore, guida di Info a tutta larghezza, filtro Categoria con icona su smartphone; Rules invariate). Prima `6f32d22` (26 novembre, su richiesta: pagina «Info»; bundle online `index-3f722592…` uguale all'export, `/images/creator.jpg` servito). Prima `adb4768` (Esercente in vista con la tastiera, con `222e0f4`: «Elimina le liste archiviate» a tutta larghezza) e `446f4e8`. Prima `96886d7` (26 novembre, su richiesta, con `4b0f777`: «Lista scontrini» e scontrini scansionati salvati con la spesa; dettagli senza trascinamento, selettore Template, frequenza in uno schermo, icone di Ordina; bundle `index-8665596e…` identico all'export). Prima `c4301b9` (26 novembre: solo `originId` tolto e commenti, nessun cambio di comportamento; bundle `index-3fba4cb1…` identico all'export). Prima `19efbd5` (25 novembre: avvio più rapido in Avanzata, rotellina CSS, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro; bundle `index-a1c0f188…`). Prima `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `dbb6369` (26 novembre, su richiesta, con `9ee93b2` e `34b235e`: aggiornamenti dell'app Android dalle GitHub Releases e gruppo «Aggiornamenti» in Info, drawer del desktop comprimibile con interruttore nelle Impostazioni, Templates senza la riga introduttiva, nuova icona senza forma «cookie»; Rules invariate; «Deploy complete!», bundle online `index-6b195c19…` e `icons/icon.svg` identici all'export; APK 0.3.6 rilasciato poi su GitHub). Prima `9a41d7e` (26 novembre, su richiesta: barre di Analisi a schede, Impostazioni/Notifiche/Templates a gruppi di righe, «Entrate e spostamenti» in Fondi con eliminazione, icona Material 3 Expressive, «Blu» predefinito, icone delle categorie «Colorato» di base; Rules invariate; «Deploy complete!», bundle online `index-e19a89b6…`, `icon.svg`, `icon-512.png`, `offline.html` e `sw.js` identici all'export). Prima `4d7425d` (26 novembre, su richiesta: pagina Categorie, modulo «Nuova categoria» con nome e «Icona» sulla prima riga, griglia delle icone sotto, «Aggiungi» a tutta larghezza, a ogni dimensione; Rules invariate; «Deploy complete!», bundle `index-55cc8cb7…` della build cloud, non confrontato con l'export). Prima `78426f2` (26 novembre, su richiesta: Registra spesa con due interruttori, pannelli di scelta alti quanto le righe, protezione nell'app Android, «Lista scontrini» a gruppi, «Aggiungi denaro» come pannello, tastiera in Nuova lista; Rules invariate; «Deploy complete!», bundle non confrontato con l'export). Prima `48bc646` (26 novembre, su richiesta: «Archiviazione e backup» a righe in una colonna, «Esci» spostato lì, movimenti senza selettore, guida di Info a tutta larghezza, filtro Categoria con icona su smartphone; Rules invariate). Prima `6f32d22` (26 novembre, su richiesta: pagina «Info»; bundle online `index-3f722592…` uguale all'export, `/images/creator.jpg` servito). Prima `adb4768` (Esercente in vista con la tastiera, con `222e0f4`: «Elimina le liste archiviate» a tutta larghezza) e `446f4e8`. Prima `96886d7` (26 novembre, su richiesta, con `4b0f777`: «Lista scontrini» e scontrini scansionati salvati con la spesa; dettagli senza trascinamento, selettore Template, frequenza in uno schermo, icone di Ordina; bundle `index-8665596e…` identico all'export). Prima `c4301b9` (26 novembre: solo `originId` tolto e commenti, nessun cambio di comportamento; bundle `index-3fba4cb1…` identico all'export). Prima `19efbd5` (25 novembre: avvio più rapido in Avanzata, rotellina CSS, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro; bundle `index-a1c0f188…`). Prima `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
   «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
   datate), bundle online `index-b03086d6…` identico byte per byte all'export. In mezzo, dopo `a8f694f`, anche `b231eeb`, `27e46bd`,
   `00a980a`/`665d96e`/`05a5ed6`, `10f3f67`, `73b9d75`, `1ed557b`, `ca00370`, `12f68c5` (sezioni datate). Prima `a8f694f` (icona nera
@@ -33,17 +36,20 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template senza importo ed esercente del precedente), `72fcf5a` (cambio tema animato, menu dell'account senza limite di altezza,
   vibrazione solo nell'app Android, tema chiaro più deciso, schede delle spese piene).
-- **App Android: 0.3.6** (`dbb6369`, versionCode 9, 27 novembre, su richiesta: aggiornamenti dalle GitHub Releases dentro l'app, nuova icona), release GitHub `android-v0.3.6` «Latest» (APK firmata `nummo-0.3.6.apk`, 9 238 584 byte, SHA-256 `4cc23cd0…c0bd`, certificato `00b1c85c…0fcf` verificato con `apksigner` sul file scaricato dall'indirizzo pubblico; tag annotato su `dbb6369`), non ancora installata dall'utente. Verificato con il codice dell'app sull'API pubblica: alla 0.3.5 propone la 0.3.6, alla 0.3.6 nulla. Prima **0.3.5** (`6f32d22`, versionCode 8, 26 novembre: solo `appVersion` del ponte per la pagina Info), release GitHub `android-v0.3.5` (APK firmata, certificato `00b1c85c…0fcf`, SHA-256 `af4d10f9…87e8`), non ancora installata dall'utente. Prima **0.3.4** (`5b3f8a1`, versionCode 7, 25 novembre: splash trattenuta fino al primo disegno della pagina, niente nero), release GitHub «Latest», installata dall'utente sul Pixel 8 il 26 novembre (nero sparito). Prima **0.3.3** (`6e3ebd0`, versionCode 6, 24 novembre: solo l'icona nera con logo bianco). Prima **0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
+- **App Android: 0.3.6** (`dbb6369`, versionCode 9, 26 novembre, su richiesta: aggiornamenti dalle GitHub Releases dentro l'app, nuova icona), release GitHub `android-v0.3.6` «Latest» (APK firmata `nummo-0.3.6.apk`, 9 238 584 byte, SHA-256 `4cc23cd0…c0bd`, certificato `00b1c85c…0fcf` verificato con `apksigner` sul file scaricato dall'indirizzo pubblico; tag annotato su `dbb6369`), non ancora installata dall'utente. Verificato con il codice dell'app sull'API pubblica: alla 0.3.5 propone la 0.3.6, alla 0.3.6 nulla. Prima **0.3.5** (`6f32d22`, versionCode 8, 26 novembre: solo `appVersion` del ponte per la pagina Info), release GitHub `android-v0.3.5` (APK firmata, certificato `00b1c85c…0fcf`, SHA-256 `af4d10f9…87e8`), non ancora installata dall'utente. Prima **0.3.4** (`5b3f8a1`, versionCode 7, 25 novembre: splash trattenuta fino al primo disegno della pagina, niente nero), release GitHub «Latest», installata dall'utente sul Pixel 8 il 26 novembre (nero sparito). Prima **0.3.3** (`6e3ebd0`, versionCode 6, 24 novembre: solo l'icona nera con logo bianco). Prima **0.3.2** (`f74ff3a`, versionCode 5; vibrazione `HEAVY_CLICK`), **installata dall'utente da GitHub sul Pixel 8** il 23 novembre:
   intensità confermata. Funzioni: WebView del sito con ponte nativo (vibrazione anche in silenzioso e Non disturbare, barre di sistema del
   colore dell'app, sblocco con `BiometricPrompt`, salvataggio dei file), Avanzata con l'accesso Google del telefono (dalla 0.2.0),
   notifiche come notifiche locali dell'app (dalla 0.3.0). Da fare dall'utente: copiare altrove la chiave di firma
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository **pubblico**): `android-v0.3.6` «Latest», poi 0.3.5, 0.3.4, 0.3.3, 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, nove tag `android-v0.1.0`…`android-v0.3.6` (il 0.3.6 annotato, su `dbb6369`, 27 novembre) (verificati sul remoto il 27 novembre: otto riferimenti, `git ls-remote` ne mostra quindici
-  righe perché sette tag sono annotati e ognuno ha anche la riga `^{}`; `android-v0.3.4` è leggero). Ultimi commit di codice, 27 novembre,
-  inviati e pubblicati: `4d7425d` (modulo «Nuova categoria»), `78426f2` (Registra spesa, pannelli di scelta), `48bc646` («Archiviazione e
-  backup» a righe). Del 26 novembre: `6f32d22` (pagina «Info», app 0.3.5), `adb4768` (Esercente in vista con la tastiera), `222e0f4` («Elimina
+- **Git.** `main` = `origin/main`, solo il ramo `main`, nove tag `android-v0.1.0`…`android-v0.3.6` (il 0.3.6 annotato, su `dbb6369`, 26 novembre) (verificati sul remoto il 26 novembre sera: nove riferimenti, `git ls-remote` ne mostra
+  diciassette righe perché otto tag sono annotati e ognuno ha anche la riga `^{}`; `android-v0.3.4` è leggero). Ultimi commit di codice,
+  26 novembre, tutti inviati e pubblicati (dal più recente): `dbb6369` (aggiornamenti dell'app Android, app 0.3.6), `34b235e` (icona senza
+  «cookie»), `9ee93b2` (drawer comprimibile), `9a41d7e` (icone «Colorato» di base), `f1bd66f` («Blu» predefinito), `55be0ed` (icona Material
+  3 Expressive), `c143647` («Entrate e spostamenti» in Fondi), `9d19a1f` (Impostazioni, Notifiche e Templates a gruppi di righe), `c9f6f69`
+  (barre di Analisi a schede), `4d7425d` (modulo «Nuova categoria»), `78426f2` (Registra spesa, pannelli di scelta), `48bc646` («Archiviazione e
+  backup» a righe). Prima, sempre del 26 novembre: `6f32d22` (pagina «Info», app 0.3.5), `adb4768` (Esercente in vista con la tastiera), `222e0f4` («Elimina
   le liste archiviate» a tutta larghezza), `446f4e8` (Categoria intera su smartphone), `96886d7` («Lista scontrini») e `4b0f777` (lavoro
   della sessione parallela); prima `26b0901` (lock hybrid, solo sviluppo) e `c4301b9` (`originId` tolto). Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
@@ -62,7 +68,9 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** 27 novembre, su `1881758` (codice di `48bc646`): `npm test` OK (**607/607**); `check` completo e `test:emulator` non rieseguiti. 26 novembre, dopo il backup di collaudo v12 (vedi la sezione datata): `npm run check` OK (**607/607**). Su `31ea15a`
+- **Verifiche (ultime).** 26 novembre sera, su `6096323` (codice di `dbb6369`, albero pulito): `npm run check` OK (**619/619**, typecheck,
+  build demo); `test:emulator` non rieseguito (l'ultima volta 25/25 su `96886d7`; da allora `DataStore` e Rules invariati). Su `dbb6369`
+  anche `./gradlew assembleDebug assembleRelease` OK (sezione datata). Prima, 26 novembre, su `1881758` (codice di `48bc646`): `npm test` OK (**607/607**); `check` completo e `test:emulator` non rieseguiti. 26 novembre, dopo il backup di collaudo v12 (vedi la sezione datata): `npm run check` OK (**607/607**). Su `31ea15a`
   (codice di `6f32d22`, albero pulito): `npm run check` OK (**606/606**, typecheck, build demo). Su `96886d7` (26 novembre, albero pulito): `npm run check` OK (**605/605**, typecheck, build demo); `test:emulator` **25/25** (porte temporanee). 26 novembre, dopo il riallineamento dei documenti e la rimozione di `originId`: `npm run check` OK (**599/599**). Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
   nelle sezioni datate. Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
@@ -90,12 +98,14 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
   separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser; il
   pulsante tondo della barra mobile anima la larghezza in JS (un ricalcolo del layout per fotogramma per 250 ms, nessun artefatto visto).
-- **Ambiente.** Il 27 novembre pomeriggio è **attivo** un runner hybrid dell'utente (PID 199921, avviato alle 16:49, con `.firebase/hybrid.lock`, `.nummo-hybrid-199921.json` ed export in `.firebase/hybrid-x41Sje/`): non toccarlo. Prima, la mattina, nessun runner era attivo; il PID 45058 del 26 novembre è terminato. In `.firebase/` restano anche `hybrid-B5HtbF` (sessione del 25 novembre interrotta
+- **Ambiente.** Il 26 novembre pomeriggio è **attivo** un runner hybrid dell'utente (PID 199921, avviato alle 16:49, con `.firebase/hybrid.lock`, `.nummo-hybrid-199921.json` ed export in `.firebase/hybrid-x41Sje/`): non toccarlo. Prima, la mattina, nessun runner era attivo; il PID 45058 dello stesso giorno è terminato con la promozione delle 15:23, che ha
+  prodotto l'attuale `emulator-data/` e lasciato in `hybrid-xWmKHo/previous` la copia precedente (l'archivio delle 21:11 del 22 novembre).
+  In `.firebase/` restano anche `hybrid-B5HtbF` (sessione del 25 novembre interrotta
   senza export, `export` vuota; vedi la sezione datata sulla sessione hybrid interrotta) e `hybrid-NBhDrA` (sessione del 23 novembre, solo
   `cli-config`), non toccate. Restano, per scelta dell'utente,
   `hybrid-hRM9mM/previous` (copia del 16 novembre), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
   `hosting.*.cache` (della CLI); `hybrid-vtMRe6/previous` è la copia dell'archivio locale delle 17:11 del 22 novembre, lasciata dalla
-  promozione delle 21:11 che ha prodotto l'attuale `emulator-data/`. Le altre cartelle citate nelle sezioni storiche sono state tolte il
+  promozione delle 21:11 di quel giorno (archivio poi sostituito il 26 novembre, vedi sopra). Le altre cartelle citate nelle sezioni storiche sono state tolte il
   22 novembre. AVD `Pixel_8` dell'emulatore con un PIN di blocco sconosciuto: per le prove usare `Medium_Phone_API_37.0` (Android 17).
   Per prove con emulatori usare porte e config temporanee proprie (es. 39199/39380) e rimuoverle a fine prova.
 - **Issue:** nessuna aperta. **Idee concordate:** `TODO.md` (Firebase unico per tutti; il link di precompilazione è implementato e pubblicato il 24
@@ -105,7 +115,7 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
-## Aggiornamenti dell'app Android dalle GitHub Releases (app 0.3.6) — 27 novembre 2026
+## Aggiornamenti dell'app Android dalle GitHub Releases (app 0.3.6) — 26 novembre 2026
 
 Su richiesta. Analisi: l'app è una WebView del sito con ponte nativo; il sito non può installare APK, quindi serve codice nativo nuovo
 (nessuna libreria: `HttpURLConnection`, `MessageDigest`, `PackageInstaller`). Il repository `alexiomagnus/Nummo` è **pubblico**
@@ -136,7 +146,7 @@ Su richiesta. Analisi: l'app è una WebView del sito con ponte nativo; il sito n
   (bundle `index-6b195c19…`); APK 0.3.6 rilasciato su GitHub lo stesso giorno (vedi «App Android» nello stato corrente). Da provare sul
   Pixel 8: dalla 0.3.5 l'offerta con rimando a GitHub; installata la 0.3.6, il flusso interno si potrà provare solo con una 0.3.7.
 
-## Drawer comprimibile da desktop, Templates senza riga introduttiva, icona senza «cookie» — 27 novembre 2026
+## Drawer comprimibile da desktop, Templates senza riga introduttiva, icona senza «cookie» — 26 novembre 2026
 
 Lavoro della sessione parallela, committato dalla sessione degli aggiornamenti su richiesta dell'utente («considerando le modifiche
 dell'altra chat») e descritto qui dal codice:
@@ -152,24 +162,24 @@ dell'altra chat») e descritto qui dal codice:
   typecheck e `npm test` OK (608/608). Drawer e interruttore **non provati** nel browser da questa sessione; icona non provata su telefono.
   Pubblicati su Hosting con `dbb6369`.
 
-## Icona in stile Material 3 Expressive, icone delle categorie «Colorato» di base — 27 novembre 2026
+## Icona in stile Material 3 Expressive, icone delle categorie «Colorato» di base — 26 novembre 2026
 
 Su richiesta, dopo la sezione sotto:
 - **Icona:** sullo stesso fondo blu notte una forma «cookie» a nove lobi tonale dietro il logo, asta azzurra e arco bianco con ombra leggera (scelta fra quattro varianti in anteprima; dettagli in `docs/icone-installazione.md`). PNG rigenerati; Android con `ic_launcher_foreground.xml` nuovo e `ic_launcher_monochrome.xml` separato (solo logo). `./gradlew assembleDebug` OK (risorse valide); APK **non** installato né rilasciato.
 - **Stile delle icone di categoria:** `defaultIconStyle` = `colorful` (prima `minimal`); una scelta salvata resta (`tests/preferences.test.ts` aggiornato).
 
-## Icona blu notte, «Blu» primo colore e predefinito — 27 novembre 2026
+## Icona blu notte, «Blu» primo colore e predefinito — 26 novembre 2026
 
 Su richiesta (icona di riferimento blu notte con logo bianco; pallini «Blu» come prima palette e predefinita):
 - **Icona:** nuova `public/icons/icon.svg` (squircle in sfumatura `#34476F` → `#1B2642`, filo chiaro sul bordo, logo bianco a 0,72) e PNG rigenerati con `rsvg-convert` (dettagli in `docs/icone-installazione.md`). App Android: sfondo a sfumatura `drawable/ic_launcher_background.xml`, `icon_background` `#1B2642`: **serve un nuovo APK** (non compilato). PWA installate: aggiornamento quando il browser rilegge il manifest.
 - **Colore:** `accents` con `blue` primo, `defaultPreferences.accent` = `blue` (e ripiego di `theme.ts`); chi ha già una scelta salvata la conserva (anche Menta). Colori statici d'avvio (`index.html`, `offline.html`, `background_color` del manifest, `start_background` Android) presi dallo schema Blu; `theme_color` `#121212` invariato. Cache offline `nummo-offline-v2` (test aggiornato).
 - `npm test` OK (608/608). Anteprima dell'icona controllata a 256 px; **non provata** nel browser installato né sul telefono. Committato in `f1bd66f`/`55be0ed`, pubblicato su Hosting con `9a41d7e`.
 
-## «Entrate e spostamenti» in Fondi, con eliminazione — 27 novembre 2026
+## «Entrate e spostamenti» in Fondi, con eliminazione — 26 novembre 2026
 
 Su richiesta. In fondo alla pagina Fondi (`MovementsSection.tsx`, sotto i fondi) l'elenco delle entrate e dei trasferimenti **del mese mostrato**, dal più recente (`movementsInMonth` in `domain/funds.ts`, test aggiunto): icona, fondo (o «da → a»), tipo · data · nota, importo (entrate con «+» verde) e cestino con `DeleteAction`; conferma che dice che il saldo cambia e le spese no. `useRemoteFunds.removeMovement` → `DataStore.removeMovement` (già presente in entrambe le implementazioni, già coperto dai test e dalle Rules, che permettono `delete`): nessun cambio di Rules, schema o backup. Le ricariche non compaiono (calcolate dal piano). L'eliminazione richiede `canWrite` come le altre operazioni dei fondi. Cambiata una regola dichiarata («i movimenti non si eliminano dall'interfaccia», «mai l'elenco dei movimenti»): `AGENTS.md` aggiornato. `npm test` OK (608/608); prova in Chromium headless a 390×844 con il backup `docs/testing/nummo-test-casi-limite-2026-11-08.json` importato (2 voci → eliminato un trasferimento → 1). **Non provato**: desktop, tema chiaro, Avanzata (`test:emulator` non rieseguito), altri mesi. Un movimento di un mese diverso da quello mostrato non si vede finché non si cambia mese. Committato in `c143647`, pubblicato su Hosting con `9a41d7e`.
 
-## Impostazioni, Notifiche e Templates a gruppi di righe — 27 novembre 2026
+## Impostazioni, Notifiche e Templates a gruppi di righe — 26 novembre 2026
 
 Su richiesta (modello: «Lista scontrini»): le tre pagine usano `ListGroup`/`ToggleRow`/`RowBody`/`RowDivider` di `ActionList.tsx`, **una colonna a ogni dimensione** (le due colonne delle Impostazioni da desktop sono tolte). Nuovo `OptionRow` (riquadro tonale, titolo e controllo sotto) e icone `globe`, `clock`, `typeIcon`, `palette`.
 - **Impostazioni:** «Immagine del profilo»; «Lingua e ora» (Lingua, Formato dell'ora, Fuso orario); «Aspetto» (Tema, Colore, Carattere, Stile delle icone); «Funzionalità» (interruttori); «Blocco dell'app», «Categorie preferite», «Fondo preferito» (stessi `Card` sostituiti da `ListGroup`); «Ripristina predefiniti» invariato.
@@ -177,17 +187,17 @@ Su richiesta (modello: «Lista scontrini»): le tre pagine usano `ListGroup`/`To
 - **Templates:** «Template» (spiegazione + interruttore), «Nuovo template» (campi, «Crea» a tutta larghezza), «I tuoi template» (righe con matita, «Elimina tutti» a tutta larghezza nel gruppo).
 - Traduzioni `Lingua e ora`, `Aspetto`. `npm test` OK (607/607); prove headless Chromium a 390×844 e 1280×900 (Standard, tema scuro, nessun errore JS): layout corretto. **Non provato** su dispositivo, in tema chiaro, con template salvati né in Avanzata. Committato in `9d19a1f`, pubblicato su Hosting con `9a41d7e`.
 
-## Barre di Analisi a schede — 27 novembre 2026
+## Barre di Analisi a schede — 26 novembre 2026
 
 Su richiesta (screenshot da iPhone: «non mi piace»): `BarChart.tsx` riorganizzato. Una scheda tonale per categoria (`cardFill` o `elevation.level1`, `radius.card`): icona da 40, nome e importo in `titleMedium`; sotto la barra da 16 (lunghezza ancora relativa alla categoria maggiore) e la quota in una pillola `secondaryContainer` da 56 minimi, allineata tra le schede. Dati, tocco, accessibilità e testi invariati. `typecheck` e `npm test` OK (607/607); **nessuna prova visiva né su dispositivo**, build demo e `test:emulator` non rieseguiti. Committato in `c9f6f69`, pubblicato su Hosting con `9a41d7e`. `AGENTS.md` aggiornato.
 
-## Modulo «Nuova categoria» — 27 novembre 2026
+## Modulo «Nuova categoria» — 26 novembre 2026
 
 Su richiesta, commit `4d7425d` (`CategorySettings.tsx`, AGENTS.md), pubblicato su Hosting: da desktop il modulo aveva nome, «Icona» e «Aggiungi» sulla stessa riga. Ora, a ogni dimensione: nome e «Icona» sulla prima riga (da medium «Icona» con larghezza minima 160, più stretta del campo), la griglia delle icone sotto (solo se aperta), «Aggiungi» a tutta larghezza in fondo. `npm run check` OK (607/607); nessuna prova nel browser né su dispositivo, `test:emulator` non rieseguito.
 
-## Registra spesa, pannelli di scelta, protezione, «Lista scontrini» a gruppi — 27 novembre 2026
+## Registra spesa, pannelli di scelta, protezione, «Lista scontrini» a gruppi — 26 novembre 2026
 
-Su richiesta, commit `78426f2`, pubblicato su Hosting il 27 novembre (`npm run check` OK, 607/607; nessuna prova su dispositivo):
+Su richiesta, commit `78426f2`, pubblicato su Hosting il 26 novembre (`npm run check` OK, 607/607; nessuna prova su dispositivo):
 - **Registra spesa** (`RegisterListDialog`): «Sposta i non acquistati in una nuova lista» parte spento; nuovo interruttore «Includi i non acquistati nella spesa» (spento), i due si escludono.
 - **Pannelli di scelta** (`ChoiceScreen`, `fitPeek="shrink"`, `fittedPeek(…, shrink)`): a metà alti quanto le righe, senza spazio vuoto; le liste lunghe restano a metà.
 - **Protezione** (Standard): icona `shieldAlert` se non attiva; nell'app Android sempre «protetto» con testo proprio (`inAndroidApp`).
@@ -197,7 +207,7 @@ Su richiesta, commit `78426f2`, pubblicato su Hosting il 27 novembre (`npm run c
 - **Aggiungi/Trasferisci** (`MovementDialog`): di nuovo pannello a tre posizioni su smartphone, a metà con tutti i campi (`detents opensHalf fitPeek`), senza Indietro.
 - `AGENTS.md` aggiornato per `MovementDialog`, Nuova lista e i pannelli di scelta.
 
-## «Archiviazione e backup» rifatta, «Esci» spostato, movimenti senza selettore — 27 novembre 2026
+## «Archiviazione e backup» rifatta, «Esci» spostato, movimenti senza selettore — 26 novembre 2026
 
 Su richiesta (screenshot della pagina da desktop e del dialogo «Trasferisci tra fondi»):
 - **«Esci» fuori dal menu account**: ora è una riga di «Archiviazione e backup» in Avanzata («Esci», «Esci da questo account Google.», spinner
@@ -217,7 +227,7 @@ Su richiesta (screenshot della pagina da desktop e del dialogo «Trasferisci tra
   menu senza «Esci», pagina con «Esci», clic → prima schermata. Non provato: telefono reale, inglese, l'eliminazione di tutte le spese
   e la sostituzione dalla nuova pagina (codice invariato). Non committato.
 
-## Info a tutta larghezza senza «Fatto», filtro Categoria con icona su smartphone — 27 novembre 2026
+## Info a tutta larghezza senza «Fatto», filtro Categoria con icona su smartphone — 26 novembre 2026
 
 Su richiesta (screenshot):
 - **Guida dentro Info** (`Guide` con `fill`): occupa tutta la larghezza del pannello da desktop (976 px su 1040 a 1280×900; prima colonna da 640);
@@ -6306,8 +6316,8 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (26 novembre):** online su Hosting il codice fino a `6f32d22`; Rules ultime quelle di `96886d7` (scontrini
-  scansionati). Vedi «Stato corrente» e «Registro dei rilasci».
+- **Pubblicazione (26 novembre sera):** online su Hosting il codice fino a `dbb6369`; Rules ultime quelle di `96886d7` (scontrini
+  scansionati); app Android 0.3.6 rilasciata su GitHub. Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
