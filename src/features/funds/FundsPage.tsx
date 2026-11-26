@@ -9,7 +9,7 @@ import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { parseSyncedExpense, type SyncedExpense, type SyncedFund } from '../../domain/firestore';
 import {
-  addMonths, firstOverviewMonth, fundInUse, hasBalanceData, monthOf, monthOverview, unassignedExpenses,
+  addMonths, firstOverviewMonth, fundInUse, hasBalanceData, monthOf, monthOverview, movementsInMonth, unassignedExpenses,
   type FundMonth, type MonthKind, type MovementKind,
 } from '../../domain/funds';
 import type { ExpenseRecord } from '../../domain/contract';
@@ -21,6 +21,7 @@ import { FundAvatar } from './FundAvatar';
 import { FundDetail, fundCardId } from './FundDetail';
 import { FundEditor } from './FundEditor';
 import { MovementDialog } from './MovementDialog';
+import { MovementsSection } from './MovementsSection';
 import type { RemoteFunds } from './useRemoteFunds';
 
 type Props = {
@@ -85,6 +86,7 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
   const balanceFunds = useMemo(() => new Set(funds.filter((fund) => hasBalanceData(fund, movements)).map((fund) => fund.id)), [funds, movements]);
   const movableFunds = activeFunds.filter((fund) => balanceFunds.has(fund.id));
   const balances = useMemo(() => new Map(overview.funds.map((item) => [item.fund.id, item.balance])), [overview]);
+  const monthMovements = useMemo(() => movementsInMonth(movements, month), [movements, month]);
   const orphans = useMemo(() => unassignedExpenses(expenses, funds), [expenses, funds]);
   // Earliest month with data (first fund start or oldest expense), up to one year ahead (forecasts only).
   const first = useMemo(() => firstOverviewMonth(funds, expenses, today), [funds, expenses, today]);
@@ -177,6 +179,14 @@ function FundsPageView({ remote, expenses, today, canWrite, defaultFundId, onSet
           {archived.map((item) => <FundCard key={item.fund.id} item={item} isDefault={false} onOpen={setDetailId} />)}
         </Reveal>}
       </View>}
+
+      {/* The month's incomes and transfers, each deletable (27 November, on request). */}
+      {funds.length > 0 && <MovementsSection movements={monthMovements} funds={funds} monthLabel={monthLabel} canWrite={canWrite}
+        onRemove={async (movement) => {
+          const done = await remote.removeMovement(movement);
+          if (done) notify(movement.kind === 'transfer' ? "Trasferimento eliminato." : "Entrata eliminata.");
+          return done;
+        }} />}
 
       {/* Before the editors: opened from the fund's screen, their screens mount later and stay above it. */}
       {detail && <FundDetail item={detail} monthLabel={monthLabel} isDefault={detail.fund.id === defaultFundId}

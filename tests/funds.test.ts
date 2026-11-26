@@ -4,6 +4,7 @@ import { backupVersion, makeBackup, parseBackup, planImport } from '../src/domai
 import type { ExpenseRecord } from '../src/domain/contract.ts';
 import { applyPriceEdit, dataOf, newDraft, validateDraft } from '../src/domain/expense.ts';
 import {
+  movementsInMonth,
   balanceAt, budgetFor, budgetState, decodeBudgets, fundPolicy, parseBudgets, parseRecharges, decodeRecharges, dueDate, encodeBudgets, encodeRecharges, fundInUse, fundMonth,
   fundNameError, monthOverview, nextFundColor, parseFund, parseMoneyMinor, parseMovement, rechargeCredits, setBudgetException,
   setRecharge, setRecurringBudget, unassignedExpenses, type Fund, type Movement,
@@ -305,4 +306,12 @@ test('piani dei fondi: 120 voci per piano (24 fino al 22 novembre), 121 rifiutat
   assert.equal(setRecurringBudget({ ...full, budgets: budgets(119) }, 500, '2026-11-22')?.length, 120);
   // Older data (up to 24 entries) stays valid.
   assert.equal(parseBudgets(budgets(24))?.length, 24);
+});
+
+test('movimenti del mese: solo il mese scelto, dal più recente', () => {
+  const make = (id: string, date: string, created: string) => ({ id, kind: 'income' as const, amount_minor: 100, date, to_fund_id: 'f', from_fund_id: null, note: '', created_at: created });
+  const list = [make('a', '2026-11-03', '2026-11-03T10:00:00Z'), make('b', '2026-10-30', '2026-10-30T10:00:00Z'),
+    make('c', '2026-11-20', '2026-11-20T09:00:00Z'), make('d', '2026-11-20', '2026-11-20T11:00:00Z')];
+  assert.deepEqual(movementsInMonth(list, '2026-11').map((m) => m.id), ['d', 'c', 'a']);
+  assert.deepEqual(movementsInMonth(list, '2026-12'), []);
 });

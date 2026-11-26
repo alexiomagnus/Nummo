@@ -46,6 +46,7 @@ export function useRemoteFunds(backend: DataStore) {
     removeFund: (expected: SyncedFund) => mutate(() => backend.removeFund(checked(expected))),
     // The ID comes from the dialog (one per opening), so a repeated press never adds a second movement.
     createMovement: (id: string, data: MovementData) => mutate(() => backend.createMovement(id, data)),
+    removeMovement: (expected: SyncedMovement) => mutate(() => backend.removeMovement(expected)),
     assignFund: (records: readonly SyncedExpense[], fundId: string) => mutate(() => backend.assignFund(records, fundId)),
   };
 }

@@ -59,6 +59,11 @@ export type MovementData = Readonly<{
   kind: MovementKind; amount_minor: number; date: string; to_fund_id: string; from_fund_id: string | null; note: string;
 }>;
 export type Movement = Readonly<MovementData & { id: string; created_at: string }>;
+// The incomes and transfers dated within a month (27 November, on request: listed in Fondi, each can be deleted), newest first.
+export function movementsInMonth<T extends Movement>(movements: readonly T[], month: Month): T[] {
+  return movements.filter((m) => monthOf(m.date) === month)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id));
+}
 
 // ---- Dates ----
 
