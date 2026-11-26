@@ -532,7 +532,7 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab, folde
   const { colors } = useTheme();
   const fabIcon = useIconSource(fab?.icon);
   const toggleLabel = folded ? t('Espandi il menu') : t('Comprimi il menu');
-  // Folding is one movement (user's request, 27 November: the swap looked cheap): the drawer's width eases between 224 and 80 while the
+  // Folding is one movement (user's request, 27 November: the swap looked cheap): the drawer's width eases between 240 and 80 while the
   // labels fade (always mounted, clipped by the drawer) and the icons stay where they are; the button at the top, which changes shape
   // (extended ↔ icon), settles in from a little smaller. Nothing at the first render, nothing with reduced motion (the global rule).
   const reduced = useReducedMotion();
