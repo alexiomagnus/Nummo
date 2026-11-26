@@ -118,6 +118,14 @@ dell'utente: valgono come 26 novembre.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## «Novità» dell'aggiornamento, dettaglio del fondo più compatto, barre con chevron — 27 novembre 2026
+
+Su richiesta, commit `bd10cf4`, pubblicato solo su Hosting («Deploy complete!», Rules invariate; bundle non confrontato con l'export). `npm run check` OK (618/618); non provato su dispositivo.
+- «Novità» di «Aggiornamento disponibile» era vuota con le note che aprono con un paragrafo prima di «## Novità»: `releaseSummary` (`domain/appUpdate.ts`, con test) prende le voci prima del primo titolo o, se non ce ne sono, quelle sotto il primo titolo.
+- Dettaglio del fondo su smartphone: righe da 44, avatar da 56, spazi ridotti, perché «Archivia» entri senza scorrere (non verificato su un fondo con budget).
+- Analisi, Barre: tolta la scritta «Tocca una barra…» (e la chiave in `en.ts`), chevron a destra dell'importo in ogni scheda.
+- Allineati `AGENTS.md` (Android 0.3.9, «Prossimo mese» schermo intero) e la testa di «Stato corrente».
+
 ## Schermi interi per fondo e «Prossimo mese», «Tutte le operazioni», riquadri coerenti — 27 novembre 2026
 
 Su richiesta, commit `685dfe6`, pubblicato solo su Hosting (Rules invariate; «Deploy complete!»; bundle non confrontato con l'export). `npm run check` OK (617/617); non provato su dispositivo.
