@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Scala al 75 %: la pagina riempiva solo i tre quarti dello schermo — 27 novembre 2026
+
+Segnalazione (app 0.3.14, scala 75 %): sotto la pagina restava una fascia vuota (circa il 27 % dell'altezza). Causa: `visibleViewportHeight` e `visibleViewportTop` (`theme/viewport.ts`) leggevano ogni `visualViewport.scale` diverso da 1 come pizzico e restituivano `null`, tenendo l'altezza vecchia di `#root`; con il tag viewport della scala la scala vale per sempre 0,75–1,25. Ora `setPageScale` (chiamata da `watchUiScale`) dice quale scala è quella della pagina e solo le altre sono pizzichi; dopo il cambio un `resize` a 200 ms rimisura. Provato in Chromium con emulazione mobile (411×860) sull'export demo con la preferenza salvata: 100 % → `#root` 411×860, 75 % → 548×1147, 125 % → 329×688 (altezza e larghezza riempiono lo schermo). Nuovo test in `tests/viewport.test.ts`; `npm run check` 630/630. Solo sito (nessuna nuova APK). Pubblicato su Hosting. Non provato sul telefono.
+
 ## «Annulla download» nei limiti del pulsante — 27 novembre 2026
 
 Segnalazione: nella schermata «Aggiornamento disponibile», durante il download, la scritta di «Annulla download» era troppo grande e usciva dal pulsante. Causa: dal 27 novembre due azioni di uno schermo stanno su una riga a metà ciascuna anche su smartphone (circa 150–175 dp), e l'etichetta di `screenActionStyles.label` (16 dp) con i margini di 24 dp di Paper è la più lunga di tutti gli schermi. Ora i due pulsanti con contorno di `UpdateDialog.tsx` («Annulla download», «Più tardi») usano `cancelLabel`: 15 dp e margini di 8 dp. Calcolato per 360 dp di larghezza, **non misurato** né visto sul telefono (serve l'app 0.3.6+ per arrivarci). Solo sito, nessuna nuova APK.

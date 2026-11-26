@@ -1,3 +1,5 @@
+import { setPageScale } from './viewport.ts';
+
 // «Scala dell'interfaccia» (27 November 2026, on request, after Morphe): the whole page drawn larger or smaller, like Android's
 // «display size». Done with the viewport meta tag, so the layout width (and with it window sizes, size classes, menus, the
 // visual viewport) simply becomes the real width divided by the scale: no CSS zoom, no per-component scaling. It works where the
@@ -34,9 +36,13 @@ export function applyUiScale(doc: ViewportTarget, scale: number, deviceWidth: nu
 // Applies the scale now and again when the screen turns (the device width changes), until the returned function is called.
 export function watchUiScale(scale: number): () => void {
   if (typeof document === 'undefined') return () => undefined;
+  // The viewport code must know this scale is the page's own, not a pinch (viewport.ts, `setPageScale`), and measure again once
+  // the new viewport has settled.
+  setPageScale(scale / 100);
   const apply = () => applyUiScale(document, scale, window.screen?.width ?? 0);
   apply();
+  const settle = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
   const orientation = window.screen?.orientation;
   orientation?.addEventListener?.('change', apply);
-  return () => orientation?.removeEventListener?.('change', apply);
+  return () => { window.clearTimeout(settle); orientation?.removeEventListener?.('change', apply); };
 }

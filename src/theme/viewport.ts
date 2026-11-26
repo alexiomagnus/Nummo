@@ -1,7 +1,14 @@
 // The keyboard may resize only the visual viewport. Keep pinch zoom independent
 // of layout: resizing the app to the magnified viewport would reflow its contents.
+// The scale the page itself asks for («Scala dell'interfaccia», theme/uiScale.ts: the viewport tag sets the visual viewport's scale to
+// 0.75–1.25 for good). Not a pinch zoom: measuring goes on at that scale. Without this the height stayed at its old value, since
+// any scale other than 1 was read as a pinch, and a 75 % page filled only the top three quarters of the screen (27 November).
+let pageScale = 1;
+export function setPageScale(scale: number): void { pageScale = Number.isFinite(scale) && scale > 0 ? scale : 1; }
+export const isPinchZoom = (scale: number): boolean => Math.abs(scale - pageScale) > 0.01;
+
 export function visibleViewportHeight(layoutHeight: number, visual?: { height: number; scale: number } | null): number | null {
-  if (visual && Math.abs(visual.scale - 1) > 0.01) return null;
+  if (visual && isPinchZoom(visual.scale)) return null;
   const height = visual?.height ?? layoutHeight;
   return Number.isFinite(height) && height > 0 ? Math.round(height) : null;
 }
@@ -250,7 +257,7 @@ export function reserveScrollPadding(element: ScrollHost | null, height: number,
 // (resizes-content) and desktop browsers always report 0. Pinch zoom (offset of a magnified view): null, keep the value.
 export function visibleViewportTop(visual?: { offsetTop: number; scale: number } | null): number | null {
   if (!visual) return 0;
-  if (Math.abs(visual.scale - 1) > 0.01) return null;
+  if (isPinchZoom(visual.scale)) return null;
   return Number.isFinite(visual.offsetTop) ? Math.max(0, Math.round(visual.offsetTop)) : 0;
 }
 

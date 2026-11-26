@@ -378,3 +378,15 @@ test('viewport iOS: la tastiera sposta il viewport visibile, #root lo segue; zoo
   visual.dispatchEvent(new Event('scroll'));
   assert.deepEqual(tops, [0, 180, 0]);
 });
+
+test('scala dell’interfaccia: lo zoom della pagina non è un pizzico, quello diverso sì', async () => {
+  const { setPageScale } = await import('../src/theme/viewport.ts');
+  try {
+    setPageScale(0.75);
+    assert.equal(visibleViewportHeight(900, { height: 1219.6, scale: 0.75 }), 1220, 'misura alla scala voluta dalla pagina');
+    assert.equal(visibleViewportTop({ offsetTop: 40, scale: 0.75 }), 40);
+    assert.equal(visibleViewportHeight(900, { height: 600, scale: 1.5 }), null, 'un pizzico resta ignorato');
+    assert.equal(visibleViewportHeight(900, { height: 900, scale: 1 }), null, 'a 75 % anche scala 1 è fuori linea');
+  } finally { setPageScale(1); }
+  assert.equal(visibleViewportHeight(900, { height: 750, scale: 1 }), 750);
+});
