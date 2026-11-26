@@ -24,11 +24,20 @@ al 35 %, 1,6 unità in basso). Maskable: tutto a scala 0,8 (forma dentro il cerc
 `ic_launcher_foreground.xml` con forma e logo (colori `icon_shape`, `icon_stem`, `icon_foreground`), nuovo `ic_launcher_monochrome.xml` (il
 solo logo, per le icone a tema: con la forma la silhouette sarebbe un disco). Scelta fra quattro varianti in anteprima (la B).
 
+**27 novembre 2026, ancora su richiesta:** tolta la forma «cookie»; fondo blu navy in sfumatura diagonale (`#2E4C8C` in alto a sinistra,
+`#1B3068` al centro, `#0D1A3E` in basso a destra) con una luce morbida dall'angolo in alto a sinistra (bianco radiale al 14 %), filo chiaro
+sul bordo (bianco al 16 %), «n» di un solo colore in bianco non puro `#F3F6FC` con un'ombra leggera (`#050B1E` al 30 %, 2 unità in basso),
+nessuna forma geometrica. Provati lo stesso giorno, su richiesta, un azzurro grigio (`#97B2D8`), un celeste e un blu vivo (`#5B9BFF` → `#1A47B8`): scartati. PNG alle stesse
+scale (0,72; maskable 0,5; Apple 0,62). `icon.svg` è solo il **favicon** delle schede (16–32 px), in una versione propria: logo a scala 0,8,
+senza ombra né filo sul bordo (a quelle misure li impastavano). Android: `ic_launcher_background.xml` con la stessa sfumatura a 315° (senza
+la luce radiale), `icon_background` `#0D1A3E` (anche primo fotogramma), `ic_launcher_foreground.xml` = logo e ombra a scala 0,6,
+`icon_foreground` `#F3F6FC`; `icon_shape` e `icon_stem` tolti (serve un nuovo APK).
+
 ## Asset e scopi
 
 | Asset in `public/icons/` | Uso |
 | --- | --- |
-| `icon.svg` | Favicon a colori, simbolo scalato a 0,72, fondo «squircle» (dal 21 novembre più squadrato: punti di controllo a 4 unità dagli angoli su 64, prima 10) |
+| `icon.svg` | Favicon a colori (dal 27 novembre logo a 0,8, senza ombra né filo, per le schede), prima simbolo scalato a 0,72, fondo «squircle» (dal 21 novembre più squadrato: punti di controllo a 4 unità dagli angoli su 64, prima 10) |
 | `icon-192.png`, `icon-512.png` | Manifest `any`, installazione/splash secondo il browser: **RGBA con angoli trasparenti** (stessa forma di `icon.svg`, resa con Chromium headless a sfondo trasparente). Prima erano quadrati opachi, e i launcher desktop li mostravano squadrati |
 | `icon-maskable-512.png` | Manifest `maskable`, sfondo pieno e simbolo centrale |
 | `apple-touch-icon.png` | Collegamento Apple, 180×180 |

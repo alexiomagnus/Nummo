@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Background of the launcher icon: the navy gradient of public/icons/icon.svg (27 November, on request). -->
+<!-- Background of the launcher icon: the diagonal navy blue of public/icons/icon.svg (27 November, on request), light top-left to deep
+     bottom-right. The soft light of the web icon's top-left corner is left out: a vector layer of the adaptive icon has no radial alpha. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient android:angle="270" android:startColor="#34476F" android:endColor="#1B2642" android:type="linear" />
+    <gradient android:angle="315" android:startColor="#2E4C8C" android:centerColor="#1B3068" android:endColor="@color/icon_background" android:type="linear" />
 </shape>
