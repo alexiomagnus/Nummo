@@ -106,7 +106,7 @@ function FundContent({ item, monthLabel, isDefault, hasBalance, canWrite, onEdit
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={styles.center}>{fund.name}</Text>
       <Text variant="displaySmall" style={[styles.amount, styles.center]}>{formatAmount(spentNow)}</Text>
       <Text variant="bodyMedium" style={[muted, styles.center]}>
-        {`${forecast ? t("previsti") : t("speso nel mese")} · ${monthLabel}`}</Text>
+        {`${forecast ? t("previsti") : t("speso nel mese")}\u2002|\u2002${monthLabel}`}</Text>
       {(isDefault || fund.archived) && <View ref={marksRef} style={styles.marks}>
         {isDefault && <View style={[styles.badge, { backgroundColor: colors.secondaryContainer }]}>
           <SvgIcon shape={iconShapes.star} size={16} color={colors.onSecondaryContainer} />

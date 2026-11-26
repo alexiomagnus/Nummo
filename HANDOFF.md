@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Separatore nel dettaglio del fondo — 27 novembre 2026
+
+Su richiesta: sotto l'importo di `FundDetail` «speso nel mese · novembre 2026» diventa «speso nel mese | novembre 2026» (U+2002 per lato, come le righe degli abbonamenti). Il punto in «Demo · Risparmi» è nel nome del fondo (dati dell'utente), non toccato.
+
 ## «Saldo iniziale» come interruttore — 27 novembre 2026
 
 Su richiesta: in `FundEditor` il campo «Saldo iniziale (facoltativo)» è l'interruttore «Saldo iniziale» (acceso se il fondo ha già un saldo iniziale) con sotto «Importo del saldo iniziale»; spento = saldo 0. Nessuna parola «facoltativo» nella sezione. `npm run check` 626/626; non provato a vista. Commit, push e Hosting come richiesto.
