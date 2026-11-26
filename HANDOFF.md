@@ -116,7 +116,8 @@ Su richiesta, dopo un confronto tra documenti e codice (su `31ea15a`, `npm run c
 - **Collaudo dall'interfaccia eseguito** (su richiesta, Chromium headless, esiti in `docs/testing/README.md`): Standard su `dist-demo/`
   e Avanzata con emulatori demo propri (porte 39199/39380, config temporanea `.nummo-collaudo-v12.json` tolta, processi propri fermati;
   la sessione hybrid dell'utente, PID 45058, non toccata). Tutto come atteso, nessun errore JS; Rules accettano i 500 prodotti e i
-  valori nulli. Non provati: CSV, telefono reale, inglese, tema scuro.
+  valori nulli. Poi, su richiesta, anche il CSV (aperto in LibreOffice Calc: date e importi riconosciuti) e il tema scuro a
+  1280×900 e 390×844: tutto come atteso. Non provati: telefono reale, inglese.
 - **Documenti:** AGENTS.md («Archiviazione e backup» sotto «Lista scontrini»; nomi dei gruppi della pagina Info); README (backup v12);
   qui «Stato corrente» (Git, verifiche) e «Funzionalità implementate» (backup v12, schermi che salgono dal basso, Lista scontrini,
   Esercenti, Info, sei backup di collaudo). Le citazioni di v11 in `docs/architecture.md` sono storiche e restano.
@@ -6195,7 +6196,7 @@ screen reader, concorrenza tra due dispositivi.
    Templates, spesa con esercente ed eliminazione di un pagamento. Per prove CRUD cloud
    serve autorizzazione. ID icona eliminati: chiuso (vedi «Problemi aperti»); resta facoltativa la verifica sui dati reali.
 2. **Collaudo in demo** con i backup di `docs/testing/` (`npm run emulators`, `emulators:seed`, `dev:demo`), compreso il nuovo v12
-   (scontrini scansionati: collaudato il 26 novembre in Standard e Avanzata, resta il CSV):
+   (scontrini scansionati: collaudato il 26 novembre in Standard e Avanzata, CSV e tema scuro compresi):
    unione/conflitto/sostituzione dall'interfaccia (backup v5 casi limite e v6 utente medio), riepilogo ed esiti del ripristino,
    sospensione della ricarica (interruttore «Ricarica mensile» del modulo del fondo), dialoghi Fondi/Liste a 320 px e in landscape,
    CSV in foglio di calcolo reale. Le eccezioni di budget non si creano più dall'interfaccia: arrivano solo da un backup e

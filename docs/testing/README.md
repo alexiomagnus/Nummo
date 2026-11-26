@@ -329,7 +329,11 @@ conflitto: tutto coperto dal test.
   unione accettata dalle Rules per i 5 scontrini (letti via REST: 500 prodotti uniti da `\n`, `merchant`, `date`, `total_minor` e
   `discount_minor` nulli dove previsto), seconda unione senza aggiunte, export identico come sopra; dopo «Elimina tutte le spese» sul
   server 0 spese e 0 scontrini. A 390×844 (smartphone emulato) lista e dettaglio senza scorrimento orizzontale.
-- **Non provati:** il CSV (passo 5), smartphone reale, inglese, tema scuro.
+- **CSV e tema scuro (26 novembre, stesso giorno, Standard):** il CSV esportato ha BOM, righe CRLF, `;`, virgola decimale e le 6 spese
+  (nessun dato degli scontrini); aperto in LibreOffice Calc con il filtro CSV italiano, date riconosciute come date e importi come
+  numeri (somma 1453,91), accenti e «·» intatti. Tema scuro a 1280×900 e 390×844: lista, dettagli (anche «Totale non letto»), prodotti
+  e conferma «Eliminare questo scontrino?» leggibili, senza scorrimento orizzontale né errori JS.
+- **Non provati:** smartphone reale, inglese.
 
 ## Fixture dei test automatici
 
