@@ -128,6 +128,16 @@ export function GlobalStyle({ mode, accent, colorMode, amoled = false }: Props) 
       [data-glass-item]:last-child, [data-glass-item]:has(+ :not([data-glass-item])) {
         border-bottom-left-radius: ${radius.group}px !important; border-bottom-right-radius: ${radius.group}px !important;
       }
+      /* «Scala dell'interfaccia» (ScaleSlider): a pill bar filled up to the handle, a vertical handle on a real range input. */
+      input[data-scale-slider] { -webkit-appearance: none; appearance: none; width: 100%; height: 40px; margin: 0; background: transparent; outline: none; cursor: pointer; }
+      input[data-scale-slider]::-webkit-slider-runnable-track { height: 20px; border-radius: 10px;
+        background: linear-gradient(to right, var(--on) 0, var(--on) var(--fill), var(--off) var(--fill), var(--off) 100%); }
+      input[data-scale-slider]::-webkit-slider-thumb { -webkit-appearance: none; width: 4px; height: 36px; margin-top: -8px; border-radius: 2px; border: 0;
+        background: var(--on); box-shadow: 0 0 0 4px transparent; }
+      input[data-scale-slider]::-moz-range-track { height: 20px; border-radius: 10px; background: var(--off); }
+      input[data-scale-slider]::-moz-range-progress { height: 20px; border-radius: 10px; background: var(--on); }
+      input[data-scale-slider]::-moz-range-thumb { width: 4px; height: 36px; border-radius: 2px; border: 0; background: var(--on); }
+      input[data-scale-slider]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--off); }
       /* Bars over the content (top bar and navigation pill on phones, screen bars): what scrolls under them is blurred. */
       [data-glass-bar] { -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4); }
       /* The circles behind the pages drift very slowly; still with reduced motion (the rule below stops them). */

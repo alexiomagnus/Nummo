@@ -3,5 +3,11 @@
     <!-- The launcher icon (public/icons/icon.svg) and the first frame before the page paints its own theme. -->
     <color name="icon_background">#171717</color>
     <color name="icon_foreground">#FAFAF7</color>
+    <!-- The other launcher icons (Impostazioni → Aspetto → Icona dell'app, 0.3.14): light = the same logo with the colours swapped,
+         original = the first icon of 6 November (dark green, mint logo). -->
+    <color name="icon_light_background">#FAFAF7</color>
+    <color name="icon_light_foreground">#171717</color>
+    <color name="icon_original_background">#0F1512</color>
+    <color name="icon_original_foreground">#97D8BB</color>
     <color name="start_background">#0F1115</color>
 </resources>

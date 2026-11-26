@@ -1,3 +1,4 @@
+import { parseUiScale, uiScaleDefault } from '../../theme/uiScale.ts';
 import { parseBackground, type Background } from '../../theme/background.ts';
 // Display preferences. Pure and storage-agnostic so they can be tested; the browser storage
 // adapter lives in usePreferences.ts. Only presentation choices: never expense data.
@@ -25,15 +26,16 @@ export type ChartType = (typeof chartTypes)[number];
 // `avatarRing` (a ring switch around the account picture, 22 November) is gone the same day: the ring now marks the Advanced
 // mode by itself; a saved value is ignored.
 export type DashboardPreferences = { dashboardChart: ChartType; dashboardPeriod: Period; dashboardTrend: boolean; showArchivedLists: boolean; showArchivedFunds: boolean; templatesEnabled: boolean; haptics: boolean; drawerToggle: boolean; timeFormat: TimeFormat; timeZone: string };
-export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; amoled: boolean; background: Background; font: FontChoice; language: Language; iconStyle: IconStyle };
+export type Preferences = DashboardPreferences & { theme: ThemeChoice; colorMode: ColorMode; accent: Accent; amoled: boolean; uiScale: number; background: Background; font: FontChoice; language: Language; iconStyle: IconStyle };
 
 export const preferencesKey = 'nummo.preferences.v1';
 // `accent`: «Grigio» (`graphite`) by default since 27 November (user's request; before «Blu»), a saved choice stays. `amoled`: true black
 // in the dark theme (off by default).
+// `uiScale`: the interface scale in percent, 75–125 in steps of 5 (100 by default; theme/uiScale.ts, touch devices and the Android app).
 // `background`: the animation behind the glass, circles by default, `none` = plain background (the glass stays); `orbs: false` of the first version reads as `none`.
 // `colorMode`: «Material You» by default since 27 November (user's request; Android app 0.3.11 only, elsewhere it reads as «Palette» with «Grigio»);
 // «Palette» by default from 22 November (before «Monocolore»). A saved choice stays.
-export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'system', accent: 'graphite', amoled: false, background: 'circles', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, drawerToggle: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
+export const defaultPreferences: Preferences = { theme: 'system', colorMode: 'system', accent: 'graphite', amoled: false, uiScale: uiScaleDefault, background: 'circles', font: 'google', language: 'it', dashboardChart: 'donut', dashboardPeriod: 'month', dashboardTrend: true, showArchivedLists: true, showArchivedFunds: true, templatesEnabled: false, haptics: true, drawerToggle: true, timeFormat: '24h', timeZone: autoTimeZone, iconStyle: defaultIconStyle };
 
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback;
@@ -48,6 +50,7 @@ export function parsePreferences(raw: string | null): Preferences {
     colorMode: oneOf(['mono', 'palette', 'system'], o.colorMode, defaultPreferences.colorMode),
     accent: oneOf(accents, o.accent, defaultPreferences.accent),
     background: parseBackground(o.background, o.orbs),
+    uiScale: parseUiScale(o.uiScale),
     amoled: typeof o.amoled === 'boolean' ? o.amoled : defaultPreferences.amoled,
     font: oneOf(['google', 'system'], o.font, defaultPreferences.font),
     language: oneOf(['it', 'en'], o.language, defaultPreferences.language),

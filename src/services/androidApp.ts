@@ -306,3 +306,13 @@ export function subscribeTopInset(listener: () => void, scope: unknown = globalT
   insetListeners.add(listener);
   return () => { insetListeners.delete(listener); };
 }
+
+// Optional too (version 0.3.14, 27 November, on request): the launcher icon, one activity-alias per icon (NummoBridge.appIcon /
+// setAppIcon). Its presence also marks an app whose WebView honours the viewport tag, which the interface scale needs.
+export type AndroidAppIcons = { appIcon(): string; setAppIcon(id: string): void };
+export function androidAppIcons(scope: unknown = globalThis): (AndroidBridge & AndroidAppIcons) | undefined {
+  const bridge = androidBridge(scope);
+  if (!bridge) return undefined;
+  const record = bridge as unknown as Record<string, unknown>;
+  return typeof record.appIcon === 'function' && typeof record.setAppIcon === 'function' ? bridge as AndroidBridge & AndroidAppIcons : undefined;
+}

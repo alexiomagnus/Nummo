@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
@@ -19,6 +19,10 @@ import type { TimeFormat } from '../../domain/timeFormat';
 import { deviceTimeZone } from '../../domain/pushSchedule';
 import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
+import { ScaleSlider } from '../../components/ScaleSlider';
+import { Logo } from '../../components/Logo';
+import { appIconColors, appIconLabels, appIcons, parseAppIcon, type AppIcon } from '../../domain/appIcons';
+import { androidAppIcons, inAndroidApp } from '../../services/androidApp';
 import { backgroundLabels, backgrounds, type Background } from '../../theme/background';
 import { hasHaptics } from '../../theme/haptics';
 import { useSizeClass } from '../../theme/useSizeClass';
@@ -30,6 +34,10 @@ import { saveProfileImage } from './useProfileImage';
 
 // Read once: only in the Android app (23 November, on request), where the vibration is Android's touch feedback.
 const vibrationAvailable = hasHaptics();
+// The interface scale needs a browser that honours the viewport tag: touch devices, and the Android app from 0.3.14 (its WebView
+// uses the wide viewport only from then on, which `appIcon` marks); a desktop browser has its own zoom. The icon only in the app.
+const iconsAvailable = androidAppIcons() !== undefined;
+const scaleAvailable = inAndroidApp() ? iconsAvailable : typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 const vibrationNote = "Una breve vibrazione quando interagisci con l'app. Segue le impostazioni di vibrazione di Android.";
 
 type Props = {
@@ -178,6 +186,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             })}
           </View>
         </OptionRow>
+        {scaleAvailable && <><RowDivider /><ScaleSlider value={preferences.uiScale} onChange={(uiScale) => onChange({ uiScale })} /></>}
+        {iconsAvailable && <><RowDivider /><OptionRow icon={iconShapes.smartphone} title={t("Icona dell'app")}>
+          <AppIconChoice /></OptionRow></>}
       </ListGroup>
       <ListGroup icon={iconShapes.settings} label={t("Funzionalità")}>
         <ToggleRow icon={iconShapes.chart} title={t("Mostra andamento nel tempo")} subtitle={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}
@@ -205,6 +216,30 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
 }
 
 // Its own width from medium (until 26 November it was as wide as the two actions of the AI card, now in «Lista scontrini»).
+// The launcher icons of the app (the current one read from the app, the choice made through it): three tiles with a preview.
+function AppIconChoice() {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const [current, setCurrent] = useState<AppIcon>(() => { try { return parseAppIcon(androidAppIcons()?.appIcon()) ?? 'default'; } catch { return 'default'; } });
+  const choose = (icon: AppIcon) => { try { androidAppIcons()?.setAppIcon(icon); setCurrent(icon); } catch { /* the app refused: the choice stays */ } };
+  return (
+    <View style={styles.styleCards} role="radiogroup" aria-label={t("Icona dell'app")}>
+      {appIcons.map((icon) => {
+        const selected = icon === current;
+        const { background, foreground } = appIconColors[icon];
+        return (
+          <StateLayerPressable key={icon} layerColor={colors.onSurface} radius={radius.card} accessibilityRole="radio" aria-checked={selected}
+            accessibilityLabel={`${t(appIconLabels[icon])}${selected ? t(", selezionata") : ''}`} onPress={() => choose(icon)}
+            style={[styles.iconTile, { borderColor: selected ? colors.primary : colors.outlineVariant, backgroundColor: selected ? colors.primaryContainer : 'transparent' }]}>
+            <View aria-hidden style={[styles.iconPreview, { backgroundColor: background }]}><Logo size={30} color={foreground} /></View>
+            <Text variant="labelLarge" style={{ color: selected ? colors.onPrimaryContainer : colors.onSurface }}>{t(appIconLabels[icon])}</Text>
+          </StateLayerPressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function ResetAllButton({ phone, onPress }: { phone: boolean; onPress: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -223,6 +258,8 @@ const styles = StyleSheet.create({
   resetPhone: { alignSelf: 'stretch' },
   styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   styleCard: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
+  iconTile: { flexGrow: 1, flexBasis: 96, minWidth: 0, alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
+  iconPreview: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   preview: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.sm, minHeight: 32, marginBottom: spacing.xs },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   swatch: { minHeight: layout.minTouch, minWidth: layout.minTouch, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.sm, borderWidth: 2, borderRadius: radius.control },

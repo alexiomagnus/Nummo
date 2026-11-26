@@ -1,5 +1,7 @@
 package app.nummo.android
 
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.hardware.biometrics.BiometricManager
 import android.hardware.biometrics.BiometricPrompt
@@ -92,6 +94,29 @@ class NummoBridge(private val activity: MainActivity) {
                 }
             }
         } catch (e: Exception) { "" }
+    }
+
+    // The launcher icon (0.3.14, «Icona dell'app»): one activity-alias per icon (AndroidManifest), exactly one enabled. `appIcon` = the id of the
+    // enabled one ("default" if none is), `setAppIcon` enables the chosen alias first and then disables the others (DONT_KILL_APP: the
+    // app keeps running; the launcher may take a few seconds to redraw). Ids: default, light, original.
+    private val iconAliases = mapOf("default" to "app.nummo.android.IconDefault", "light" to "app.nummo.android.IconLight", "original" to "app.nummo.android.IconOriginal")
+
+    @JavascriptInterface
+    fun appIcon(): String {
+        val manager = activity.packageManager
+        return iconAliases.entries.firstOrNull { (_, alias) ->
+            manager.getComponentEnabledSetting(ComponentName(activity, alias)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+        }?.key ?: "default"
+    }
+
+    @JavascriptInterface
+    fun setAppIcon(id: String) {
+        val chosen = iconAliases[id] ?: return
+        val manager = activity.packageManager
+        manager.setComponentEnabledSetting(ComponentName(activity, chosen), PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+        for (alias in iconAliases.values) if (alias != chosen) {
+            manager.setComponentEnabledSetting(ComponentName(activity, alias), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+        }
     }
 
     // Google sign-in (GoogleSignIn.kt): the project the app is registered with ("" without a client ID: Standard only),

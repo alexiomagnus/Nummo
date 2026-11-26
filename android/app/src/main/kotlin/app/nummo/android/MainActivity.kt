@@ -126,6 +126,9 @@ class MainActivity : Activity() {
             allowContentAccess = false
             setSupportMultipleWindows(false)
             javaScriptCanOpenWindowsAutomatically = false
+            // The viewport tag is honoured (0.3.14): the page sets it for «Scala dell'interfaccia» (theme/uiScale.ts).
+            useWideViewPort = true
+            loadWithOverviewMode = false
         }
         view.isHapticFeedbackEnabled = true
         view.addJavascriptInterface(bridge, "NummoAndroid")

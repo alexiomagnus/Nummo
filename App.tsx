@@ -21,6 +21,7 @@ import { switchTheme } from './src/theme/themeTransition';
 import { AccessDenied } from './src/features/session/AccessDenied';
 import { FirebaseConnect, OwnerSetup } from './src/features/session/FirebaseSetup';
 import { setSystemColors } from './src/theme/palette';
+import { watchUiScale } from './src/theme/uiScale';
 import { androidSystemColors } from './src/services/androidApp';
 import { OrbsProvider } from './src/components/Orbs';
 import { inAndroidApp } from './src/services/androidApp';
@@ -75,6 +76,8 @@ export default function App() {
   const [preferences, updatePreferences, resetPreferences] = usePreferences();
   const dark = preferences.theme === 'system' ? systemScheme === 'dark' : preferences.theme === 'dark';
   const { accent, colorMode, font, amoled } = preferences;
+  // The interface scale (theme/uiScale.ts): the viewport tag, again when the screen turns.
+  useEffect(() => watchUiScale(preferences.uiScale), [preferences.uiScale]);
   const theme = useMemo(() => createTheme(dark, reduceMotion, { accent, colorMode, font, amoled }), [dark, reduceMotion, accent, colorMode, font, amoled]);
   // A change that turns light into dark or back (top-bar button, «Tema» in Settings) is revealed by a circle from the
   // control (themeTransition.ts); every other change, «Sistema» included when it keeps the same look, applies at once.

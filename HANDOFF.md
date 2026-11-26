@@ -1,5 +1,13 @@
 # HANDOFF — Nummo
 
+## Scala dell'interfaccia e icona dell'app (app 0.3.14) — 27 novembre 2026
+
+Su richiesta, sul modello di «Aspetto» di Morphe. **Non ancora in commit, né su Hosting, né in una release**: serve la 0.3.14 per l'icona e per la scala nell'app. `npm run check` 629/629 (tre test nuovi in `tests/uiScale.test.ts`), `./gradlew assembleDebug` OK; `assembleRelease` non eseguito.
+
+- **Scala** (`theme/uiScale.ts`, `components/ScaleSlider.tsx`, `uiScale` in `nummo.preferences.v1`, 75–125 % a passi di 5, predefinito 100): si applica con il tag `viewport` (larghezza = larghezza dello schermo ÷ scala, più `initial/minimum/maximum-scale`), non con `zoom` CSS: la larghezza della finestra, le classi di dimensione, i menu e il visual viewport seguono da soli. Applicata da `App.tsx` (`watchUiScale`, anche alla rotazione), sul cursore solo al rilascio (`change`). **Provato** in Chromium con emulazione mobile (411 px): 125 % → larghezza 329, 75 % → 548, 100 % → 411, cambio a runtime incluso. **Non provato** sul telefono né in Safari iOS. Il browser desktop ignora il tag (ha il suo zoom): la riga compare solo con puntatore touch o nell'app Android 0.3.14+ (`androidAppIcons()` come marcatore: la WebView ora usa `useWideViewPort`, senza il quale il tag è ignorato). «Ripristina predefiniti» la riporta a 100.
+- **Icona dell'app** (solo app Android 0.3.14+): tre tessere con anteprima in Aspetto (`AppIconChoice`). `Predefinita` = quella installata (`#171717`, «n» `#FAFAF7`, invariata); `Chiara` = colori scambiati (`#FAFAF7`, `#171717`); `Originale` = la prima icona del 6 novembre, verde scuro `#0F1512` e «n» menta `#97D8BB`. Nativo: un `activity-alias` per icona nel manifest (`IconDefault` abilitato di base, `IconLight`, `IconOriginal`; `MainActivity` non è più voce del launcher), metodi `appIcon`/`setAppIcon` di `NummoBridge` (abilita il nuovo alias, poi disabilita gli altri con `DONT_KILL_APP`), risorse `ic_launcher_light|original_*` e `mipmap-anydpi`, `monochrome` condiviso. Regole pure in `domain/appIcons.ts`. **Non provato sul telefono**: il launcher può metterci qualche secondo a ridisegnare, e alcuni launcher chiudono l'app al cambio; verificare che, aggiornando dalla 0.3.13, la voce del launcher resti una sola.
+- Versione dell'app: 0.3.14, versionCode 17 (solo in `build.gradle.kts`). Da fare su richiesta: commit, Hosting, `assembleRelease` firmata, release GitHub `android-v0.3.14`.
+
 ## Material You calibrato su Morphe, icone nelle scelte di Tema e Colore — 27 novembre 2026
 
 Su richiesta, dopo il confronto di due screenshot (Morphe e Nummo con Material You, tema scuro, Pixel 8). Commit, push e Hosting come richiesto; nessuna nuova APK. `npm run check` 626/626; **nulla provato sul telefono**.
