@@ -4,17 +4,15 @@ import { HelperText, IconButton, Text, useTheme } from 'react-native-paper';
 import { Button, DangerButton } from '../../components/Button';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
-import { Card } from '../../components/Card';
-import { ListRow, listRowStyles } from '../../components/ListRow';
+import { ListGroup, RowBody, RowDivider, StatusRow, ToggleRow } from '../../components/ActionList';
+import { IconTile, listRowStyles } from '../../components/ListRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useHaptics } from '../../components/Haptics';
-import { SwitchRow } from '../../components/SwitchRow';
 import type { Category } from '../../domain/category';
 import type { SyncedTemplate } from '../../domain/firestore';
 import type { RankedMerchant } from '../../domain/merchant';
 import { templatePolicy } from '../../domain/template';
 import { useI18n } from '../../i18n/I18nProvider';
-import { useSizeClass } from '../../theme/useSizeClass';
 import { layout, radius, spacing, stateOpacity } from '../../theme/tokens';
 import type { FundChoice } from '../funds/FundField';
 import { TemplateEditor } from './TemplateEditor';
@@ -40,7 +38,6 @@ type Props = {
 // Removed on 16 November 2026, reintroduced on 21 November on request (now with «Esercente»).
 export function TemplatesPage({ remote, categories, fundChoices, fundNames, merchants, enabled, onToggle }: Props) {
   const { t, formatAmount } = useI18n();
-  const phone = useSizeClass() === 'compact';
   const { colors } = useTheme();
   const haptic = useHaptics();
   const muted = { color: colors.onSurfaceVariant };
@@ -52,40 +49,52 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
   const full = remote.templates.length >= templatePolicy.maxTemplates;
   return (
     <View style={styles.root}>
-      <Card>
-        <Text variant="bodyMedium" style={muted}>{t("Un template è una spesa già pronta, semplifica la gestione delle spese.")}</Text>
-        <SwitchRow label={t("Usa i template")} value={enabled} onChange={onToggle}
-          supporting={enabled ? t("In Nuova spesa compare il pulsante Template.") : t("In Nuova spesa non compare il pulsante Template.")} />
-      </Card>
+      {/* The grouped rows of «Lista scontrini», «Info» and «Archiviazione e backup» (user's request, 27 November: Impostazioni,
+          Notifiche and Templates redone like them). */}
+      <ListGroup label={t("Template")}>
+        <RowBody><Text variant="bodyMedium" style={muted}>{t("Un template è una spesa già pronta, semplifica la gestione delle spese.")}</Text></RowBody>
+        <RowDivider />
+        <ToggleRow icon={iconShapes.template} title={t("Usa i template")} value={enabled} onChange={onToggle}
+          subtitle={enabled ? t("In Nuova spesa compare il pulsante Template.") : t("In Nuova spesa non compare il pulsante Template.")} />
+      </ListGroup>
       {/* Off: greyed out (M3 disabled opacity) and unreachable, never hidden (user's request, 21 November), like the AI card. */}
       <View style={[styles.sections, !enabled && { opacity: stateOpacity.disabled }]} aria-disabled={!enabled} {...{ inert: enabled ? undefined : true }}>
-        <Card title={t("Nuovo template")}>
-          {full ? <Text variant="bodyMedium" style={muted}>{t("Hai raggiunto il limite di {p0} template: eliminane uno per aggiungerne altri.", { p0: templatePolicy.maxTemplates })}</Text> : <>
-            <TemplateFields form={form} disabled={!remote.ready || !enabled} />
-            <View style={styles.actions}><Button mode="contained" disabled={!remote.ready || !enabled} onPress={() => { haptic(); form.submit(); }} contentStyle={styles.createContent} labelStyle={styles.createLabel} style={styles.create}>{t("Crea")}</Button></View>
-          </>}
-          {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
-        </Card>
-        <Card title={remote.templates.length > 0 ? t("I tuoi template ({p0})", { p0: remote.templates.length }) : t("I tuoi template")}>
+        <ListGroup label={t("Nuovo template")}>
+          <RowBody>
+            {full ? <Text variant="bodyMedium" style={muted}>{t("Hai raggiunto il limite di {p0} template: eliminane uno per aggiungerne altri.", { p0: templatePolicy.maxTemplates })}</Text> : <>
+              <TemplateFields form={form} disabled={!remote.ready || !enabled} />
+              <Button mode="contained" disabled={!remote.ready || !enabled} onPress={() => { haptic(); form.submit(); }} contentStyle={styles.createContent} labelStyle={styles.createLabel} style={styles.create}>{t("Crea")}</Button>
+            </>}
+            {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
+          </RowBody>
+        </ListGroup>
+        <ListGroup label={remote.templates.length > 0 ? t("I tuoi template ({p0})", { p0: remote.templates.length }) : t("I tuoi template")}>
           {remote.templates.length === 0
-            ? <Text variant="bodyMedium" style={muted}>{remote.ready ? t("Nessun template.") : t("Caricamento…")}</Text>
+            ? <StatusRow icon={iconShapes.template} tone="secondary" title={remote.ready ? t("Nessun template.") : t("Caricamento…")} />
             : <View role="list">{remote.templates.map((template, index) => {
               const category = labels.get(template.category_id);
               const details = [category?.label ?? t("Categoria eliminata"), template.fund_id ? fundNames.get(template.fund_id) ?? t("Fondo eliminato") : null,
                 template.merchant].filter(Boolean).join(' · ');
-              return <ListRow key={template.id} icon={category?.icon ?? null} title={template.description} subtitle={details} divider={index < remote.templates.length - 1}
-                trailing={<View style={styles.trailing}>
+              return <View key={template.id} role="listitem">
+                {index > 0 && <RowDivider />}
+                <View style={styles.templateRow}>
+                  <IconTile icon={category?.icon ?? null} size={40} />
+                  <View style={styles.templateText}>
+                    <Text variant="titleMedium" numberOfLines={1}>{template.description}</Text>
+                    <Text variant="bodyMedium" numberOfLines={1} style={muted}>{details}</Text>
+                  </View>
                   {template.amount_minor !== null && <Text variant="titleMedium" style={listRowStyles.amount}>{formatAmount(template.amount_minor)}</Text>}
                   {/* Only the pencil opens the editor, as in Liste (user's request, 24 November: the whole row was one button). */}
                   <IconButton style={styles.editButton} accessibilityLabel={t("Modifica {p0}", { p0: template.description })}
                     onPress={() => setEditing(template)} icon={pencilIcon} />
-                </View>} />;
+                </View>
+              </View>;
             })}</View>}
           {/* Every template at once (user's request, 22 November); Nuova spesa and the saved expenses are not touched. */}
-          {remote.templates.length > 0 && <DangerButton disabled={!remote.ready || !enabled}
-            style={[styles.removeAll, phone && styles.removeAllFull]} onPress={() => setConfirmAll(true)}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</DangerButton>}
-        </Card>
+          {remote.templates.length > 0 && <><RowDivider />
+            <RowBody><DangerButton disabled={!remote.ready || !enabled} style={styles.removeAll} onPress={() => setConfirmAll(true)}
+              icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</DangerButton></RowBody></>}
+        </ListGroup>
       </View>
       <DeleteDialog visible={confirmAll} name={t("tutti i template")}
         title={remote.templates.length === 1 ? t("Eliminare 1 template?") : t("Eliminare {p0} template?", { p0: remote.templates.length })}
@@ -107,16 +116,14 @@ const pencilIcon = ({ size, color }: { size: number; color: string }) => <SvgIco
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   sections: { width: '100%', gap: layout.sectionGap },
-  // As tall as «Salva» in Nuova spesa, aligned to the right.
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm, marginTop: spacing.sm },
   // Like «Salva» of Nuova spesa (user's request, 21 November): full width at every size, pill-shaped.
-  create: { flexGrow: 1, borderRadius: radius.pill },
+  create: { alignSelf: 'stretch', borderRadius: radius.pill },
   createContent: { minHeight: layout.controlHeight },
   createLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
-  trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  removeAll: { alignSelf: 'flex-start', marginTop: spacing.sm },
-  // On phones as wide as the section (user's request, 26 November).
-  removeAllFull: { alignSelf: 'stretch' },
+  templateRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, minHeight: 72, paddingVertical: spacing.sm, paddingLeft: spacing.lg, paddingRight: spacing.sm },
+  templateText: { flex: 1, minWidth: 0, gap: 2 },
+  // The whole width of the group, as the other pill actions of the page.
+  removeAll: { alignSelf: 'stretch' },
   // Same as the pencil of the products in Liste.
   editButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
 });

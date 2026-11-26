@@ -105,6 +105,18 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Impostazioni, Notifiche e Templates a gruppi di righe — 27 novembre 2026
+
+Su richiesta (modello: «Lista scontrini»): le tre pagine usano `ListGroup`/`ToggleRow`/`RowBody`/`RowDivider` di `ActionList.tsx`, **una colonna a ogni dimensione** (le due colonne delle Impostazioni da desktop sono tolte). Nuovo `OptionRow` (riquadro tonale, titolo e controllo sotto) e icone `globe`, `clock`, `typeIcon`, `palette`.
+- **Impostazioni:** «Immagine del profilo»; «Lingua e ora» (Lingua, Formato dell'ora, Fuso orario); «Aspetto» (Tema, Colore, Carattere, Stile delle icone); «Funzionalità» (interruttori); «Blocco dell'app», «Categorie preferite», «Fondo preferito» (stessi `Card` sostituiti da `ListGroup`); «Ripristina predefiniti» invariato.
+- **Notifiche:** gruppi «Notifiche di sistema», «Orario», «Promemoria backup», «Riepilogo spese», «Rinnovi»; frequenze nel `RowBody`.
+- **Templates:** «Template» (spiegazione + interruttore), «Nuovo template» (campi, «Crea» a tutta larghezza), «I tuoi template» (righe con matita, «Elimina tutti» a tutta larghezza nel gruppo).
+- Traduzioni `Lingua e ora`, `Aspetto`. `npm test` OK (607/607); prove headless Chromium a 390×844 e 1280×900 (Standard, tema scuro, nessun errore JS): layout corretto. **Non provato** su dispositivo, in tema chiaro, con template salvati né in Avanzata. Non committato né pubblicato.
+
+## Barre di Analisi a schede — 27 novembre 2026
+
+Su richiesta (screenshot da iPhone: «non mi piace»): `BarChart.tsx` riorganizzato. Una scheda tonale per categoria (`cardFill` o `elevation.level1`, `radius.card`): icona da 40, nome e importo in `titleMedium`; sotto la barra da 16 (lunghezza ancora relativa alla categoria maggiore) e la quota in una pillola `secondaryContainer` da 56 minimi, allineata tra le schede. Dati, tocco, accessibilità e testi invariati. `typecheck` e `npm test` OK (607/607); **nessuna prova visiva né su dispositivo**, build demo e `test:emulator` non rieseguiti. Non committato né pubblicato. `AGENTS.md` aggiornato.
+
 ## Modulo «Nuova categoria» — 27 novembre 2026
 
 Su richiesta, commit `4d7425d` (`CategorySettings.tsx`, AGENTS.md), pubblicato su Hosting: da desktop il modulo aveva nome, «Icona» e «Aggiungi» sulla stessa riga. Ora, a ogni dimensione: nome e «Icona» sulla prima riga (da medium «Icona» con larghezza minima 160, più stretta del campo), la griglia delle icone sotto (solo se aperta), «Aggiungi» a tutta larghezza in fondo. `npm run check` OK (607/607); nessuna prova nel browser né su dispositivo, `test:emulator` non rieseguito.

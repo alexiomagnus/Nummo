@@ -82,6 +82,17 @@ export function StatusRow(content: Content & { value?: string }) {
   );
 }
 
+// A setting with its choices: the title row (tonal tile, title, optional line) and the control under it, the whole width of
+// the row (chips, segments, a select). Used by the pages of options (Impostazioni, Notifiche, Templates).
+export function OptionRow({ children, ...content }: Content & { children: ReactNode }) {
+  return (
+    <View style={styles.option}>
+      <View style={styles.optionHead}><RowContent {...content} /></View>
+      {children}
+    </View>
+  );
+}
+
 // Content under the rows inside the surface (a preview, a note): padded like a row.
 export const RowBody = ({ children }: { children: ReactNode }) => <View style={styles.body}>{children}</View>;
 
@@ -100,5 +111,7 @@ const styles = StyleSheet.create({
   tile: { width: 40, height: 40, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, minWidth: 0, gap: 2 },
   value: { flexShrink: 1, fontWeight: '500', textAlign: 'right', maxWidth: '50%' },
+  option: { padding: spacing.lg, gap: spacing.md },
+  optionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   body: { padding: spacing.lg, gap: spacing.md },
 });

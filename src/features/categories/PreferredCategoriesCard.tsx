@@ -1,10 +1,8 @@
-import { StyleSheet, View } from 'react-native';
-import { Card } from '../../components/Card';
+import { ListGroup, RowBody } from '../../components/ActionList';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { SelectField } from '../../components/SelectField';
 import type { Category } from '../../domain/category';
 import { useI18n } from '../../i18n/I18nProvider';
-import { spacing } from '../../theme/tokens';
 import { NoFundAvatar } from '../funds/FundAvatar';
 import { existingCategory, type PreferredCategories } from './preferredCategories';
 
@@ -22,16 +20,11 @@ export function PreferredCategoriesCard({ categories, value, onChange }: {
   ];
   const pick = (field: keyof PreferredCategories) => (next: string) => onChange({ ...value, [field]: next === none ? '' : next });
   return (
-    <Card title={t("Categorie preferite")} style={styles.section}>
-      <View style={styles.fields}>
+    <ListGroup label={t("Categorie preferite")}>
+      <RowBody>
         <SelectField panel label={t("Nuova spesa")} options={options} value={existingCategory(value.expense, categories) || none} onChange={pick('expense')} />
         <SelectField panel label={t("Nuove liste")} options={options} value={existingCategory(value.list, categories) || none} onChange={pick('list')} />
-      </View>
-    </Card>
+      </RowBody>
+    </ListGroup>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { width: '100%' },
-  fields: { gap: spacing.lg },
-});

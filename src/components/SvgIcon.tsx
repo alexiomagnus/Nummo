@@ -89,5 +89,9 @@ export const iconShapes = {
   externalLink: '<path d="M14 4h6v6M10 14 20 4M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>',
   pullRequest: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5V20M13 6h3a2 2 0 0 1 2 2v7.5M15.5 3.5 13 6l2.5 2.5"/>',
   bug: '<rect x="7" y="7" width="10" height="13" rx="5"/><path d="M9 7.5V7a3 3 0 0 1 6 0v.5M12 11v9M7 12H3M21 12h-4M7.5 17 4 19M16.5 17l3.5 2M7.5 9 4 7M16.5 9 20 7"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  typeIcon: '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
+  palette: '<circle cx="13.5" cy="6.5" r=".6"/><circle cx="17.5" cy="10.5" r=".6"/><circle cx="8.5" cy="7.5" r=".6"/><circle cx="6.5" cy="12.5" r=".6"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.12a1.64 1.64 0 0 1 1.67-1.67H16.4c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2Z"/>',
   copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
 } as const;

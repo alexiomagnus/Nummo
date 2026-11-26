@@ -1,15 +1,14 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
+import { ListGroup, OptionRow, RowDivider, ToggleRow } from '../../components/ActionList';
 import { DoneButton } from '../../components/DoneButton';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { iconStyles, iconStyleText } from '../../components/categoryIconSets';
 import type { CategoryIcon } from '../../domain/category';
 import { ChoiceChips } from '../../components/ChoiceChips';
-import { SwitchRow } from '../../components/SwitchRow';
 import { PageHeader } from '../../components/PageHeader';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -77,79 +76,71 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   const resetAll = () => { onReset(); resetAppLockDelay(); if (profile) { saveProfileImage(noProfileImage, profile.scope); if (profile.scope !== localProfileScope) saveProfileRing(defaultProfileRing, profile.scope); } onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
-  const [contentWidth, setContentWidth] = useState(0);
   const phone = useSizeClass() === 'compact';
-  // Measure the actual page: the desktop navigation and browser zoom reduce its usable width.
-  // 360 dp per column: the colour swatches wrap onto a second row rather than squeeze, every chip row still fits.
-  const wide = contentWidth >= 2 * 360 + spacing.xxl;
   const device = deviceTimeZone();
   const zones = timeZoneChoices([device, preferences.timeZone]);
-  const general = (
-    <View key="general" style={[styles.column, wide && styles.half]}>
-      <Card title={t("Lingua")} style={styles.section}>
-        <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
-          value={preferences.language} onChange={(language) => language && onChange({ language })} />
-      </Card>
-      <Card title={t("Carattere")} style={styles.section}>
-        <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
-      </Card>
-      <Card title={t("Formato dell’ora")} style={styles.section}>
-        <ChoiceChips label={t("Formato dell’ora")} options={timeFormatOptions.map((entry) => ({ ...entry, label: t(entry.label) }))}
-          value={preferences.timeFormat} onChange={(value) => value && onChange({ timeFormat: value })} />
-      </Card>
-      <Card title={t("Fuso orario")} style={styles.section}>
-        <ChoiceChips label={t("Fuso orario")} value={preferences.timeZone === autoTimeZone ? 'auto' : 'custom'}
-          options={[{ value: 'auto', label: t("Automatico") }, { value: 'custom', label: t("Scegli un fuso") }]}
-          onChange={(value) => { if (value === 'auto') onChange({ timeZone: autoTimeZone }); else if (value) onChange({ timeZone: device }); }} />
-        {preferences.timeZone === autoTimeZone
-          ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Fuso orario: {p0}", { p0: device.replace(/_/g, ' ') })}</Text>
-          : <MenuSelect label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
-              onChange={(timeZone) => onChange({ timeZone })} />}
-      </Card>
-    </View>
-  );
-  const look = (
-    <View key="look" style={[styles.column, wide && styles.half]}>
-      <Card title={t("Tema")} style={styles.section}>
-        <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
-      </Card>
-      <Card title={t("Colore")} style={styles.section}>
-        <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
-        <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
-          {accents.map((accent) => {
-            const selected = accent === preferences.accent;
-            // Shown colours of the accent (accentSwatches): in light the dots were the text-safe roles, far too dark.
-            const dots = accentSwatches(accent, preferences.colorMode, dark);
-            return (
-              <StateLayerPressable key={accent} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="radio"
-                aria-checked={selected} accessibilityLabel={`${t(accentLabels[accent])}${selected ? t(", selezionato") : ''}`}
-                // `title` is the web tooltip: the swatch carries no visible text.
-                {...({ title: t(accentLabels[accent]) } as object)}
-                onPress={() => onChange({ accent })}
-                style={[styles.swatch, { borderColor: selected ? colors.primary : 'transparent' }]}>
-                <View style={styles.dots}>
-                  {dots.map((color, index) => (
-                    <View key={index} style={[styles.dot, { backgroundColor: color, marginLeft: index ? -8 : 0 }]} />
-                  ))}
-                </View>
-              </StateLayerPressable>
-            );
-          })}
-        </View>
-      </Card>
-    </View>
-  );
   return (
-    <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
+    <View style={styles.root}>
       <PageHeader title={t("Impostazioni")} action={<DoneButton onPress={onDone} />} />
+      {/* The grouped rows of «Lista scontrini» and «Info» (user's request, 27 November), one column at every size: each setting is a
+          row with a tonal tile and its choices under it. */}
       {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} />}
-      <View style={[styles.grid, wide && styles.columns]}>
-        {/* Lingua, Carattere and Tema first (left column on desktop), then Colore. */}
-        {general}
-        {look}
-      </View>
-      <View style={styles.grid}>
-        <Card title={t("Stile delle icone")} style={styles.section}>
+      <ListGroup label={t("Lingua e ora")}>
+        <OptionRow icon={iconShapes.globe} title={t("Lingua")}>
+          <ChoiceChips label={t("Lingua")} options={[{ value: 'it', label: 'Italiano' }, { value: 'en', label: 'English' }]}
+            value={preferences.language} onChange={(language) => language && onChange({ language })} />
+        </OptionRow>
+        <RowDivider />
+        <OptionRow icon={iconShapes.clock} title={t("Formato dell’ora")}>
+          <ChoiceChips label={t("Formato dell’ora")} options={timeFormatOptions.map((entry) => ({ ...entry, label: t(entry.label) }))}
+            value={preferences.timeFormat} onChange={(value) => value && onChange({ timeFormat: value })} />
+        </OptionRow>
+        <RowDivider />
+        <OptionRow icon={iconShapes.calendar} title={t("Fuso orario")}>
+          <ChoiceChips label={t("Fuso orario")} value={preferences.timeZone === autoTimeZone ? 'auto' : 'custom'}
+            options={[{ value: 'auto', label: t("Automatico") }, { value: 'custom', label: t("Scegli un fuso") }]}
+            onChange={(value) => { if (value === 'auto') onChange({ timeZone: autoTimeZone }); else if (value) onChange({ timeZone: device }); }} />
+          {preferences.timeZone === autoTimeZone
+            ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Fuso orario: {p0}", { p0: device.replace(/_/g, ' ') })}</Text>
+            : <MenuSelect label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
+                onChange={(timeZone) => onChange({ timeZone })} />}
+        </OptionRow>
+      </ListGroup>
+      <ListGroup label={t("Aspetto")}>
+        <OptionRow icon={iconShapes.moon} title={t("Tema")}>
+          <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
+        </OptionRow>
+        <RowDivider />
+        <OptionRow icon={iconShapes.palette} title={t("Colore")}>
+          <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
+          <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
+            {accents.map((accent) => {
+              const selected = accent === preferences.accent;
+              // Shown colours of the accent (accentSwatches): in light the dots were the text-safe roles, far too dark.
+              const dots = accentSwatches(accent, preferences.colorMode, dark);
+              return (
+                <StateLayerPressable key={accent} layerColor={colors.onSurface} radius={radius.control} accessibilityRole="radio"
+                  aria-checked={selected} accessibilityLabel={`${t(accentLabels[accent])}${selected ? t(", selezionato") : ''}`}
+                  // `title` is the web tooltip: the swatch carries no visible text.
+                  {...({ title: t(accentLabels[accent]) } as object)}
+                  onPress={() => onChange({ accent })}
+                  style={[styles.swatch, { borderColor: selected ? colors.primary : 'transparent' }]}>
+                  <View style={styles.dots}>
+                    {dots.map((color, index) => (
+                      <View key={index} style={[styles.dot, { backgroundColor: color, marginLeft: index ? -8 : 0 }]} />
+                    ))}
+                  </View>
+                </StateLayerPressable>
+              );
+            })}
+          </View>
+        </OptionRow>
+        <RowDivider />
+        <OptionRow icon={iconShapes.typeIcon} title={t("Carattere")}>
+          <ChoiceChips label={t("Carattere")} options={fontOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.font} onChange={(value) => value && onChange({ font: value })} />
+        </OptionRow>
+        <RowDivider />
+        <OptionRow icon={iconShapes.blocks} title={t("Stile delle icone")}>
           <View style={styles.styleCards} role="radiogroup" aria-label={t("Stile delle icone")}>
             {iconStyles.map((style) => {
               const selected = style === preferences.iconStyle;
@@ -166,21 +157,23 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
               );
             })}
           </View>
-        </Card>
-        <Card title={t("Funzionalità")} style={styles.section}>
-          <SwitchRow label={t("Mostra andamento nel tempo")} supporting={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}
-            onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
-          <SwitchRow label={t("Mostra liste archiviate")} supporting={t("Nella pagina Liste, le liste già registrate come spesa.")}
-            value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
-          <SwitchRow label={t("Mostra fondi archiviati")} supporting={t("Nella pagina Fondi, i fondi che non usi più.")}
-            value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
-          {/* Only in the Android app: never in the browser (23 November, on request). */}
-          {vibrationAvailable && <SwitchRow label={t("Vibrazione")} supporting={t(vibrationNote)}
-            value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} />}
-        </Card>
-        <AppLockCard requirePin={lockPin} />
-        {archiveSections}
-      </View>
+        </OptionRow>
+      </ListGroup>
+      <ListGroup label={t("Funzionalità")}>
+        <ToggleRow icon={iconShapes.chart} title={t("Mostra andamento nel tempo")} subtitle={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}
+          onChange={(dashboardTrend) => onChange({ dashboardTrend })} />
+        <RowDivider />
+        <ToggleRow icon={iconShapes.archive} title={t("Mostra liste archiviate")} subtitle={t("Nella pagina Liste, le liste già registrate come spesa.")}
+          value={preferences.showArchivedLists} onChange={(showArchivedLists) => onChange({ showArchivedLists })} />
+        <RowDivider />
+        <ToggleRow icon={iconShapes.wallet} title={t("Mostra fondi archiviati")} subtitle={t("Nella pagina Fondi, i fondi che non usi più.")}
+          value={preferences.showArchivedFunds} onChange={(showArchivedFunds) => onChange({ showArchivedFunds })} />
+        {/* Only in the Android app: never in the browser (23 November, on request). */}
+        {vibrationAvailable && <><RowDivider /><ToggleRow icon={iconShapes.flash} title={t("Vibrazione")} subtitle={t(vibrationNote)}
+          value={preferences.haptics} onChange={(haptics) => onChange({ haptics })} /></>}
+      </ListGroup>
+      <AppLockCard requirePin={lockPin} />
+      {archiveSections}
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}
       <ResetAllButton phone={phone} onPress={resetAll} />
@@ -202,16 +195,11 @@ function ResetAllButton({ phone, onPress }: { phone: boolean; onPress: () => voi
 
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
-  grid: { gap: layout.sectionGap },
-  columns: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xxl },
-  column: { gap: layout.sectionGap },
-  half: { flex: 1, minWidth: 0 },
-  section: { width: '100%' },
   reset: { alignSelf: 'flex-start', borderRadius: radius.pill },
   // Phones: as wide as the page, like the actions above it (user's request, 22 November).
   resetPhone: { alignSelf: 'stretch' },
   styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  styleCard: { flexGrow: 1, flexBasis: 150, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
+  styleCard: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
   preview: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', gap: spacing.sm, minHeight: 32, marginBottom: spacing.xs },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   swatch: { minHeight: layout.minTouch, minWidth: layout.minTouch, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.sm, borderWidth: 2, borderRadius: radius.control },

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
 import { HelperText, Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
+import { ListGroup, RowBody } from '../../components/ActionList';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
@@ -99,7 +99,8 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
     </StateLayerPressable>
   );
   return (
-    <Card title={t("Immagine del profilo")} style={styles.card}>
+    <ListGroup label={t("Immagine del profilo")}>
+      <RowBody>
       <View style={styles.current}>
         <View style={[styles.ring, fillTransition, { borderColor: ring ? ringColor : 'transparent' }]}>
           <ProfileAvatar image={image} size={accountAvatarSize * 2} googlePhoto={googlePhoto} />
@@ -136,12 +137,12 @@ export function ProfileImageCard({ scope, googlePhoto }: ProfileScope) {
       {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
       <input ref={input} type="file" accept="image/*" hidden
         onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ''; }} />
-    </Card>
+      </RowBody>
+    </ListGroup>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%' },
   avatar: { overflow: 'hidden' },
   fill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   picture: { width: '100%', height: '100%' },

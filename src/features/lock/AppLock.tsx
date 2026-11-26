@@ -5,10 +5,9 @@ import { HelperText, Portal, Text, TextInput, useTheme } from 'react-native-pape
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { useBackLayer } from '../../components/BackNavigation';
 import { Button, CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
-import { Card } from '../../components/Card';
+import { ListGroup, RowBody, RowDivider, ToggleRow } from '../../components/ActionList';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { SwitchRow } from '../../components/SwitchRow';
 import { createPin, lockDelays, lockOnReturn, pinInput, pinLength, pinMatches, isPin, type LockDelay } from '../../domain/appLock';
 import { useI18n } from '../../i18n/I18nProvider';
 import { createLockCredential, platformLockAvailable, verifyLockCredential, type LockOutcome } from '../../services/platformLock';
@@ -283,28 +282,28 @@ export function AppLockCard({ requirePin = false }: { requirePin?: boolean }) {
   };
   const missing = available === false && !settings.enabled;
   return (
-    <Card title={t("Blocco dell’app")} style={styles.card}>
-      <SwitchRow label={t("Blocca con impronta o viso")} value={settings.enabled} disabled={busy || missing || available === null}
-        supporting={missing ? t("Questo browser non offre impronta, viso o PIN del dispositivo alle app web.")
+    <ListGroup label={t("Blocco dell’app")}>
+      <ToggleRow icon={iconShapes.lock} title={t("Blocca con impronta o viso")} value={settings.enabled} disabled={busy || missing || available === null}
+        subtitle={missing ? t("Questo browser non offre impronta, viso o PIN del dispositivo alle app web.")
           : t("All’apertura e quando torni nell’app chiede impronta, viso o il PIN del dispositivo.")}
         onChange={(on) => void toggle(on)} />
-      {settings.enabled && <View style={styles.delay}>
+      {settings.enabled && <><RowDivider /><RowBody><View style={styles.delay}>
         <Text variant="labelLarge" style={{ color: colors.onSurfaceVariant }}>{t("Blocca di nuovo quando torni dopo")}</Text>
         <ChoiceChips label={t("Blocca di nuovo quando torni dopo")} value={String(settings.delay)}
           options={lockDelays.map((delay) => ({ value: String(delay), label: t(delayLabels[delay]) }))}
           onChange={(value) => { if (value) save({ ...settings, delay: Number(value) as LockDelay }); }} />
-      </View>}
-      {settings.enabled && requirePin && <View style={styles.pin}>
+      </View></RowBody></>}
+      {settings.enabled && requirePin && <><RowDivider /><RowBody><View style={styles.pin}>
         <Text variant="bodyMedium" style={{ color: settings.pin ? colors.onSurfaceVariant : colors.error }}>{settings.pin
           ? t("Con il PIN di Nummo disattivi il blocco se impronta, viso o il PIN del dispositivo non funzionano.")
           : t("Imposta un PIN: senza, chiunque può disattivare il blocco dalla schermata di blocco.")}</Text>
         <View style={styles.start}>
           <Button mode="outlined" disabled={busy} onPress={() => setChoosingPin('set')}>{settings.pin ? t("Cambia il PIN") : t("Imposta il PIN")}</Button>
         </View>
-      </View>}
-      {error && <HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText>}
+      </View></RowBody></>}
+      {error && <RowBody><HelperText type="error" accessibilityRole="alert" style={styles.helper}>{t(error)}</HelperText></RowBody>}
       <PinDialog visible={choosingPin !== null} onDismiss={() => setChoosingPin(null)} onConfirm={confirmPin} />
-    </Card>
+    </ListGroup>
   );
 }
 
@@ -319,7 +318,6 @@ const styles = StyleSheet.create({
   unlock: { minWidth: 200, minHeight: layout.minTouch },
   leave: { width: '100%', gap: spacing.md, padding: spacing.lg, borderWidth: 1, borderRadius: radius.card },
   actions: { flexDirection: 'row', justifyContent: 'flex-end' },
-  card: { width: '100%' },
   delay: { gap: spacing.sm },
   helper: { paddingHorizontal: 0 },
   pin: { gap: spacing.sm },

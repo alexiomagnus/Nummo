@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button, CancelButton } from '../../components/Button';
-import { Card } from '../../components/Card';
+import { ListGroup, OptionRow, RowBody, RowDivider, ToggleRow } from '../../components/ActionList';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { SwitchRow } from '../../components/SwitchRow';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { notificationFrequencies, notificationFrequencyLabels, reminderHourRange, reminderPresets, type NotificationFrequency } from '../../domain/notifications';
 import { MenuSelect } from '../../components/MenuSelect';
@@ -78,9 +77,9 @@ function SystemNotifications({ push }: { push: PushState }) {
     {pushTests && waiting && line(t("Chiudi Nummo ora: entro circa un minuto arriverà una notifica push dal servizio. Se arriva, le notifiche funzionano anche ad app chiusa."))}
   </>;
   return (
-    <Card title={t("Notifiche di sistema")}>
-      <View style={styles.block}>{body}</View>
-    </Card>
+    <ListGroup label={t("Notifiche di sistema")}>
+      <RowBody>{body}</RowBody>
+    </ListGroup>
   );
 }
 
@@ -96,8 +95,8 @@ function OpenedSummary({ notifications, from, to, onClose }: { notifications: No
   // Seen: not offered again as an in-app notice.
   useEffect(() => { notifications.closeSummary({ from, to }); }, [from, to]);
   return (
-    <Card title={t("Riepilogo spese")}>
-      <View style={styles.block}>
+    <ListGroup label={t("Riepilogo spese")}>
+      <RowBody>
         <Text variant="bodyMedium" style={muted}>{(() => {
           const dates = { p0: formatDate(from), p1: formatDate(to) };
           if (elided(from)) return elided(to) ? t("Dall’{p0} all’{p1}", dates) : t("Dall’{p0} al {p1}", dates);
@@ -108,8 +107,8 @@ function OpenedSummary({ notifications, from, to, onClose }: { notifications: No
         {top && <Text variant="bodyMedium">{t("Categoria principale: {p0} ({p1})", { p0: top.label, p1: formatAmount(top.amount) })}</Text>}
         <Text variant="bodySmall" style={muted}>{t("Abbonamenti esclusi.")}</Text>
         <View style={styles.actions}><CancelButton onPress={onClose}>{t("Chiudi")}</CancelButton></View>
-      </View>
-    </Card>
+      </RowBody>
+    </ListGroup>
   );
 }
 
@@ -133,16 +132,15 @@ function ReminderTime({ hour, timeFormat, timeZone, onChange }: { hour: number; 
   // The zone is named only when it is not the device's own (a chosen one): the usual case stays a plain «alle 9:00».
   const zoneNote = timeZone !== autoTimeZone && timeZone !== deviceTimeZone() ? timeZoneCity(timeZone) : null;
   return (
-    <Card title={t("Orario delle notifiche")}>
-      <View style={styles.hourBlock}>
-        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("A che ora vuoi riceverle? Vale per promemoria backup, riepiloghi e rinnovi.")}</Text>
+    <ListGroup label={t("Orario delle notifiche")}>
+      <OptionRow icon={iconShapes.clock} title={t("Ora di arrivo")} subtitle={t("Vale per promemoria, riepiloghi e rinnovi.")}>
         <SegmentedButtons label={t("Orario delle notifiche")} value={choice} onChange={pick}
           options={(['morning', 'lunch', 'evening', 'custom'] as const).map((value) => ({ value, label: labels[value] }))} />
         {custom && <MenuSelect label={t("Ora")} icon={iconShapes.bell} value={String(hour)} onChange={(value) => onChange(Number(value))}
           options={hours.map((value) => ({ value: String(value), label: time(value) }))} />}
-        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{zoneNote ? t("Arrivano alle {p0} ({p1}).", { p0: time(hour), p1: zoneNote }) : t("Arrivano alle {p0}.", { p0: time(hour) })}</Text>
-      </View>
-    </Card>
+        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{zoneNote ? t("Arrivano alle {p0} ({p1}).", { p0: time(hour), p1: zoneNote }) : t("Arrivano alle {p0}.", { p0: time(hour) })}</Text>
+      </OptionRow>
+    </ListGroup>
   );
 }
 
@@ -180,31 +178,34 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
         <OpenedSummary notifications={notifications} from={opened.from} to={opened.to} onClose={onCloseOpened} />}
       <SystemNotifications push={notifications.push} />
       <ReminderTime hour={p.reminderHour} timeFormat={timeFormat} timeZone={timeZone} onChange={(reminderHour) => change({ reminderHour })} />
-      {backupReminders && <Card title={t("Promemoria backup")}>
-        <Text variant="bodyMedium" style={muted}>{t("Ricevi un promemoria per esportare una copia dei tuoi dati.")}</Text>
-        <SwitchRow label={t("Attiva promemoria backup")} value={p.backupEnabled} onChange={(backupEnabled) => change({ backupEnabled })}
-          supporting={t("Solo se i dati sono cambiati dall’ultimo backup.")} />
-        {frequency(t("Frequenza del promemoria"), p.backupFrequency, (backupFrequency) => change({ backupFrequency }), !p.backupEnabled)}
-        <Text variant="bodyMedium" style={muted}>{lastBackupAt
-          ? t("Ultimo backup: {p0}", { p0: new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastBackupAt)) })
-          : t("Nessun backup finora.")}</Text>
-        {backupDue && <View style={styles.block}>
-          <Text variant="bodyMedium">{t("I dati sono cambiati dall’ultimo backup: è il momento di esportarne una copia.")}</Text>
-          <View style={styles.actions}>
-            <Button mode="contained-tonal" icon={icon(iconShapes.download)} loading={exporting} disabled={exporting} onPress={onExport}>{t("Esporta backup")}</Button>
-            <Button mode="text" disabled={exporting} onPress={notifications.snoozeBackup}>{t("Ricordamelo tra 3 giorni")}</Button>
-          </View>
-        </View>}
-      </Card>}
-      <Card title={t("Riepilogo spese")}>
-        <SwitchRow label={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })}
-          supporting={t("Un riepilogo delle tue spese del periodo appena concluso.")} />
-        {frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.summaryEnabled, false)}
-      </Card>
-      <Card title={t("Rinnovi degli abbonamenti")}>
-        <SwitchRow label={t("Avvisa prima dei rinnovi")} value={p.renewalEnabled} onChange={(renewalEnabled) => change({ renewalEnabled })}
-          supporting={t("Una notifica il giorno prima del rinnovo di un abbonamento attivo.")} />
-      </Card>
+      {backupReminders && <ListGroup label={t("Promemoria backup")}>
+        <ToggleRow icon={iconShapes.database} title={t("Attiva promemoria backup")} value={p.backupEnabled} onChange={(backupEnabled) => change({ backupEnabled })}
+          subtitle={t("Solo se i dati sono cambiati dall’ultimo backup.")} />
+        <RowDivider />
+        <RowBody>
+          {frequency(t("Frequenza del promemoria"), p.backupFrequency, (backupFrequency) => change({ backupFrequency }), !p.backupEnabled)}
+          <Text variant="bodyMedium" style={muted}>{lastBackupAt
+            ? t("Ultimo backup: {p0}", { p0: new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastBackupAt)) })
+            : t("Nessun backup finora.")}</Text>
+          {backupDue && <View style={styles.block}>
+            <Text variant="bodyMedium">{t("I dati sono cambiati dall’ultimo backup: è il momento di esportarne una copia.")}</Text>
+            <View style={styles.actions}>
+              <Button mode="contained-tonal" icon={icon(iconShapes.download)} loading={exporting} disabled={exporting} onPress={onExport}>{t("Esporta backup")}</Button>
+              <Button mode="text" disabled={exporting} onPress={notifications.snoozeBackup}>{t("Ricordamelo tra 3 giorni")}</Button>
+            </View>
+          </View>}
+        </RowBody>
+      </ListGroup>}
+      <ListGroup label={t("Riepilogo spese")}>
+        <ToggleRow icon={iconShapes.chart} title={t("Attiva riepilogo spese")} value={p.summaryEnabled} onChange={(summaryEnabled) => change({ summaryEnabled })}
+          subtitle={t("Un riepilogo delle tue spese del periodo appena concluso.")} />
+        <RowDivider />
+        <RowBody>{frequency(t("Frequenza del riepilogo"), p.summaryFrequency, (summaryFrequency) => change({ summaryFrequency }), !p.summaryEnabled, false)}</RowBody>
+      </ListGroup>
+      <ListGroup label={t("Rinnovi degli abbonamenti")}>
+        <ToggleRow icon={iconShapes.calendar} title={t("Avvisa prima dei rinnovi")} value={p.renewalEnabled} onChange={(renewalEnabled) => change({ renewalEnabled })}
+          subtitle={t("Una notifica il giorno prima del rinnovo di un abbonamento attivo.")} />
+      </ListGroup>
     </View>
   );
 }
@@ -212,7 +213,7 @@ export function NotificationsPage({ notifications, opened, onCloseOpened, export
 const styles = StyleSheet.create({
   root: { width: '100%', gap: layout.sectionGap },
   frequency: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: spacing.lg,
-    rowGap: spacing.md, minHeight: 56, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
+    rowGap: spacing.md, minHeight: 40 },
   // Phones: the choices sit a little lower under the label (20 instead of 12).
   frequencyNarrow: { rowGap: spacing.lg + spacing.xs },
   frequencyFull: { justifyContent: 'flex-start' },
@@ -220,7 +221,5 @@ const styles = StyleSheet.create({
   frequencyChoices: { width: 420, maxWidth: '100%' },
   frequencyChoicesNarrow: { width: '100%' },
   block: { gap: spacing.sm },
-  // Orario: room (16) around the choices, between the question above and the note below.
-  hourBlock: { gap: spacing.lg },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

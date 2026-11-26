@@ -1,4 +1,4 @@
-import { Card } from '../../components/Card';
+import { ListGroup, RowBody } from '../../components/ActionList';
 import { SelectField } from '../../components/SelectField';
 import { useI18n } from '../../i18n/I18nProvider';
 import { FundAvatar, NoFundAvatar } from './FundAvatar';
@@ -18,8 +18,8 @@ export function PreferredFundCard({ funds, value, onChange }: {
   ];
   const current = funds.some((fund) => fund.id === value) ? value : none;
   return (
-    <Card title={t("Fondo preferito")} style={{ width: '100%' }}>
-      <SelectField panel label={t("Nuova spesa")} options={options} value={current} onChange={(next) => onChange(next === none ? '' : next)} />
-    </Card>
+    <ListGroup label={t("Fondo preferito")}>
+      <RowBody><SelectField panel label={t("Nuova spesa")} options={options} value={current} onChange={(next) => onChange(next === none ? '' : next)} /></RowBody>
+    </ListGroup>
   );
 }
