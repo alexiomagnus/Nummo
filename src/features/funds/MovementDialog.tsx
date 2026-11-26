@@ -5,7 +5,6 @@ import { AppDialog as Dialog } from '../../components/AppDialog';
 import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { DateField } from '../../components/DateField';
 import { leadingIcon } from '../../components/FieldIcon';
-import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { SelectField } from '../../components/SelectField';
 import { iconShapes } from '../../components/SvgIcon';
 import { normalizeDescription } from '../../domain/expense';
@@ -28,13 +27,13 @@ type Props = {
 
 // Money added by hand to a fund, or moved between two funds. One ID per opening of the dialog: pressing again after a
 // failure repeats the same request, so the server never records the movement twice.
-export function MovementDialog({ funds, balances, kind: initialKind, to: initialTo, ready, error, onCreate, close }: Props) {
+// The kind is the button it was opened from («Aggiungi» or «Trasferisci»): no switch inside the dialog (27 November, on request).
+export function MovementDialog({ funds, balances, kind, to: initialTo, ready, error, onCreate, close }: Props) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
   const id = useRef(crypto.randomUUID()).current;
-  const [kind, setKind] = useState<MovementKind>(initialKind);
-  const [to, setTo] = useState(initialTo ?? (initialKind === 'income' ? funds[0]?.id ?? '' : funds[1]?.id ?? ''));
-  const [from, setFrom] = useState(initialKind === 'transfer' ? funds.find((f) => f.id !== (initialTo ?? funds[1]?.id))?.id ?? '' : '');
+  const [to, setTo] = useState(initialTo ?? (kind === 'income' ? funds[0]?.id ?? '' : funds[1]?.id ?? ''));
+  const [from, setFrom] = useState(kind === 'transfer' ? funds.find((f) => f.id !== (initialTo ?? funds[1]?.id))?.id ?? '' : '');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
   const [note, setNote] = useState('');
@@ -65,9 +64,6 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
       <Dialog.Title>{kind === 'income' ? t("Aggiungi denaro") : t("Trasferisci tra fondi")}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          {funds.length > 1 && <SegmentedButtons label={t("Tipo di movimento")} value={kind} disabled={blocked}
-            onChange={(next) => { setKind(next); setErrors({}); if (next === 'transfer' && !from) setFrom(funds.find((f) => f.id !== to)?.id ?? ''); }}
-            options={[{ value: 'income', label: t("Entrata") }, { value: 'transfer', label: t("Spostamento"), accessibilityLabel: t("Spostamento") }]} />}
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo")} value={amount} inputMode="decimal" placeholder="0,00"
               readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.amount)} left={leadingIcon(iconShapes.euro)}

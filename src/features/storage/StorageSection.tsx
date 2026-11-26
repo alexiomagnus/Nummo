@@ -2,34 +2,17 @@ import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { Button, CancelButton, ConfirmButton } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { doubleWidth, useSameWidth } from '../../components/SameWidth';
-import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { CancelButton, ConfirmButton } from '../../components/Button';
+import { ActionRow, ListGroup, RowDivider, StatusRow } from '../../components/ActionList';
+import { iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import type { ProtectionState } from '../../services/storageProtection';
 import type { StorageMode } from '../../services/storageMode';
-import { radius, spacing } from '../../theme/tokens';
+import { spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { appOnlyStandard, appWithoutAdvanced } from './ModeChoice';
 
-const icon = (shape: string) => ({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape} size={size} color={color} />;
-
-// Icon and label on the left, value on the right; wraps on narrow phones.
-function InfoRow({ shape, label, value }: { shape: string; label: string; value: string }) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.info}>
-      <View style={styles.label}>
-        <SvgIcon shape={shape} size={24} color={colors.onSurfaceVariant} />
-        <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{label}</Text>
-      </View>
-      <Text variant="bodyLarge" style={styles.value} selectable>{value}</Text>
-    </View>
-  );
-}
-
-type Common = { onChangeMode: (mode: StorageMode | null) => void; style?: object };
+type Common = { onChangeMode: (mode: StorageMode | null) => void };
 
 // What the browser answered about keeping this site's data. Plain words only: no API or storage names, and never a
 // promise that nothing can be lost.
@@ -42,73 +25,69 @@ const protectionText: Record<ProtectionState, { title: string; text: string; sha
     text: 'Questo browser non offre una protezione aggiuntiva dei dati.' },
 };
 
-function ProtectionStatus({ state }: { state: ProtectionState }) {
+// Storage tile of the «Archiviazione e backup» page, Standard mode: where the data is, how the browser keeps it, and the way to
+// the Advanced mode. A tile of the page's grid (`ListGroup`, 27 November: before, a card of loose lines and a filled button).
+export function StandardStorage({ protection, onChangeMode }: Common & { protection: ProtectionState | null }) {
   const { t } = useI18n();
-  const { colors } = useTheme();
-  const { title, text, shape } = protectionText[state];
-  return (
-    <View style={styles.protection} role="status">
-      <SvgIcon shape={shape} size={24} color={state === 'protected' ? colors.primary : colors.onSurfaceVariant} />
-      <View style={styles.protectionText}>
-        <Text variant="bodyLarge">{t(title)}</Text>
-        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t(text)}</Text>
-      </View>
-    </View>
-  );
-}
-
-// Storage section of the «Archiviazione e backup» page, Standard mode: where the data is, its protection and the manual backup files.
-export function StandardStorage({ protection, onChangeMode, style }: Common & { protection: ProtectionState | null }) {
-  const { t } = useI18n();
-  const { colors } = useTheme();
-  const compact = useSizeClass() === 'compact';
   const [changing, setChanging] = useState(false);
-  const sameWidth = useSameWidth();
+  const kept = protection ? protectionText[protection] : null;
   return (
-    <Card style={style}>
-      {/* Same icon + text layout as the protection status below, so the two lines align. */}
-      <View style={[styles.protection, styles.deviceRow]}>
-        <SvgIcon shape={iconShapes.database} size={24} color={colors.onSurfaceVariant} />
-        <View style={styles.protectionText}><Text variant="bodyLarge">{t("Su questo dispositivo")}</Text></View>
-      </View>
-      {protection && <ProtectionStatus state={protection} />}
-      {/* Filled in the main colour and as wide as two buttons of the page (user's requests, 22 November): before, a text button.
-          Android app without Advanced (ModeChoice): a line instead of the button. */}
-      {appWithoutAdvanced()
-        ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t(appOnlyStandard)}</Text>
-        : <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-          <Button mode="contained" style={[doubleWidth(sameWidth, spacing.sm), pill]} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
-        </View>}
+    <>
+      <ListGroup label={t("Archiviazione")}>
+        <StatusRow icon={iconShapes.database} title={t("Su questo dispositivo")} subtitle={t("I dati restano in questo browser.")} />
+        {kept && <>
+          <RowDivider />
+          <StatusRow icon={kept.shape} tone={protection === 'protected' ? 'primary' : 'secondary'} title={t(kept.title)} subtitle={t(kept.text)} />
+        </>}
+        <RowDivider />
+        {/* Android app without Advanced (ModeChoice): a line instead of the action. */}
+        {appWithoutAdvanced()
+          ? <StatusRow icon={iconShapes.swap} tone="secondary" title={t(appOnlyStandard)} />
+          : <ActionRow icon={iconShapes.swap} tone="tertiary" title={t("Cambia modalità")} subtitle={t("Passa alla modalità Avanzata, con Firebase.")}
+            onPress={() => setChanging(true)} />}
+      </ListGroup>
       <ChangeModeDialog visible={changing} target="advanced" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('advanced')} />
-    </Card>
+    </>
   );
 }
 
-// Storage section of the «Archiviazione e backup» page, Advanced mode: the Firebase project this build is connected to.
+// Storage tile of the «Archiviazione e backup» page, Advanced mode: the Firebase project this build is connected to, the way
+// back to the Standard mode and «Esci» (27 November, on request: it left the account menu and is here).
 // `connected`: the project was connected from this browser (not the site's); `onDisconnect` goes back to the site's one.
-export function AdvancedStorage({ project, cache, onChangeMode, style, connected = false, onDisconnect }: Common & {
-  project: string; cache: string; connected?: boolean; onDisconnect?: () => Promise<string | null>;
+// `onSignOut` is absent when there is no account.
+export function AdvancedStorage({ project, cache, onChangeMode, connected = false, onDisconnect, onSignOut, signingOut = false }: Common & {
+  project: string; cache: string; connected?: boolean; onDisconnect?: () => Promise<string | null>; onSignOut?: () => void; signingOut?: boolean;
 }) {
   const { t } = useI18n();
-  const compact = useSizeClass() === 'compact';
   const [changing, setChanging] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
-  const sameWidth = useSameWidth();
   return (
-    <Card style={style}>
-      <View style={styles.rows}>
-        <InfoRow shape={iconShapes.database} label={t("Archiviazione")} value="Firebase" />
-        {project !== '' && <InfoRow shape={iconShapes.cloud} label={connected ? t("Progetto collegato da te") : t("Nome progetto")} value={project} />}
-        <InfoRow shape={iconShapes.cloudOff} label={t("Cache offline")} value={t(cache)} />
-      </View>
-      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        {connected && onDisconnect && <Button mode="outlined" {...sameWidth} style={[sameWidth.style, pill]} icon={icon(iconShapes.logout)} onPress={() => setDisconnecting(true)}>{t("Scollega progetto")}</Button>}
-        {/* Alone, as wide as the two buttons of the rows below; beside «Scollega progetto», one width each. */}
-        <Button mode="contained" {...(connected && onDisconnect ? sameWidth : {})} style={[connected && onDisconnect ? sameWidth.style : doubleWidth(sameWidth, spacing.sm), pill]} icon={icon(iconShapes.swap)} onPress={() => setChanging(true)}>{t("Cambia modalità")}</Button>
-      </View>
+    <>
+      <ListGroup label={t("Archiviazione")}>
+        <StatusRow icon={iconShapes.database} title={t("Archiviazione")} value="Firebase" />
+        {project !== '' && <>
+          <RowDivider />
+          <StatusRow icon={iconShapes.cloud} title={connected ? t("Progetto collegato da te") : t("Nome progetto")} value={project} />
+        </>}
+        <RowDivider />
+        <StatusRow icon={iconShapes.cloudOff} tone="secondary" title={t("Cache offline")} value={t(cache)} />
+        {connected && onDisconnect && <>
+          <RowDivider />
+          <ActionRow icon={iconShapes.close} tone="secondary" title={t("Scollega progetto")} subtitle={t("Torna al progetto Firebase del sito.")}
+            onPress={() => setDisconnecting(true)} />
+        </>}
+        <RowDivider />
+        <ActionRow icon={iconShapes.swap} tone="tertiary" title={t("Cambia modalità")} subtitle={t("Passa alla modalità Standard, sul dispositivo.")}
+          onPress={() => setChanging(true)} />
+        {onSignOut && <>
+          <RowDivider />
+          <ActionRow icon={iconShapes.logout} tone="secondary" title={t("Esci")} subtitle={signingOut ? t("Uscita in corso…") : t("Esci da questo account Google.")}
+            busy={signingOut} busyLabel={t("Uscita in corso…")} onPress={onSignOut} />
+        </>}
+      </ListGroup>
       <ChangeModeDialog visible={changing} target="standard" onDismiss={() => setChanging(false)} onConfirm={() => onChangeMode('standard')} />
       {onDisconnect && <DisconnectDialog visible={disconnecting} project={project} onDismiss={() => setDisconnecting(false)} onConfirm={onDisconnect} />}
-    </Card>
+    </>
   );
 }
 
@@ -174,22 +153,9 @@ function ChangeModeDialog({ visible, target, onDismiss, onConfirm }: { visible: 
 }
 
 const styles = StyleSheet.create({
-  rows: { gap: spacing.sm },
-  info: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: spacing.lg, rowGap: 2 },
-  label: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  value: { flexShrink: 1, fontWeight: '500' },
-  protection: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
-  protectionText: { flex: 1, gap: 2 },
-  // A little more room before the protection status (the card's own gap is 16).
-  deviceRow: { marginBottom: spacing.md },
-  buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   container: { flexShrink: 1, minHeight: 0 },
   scrollArea: { minHeight: 0, paddingHorizontal: 0, marginBottom: 0 },
   dialogBody: { paddingHorizontal: spacing.xl, gap: spacing.md },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   actionsCompact: { flexDirection: 'column', alignItems: 'stretch' },
 });
-
-// Every button of the «Archiviazione e backup» page is a pill (user's request, 24 November).
-const pill = { borderRadius: radius.pill };

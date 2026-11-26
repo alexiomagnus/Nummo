@@ -18,7 +18,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export function Guide({ onBack }: { onBack: () => void }) {
+// `fill`: inside the app (the «Info» page) the text takes the whole width of the panel; alone, on the first screens, it stays a column.
+export function Guide({ onBack, fill = false }: { onBack: () => void; fill?: boolean }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const muted = { color: colors.onSurfaceVariant };
@@ -28,7 +29,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
     <Text variant="bodyLarge" style={styles.paragraph}><Text variant="bodyLarge" style={styles.lead}>{t(lead)}</Text>{": "}{t(text)}</Text>
   );
   return (
-    <View role="article" aria-label={t("Cos'è Nummo e come funziona")} style={styles.wrap}>
+    <View role="article" aria-label={t("Cos'è Nummo e come funziona")} style={[styles.wrap, fill && styles.fill]}>
       <BackButton onPress={onBack} />
       <View style={styles.intro}>
         <Text variant="headlineMedium" style={styles.title} accessibilityRole="header" aria-level={1}>{t("Cos'è Nummo")}</Text>
@@ -67,6 +68,7 @@ export function Guide({ onBack }: { onBack: () => void }) {
 
 const styles = StyleSheet.create({
   wrap: { width: '100%', maxWidth: 640, alignSelf: 'center', gap: spacing.xl },
+  fill: { maxWidth: '100%' },
   intro: { gap: spacing.sm },
   title: { fontWeight: '700', letterSpacing: -0.3 },
   section: { gap: spacing.sm },

@@ -7,16 +7,17 @@ import { AnchoredMenu, type MenuAnchor } from './Overlay';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
 
-// Without `onSignOut` there is no account (Standard mode, data on this device): the menu keeps only its pages.
+// Without `signedIn` there is no account (Standard mode, data on this device): the menu keeps only its pages. «Esci» is not in
+// the menu any more (27 November, on request): it is in «Archiviazione e backup», Advanced mode.
 // `avatar`: the picture chosen in Settings, drawn instead of the person glyph and the Google photo; with it the menu says
 // nothing about the Google photo (loading, missing, «Riprova foto»). `ring`: the colour of a ring around the picture, the
 // mark of the Advanced mode (22 November; never in the Standard mode; colour chosen in Settings, the main one by default).
-type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: string; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenReceipts: () => void; onOpenBackup: () => void; onOpenMerchants: () => void; onOpenInfo: () => void };
+type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: string; signedIn?: boolean; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenReceipts: () => void; onOpenBackup: () => void; onOpenMerchants: () => void; onOpenInfo: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
 // `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
-export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenReceipts, onOpenBackup, onOpenMerchants, onOpenInfo }: Props) {
+export function AccountMenu({ email, photoURL, avatar, ring, signedIn = false, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenReceipts, onOpenBackup, onOpenMerchants, onOpenInfo }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -30,7 +31,7 @@ export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, on
     <>
       <View ref={trigger}>
         <StateLayerPressable layerColor={colors.onSurfaceVariant} radius={24} bleed={4} accessibilityRole="button"
-          aria-haspopup="menu" aria-expanded={open} accessibilityLabel={onSignOut ? `Account${email ? `: ${email}` : ''}` : t("Menu")}
+          aria-haspopup="menu" aria-expanded={open} accessibilityLabel={signedIn ? `Account${email ? `: ${email}` : ''}` : t("Menu")}
           onPress={openMenu} style={styles.trigger}>
           <View style={[styles.ring, { borderColor: ring ?? 'transparent' }]}>
           {avatar ?? <View style={[styles.avatar, { backgroundColor: colors.primaryContainer }]}>
@@ -43,10 +44,10 @@ export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, on
           </View>
         </StateLayerPressable>
       </View>
-      {/* No fixed cap (the selectors' 360 hid «Esci» under the scroll, 23 November): only the room in the window limits it. */}
+      {/* No fixed cap (the selectors' 360 hid the last item under the scroll, 23 November): only the room in the window limits it. */}
       <AnchoredMenu visible={open} onDismiss={() => setOpen(false)} anchor={anchor} align="end" label="Account" contentStyle={styles.menu}
         maxHeight={Number.POSITIVE_INFINITY}>
-      {onSignOut ? <View style={styles.info}>
+      {signedIn ? <View style={styles.info}>
         <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Account Google")}</Text>
         <Text variant="bodyMedium" numberOfLines={1} selectable style={styles.email}>{email ?? t("Account senza e-mail")}</Text>
         {!avatar && (!photoURL || photoFailed || !photoLoaded) && <Text variant="bodySmall" accessibilityLiveRegion="polite" style={{ color: colors.onSurfaceVariant }}>
@@ -88,9 +89,6 @@ export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, on
       <Menu.Item title={t("Info")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.info} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenInfo(); }} />
-      {onSignOut && <Menu.Item title={busy ? t("Uscita in corso…") : t("Esci")} disabled={busy} style={styles.item}
-        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.logout} size={size} color={color} />}
-        onPress={() => { setOpen(false); onSignOut(); }} />}
       </AnchoredMenu>
     </>
   );

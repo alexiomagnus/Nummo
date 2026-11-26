@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Text, useTheme } from 'react-native-paper';
 import { useBackLayer } from '../../components/BackNavigation';
@@ -29,13 +29,15 @@ const linkProps = (href: string) => ({ href, hrefAttrs: { target: '_blank', rel:
 // version (only in the Android app, which knows it: the browser and the installed web app show the mark instead), the
 // public guide «Cos'è Nummo» (in place of the page; Back returns), the creator with the GitHub picture, and links to
 // contribute or report a problem. No data.
-export function InfoPage() {
+export function InfoPage({ onGuideChange }: { onGuideChange?: (open: boolean) => void } = {}) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [guide, setGuide] = useState(false);
   const version = useMemo(() => androidAppVersion(), []);
   useBackLayer(guide, backLevels.detail, () => setGuide(false));
-  if (guide) return <Guide onBack={() => setGuide(false)} />;
+  // The page header drops «Fatto» while the guide is open (27 November, on request): «Torna indietro» is the only way back.
+  useEffect(() => { onGuideChange?.(guide); return () => onGuideChange?.(false); }, [guide, onGuideChange]);
+  if (guide) return <Guide onBack={() => setGuide(false)} fill />;
   return (
     <View style={styles.root}>
       <Hero version={version} />

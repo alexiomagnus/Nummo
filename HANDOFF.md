@@ -105,6 +105,41 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## «Archiviazione e backup» rifatta, «Esci» spostato, movimenti senza selettore — 27 novembre 2026
+
+Su richiesta (screenshot della pagina da desktop e del dialogo «Trasferisci tra fondi»):
+- **«Esci» fuori dal menu account**: ora è una riga di «Archiviazione e backup» in Avanzata («Esci», «Esci da questo account Google.», spinner
+  «Uscita in corso…» mentre esce); porta alla prima schermata come prima. `AccountMenu`: tolti `onSignOut`/`busy`, al loro posto `signedIn`
+  (solo per l'intestazione Standard/Account Google). `AccessDenied` e `OwnerSetup` hanno ancora il loro «Esci».
+- **Pagina rifatta** (desktop e smartphone, stesso linguaggio di «Info»): nuovo `components/ActionList.tsx` (`ListGroup`, `ActionRow`,
+  `StatusRow`, `RowDivider`, `RowBody`, `ListGrid`). Tile: **Archiviazione** (stato, protezione/progetto/cache, «Cambia modalità», «Scollega
+  progetto», «Esci»), **Dati della modalità Standard** (solo Avanzata), **Backup** (Scarica, Importa, CSV; anteprima del ripristino e
+  stato sotto le righe), **Elimina le spese** (testo + pillola rossa). Una sola colonna a tutta larghezza a ogni dimensione (affiancati da desktop, in una prima versione, sembravano sparsi: su richiesta).
+  Tolti `SameWidthGroup`/`useSameWidth` da questa pagina e i pulsanti affiancati; l'anteprima, i dialoghi di sostituzione/eliminazione e
+  `ModeTransfer` sono invariati nel comportamento. Testi nuovi con traduzione in `en.ts` (sottotitoli delle righe, «Backup»).
+- **«Trasferisci tra fondi» / «Aggiungi denaro»**: tolto il selettore Entrata/Spostamento: il tipo è quello del pulsante da cui si apre
+  (`MovementDialog`, `kind` fisso). Tolte le chiavi `Tipo di movimento` e `Spostamento` da `en.ts`.
+- **Verifica:** `npm run check` OK (**607/607**). Headless su `dist-demo` (Standard, chiaro e scuro, 1280×900 e 390×844: nessun
+  overflow, nessun errore JS; importazione con anteprima nel tile Backup; Aggiungi e Trasferisci senza selettore) e in Avanzata con
+  emulatori demo propri (porte 39199/39380, config temporanea tolta, processi propri fermati; la sessione hybrid PID 45058 non toccata):
+  menu senza «Esci», pagina con «Esci», clic → prima schermata. Non provato: telefono reale, inglese, l'eliminazione di tutte le spese
+  e la sostituzione dalla nuova pagina (codice invariato). Non committato.
+
+## Info a tutta larghezza senza «Fatto», filtro Categoria con icona su smartphone — 27 novembre 2026
+
+Su richiesta (screenshot):
+- **Guida dentro Info** (`Guide` con `fill`): occupa tutta la larghezza del pannello da desktop (976 px su 1040 a 1280×900; prima colonna da 640);
+  la guida pubblica `#guida` delle prime schermate resta una colonna. **«Fatto» non c'è più** mentre la guida è aperta, su desktop e
+  smartphone (`InfoPage` → `onGuideChange`, `infoGuide` in `Sections` di `Workspace`): resta «Torna indietro» (in testa e in fondo),
+  Indietro e Escape. *Interpretazione:* il «tasto verde indietro» è «Fatto» (pillola tonale verde con la freccia); «Torna indietro»
+  è rimasto. Se si voleva il contrario, basta invertire.
+- **Spese, filtro Categoria su smartphone:** mostra l'icona (della categoria scelta, o il filtro senza scelta) come Ordina e Fondo
+  (`iconOnPhones`). **«Tutte le categorie» → «Tutte»** (en «All»): sotto l'etichetta «Categoria» e con l'icona il testo lungo non entrava.
+  Il testo è una scelta mia (la richiesta diceva solo «un'altra proposizione»): da cambiare se se ne vuole un'altra.
+- **Verifica:** `npm run check` OK (**607/607**). Headless su `dist-demo` (Standard): guida e «Fatto» a 1280×900 e 390×844, ritorno
+  a Info con «Torna indietro» (Fatto di nuovo presente), filtro a 390×844 con e senza categoria; nessun errore JS. Non provato sul telefono.
+  Non committato.
+
 ## Documenti riallineati, backup di collaudo v12 — 26 novembre 2026
 
 Su richiesta, dopo un confronto tra documenti e codice (su `31ea15a`, `npm run check` OK, 606/606):

@@ -196,7 +196,7 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
   const [infoRequest, setInfoRequest] = useState(0);
   const [released, setReleased] = useState(false);
   const openBackup = () => setBackupRequest((n) => n + 1);
-  const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar />} busy={false} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
+  const menu = <AccountMenu email={null} photoURL={null} avatar={<StandardAvatar />} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
     onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenReceipts={() => setReceiptsRequest((n) => n + 1)} onOpenBackup={openBackup}
     onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} onOpenInfo={() => setInfoRequest((n) => n + 1)} />;
   return (
@@ -206,7 +206,7 @@ function StandardWorkspace({ store, themeToggle, renderSettings, onChangeMode, p
           onReleased={() => setReleased(true)} categoriesRequest={categoriesRequest} templatesRequest={templatesRequest} receiptsRequest={receiptsRequest} backupRequest={backupRequest} merchantsRequest={merchantsRequest} infoRequest={infoRequest} settingsRequest={settingsRequest}
           notificationsRequest={notificationsRequest} localArchive={store}
           renderSettings={renderSettings}
-          storage={<StandardStorage protection={protection} onChangeMode={onChangeMode} style={styles.wide} />}
+          storage={<StandardStorage protection={protection} onChangeMode={onChangeMode} />}
           dashboardPreferences={preferences} onChangeDashboardPreferences={onChangePreferences}
           topActions={<>{themeToggle}{menu}</>} />
       </View>
@@ -250,10 +250,11 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const openBackup = () => setBackupRequest((n) => n + 1);
   // The storage section of the backup page: the connected project and the offline cache.
   const storage = (): StorageSlot => ({ backend, enabled, shown }) => <>
-    <AdvancedStorage style={styles.wide} onChangeMode={onChangeMode}
+    <AdvancedStorage onChangeMode={onChangeMode}
+      onSignOut={session.status === 'signed-in' ? signOut : undefined} signingOut={session.status === 'signed-in' && session.busy}
       project={configMissing ? '' : activeFirebaseConfig.projectId} cache={persistentCache ? 'Locale' : 'Non attiva'}
       connected={customFirebaseConfig !== null} onDisconnect={() => switchFirebase(null, true)} />
-    <ModeTransfer style={styles.wide} backend={backend} enabled={enabled} shown={shown} />
+    <ModeTransfer backend={backend} enabled={enabled} shown={shown} />
   </>;
   // The picture chosen for this account in Settings (since 22 November); nothing chosen: the Google photo, as before.
   const chosenAvatar = useProfileImage(session.status === 'signed-in' ? session.user.uid : 'local');
@@ -262,7 +263,7 @@ function AdvancedRoot({ themeToggle, renderSettings, onChangeMode, preferences, 
   const advancedSettings = (onDone: () => void, archiveSections?: ReactNode, onResetArchive?: () => void) =>
     renderSettings(onDone, archiveSections, onResetArchive, session.status === 'signed-in' ? { scope: session.user.uid, googlePhoto: session.user.photoURL } : undefined);
   const account = session.status === 'signed-in'
-    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} ring={ringColor} busy={session.busy} onSignOut={signOut}
+    ? <AccountMenu key={`${session.user.uid}:${session.user.photoURL ?? ''}`} email={session.user.email} photoURL={session.user.photoURL} ring={ringColor} signedIn
       avatar={chosenAvatar.kind === 'none' ? undefined : <ProfileAvatar image={chosenAvatar} size={accountAvatarSize} />} onOpenSettings={() => setSettingsRequest((n) => n + 1)}
       onOpenNotifications={() => setNotificationsRequest((n) => n + 1)} onOpenCategories={() => setCategoriesRequest((n) => n + 1)} onOpenTemplates={() => setTemplatesRequest((n) => n + 1)} onOpenReceipts={() => setReceiptsRequest((n) => n + 1)}
       onOpenBackup={openBackup} onOpenMerchants={() => setMerchantsRequest((n) => n + 1)} onOpenInfo={() => setInfoRequest((n) => n + 1)} /> : null;
@@ -370,5 +371,4 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', padding: spacing.xxl },
   alert: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   start: { alignSelf: 'flex-start' },
-  wide: { width: '100%' },
 });

@@ -44,7 +44,7 @@ import { SubscriptionList } from '../history/SubscriptionList';
 import { makeBackup } from '../../domain/backup';
 import { backendMode, firestoreEmulator } from '../../services/backendConfig';
 import { BackupActions, download, downloadBackup } from '../backup/BackupActions';
-import { SameWidthGroup } from '../../components/SameWidth';
+import { ListGrid } from '../../components/ActionList';
 import { message } from '../expenses/useRemoteExpenses';
 import { NotificationsPage } from '../notifications/NotificationsPage';
 import { useNotifications, type LocalArchive } from '../notifications/useNotifications';
@@ -307,6 +307,8 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const closeDetail = useCallback(() => setDetailId(null), []);
   const detailItem = useMemo(() => detailId ? oneOff.find((item) => item.expenseId === detailId) ?? null : null, [detailId, oneOff]);
   const [seriesId, setSeriesId] = useState<string | null>(null);
+  // The guide opened inside «Info» has its own «Torna indietro»: «Fatto» goes away while it is shown.
+  const [infoGuide, setInfoGuide] = useState(false);
   const openSeries = useCallback((id: string) => setSeriesId(id), []);
   const closeSeries = useCallback(() => setSeriesId(null), []);
   // Only the change itself is written (see subscription.ts). Confirmed by the server transaction.
@@ -434,7 +436,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   return <>
     {/* The Lists page draws its own header (the open list's name is the title), as does Settings. */}
     {section !== 'lists' && section !== 'settings' && <PageHeader title={heading}
-      action={section === 'categories' || section === 'templates' || section === 'receipts' || section === 'backup' || section === 'merchants' || section === 'info' || section === 'notifications' ? (
+      action={section === 'categories' || section === 'templates' || section === 'receipts' || section === 'backup' || section === 'merchants' || (section === 'info' && !infoGuide) || section === 'notifications' ? (
         <DoneButton onPress={onDone} />
       ) : undefined} />}
     {!!store.recovery?.length && (
@@ -475,11 +477,11 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </VisitedSection>
     {/* Preserve import previews and in-flight actions when leaving this page; no reads until an explicit action. */}
     <View style={section === 'backup' && !starting ? styles.backupPage : styles.hidden}>
-      {/* One width for every button of the page (storage, mode transfer, backup files; 22 November). */}
-      <SameWidthGroup>
+      {/* The tiles of the page side by side from medium, wrapping, one column on phones (27 November, on request). */}
+      <ListGrid>
         {typeof storage === 'function' ? storage({ backend, enabled: synchronized, shown: section === 'backup' && !starting }) : storage}
         <BackupActions backend={backend} enabled={synchronized} onBackupDownloaded={notifications.backupDownloaded} />
-      </SameWidthGroup>
+      </ListGrid>
     </View>
     {/* Before the editor: opened from the detail, the editor's portal mounts later and stays above it. */}
     <ExpenseDetail value={expenseDetail} onClose={closeDetail} onEdit={edit} />
@@ -506,7 +508,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
       fundNames={fundNames} merchants={merchants} enabled={dashboardPreferences.templatesEnabled}
       onToggle={(templatesEnabled) => onChangeDashboardPreferences({ templatesEnabled })} />}
     {section === 'receipts' && !starting && <ReceiptsPage remote={receiptState} expenses={store.expenses} categories={categoryState.categories} />}
-    {section === 'info' && <InfoPage />}
+    {section === 'info' && <InfoPage onGuideChange={setInfoGuide} />}
     {section === 'merchants' && !starting && <MerchantsPage merchants={merchants} backend={backend} canWrite={synchronized} notify={notify} />}
     {section === 'categories' && !starting && <>
       <CategorySettings categories={categoryState.categories} error={categoryState.error} ready={categoryState.ready && online}

@@ -3,9 +3,8 @@ import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from '
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button, CancelButton, DangerButton } from '../../components/Button';
-import { Card } from '../../components/Card';
+import { ActionRow, ListGroup, RowBody, RowDivider } from '../../components/ActionList';
 import { DeleteDialog } from '../../components/DeleteAction';
-import { useSameWidth } from '../../components/SameWidth';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { radius, spacing } from '../../theme/tokens';
@@ -104,9 +103,6 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   // A backup downloaded from the confirmation dialog now open (reset at every opening).
   const [savedBefore, setSavedBefore] = useState(false);
   const [saving, setSaving] = useState(false);
-  // The file actions share one width with the other buttons of the page (`SameWidthGroup` in Workspace); phones stack them full width.
-  const fileAction = useSameWidth();
-  const sameWidth = fileAction.style ?? null;
   // The preview appears below the buttons, often out of sight on phones: bring it into view when a file has been read
   // (only as far as needed; no animation with reduced motion).
   const reduceMotion = useReducedMotion();
@@ -165,35 +161,40 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const written = replace ? replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length
     + replace.addMovements.length + replace.addLists.length + replace.addMerchants.length + replace.addTemplates.length + replace.addReceipts.length : 0;
   const finish = () => { setPreview(null); notify("Importazione completata."); };
-  return <Card style={styles.card}>
-    <View style={styles.group}>
-      <Text variant="titleSmall">{t("Consulta le spese")}</Text>
-      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button {...fileAction} style={[sameWidth, pill]} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportCsvFile()}>{t("Esporta transazioni (CSV)")}</Button>
-      </View>
-    </View>
-    <View style={styles.group}>
-      <Text variant="titleSmall">{t("Backup completo")}</Text>
-      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <Button {...fileAction} style={[sameWidth, pill]} mode="outlined" icon={icon(iconShapes.download)} disabled={!enabled || busy} onPress={() => void exportBackup()}>{t("Scarica backup (JSON)")}</Button>
-        <Button {...fileAction} style={[sameWidth, pill]} mode="outlined" icon={icon(iconShapes.upload)} disabled={!enabled || busy} onPress={pick}>{t("Importa backup (JSON)")}</Button>
-      </View>
-    </View>
+  // Two tiles of the page's grid (27 November, on request: the card of loose buttons was redone as grouped rows, like «Info»).
+  // «Elimina tutte le spese» stays the red pill of every deletion.
+  return <>
+    <ListGroup label={t("Backup")}>
+      <ActionRow icon={iconShapes.download} title={t("Scarica backup (JSON)")} subtitle={t("Una copia completa dei tuoi dati.")}
+        disabled={!enabled || busy} onPress={() => void exportBackup()} />
+      <RowDivider />
+      <ActionRow icon={iconShapes.upload} tone="secondary" title={t("Importa backup (JSON)")} subtitle={t("Aggiungi o sostituisci i dati da un file.")}
+        disabled={!enabled || busy} onPress={pick} />
+      <RowDivider />
+      <ActionRow icon={iconShapes.list} tone="tertiary" title={t("Esporta transazioni (CSV)")} subtitle={t("Per consultarle in un foglio di calcolo.")}
+        disabled={!enabled || busy} onPress={() => void exportCsvFile()} />
+      {(preview || status !== '') && <>
+        <RowDivider />
+        <RowBody>
+          {preview && <View ref={previewRef}>
+            <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => setPreview(null)}
+              onMerge={() => void run(async () => {
+                await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates, preview.data.receipts); finish();
+              })}
+              replace={<Button style={pill} disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
+          </View>}
+          {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}
+        </RowBody>
+      </>}
+    </ListGroup>
     {/* Only the expenses (user's request, 22 November): categories, funds, lists, templates and merchants stay. */}
-    <View style={styles.group}>
-      <Text variant="titleSmall">{t("Elimina le spese")}</Text>
-      <View style={[styles.buttons, compact && styles.buttonsCompact]}>
-        <DangerButton {...fileAction} icon={icon(iconShapes.trash)} style={sameWidth}
-          disabled={!enabled || busy} onPress={() => { setSavedBefore(false); setConfirmWipe(true); }}>{t("Elimina tutte le spese")}</DangerButton>
-      </View>
-    </View>
-    {preview && <View ref={previewRef}>
-      <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => setPreview(null)}
-        onMerge={() => void run(async () => {
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates, preview.data.receipts); finish();
-        })}
-        replace={<Button style={pill} disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
-    </View>}
+    <ListGroup label={t("Elimina le spese")}>
+      <RowBody>
+        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{t("Restano categorie, fondi, liste ed esercenti.")}</Text>
+        <DangerButton icon={icon(iconShapes.trash)} disabled={!enabled || busy}
+          onPress={() => { setSavedBefore(false); setConfirmWipe(true); }}>{t("Elimina tutte le spese")}</DangerButton>
+      </RowBody>
+    </ListGroup>
     <DeleteDialog visible={confirmReplace} name={t("i dati esistenti")} title={t("Sostituire tutti i dati?")} confirmLabel={t("Sostituisci")}
       description={replace && t("Elementi da eliminare: {p0}. Da scrivere: {p1}.", { p0: removed, p1: written })}
       onDismiss={() => setConfirmReplace(false)}
@@ -217,19 +218,16 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
           return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }}>{offerBackup}</DeleteDialog>
-    {status !== '' && <Text variant="bodyMedium" accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{t(status)}</Text>}
-  </Card>;
+  </>;
 }
 
 const styles = StyleSheet.create({
-  card: { gap: spacing.xxxl },
-  group: { gap: spacing.sm },
   // Note under the buttons, a little further from them than the buttons are from each other (user's request, 21 November).
   offer: { gap: spacing.md },
   lines: { gap: 2 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   buttonsCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
-  preview: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.md },
+  preview: { borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
 });
 
 // Every button of the «Archiviazione e backup» page is a pill (user's request, 24 November).
