@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Annulla download» nei limiti del pulsante — 27 novembre 2026
+
+Segnalazione: nella schermata «Aggiornamento disponibile», durante il download, la scritta di «Annulla download» era troppo grande e usciva dal pulsante. Causa: dal 27 novembre due azioni di uno schermo stanno su una riga a metà ciascuna anche su smartphone (circa 150–175 dp), e l'etichetta di `screenActionStyles.label` (16 dp) con i margini di 24 dp di Paper è la più lunga di tutti gli schermi. Ora i due pulsanti con contorno di `UpdateDialog.tsx` («Annulla download», «Più tardi») usano `cancelLabel`: 15 dp e margini di 8 dp. Calcolato per 360 dp di larghezza, **non misurato** né visto sul telefono (serve l'app 0.3.6+ per arrivarci). Solo sito, nessuna nuova APK.
+
 ## Lista scontrini, Templates: nota tolta, fondo non obbligatorio, «Elimina tutti» fuori dalla scheda — 27 novembre 2026
 
 Su richiesta, dalle immagini dell'utente. **Non ancora in commit né su Hosting.** `npm run check` 629/629; non provato a vista.

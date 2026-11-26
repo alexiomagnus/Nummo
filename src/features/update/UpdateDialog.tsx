@@ -115,9 +115,9 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
       </AppDialog.ScrollArea>
       <AppDialog.Actions>
         {phase.kind === 'downloading'
-          ? <Button mode="outlined" style={pill} contentStyle={screenActionStyles.content} labelStyle={screenActionStyles.label}
+          ? <Button mode="outlined" style={pill} contentStyle={screenActionStyles.content} labelStyle={styles.cancelLabel}
               onPress={() => { download.current?.abort(); download.current = null; setPhase({ kind: 'offer' }); }}>{t("Annulla download")}</Button>
-          : <Button mode="outlined" style={pill} contentStyle={screenActionStyles.content} labelStyle={screenActionStyles.label}
+          : <Button mode="outlined" style={pill} contentStyle={screenActionStyles.content} labelStyle={styles.cancelLabel}
               disabled={phase.kind === 'installing'} onPress={close}>{t("Più tardi")}</Button>}
         {phase.kind === 'permission'
           ? <ConfirmButton onPress={() => { void allow(); }}>{t("Apri le impostazioni")}</ConfirmButton>
@@ -180,6 +180,9 @@ function Note({ icon, text, error = false }: { icon: string; text: string; error
 }
 
 const styles = StyleSheet.create({
+  // «Annulla download» is the longest action label of any screen: in half a phone's row (about 150 dp at 360) the 16 dp label with its
+  // 24 dp margins stuck out of the button (user's report, 27 November). 15 dp and 8 dp margins fit down to 360; «Più tardi» alike.
+  cancelLabel: { ...screenActionStyles.label, fontSize: 15, marginHorizontal: spacing.sm },
   area: { paddingHorizontal: 0 },
   content: { gap: spacing.lg, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm },
   hero: { borderRadius: radius.dialog, overflow: 'hidden', alignItems: 'center', paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, gap: spacing.xs },
