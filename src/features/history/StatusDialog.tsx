@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, Portal, Text, useTheme } from 'react-native-paper';
 import { AppDialog as Dialog } from '../../components/AppDialog';
-import { ConfirmButton, dialogActionsRow } from '../../components/Button';
+import { ConfirmButton, dialogActionsRow, useDangerColors } from '../../components/Button';
 import { DateField } from '../../components/DateField';
 import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { paymentsRemoved, type SubscriptionSummary } from '../../domain/history';
@@ -29,6 +29,7 @@ const previewLimit = 5;
 export function StatusDialog({ summary, status, today, onConfirm, close }: Props) {
   const { t, formatAmount, formatDate } = useI18n();
   const { colors } = useTheme();
+  const danger = useDangerColors();
   const { entry } = summary;
   const changes = entry.status_changes ?? [];
   const minDate = [entry.expense_date, changes[changes.length - 1]?.date ?? ''].reduce((a, b) => (b > a ? b : a));
@@ -86,7 +87,7 @@ export function StatusDialog({ summary, status, today, onConfirm, close }: Props
       <Dialog.Actions style={dialogActionsRow}>
         {/* No «Indietro»: the sheet closes with its handle, a tap above it or Back (user's request, 23 November). */}
         <ConfirmButton disabled={busy || !next} loading={busy}
-          buttonColor={cancel ? colors.error : undefined} textColor={cancel ? colors.onError : undefined} onPress={() => void submit()}>{title}</ConfirmButton>
+          buttonColor={cancel ? danger.fill : undefined} textColor={cancel ? danger.ink : undefined} onPress={() => void submit()}>{title}</ConfirmButton>
       </Dialog.Actions>
     </Dialog>
   </Portal>;

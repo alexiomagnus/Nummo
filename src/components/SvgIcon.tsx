@@ -52,6 +52,12 @@ export const iconShapes = {
   calendarPrevious: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4M15 15H9m2.5-2.5L9 15l2.5 2.5"/>',
   calendarQuarter: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4M8.5 15h.01M12 15h.01M15.5 15h.01" stroke-width="2.6"/>',
   calendarYear: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4"/><path d="M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01M15.5 17h.01" stroke-width="2.4"/>',
+  // Sort orders of Spese (user's request, 26 November): newest/oldest first (a calendar with the arrow down/up), highest/lowest amount
+  // first (bars, longest/shortest on top).
+  sortNewest: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4M12 12.5v5m-2.2-2.2L12 17.5l2.2-2.2"/>',
+  sortOldest: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4m8-4v4M12 17.5v-5m-2.2 2.2L12 12.5l2.2 2.2"/>',
+  sortAmountHigh: '<path d="M4 6.5h16M4 12h10.5M4 17.5h5" stroke-width="3"/>',
+  sortAmountLow: '<path d="M4 6.5h5M4 12h10.5M4 17.5h16" stroke-width="3"/>',
   // Chart types of Analisi: donut, bars (horizontal, longest first, as drawn), blocks (treemap).
   donut: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 4v4.5m6.9 7.5-3.9-2.2"/>',
   bars: '<path d="M5 6.5h13M5 12h9M5 17.5h5" stroke-width="3"/>',

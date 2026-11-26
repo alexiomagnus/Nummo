@@ -183,21 +183,25 @@ export function PriceChangeField({ next, shownAmount, typed, scope, changes, sta
 
 // The next renewal of a series at a glance, at the top of the «Rinnovi» group of «Modifica serie»: calendar tile, «Prossimo rinnovo»
 // and its date, the price on the right (user's request, 24 November, in place of a small line «Prossimo rinnovo (date): price»).
-export function NextRenewalRow({ date, amount }: { date: string; amount: number }) {
+// `onPress`: the row opens the frequency screen (user's request, 26 November), so it ends with an arrow that says it can be pressed.
+export function NextRenewalRow({ date, amount, onPress, disabled }: { date: string; amount: number; onPress?: () => void; disabled?: boolean }) {
   const { t, locale, formatAmount } = useI18n();
   const { colors } = useTheme();
-  return (
-    <View style={styles.next} role="group" aria-label={`${t("Prossimo rinnovo")}: ${formatLongDate(date, locale)}, ${formatAmount(amount)}`}>
-      <View aria-hidden style={[styles.nextTile, { backgroundColor: colors.secondaryContainer }]}>
-        <SvgIcon shape={iconShapes.calendar} size={22} color={colors.onSecondaryContainer} />
-      </View>
-      <View aria-hidden style={styles.nextText}>
-        <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Prossimo rinnovo")}</Text>
-        <Text variant="bodyLarge" numberOfLines={1}>{formatLongDate(date, locale)}</Text>
-      </View>
-      <Text aria-hidden variant="titleMedium" style={styles.nextAmount}>{formatAmount(amount)}</Text>
+  const label = `${t("Prossimo rinnovo")}: ${formatLongDate(date, locale)}, ${formatAmount(amount)}`;
+  const content = <>
+    <View aria-hidden style={[styles.nextTile, { backgroundColor: colors.secondaryContainer }]}>
+      <SvgIcon shape={iconShapes.calendar} size={22} color={colors.onSecondaryContainer} />
     </View>
-  );
+    <View aria-hidden style={styles.nextText}>
+      <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Prossimo rinnovo")}</Text>
+      <Text variant="bodyLarge" numberOfLines={1}>{formatLongDate(date, locale)}</Text>
+    </View>
+    <Text aria-hidden variant="titleMedium" style={styles.nextAmount}>{formatAmount(amount)}</Text>
+    {onPress && <SvgIcon shape={iconShapes.chevronRight} size={24} color={colors.onSurfaceVariant} />}
+  </>;
+  if (!onPress) return <View style={styles.next} role="group" aria-label={label}>{content}</View>;
+  return <StateLayerPressable layerColor={colors.onSurface} radius={radius.control} disabled={disabled} onPress={onPress} style={styles.next}
+    accessibilityRole="button" aria-haspopup="dialog" accessibilityLabel={`${label}. ${t("Frequenza")}`}>{content}</StateLayerPressable>;
 }
 
 const styles = StyleSheet.create({

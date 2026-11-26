@@ -15,8 +15,8 @@ import { layout, radius, spacing } from '../../theme/tokens';
 
 // Detail screen of one card of the Spese page (23 November, on request, in place of the details opened inside the card):
 // one shell for the expenses (ExpenseDetail) and the subscriptions (SubscriptionDetail), on the shared screen layer
-// (components/ScreenLayer.tsx: slide from the bottom, Back, safe areas, panel from medium up; on phones whole, peek or closed with a
-// drag, `detents`).
+// (components/ScreenLayer.tsx: slide from the bottom, Back, safe areas, panel from medium up; on phones always whole, closed with Back: no
+// drag, no `detents`, 26 November, on request).
 
 type ShellProps<T> = {
   // The item shown, null when closed (the layer then slides back down).
@@ -32,15 +32,14 @@ type ShellProps<T> = {
 export function DetailScreen<T>({ value, cardId, label, backLabel, onClose, children }: ShellProps<T>) {
   if (!value) return null;
   const id = cardId(value);
-  return <Portal><ScreenLayer key={id} detents label={label(value)} backLabel={backLabel} onBack={onClose} onEscape={onClose}>
+  return <Portal><ScreenLayer key={id} label={label(value)} backLabel={backLabel} onBack={onClose} onEscape={onClose}>
     {children(value)}
   </ScreenLayer></Portal>;
 }
 
-// What the item is and how much: icon, name, the figure first in weight, then what the caller adds (merchant, status, marks).
-// `dense`: a smaller icon tile and tighter gaps, for a screen that must fit one page on a phone (the subscription's detail).
-export function DetailHero({ icon, title, amount, muted, dense, children }: { icon: CategoryIcon | null; title: string; amount: string; muted?: boolean; dense?: boolean; children?: ReactNode }) {
-  const { colors } = useTheme();
+// Entry animation of the big icon tile of a screen (see `heroIconSpring`): the tile, then the glyph in it. Once, on opening;
+// nothing with reduced motion. Shared by the details and by «Prossimo mese».
+export function useHeroIconEntry() {
   const reduced = useReducedMotion();
   const tile = useRef<ComponentRef<typeof View>>(null);
   const glyph = useRef<ComponentRef<typeof View>>(null);
@@ -62,6 +61,14 @@ export function DetailHero({ icon, title, amount, muted, dense, children }: { ic
     ];
     return () => moves.forEach((move) => move.cancel());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return { tile, glyph };
+}
+
+// What the item is and how much: icon, name, the figure first in weight, then what the caller adds (merchant, status, marks).
+// `dense`: a smaller icon tile and tighter gaps, for a screen that must fit one page on a phone (the subscription's detail).
+export function DetailHero({ icon, title, amount, muted, dense, children }: { icon: CategoryIcon | null; title: string; amount: string; muted?: boolean; dense?: boolean; children?: ReactNode }) {
+  const { colors } = useTheme();
+  const { tile, glyph } = useHeroIconEntry();
   return (
     <View style={[styles.hero, dense && styles.denseHero]}>
       {/* The same size for expenses and subscriptions (user's request, 25 November: the expense's took the subscription's): tile 64,

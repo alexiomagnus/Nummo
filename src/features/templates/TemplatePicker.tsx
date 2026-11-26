@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
-import { AppDialog } from '../../components/AppDialog';
+import { ScreenLayer } from '../../components/ScreenLayer';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import type { TemplateRecord } from '../../domain/template';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { useI18n } from '../../i18n/I18nProvider';
 import { layout, radius, spacing, stateOpacity } from '../../theme/tokens';
 import { NoFundAvatar } from '../funds/FundAvatar';
@@ -33,6 +34,7 @@ type Props = {
 export function TemplatePicker({ templates, categories, value, onChange, disabled, style }: Props) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
+  const compact = useSizeClass() === 'compact';
   const [open, setOpen] = useState(false);
   const color = colors.primary;
   const chosen = templates.find((item) => item.id === value);
@@ -50,25 +52,22 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
         {/* The arrow says it is a choice, not an action. */}
         <SvgIcon shape={iconShapes.chevronDown} size={20} color={color} />
       </StateLayerPressable>
-      {open && <Portal><AppDialog visible detents opensHalf onDismiss={() => setOpen(false)}>
-        <AppDialog.Title>{t("Template")}</AppDialog.Title>
-        <AppDialog.ScrollArea style={styles.area}><ScrollView>
-          <View role="list" accessibilityLabel={t("Template")} style={styles.list}>
-            {rows.map((row) => {
-              const selected = row.id === (chosen?.id ?? '');
-              return <StateLayerPressable key={row.id || 'none'} layerColor={colors.onSurface} radius={radius.button} onPress={() => choose(row.id)}
-                accessibilityRole="button" aria-current={selected || undefined} accessibilityLabel={`${row.label}${selected ? t(", selezionata") : ''}`}
-                style={[styles.row, selected && { backgroundColor: colors.primaryContainer }]}>
-                <View style={styles.icon}>{row.icon}</View>
-                <Text variant="bodyLarge" numberOfLines={1} style={[styles.name, selected && { color: colors.onPrimaryContainer }]}>{row.label}</Text>
-                {row.amount !== null && <Text variant="titleMedium" style={{ color: selected ? colors.onPrimaryContainer : colors.onSurface }}>{formatAmount(row.amount)}</Text>}
-                <View style={styles.check}>{selected && <SvgIcon shape={iconShapes.check} size={20} color={colors.onPrimaryContainer} />}</View>
-              </StateLayerPressable>;
-            })}
-          </View>
-        </ScrollView></AppDialog.ScrollArea>
-        {/* No «Chiudi»: Back closes it, like the other screens of choice. */}
-      </AppDialog></Portal>}
+      {open && <Portal><ScreenLayer label={t("Template")} title={t("Template")} backLabel={t("Indietro")} onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents="panel" opensHalf>
+        {/* Same layout as the choice screens of Categoria and Fondo (user's request, 26 November), in Template's colours. */}
+        <View role="menu" aria-label={t("Template")} style={compact ? styles.edgeToEdge : styles.inset}>
+          {rows.map((row) => {
+            const selected = row.id === (chosen?.id ?? '');
+            return <StateLayerPressable key={row.id || 'none'} layerColor={colors.onSurface} radius={compact ? 0 : radius.control} onPress={() => choose(row.id)}
+              accessibilityRole="menuitem" accessibilityLabel={`${row.label}${selected ? t(", selezionata") : ''}`}
+              style={[styles.row, !compact && styles.rounded, selected && { backgroundColor: colors.primaryContainer }]}>
+              <View style={styles.icon}>{row.icon}</View>
+              <Text variant="bodyLarge" numberOfLines={2} style={[styles.name, selected && { color: colors.onPrimaryContainer }]}>{row.label}</Text>
+              {row.amount !== null && <Text variant="titleMedium" style={{ color: selected ? colors.onPrimaryContainer : colors.onSurface }}>{formatAmount(row.amount)}</Text>}
+              <View style={styles.check}>{selected && <SvgIcon shape={iconShapes.check} size={20} color={colors.onPrimaryContainer} />}</View>
+            </StateLayerPressable>;
+          })}
+        </View>
+      </ScreenLayer></Portal>}
     </View>
   );
 }
@@ -84,10 +83,12 @@ const styles = StyleSheet.create({
   button: { minHeight: layout.minTouch, borderRadius: radius.button, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
   lead: { minWidth: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   label: { flexShrink: 1 },
-  area: { minHeight: 0 },
-  list: { gap: spacing.xs },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56, paddingHorizontal: spacing.md, borderRadius: radius.button },
-  icon: { width: 32, alignItems: 'center', justifyContent: 'center' },
+  // As the rows of ChoiceScreen: edge to edge on phones, rounded and apart from medium.
+  edgeToEdge: { marginHorizontal: -spacing.md },
+  inset: { gap: spacing.xs },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingHorizontal: spacing.lg },
+  rounded: { borderRadius: radius.control },
+  icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   name: { flex: 1, minWidth: 0 },
-  check: { width: 20 },
+  check: { width: 20, height: 20 },
 });

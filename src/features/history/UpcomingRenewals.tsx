@@ -1,3 +1,4 @@
+import { useHeroIconEntry } from './DetailScreen';
 import { useI18n } from '../../i18n/I18nProvider';
 import { dateTimeFormat } from '../../i18n/translate';
 import { useState } from 'react';
@@ -65,10 +66,12 @@ function RenewalsContent({ renewals, categories, soon, count, days }: Props & { 
   const tone = { color: colors.onSurface };
   const muted = { color: colors.onSurfaceVariant };
   const card = { color: colors.onPrimaryContainer };
+  // The same entry as the icon of the details (user's request, 26 November).
+  const { tile, glyph } = useHeroIconEntry();
   return <>
     <View style={[styles.hero, { backgroundColor: colors.primaryContainer }]}>
-      <View style={[styles.heroTile, { backgroundColor: colors.primary }]}>
-        <SvgIcon shape={iconShapes.calendar} size={32} color={colors.onPrimary} />
+      <View ref={tile} style={[styles.heroTile, { backgroundColor: colors.primary }]}>
+        <View ref={glyph}><SvgIcon shape={iconShapes.calendar} size={32} color={colors.onPrimary} /></View>
       </View>
       <Text variant="headlineSmall" accessibilityRole="header" aria-level={1} style={[card, styles.center]}>{t("Prossimo mese")}</Text>
       <Text variant="displaySmall" style={[card, styles.amount, styles.bold, styles.center]}>{formatAmount(soon)}</Text>

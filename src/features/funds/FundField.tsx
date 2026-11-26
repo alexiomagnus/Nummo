@@ -18,8 +18,9 @@ export function FundField({ choices, value, error, disabled, onChange }: {
   const { t } = useI18n();
   const selected = choices.find((choice) => choice.fund.id === value);
   const options = [
-    ...choices.map(({ fund }) => ({ value: fund.id, label: fund.archived ? t("{p0} (archiviato)", { p0: fund.name }) : fund.name, icon: <FundAvatar fund={fund} size={24} /> })),
+    // «Nessun fondo» first, like «Nessuna categoria» (user's request, 26 November).
     { value: noFund, label: t("Nessun fondo"), icon: <NoFundAvatar size={24} /> },
+    ...choices.map(({ fund }) => ({ value: fund.id, label: fund.archived ? t("{p0} (archiviato)", { p0: fund.name }) : fund.name, icon: <FundAvatar fund={fund} size={24} /> })),
   ];
   return (
     <View>

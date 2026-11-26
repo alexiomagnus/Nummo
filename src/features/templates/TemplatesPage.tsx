@@ -14,6 +14,7 @@ import type { SyncedTemplate } from '../../domain/firestore';
 import type { RankedMerchant } from '../../domain/merchant';
 import { templatePolicy } from '../../domain/template';
 import { useI18n } from '../../i18n/I18nProvider';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { layout, radius, spacing, stateOpacity } from '../../theme/tokens';
 import type { FundChoice } from '../funds/FundField';
 import { TemplateEditor } from './TemplateEditor';
@@ -39,6 +40,7 @@ type Props = {
 // Removed on 16 November 2026, reintroduced on 21 November on request (now with «Esercente»).
 export function TemplatesPage({ remote, categories, fundChoices, fundNames, merchants, enabled, onToggle }: Props) {
   const { t, formatAmount } = useI18n();
+  const phone = useSizeClass() === 'compact';
   const { colors } = useTheme();
   const haptic = useHaptics();
   const muted = { color: colors.onSurfaceVariant };
@@ -81,7 +83,7 @@ export function TemplatesPage({ remote, categories, fundChoices, fundNames, merc
             })}</View>}
           {/* Every template at once (user's request, 22 November); Nuova spesa and the saved expenses are not touched. */}
           {remote.templates.length > 0 && <DangerButton disabled={!remote.ready || !enabled}
-            style={styles.removeAll} onPress={() => setConfirmAll(true)}
+            style={[styles.removeAll, phone && styles.removeAllFull]} onPress={() => setConfirmAll(true)}
             icon={({ size, color }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />}>{t("Elimina tutti i template")}</DangerButton>}
         </Card>
       </View>
@@ -113,6 +115,8 @@ const styles = StyleSheet.create({
   createLabel: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   removeAll: { alignSelf: 'flex-start', marginTop: spacing.sm },
+  // On phones as wide as the section (user's request, 26 November).
+  removeAllFull: { alignSelf: 'stretch' },
   // Same as the pencil of the products in Liste.
   editButton: { margin: 0, width: layout.minTouch, height: layout.minTouch, borderRadius: 8 },
 });

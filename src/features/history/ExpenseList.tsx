@@ -76,7 +76,8 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
   const summaries = useMemo(() => expenseMonths(results), [results]);
   const resultsTotal = useMemo(() => results.reduce((sum, item) => sum + item.amount_minor, 0), [results]);
   const byDate = sort === 'date-desc' || sort === 'date-asc';
-  const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]) }));
+  const sortIcons: Record<(typeof sortOptions)[number], string> = { 'date-desc': iconShapes.sortNewest, 'date-asc': iconShapes.sortOldest, 'amount-desc': iconShapes.sortAmountHigh, 'amount-asc': iconShapes.sortAmountLow };
+  const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]), icon: <SvgIcon shape={sortIcons[value]} size={20} color={theme.colors.onSurfaceVariant} /> }));
   const categoryChoices = [{ value: ALL, label: t("Tutte le categorie"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={theme.colors.onSurfaceVariant} /> },
     ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))];
 
@@ -90,7 +91,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
             icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
         {/* Secondary filters: they sit side by side under the search on phones, in the same line on wider pages. */}
         <View style={compact ? styles.selectsCompact : styles.selects}>
-          <MenuSelect panel label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
+          <MenuSelect panel iconOnPhones label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
             onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
           <MenuSelect panel label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
             onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />

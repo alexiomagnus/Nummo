@@ -17,7 +17,7 @@ import { isRecurrence, recurrenceAt, type Recurrence } from '../../domain/recurr
 import { spacing } from '../../theme/tokens';
 import { ExpenseFields } from './ExpenseFields';
 import { NextRenewalRow, PriceChangeField } from './PriceSchedule';
-import { FrequencyField } from './FrequencyField';
+import { FrequencyEntry } from './FrequencyField';
 import type { ExpenseStore } from './expenseStore';
 import { FundField, noFund, type FundChoice } from '../funds/FundField';
 import type { RankedMerchant } from '../../domain/merchant';
@@ -100,13 +100,13 @@ export function ExpenseEditor({ record, categories, store, close, fundChoices = 
           the choices about a new price. In the flow of the form like the fields above, without a box of its own (user's request,
           25 November: the coloured box of 24 November did not match the rest); the group keeps its accessible name. */}
       {series && <View style={styles.renewals} role="group" aria-label={t("Rinnovi")}>
-      {next && <NextRenewalRow date={next.date} amount={shownAmount} />}
+      {next && !(currentFrequency && frequency) && <NextRenewalRow date={next.date} amount={shownAmount} />}
+      {next && currentFrequency && frequency && <FrequencyEntry renewal={{ date: next.date, amount: shownAmount }} value={frequency} current={currentFrequency} next={nextSaved} firstDate={firstDate} tomorrow={tomorrow}
+        pending={savedCalendar.find((change) => nextSaved !== null && change.index === nextSaved.index) ?? null} error={frequencyError ?? undefined} disabled={busy}
+        onChange={(patch) => { if (patch.frequency) setFrequency(patch.frequency); if (patch.firstDate) setFirstDate(patch.firstDate); setFrequencyError(null); }} />}
       {record.first_payment_date && <TrialField existing enabled firstPaymentDate={draft.firstPaymentDate} startDate={draft.date || today}
         locked={record.first_payment_date <= today} disabled={busy} error={errors.firstPaymentDate}
         onChange={(patch) => { setDraft((d) => ({ ...d, ...patch })); setErrors((e) => ({ ...e, firstPaymentDate: undefined })); }} />}
-      {currentFrequency && frequency && <FrequencyField value={frequency} current={currentFrequency} next={nextSaved} firstDate={firstDate} tomorrow={tomorrow}
-        pending={savedCalendar.find((change) => nextSaved !== null && change.index === nextSaved.index) ?? null} error={frequencyError ?? undefined} disabled={busy}
-        onChange={(patch) => { if (patch.frequency) setFrequency(patch.frequency); if (patch.firstDate) setFirstDate(patch.firstDate); setFrequencyError(null); }} />}
       {recurrence && <PriceChangeField next={next} shownAmount={shownAmount} typed={draft.amount} scope={scope} changes={changes}
         start={paymentStart({ expense_date: record.expense_date, ...(draft.trial ? { first_payment_date: draft.firstPaymentDate } : {}) })} recurrence={recurrence} calendar={calendar} disabled={busy} onScope={setScope}
         onRemove={(change) => setChanges((all) => all.filter((item) => item !== change))} />}

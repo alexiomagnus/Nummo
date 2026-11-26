@@ -764,6 +764,8 @@ export const english: Readonly<Record<string, string>> = {
   "Ogni settimana": "Every week",
   "14 giorni": "14 days",
   "Ogni mese": "Every month",
+  "Ogni anno": "Every year",
+  "Prossimi rinnovi": "Upcoming renewals",
   "Problema con i dati": "Data problem",
   "Sul dispositivo": "On device",
   "Lettura dei dati dal dispositivo in corso.": "Reading data from the device.",

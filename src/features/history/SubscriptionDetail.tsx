@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { Button } from '../../components/Button';
+import { Button, useDangerColors } from '../../components/Button';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
@@ -49,7 +49,10 @@ export function SubscriptionDetail({ value, onClose, ...actions }: { value: Subs
 
 function SubscriptionContent({ summary, category, fund, merchant, canChange, today, onEdit, onSetStatus, onRemovePayment }: SubscriptionDetailValue & Actions) {
   const { t, formatAmount, formatDate } = useI18n();
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
+  // Label and icon of «Annulla» in the ink of the «Elimina» buttons in the dark theme (user's request, 26 November); in the light one
+  // that ink is white, so the error colour stays.
+  const cancelInk = useDangerColors().ink;
   const muted = colors.onSurfaceVariant;
   // Phones: short visible labels so the two status actions never cut theirs; the accessible name stays the full action.
   const compact = useSizeClass() === 'compact';
@@ -98,7 +101,7 @@ function SubscriptionContent({ summary, category, fund, merchant, canChange, tod
       {/* Status actions side by side, equal halves (one when cancelled: only resuming is left). The pressed one stays visible
           while the «from when?» sheet is up, as every origin of a screen since the slide (24 November). */}
       <View style={[styles.statusRow, !compact && [detailActions.part, { flexGrow: status === 'cancelled' ? 1 : 2 }]]}>
-        {status !== 'cancelled' && <Button mode="outlined" textColor={colors.error} style={styles.half} contentStyle={outlinedActionContent} disabled={!canChange || busy}
+        {status !== 'cancelled' && <Button mode="outlined" textColor={dark ? cancelInk : colors.error} style={styles.half} contentStyle={outlinedActionContent} disabled={!canChange || busy}
           accessibilityLabel={t("Annulla abbonamento")} icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />}
           onPress={() => void change('cancelled')}>{compact ? t("Annulla") : t("Annulla abbonamento")}</Button>}
         {status === 'active' ? <Button mode="outlined" style={styles.half} contentStyle={outlinedActionContent} disabled={!canChange || busy} loading={busy}
