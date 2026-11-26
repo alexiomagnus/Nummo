@@ -8,7 +8,7 @@ rilasci». Riallineato il 23 novembre: la cronaca dei rilasci del 22–23 novemb
 prima qui, sono nel «Registro dei rilasci», alla voce «Dettaglio dei rilasci del 22–23 novembre». Aggiornato il 24 novembre con i rilasci
 di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, l'app 0.3.4 e il riallineamento dei documenti.
 
-- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `c4301b9` (26 novembre: solo `originId` tolto e commenti, nessun cambio di comportamento; bundle `index-3fba4cb1…` identico all'export). Prima `19efbd5` (25 novembre: avvio più rapido in Avanzata, rotellina CSS, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro; bundle `index-a1c0f188…`). Prima `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
+- **Produzione (progetto `nummo-6b6e2`).** Ultimo **Hosting**: `96886d7` (26 novembre, su richiesta, con `4b0f777`: «Lista scontrini» e scontrini scansionati salvati con la spesa; dettagli senza trascinamento, selettore Template, frequenza in uno schermo, icone di Ordina; bundle `index-8665596e…` identico all'export). Prima `c4301b9` (26 novembre: solo `originId` tolto e commenti, nessun cambio di comportamento; bundle `index-3fba4cb1…` identico all'export). Prima `19efbd5` (25 novembre: avvio più rapido in Avanzata, rotellina CSS, Modifica serie senza riquadro, Storico e Aggiungi denaro con Indietro; bundle `index-a1c0f188…`). Prima `35d2900` (dettaglio del fondo senza «Aggiungi denaro», transizione su Archivia/Ripristina; bundle `index-f95ce2bc…`). Prima `8316f19` («Modifica fondo» con Indietro; bundle `index-655cc891…`). Prima `662fa7f` (icona dei dettagli; bundle `index-e5abab66…`). Prima `2c7dee3` («Modifica categoria» come pannello; bundle `index-110bbf4e…`). Prima `6e83453` (ripristino delle categorie che aggiunge soltanto, predefinite segnate; bundle `index-f59dab04…`). Prima `8c28620` (25 novembre: navigazione libera con uno schermo aperto da desktop, drawer a 224; bundle `index-8f444db1…`). Prima `4d8a5f9` (Descrizione degli editor su tre righe; bundle `index-9e5a1e94…`). Prima `56af756` («Aggiungi denaro» intero a metà schermo; bundle `index-97237851…`). Prima `651d93e` (schermi di consultazione trascinabili, Modifica serie in una schermata; bundle `index-9611df32…`). Prima `574956f` (icona di Periodo e Grafico su smartphone; bundle `index-5a16e880…`). Prima `01d5072` (pannello più ampio da desktop; bundle `index-a6f7e367…`). Prima `349d34d` (Descrizione degli editor più bassa, azioni su una riga da desktop; bundle `index-13e081b6…`). Prima `1c5d647` (24 novembre sera, su richiesta: schermi di scelta, riquadro
   «Rinnovi», «Elimina» più tenue, pannelli a metà, «Scansiona» di nuovo visibile, «Apri a metà schermo» tolto; vedi le prime sezioni
   datate), bundle online `index-b03086d6…` identico byte per byte all'export. In mezzo, dopo `a8f694f`, anche `b231eeb`, `27e46bd`,
   `00a980a`/`665d96e`/`05a5ed6`, `10f3f67`, `73b9d75`, `1ed557b`, `ca00370`, `12f68c5` (sezioni datate). Prima `a8f694f` (icona nera
@@ -23,9 +23,11 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   `index-aba7a80c…`), `de199c7` (bundle `index-290105cc…`), prima `7bfa99b` (pannelli come
   schermi, bundle `index-c592ccbd…`), prima `9e032b8` (dettaglio di spese e abbonamenti,
   bundle `index-d8345c5c…`), prima `da3103e` (accenti del tema
-  chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `48361b9` (22 novembre, 500 prodotti per lista),
-  invariate da allora. Chi ha collegato il proprio Firebase e non ha ricopiato le Rules dopo il 22 novembre deve farlo (importi oltre
-  99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista). Le novità web arrivano anche all'app Android senza un nuovo APK.
+  chiaro, bundle `index-9f999119…`), prima ancora `e3c250e` (audit mobile, bundle `index-3ee80b89…`). Ultime **Rules**: `96886d7` (26 novembre, collezione
+  `receipts` degli scontrini scansionati; pubblicate prima di Hosting, «Deploy complete!», copia pubblica `firestore.rules` identica).
+  Prima `48361b9` (22 novembre, 500 prodotti per lista). Chi ha collegato il proprio Firebase deve ricopiare le Rules: senza quelle del
+  26 novembre una spesa compilata dalla scansione non si salva in Avanzata (il batch con lo scontrino è rifiutato); prima ancora importi
+  oltre 99.999,99 €, limiti degli abbonamenti, piani dei fondi, prodotti per lista. Le novità web arrivano anche all'app Android senza un nuovo APK.
 - **Rilasci del 24 novembre** (dal più recente, tutti su richiesta, solo Hosting): `a8f694f` (icona, transizione del dettaglio) con `e58ce41` (notifiche), `89c776d` (testo della Guida sui fondi), `2d3feed` (link per compilare Nuova spesa), `1ad74ad` («Template» come schermo), `32a276f` (animazione piena per tutte le pagine), `d196dc9` (animazioni degli schermi come prima),
   `695a5c4` (selettori e fogli da desktop come prima), `bafadd3` (schermi dei fondi e della lista, chiusura alla navigazione).
 - **Rilasci del 23 novembre** (dal più recente, tutti su richiesta, solo Hosting): `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
@@ -38,8 +40,9 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.4` «Latest», poi 0.3.3, 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, sette tag `android-v0.1.0`…`android-v0.3.4`. Ultimo commit di codice `c4301b9`
-  (26 novembre, `originId` tolto), inviato e pubblicato. Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
+- **Git.** `main` = `origin/main`, solo il ramo `main`, sette tag `android-v0.1.0`…`android-v0.3.4`. Ultimi commit di codice `96886d7`
+  («Lista scontrini») e `4b0f777` (lavoro della sessione parallela), 26 novembre, inviati e pubblicati; prima `26b0901` (lock hybrid, solo
+  sviluppo) e `c4301b9` (`originId` tolto). Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
   `8e8a756` (rivelazione del tema più lenta), `902d38b` (cambio tema animato, menu dell'account), `7008e73` (backup di collaudo v11, test).
   L'hash di testa non si scrive qui; i commit di soli documenti non sono elencati.
@@ -56,7 +59,7 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** 26 novembre, dopo il riallineamento dei documenti e la rimozione di `originId`: `npm run check` OK (**599/599**). Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
+- **Verifiche (ultime).** Su `96886d7` (26 novembre, albero pulito): `npm run check` OK (**605/605**, typecheck, build demo); `test:emulator` **25/25** (porte temporanee). 26 novembre, dopo il riallineamento dei documenti e la rimozione di `originId`: `npm run check` OK (**599/599**). Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
   nelle sezioni datate. Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
   visibile in ogni fotogramma, nessun long task né errore JS. Chromium headless: cambio tema (cerchio da 868 ms, `theme-color` dopo 145 ms),
@@ -122,8 +125,11 @@ scansioni salvate** con «Salva»; **nell'archivio** di entrambe le modalità (c
   preparato via IndexedDB) a 390×844 e 1440×900: voce nel menu, pagina, dettaglio, prodotti; nessun errore JS. **Non provati:** una
   scansione reale salvata (serve una chiave AI), l'Avanzata nel browser, il telefono.
 - **Da fare con autorizzazione:** pubblicare le **Rules** (senza, in Avanzata il salvataggio di una spesa scansionata è rifiutato:
-  il batch con lo scontrino fallisce tutto) e poi Hosting; chi ha collegato il proprio Firebase deve ricopiare le Rules. Commit dopo
-  `4b0f777` (lavoro dell'altra sessione), su richiesta dell'utente; esito della pubblicazione nello «Stato corrente».
+  il batch con lo scontrino fallisce tutto) e poi Hosting; chi ha collegato il proprio Firebase deve ricopiare le Rules.
+- **Pubblicazione (su richiesta):** commit `96886d7` dopo `4b0f777` (lavoro dell'altra sessione), inviati; **Rules** pubblicate
+  (`firebase deploy --only firestore:rules --project nummo-6b6e2`, «Deploy complete!»), poi **Hosting** (`npm run deploy:hosting`,
+  bundle online `index-8665596e…` identico all'export, `firestore.rules` pubblico identico). Da provare dal vivo: una scansione salvata
+  in Avanzata e in Standard, la pagina sul telefono.
 
 ## Sessione hybrid interrotta senza export, lock più parlante — 26 novembre 2026
 
@@ -6121,8 +6127,8 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (26 novembre):** online su Hosting il codice fino a `c4301b9`; le modifiche del 26 novembre sera (sezione in testa) non sono ancora pubblicate; Rules ultime quelle di `48361b9` (prodotti per
-  lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
+- **Pubblicazione (26 novembre):** online su Hosting il codice fino a `96886d7`; Rules ultime quelle di `96886d7` (scontrini
+  scansionati). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina
    Notifiche e riepilogo (finora solo test di dominio); Standard su Safari/iOS e Firefox (IndexedDB, cancellazione per
