@@ -126,6 +126,15 @@ Su richiesta, commit `685dfe6`, pubblicato solo su Hosting (Rules invariate; «D
 - Lista scontrini: impostazioni AI nascondibili. Aggiornamento Android: schermata ridotta (versione e «Installata: X», senza note).
 - Commento di `AppShell.tsx` sistemato (niente più `wholeRows.ts`).
 
+## Spese e dettaglio del fondo rivisti, barre su due colonne — 27 novembre 2026, sera
+
+Su richiesta, commit `1db4e9b` e il successivo (barre e dettaglio del fondo), pubblicati solo su Hosting (Rules invariate). `npm run check` OK (617/617); non provato su dispositivo.
+- Spese e Abbonamenti: righe e card «Totale»/«Prossimo mese» con gli angoli dei gruppi di righe (`radius.dialog`, nello scuro `elevation.level1` e bordo `outlineVariant`).
+- Schermata «Aggiornamento disponibile»: versione, «Installata: X», data e dimensione, «Novità» con al massimo tre voci della prima sezione delle note (`summary` di `ReleaseNotes`).
+- Dettagli di spesa e abbonamento: cerchio dell'icona in `secondaryContainer`, come le icone delle liste.
+- Dettaglio del fondo: due blocchi «Entrate» e «Uscite», senza la riga «Spesa totale» (è già il numero in testa: non include i trasferimenti inviati); le righe a zero restano.
+- Analisi, Barre: due categorie per riga dai 720 px, schede con angoli `radius.dialog` e contorno da 1 px a ogni dimensione.
+
 ## Legende senza tessere colorate, ciambella più grande, Android 0.3.8 — 27 novembre 2026
 
 Su richiesta, commit `3a0358a`, Hosting pubblicato («Deploy complete!», Rules invariate). `npm run check` OK (617/617); non provato su dispositivo.
