@@ -53,7 +53,9 @@ const themeOptions: { value: ThemeChoice; label: string }[] = [
   { value: 'system', label: 'Sistema' }, { value: 'light', label: 'Chiaro' }, { value: 'dark', label: 'Scuro' },
 ];
 // «Material You» only where the phone gives its palettes (Android app 0.3.11+), first and the default there (27 November).
-const modeOptions: { value: ColorMode; label: string }[] = [
+// A function, not a constant: the palettes are read in App.tsx after the imports have run, so a module-level check was always false
+// (the option never showed in the app 0.3.11–0.3.13).
+const colorModeOptions = (): { value: ColorMode; label: string }[] => [
   ...(hasSystemColors() ? [{ value: 'system' as const, label: 'Material You' }] : []),
   { value: 'palette', label: 'Palette' }, { value: 'mono', label: 'Monocolore' },
 ];
@@ -129,7 +131,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         </OptionRow>
         <RowDivider />
         <OptionRow icon={iconShapes.palette} title={t("Colore")}>
-          <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode === 'system' && !hasSystemColors() ? 'palette' : preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
+          <ChoiceChips label={t("Modalità colore")} options={colorModeOptions().map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode === 'system' && !hasSystemColors() ? 'palette' : preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
           {!(preferences.colorMode === 'system' && hasSystemColors()) && <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
             {accents.map((accent) => {
               const selected = accent === preferences.accent;

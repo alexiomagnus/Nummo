@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Material You» non compariva nelle Impostazioni — 27 novembre 2026
+
+Segnalazione: con l'app 0.3.13 installata (versione confermata dall'utente) la scheda «Colore» mostrava solo «Palette» e «Monocolore». Causa nel sito, non nell'APK: `modeOptions` di `SettingsPage.tsx` era una costante di modulo che chiamava `hasSystemColors()` al caricamento, cioè prima che `App.tsx` eseguisse `setSystemColors(androidSystemColors())` (gli import si valutano prima del corpo del modulo): sempre falso, in tutte le versioni 0.3.11–0.3.13. Ora è la funzione `colorModeOptions()`, valutata a ogni disegno. `npm run check` 626/626; commit, push e Hosting come richiesto, nessuna nuova APK. **Non provata sul telefono**: dopo il deploy «Material You» dovrebbe comparire come prima scelta (la scelta salvata «Palette» non cambia da sola) e va controllato che i colori di sistema siano resi correttamente (la mappa dei toni M3 resta teorica). Lezione: niente letture di `systemColors` a livello di modulo; i test con palette finte non vedono l'ordine di caricamento.
+
 ## Riquadro di Info, sfumatura della barra, cerchi più veloci, drawer più largo — 27 novembre 2026
 
 Su richiesta, dopo una registrazione dello schermo dell'app 0.3.13 (Pixel 8). Commit `0178913` (primi tre punti), su `main`, pubblicati su Hosting `nummo-6b6e2` («Deploy complete!», Rules invariate, bundle non confrontato con l'export). **Nessuna nuova APK**: nessuna modifica in `android/`, l'app 0.3.13 carica il sito. `npm run check` 626/626; nulla provato a vista né sul telefono.
