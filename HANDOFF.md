@@ -118,6 +118,14 @@ dell'utente: valgono come 26 novembre.
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Gruppi di righe ovunque, barra con contorno, drawer animato — 27 novembre 2026
+
+Su richiesta, commit `bea73ab` (preceduto da uno dell'altro agente: schermi che seguono il pannello quando il drawer si comprime, `ScreenLayer`; righe di «Elimina le spese» e `ModeTransfer` più compatte), pubblicati solo su Hosting (Rules invariate; bundle non confrontato con l'export). `npm run check` OK (618/618); non provato su dispositivo.
+- Nuova spesa (riquadro «Dettagli della spesa»), Categorie («Nuova categoria», «Categorie») ed Esercenti: `ListGroup`; le `ListRow` restano com'erano. Da verificare a 390×844 che «Salva» resti sopra la navigazione.
+- Notifiche: «Altra ora» in una riga propria (`MenuSelect`), il segmento «Altra» non c'è più.
+- Barra mobile: pillola `elevation.level1` con contorno `outlineVariant` (livello sovrapposto), indicatore con bordo `primary`.
+- Drawer da desktop: larghezza ed etichette animate nel comprimere (`AppShell`); etichette dei gruppi e titoli «Entrate/Uscite» dei fondi in `primary`.
+
 ## «Novità» dell'aggiornamento, dettaglio del fondo più compatto, barre con chevron — 27 novembre 2026
 
 Su richiesta, commit `bd10cf4`, pubblicato solo su Hosting («Deploy complete!», Rules invariate; bundle non confrontato con l'export). `npm run check` OK (618/618); non provato su dispositivo.
