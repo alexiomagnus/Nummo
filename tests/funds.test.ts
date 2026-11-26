@@ -269,7 +269,7 @@ test('backup v3: fondi, movimenti e fund_id ricostruiti; v2 letto senza fondi; c
 test('fondi: testi di stato tradotti in inglese', async () => {
   const { translate } = await import('../src/i18n/translate.ts');
   for (const [it, en] of [['Fondi e budget', 'Funds and budgets'], ['Fondo archiviato.', 'Fund archived.'], ['Ricarica mensile', 'Monthly recharge'], ['Trasferisci', 'Transfer'],
-    ['Spesa totale', 'Total spent'], ['Riepilogo del mese', 'Month summary'], ['Previsione', 'Forecast'], ['Mese in corso', 'Current month'], ['Mese concluso', 'Past month'],
+    ['Entrate', 'Income'], ['Uscite', 'Outgoings'], ['Riepilogo del mese', 'Month summary'], ['Previsione', 'Forecast'], ['Mese in corso', 'Current month'], ['Mese concluso', 'Past month'],
     ['Esiste già un fondo con questo nome.', 'A fund with this name already exists.'], ['Il fondo scelto non esiste più.', 'The chosen fund no longer exists.']] as const) {
     assert.equal(translate('en', it), en);
     assert.equal(translate('it', it), it);

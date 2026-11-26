@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { IconTile } from '../../components/ListRow';
@@ -12,22 +13,27 @@ import { seriesColor, type ChartColors } from './charts';
 import { seriesLabel } from './seriesLabel';
 import { categoryPercent } from './categoryPresentation';
 
+// From this width of the chart the category cards sit two to a row (user's request, 27 November: one per row left a wide desktop mostly empty).
+const twoColumnsFrom = 720;
+
 export function BarChart({ rows, total, colors, categories, onOpen }: {
   rows: readonly RankingRow[]; total: number; colors: ChartColors;
   categories: readonly Category[]; onOpen: (key: string) => void;
 }) {
   const { t, formatAmount } = useI18n();
   const theme = useTheme();
+  const [width, setWidth] = useState(0);
+  const twoColumns = width >= twoColumnsFrom;
   const sorted = rankCategories(rows, 'amount');
   const maximum = Math.max(0, ...sorted.map(row => row.total));
   const icons = new Map(categories.map(category => [category.id, category.icon]));
-  return <View style={styles.bars}>
+  return <View style={styles.bars} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
     <View role="list" accessibilityLabel={t('Barre delle spese per categoria')} style={styles.list}>
       {sorted.map(series => {
         const name = seriesLabel(series, t);
         const amount = formatAmount(series.total);
         const share = categoryPercent(series.total, total);
-        return <View key={series.key} role="listitem">
+        return <View key={series.key} role="listitem" style={twoColumns ? styles.half : styles.full}>
           {/* One tonal card per category: icon, name and amount on top; below, the bar (length against the largest
               category) and the share of the total in a fixed pill, so the shares line up from card to card. */}
           <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={radius.card}
@@ -58,7 +64,9 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
 
 const styles = StyleSheet.create({
   bars: { gap: spacing.sm },
-  list: { gap: spacing.md },
+  list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  full: { width: '100%' },
+  half: { width: `calc(50% - ${spacing.md / 2}px)` } as ViewStyle,
   hint: { marginTop: spacing.sm },
   card: { padding: spacing.lg, gap: spacing.md },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

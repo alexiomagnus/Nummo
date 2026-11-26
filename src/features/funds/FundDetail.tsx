@@ -83,16 +83,14 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
   const spentNow = forecast ? item.forecastSpent : item.spent;
   const muted = { color: colors.onSurfaceVariant };
   const positive = positiveColor(colors);
-  // The month in a few totals, always the same rows: money in «+» in green, money out «−» in red, a zero plain and muted; the
-  // total spent closes the summary in bold, unsigned (as in the card before).
-  const total = (key: string, label: string, value: number, tone: 'in' | 'out' | 'total') => {
-    const strong = tone === 'total';
-    const sign = value === 0 ? '' : tone === 'in' ? '+' : tone === 'out' ? '−' : '';
-    const color = strong ? colors.onSurface : value === 0 ? colors.onSurfaceVariant : tone === 'in' ? positive : colors.error;
+  // The month in a few totals, always the same rows: money in «+» in green, money out «−» in red, a zero plain and muted.
+  const total = (key: string, label: string, value: number, tone: 'in' | 'out') => {
+    const sign = value === 0 ? '' : tone === 'in' ? '+' : '−';
+    const color = value === 0 ? colors.onSurfaceVariant : tone === 'in' ? positive : colors.error;
     return (
       <View key={key} style={styles.line} role="listitem" aria-label={`${label}: ${sign}${formatAmount(value)}`}>
-        <Text variant={strong ? 'titleMedium' : 'bodyLarge'} style={[styles.grow, strong ? styles.strong : muted]}>{label}</Text>
-        <Text variant={strong ? 'titleMedium' : 'bodyLarge'} style={[styles.number, styles.strong, { color }]}>{sign}{formatAmount(value)}</Text>
+        <Text variant="bodyLarge" style={[styles.grow, muted]}>{label}</Text>
+        <Text variant="bodyLarge" style={[styles.number, styles.strong, { color }]}>{sign}{formatAmount(value)}</Text>
       </View>
     );
   };
@@ -116,17 +114,26 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
     </View>
     {item.budget !== null && <BudgetMeter label={t("Budget di {p0}", { p0: fund.name })}
       spent={spentNow} budget={item.budget} state={item.state} forecast={forecast} />}
-    <View role="list" accessibilityLabel={t("Riepilogo del mese")}>
-      <InfoGroup rows={[
-        total('income', t("Entrata"), item.income, 'in'),
-        // The month's recharge: received or still due within the month (forecast for future months).
-        total('recharge', t("Ricarica mensile"), item.recharges + item.forecastRecharges, 'in'),
-        total('in', t("Trasferimenti ricevuti"), item.transfersIn, 'in'),
-        total('out', t("Trasferimenti inviati"), item.transfersOut, 'out'),
-        total('subscriptions', t("Abbonamenti"), item.subscriptions, 'out'),
-        total('singles', t("Spese"), item.singles, 'out'),
-        total('total', forecast ? t("Spesa totale prevista") : t("Spesa totale"), spentNow, 'total'),
-      ]} />
+    {/* Two blocks under a title (user's request, 27 November): what came in and what went out. The total spent is no longer a row: it is
+        the big number on top (it was the same figure twice). Every row stays, zeros included. */}
+    <View role="list" accessibilityLabel={t("Riepilogo del mese")} style={styles.blocks}>
+      <View style={styles.block}>
+        <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[muted, styles.blockTitle]}>{t("Entrate")}</Text>
+        <InfoGroup rows={[
+          total('income', t("Entrata"), item.income, 'in'),
+          // The month's recharge: received or still due within the month (forecast for future months).
+          total('recharge', t("Ricarica mensile"), item.recharges + item.forecastRecharges, 'in'),
+          total('in', t("Trasferimenti ricevuti"), item.transfersIn, 'in'),
+        ]} />
+      </View>
+      <View style={styles.block}>
+        <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[muted, styles.blockTitle]}>{t("Uscite")}</Text>
+        <InfoGroup rows={[
+          total('subscriptions', t("Abbonamenti"), item.subscriptions, 'out'),
+          total('singles', t("Spese"), item.singles, 'out'),
+          total('out', t("Trasferimenti inviati"), item.transfersOut, 'out'),
+        ]} />
+      </View>
     </View>
     {/* Actions as on the other screens: full-width pills, the main one first. */}
     <ScreenActionsContext.Provider value>
@@ -157,6 +164,9 @@ const styles = StyleSheet.create({
   amount: { fontWeight: '700', fontVariant: ['tabular-nums'] },
   marks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
   badge: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, borderRadius: 999, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  blocks: { gap: spacing.lg },
+  block: { gap: spacing.sm },
+  blockTitle: { paddingHorizontal: spacing.sm },
   line: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   grow: { flex: 1, minWidth: 0 },
   strong: { fontWeight: '600' },
