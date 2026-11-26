@@ -74,7 +74,7 @@ export function aiDestination(settings: AiSettings): string {
 
 // What is still missing before the AI scan can be offered (source-language message), or null when it is set up.
 export function aiSetupProblem(settings: AiSettings): string | null {
-  if (settings.provider === 'none') return 'Scegli il servizio AI nelle Impostazioni.';
+  if (settings.provider === 'none') return 'Scegli il servizio AI in Lista scontrini.';
   if (!settings.model) return 'Indica il modello da usare.';
   return null;
 }

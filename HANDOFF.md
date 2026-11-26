@@ -97,6 +97,34 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## «Lista scontrini»: scheda AI spostata, scontrini scansionati salvati con la spesa — 26 novembre 2026
+
+Su richiesta (screenshot del menu account e della scheda «Analisi scontrini con AI»), lavoro della sessione `nummo-78` (in parallelo a
+`nummo-cc`, sezione sotto: file separati, ognuno committa i propri). Scelte dell'utente: **solo i dati letti, mai la foto**; **solo le
+scansioni salvate** con «Salva»; **nell'archivio** di entrambe le modalità (con backup e Rules); voce **dopo Templates**.
+- **Menu e pagina:** voce «Lista scontrini» (icona scontrino) tra Templates e Archiviazione e backup (`receiptsRequest`, sezione
+  `receipts` con «Fatto»). `ReceiptsPage`: in testa la scheda AI (tolta dalle Impostazioni), sotto «Scontrini scansionati» (dal più
+  recente: esercente, data, numero di prodotti, totale; icona della categoria della spesa); il tocco apre un dettaglio (`DetailScreen`):
+  data, spesa collegata con categoria, sconto, «Prodotti letti» → `ProductsDialog`, servizio AI, «Elimina scontrino» rosso (la spesa resta).
+- **Dati:** `domain/scannedReceipt.ts` (esercente, totale e data come rivisti nella revisione, prodotti e sconto come letti, servizio;
+  `receiptFromScan`, validazione, ordinamento). ID = ID della spesa, mai modificato. `ScanReceiptDialog` → `onApply(patch, scanned)`,
+  `ExpenseForm` lo tiene finché il modulo non si svuota (salvataggio, «Nessun template», nuova scansione) → `createExpense(request,
+  merchant, scanned)` nella stessa scrittura (batch Firestore / transazione locale). `removeExpense` e `removeAllExpenses` tolgono anche
+  gli scontrini; `removeReceipt` toglie il solo scontrino (scrittura semplice accodata); `watchReceipts`.
+- **Archivi:** Firestore `users/{uid}/receipts/{id}` (prodotti uniti da `\n`, Rules `scannedReceipt`: forma, limiti, 500 prodotti da 60
+  caratteri, `update` negato); IndexedDB passo 4 `receipts`; **backup v12** con `receipts` (ognuno con la sua spesa nel file, unione,
+  conflitti e sostituzione come i template; uno scontrino rimasto senza spesa non si esporta invece di bloccare il backup; file < 12 con
+  `receipts` rifiutati). Passaggio tra modalità incluso. Riepiloghi d'importazione con «n scontrini».
+- **Impostazioni:** senza la scheda AI; «Ripristina predefiniti» non tocca più la scansione e ha la sua larghezza (era larga quanto i due
+  pulsanti della scheda). Messaggi «… nelle Impostazioni» della scansione → «… in Lista scontrini»; Guida e README aggiornati.
+- **Verifica:** `npm run check` OK (**605/605**, typecheck, build demo); `test:emulator` **25/25** con config e porte temporanee
+  (39099/39180, config tolta; la sessione hybrid dell'utente, PID 45058, non toccata). Headless su `dist-demo` (Standard, scuro, archivio
+  preparato via IndexedDB) a 390×844 e 1440×900: voce nel menu, pagina, dettaglio, prodotti; nessun errore JS. **Non provati:** una
+  scansione reale salvata (serve una chiave AI), l'Avanzata nel browser, il telefono.
+- **Da fare con autorizzazione:** pubblicare le **Rules** (senza, in Avanzata il salvataggio di una spesa scansionata è rifiutato:
+  il batch con lo scontrino fallisce tutto) e poi Hosting; chi ha collegato il proprio Firebase deve ricopiare le Rules. Commit dopo
+  `4b0f777` (lavoro dell'altra sessione), su richiesta dell'utente; esito della pubblicazione nello «Stato corrente».
+
 ## Sessione hybrid interrotta senza export, lock più parlante — 26 novembre 2026
 
 - **Segnalazione:** `npm run dev` rifiutava l'avvio («Un'altra sessione hybrid gestisce l'archivio locale»). Il lock era del PID 10069
@@ -114,6 +142,34 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   emulatori utente).
 - **Verifica:** `npm run check` OK (**600/600**), `npm run test:hybrid` OK (**9/9**). Commit inviato su `main`; solo strumenti di
   sviluppo, nulla da pubblicare su Hosting.
+
+## Dettagli senza trascinamento, «Elimina tutti i template» a tutta larghezza, «Template» come Categoria — 26 novembre 2026
+
+Su richiesta (screenshot dal telefono):
+- **Senza trascinamento, con Indietro:** dettaglio della spesa, dettaglio dell'abbonamento (`DetailScreen` senza `detents`) e transazioni di
+  Analisi (`TransactionDetails`): su smartphone schermi interi con il pulsante Indietro, niente maniglia, ridotto o chiusura col dito.
+  Restano a tre posizioni il dettaglio del fondo, «Prossimo mese» e Prodotti acquistati (non citati).
+- **«Elimina tutti i template»** largo quanto la sezione su smartphone (`TemplatesPage`); da medium invariato.
+- **Selettore «Template»** (`TemplatePicker`) con il layout di `ChoiceScreen`: `ScreenLayer` a metà, righe a tutto bordo su smartphone
+  (arrotondate e staccate da medium), altezza 52, nome su due righe; colori invariati (`primaryContainer`).
+- **Verifica:** `npm run check` OK (**600/600**). Non rivisto in headless né sul telefono. Commit `4b0f777` (con le modifiche
+  sotto), fatto dalla sessione `nummo-78` su richiesta dell'utente, insieme a «Lista scontrini»; pubblicazione nella sezione in testa.
+- **Poi, sempre il 26 novembre e su richiesta:**
+  - **Modifica serie:** la frequenza si cambia in uno schermo (`FrequencyEntry`; scelta, cambio programmato, data del primo
+    rinnovo, «Fatto», in testa un riquadro con la frequenza in parole e il prossimo rinnovo, sotto «Prossimi rinnovi» con le prossime quattro date) aperto dalla riga «Prossimo rinnovo», che ora ha la freccia (la riga «Frequenza» a parte è stata tolta su richiesta); l'errore trovato al salvataggio compare anche sotto la riga. Nessun salvataggio nello schermo.
+  - **Animazione dell'icona** del riquadro calendario di «Prossimo mese» (screenshot interpretato così) come quella dei dettagli:
+    hook condiviso `useHeroIconEntry` in `DetailScreen.tsx`.
+  - **«Annulla abbonamento»:** la conferma di `StatusDialog` nel rosso pieno degli «Elimina» (`useDangerColors`); il pulsante a contorno
+    del dettaglio, senza riempimento, con testo e icona nel rosa di «Elimina» nel tema scuro (nel chiaro resta `error`: l'inchiostro
+    di «Elimina» è bianco).
+  - **«Nessun fondo»** prima voce del selettore Fondo (`FundField`).
+  - **Icone di «Ordina»** in Spese (quattro forme nuove in `SvgIcon`), anche nel campo su smartphone (`iconOnPhones`).
+  - **Verifica:** typecheck OK; `npm test` **605/605** (a metà giornata 588/600: i test falliti venivano da lavoro non mio sugli
+    scontrini archiviati, poi completato). Quel lavoro è di un'altra sessione (nummo-78, «Lista scontrini», su richiesta dell'utente),
+    non committato: nell'albero non va annullato; al commit ognuno mette in stage solo i propri file. Nessuna schermata vista in headless né sul telefono.
+- **Documenti riallineati:** AGENTS.md (versione Android 0.3.4, Storico dei pagamenti da una riga, dettagli sopra); «Prossime attività»
+  punto «Pubblicazione» corretto. **Ambiente:** il lock `.firebase/hybrid.lock` (PID 10069) è stato ispezionato e tolto il
+  26 novembre da un'altra sessione (export vuoto, `emulator-data/` intatta); `npm run dev` dell'utente di nuovo in esecuzione. Il PID 6588 e la cartella `firebase-export-…` citati in «Ambiente» sono superati.
 
 ## Riallineamento documentale, `originId` tolto — 26 novembre 2026
 
@@ -6065,7 +6121,7 @@ screen reader, concorrenza tra due dispositivi.
 
 ## Prossime attività, per priorità
 
-- **Pubblicazione (24 novembre):** tutto il codice fino a `35d2900` è online su Hosting; Rules ultime quelle di `48361b9` (prodotti per
+- **Pubblicazione (26 novembre):** online su Hosting il codice fino a `c4301b9`; le modifiche del 26 novembre sera (sezione in testa) non sono ancora pubblicate; Rules ultime quelle di `48361b9` (prodotti per
   lista fino a 500). Vedi «Stato corrente» e «Registro dei rilasci».
 
 0. **Modalità Standard/Avanzata (aggiornato 15 novembre):** provare l'Avanzata con accesso e dati reali, comprese pagina

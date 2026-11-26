@@ -20,7 +20,7 @@ test('collaudo v9: pagamenti eliminati, valori del README', () => {
   assert.ok(!('merchants' in file));
   const data = parseBackup(file);
   // Same records as a current export (only the version number differs).
-  assert.equal(makeBackup(data, new Date(file.exported_at)).replace('"version": 11,', '"version": 9,') + '\n', raw);
+  assert.equal(makeBackup(data, new Date(file.exported_at)).replace('"version": 12,', '"version": 9,') + '\n', raw);
   const summary = (description: string) => subscriptionSummary(data.expenses.find((e) => e.description === description)!, today);
   const expected: Record<string, [number, number, string | undefined]> = {
     'V9 Streaming': [10, 12990, '2026-12-15'], 'V9 Palestra': [7, 27300, undefined], 'V9 Telefono': [6, 6594, '2026-12-05'],
@@ -50,7 +50,7 @@ test('collaudo v10: esercenti, valori del README', () => {
   assert.equal(file.version, 10);
   const data = parseBackup(file);
   // Same records as a current export (only the version number differs: v11 adds templates, none here).
-  assert.equal(makeBackup(data, new Date(file.exported_at)).replace('"version": 11,', '"version": 10,') + '\n', raw);
+  assert.equal(makeBackup(data, new Date(file.exported_at)).replace('"version": 12,', '"version": 10,') + '\n', raw);
   const merchants = data.merchants ?? [];
   assert.equal(merchants.length, 12);
   const ranked = rankMerchants(merchants, data.expenses, today);
@@ -81,8 +81,8 @@ test('collaudo v11: template ed esercente, valori del README', () => {
   const file = JSON.parse(raw);
   assert.equal(file.version, 11);
   const data = parseBackup(file);
-  // Byte for byte what the current exporter writes.
-  assert.equal(makeBackup(data, new Date(file.exported_at)) + '\n', raw);
+  // Same records as a current export (only the version number differs, v12 since 26 November).
+  assert.equal(makeBackup(data, new Date(file.exported_at)).replace('"version": 12,', '"version": 11,') + '\n', raw);
   const templates = data.templates ?? [];
   assert.equal(templates.length, 9);
   const byName = (description: string) => templates.find((x) => x.description === description)!;

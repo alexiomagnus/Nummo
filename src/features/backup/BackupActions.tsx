@@ -38,7 +38,7 @@ export function ImportPreview({ source, plan: merge, busy, enabled, onMerge, onC
     [merge.addExpenses.length, "1 spesa", "{p0} spese"], [merge.addCategories.length, "1 categoria", "{p0} categorie"],
     [merge.addFunds.length, "1 fondo", "{p0} fondi"], [merge.addMovements.length, "1 movimento", "{p0} movimenti"],
     [merge.addLists.length, "1 lista", "{p0} liste"], [merge.addMerchants.length, "1 esercente", "{p0} esercenti"],
-    [merge.addTemplates.length, "1 template", "{p0} template"],
+    [merge.addTemplates.length, "1 template", "{p0} template"], [merge.addReceipts.length, "1 scontrino", "{p0} scontrini"],
   ].filter(([n]) => (n as number) > 0).map(([n, one, many]) => (n === 1 ? t(one as string) : t(many as string, { p0: n as number })));
   const mergeEmpty = added.length === 0;
   // A blocked merge names what differs (the source's own names), at most three, then how many more.
@@ -161,9 +161,9 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
   const replace = preview?.replace;
   // Replace: what goes and what is written (new or different items, merchants included).
   const removed = replace ? replace.removeExpenseIds.length + replace.removeCategoryIds.length + replace.removeFundIds.length
-    + replace.removeMovementIds.length + replace.removeListIds.length + replace.removeMerchantIds.length + replace.removeTemplateIds.length : 0;
+    + replace.removeMovementIds.length + replace.removeListIds.length + replace.removeMerchantIds.length + replace.removeTemplateIds.length + replace.removeReceiptIds.length : 0;
   const written = replace ? replace.addExpenses.length + replace.addCategories.length + replace.addFunds.length
-    + replace.addMovements.length + replace.addLists.length + replace.addMerchants.length + replace.addTemplates.length : 0;
+    + replace.addMovements.length + replace.addLists.length + replace.addMerchants.length + replace.addTemplates.length + replace.addReceipts.length : 0;
   const finish = () => { setPreview(null); notify("Importazione completata."); };
   return <Card style={styles.card}>
     <View style={styles.group}>
@@ -190,7 +190,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     {preview && <View ref={previewRef}>
       <ImportPreview source={preview.file} plan={preview.merge} busy={busy} enabled={enabled} onCancel={() => setPreview(null)}
         onMerge={() => void run(async () => {
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates); finish();
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'merge', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates, preview.data.receipts); finish();
         })}
         replace={<Button style={pill} disabled={busy || !enabled} mode="outlined" icon={icon(iconShapes.upload)} onPress={() => { setSavedBefore(false); setConfirmReplace(true); }}>{t("Sostituisci tutti i dati")}</Button>} />
     </View>}
@@ -201,7 +201,7 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
         if (!preview || busy) return false;
         setBusy(true); setStatus('');
         try {
-          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates);
+          await backend.importRecords(preview.data.expenses, preview.data.categories, 'replace', preview.data.funds, preview.data.movements, preview.data.lists, preview.data.budget, preview.data.merchants, preview.data.templates, preview.data.receipts);
           finish(); return true;
         } catch (e) { setStatus(message(e)); return true; } finally { setBusy(false); }
       }}>{offerBackup}</DeleteDialog>

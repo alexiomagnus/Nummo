@@ -95,7 +95,7 @@ export function ModeTransfer({ backend, enabled, shown, style }: { backend: Data
   const merge = (current: Preview) => run(async () => {
     const target = current.direction === 'in' ? backend : await openStore();
     const { data } = current;
-    await target.importRecords(data.expenses, data.categories, 'merge', data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates);
+    await target.importRecords(data.expenses, data.categories, 'merge', data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates, data.receipts);
     if (!live.current) return;
     setPreview(null);
     notify(current.direction === 'in' ? "Dati della modalità Standard aggiunti a questo progetto." : "Dati copiati su questo dispositivo.");

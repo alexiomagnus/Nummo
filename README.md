@@ -111,11 +111,13 @@ Due strade:
 
 ## Funzionalità
 
-- **Scansione dello scontrino** in Nuova spesa, facoltativa e spenta di base: si attiva in Impostazioni («Analisi scontrini con AI»),
+- **Scansione dello scontrino** in Nuova spesa, facoltativa e spenta di base: si attiva nella pagina **Lista scontrini** del menu account («Analisi scontrini con AI»; fino al 26 novembre 2026 nelle Impostazioni),
   dove si scelgono il servizio (Claude, OpenAI o Google Gemini), la chiave API personale e il modello; finché è spenta il pulsante
   «Scansiona scontrino» non compare. L'AI propone importo, data, descrizione, esercente e categoria da controllare prima di salvare.
   La chiave resta salvata solo in questo browser (una per servizio) e la foto viene inviata al servizio scelto solo dopo il consenso.
-  Nessuna lettura sul dispositivo (OCR rimosso il 21 novembre 2026).
+  Nessuna lettura sul dispositivo (OCR rimosso il 21 novembre 2026). Quando salvi la spesa, i dati letti (esercente, data, totale,
+  prodotti e sconto, mai la foto) restano nella **Lista scontrini**, collegati alla spesa: si consultano lì, si eliminano da soli
+  o insieme alla spesa, e fanno parte del backup JSON (versione 12).
 - **Nuova spesa** con importo, data, descrizione, categoria ed **Esercente** facoltativo (suggerimenti dagli esercenti già usati, più frequenti e recenti per primi; «amazon» e «AMAZON» sono lo stesso esercente; pagina **Esercenti** dal menu account per rinominarli, unirli o eliminarli, togliendoli dalle spese); **Spese** con ricerca, filtri, modifica ed eliminazione.
 - **Link per compilare Nuova spesa** (vedi [sotto](#link-per-compilare-nuova-spesa)): un indirizzo come `…/#nuova?importo=12,50&descrizione=Bar`
   apre Nuova spesa con i campi già compilati, per un'automazione del telefono dopo un pagamento; si salva sempre e solo con «Salva».

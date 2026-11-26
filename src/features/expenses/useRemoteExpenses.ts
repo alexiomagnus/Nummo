@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { ExpenseData, ExpenseRequest } from '../../domain/expense';
 import type { Merchant } from '../../domain/merchant';
+import type { ScannedReceiptData } from '../../domain/scannedReceipt';
 import { sameFieldValue } from '../../domain/contract';
 import { parseSyncedExpense, type SyncedExpense } from '../../domain/firestore';
 import { submissionReducer } from '../../domain/submission';
@@ -75,7 +76,7 @@ export function useRemoteExpenses(backend: DataStore, storageNote: string): Expe
     });
     return () => { active.current = false; clearTimeout(queueTimer.current); queueTimer.current = undefined; stop(); };
   }, [backend]);
-  const submit = (data: ExpenseData, merchant?: Merchant | null) => {
+  const submit = (data: ExpenseData, merchant?: Merchant | null, scanned?: ScannedReceiptData | null) => {
     if (inFlight.current || !ready || !['draft', 'rejected'].includes(latest.current.status)) return;
     const request: ExpenseRequest = { ...data, expense_id: crypto.randomUUID() };
     const id = request.expense_id;
@@ -89,7 +90,7 @@ export function useRemoteExpenses(backend: DataStore, storageNote: string): Expe
       return (state.status === 'sending' || state.status === 'uncertain') && state.request.expense_id === id;
     };
     const definitive = (reason: unknown) => ['permission-denied', 'unauthenticated', 'invalid-argument'].includes(errorCode(reason));
-    void backend.createExpense(request, merchant).then((receipt) => {
+    void backend.createExpense(request, merchant, scanned).then((receipt) => {
       // A queued expense confirmed later needs nothing here: the listener shows it as no longer waiting.
       if (active.current && current()) dispatch({ type: 'confirmed', receipt });
     }).catch((reason: unknown) => {

@@ -13,6 +13,7 @@ import {
   amountText, emptyProposal, parseAiReceipt, receiptFields, scanConflicts, scanPatch,
   type ReceiptField, type ReceiptProposal, type ReceiptValues,
 } from '../../domain/receipt';
+import { receiptFromScan, type ScannedReceiptData } from '../../domain/scannedReceipt';
 import { aiProviderLabels, aiSetupProblem, receiptPrompt } from '../../domain/receiptAi';
 import { useI18n } from '../../i18n/I18nProvider';
 import { analyzeReceipt, isAbort } from '../../services/receiptAi';
@@ -29,8 +30,10 @@ type Props = {
   merchants: readonly RankedMerchant[];
   // What the form holds now, as typed by the user (an untouched field is '').
   draft: ReceiptValues;
-  // The reviewed values the user accepted. The form only fills its fields: saving stays on its own Save button.
-  onApply: (patch: Partial<Record<ReceiptField, string>>) => void;
+  // The reviewed values the user accepted. The form only fills its fields: saving stays on its own Save button. `scanned`:
+  // what the receipt says (shop, total and date as reviewed, products and discount as read), kept by the form and saved
+  // with the expense as its receipt («Lista scontrini», 26 November) only when «Salva» is pressed.
+  onApply: (patch: Partial<Record<ReceiptField, string>>, scanned: ScannedReceiptData | null) => void;
   onClose: () => void;
 };
 
@@ -45,7 +48,8 @@ const unreadable = 'Non è stato possibile leggere lo scontrino: prova con una f
 
 // Scan of a receipt for the new-expense form, in one dialog: choose or take a picture, preview it, read it with the
 // user's AI provider (the only kind of scan since 21 November: the local OCR was removed on request), then review. The picture exists only in this component's
-// memory and is released when the dialog closes. Nothing is ever saved from here.
+// memory and is released when the dialog closes. Nothing is ever saved from here: what was read reaches the form, which saves
+// it with the expense (never the photo).
 export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClose }: Props) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
@@ -54,7 +58,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
   const ai = useReceiptAi();
   // The API key is written only in Settings (user's request, 21 November: no key field in this dialog); a missing key is
   // said here like a missing service or model, and the scan waits for it.
-  const setupProblem = aiSetupProblem(ai.settings) ?? (ai.apiKey.trim() ? null : 'Inserisci la chiave API nelle Impostazioni.');
+  const setupProblem = aiSetupProblem(ai.settings) ?? (ai.apiKey.trim() ? null : 'Inserisci la chiave API in Lista scontrini.');
   const aiReady = setupProblem === null;
   const provider = ai.settings.provider === 'none' ? '' : aiProviderLabels[ai.settings.provider];
 
@@ -181,7 +185,11 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
 
   const conflicts = stage === 'review' ? scanConflicts(draft, values) : [];
   const patch = scanPatch(draft, values, replace);
-  const apply = () => { onApply(patch); onClose(); };
+  const apply = () => {
+    const service = ai.settings.provider;
+    onApply(patch, proposal && service !== 'none' ? receiptFromScan(values, proposal, service) : null);
+    onClose();
+  };
   const flagged = (status: 'uncertain' | 'missing') => (proposal ? receiptFields.filter((field) => proposal.status[field] === status).map((field) => t(fieldLabels[field])).join(', ') : '');
   const picture = preview ? (
     // Review on a wide window: the photo takes the height of the form beside it (no fixed height, no empty space under the fields).

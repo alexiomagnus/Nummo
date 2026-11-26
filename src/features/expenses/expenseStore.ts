@@ -1,6 +1,7 @@
 import type { ExpenseRecord } from '../../domain/contract';
 import type { ExpenseData } from '../../domain/expense';
 import type { Merchant } from '../../domain/merchant';
+import type { ScannedReceiptData } from '../../domain/scannedReceipt';
 import type { Submission } from '../../domain/submission';
 
 // UI-facing contract; persistence and synchronization stay in the service/hooks.
@@ -10,7 +11,8 @@ export type ExpenseStore = Readonly<{
   error: string | null;
   submission: Submission;
   // `merchant`: a merchant used for the first time, saved with the expense.
-  submit: (data: ExpenseData, merchant?: Merchant | null) => void;
+  // `scanned`: the receipt read by the scan that filled the form, saved with the expense (`DataStore.createExpense`).
+  submit: (data: ExpenseData, merchant?: Merchant | null, scanned?: ScannedReceiptData | null) => void;
   // Read-only server verification of the uncertain attempt; SDK owns retries.
   retry: () => void;
   // After a confirmation or a definitive rejection.

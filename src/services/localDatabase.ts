@@ -6,8 +6,8 @@
 // 16 November 2026 (the store stayed, unread) and reintroduced on 21 November: the same store, so templates saved before
 // the removal come back as they were.
 const firstStoreNames = ['expenses', 'categories', 'funds', 'movements', 'lists', 'listItems', 'settings', 'meta'] as const;
-// `merchants` came with step 3.
-export const localStoreNames = [...firstStoreNames, 'templates', 'merchants'] as const;
+// `merchants` came with step 3, `receipts` (scanned receipts, keyed by the ID of their expense) with step 4.
+export const localStoreNames = [...firstStoreNames, 'templates', 'merchants', 'receipts'] as const;
 export type LocalStoreName = (typeof localStoreNames)[number];
 export type LocalRow = { id: string } & Record<string, unknown>;
 
@@ -40,6 +40,8 @@ export const localMigrations: readonly Migration[] = [
   (db) => { db.createObjectStore('templates', { keyPath: 'id' }); },
   // 3: merchants («Esercente» of an expense), keyed by the key of their name (merchant.ts).
   (db) => { db.createObjectStore('merchants', { keyPath: 'id' }); },
+  // 4: scanned receipts («Lista scontrini», 26 November 2026), keyed by the ID of the expense they belong to.
+  (db) => { db.createObjectStore('receipts', { keyPath: 'id' }); },
 ];
 export const localSchemaVersion = localMigrations.length;
 

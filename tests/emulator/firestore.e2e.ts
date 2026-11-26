@@ -816,6 +816,50 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
       owner.store.removeTemplate((await owner.store.exportSnapshot()).templates.find((x) => x.id === oldId)!);
       await waitForPendingWrites(owner.db);
     });
+    await t.test('scontrini: salvati con la spesa, regole, immutabili, eliminati da soli o con la spesa, backup', async () => {
+      const receiptRef = (id: string) => doc(owner.db, 'users', uid, 'receipts', id);
+      const scanned = { merchant: `Conad ${suffix}`, total_minor: 2475, date: todayInRome(), items: ['Latte', 'Pane'], discount_minor: 120, provider: 'gemini' as const };
+      const request = expense();
+      await owner.store.createExpense(request, null, scanned);
+      let snapshot = await second.store.exportSnapshot();
+      const saved = snapshot.receipts.find((r) => r.id === request.expense_id)!;
+      assert.deepEqual([saved.merchant, saved.items, saved.discount_minor, saved.provider], [scanned.merchant, ['Latte', 'Pane'], 120, 'gemini']);
+      assert.equal((await getDocFromServer(receiptRef(request.expense_id))).data()?.items, 'Latte\nPane');
+      // Isolation and Rules: shape, limits (500 products of 60 characters at the limit), never updated.
+      await denied(getDocsFromServer(collection(intruder.db, 'users', uid, 'receipts')));
+      const raw = { merchant: 'Coop', total_minor: 100, date: '2026-11-20', items: '', discount_minor: null, provider: 'claude', created_at: serverTimestamp() };
+      await setDoc(receiptRef(randomUUID()), { ...raw, items: Array(500).fill('x'.repeat(60)).join('\n') });
+      await setDoc(receiptRef(randomUUID()), { ...raw, merchant: null, total_minor: null, date: null });
+      await denied(setDoc(doc(intruder.db, 'users', uid, 'receipts', randomUUID()), raw));
+      for (const patch of [{ merchant: '' }, { merchant: ' Coop' }, { merchant: 'A  B' }, { merchant: 'x'.repeat(61) }, { total_minor: 0 }, { total_minor: 1.5 },
+        { total_minor: 100000000000 }, { date: '2026-02-30' }, { date: '1999-12-31' }, { items: 'a\n' }, { items: '\na' }, { items: 'a\n\nb' }, { items: 'a\tb' },
+        { items: 'x'.repeat(30500) }, { items: ['a'] }, { discount_minor: 0 }, { provider: 'compatible' }, { created_at: Timestamp.fromMillis(Date.now() + 3600000) },
+        { extra: true }]) {
+        await denied(setDoc(receiptRef(randomUUID()), { ...raw, ...patch }));
+      }
+      const { provider: _p, ...withoutProvider } = raw;
+      await denied(setDoc(receiptRef(randomUUID()), withoutProvider));
+      await denied(setDoc(receiptRef('not-a-uuid'), raw));
+      await denied(updateDoc(receiptRef(request.expense_id), { merchant: 'Altro' }));
+      // Backup: included and repeatable; removing the receipt keeps the expense; removing the expense takes its receipt.
+      // The receipts written directly above have no expense: the backup leaves them out instead of failing.
+      const restored = parseBackup(JSON.parse(makeBackup(await owner.store.exportSnapshot())));
+      assert.deepEqual(restored.receipts?.map((r) => r.id), [request.expense_id]);
+      const again = () => owner.store.importRecords(restored.expenses, restored.categories, 'merge', restored.funds, restored.movements, restored.lists,
+        restored.budget, restored.merchants, restored.templates, restored.receipts);
+      await again();
+      owner.store.removeReceipt(saved);
+      await waitForPendingWrites(owner.db);
+      snapshot = await owner.store.exportSnapshot();
+      assert.equal(snapshot.receipts.some((r) => r.id === request.expense_id), false);
+      assert.ok(snapshot.expenses.some((e) => e.id === request.expense_id), 'la spesa resta');
+      await again();
+      assert.deepEqual((await owner.store.exportSnapshot()).receipts.find((r) => r.id === request.expense_id), saved);
+      await owner.store.removeExpense((await owner.store.exportSnapshot()).expenses.find((e) => e.id === request.expense_id)!);
+      assert.equal((await getDocFromServer(receiptRef(request.expense_id))).exists(), false);
+      // The receipts written directly above have no expense: removed here so later tests see a consistent archive.
+      for (const r of (await owner.store.exportSnapshot()).receipts) await deleteDoc(receiptRef(r.id));
+    });
     await t.test('migrazione oltre il limite di accessi Rules: gruppi di categorie e spese ripetibili', async () => {
       const categories = Array.from({ length: 30 }, (_, i) => ({ id: randomUUID(), label: `Gruppo ${suffix} ${i}`, icon: null }));
       const records = Array.from({ length: 205 }, () => { const { expense_id, ...data } = expense(); return { ...data, id: expense_id, created_at: '2025-01-01T00:00:00.000Z' }; });
@@ -858,12 +902,12 @@ test('Firestore personale: sicurezza, CRUD, sincronizzazione e migrazione', { ti
     });
     await t.test('elimina tutte le spese: solo le spese del proprietario, categorie conservate, ripetibile', async () => {
       await owner.store.createExpense(expense());
-      await owner.store.createExpense(expense());
+      await owner.store.createExpense(expense(), null, { merchant: null, total_minor: null, date: null, items: [], discount_minor: null, provider: 'openai' });
       const before = await owner.store.exportSnapshot();
-      assert.ok(before.expenses.length >= 2);
+      assert.ok(before.expenses.length >= 2 && before.receipts.length >= 1);
       assert.equal(await owner.store.removeAllExpenses(), before.expenses.length);
       const after = await owner.store.exportSnapshot();
-      assert.equal(after.expenses.length, 0);
+      assert.deepEqual([after.expenses.length, after.receipts.length], [0, 0], 'con le spese anche i loro scontrini');
       assert.deepEqual(after.categories.map((c) => c.id).sort(), before.categories.map((c) => c.id).sort());
       assert.equal(await owner.store.removeAllExpenses(), 0);
     });

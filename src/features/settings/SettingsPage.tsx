@@ -20,11 +20,8 @@ import type { TimeFormat } from '../../domain/timeFormat';
 import { deviceTimeZone } from '../../domain/pushSchedule';
 import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
-import { ReceiptAiCard } from '../receipts/ReceiptAiCard';
-import { resetReceiptAi } from '../receipts/aiSettings';
 import { hasHaptics } from '../../theme/haptics';
 import { useSizeClass } from '../../theme/useSizeClass';
-import { SameWidthGroup, doubleWidth, useSameWidth } from '../../components/SameWidth';
 import { ProfileImageCard, localProfileScope, type ProfileScope } from './ProfileImageCard';
 import { AppLockCard } from '../lock/AppLock';
 import { resetAppLockDelay } from '../lock/appLockStore';
@@ -74,10 +71,10 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 // Carattere, Formato dell'ora and Fuso orario form the left column and Tema and Colore the right one, and the wider sections follow at full width.
 export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections, onResetArchive, profile, lockPin = false }: Props) {
   // «Ripristina predefiniti» brings back the defaults of everything on this page (user's request, 21 November): the
-  // preferences, the receipt scan (off, no service), the profile picture of the Standard mode and, with an archive open,
-  // its preferred categories and fund.
+  // preferences, the profile picture and, with an archive open, its preferred categories and fund. The receipt scan moved to
+  // «Lista scontrini» (26 November, on request) and is no longer reset from here.
   // The app lock is the exception: only its delay goes back to the default, since turning it off asks for the fingerprint.
-  const resetAll = () => { onReset(); resetReceiptAi(); resetAppLockDelay(); if (profile) { saveProfileImage(noProfileImage, profile.scope); if (profile.scope !== localProfileScope) saveProfileRing(defaultProfileRing, profile.scope); } onResetArchive?.(); };
+  const resetAll = () => { onReset(); resetAppLockDelay(); if (profile) { saveProfileImage(noProfileImage, profile.scope); if (profile.scope !== localProfileScope) saveProfileRing(defaultProfileRing, profile.scope); } onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
   const [contentWidth, setContentWidth] = useState(0);
@@ -143,8 +140,6 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
     </View>
   );
   return (
-    // From medium «Ripristina predefiniti» and the AI card's actions share one width (user's request, 22 November).
-    <SameWidthGroup>
     <View style={styles.root} onLayout={({ nativeEvent }) => setContentWidth(nativeEvent.layout.width)}>
       <PageHeader title={t("Impostazioni")} action={<DoneButton onPress={onDone} />} />
       {profile && <ProfileImageCard scope={profile.scope} googlePhoto={profile.googlePhoto} />}
@@ -185,24 +180,20 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         </Card>
         <AppLockCard requirePin={lockPin} />
         {archiveSections}
-        <ReceiptAiCard />
       </View>
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}
       <ResetAllButton phone={phone} onPress={resetAll} />
     </View>
-    </SameWidthGroup>
   );
 }
 
-// Inside the page's `SameWidthGroup`: from medium as wide as the AI card's two actions together (user's request, 22 November);
-// it does not measure itself. Without those actions on screen, its own width.
+// Its own width from medium (until 26 November it was as wide as the two actions of the AI card, now in «Lista scontrini»).
 function ResetAllButton({ phone, onPress }: { phone: boolean; onPress: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const sameWidth = useSameWidth();
   return (
-    <Button mode="outlined" textColor={colors.secondary} style={[styles.reset, phone && styles.resetPhone, doubleWidth(sameWidth, spacing.sm)]} onPress={onPress}
+    <Button mode="outlined" textColor={colors.secondary} style={[styles.reset, phone && styles.resetPhone]} onPress={onPress}
       icon={({ size, color }) => <SvgIcon shape={iconShapes.rotateCcw} size={size} color={color} />}>
       {t("Ripristina predefiniti")}
     </Button>

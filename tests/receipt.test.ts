@@ -128,7 +128,7 @@ test('AI: impostazioni dal browser validate, la chiave non ne fa mai parte', () 
   // The removed OpenAI-compatible API reads as no service chosen (and off, for old settings).
   assert.deepEqual(parseAiSettings(JSON.stringify({ provider: 'compatible', model: 'llava', endpoint: 'http://localhost/v1', scan: 'ai' })), defaultAiSettings);
   assert.deepEqual(aiProviders, ['claude', 'openai', 'gemini']);
-  assert.equal(aiSetupProblem(defaultAiSettings), 'Scegli il servizio AI nelle Impostazioni.');
+  assert.equal(aiSetupProblem(defaultAiSettings), 'Scegli il servizio AI in Lista scontrini.');
   assert.equal(aiSetupProblem({ ...openai, model: '' }), 'Indica il modello da usare.');
   assert.equal(aiSetupProblem(openai), null);
 });
@@ -168,7 +168,7 @@ test('AI: richiesta per provider, chiave solo nelle intestazioni, categorie esis
   assert.deepEqual([claudeBody.model, claudeBody.max_tokens, 'thinking' in claudeBody, 'temperature' in claudeBody], ['claude-opus-5-5', 16000, false, false]);
   assert.equal(aiDestination({ ...openai, provider: 'claude' }), 'api.anthropic.com');
   assert.throws(() => buildAiRequest(openai, '  ', image, prompt), { message: 'Inserisci la chiave API.' });
-  assert.throws(() => buildAiRequest(defaultAiSettings, 'k', image, prompt), { message: 'Scegli il servizio AI nelle Impostazioni.' });
+  assert.throws(() => buildAiRequest(defaultAiSettings, 'k', image, prompt), { message: 'Scegli il servizio AI in Lista scontrini.' });
 });
 
 test('AI: risposte ed errori del provider (chiave, limite, modello, server, risposta vuota)', () => {
@@ -215,7 +215,7 @@ test('AI: invio con rete assente, timeout, annullamento e risposta malformata', 
 });
 
 test('scansione: ogni messaggio di dominio ha la traduzione inglese', () => {
-  for (const message of [...Object.values(receiptNotes), ...Object.values(aiErrors), aiResponseError, 'Indica il modello da usare.', 'Inserisci la chiave API.', 'Scegli il servizio AI nelle Impostazioni.']) {
+  for (const message of [...Object.values(receiptNotes), ...Object.values(aiErrors), aiResponseError, 'Indica il modello da usare.', 'Inserisci la chiave API.', 'Scegli il servizio AI in Lista scontrini.']) {
     assert.ok(Object.hasOwn(english, message), message);
   }
 });

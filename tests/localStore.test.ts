@@ -21,7 +21,7 @@ function latest<T>(subscribe: (next: (value: T) => void, error: (reason: Error) 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
 const restore = (store: DataStore, json: string, mode: 'merge' | 'replace') => {
   const data = parseBackup(JSON.parse(json));
-  return store.importRecords(data.expenses, data.categories, mode, data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates);
+  return store.importRecords(data.expenses, data.categories, mode, data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates, data.receipts);
 };
 
 test('schema locale: versione = numero di migrazioni, passi mancanti in ordine, versione futura rifiutata', () => {
@@ -31,13 +31,15 @@ test('schema locale: versione = numero di migrazioni, passi mancanti in ordine, 
   const steps = [() => {}, () => {}, () => {}];
   assert.deepEqual(pendingMigrations(1, steps), steps.slice(1));
   assert.throws(() => pendingMigrations(steps.length + 1, steps), new RegExp(newerDatabase.slice(0, 20)));
-  // Step 1 creates the original object stores, step 2 the templates, step 3 the merchants; together every store, keyed by `id`.
+  // Step 1 creates the original object stores, step 2 the templates, step 3 the merchants, step 4 the scanned receipts; together
+  // every store, keyed by `id`.
   const created: [string, unknown][] = [];
   const fake = { createObjectStore: (name: string, options: unknown) => { created.push([name, options]); } } as unknown as IDBDatabase;
   localMigrations[0]!(fake, {} as IDBTransaction);
-  assert.deepEqual(created.map(([name]) => name), localStoreNames.filter((name) => name !== 'templates' && name !== 'merchants'));
+  assert.deepEqual(created.map(([name]) => name), localStoreNames.filter((name) => name !== 'templates' && name !== 'merchants' && name !== 'receipts'));
   localMigrations[1]!(fake, {} as IDBTransaction);
   localMigrations[2]!(fake, {} as IDBTransaction);
+  localMigrations[3]!(fake, {} as IDBTransaction);
   assert.deepEqual(created, localStoreNames.map((name) => [name, { keyPath: 'id' }]));
 });
 
@@ -419,7 +421,7 @@ test('template nel backup: v11 completo e ripetibile, unione con conflitto, sost
   await tick();
   const json = makeBackup(await first.store.exportSnapshot());
   const file = JSON.parse(json);
-  assert.equal(file.version, 11);
+  assert.equal(file.version, 12);
   assert.equal(file.templates.length, 2);
   // Sorted by description; the merchant only when there is one.
   assert.deepEqual(Object.keys(file.templates[0]).sort(), ['amount_minor', 'category_id', 'created_at', 'date', 'description', 'fund_id', 'id']);
@@ -546,7 +548,7 @@ test('passaggio tra modalità: le predefinite di entrambi gli archivi si allinea
   assert.equal(plan.addExpenses.length, 2);
   assert.equal(plan.sameExpenses, 1);
   assert.deepEqual(plan.addCategories.map((c) => c.label), ['Viaggi']);
-  await to.importRecords(data.expenses, data.categories, 'merge', data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates);
+  await to.importRecords(data.expenses, data.categories, 'merge', data.funds, data.movements, data.lists, data.budget, data.merchants, data.templates, data.receipts);
   const after = await to.exportSnapshot();
   assert.deepEqual(after.categories.map((c) => c.label).sort(), ['Alimentari', 'Viaggi']);
   assert.equal(after.expenses.find((e) => e.description === 'Pane')!.category_id, toFood);
@@ -611,4 +613,45 @@ test('esercenti: rinomina, unione con un esercente esistente ed eliminazione che
   assert.equal(saved.expenses.length, 4);
   assert.ok(saved.expenses.every((e) => (e.merchant_id ?? null) === null));
   assert.ok(makeBackup(saved), 'archivio ancora esportabile');
+});
+
+test('scontrini in locale: salvati solo con la spesa, eliminati con lei o da soli, tutti con «Elimina tutte le spese»; backup v12', async () => {
+  const { store } = open();
+  const receipts = latest(store.watchReceipts);
+  const scanned = { merchant: 'Conad', total_minor: 2475, date: today, items: ['Latte', 'Pane'], discount_minor: 120, provider: 'gemini' as const };
+  const first = expense({ description: 'Spesa' });
+  await store.createExpense(first, null, scanned);
+  await store.createExpense(expense({ description: 'Senza scontrino' }));
+  await tick();
+  assert.deepEqual(receipts.state.value!.records.map((r) => [r.id, r.merchant, r.items, r.provider]), [[first.expense_id, 'Conad', ['Latte', 'Pane'], 'gemini']]);
+  // Same ID and creation time as the expense; a receipt is not valid on its own.
+  const snapshot = await store.exportSnapshot();
+  assert.equal(snapshot.receipts[0]!.created_at, snapshot.expenses.find((e) => e.id === first.expense_id)!.created_at);
+  await assert.rejects(store.createExpense(expense(), null, { ...scanned, items: ['a\nb'] }), /Scontrino non valido/);
+  assert.equal((await store.exportSnapshot()).expenses.length, 2, 'nessuna spesa senza il suo scontrino valido');
+  // Backup v12: round trip byte for byte, then the receipt alone, then with its expense.
+  const json = makeBackup(await store.exportSnapshot());
+  const file = JSON.parse(json);
+  assert.equal(file.version, 12);
+  assert.deepEqual(Object.keys(file.receipts[0]).sort(), ['created_at', 'date', 'discount_minor', 'id', 'items', 'merchant', 'provider', 'total_minor']);
+  const other = open();
+  await restore(other.store, json, 'merge');
+  assert.equal(makeBackup(await other.store.exportSnapshot(), new Date(file.exported_at)), json);
+  await restore(other.store, json, 'merge');
+  store.removeReceipt(snapshot.receipts[0]!);
+  await tick();
+  assert.deepEqual(receipts.state.value!.records, []);
+  assert.equal((await store.exportSnapshot()).expenses.length, 2, 'la spesa resta');
+  // Deleting the expense takes its receipt; «Elimina tutte le spese» takes all of them.
+  const saved = (await other.store.exportSnapshot()).expenses.find((e) => e.id === first.expense_id)!;
+  await other.store.removeExpense(saved);
+  assert.deepEqual((await other.store.exportSnapshot()).receipts, []);
+  await restore(other.store, json, 'merge');
+  assert.equal((await other.store.exportSnapshot()).receipts.length, 1);
+  assert.equal(await other.store.removeAllExpenses(), 2);
+  assert.deepEqual((await other.store.exportSnapshot()).receipts, []);
+  // A replace makes the receipts equal to the file.
+  await restore(other.store, json, 'replace');
+  assert.equal(makeBackup(await other.store.exportSnapshot(), new Date(file.exported_at)), json);
+  receipts.stop();
 });

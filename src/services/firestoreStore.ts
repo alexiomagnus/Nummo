@@ -18,6 +18,7 @@ import { decodeBudgets, decodeRecharges, encodeBudgets, encodeRecharges, parseFu
 
 import { parseMerchant, renamedMerchant, type Merchant } from '../domain/merchant.ts';
 import { parseTemplateData, sameTemplate, templateFields, type TemplateData, type TemplateRecord } from '../domain/template.ts';
+import { parseScannedReceipt, parseScannedReceiptData, sameScannedReceipt, scannedReceiptFields, type ScannedReceipt, type ScannedReceiptData } from '../domain/scannedReceipt.ts';
 import { checkNewMerchant, listRecords, type BudgetSnapshot, type DataStore, type SnapshotState } from './dataStore.ts';
 export type { BudgetSnapshot, SnapshotState } from './dataStore.ts';
 // The stored schedule is a compact string (see firestore.rules); undecodable → the record check fails (archive invalid).
@@ -65,6 +66,11 @@ function stored<T extends Pick<ExpenseData, 'status_changes' | 'fund_id' | 'list
 // A merchant document holds only its displayed name: the document ID is the key of that name (merchant.ts).
 const decodeMerchant = (data: DocumentData, id: string) => ({ ...data, id });
 const storedMerchant = (m: Merchant) => ({ name: m.name });
+// A scanned receipt: products as one string joined by '\n' ('' = none), like the products of a registered list.
+const storedReceipt = (r: ScannedReceiptData) => ({ merchant: r.merchant, total_minor: r.total_minor, date: r.date, items: encodeListItems(r.items),
+  discount_minor: r.discount_minor, provider: r.provider });
+const decodeReceipt = (data: DocumentData, id: string) => ({ ...data, items: decodeListItems(data.items), id,
+  created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : data.created_at });
 const storedList = (data: ShoppingListData) => ({ name: data.name, category_id: data.category_id, total_minor: data.total_minor, expense_id: data.expense_id });
 
 export function createFirestoreStore(db: Firestore, uid: string): DataStore {
@@ -77,6 +83,7 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
   const listItems = collection(db, 'users', uid, 'listItems');
   const merchants = collection(db, 'users', uid, 'merchants');
   const templates = collection(db, 'users', uid, 'templates');
+  const receipts = collection(db, 'users', uid, 'receipts');
   // General monthly budget (issue #7): the only document of `settings`.
   const budgetRef = doc(db, 'users', uid, 'settings', 'budget');
   const conflict = () => new Error('I dati sono cambiati in un’altra sessione. Riapri la modifica e riprova.');
@@ -111,18 +118,19 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
   async function readAll() {
     const [e, c, f, m, l, i, b, s, x] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(categories), getDocsFromServer(funds), getDocsFromServer(movements),
       getDocsFromServer(lists), getDocsFromServer(listItems), getDocFromServer(budgetRef), getDocsFromServer(merchants), getDocsFromServer(templates)]);
+    const r = await getDocsFromServer(receipts);
     return [parseSnapshot(e, parseSyncedExpense), parseSnapshot(c, parseSyncedCategory), parseSnapshot(f, parseSyncedFund, decodeFund), parseSnapshot(m, parseSyncedMovement),
       parseSnapshot(l, parseSyncedList), parseSnapshot(i, parseSyncedListItem),
       { records: b.exists() ? [readBudget(b.data())!] : [], pending: b.metadata.hasPendingWrites }, parseSnapshot(s, parseMerchant, decodeMerchant),
-      parseSnapshot(x, parseSyncedTemplate)] as const;
+      parseSnapshot(x, parseSyncedTemplate), parseSnapshot(r, parseScannedReceipt, decodeReceipt)] as const;
   }
   async function readArchive() {
     const states = await readAll();
-    const [savedExpenses, savedCategories, savedFunds, savedMovements, savedLists, savedItems, savedBudget, savedMerchants, savedTemplates] = states;
+    const [savedExpenses, savedCategories, savedFunds, savedMovements, savedLists, savedItems, savedBudget, savedMerchants, savedTemplates, savedReceipts] = states;
     if (states.some((state) => state.pending)) throw new Error('Attendi le scritture pendenti prima di importare.');
     return { expenses: savedExpenses.records, categories: savedCategories.records, funds: savedFunds.records, movements: savedMovements.records,
       lists: listRecords(savedLists.records, savedItems.records), items: savedItems.records, budget: savedBudget.records[0]?.budgets ?? [], merchants: savedMerchants.records,
-      templates: savedTemplates.records };
+      templates: savedTemplates.records, receipts: savedReceipts.records };
   }
   // Checklist edits are plain writes queued by the SDK (they work with a weak signal in a shop): the listener shows them
   // at once and the sync chip until the server has them. A rejected write is reported, never retried by the app.
@@ -150,6 +158,11 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
         try { next(parseSnapshot(s, parseSyncedTemplate)); } catch (e) { error(e as Error); }
       }, error);
     },
+    watchReceipts(next: (value: SnapshotState<ScannedReceipt>) => void, error: (reason: Error) => void) {
+      return onSnapshot(receipts, { includeMetadataChanges: true }, (s) => {
+        try { next(parseSnapshot(s, parseScannedReceipt, decodeReceipt)); } catch (e) { error(e as Error); }
+      }, error);
+    },
     async confirmExpense(request: ExpenseRequest) {
       const saved = await getDocFromServer(doc(expenses, request.expense_id));
       const record = saved.exists() ? parseSyncedExpense(decode(saved.data(), saved.id)) : null;
@@ -157,16 +170,20 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
       if (!record || Object.entries(data).some(([key, value]) => !sameFieldValue(record[key as keyof ExpenseData], value))) throw new Error('Spesa non ancora confermata dal server. Attendi la riconnessione.');
       return { expense_id, created_at: record.created_at };
     },
-    async createExpense(request: ExpenseRequest, merchant?: Merchant | null) {
+    async createExpense(request: ExpenseRequest, merchant?: Merchant | null, scanned?: ScannedReceiptData | null) {
       if (!parseExpenseRequest(request, new Date())) throw new Error('Spesa non valida.');
       const { expense_id, ...data } = request;
       const created = checkNewMerchant(data, merchant);
+      const receipt = scanned ? scannedReceiptFields(scanned) : null;
+      if (receipt && !parseScannedReceiptData({ ...receipt })) throw new Error('Scontrino non valido.');
       // One stable document ID; SDK owns the queue/retries. No application retry queue. A new merchant goes in the same
       // batch (queued offline like the expense, all or nothing); its ID is its name key, so a merchant created meanwhile
       // elsewhere is the same document, never a duplicate.
       const batch = writeBatch(db);
       batch.set(doc(expenses, expense_id), { ...stored(data), created_at: serverTimestamp(), updated_at: serverTimestamp(), revision: 1 });
       if (created) batch.set(doc(merchants, created.id), storedMerchant(created));
+      // The scanned receipt, if any, in the same batch: it never exists without its expense.
+      if (receipt) batch.set(doc(receipts, expense_id), { ...storedReceipt(receipt), created_at: serverTimestamp() });
       await batch.commit();
       const saved = await getDocFromServer(doc(expenses, expense_id));
       const record = saved.exists() ? parseSyncedExpense(decode(saved.data(), saved.id)) : null;
@@ -200,6 +217,8 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
         const list = previous.list_id ? await tx.get(doc(lists, previous.list_id)) : null;
         if (!current.exists() || current.data().revision !== previous.revision) throw conflict();
         tx.delete(ref);
+        // Its scanned receipt goes with it (deleting a missing document is allowed).
+        tx.delete(doc(receipts, previous.id));
         if (list?.exists() && list.data().expense_id === previous.id) tx.update(list.ref, { expense_id: null, updated_at: serverTimestamp() });
       });
     },
@@ -224,11 +243,13 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
     // Read from the server (offline: refused before any delete), then batches of 400: not atomic over the whole archive, so
     // an interruption says so and running it again finishes the job.
     async removeAllExpenses() {
-      const saved = await getDocsFromServer(expenses);
+      const [saved, scanned] = await Promise.all([getDocsFromServer(expenses), getDocsFromServer(receipts)]);
+      // Receipts first: an interruption never leaves a receipt without its expense.
+      const refs = [...scanned.docs.map((d) => d.ref), ...saved.docs.map((d) => d.ref)];
       try {
-        for (let i = 0; i < saved.docs.length; i += 400) {
+        for (let i = 0; i < refs.length; i += 400) {
           const batch = writeBatch(db);
-          for (const d of saved.docs.slice(i, i + 400)) batch.delete(d.ref);
+          for (const ref of refs.slice(i, i + 400)) batch.delete(ref);
           await batch.commit();
         }
       } catch {
@@ -404,6 +425,7 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
         : setDoc(doc(templates, id), { ...fields, created_at: serverTimestamp(), updated_at: serverTimestamp() }));
     },
     removeTemplate(template: SyncedTemplate) { queued(deleteDoc(doc(templates, template.id))); },
+    removeReceipt(receipt: ScannedReceipt) { queued(deleteDoc(doc(receipts, receipt.id))); },
     // Registers a list: ONE server transaction creates the expense (ID chosen when the confirmation opened) and archives
     // the list. Repeating it after an uncertain outcome finds the same expense and does nothing; a list already registered
     // (other device, double press) is refused, so a purchase is never counted twice.
@@ -429,11 +451,11 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
     async exportSnapshot() {
       // Server-only: never label an incomplete offline cache as a complete backup.
       const states = await readAll();
-      const [expenseState, categoryState, fundState, movementState, listState, itemState, budgetState, merchantState, templateState] = states;
+      const [expenseState, categoryState, fundState, movementState, listState, itemState, budgetState, merchantState, templateState, receiptState] = states;
       if (states.some((state) => state.pending)) throw new Error('Attendi la sincronizzazione prima di esportare.');
       return { expenses: expenseState.records, categories: categoryState.records, funds: fundState.records, movements: movementState.records,
         lists: listRecords(listState.records, itemState.records), budget: budgetState.records[0]?.budgets ?? [], merchants: merchantState.records,
-        templates: templateState.records };
+        templates: templateState.records, receipts: receiptState.records };
     },
     // Preview for the import dialog: what each mode would do, computed on the current server data. No writes.
     async previewImport(data: ImportData) {
@@ -443,8 +465,8 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
     // 'merge' only adds (identical items skipped; any conflict blocks the whole import before the first write).
     // 'replace' makes the archive equal to the file: it removes saved items that differ from the file, then adds the rest.
     // Nothing is written until the file and the plan have been validated against the server data.
-    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = [], merchantRecords: readonly Merchant[] = [], templateRecords: readonly TemplateRecord[] = []) {
-      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget, merchantRecords, templateRecords);
+    async importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode: ImportMode = 'merge', fundRecords: readonly Fund[] = [], movementRecords: readonly Movement[] = [], shoppingLists: readonly ShoppingListRecord[] = [], generalBudget: readonly BudgetChange[] = [], merchantRecords: readonly Merchant[] = [], templateRecords: readonly TemplateRecord[] = [], receiptRecords: readonly ScannedReceipt[] = []) {
+      const checked = validateBackupData(records, categoryRecords, fundRecords, movementRecords, shoppingLists, generalBudget, merchantRecords, templateRecords, receiptRecords);
       const current = await readArchive();
       const plan = planImport(checked, current, mode);
       if (plan.conflicts.length > 0) throw new Error(`Importazione bloccata: ${plan.conflicts.length} elementi diversi dai dati salvati. Nessuna modifica.`);
@@ -455,7 +477,7 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
           // A replaced list goes with all its items; items of no kept list (left by concurrent edits) are removed too.
           const keptLists = new Set(current.lists.filter((l) => !plan.removeListIds.includes(l.id)).map((l) => l.id));
           const removeItemIds = current.items.filter((i) => !keptLists.has(i.list_id)).map((i) => i.id);
-          for (const [target, ids] of [[expenses, plan.removeExpenseIds], [movements, plan.removeMovementIds], [funds, plan.removeFundIds],
+          for (const [target, ids] of [[receipts, plan.removeReceiptIds], [expenses, plan.removeExpenseIds], [movements, plan.removeMovementIds], [funds, plan.removeFundIds],
             [listItems, removeItemIds], [lists, plan.removeListIds], [merchants, plan.removeMerchantIds], [templates, plan.removeTemplateIds]] as const) {
             for (let i = 0; i < ids.length; i += 200) {
               const batch = writeBatch(db);
@@ -572,6 +594,20 @@ export function createFirestoreStore(db: Firestore, uid: string): DataStore {
                 const parsed = parseSyncedTemplate(decode(existing.data(), existing.id));
                 if (!parsed || !sameTemplate(parsed, r)) throw conflict();
               } else tx.set(doc(templates, r.id), { ...templateFields(r), created_at: Timestamp.fromDate(new Date(r.created_at)), updated_at: serverTimestamp() });
+            });
+          });
+        }
+        // Receipts after their expenses: simple documents, an identical saved one is skipped (rechecked in the transaction).
+        for (let i = 0; i < plan.addReceipts.length; i += 200) {
+          const group = plan.addReceipts.slice(i, i + 200);
+          await runTransaction(db, async (tx) => {
+            const docs = await Promise.all(group.map((r) => tx.get(doc(receipts, r.id))));
+            group.forEach((r, index) => {
+              const existing = docs[index]!;
+              if (existing.exists()) {
+                const parsed = parseScannedReceipt(decodeReceipt(existing.data(), existing.id));
+                if (!parsed || !sameScannedReceipt(parsed, r)) throw conflict();
+              } else tx.set(doc(receipts, r.id), { ...storedReceipt(r), created_at: Timestamp.fromDate(new Date(r.created_at)) });
             });
           });
         }

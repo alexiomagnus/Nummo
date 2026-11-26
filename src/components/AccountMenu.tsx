@@ -11,12 +11,12 @@ import { SvgIcon, iconShapes } from './SvgIcon';
 // `avatar`: the picture chosen in Settings, drawn instead of the person glyph and the Google photo; with it the menu says
 // nothing about the Google photo (loading, missing, «Riprova foto»). `ring`: the colour of a ring around the picture, the
 // mark of the Advanced mode (22 November; never in the Standard mode; colour chosen in Settings, the main one by default).
-type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: string; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenBackup: () => void; onOpenMerchants: () => void };
+type Props = { email: string | null; photoURL: string | null; avatar?: ReactNode; ring?: string; busy: boolean; onSignOut?: () => void; onOpenSettings: () => void; onOpenNotifications: () => void; onOpenCategories: () => void; onOpenTemplates: () => void; onOpenReceipts: () => void; onOpenBackup: () => void; onOpenMerchants: () => void };
 
 // Account avatar → menu with the signed-in e-mail, settings, notifications, categories, import/export and the sign-out action.
 // Shared anchored menu (right edge under the avatar): same motion, Escape and focus return as the selectors.
 // `Menu.Item` is only Paper's row component here; Paper's Menu (scale from zero, slow fade) is no longer used.
-export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenBackup, onOpenMerchants }: Props) {
+export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, onOpenSettings, onOpenNotifications, onOpenCategories, onOpenTemplates, onOpenReceipts, onOpenBackup, onOpenMerchants }: Props) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -73,6 +73,10 @@ export function AccountMenu({ email, photoURL, avatar, ring, busy, onSignOut, on
       <Menu.Item title={t("Templates")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.template} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenTemplates(); }} />
+      {/* The receipts read by the scan and its settings (26 November, on request; the settings were in Impostazioni). */}
+      <Menu.Item title={t("Lista scontrini")} style={styles.item}
+        leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}
+        onPress={() => { setOpen(false); onOpenReceipts(); }} />
       <Menu.Item title={t("Archiviazione e backup")} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.database} size={size} color={color} />}
         onPress={() => { setOpen(false); onOpenBackup(); }} />

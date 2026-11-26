@@ -217,6 +217,21 @@ service cloud.firestore {
           && d.merchant == d.merchant.trim() && !d.merchant.matches('.*[\\t\\r\\n].*') && !d.merchant.matches('.*  .*')))
         && d.created_at is timestamp && d.created_at <= request.time && d.updated_at == request.time;
     }
+    // Scanned receipt (mirrors parseScannedReceiptData in src/domain/scannedReceipt.ts; 26 November 2026): what the AI read,
+    // never the photo. Its ID is the ID of its expense, written in the same batch and deleted with it. Never updated.
+    // Products as one string joined by '\n' ('' = none; at most 500 names of 60 characters), like a registered list.
+    function scannedReceipt(d) {
+      return d.keys().hasAll(['merchant', 'total_minor', 'date', 'items', 'discount_minor', 'provider', 'created_at'])
+        && d.keys().hasOnly(['merchant', 'total_minor', 'date', 'items', 'discount_minor', 'provider', 'created_at'])
+        && (d.merchant == null || (d.merchant is string && d.merchant.size() > 0 && d.merchant.size() <= 60
+          && d.merchant == d.merchant.trim() && !d.merchant.matches('.*[\\t\\r\\n].*') && !d.merchant.matches('.*  .*')))
+        && (d.total_minor == null || (d.total_minor is int && d.total_minor > 0 && d.total_minor <= 99999999999))
+        && (d.date == null || (d.date is string && d.date.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') && validDate(d.date) && d.date >= '2000-01-01' && d.date <= '2099-12-31'))
+        && d.items is string && d.items.size() <= 30499 && !d.items.matches('(?s)(\\n.*|.*\\n|.*\\n\\n.*|.*[\\r\\t].*)')
+        && (d.discount_minor == null || (d.discount_minor is int && d.discount_minor > 0 && d.discount_minor <= 99999999999))
+        && d.provider in ['claude', 'openai', 'gemini']
+        && d.created_at is timestamp && d.created_at <= request.time;
+    }
     // Product of a list: one small document, so ticking it is a single write the SDK can queue offline.
     function listItem(d) {
       return d.keys().hasAll(['list_id', 'name', 'checked', 'position']) && d.keys().hasOnly(['list_id', 'name', 'checked', 'position'])
@@ -292,6 +307,12 @@ service cloud.firestore {
       allow read: if owner(uid);
       allow create: if owner(uid) && uuid(id) && template(request.resource.data);
       allow update: if owner(uid) && template(request.resource.data) && request.resource.data.created_at == resource.data.created_at;
+      allow delete: if owner(uid);
+    }
+    match /users/{uid}/receipts/{id} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && uuid(id) && scannedReceipt(request.resource.data);
+      allow update: if false;
       allow delete: if owner(uid);
     }
     match /users/{uid}/categoryNames/{key} {

@@ -23,6 +23,7 @@ import { ScanReceiptDialog } from '../receipts/ScanReceiptDialog';
 import { useReceiptAi } from '../receipts/aiSettings';
 import type { RankedMerchant } from '../../domain/merchant';
 import { draftOfTemplate, templateOptionalFields, type TemplateFill, type TemplateRecord } from '../../domain/template';
+import type { ScannedReceiptData } from '../../domain/scannedReceipt';
 import { TemplatePicker } from '../templates/TemplatePicker';
 import { resolvePrefill, type PrefillLink } from '../../domain/prefillLink';
 
@@ -62,6 +63,9 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   // Remounts the fields after a saved expense, so the «Altra data» field closes with the cleared draft.
   const [formKey, setFormKey] = useState(0);
   const [scanning, setScanning] = useState(false);
+  // What the last applied scan read: saved with the expense as its receipt («Lista scontrini») when «Salva» is pressed, and
+  // forgotten once the form is cleared (saved expense, «Nessun template») or replaced by the next scan.
+  const [scanned, setScanned] = useState<ScannedReceiptData | null>(null);
   // The template the form was filled from (shown in its field until saved); the fields stay editable afterwards.
   const [templateId, setTemplateId] = useState('');
   // Amount and merchant as the last template put them: the next template takes them back if still untouched.
@@ -84,6 +88,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     setFormKey((key) => key + 1);
     setTemplateId('');
     setTemplateFill({});
+    setScanned(null);
     store.startNew();
   }, [submission.status]);
   // A category deleted in the other section simply stops being selected; without one, the preferred category if it exists.
@@ -112,6 +117,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     setTemplateId(template ? template.id : '');
     if (!template) {
       setTemplateFill({});
+      setScanned(null);
       setDraft(newDraft());
       setErrors({});
       setFormKey((key) => key + 1);
@@ -155,7 +161,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       setErrors({ ...(current.categoryId ? {} : { categoryId: categoryMissing }), ...fundMissing });
       return;
     }
-    store.submit(result.data, result.merchant);
+    store.submit(result.data, result.merchant, scanned);
   };
 
   const startDate = draft.date || todayInRome();
@@ -204,7 +210,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
       {templates && templates.length === 0 && <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Il pulsante Template compare quando crei un template nella pagina Templates.")}</Text>}
       {scanEnabled && scanning && <ScanReceiptDialog categories={categories} merchants={merchants} onClose={() => setScanning(false)}
         draft={{ amount: draft.amount, date: draft.date, description: draft.description, merchant: draft.merchant ?? '', categoryId: draft.categoryId }}
-        onApply={update} />}
+        onApply={(patch, read) => { update(patch); setScanned(read); }} />}
       <ExpenseFields dense={desktop} key={formKey} values={current} errors={errors} categories={categories} dataState={dataState} disabled={!enabled}
         extra={repeat} fund={fundField ?? undefined} fundBelow={size === 'compact'}
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}

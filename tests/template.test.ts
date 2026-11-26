@@ -69,7 +69,7 @@ test('template: lettura di dati non fidati, bozza di modifica, uguaglianza e ord
 test('template: backup v11 con round trip, piano di importazione e file precedenti senza template', () => {
   const t1 = record(); const t2 = record({ id: '66666666-6666-4666-8666-666666666666', description: 'Abbonamento sala', amount_minor: 3000, fund_id: fund });
   const file = JSON.parse(makeBackup({ expenses: [], categories, templates: [t1, t2] }, now));
-  assert.equal(file.version, 11);
+  assert.equal(file.version, 12);
   assert.deepEqual(file.templates.map((x: { description: string }) => x.description), ['Abbonamento sala', 'Caffè']);
   const restored = parseBackup(file);
   assert.deepEqual(restored.templates, [t2, t1]);

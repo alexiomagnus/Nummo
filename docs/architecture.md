@@ -1669,6 +1669,10 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   metà (`opensHalf`), gli altri interi.
 - **Eccezioni scelte il 25 novembre:** «Modifica fondo»/«Nuovo fondo» (`FundEditor`), «Aggiungi denaro»/«Trasferisci» (`MovementDialog`)
   e lo «Storico dei pagamenti» (`PaymentsDialog`) sono tornati schermi normali con Indietro, senza trascinamento.
+- **Eccezioni scelte il 26 novembre:** il dettaglio della spesa e dell'abbonamento (`DetailScreen` senza `detents`) e le transazioni di
+  Analisi (`TransactionDetails`) sono schermi interi con Indietro anche su smartphone, senza maniglia né trascinamento. Restano a tre
+  posizioni il dettaglio del fondo, «Prossimo mese», Prodotti acquistati e i pannelli di scelta (Template con il layout di
+  `ChoiceScreen`, Categoria, Fondo, data, Scansiona scontrino, «Modifica categoria»).
 
 ## Avvio in Avanzata, navigazione da desktop con uno schermo aperto, splash Android — 25 novembre 2026
 
@@ -1683,3 +1687,19 @@ Su richiesta: la funzione Templates, eliminata il 16 novembre, torna com'era, ad
   è tolto: cambiare pagina chiude prima gli schermi (`closeAllScreens`), e se uno rifiuta (operazione in corso) la pagina non cambia.
 - **Splash Android** (app 0.3.4): `MainActivity.holdSplash` trattiene il primo fotogramma fino a `onPageCommitVisible` (al massimo
   1,5 s) e la WebView prende lo sfondo dell'ultimo tema salvato: niente fotogramma nero tra splash e pagina (confermato sul Pixel 8).
+
+## Scontrini scansionati nell'archivio («Lista scontrini») — 26 novembre 2026
+
+- **Decisione dell'utente** (che supera la regola del 16–17 novembre «la scansione non conserva nulla»): si conservano **i dati letti**,
+  **mai la foto**; **solo** per le scansioni da cui si salva una spesa; **nell'archivio** della modalità (IndexedDB o Firestore), quindi
+  nel backup. La pagina «Lista scontrini» del menu account li elenca e contiene anche le impostazioni della scansione, tolte dalle
+  Impostazioni.
+- **Modello:** un documento per spesa, con lo stesso ID (`receipts/{id spesa}`), scritto nella stessa scrittura atomica della spesa
+  (`createExpense`) e mai modificato; eliminato con la spesa (`removeExpense`, `removeAllExpenses`) o da solo (`removeReceipt`).
+  Collezione separata invece di campi nella spesa: le Rules delle spese sono già vicine al budget di espressioni, e lo scontrino non
+  cambia mai. Nessun `existsAfter` sulla spesa nelle Rules: l'importazione scrive gli scontrini in gruppi da 200 e supererebbe il limite
+  di accessi; la coerenza la garantisce l'app, e un backup salta lo scontrino rimasto senza spesa invece di fallire.
+- **Contenuto:** esercente, totale e data come l'utente li ha lasciati nella revisione (null se vuoti o non validi), prodotti e sconto
+  come letti, servizio AI. Descrizione e categoria proposte dall'AI non si salvano: sono quelle della spesa.
+- **Formati:** Firestore con i prodotti uniti da `\n` (come i prodotti di una lista registrata); IndexedDB passo 4; backup v12.
+

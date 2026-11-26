@@ -8,6 +8,7 @@ import type { ExpenseRecord, Receipt } from '../domain/contract.ts';
 import type { ExpenseData, ExpenseRequest } from '../domain/expense.ts';
 import type { SyncedBudget, SyncedCategory, SyncedExpense, SyncedFund, SyncedList, SyncedListItem, SyncedMovement, SyncedTemplate } from '../domain/firestore.ts';
 import type { TemplateData, TemplateRecord } from '../domain/template.ts';
+import type { ScannedReceipt, ScannedReceiptData } from '../domain/scannedReceipt.ts';
 import type { BudgetChange, Fund, FundData, Movement, MovementData } from '../domain/funds.ts';
 import { parseMerchant, type Merchant } from '../domain/merchant.ts';
 import { sortItems, type ShoppingListData, type ShoppingListRecord } from '../domain/shoppingList.ts';
@@ -20,7 +21,7 @@ type Watch<T> = (next: (value: SnapshotState<T>) => void, error: (reason: Error)
 // A complete, confirmed copy of the archive (backups and CSV).
 export type ArchiveSnapshot = {
   expenses: SyncedExpense[]; categories: SyncedCategory[]; funds: SyncedFund[]; movements: SyncedMovement[];
-  lists: ShoppingListRecord[]; budget: BudgetChange[]; merchants: Merchant[]; templates: SyncedTemplate[];
+  lists: ShoppingListRecord[]; budget: BudgetChange[]; merchants: Merchant[]; templates: SyncedTemplate[]; receipts: ScannedReceipt[];
 };
 
 export type DataStore = {
@@ -45,16 +46,20 @@ export type DataStore = {
   // many expenses changed; same atomicity as `renameMerchant`.
   removeMerchant(merchant: Merchant): Promise<number>;
   watchTemplates: Watch<SyncedTemplate>;
+  // Scanned receipts («Lista scontrini», scannedReceipt.ts): written only with their expense (`createExpense`), deleted with
+  // it (`removeExpense`, `removeAllExpenses`) or on their own (`removeReceipt`, the expense stays). Never edited.
+  watchReceipts: Watch<ScannedReceipt>;
   // Read-only verification of an uncertain save; never a second write.
   confirmExpense(request: ExpenseRequest): Promise<Receipt>;
   // `merchant`: a merchant used for the first time (its ID is `request.merchant_id`), saved in the same atomic write as the
-  // expense; a merchant that already exists keeps the name it has.
-  createExpense(request: ExpenseRequest, merchant?: Merchant | null): Promise<Receipt>;
+  // expense; a merchant that already exists keeps the name it has. `scanned`: what the scan that filled the form read, saved
+  // as the expense's receipt (same ID) in the same atomic write.
+  createExpense(request: ExpenseRequest, merchant?: Merchant | null, scanned?: ScannedReceiptData | null): Promise<Receipt>;
   // Updates and removals act on the revision seen when the editor opened; a newer one is an explicit conflict.
   updateExpense(previous: SyncedExpense, data: ExpenseData, merchant?: Merchant | null): Promise<void>;
   removeExpense(previous: SyncedExpense): Promise<void>;
-  // «Elimina tutte le spese» (Archiviazione e backup, 22 November, on request): every expense and series, nothing else
-  // (categories, funds, movements, lists, templates and merchants stay; a registered list is left «detached»). Returns
+  // «Elimina tutte le spese» (Archiviazione e backup, 22 November, on request): every expense and series with their scanned
+  // receipts, nothing else (categories, funds, movements, lists, templates and merchants stay; a registered list is left «detached»). Returns
   // how many were removed. Explicit gesture only, after a confirmation and an automatic backup copy.
   removeAllExpenses(): Promise<number>;
   saveCategory(id: string, name: string, icon: CategoryIcon | null, previous?: SyncedCategory): Promise<void>;
@@ -78,12 +83,14 @@ export type DataStore = {
   // background like the list edits; `previous` keeps the creation time of an edited template.
   saveTemplate(id: string, data: TemplateData, previous?: SyncedTemplate): void;
   removeTemplate(template: SyncedTemplate): void;
+  // A receipt alone (its expense stays): plain delete, saved in the background like a template.
+  removeReceipt(receipt: ScannedReceipt): void;
   registerList(list: SyncedList, expenseId: string, data: ExpenseData, remember?: boolean): Promise<void>;
   exportSnapshot(): Promise<ArchiveSnapshot>;
   previewImport(data: ImportData): Promise<{ merge: ImportPlan; replace: ImportPlan }>;
   importRecords(records: readonly ExpenseRecord[], categoryRecords: readonly Category[], mode?: ImportMode, fundRecords?: readonly Fund[],
     movementRecords?: readonly Movement[], shoppingLists?: readonly ShoppingListRecord[], generalBudget?: readonly BudgetChange[], merchantRecords?: readonly Merchant[],
-    templateRecords?: readonly TemplateRecord[]): Promise<void>;
+    templateRecords?: readonly TemplateRecord[], receiptRecords?: readonly ScannedReceipt[]): Promise<void>;
 };
 
 // Lists of the archive with their items (backups and import plans). Items whose list no longer exists are left out.

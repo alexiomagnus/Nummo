@@ -18,7 +18,7 @@ const phoneHalf = { flex: 1, minWidth: 0 };
 // Label margins a little tighter than Paper's compact ones: «Dimentica la chiave» fits half of a 320 px screen.
 const phoneLabel = { marginHorizontal: 6 };
 
-// Settings section of the receipt scan, AI only (local OCR and the OpenAI-compatible API removed on 21 November, on
+// Section of the receipt scan in «Lista scontrini» (in Settings until 26 November, moved on request), AI only (local OCR and the OpenAI-compatible API removed on 21 November, on
 // request). Off by default: until the switch is on, «Scansiona scontrino» is not in the new-expense form and the options
 // below are greyed out and unreachable (`inert`), with no request to the provider. Switch, provider, model and key are
 // remembered in this browser (see aiSettings.ts). The model is only chosen from the provider's list (user's choice of
@@ -28,7 +28,7 @@ export function ReceiptAiCard() {
   const { colors } = useTheme();
   const ai = useReceiptAi();
   const compact = useSizeClass() === 'compact';
-  // From medium: as wide as each other and as «Ripristina predefiniti» (the Settings page's `SameWidthGroup`), never the whole row.
+  // From medium: as wide as each other (the `SameWidthGroup` of «Lista scontrini»), never the whole row.
   const sameWidth = useSameWidth();
   const { enabled, provider, model } = ai.settings;
   const list = useAiModels(ai.settings, enabled ? ai.apiKey : '');
