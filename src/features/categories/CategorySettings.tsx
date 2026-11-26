@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
+import { ListGroup, RowBody } from '../../components/ActionList';
 import { Button } from '../../components/Button';
 import { searchKey } from '../../domain/history';
 import { categoryNameError, isDefaultCategory, maxCategoryNameLength, type Category, type CategoryIcon, type CategoryUsage } from '../../domain/category';
@@ -80,7 +81,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
     accessibilityLabel={t("Icona della categoria, facoltativa")} style={[styles.create, !compact && styles.iconWide]} contentStyle={styles.createContent}>{t("Icona")}</Button>;
   const addButton = <Button mode="contained" style={[styles.create, styles.addPill, styles.addCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>;
   const createForm = (
-    <View style={styles.createPanel}>
+    <ListGroup label={t("Nuova categoria")}><RowBody><View style={styles.createPanel}>
       <View style={styles.createRow}>
         <View style={[styles.nameField, styles.nameFieldCompact]}>
           <TextInput outlineStyle={inputOutline} label={t("Nuova categoria")} accessibilityLabel={t("Nome della nuova categoria, obbligatorio")} mode="outlined" value={name}
@@ -94,7 +95,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
       {choosingIcon && <IconPicker value={icon} onChange={setIcon} disabled={!ready} />}
       {addButton}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
-    </View>
+    </View></RowBody></ListGroup>
   );
 
   return (
@@ -111,7 +112,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
             <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>{t("Nessuna categoria.")}</Text>
           </View>
         )}
-        <View role="list">
+        {shown.length > 0 && <ListGroup label={t("Categorie")}><View role="list">
           {shown.map((category, index) => {
             const isEditing = editing?.id === category.id;
             return (
@@ -128,7 +129,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
                 </>} />
             );
           })}
-        </View>
+        </View></ListGroup>}
         {/* Always offered, with or without categories (user's request, 22 November): adds back the default categories missing by name,
             nothing else, without a confirmation (user's request, 25 November). Same look as «Ripristina predefiniti» of Settings: pill,
             label in `secondary`. */}

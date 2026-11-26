@@ -112,33 +112,32 @@ function OpenedSummary({ notifications, from, to, onClose }: { notifications: No
   );
 }
 
-type TimeChoice = 'morning' | 'lunch' | 'evening' | 'custom';
-const timeChoiceOf = (hour: number): TimeChoice => (Object.entries(reminderPresets).find(([, value]) => value === hour)?.[0] as TimeChoice | undefined) ?? 'custom';
+type TimeChoice = 'morning' | 'lunch' | 'evening';
+const timeChoiceOf = (hour: number): TimeChoice | null => (Object.entries(reminderPresets).find(([, value]) => value === hour)?.[0] as TimeChoice | undefined) ?? null;
 const hours = Array.from({ length: reminderHourRange.max - reminderHourRange.min + 1 }, (_, index) => reminderHourRange.min + index);
 
-// The hour at which every notification is delivered (clock of the device's time zone, written in 24 or 12 hours as chosen in the settings): three quick choices or any hour of the day.
+// The hour at which every notification is delivered (clock of the device's time zone, written in 24 or 12 hours as chosen in the settings):
+// three quick choices in the first row and, in a row of its own (user's request, 27 November: «Altra» was a fourth segment), any other hour of the day.
 function ReminderTime({ hour, timeFormat, timeZone, onChange }: { hour: number; timeFormat: TimeFormat; timeZone: string; onChange: (hour: number) => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  // «Altra» stays selected while the chosen hour happens to equal a preset.
-  const [custom, setCustom] = useState(() => timeChoiceOf(hour) === 'custom');
-  const choice: TimeChoice = custom ? 'custom' : timeChoiceOf(hour);
-  const labels: Record<TimeChoice, string> = { morning: t("Mattina"), lunch: t("Pranzo"), evening: t("Sera"), custom: t("Altra") };
-  const pick = (next: TimeChoice) => {
-    if (next === 'custom') { setCustom(true); return; }
-    setCustom(false); onChange(reminderPresets[next]);
-  };
+  // No segment is selected while the hour is not one of the three.
+  const choice = timeChoiceOf(hour);
+  const labels: Record<TimeChoice, string> = { morning: t("Mattina"), lunch: t("Pranzo"), evening: t("Sera") };
   const time = (value: number) => formatHour(value, timeFormat);
   // The zone is named only when it is not the device's own (a chosen one): the usual case stays a plain «alle 9:00».
   const zoneNote = timeZone !== autoTimeZone && timeZone !== deviceTimeZone() ? timeZoneCity(timeZone) : null;
   return (
     <ListGroup label={t("Orario delle notifiche")}>
       <OptionRow icon={iconShapes.clock} title={t("Ora di arrivo")} subtitle={t("Vale per promemoria, riepiloghi e rinnovi.")}>
-        <SegmentedButtons label={t("Orario delle notifiche")} value={choice} onChange={pick}
-          options={(['morning', 'lunch', 'evening', 'custom'] as const).map((value) => ({ value, label: labels[value] }))} />
-        {custom && <MenuSelect label={t("Ora")} icon={iconShapes.bell} value={String(hour)} onChange={(value) => onChange(Number(value))}
-          options={hours.map((value) => ({ value: String(value), label: time(value) }))} />}
+        <SegmentedButtons label={t("Orario delle notifiche")} value={choice ?? ''} onChange={(next) => onChange(reminderPresets[next as TimeChoice])}
+          options={(['morning', 'lunch', 'evening'] as const).map((value) => ({ value, label: labels[value] }))} />
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{zoneNote ? t("Arrivano alle {p0} ({p1}).", { p0: time(hour), p1: zoneNote }) : t("Arrivano alle {p0}.", { p0: time(hour) })}</Text>
+      </OptionRow>
+      <RowDivider />
+      <OptionRow icon={iconShapes.pencil} tone="secondary" title={t("Altra ora")} subtitle={t("Scegli un’ora diversa da quelle sopra.")}>
+        <MenuSelect label={t("Ora")} icon={iconShapes.clock} value={String(hour)} onChange={(value) => onChange(Number(value))}
+          options={hours.map((value) => ({ value: String(value), label: time(value) }))} />
       </OptionRow>
     </ListGroup>
   );

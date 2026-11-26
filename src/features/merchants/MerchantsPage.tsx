@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { HelperText, IconButton, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { ListGroup } from '../../components/ActionList';
 import { AppDialog as Dialog } from '../../components/AppDialog';
 import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { DeleteAction } from '../../components/DeleteAction';
@@ -55,7 +56,7 @@ export function MerchantsPage({ merchants, backend, canWrite, notify }: Props) {
       )}
       {merchants.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun esercente.")}</Text>}
       {Boolean(filter) && shown.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessun risultato.")}</Text>}
-      <View role="list">
+      {shown.length > 0 && <ListGroup label={t("Esercenti")}><View role="list">
         {shown.map((m, index) => (
           <ListRow key={m.id} icon={null} iconless divider={index < shown.length - 1} title={m.name} subtitle={uses(m)}
             trailing={<>
@@ -68,7 +69,7 @@ export function MerchantsPage({ merchants, backend, canWrite, notify }: Props) {
                 onDelete={() => remove(m)} />
             </>} />
         ))}
-      </View>
+      </View></ListGroup>}
       {editing && <RenameDialog merchant={editing} merchants={merchants} backend={backend} notify={notify} close={() => setEditing(null)} />}
     </View>
   );

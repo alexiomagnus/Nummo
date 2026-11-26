@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom';
 import { Animated, Easing, ScrollView, StyleSheet, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import { FAB, Text, ThemeProvider, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { layerTransition } from '../theme/motion';
+import { layerTransition, transitions } from '../theme/motion';
 import { detailSpring } from '../theme/containerTransform';
 import { springEasing } from '../theme/themeTransition';
 import { layout, motion, radius, shape, spacing, spatialSpring, stateOpacity } from '../theme/tokens';
@@ -258,10 +258,12 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
     <View aria-hidden={hidden} {...{ inert: hidden ? true : undefined, dataSet: { appChrome: 'true' } }} pointerEvents={hidden ? 'none' : 'auto'}
       onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
       style={[styles.floating, { paddingBottom: bottomSpace, paddingHorizontal: barSide }, hidden && (reserveSpace ? { opacity: 0 } : styles.hidden)]}>
-      <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level3 }]}>
+      <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} style={[styles.pill, { backgroundColor: colors.elevation.level1 }]}>
+        {/* Hairline outline drawn as an overlay, so the border does not change the geometry the indicator is measured on. */}
+        <View pointerEvents="none" style={[styles.pillOutline, { borderColor: colors.outlineVariant }]} />
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
             the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}
-        {indicator && <Animated.View pointerEvents="none" style={[styles.indicator, indicator.style, { backgroundColor: colors.primaryContainer }]} />}
+        {indicator && <Animated.View pointerEvents="none" style={[styles.indicator, indicator.style, { backgroundColor: colors.primaryContainer, borderColor: colors.primary }]} />}
         {destinations.map((item, i) => {
           const active = i === shownIndex;
           const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
@@ -269,7 +271,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
             <StateLayerPressable key={item.value} layerColor={focus === null ? color : 'transparent'} radius={radius.pill} accessibilityRole="button"
               suppressPressed={suppressPressed}
               aria-current={item.value === selected ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => { haptic(); onSelect(item.value); }}
-              style={[styles.pillItem, active && !indicator && { backgroundColor: colors.primaryContainer }]}>
+              style={[styles.pillItem, active && !indicator && { backgroundColor: colors.primaryContainer, borderWidth: 1, borderColor: colors.primary }]}>
               <SvgIcon shape={item.icon} size={24} color={color} />
               <Text variant={tight ? 'labelSmall' : 'labelMedium'} numberOfLines={1} style={{ maxWidth: '100%', textAlign: 'center', color, fontWeight: active ? '700' : '500', ...(tight ? { letterSpacing: 0 } : null) }}>{item.label}</Text>
             </StateLayerPressable>
@@ -491,13 +493,31 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
   );
 }
 
+const drawerMotion = transitions([['width', motion.long]]);
+const labelMotion = transitions([['opacity', motion.medium]]);
+
 function Drawer<T extends string>({ destinations, selected, onSelect, fab, folded, onToggle }: NavProps<T> & { folded: boolean; onToggle?: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const fabIcon = useIconSource(fab?.icon);
   const toggleLabel = folded ? t('Espandi il menu') : t('Comprimi il menu');
+  // Folding is one movement (user's request, 27 November: the swap looked cheap): the drawer's width eases between 224 and 80 while the
+  // labels fade (always mounted, clipped by the drawer) and the icons stay where they are; the button at the top, which changes shape
+  // (extended ↔ icon), settles in from a little smaller. Nothing at the first render, nothing with reduced motion (the global rule).
+  const reduced = useReducedMotion();
+  const fabRef = useRef<ComponentRef<typeof View>>(null);
+  const first = useRef(true);
+  useLayoutEffect(() => {
+    if (first.current) { first.current = false; return undefined; }
+    const node = fabRef.current as unknown as HTMLElement | null;
+    if (reduced || !node || typeof node.animate !== 'function') return undefined;
+    const move = node.animate([{ opacity: 0, transform: 'scale(0.85)' }, { opacity: 1, transform: 'none' }],
+      { duration: motion.medium, easing: `cubic-bezier(${motion.easing.join(',')})`, fill: 'backwards' });
+    return () => move.cancel();
+  }, [folded, reduced]);
   return (
-    <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, folded && styles.drawerFolded, { backgroundColor: colors.background }]}>
+    <View role="navigation" aria-label={t("Sezioni")} style={[styles.drawer, folded && styles.drawerFolded, drawerMotion, { backgroundColor: colors.background }]}>
+      <View ref={fabRef} style={styles.drawerFabBox}>
       {fab && (folded ? (
         <FAB mode="flat" icon={fabIcon} accessibilityLabel={fab.label} onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
           style={[styles.railFab, styles.drawerFabFolded, { backgroundColor: colors.primaryContainer }]} />
@@ -506,24 +526,25 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab, folde
           accessibilityLabel={fab.label} onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
           style={[styles.drawerFab, { backgroundColor: colors.primaryContainer }]} />
       ))}
+      </View>
       {destinations.map((item) => {
         const active = item.value === selected;
         const color = active ? colors.onSecondaryContainer : colors.onSurfaceVariant;
         return (
           <StateLayerPressable key={item.value} layerColor={color} accessibilityRole="button" radius={radius.nav}
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
-            style={[styles.drawerItem, folded && styles.drawerItemFolded, active && { backgroundColor: colors.secondaryContainer }]}>
+            style={[styles.drawerItem, active && { backgroundColor: colors.secondaryContainer }]}>
             <SvgIcon shape={item.icon} size={24} color={color} />
-            {!folded && <Text variant="titleSmall" style={{ color, fontWeight: active ? '700' : '500' }}>{item.label}</Text>}
+            <Text variant="titleSmall" numberOfLines={1} aria-hidden={folded} style={[styles.drawerLabel, labelMotion, { color, fontWeight: active ? '700' : '500', opacity: folded ? 0 : 1 }]}>{item.label}</Text>
           </StateLayerPressable>
         );
       })}
       {onToggle && <>
       {/* At the foot, a row like the destinations (same height, shape and colours), so it reads as part of the menu. */}
       <StateLayerPressable layerColor={colors.onSurfaceVariant} accessibilityRole="button" accessibilityLabel={toggleLabel} aria-expanded={!folded}
-        radius={radius.nav} onPress={onToggle} style={[styles.drawerItem, styles.drawerToggle, folded && styles.drawerItemFolded]}>
+        radius={radius.nav} onPress={onToggle} style={[styles.drawerItem, styles.drawerToggle]}>
         <SvgIcon shape={folded ? iconShapes.chevronRight : iconShapes.chevronLeft} size={24} color={colors.onSurfaceVariant} />
-        {!folded && <Text variant="titleSmall" style={{ color: colors.onSurfaceVariant, fontWeight: '500' }}>{t('Comprimi')}</Text>}
+        <Text variant="titleSmall" numberOfLines={1} aria-hidden={folded} style={[styles.drawerLabel, labelMotion, { color: colors.onSurfaceVariant, fontWeight: '500', opacity: folded ? 0 : 1 }]}>{t('Comprimi')}</Text>
       </StateLayerPressable>
       </>}
     </View>
@@ -549,7 +570,8 @@ const styles = StyleSheet.create({
   // display: none also removes it from the accessibility tree and the Tab order while the keyboard is open.
   hidden: { display: 'none' },
   pill: { flex: 1, flexDirection: 'row', alignItems: 'center', height: layout.floatingBar, borderRadius: radius.pill, padding: pillPadding, gap: pillGap },
-  indicator: { position: 'absolute', left: pillPadding, top: pillPadding, height: layout.floatingBar - pillPadding * 2, borderRadius: radius.pill },
+  pillOutline: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, borderWidth: 1, borderRadius: radius.pill },
+  indicator: { position: 'absolute', left: pillPadding, top: pillPadding, height: layout.floatingBar - pillPadding * 2, borderRadius: radius.pill, borderWidth: 1 },
   // The rounded state layer clips itself; clipping the entire button would cut label glyphs at the bottom corners.
   pillItem: { flex: 1, minWidth: 0, height: layout.floatingBar - spacing.xs * 2, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.pill, overflow: 'visible' },
   actionSlot: { height: layout.floatingBar, overflow: 'hidden' },
@@ -559,11 +581,12 @@ const styles = StyleSheet.create({
   railFab: { marginTop: spacing.lg, marginBottom: spacing.md, borderRadius: radius.button },
   railItem: { width: layout.railWidth - spacing.sm, alignItems: 'center', gap: spacing.xs, paddingVertical: 4 },
   railIndicator: { overflow: 'hidden', width: 56, height: 32, borderRadius: radius.nav, alignItems: 'center', justifyContent: 'center' },
-  drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.lg + 4 },
+  drawer: { width: layout.drawerWidth, padding: spacing.md, paddingTop: spacing.lg, gap: spacing.lg + 4, overflow: 'hidden' },
+  drawerFabBox: { alignSelf: 'stretch' },
+  drawerLabel: { flexShrink: 0, whiteSpace: 'nowrap' } as object,
   drawerFab: { alignSelf: 'flex-start', marginTop: spacing.md, marginBottom: spacing.md, marginLeft: spacing.xs, borderRadius: radius.button },
-  drawerFolded: { width: layout.railWidth, alignItems: 'center', paddingHorizontal: spacing.sm },
+  drawerFolded: { width: layout.railWidth },
   drawerToggle: { marginTop: 'auto' },
-  drawerFabFolded: { alignSelf: 'center', marginLeft: 0, marginTop: 0, marginBottom: 0 },
-  drawerItemFolded: { width: 56, paddingHorizontal: 0, justifyContent: 'center' },
-  drawerItem: { height: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
+  drawerFabFolded: { alignSelf: 'flex-start', marginLeft: 0, marginTop: 0, marginBottom: 0 },
+  drawerItem: { height: 56, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, overflow: 'hidden' },
 });

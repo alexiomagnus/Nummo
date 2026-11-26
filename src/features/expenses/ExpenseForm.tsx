@@ -1,3 +1,4 @@
+import { ListGroup, RowBody } from '../../components/ActionList';
 import { useI18n } from '../../i18n/I18nProvider';
 import { existingCategory } from '../categories/preferredCategories';
 import { memo, useEffect, useRef, useState } from 'react';
@@ -191,6 +192,8 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
   return (
     <View style={styles.page}>
     <View style={[styles.form, desktop && styles.formDesktop]}>
+      {/* The fields in one grouped box, like the other pages (user's request, 27 November). */}
+      <ListGroup label={t("Dettagli della spesa")}><RowBody>
       {/* A scan only fills the fields below after a review: saving stays on «Salva», with the usual validation. No message
           when the fields are filled (removed on request, 17 November): the filled fields speak for themselves. */}
       {/* «Scansiona scontrino» and «Template» share the first row (user's request, 21 November: the Template field above the
@@ -215,6 +218,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
         extra={repeat} fund={fundField ?? undefined} fundBelow={size === 'compact'}
         merchant={{ value: draft.merchant ?? '', merchants, error: errors.merchant, onChange: (merchant) => update({ merchant }) }}
         onChange={(field, value) => update({ [field]: value })} onBlur={validateField} />
+      </RowBody></ListGroup>
       {store.error && <HelperText type="error" accessibilityRole="alert">{t(store.error)}</HelperText>}
       {submission.status === 'rejected' && (
         <HelperText type="error" accessibilityRole="alert">{t(submission.message)}</HelperText>

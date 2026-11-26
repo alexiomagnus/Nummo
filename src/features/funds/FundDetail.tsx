@@ -118,7 +118,7 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
         the big number on top (it was the same figure twice). Every row stays, zeros included. */}
     <View role="list" accessibilityLabel={t("Riepilogo del mese")} style={[styles.blocks, !wide && styles.blocksPhone]}>
       <View style={styles.block}>
-        <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[muted, styles.blockTitle]}>{t("Entrate")}</Text>
+        <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[{ color: colors.primary }, styles.blockTitle]}>{t("Entrate")}</Text>
         <InfoGroup rows={[
           total('income', t("Entrata"), item.income, 'in'),
           // The month's recharge: received or still due within the month (forecast for future months).
@@ -127,7 +127,7 @@ function FundContent({ item, monthLabel, isDefault, canWrite, onEdit, onArchive,
         ]} />
       </View>
       <View style={styles.block}>
-        <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[muted, styles.blockTitle]}>{t("Uscite")}</Text>
+        <Text variant="titleSmall" accessibilityRole="header" aria-level={2} style={[{ color: colors.primary }, styles.blockTitle]}>{t("Uscite")}</Text>
         <InfoGroup rows={[
           total('subscriptions', t("Abbonamenti"), item.subscriptions, 'out'),
           total('singles', t("Spese"), item.singles, 'out'),

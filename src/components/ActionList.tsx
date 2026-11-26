@@ -17,7 +17,7 @@ export function ListGroup({ label, plain = false, children, footer }: { label?: 
     <View style={styles.group} {...({ role: 'region', 'aria-label': label } as object)}>
       {label !== undefined && (plain
         ? <Text variant="titleMedium" style={styles.plainLabel} accessibilityRole="header" aria-level={2}>{label}</Text>
-        : <Text variant="labelLarge" style={[styles.label, { color: colors.onSurfaceVariant }]} accessibilityRole="header" aria-level={2}>
+        : <Text variant="labelLarge" style={[styles.label, { color: colors.primary }]} accessibilityRole="header" aria-level={2}>
           {label.toLocaleUpperCase()}</Text>)}
       <View style={[styles.box, { backgroundColor: colors.elevation.level1, borderColor: colors.outlineVariant }]}>{children}</View>
       {footer}
