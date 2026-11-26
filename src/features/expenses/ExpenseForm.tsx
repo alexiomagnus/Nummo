@@ -194,9 +194,9 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
     <View style={[styles.form, desktop && styles.formDesktop]}>
       {/* «Scansiona scontrino» and «Template» share the first row (user's request, 21 November: the Template field above the
           repeat pushed «Salva» under the navigation on phones); without the scan, Template takes its place. At every size each
-          is half of the row. Outside any box, no outline (user's request, 27 November). A scan only fills the fields after a review:
+          is half of the row. In a box of its own, with the outline (user's request, 27 November). A scan only fills the fields after a review:
           saving stays on «Salva». */}
-      {(scanEnabled || templateShown) && <View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
+      {(scanEnabled || templateShown) && <ListGroup><RowBody tight={desktop}><View style={[styles.scan, size === 'compact' && styles.scanCompact]}>
         {scanEnabled && <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={styles.scanHalf}
           compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
           accessibilityLabel={t("Scansiona scontrino")}
@@ -205,7 +205,7 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
           value={templates.some((item) => item.id === templateId) ? templateId : ''} onChange={applyTemplate}
           style={styles.scanHalf} />}
         {!(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
-      </View>}
+      </View></RowBody></ListGroup>}
       {/* The fields in one grouped box, like the other pages, with its label on every size (user's request, 27 November). */}
       <ListGroup label={t("Dettagli della spesa")}><RowBody tight={desktop}>
       {/* Templates turned on but none saved yet: the button cannot appear, so say why. */}
