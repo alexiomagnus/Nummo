@@ -6,8 +6,10 @@ import { shapeMorph } from '../theme/motion';
 import { glassOf } from '../theme/theme';
 import { groupGap, radius, spacing } from '../theme/tokens';
 import { StateLayerPressable } from './StateLayerPressable';
+import { SvgIcon } from './SvgIcon';
 
-export type Choice<T extends string> = { value: T; label: string; icon?: ReactNode };
+// `shape` (an `iconShapes` path) is drawn in the tile's own ink; `icon` is any node, drawn as given.
+export type Choice<T extends string> = { value: T; label: string; icon?: ReactNode; shape?: string };
 type Props<T extends string> = {
   options: readonly Choice<T>[];
   value: T | '';
@@ -41,10 +43,10 @@ export function ChoiceChips<T extends string>({ options, value, onChange, allowD
             onPress={() => onChange(selected && allowDeselect ? '' : option.value)}
             accessibilityRole="radio" aria-checked={selected} aria-disabled={disabled}
             accessibilityLabel={`${option.label}${selected ? t(", selezionata") : ''}`}
-            style={[styles.chip, corners, option.icon ? styles.withIcon : null, selected
+            style={[styles.chip, corners, option.icon || option.shape ? styles.withIcon : null, selected
               ? { backgroundColor: colors.primaryContainer, borderColor: colors.primary }
               : { backgroundColor: glass.glass, borderColor: glass.glassBorder }, shapeMorph]}>
-            {option.icon}
+            {option.shape ? <SvgIcon shape={option.shape} size={24} color={color} /> : option.icon}
             <Text variant="labelLarge" style={[styles.label, { color, fontWeight: selected ? '700' : '500' }]}>{option.label}</Text>
           </StateLayerPressable>
         );

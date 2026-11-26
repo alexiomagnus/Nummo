@@ -49,15 +49,16 @@ type Props = {
   lockPin?: boolean;
 };
 
-const themeOptions: { value: ThemeChoice; label: string }[] = [
-  { value: 'system', label: 'Sistema' }, { value: 'light', label: 'Chiaro' }, { value: 'dark', label: 'Scuro' },
+const themeOptions: { value: ThemeChoice; label: string; shape: string }[] = [
+  { value: 'system', label: 'Sistema', shape: iconShapes.smartphone }, { value: 'light', label: 'Chiaro', shape: iconShapes.sun },
+  { value: 'dark', label: 'Scuro', shape: iconShapes.moon },
 ];
 // «Material You» only where the phone gives its palettes (Android app 0.3.11+), first and the default there (27 November).
 // A function, not a constant: the palettes are read in App.tsx after the imports have run, so a module-level check was always false
 // (the option never showed in the app 0.3.11–0.3.13).
-const colorModeOptions = (): { value: ColorMode; label: string }[] => [
-  ...(hasSystemColors() ? [{ value: 'system' as const, label: 'Material You' }] : []),
-  { value: 'palette', label: 'Palette' }, { value: 'mono', label: 'Monocolore' },
+const colorModeOptions = (): { value: ColorMode; label: string; shape: string }[] => [
+  ...(hasSystemColors() ? [{ value: 'system' as const, label: 'Material You', shape: iconShapes.sparkles }] : []),
+  { value: 'palette', label: 'Palette', shape: iconShapes.palette }, { value: 'mono', label: 'Monocolore', shape: iconShapes.contrast },
 ];
 const fontOptions: { value: FontChoice; label: string }[] = [
   { value: 'google', label: 'Google Sans' }, { value: 'system', label: 'Sistema' },
