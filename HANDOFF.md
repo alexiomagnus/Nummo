@@ -126,6 +126,10 @@ Su richiesta, commit `685dfe6`, pubblicato solo su Hosting (Rules invariate; «D
 - Lista scontrini: impostazioni AI nascondibili. Aggiornamento Android: schermata ridotta (versione e «Installata: X», senza note).
 - Commento di `AppShell.tsx` sistemato (niente più `wholeRows.ts`).
 
+## App Android 0.3.9 — 27 novembre 2026, sera
+
+Su richiesta, commit `65d4e83` (solo `versionCode` 12 e `versionName` 0.3.9: nessuna modifica nativa dalla 0.3.7). Release GitHub `android-v0.3.9` «Latest» (APK firmata `nummo-0.3.9.apk`, 9 238 420 byte, SHA-256 `0d17a7d0…d71e`, uguale al `digest` dell'API; certificato `00b1c85c…0fcf` verificato con `apksigner` sul file locale; tag annotato su `65d4e83`). Le note hanno nella prima sezione tre voci sulle novità, mostrate dalla schermata «Aggiornamento disponibile». Non ancora installata dall'utente: una 0.3.8 deve riceverla dall'app stessa.
+
 ## Spese e dettaglio del fondo rivisti, barre su due colonne — 27 novembre 2026, sera
 
 Su richiesta, commit `1db4e9b` e il successivo (barre e dettaglio del fondo), pubblicati solo su Hosting (Rules invariate). `npm run check` OK (617/617); non provato su dispositivo.
