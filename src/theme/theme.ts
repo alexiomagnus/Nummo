@@ -15,7 +15,7 @@ export function createTheme(dark: boolean, reduceMotion = false, preferences?: P
     positive: dark ? positiveColors.dark : positiveColors.light,
     card: cardColor(s, dark),
     // The accent as shown, not read (avatar ring «Colore dell'app»): see accentSwatches.
-    accentSwatch: accentSwatches(preferences?.accent ?? 'blue', 'mono', dark)[0]!,
+    accentSwatch: accentSwatches(preferences?.accent ?? 'blue', preferences?.colorMode === 'system' ? 'system' : 'mono', dark)[0]!,
     ...dialogColors(s, dark),
     ...glassColors(s, dark),
   };

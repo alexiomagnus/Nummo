@@ -92,6 +92,27 @@ export function androidAppVersion(scope: unknown = globalThis): AndroidAppVersio
   } catch { return null; }
 }
 
+// Optional too (version 0.3.11, 27 November, on request): Material You, the system's tonal palettes (Android 12+). Five palettes
+// (accent 1, 2, 3, neutral 1, 2) of the thirteen tones of Android's resources, every value a #RRGGBB; anything else gives null
+// (an older app, Android 11, a browser): the page then offers no Material You.
+export const systemToneKeys = ['0', '10', '50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '1000'] as const;
+export const systemPaletteNames = ['a1', 'a2', 'a3', 'n1', 'n2'] as const;
+export type SystemColors = Record<(typeof systemPaletteNames)[number], Record<(typeof systemToneKeys)[number], string>>;
+export function androidSystemColors(scope: unknown = globalThis): SystemColors | null {
+  const bridge = androidBridge(scope) as (AndroidBridge & { systemColors?: unknown }) | undefined;
+  if (!bridge || typeof bridge.systemColors !== 'function') return null;
+  try {
+    const raw = String((bridge.systemColors as () => unknown).call(bridge));
+    if (raw === '') return null;
+    const value = JSON.parse(raw) as Record<string, Record<string, unknown> | undefined>;
+    for (const name of systemPaletteNames) for (const tone of systemToneKeys) {
+      const color = value[name]?.[tone];
+      if (typeof color !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(color)) return null;
+    }
+    return value as unknown as SystemColors;
+  } catch { return null; }
+}
+
 // Optional too (version 0.3.6, 27 November, on request): updates of the app from the repository's GitHub Releases
 // (Updater.kt). The app downloads the APK of a release (only from this repository's downloads), checks its SHA-256 when the
 // release gives one, its package, its version and that it is signed with the same key as the installed app, then hands it to

@@ -20,6 +20,9 @@ import { usePreferences } from './src/features/settings/usePreferences';
 import { switchTheme } from './src/theme/themeTransition';
 import { AccessDenied } from './src/features/session/AccessDenied';
 import { FirebaseConnect, OwnerSetup } from './src/features/session/FirebaseSetup';
+import { setSystemColors } from './src/theme/palette';
+import { androidSystemColors } from './src/services/androidApp';
+import { OrbsProvider } from './src/components/Orbs';
 import { inAndroidApp } from './src/services/androidApp';
 import { switchFirebase } from './src/features/session/firebaseConnection';
 import { SignIn, leaveGuide } from './src/features/session/SignIn';
@@ -64,6 +67,9 @@ const startMode = initialStorageMode(readStorageMode(), readSessionHint());
 // Firebase is started only for the Advanced mode: the Standard mode never contacts it.
 if (!configMissing && startMode === 'advanced') warmUpServices();
 
+// Material You: the phone's palettes, read once before the first render (Android app 0.3.11+; null elsewhere).
+setSystemColors(androidSystemColors());
+
 export default function App() {
   const systemScheme = useColorScheme();
   const reduceMotion = useReducedMotion();
@@ -85,6 +91,7 @@ export default function App() {
     <I18nProvider language={preferences.language}>
       <IconStyleProvider style={preferences.iconStyle}>
         <HapticsProvider enabled={preferences.haptics}>
+        <OrbsProvider value={preferences.background}>
         <SafeAreaProvider initialMetrics={safeArea}>
           <PaperProvider theme={theme}>
             <GlobalStyle mode={preferences.theme} accent={accent} colorMode={colorMode} amoled={amoled} />
@@ -95,6 +102,7 @@ export default function App() {
             <AppLockScreen />
           </PaperProvider>
         </SafeAreaProvider>
+        </OrbsProvider>
         </HapticsProvider>
       </IconStyleProvider>
     </I18nProvider>

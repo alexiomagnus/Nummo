@@ -68,6 +68,28 @@ class NummoBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun appVersion(): String = "{\"name\":\"${BuildConfig.VERSION_NAME}\",\"code\":${BuildConfig.VERSION_CODE}}"
 
+    // Material You (0.3.11, 27 November, on request): the system's tonal palettes (Android 12+, taken from the wallpaper) as JSON
+    // `{"a1":{"0":"#FFFFFF",…,"1000":"#000000"},"a2":…,"a3":…,"n1":…,"n2":…}`; "" before Android 12. The page validates it.
+    @JavascriptInterface
+    fun systemColors(): String {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return ""
+        val tones = intArrayOf(0, 10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
+        val ids = mapOf(
+            "a1" to intArrayOf(android.R.color.system_accent1_0, android.R.color.system_accent1_10, android.R.color.system_accent1_50, android.R.color.system_accent1_100, android.R.color.system_accent1_200, android.R.color.system_accent1_300, android.R.color.system_accent1_400, android.R.color.system_accent1_500, android.R.color.system_accent1_600, android.R.color.system_accent1_700, android.R.color.system_accent1_800, android.R.color.system_accent1_900, android.R.color.system_accent1_1000),
+            "a2" to intArrayOf(android.R.color.system_accent2_0, android.R.color.system_accent2_10, android.R.color.system_accent2_50, android.R.color.system_accent2_100, android.R.color.system_accent2_200, android.R.color.system_accent2_300, android.R.color.system_accent2_400, android.R.color.system_accent2_500, android.R.color.system_accent2_600, android.R.color.system_accent2_700, android.R.color.system_accent2_800, android.R.color.system_accent2_900, android.R.color.system_accent2_1000),
+            "a3" to intArrayOf(android.R.color.system_accent3_0, android.R.color.system_accent3_10, android.R.color.system_accent3_50, android.R.color.system_accent3_100, android.R.color.system_accent3_200, android.R.color.system_accent3_300, android.R.color.system_accent3_400, android.R.color.system_accent3_500, android.R.color.system_accent3_600, android.R.color.system_accent3_700, android.R.color.system_accent3_800, android.R.color.system_accent3_900, android.R.color.system_accent3_1000),
+            "n1" to intArrayOf(android.R.color.system_neutral1_0, android.R.color.system_neutral1_10, android.R.color.system_neutral1_50, android.R.color.system_neutral1_100, android.R.color.system_neutral1_200, android.R.color.system_neutral1_300, android.R.color.system_neutral1_400, android.R.color.system_neutral1_500, android.R.color.system_neutral1_600, android.R.color.system_neutral1_700, android.R.color.system_neutral1_800, android.R.color.system_neutral1_900, android.R.color.system_neutral1_1000),
+            "n2" to intArrayOf(android.R.color.system_neutral2_0, android.R.color.system_neutral2_10, android.R.color.system_neutral2_50, android.R.color.system_neutral2_100, android.R.color.system_neutral2_200, android.R.color.system_neutral2_300, android.R.color.system_neutral2_400, android.R.color.system_neutral2_500, android.R.color.system_neutral2_600, android.R.color.system_neutral2_700, android.R.color.system_neutral2_800, android.R.color.system_neutral2_900, android.R.color.system_neutral2_1000),
+        )
+        return try {
+            ids.entries.joinToString(",", "{", "}") { (name, colors) ->
+                "\"$name\":" + tones.indices.joinToString(",", "{", "}") { i ->
+                    "\"${tones[i]}\":\"" + String.format("#%06X", activity.getColor(colors[i]) and 0xFFFFFF) + "\""
+                }
+            }
+        } catch (e: Exception) { "" }
+    }
+
     // Google sign-in (GoogleSignIn.kt): the project the app is registered with ("" without a client ID: Standard only),
     // the token through `window.nummoAndroidResult(id, outcome, idToken)`, and the account forgotten after «Esci».
     @JavascriptInterface

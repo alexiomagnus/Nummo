@@ -2,12 +2,60 @@
 // `mono`: every role shares the accent hue. `palette`: secondary and tertiary roles rotate to
 // other hues, so selected states, chips and icon tiles read as a small multi-colour palette.
 import { schemes, type Scheme } from './tokens.ts';
+import { systemToneKeys, type SystemColors } from '../services/androidApp.ts';
 
 // «Grigio» (id `graphite`, kept so a saved choice still reads) is first and the default since 27 November (user's request): a
 // neutral grey, no hue at all.
 export const accents = ['graphite', 'blue', 'mint', 'violet', 'rose', 'amber'] as const;
 export type Accent = (typeof accents)[number];
-export type ColorMode = 'mono' | 'palette';
+// `system` = Material You (Android app only, from 0.3.11): the colours of the phone's wallpaper (see `setSystemColors`).
+export type ColorMode = 'mono' | 'palette' | 'system';
+
+// The system's tonal palettes, set once at start by App.tsx from the Android bridge; null elsewhere. Without them «Material You»
+// reads as «Palette» with «Grigio».
+let systemColors: SystemColors | null = null;
+export const setSystemColors = (colors: SystemColors | null) => { systemColors = colors; };
+export const hasSystemColors = () => systemColors !== null;
+
+// M3 tone t (0 black … 100 white) from an Android tonal palette (resource tones 0 = white … 1000 = black, i.e. tone = 100 − n/10);
+// tones between two resources are mixed.
+function toneOf(palette: SystemColors['a1'], t: number): string {
+  const n = (100 - t) * 10;
+  const keys = systemToneKeys.map(Number);
+  const lower = Math.max(...keys.filter((key) => key <= n));
+  const upper = Math.min(...keys.filter((key) => key >= n));
+  const at = (key: number) => palette[String(key) as keyof SystemColors['a1']];
+  return lower === upper ? at(lower) : mixColors(at(lower), at(upper), (upper - n) / (upper - lower));
+}
+
+// The Material 3 role mapping over the system palettes (same tones as the generated schemes' source, M3 baseline).
+function systemScheme(dark: boolean): Scheme {
+  const { a1, a2, a3, n1, n2 } = systemColors!;
+  const e = schemes[dark ? 'dark' : 'light'];
+  const common = { error: e.error, onError: e.onError, errorContainer: e.errorContainer, onErrorContainer: e.onErrorContainer };
+  if (!dark) return {
+    ...common,
+    primary: toneOf(a1, 40), onPrimary: toneOf(a1, 100), primaryContainer: toneOf(a1, 90), onPrimaryContainer: toneOf(a1, 10),
+    secondary: toneOf(a2, 40), onSecondary: toneOf(a2, 100), secondaryContainer: toneOf(a2, 90), onSecondaryContainer: toneOf(a2, 10),
+    tertiary: toneOf(a3, 40), onTertiary: toneOf(a3, 100), tertiaryContainer: toneOf(a3, 90), onTertiaryContainer: toneOf(a3, 10),
+    background: toneOf(n1, 98), onBackground: toneOf(n1, 10), surface: toneOf(n1, 98), onSurface: toneOf(n1, 10),
+    surfaceVariant: toneOf(n2, 90), onSurfaceVariant: toneOf(n2, 30), outline: toneOf(n2, 50), outlineVariant: toneOf(n2, 80),
+    inverseSurface: toneOf(n1, 20), inverseOnSurface: toneOf(n1, 95), inversePrimary: toneOf(a1, 80),
+    surfaceContainerLowest: toneOf(n1, 100), surfaceContainerLow: toneOf(n1, 96), surfaceContainer: toneOf(n1, 94),
+    surfaceContainerHigh: toneOf(n1, 92), surfaceContainerHighest: toneOf(n1, 90),
+  };
+  return {
+    ...common,
+    primary: toneOf(a1, 80), onPrimary: toneOf(a1, 20), primaryContainer: toneOf(a1, 30), onPrimaryContainer: toneOf(a1, 90),
+    secondary: toneOf(a2, 80), onSecondary: toneOf(a2, 20), secondaryContainer: toneOf(a2, 30), onSecondaryContainer: toneOf(a2, 90),
+    tertiary: toneOf(a3, 80), onTertiary: toneOf(a3, 20), tertiaryContainer: toneOf(a3, 30), onTertiaryContainer: toneOf(a3, 90),
+    background: toneOf(n1, 6), onBackground: toneOf(n1, 90), surface: toneOf(n1, 6), onSurface: toneOf(n1, 90),
+    surfaceVariant: toneOf(n2, 30), onSurfaceVariant: toneOf(n2, 80), outline: toneOf(n2, 60), outlineVariant: toneOf(n2, 30),
+    inverseSurface: toneOf(n1, 90), inverseOnSurface: toneOf(n1, 20), inversePrimary: toneOf(a1, 40),
+    surfaceContainerLowest: toneOf(n1, 4), surfaceContainerLow: toneOf(n1, 10), surfaceContainer: toneOf(n1, 12),
+    surfaceContainerHigh: toneOf(n1, 17), surfaceContainerHighest: toneOf(n1, 22),
+  };
+}
 
 // Modal surfaces have their own role: changing them must not recolour navigation or menus.
 export const dialogColors = (scheme: Scheme, dark: boolean) => ({
@@ -37,16 +85,24 @@ function hex(h: number, s: number, l: number): string {
   return `#${channel(0)}${channel(8)}${channel(4)}`.toUpperCase();
 }
 
+// Hue and saturation multiplier of the secondary and tertiary of «Grigio» with «Palette».
+const greyPalette = [{ hue: 215, sat: 0.8 }, { hue: 32, sat: 0.8 }] as const;
+
 function generate(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
   const { hue: h, sat: k } = accentSpec[accent];
-  const palette = mode === 'palette' && accent !== 'graphite';
-  const hs = palette ? (h + 45) % 360 : h;
-  const ht = palette ? (h + 150) % 360 : h;
+  const palette = mode === 'palette';
+  // «Grigio» in palette mode (user's request, 27 November): the primary and every surface stay neutral grey, the secondary and
+  // tertiary take a soft blue and a warm amber (`greyPalette`), so selections, chips and icon tiles carry colour on a grey base.
+  const grey = palette && accent === 'graphite';
+  const hs = grey ? greyPalette[0].hue : palette ? (h + 45) % 360 : h;
+  const ht = grey ? greyPalette[1].hue : palette ? (h + 150) % 360 : h;
   const ks = palette ? 1.5 : 1;
+  const ksec = grey ? greyPalette[0].sat : k * ks;
+  const kter = grey ? greyPalette[1].sat : k * ks;
   const error = schemes[dark ? 'dark' : 'light'];
   const p = (s: number, l: number) => hex(h, s * k, l);
-  const sec = (s: number, l: number) => hex(hs, s * k * ks, l);
-  const ter = (s: number, l: number) => hex(ht, s * k * ks, l);
+  const sec = (s: number, l: number) => hex(hs, s * ksec, l);
+  const ter = (s: number, l: number) => hex(ht, s * kter, l);
   const common = {
     error: error.error, onError: error.onError, errorContainer: error.errorContainer, onErrorContainer: error.onErrorContainer,
   };
@@ -101,10 +157,11 @@ function generate(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
 // (user's report, 23 November: in light they were the text-safe primary, navy, plum, maroon and brown). In light each hue
 // takes the lightest vivid tone with 3:1 on the background (WCAG non-text contrast), like the seed colours of a Material
 // You picker; in dark the scheme's own primary, secondary and tertiary, already light and vivid there. One colour, or three
-// in palette mode (graphite has one hue only).
+// in palette mode (graphite: neutral grey, soft blue, amber).
 export function accentSwatches(accent: Accent, mode: ColorMode, dark: boolean): string[] {
   const scheme = buildScheme(accent, mode, dark);
-  const multi = mode === 'palette' && accent !== 'graphite';
+  if (mode === 'system' && systemColors) return [scheme.primary, scheme.secondary, scheme.tertiary];
+  const multi = mode === 'palette';
   if (dark) return multi ? [scheme.primary, scheme.secondary, scheme.tertiary] : [scheme.primary];
   const { hue, sat } = accentSpec[accent];
   const vivid = (h: number, s: number) => {
@@ -115,6 +172,12 @@ export function accentSwatches(accent: Accent, mode: ColorMode, dark: boolean): 
     return hex(h, s * sat, 15);
   };
   const first = vivid(hue, 72);
+  if (accent === 'graphite') {
+    const tint = (index: 0 | 1, s: number) => { const { hue: h, sat: k } = greyPalette[index];
+      for (let l = 70; l > 15; l -= 0.5) { const color = hex(h, s * k, l); if (contrastRatio(color, scheme.background) >= swatchContrast) return color; }
+      return hex(h, s * k, 15); };
+    return multi ? [first, tint(0, 60), tint(1, 66)] : [first];
+  }
   return multi ? [first, vivid((hue + 45) % 360, 60), vivid((hue + 150) % 360, 66)] : [first];
 }
 
@@ -130,7 +193,12 @@ function amoledOf(scheme: Scheme): Scheme {
     surfaceContainerLow: mixColors(scheme.surfaceContainerLow, '#000000', 0.5) };
 }
 
-export function buildScheme(accent: Accent, mode: ColorMode, dark: boolean, amoled = false): Scheme {
+export function buildScheme(accent: Accent, requested: ColorMode, dark: boolean, amoled = false): Scheme {
+  // Material You without the system palettes (browser, Android 11, an older app) is «Palette» with «Grigio» (the default look).
+  const system = requested === 'system' && systemColors !== null;
+  const mode: ColorMode = requested === 'system' && !system ? 'palette' : requested;
+  if (requested === 'system' && !system) accent = 'graphite';
+  if (system) { const scheme = systemScheme(dark); return dark && amoled ? amoledOf(scheme) : scheme; }
   const scheme = accent === 'mint' && mode === 'mono' ? { ...schemes[dark ? 'dark' : 'light'] } : generate(accent, mode, dark);
   if (mode === 'mono') {
     scheme.tertiary = scheme.secondary;

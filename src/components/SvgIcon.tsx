@@ -8,6 +8,12 @@ export function SvgIcon({ shape, size, color }: { shape: string; size: number; c
 }
 
 export const iconShapes = {
+  circle: '<circle cx="12" cy="12" r="8"/>',
+  rings: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" stroke-width="2.6"/>',
+  sparkles: '<path d="M10 4l1.8 4.7L16.5 10.5l-4.7 1.8L10 17l-1.8-4.7L3.5 10.5l4.7-1.8L10 4Z"/><path d="M18 14l.9 2.1 2.1.9-2.1.9L18 20l-.9-2.1-2.1-.9 2.1-.9L18 14Z"/>',
+  snow: '<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9M9.5 4.5 12 6.5l2.5-2M9.5 19.5l2.5-2 2.5 2"/>',
+  particles: '<circle cx="8" cy="15" r="3"/><circle cx="16" cy="8" r="2"/><circle cx="17" cy="17" r="1.4"/><path d="M10.4 13l4-3.4"/>',
+  eyeOff: '<path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a12 12 0 0 1-2.4 3.1M6.5 7.5A12 12 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9 9 0 0 0 3.2-.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
   rotateCcw: '<path d="M3 10a9 9 0 1 1 2.7 8.4M3 4v6h6"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/>',
   moon: '<path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/>',

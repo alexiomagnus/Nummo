@@ -12,13 +12,14 @@ import { ChoiceChips } from '../../components/ChoiceChips';
 import { PageHeader } from '../../components/PageHeader';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { accentLabels, accentSwatches, accents, type ColorMode } from '../../theme/palette';
+import { accentLabels, accentSwatches, accents, hasSystemColors, type ColorMode } from '../../theme/palette';
 import { layout, radius, spacing } from '../../theme/tokens';
 import type { FontChoice, Preferences, ThemeChoice } from './preferences';
 import type { TimeFormat } from '../../domain/timeFormat';
 import { deviceTimeZone } from '../../domain/pushSchedule';
 import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
+import { backgroundLabels, backgrounds, type Background } from '../../theme/background';
 import { hasHaptics } from '../../theme/haptics';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { ProfileImageCard, localProfileScope, type ProfileScope } from './ProfileImageCard';
@@ -51,8 +52,9 @@ type Props = {
 const themeOptions: { value: ThemeChoice; label: string }[] = [
   { value: 'system', label: 'Sistema' }, { value: 'light', label: 'Chiaro' }, { value: 'dark', label: 'Scuro' },
 ];
+// «Material You» only where the phone gives its palettes (Android app 0.3.11+), first and the default there (27 November).
 const modeOptions: { value: ColorMode; label: string }[] = [
-  // «Palette» first: it is the default (22 November).
+  ...(hasSystemColors() ? [{ value: 'system' as const, label: 'Material You' }] : []),
   { value: 'palette', label: 'Palette' }, { value: 'mono', label: 'Monocolore' },
 ];
 const fontOptions: { value: FontChoice; label: string }[] = [
@@ -68,6 +70,9 @@ const iconPreview: CategoryIcon[] = ['cart', 'popcorn', 'shirt', 'train'];
 // Every change applies at once and is kept in this browser; nothing here touches expense data.
 // Sections stack on phones (Lingua, Carattere, Formato dell'ora, Fuso orario, then Tema and Colore); when the page is wide enough, Lingua,
 // Carattere, Formato dell'ora and Fuso orario form the left column and Tema and Colore the right one, and the wider sections follow at full width.
+const backgroundIcons: Record<Background, string> = { circles: iconShapes.circle, rings: iconShapes.rings, space: iconShapes.sparkles,
+  snow: iconShapes.snow, particles: iconShapes.particles, none: iconShapes.eyeOff };
+
 export function SettingsPage({ preferences, dark, onChange, onReset, onDone, archiveSections, onResetArchive, profile, lockPin = false }: Props) {
   // «Ripristina predefiniti» brings back the defaults of everything on this page (user's request, 21 November): the
   // preferences, the profile picture and, with an archive open, its preferred categories and fund. The receipt scan moved to
@@ -116,9 +121,16 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         <ToggleRow icon={iconShapes.moon} title={t("Modalità AMOLED")} subtitle={t("Nel tema scuro lo sfondo è nero puro: consuma meno sugli schermi OLED.")}
           value={preferences.amoled} onChange={(amoled) => onChange({ amoled })} />
         <RowDivider />
+        <OptionRow icon={iconShapes.sparkles} title={t("Animazione dello sfondo")}>
+          <MenuSelect panel whole label={t("Animazione")} icon={iconShapes.sparkles} value={preferences.background}
+            options={backgrounds.map((value) => ({ value, label: t(backgroundLabels[value]),
+              icon: <SvgIcon shape={backgroundIcons[value]} size={20} color={colors.onSurfaceVariant} /> }))}
+            onChange={(background) => onChange({ background })} />
+        </OptionRow>
+        <RowDivider />
         <OptionRow icon={iconShapes.palette} title={t("Colore")}>
-          <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
-          <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
+          <ChoiceChips label={t("Modalità colore")} options={modeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode === 'system' && !hasSystemColors() ? 'palette' : preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
+          {!(preferences.colorMode === 'system' && hasSystemColors()) && <View style={styles.swatches} role="radiogroup" aria-label={t("Colore principale")}>
             {accents.map((accent) => {
               const selected = accent === preferences.accent;
               // Shown colours of the accent (accentSwatches): in light the dots were the text-safe roles, far too dark.
@@ -138,7 +150,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
                 </StateLayerPressable>
               );
             })}
-          </View>
+          </View>}
         </OptionRow>
         <RowDivider />
         <OptionRow icon={iconShapes.typeIcon} title={t("Carattere")}>

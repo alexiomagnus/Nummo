@@ -123,13 +123,46 @@ test('preferenze: l’anello dell’avatar non è più una preferenza, un valore
   assert.equal('avatarRing' in parsePreferences('{"avatarRing":true}'), false);
 });
 
-test('preferenze: «Palette» predefinita dal 22 novembre, una scelta salvata resta', () => {
-  assert.equal(defaultPreferences.colorMode, 'palette');
-  assert.equal(parsePreferences('{}').colorMode, 'palette');
+test('preferenze: «Material You» predefinito dal 27 novembre (senza i colori di sistema vale «Palette»), una scelta salvata resta', () => {
+  assert.equal(defaultPreferences.colorMode, 'system');
+  assert.equal(parsePreferences('{}').colorMode, 'system');
+  assert.equal(parsePreferences('{"colorMode":"palette"}').colorMode, 'palette');
   assert.equal(parsePreferences('{"colorMode":"mono"}').colorMode, 'mono');
 });
 
 test('«Apri a metà schermo» tolto: un valore salvato si ignora', () => {
   assert.equal('halfScreens' in defaultPreferences, false);
   assert.equal('halfScreens' in parsePreferences(JSON.stringify({ halfScreens: true })), false);
+});
+
+test('animazione dello sfondo: sei scelte, «Cerchi» di base, il vecchio interruttore spento vale «Nessuna»', async () => {
+  const { parseBackground, backgrounds } = await import('../src/theme/background.ts');
+  assert.deepEqual(backgrounds, ['circles', 'rings', 'space', 'snow', 'particles', 'none']);
+  assert.equal(parseBackground(undefined, undefined), 'circles');
+  assert.equal(parseBackground('snow', true), 'snow');
+  assert.equal(parseBackground(undefined, false), 'none');
+  assert.equal(parseBackground('rain', undefined), 'circles');
+});
+
+test('Material You: palette di sistema validate, schema dai toni, senza palette vale «Palette» con «Grigio»', async () => {
+  const { androidSystemColors, systemPaletteNames, systemToneKeys } = await import('../src/services/androidApp.ts');
+  const { buildScheme, setSystemColors, hasSystemColors, contrastRatio } = await import('../src/theme/palette.ts');
+  const tones = Object.fromEntries(systemToneKeys.map((key, i) => [key, `#${(i * 20).toString(16).padStart(2, '0').repeat(3)}`]));
+  const palettes = Object.fromEntries(systemPaletteNames.map((name) => [name, tones]));
+  const bridge = (json: string) => ({ NummoAndroid: { haptic() {}, setSystemBars() {}, saveFile() {}, canAuthenticate() {}, authenticate() {}, cancelAuthentication() {}, systemColors: () => json } });
+  assert.ok(androidSystemColors(bridge(JSON.stringify(palettes))));
+  assert.equal(androidSystemColors(bridge('')), null);
+  assert.equal(androidSystemColors(bridge(JSON.stringify({ ...palettes, a1: { ...tones, 500: 'red' } }))), null);
+  assert.equal(androidSystemColors({}), null);
+  const fallback = buildScheme('mint', 'system', true);
+  assert.deepEqual(fallback, buildScheme('graphite', 'palette', true));
+  setSystemColors(androidSystemColors(bridge(JSON.stringify(palettes))));
+  try {
+    assert.equal(hasSystemColors(), true);
+    for (const dark of [false, true]) {
+      const scheme = buildScheme('graphite', 'system', dark);
+      assert.notDeepEqual(scheme, fallback);
+      assert.ok(contrastRatio(scheme.onSurface, scheme.surface) >= 4.5);
+    }
+  } finally { setSystemColors(null); }
 });
