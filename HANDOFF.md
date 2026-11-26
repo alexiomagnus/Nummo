@@ -40,8 +40,10 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   (`android/nummo-release.jks`, `android/keystore.properties`): senza la stessa chiave l'app non si aggiorna.
 - **Release GitHub** (repository privato): `android-v0.3.5` «Latest», poi 0.3.4, 0.3.3, 0.3.2, 0.3.1, 0.3.0, 0.2.0, 0.1.0, tutte con certificato
   `00b1c85c…0fcf`. La 0.1.0, la 0.2.0 e la 0.3.0 sono ricompilate (stesso codice, non gli stessi file installati allora).
-- **Git.** `main` = `origin/main`, solo il ramo `main`, otto tag `android-v0.1.0`…`android-v0.3.5`. Ultimi commit di codice, 26 novembre,
-  tutti inviati e pubblicati: `6f32d22` (pagina «Info», app 0.3.5), `adb4768` (Esercente in vista con la tastiera), `222e0f4` («Elimina
+- **Git.** `main` = `origin/main`, solo il ramo `main`, otto tag `android-v0.1.0`…`android-v0.3.5` (verificati sul remoto il 27 novembre: otto riferimenti, `git ls-remote` ne mostra quindici
+  righe perché sette tag sono annotati e ognuno ha anche la riga `^{}`; `android-v0.3.4` è leggero). Ultimi commit di codice, 27 novembre,
+  inviati e pubblicati: `4d7425d` (modulo «Nuova categoria»), `78426f2` (Registra spesa, pannelli di scelta), `48bc646` («Archiviazione e
+  backup» a righe). Del 26 novembre: `6f32d22` (pagina «Info», app 0.3.5), `adb4768` (Esercente in vista con la tastiera), `222e0f4` («Elimina
   le liste archiviate» a tutta larghezza), `446f4e8` (Categoria intera su smartphone), `96886d7` («Lista scontrini») e `4b0f777` (lavoro
   della sessione parallela); prima `26b0901` (lock hybrid, solo sviluppo) e `c4301b9` (`originId` tolto). Commit di codice del 23 novembre, tutti inviati e pubblicati: `de199c7` (fogli, pillole, Elimina rosso), `7bfa99b` (pannelli come schermi), `9e032b8` (dettaglio di spese e abbonamenti), `da3103e` (accenti del tema chiaro), `e3c250e` (audit mobile), `d633282` (template dopo
   template), `f74ff3a` (app 0.3.2, solo Android), `72fcf5a` (tema chiaro, schede piene), `b9566dc` (vibrazione solo nell'app),
