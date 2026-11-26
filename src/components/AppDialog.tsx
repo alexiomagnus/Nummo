@@ -17,7 +17,7 @@ type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dism
   style?: StyleProp<ViewStyle>;
   // Focus the first text field on opening also on touch-first devices, bringing up the keyboard. Only for creation
   // dialogs that start from typing a name (Nuova lista, Nuovo fondo): every other dialog keeps the keyboard closed.
-  focusTextEntry?: boolean;
+  focusTextEntry?: boolean | 'touch';
   // `screen` (default since 23 November, on request): a full screen of the app on the shared screen layer (ScreenLayer),
   // with the container transform from the element that opened it. `alert`: the small centred dialog, kept only for short
   // confirmations and warnings (delete, change of mode, the lock's PIN).

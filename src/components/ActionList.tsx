@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Text, useTheme } from 'react-native-paper';
 import { radius, spacing } from '../theme/tokens';
+import { M3Switch } from './M3Switch';
 import { Spinner } from './Spinner';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -55,6 +56,17 @@ export function ActionRow({ label, disabled, busy, busyLabel, onPress, ...conten
       <RowContent {...content} trailing={busy
         ? <Spinner size={20} label={busyLabel ?? content.title} />
         : <SvgIcon shape={iconShapes.chevronRight} size={20} color={colors.onSurfaceVariant} />} />
+    </StateLayerPressable>
+  );
+}
+
+// A row with a switch: the whole row turns it on and off (role switch), same tile, title and line as the other rows.
+export function ToggleRow({ value, onChange, disabled, ...content }: Content & { value: boolean; onChange: (value: boolean) => void; disabled?: boolean }) {
+  const { colors } = useTheme();
+  return (
+    <StateLayerPressable layerColor={colors.onSurface} accessibilityRole="switch" aria-checked={value} aria-disabled={disabled} accessibilityLabel={content.title}
+      disabled={disabled} onPress={() => onChange(!value)} style={styles.row}>
+      <RowContent {...content} trailing={<M3Switch value={value} disabled={disabled} />} />
     </StateLayerPressable>
   );
 }

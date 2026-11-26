@@ -2,18 +2,19 @@ import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import { ActivityIndicator, HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
+import { ListGroup, RowBody, RowDivider, ToggleRow } from '../../components/ActionList';
+import { iconShapes } from '../../components/SvgIcon';
 import { ChoiceChips } from '../../components/ChoiceChips';
 import { SelectField } from '../../components/SelectField';
-import { SwitchRow } from '../../components/SwitchRow';
 import { aiProviderLabels, aiProviders, recommendedModel } from '../../domain/receiptAi';
 import { useI18n } from '../../i18n/I18nProvider';
-import { inputOutline, spacing } from '../../theme/tokens';
+import { inputOutline, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { useSameWidth } from '../../components/SameWidth';
 import { useReceiptAi } from './aiSettings';
 import { useAiModels } from './useAiModels';
 
+const pill = { borderRadius: radius.pill };
 const phoneHalf = { flex: 1, minWidth: 0 };
 // Label margins a little tighter than Paper's compact ones: «Dimentica la chiave» fits half of a 320 px screen.
 const phoneLabel = { marginHorizontal: 6 };
@@ -47,10 +48,13 @@ export function ReceiptAiCard() {
   }, [model, list.models, recommended, t]);
   const options = aiProviders.map((value) => ({ value, label: aiProviderLabels[value] }));
   return (
-    <Card title={t("Analisi scontrini con AI")} style={{ width: '100%' }}>
-      <SwitchRow label={t("Scansione dello scontrino")} supporting={t("In Nuova spesa, il pulsante Scansiona scontrino.")}
+    <ListGroup label={t("Analisi scontrini con AI")}>
+      <ToggleRow icon={iconShapes.receipt} title={t("Scansione dello scontrino")} subtitle={t("In Nuova spesa, il pulsante Scansiona scontrino.")}
         value={enabled} onChange={(value) => ai.change({ enabled: value })} />
-      {/* Greyed out (M3 disabled opacity) and unreachable while the scan is off. */}
+      <RowDivider />
+      {/* Greyed out (M3 disabled opacity) and unreachable while the scan is off. Same grouped-rows language as «Info» and
+          «Archiviazione e backup» (user's request, 27 November: the page looked confused). */}
+      <RowBody>
       <View style={{ gap: spacing.md, opacity: enabled ? 1 : 0.38 }} aria-disabled={!enabled} {...{ inert: enabled ? undefined : true }}>
         <ChoiceChips label={t("Servizio AI")} options={options} value={provider === 'none' ? '' : provider} disabled={!enabled}
           onChange={(value) => { if (value && value !== provider) ai.change({ provider: value, model: '' }); }} />
@@ -72,11 +76,12 @@ export function ReceiptAiCard() {
               A little more room after the fields (user's request, 17 November): the actions do not read as part of Modello. */}
           {/* Phones: the two actions share the whole row in equal halves (one alone takes it all; user's request, 22 November). */}
           {(ai.apiKey !== '' || ai.consented) && <View style={{ flexDirection: 'row', flexWrap: compact ? 'nowrap' : 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
-            {ai.apiKey !== '' && <Button mode="outlined" style={compact ? phoneHalf : sameWidth.style} onLayout={sameWidth.onLayout} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.setApiKey('')}>{t("Dimentica la chiave")}</Button>}
-            {ai.consented && <Button mode="outlined" style={compact ? phoneHalf : sameWidth.style} onLayout={sameWidth.onLayout} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.change({ consent: '' })}>{t("Revoca il consenso")}</Button>}
+            {ai.apiKey !== '' && <Button mode="outlined" style={[pill, compact ? phoneHalf : sameWidth.style]} onLayout={sameWidth.onLayout} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.setApiKey('')}>{t("Dimentica la chiave")}</Button>}
+            {ai.consented && <Button mode="outlined" style={[pill, compact ? phoneHalf : sameWidth.style]} onLayout={sameWidth.onLayout} labelStyle={compact && phoneLabel} compact={compact} onPress={() => ai.change({ consent: '' })}>{t("Revoca il consenso")}</Button>}
           </View>}
         </View>}
       </View>
-    </Card>
+      </RowBody>
+    </ListGroup>
   );
 }

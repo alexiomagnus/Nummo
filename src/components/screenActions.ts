@@ -10,6 +10,8 @@ export const useScreenActions = () => useContext(ScreenActionsContext);
 
 export const screenActionStyles = StyleSheet.create({
   button: { alignSelf: 'stretch', borderRadius: radius.pill, minWidth: 0 },
+  // Only the shape, for an outlined action that keeps its own width («Annulla» halves, rows of the scan).
+  pill: { borderRadius: radius.pill },
   content: { minHeight: layout.controlHeight },
   label: { fontSize: 16, fontWeight: '600', letterSpacing: 0.1 },
 });

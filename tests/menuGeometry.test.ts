@@ -101,6 +101,9 @@ test('pannello adattato al contenuto (calendario): ridotto alto quanto serve, ma
   const h = 800;
   assert.equal(fittedPeek(h, 600), 200, 'il contenuto intero resta visibile');
   assert.equal(fittedPeek(h, 300), 400, 'un contenuto corto resta a metà');
+  assert.equal(fittedPeek(h, 300, true), 500, 'un pannello di scelta corto si abbassa al suo contenuto');
+  assert.equal(fittedPeek(h, 700, true), 400, 'un pannello di scelta lungo resta a metà');
+  assert.equal(fittedPeek(h, 50, true), 640, 'mai oltre l\'80 % dello schermo');
   assert.equal(fittedPeek(h, 790), 120, 'sopra resta sempre il 15 % della pagina');
   assert.equal(fittedPeek(h, 0), 400, 'senza misura: metà');
   // Le soglie seguono la posizione ridotta data.

@@ -78,7 +78,7 @@ export function CategorySettings({ categories, error, ready, notify, onResetDefa
   const iconButton = <Button mode="outlined" disabled={!ready} onPress={() => setChoosingIcon(!choosingIcon)} aria-expanded={choosingIcon}
     icon={({ size, color }) => <SvgIcon shape={choosingIcon ? iconShapes.chevronUp : iconShapes.chevronDown} size={size} color={color} />}
     accessibilityLabel={t("Icona della categoria, facoltativa")} style={styles.create} contentStyle={styles.createContent}>{t("Icona")}</Button>;
-  const addButton = <Button mode="contained" style={[styles.create, compact && styles.addCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>;
+  const addButton = <Button mode="contained" style={[styles.create, styles.addPill, compact && styles.addCompact]} contentStyle={styles.createContent} onPress={create} disabled={!ready}>{t("Aggiungi")}</Button>;
   const createForm = (
     <View style={styles.createPanel}>
       <View style={styles.createRow}>
@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
   // Phones: the name and «Icona» on one row (the name takes what is left), «Aggiungi» below at full width.
   nameFieldCompact: { flexBasis: 0 },
   addCompact: { marginTop: 0 },
+  addPill: { borderRadius: radius.pill },
   nameField: { flexGrow: 1, flexBasis: 240, minWidth: 0 },
   createButtons: { flexDirection: 'row', gap: spacing.md },
   // Paper's outlined field is 56 dp with 6 dp reserved above its box: buttons take the same 50 dp box and offset.

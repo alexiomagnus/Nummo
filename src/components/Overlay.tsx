@@ -71,7 +71,7 @@ export function useEscape(active: boolean, onEscape: () => boolean | void) {
 // element that had it when the overlay opened (the field), unless the user has meanwhile moved it elsewhere. On
 // touch-first devices a text field is not focused on opening (the overlay itself takes the focus instead), unless the
 // caller asks for it with `textEntry`.
-export function useFocusHandoff(visible: boolean, shown: boolean, container: { current: unknown }, textEntry = false) {
+export function useFocusHandoff(visible: boolean, shown: boolean, container: { current: unknown }, textEntry: boolean | 'touch' = false) {
   const opener = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!visible || typeof document === 'undefined') return;

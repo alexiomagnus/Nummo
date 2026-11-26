@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from '
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button, CancelButton, DangerButton } from '../../components/Button';
-import { ActionRow, ListGroup, RowBody, RowDivider } from '../../components/ActionList';
+import { ActionRow, ListGroup, RowBody, RowDivider, StatusRow } from '../../components/ActionList';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { useSnackbar } from '../../components/SnackbarHost';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
@@ -189,8 +189,10 @@ export function BackupActions({ backend, enabled, onBackupDownloaded }: { backen
     </ListGroup>
     {/* Only the expenses (user's request, 22 November): categories, funds, lists, templates and merchants stay. */}
     <ListGroup label={t("Elimina le spese")}>
+      {/* What stays, said as a row of its own (user's request, 27 November: the grey line was easy to miss). */}
+      <StatusRow icon={iconShapes.info} tone="secondary" title={t("Restano categorie, fondi, liste ed esercenti.")} />
+      <RowDivider />
       <RowBody>
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{t("Restano categorie, fondi, liste ed esercenti.")}</Text>
         <DangerButton icon={icon(iconShapes.trash)} disabled={!enabled || busy}
           onPress={() => { setSavedBefore(false); setConfirmWipe(true); }}>{t("Elimina tutte le spese")}</DangerButton>
       </RowBody>

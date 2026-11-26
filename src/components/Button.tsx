@@ -62,7 +62,10 @@ function useActionStyle(narrowOnPhone?: boolean, small?: boolean) {
   return narrowOnPhone && phone ? [dialogAction, dialogActionStyles.phone] : dialogAction;
 }
 export function CancelButton({ style, narrowOnPhone, small, contentStyle, labelStyle, ...rest }: ActionProps) {
-  return <Button {...rest} compact={false} mode="outlined" style={[style, useActionStyle(narrowOnPhone, small)]} contentStyle={[small && dialogActionStyles.smallContent, contentStyle]}
+  // In a screen's actions (those that cannot be dismissed, e.g. a scan in progress) a pill like «Salva» (user's request, 27 November).
+  const onScreen = useScreenActions();
+  return <Button {...rest} compact={false} mode="outlined" style={[style, useActionStyle(narrowOnPhone, small), onScreen && screenActionStyles.pill]}
+    contentStyle={[small && dialogActionStyles.smallContent, contentStyle]}
     labelStyle={[small && dialogActionStyles.smallLabel, labelStyle]} />;
 }
 export function ConfirmButton({ style, narrowOnPhone, small, contentStyle, labelStyle, ...rest }: ActionProps) {

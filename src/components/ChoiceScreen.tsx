@@ -22,7 +22,7 @@ export function ChoiceScreen<T extends string>({ label, options, value, selected
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
-  return <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={onClose} onEscape={onClose} detents="panel" opensHalf={!whole}>
+  return <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={onClose} onEscape={onClose} detents="panel" opensHalf={!whole} fitPeek="shrink">
     <View role="menu" aria-label={label} style={compact ? styles.edgeToEdge : styles.inset}>
       {options.map((option) => {
         const selected = option.value === value;

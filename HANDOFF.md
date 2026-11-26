@@ -1,6 +1,6 @@
 # HANDOFF — Nummo
 
-## Stato corrente — 26 novembre 2026
+## Stato corrente — 27 novembre 2026
 
 Leggere questa sezione per prima: è il riepilogo aggiornato. Le sezioni datate sotto, dal più recente, sono cronaca delle singole fasi
 e possono dire cose superate; il riepilogo precedente (21 novembre) è conservato in «Stato corrente precedente», prima del «Registro dei
@@ -60,7 +60,7 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Novità del 22 novembre, in breve:** app Android (0.1.0–0.3.1); Indietro che chiude ciò che è aperto ed esce solo da Nuova spesa;
   immagine del profilo (avatar astratti o foto); blocco dell'app (impronta, viso o PIN; PIN di Nummo in Standard); importo massimo
   999.999.999,99 € (Rules pubblicate); limiti di lunghezza dei campi; barra dei menu lontana dagli angoli; scansione più ordinata.
-- **Verifiche (ultime).** 26 novembre, dopo il backup di collaudo v12 (vedi la sezione datata): `npm run check` OK (**607/607**). Su `31ea15a`
+- **Verifiche (ultime).** 27 novembre, su `1881758` (codice di `48bc646`): `npm test` OK (**607/607**); `check` completo e `test:emulator` non rieseguiti. 26 novembre, dopo il backup di collaudo v12 (vedi la sezione datata): `npm run check` OK (**607/607**). Su `31ea15a`
   (codice di `6f32d22`, albero pulito): `npm run check` OK (**606/606**, typecheck, build demo). Su `96886d7` (26 novembre, albero pulito): `npm run check` OK (**605/605**, typecheck, build demo); `test:emulator` **25/25** (porte temporanee). 26 novembre, dopo il riallineamento dei documenti e la rimozione di `originId`: `npm run check` OK (**599/599**). Su `6e83453` (25 novembre): `npm run check` OK (**599/599**). Su `1c5d647` (24 novembre sera): `npm run check` OK (**598/598**, typecheck, build demo); prove headless
   nelle sezioni datate. Su `8d4023f` (24 novembre, codice di `1ad74ad`, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo); documenti confrontati col codice e riallineati. Su `d196dc9` (24 novembre, albero pulito): `npm run check` OK (**590/590**, typecheck, build demo). Su `da3103e`: `npm run check` OK (**585/585**, typecheck, build demo). Su `e3c250e`: `npm run check` OK (**585/585**). `scripts/check-keyboard.mjs` in sei
   scenari, con la nuova modalità `--ios` (visual viewport che si riduce e si sposta come in Safari) e quella Android: `#root` sull'area
@@ -88,9 +88,7 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
 - **Noti e non corretti:** nella scheda «Totale» di Spese, con importi enormi su schermi stretti (360 px), il conteggio va a capo e il
   separatore sottile resta a fine riga; la ricerca delle categorie (da 9 categorie) e quella degli abbonamenti non provate nel browser; il
   pulsante tondo della barra mobile anima la larghezza in JS (un ricalcolo del layout per fotogramma per 250 ms, nessun artefatto visto).
-- **Ambiente.** Il 26 novembre (verificato dopo le 12:20) è attivo un runner hybrid dell'utente: PID 45058 (`node scripts/dev-hybrid.ts`),
-  avviato alle 10:53 UTC, con `.firebase/hybrid.lock`, `.nummo-hybrid-45058.json` e la sessione `hybrid-xWmKHo`: stato del momento, non
-  toccato. Il PID 6588 del 23 novembre è superato. In `.firebase/` restano anche `hybrid-B5HtbF` (sessione del 25 novembre interrotta
+- **Ambiente.** Il 27 novembre nessun runner hybrid è attivo (nessun processo `dev-hybrid`, né `.firebase/hybrid.lock` né `.nummo-hybrid-*`); il PID 45058 del 26 novembre è terminato. In `.firebase/` restano anche `hybrid-B5HtbF` (sessione del 25 novembre interrotta
   senza export, `export` vuota; vedi la sezione datata sulla sessione hybrid interrotta) e `hybrid-NBhDrA` (sessione del 23 novembre, solo
   `cli-config`), non toccate. Restano, per scelta dell'utente,
   `hybrid-hRM9mM/previous` (copia del 16 novembre), `backup-prod-20261110-021925/` (backup dei dati di produzione del 10 novembre) e
@@ -104,6 +102,18 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Avanzata con notifiche e riepilogo mai provata nel browser (solo test di dominio); Safari/iOS/Firefox (protezione locale e richiesta di
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
+
+## Registra spesa, pannelli di scelta, protezione, «Lista scontrini» a gruppi — 27 novembre 2026
+
+Su richiesta, non ancora pubblicato (`npm run check` OK, 607/607; nessuna prova su dispositivo):
+- **Registra spesa** (`RegisterListDialog`): «Sposta i non acquistati in una nuova lista» parte spento; nuovo interruttore «Includi i non acquistati nella spesa» (spento), i due si escludono.
+- **Pannelli di scelta** (`ChoiceScreen`, `fitPeek="shrink"`, `fittedPeek(…, shrink)`): a metà alti quanto le righe, senza spazio vuoto; le liste lunghe restano a metà.
+- **Protezione** (Standard): icona `shieldAlert` se non attiva; nell'app Android sempre «protetto» con testo proprio (`inAndroidApp`).
+- **Categorie**: «Aggiungi» a pillola. **Trasferimento dati**: tolta la nota «* Si aggiunge solo ciò che manca…» (restano README e AGENTS).
+- **«Elimina le spese»**: «Restano categorie, fondi, liste ed esercenti.» in una `StatusRow`. **«Lista scontrini»**: gruppi di `ActionList` (`ToggleRow` nuovo), pulsanti AI a pillola.
+- **«Annulla»** a pillola negli schermi (`CancelButton` con `useScreenActions`). **Nuova lista**: la tastiera si apre da sola su touch (`focusTextEntry="touch"`; Nuovo fondo no).
+- **Aggiungi/Trasferisci** (`MovementDialog`): di nuovo pannello a tre posizioni su smartphone, a metà con tutti i campi (`detents opensHalf fitPeek`), senza Indietro.
+- Da aggiornare in `AGENTS.md` se confermati: `MovementDialog` non è più schermo normale; Nuova lista con tastiera su touch.
 
 ## «Archiviazione e backup» rifatta, «Esci» spostato, movimenti senza selettore — 27 novembre 2026
 

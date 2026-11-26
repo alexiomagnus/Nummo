@@ -7,7 +7,7 @@ import { SwitchRow } from '../../components/SwitchRow';
 import type { Category } from '../../domain/category';
 import { newDraft, validateDraft, type ExpenseData, type ExpenseDraft, type FieldErrors } from '../../domain/expense';
 import type { SyncedList, SyncedListItem } from '../../domain/firestore';
-import { purchasedNames } from '../../domain/shoppingList';
+import { purchasedNames, sortItems } from '../../domain/shoppingList';
 import { useI18n } from '../../i18n/I18nProvider';
 import { spacing } from '../../theme/tokens';
 import { ExpenseFields } from '../expenses/ExpenseFields';
@@ -40,7 +40,9 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
   const [draft, setDraft] = useState<ExpenseDraft>({ ...newDraft(), amount: initialAmount, description: list.name, categoryId: category, fundId: fund });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [remember, setRemember] = useState(list.category_id === null);
-  const [move, setMove] = useState(remaining > 0);
+  const [move, setMove] = useState(false);
+  // Off by default; the two switches exclude each other: the products not bought either go in the expense or in a new list.
+  const [includeAll, setIncludeAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const register = async () => {
@@ -52,9 +54,9 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
     setAttempted(true);
     try {
       const keep = remember && result.data.category_id !== list.category_id;
-      const saved = await onRegister(expenseId, { ...result.data, list_id: list.id, list_items: bought }, keep);
+      const saved = await onRegister(expenseId, { ...result.data, list_id: list.id, list_items: includeAll ? sortItems(items).map((item) => item.name) : bought }, keep);
       if (saved) {
-        if (move && remaining > 0) onMoveRemaining(keep ? result.data.category_id : list.category_id);
+        if (move && !includeAll && remaining > 0) onMoveRemaining(keep ? result.data.category_id : list.category_id);
         close();
       }
     } finally { setBusy(false); }
@@ -74,8 +76,12 @@ export function RegisterListDialog({ list, initialAmount, items, categories, fun
           value={remember} disabled={busy} onChange={setRemember} />
       )}
       {remaining > 0 && (
+        <SwitchRow label={t("Includi i non acquistati nella spesa")} supporting={remaining === 1 ? t("1 prodotto non spuntato") : t("{p0} prodotti non spuntati", { p0: remaining })}
+          value={includeAll} disabled={busy} onChange={(value) => { setIncludeAll(value); if (value) setMove(false); }} />
+      )}
+      {remaining > 0 && (
         <SwitchRow label={t("Sposta i non acquistati in una nuova lista")} supporting={remaining === 1 ? t("1 prodotto non spuntato") : t("{p0} prodotti non spuntati", { p0: remaining })}
-          value={move} disabled={busy} onChange={setMove} />
+          value={move} disabled={busy} onChange={(value) => { setMove(value); if (value) setIncludeAll(false); }} />
       )}
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       {attempted && error && <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>

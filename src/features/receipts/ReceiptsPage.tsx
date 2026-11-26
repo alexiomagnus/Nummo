@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HelperText, Text, useTheme } from 'react-native-paper';
+import { Divider, HelperText, Text, useTheme } from 'react-native-paper';
 import { Button, DangerButton } from '../../components/Button';
-import { Card } from '../../components/Card';
+import { ListGrid, ListGroup, RowBody, StatusRow } from '../../components/ActionList';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { DeleteDialog } from '../../components/DeleteAction';
 import { ListRow, listRowStyles } from '../../components/ListRow';
@@ -13,7 +13,7 @@ import type { ExpenseRecord } from '../../domain/contract';
 import { aiProviderLabels } from '../../domain/receiptAi';
 import type { ScannedReceipt } from '../../domain/scannedReceipt';
 import { useI18n } from '../../i18n/I18nProvider';
-import { radius, spacing } from '../../theme/tokens';
+import { radius } from '../../theme/tokens';
 import { DetailHero, DetailScreen, InfoGroup, InfoRow } from '../history/DetailScreen';
 import { ProductsDialog } from '../history/ProductsDialog';
 import { ReceiptAiCard } from './ReceiptAiCard';
@@ -47,14 +47,18 @@ export function ReceiptsPage({ remote, expenses, categories }: Props) {
   return (
     // The AI card's two actions share one width from medium (they did in Settings, with «Ripristina predefiniti»).
     <SameWidthGroup>
-    <View style={styles.root}>
+    <ListGrid>
       <ReceiptAiCard />
-      <Card title={t("Scontrini scansionati")} style={styles.wide}>
-        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-          {t("Quando salvi una spesa compilata con Scansiona scontrino, qui restano i dati letti: esercente, data, totale e prodotti. La foto non viene conservata.")}
-        </Text>
-        {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
-        {remote.ready && remote.receipts.length === 0 && <Text variant="bodyLarge" style={{ color: colors.onSurfaceVariant }}>{t("Nessuno scontrino.")}</Text>}
+      {/* The same grouped rows as «Info» (27 November, on request). */}
+      <ListGroup label={t("Scontrini scansionati")}>
+        <RowBody>
+          <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
+            {t("Quando salvi una spesa compilata con Scansiona scontrino, qui restano i dati letti: esercente, data, totale e prodotti. La foto non viene conservata.")}
+          </Text>
+          {remote.error && <HelperText type="error" accessibilityRole="alert">{t(remote.error)}</HelperText>}
+        </RowBody>
+        <Divider />
+        {remote.ready && remote.receipts.length === 0 && <StatusRow icon={iconShapes.receipt} tone="secondary" title={t("Nessuno scontrino.")} />}
         <View role="list" accessibilityLabel={t("Scontrini scansionati")}>
           {remote.receipts.map((r, index) => {
             const title = r.merchant ?? t("Esercente non letto");
@@ -63,9 +67,9 @@ export function ReceiptsPage({ remote, expenses, categories }: Props) {
               trailing={r.total_minor !== null ? <Text variant="bodyLarge" style={listRowStyles.amount}>{formatAmount(r.total_minor)}</Text> : undefined} />;
           })}
         </View>
-      </Card>
+      </ListGroup>
       <ReceiptDetail receipt={open} linked={open ? linked.get(open.id) : undefined} onClose={() => setOpenId(null)} onRemove={remote.remove} />
-    </View>
+    </ListGrid>
     </SameWidthGroup>
   );
 }
@@ -120,7 +124,5 @@ function ReceiptContent({ receipt, linked, onRemove }: { receipt: ScannedReceipt
 }
 
 const styles = StyleSheet.create({
-  root: { gap: spacing.lg },
-  wide: { width: '100%' },
   remove: { borderRadius: radius.pill },
 });

@@ -1,3 +1,4 @@
+import { inAndroidApp } from '../../services/androidApp';
 import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
@@ -19,22 +20,27 @@ type Common = { onChangeMode: (mode: StorageMode | null) => void };
 const protectionText: Record<ProtectionState, { title: string; text: string; shape: string }> = {
   protected: { title: 'Archivio locale protetto', shape: iconShapes.shieldCheck,
     text: 'Il browser si impegna a non eliminare i dati quando lo spazio scarseggia. Non sostituisce un backup.' },
-  unprotected: { title: 'Protezione aggiuntiva non attiva', shape: iconShapes.shield,
+  unprotected: { title: 'Protezione aggiuntiva non attiva', shape: iconShapes.shieldAlert,
     text: 'Il browser potrebbe eliminare i dati se lo spazio scarseggia.' },
   unavailable: { title: 'Protezione non disponibile', shape: iconShapes.shieldOff,
     text: 'Questo browser non offre una protezione aggiuntiva dei dati.' },
 };
+
+// In the Android app: the data is in the app's own space and stays until the user clears the app's data or uninstalls it.
+const appProtection = { title: 'Archivio locale protetto', shape: iconShapes.shieldCheck,
+  text: 'I dati stanno nello spazio dell’app e restano finché non cancelli i dati dell’app o la disinstalli. Non sostituisce un backup.' };
 
 // Storage tile of the «Archiviazione e backup» page, Standard mode: where the data is, how the browser keeps it, and the way to
 // the Advanced mode. A tile of the page's grid (`ListGroup`, 27 November: before, a card of loose lines and a filled button).
 export function StandardStorage({ protection, onChangeMode }: Common & { protection: ProtectionState | null }) {
   const { t } = useI18n();
   const [changing, setChanging] = useState(false);
-  const kept = protection ? protectionText[protection] : null;
+  const app = inAndroidApp();
+  const kept = protection ? (app && protection === 'protected' ? appProtection : protectionText[protection]) : null;
   return (
     <>
       <ListGroup label={t("Archiviazione")}>
-        <StatusRow icon={iconShapes.database} title={t("Su questo dispositivo")} subtitle={t("I dati restano in questo browser.")} />
+        <StatusRow icon={iconShapes.database} title={t("Su questo dispositivo")} subtitle={app ? t("I dati restano in questa app.") : t("I dati restano in questo browser.")} />
         {kept && <>
           <RowDivider />
           <StatusRow icon={kept.shape} tone={protection === 'protected' ? 'primary' : 'secondary'} title={t(kept.title)} subtitle={t(kept.text)} />

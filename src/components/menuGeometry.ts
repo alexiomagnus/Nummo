@@ -75,9 +75,13 @@ export function peekOffset(height: number): number {
 // abbasso il pannello si dovrebbe comunque vedere il calendario completo»): as high as `need` (the height its content takes), never
 // lower than half and never higher than `fitMargin` of the screen, so some of the page always shows above it and peek stays peek.
 export const fitMargin = 0.15;
-export function fittedPeek(height: number, need: number): number {
+// `shrink` (the choice panels: Ordina, Grafico, Periodo; user's request, 27 November, «eliminare lo spazio vuoto»): a short content
+// lowers peek instead, so the panel is as tall as its rows (at most `shrinkMargin` of the screen below the top); a long one stays at half.
+export const shrinkMargin = 0.8;
+export function fittedPeek(height: number, need: number, shrink = false): number {
   const half = peekOffset(height);
   if (!(need > 0)) return half;
+  if (shrink) return Math.round(Math.max(half, Math.min(Math.max(0, height) * shrinkMargin, height - need)));
   return Math.round(Math.min(half, Math.max(Math.max(0, height) * fitMargin, height - need)));
 }
 

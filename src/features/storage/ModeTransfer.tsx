@@ -107,8 +107,6 @@ export function ModeTransfer({ backend, enabled, shown }: { backend: DataStore; 
       <RowDivider />
       <RowBody>
         {summary !== null && <Text variant="bodyMedium" accessibilityLiveRegion="polite">{summary}</Text>}
-        {/* Short note under the rows (user's request, 21 November: fewer words, clearer). */}
-        <Text variant="bodySmall" style={muted}>{t("* Si aggiunge solo ciò che manca: nulla viene sovrascritto o eliminato.")}</Text>
         {/* Few words (user's request, 22 November): the direction in the title, then only what is added; nothing to add →
             one sentence and «Chiudi». */}
         {preview && <ImportPreview plan={preview.plan} busy={busy} enabled={enabled} onCancel={() => setPreview(null)} onMerge={() => void merge(preview)}

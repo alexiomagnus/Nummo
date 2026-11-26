@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { inAndroidApp } from '../../services/androidApp';
 import type { LocalStore } from '../../services/localStore';
 import { browserKeyValueStore, browserStorageManager, ensureProtection, readProtection, type ProtectionState } from '../../services/storageProtection';
 
@@ -8,6 +9,9 @@ import { browserKeyValueStore, browserStorageManager, ensureProtection, readProt
 export function useStorageProtection(store: LocalStore): ProtectionState | null {
   const [state, setState] = useState<ProtectionState | null>(null);
   useEffect(() => {
+    // In the Android app the data lives in the app's own space, not in a browser profile that can drop a site's data when
+    // space runs low: always protected, nothing to ask (user's request, 27 November).
+    if (inAndroidApp()) { setState('protected'); return undefined; }
     let active = true;
     let requested = false;
     // A slower, older answer never replaces a newer one.

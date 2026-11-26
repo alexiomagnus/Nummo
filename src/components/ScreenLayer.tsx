@@ -41,7 +41,7 @@ export type ScreenLayerProps = {
   // Wrap the content in a scroll view (details); editors bring their own scroll area and actions.
   scroll?: boolean;
   // Focus the first text field on opening also on touch-first devices (Nuova lista, Nuovo fondo).
-  textEntry?: boolean;
+  textEntry?: boolean | 'touch';
   // Colours of a screen that continues a coloured card (the «Prossimo mese» card: its container colour fills the screen, so the
   // card turns into it without a change of colour). Default: the page's background and the tonal Back button.
   tone?: ScreenTone;
@@ -64,7 +64,8 @@ export type ScreenLayerProps = {
   // A panel whose peek shows all its content, higher than half if needed (`fittedPeek`; the date picker: the whole month stays in
   // view when lowered, user's request of 24 November). Measured at opening and again when the content changes height (a month
   // with six weeks).
-  fitPeek?: boolean;
+  // `'shrink'`: also lower than half when the content is short (the choice panels).
+  fitPeek?: boolean | 'shrink';
   children: ReactNode;
 };
 
@@ -104,7 +105,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
   // `rise`: only ever higher than now (a month with one week more raises it; one less leaves it, so it does not jump at every month).
   const fitTo = (node: HTMLElement | null, height: number, rise = false): number => {
     const need = fitPeek && fit && stops && node ? contentNeed(parts(node).surface) : 0;
-    const found = need > 0 ? fittedPeek(height, need) : null;
+    const found = need > 0 ? fittedPeek(height, need, fitPeek === 'shrink') : null;
     const now = fittedRef.current;
     const next = rise && now !== null && (found === null || found > now) ? now : found;
     fittedRef.current = next;
@@ -291,7 +292,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     if (!fitPeek || !fit || !stops || !node || !inner || typeof ResizeObserver === 'undefined') return undefined;
     const observer = new ResizeObserver(() => {
       const before = peekAt(latest.current.frame.height);
-      const next = fitTo(node, latest.current.frame.height, true);
+      const next = fitTo(node, latest.current.frame.height, fitPeek !== 'shrink');
       if (next !== before && detentRef.current === 'peek') settle('peek', before);
     });
     observer.observe(inner);
