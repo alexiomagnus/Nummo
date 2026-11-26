@@ -130,6 +130,29 @@ export function promoteArchive(data: string, exported: string, backup: string): 
   catch (error) { if (existsSync(backup)) renameSync(backup, data); throw error; }
 }
 
+// Contents of `.firebase/hybrid.lock`: who holds the local archive and where its export goes. `session` and `started` are written
+// once the session folder exists (locks from before 26 November have only `pid` and `project`).
+export type HybridLock = { pid: number; project: string; session?: string; started?: string };
+
+const processAlive = (pid: number): boolean => {
+  try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === 'EPERM'; }
+};
+
+// Why a new start is refused, from the lock found on disk: a live holder means another session is running; a dead one means a
+// session stopped without confirming its export (or was killed), and says which folder to inspect before removing the lock.
+export function lockConflictMessage(lockPath: string, text: string, alive: (pid: number) => boolean = processAlive): string {
+  let lock: Partial<HybridLock> = {};
+  try { lock = JSON.parse(text) as Partial<HybridLock>; } catch { /* Unreadable: treated as an unknown holder. */ }
+  const pid = Number.isInteger(lock.pid) && (lock.pid as number) > 0 ? lock.pid as number : null;
+  const since = typeof lock.started === 'string' ? `, avviata ${lock.started}` : '';
+  const folder = typeof lock.session === 'string' ? lock.session : '.firebase/hybrid-* (cartella non registrata nel lock)';
+  if (pid !== null && alive(pid)) {
+    return `Un'altra sessione hybrid è in corso (PID ${pid}${since}) e gestisce l'archivio locale (${lockPath}). Fermala con Ctrl+C nel suo terminale.`;
+  }
+  return `Una sessione hybrid precedente (PID ${pid ?? 'sconosciuto'}${since}) non è più attiva e non ha confermato l'export: il lock ${lockPath} è rimasto. `
+    + `Controlla ${folder} (export, previous) e il log nel suo terminale, recupera il backup appropriato, poi rimuovi il lock. emulator-data/ non è stato toccato.`;
+}
+
 type Options = {
   root: string; env?: NodeJS.ProcessEnv; expoArgs?: string[];
   // Commands may be replaced by the integration harness; never exposed as CLI flags.
@@ -156,9 +179,16 @@ export async function runHybrid(options: Options): Promise<void> {
       const hasData = validateArchive(data);
       mkdirSync(join(root, '.firebase'), { recursive: true });
       const lockPath = join(root, '.firebase', 'hybrid.lock');
-      try { writeFileSync(lockPath, JSON.stringify({ pid: process.pid, project }), { flag: 'wx' }); lock = lockPath; }
-      catch { throw new Error(`Un'altra sessione hybrid gestisce l'archivio locale (${lockPath}). Se è stata interrotta, verifica i suoi export prima di rimuovere il lock.`); }
+      const held: HybridLock = { pid: process.pid, project };
+      try { writeFileSync(lockPath, JSON.stringify(held), { flag: 'wx' }); lock = lockPath; }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        let text = '';
+        try { text = readFileSync(lockPath, 'utf8'); } catch { /* Removed meanwhile: the message stays generic. */ }
+        throw new Error(lockConflictMessage(lockPath, text));
+      }
       session = mkdtempSync(join(root, '.firebase', 'hybrid-'));
+      writeFileSync(lockPath, JSON.stringify({ ...held, session, started: new Date().toISOString() } satisfies HybridLock));
       const firebase = json(join(root, 'firebase.json'));
       firebase.emulators = { ...firebase.emulators, singleProjectMode: true,
         firestore: { ...firebase.emulators?.firestore, host: '127.0.0.1', port: endpoint.port } };

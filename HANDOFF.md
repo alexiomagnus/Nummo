@@ -97,6 +97,24 @@ di quel giorno e la verifica su `d196dc9`; il 26 novembre con i rilasci del 25, 
   Firefox); collaudo in demo con `docs/testing/` (file v11 creato e collaudato il 23 novembre). La tastiera automatica di Nuova lista/Nuovo fondo
   non è più da provare: dal 23 novembre su touch nessun campo prende il focus all'apertura (`initialFocusAllowed`).
 
+## Sessione hybrid interrotta senza export, lock più parlante — 26 novembre 2026
+
+- **Segnalazione:** `npm run dev` rifiutava l'avvio («Un'altra sessione hybrid gestisce l'archivio locale»). Il lock era del PID 10069
+  (`npm run dev` del 25 novembre, 14:17, sessione `.firebase/hybrid-B5HtbF`), non più attivo. La sessione si è chiusa il 26 novembre
+  alle 11:42 senza export: `hybrid-B5HtbF/export` vuota e vuota anche la cartella temporanea della CLI `firebase-export-1795689723022UKHHE1/`
+  nella radice (tolta). Il runner ha fatto ciò che deve: lock conservato, `emulator-data/` (22 novembre, 21:11) intatto e valido.
+  **Le scritture nell'emulatore tra il 25 novembre 14:20 e il 26 novembre 11:42 sono perse** (solo in memoria). Causa probabile, non
+  confermata: JVM dell'emulatore fermata dall'esterno (spegnimento ordinato nel log, nessun `kill` nella cronologia della shell, il
+  runner avvia l'emulatore in una sessione separata); il 25 novembre alle 22:38 un secondo emulatore (porta 19280) era partito nella
+  stessa cartella, compatibile con le prove di un'altra sessione di lavoro. Lock rimosso dopo la verifica.
+- **Runner:** il lock registra anche `session` e `started` (dopo la creazione della cartella di sessione); un avvio bloccato legge il
+  lock e dice se il PID è vivo («in corso», fermarla con Ctrl+C) o no («non è più attiva», quale cartella controllare prima di togliere
+  il lock) (`lockConflictMessage`, test in `tests/hybridRunner.test.ts`). Lock dei formati precedenti e illeggibili gestiti.
+- **Per le prove degli agenti:** mai fermare emulatori per nome di processo; solo i propri PID (regola già in AGENTS.md: non fermare
+  emulatori utente).
+- **Verifica:** `npm run check` OK (**600/600**), `npm run test:hybrid` OK (**9/9**). Commit inviato su `main`; solo strumenti di
+  sviluppo, nulla da pubblicare su Hosting.
+
 ## Riallineamento documentale, `originId` tolto — 26 novembre 2026
 
 Su richiesta, dopo un confronto tra documenti e codice:

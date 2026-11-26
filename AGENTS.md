@@ -149,7 +149,7 @@ IndexedDB e non archivio parallelo, cancellata a ogni «Esci» (`signOutUser`: `
 Hybrid: endpoint predefinito `127.0.0.1:8180`, override shell `EXPO_PUBLIC_FIRESTORE_EMULATOR` solo localhost/127.0.0.1.
 Il runner usa il parser dotenv di Expo per entrambi i processi; riusa solo istanze con progetto/PID/endpoint verificati.
 Import da `emulator-data/`, export in staging e promozione dopo successo, copia in `.firebase/hybrid-*/previous`,
-lock `.firebase/hybrid.lock`. Un solo Ctrl+C ferma i processi propri; preservare lock/staging/originali su export fallito
+lock `.firebase/hybrid.lock` (PID, progetto, cartella della sessione, ora d'avvio; un avvio bloccato dice se il PID è vivo, `lockConflictMessage`). Un solo Ctrl+C ferma i processi propri; preservare lock/staging/originali su export fallito
 o arresto forzato e ispezionare prima di ripartire. Variante manuale: `npm run emulators:personal -- --project ID`;
 `emulators:real` usa l'alias personale `real` e importa/riesporta `emulator-data/`.
 

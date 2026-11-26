@@ -147,7 +147,9 @@ ignorate da Git e contengono dati personali. Nessuna pulizia automatica dei back
 Se l'export fallisce, l'archivio precedente resta intatto e il lock
 `.firebase/hybrid.lock` impedisce un nuovo avvio gestito: controllare staging/log e
 recuperare il backup appropriato prima di rimuovere il lock. Lo stesso controllo serve
-dopo un arresto forzato. Un archivio non vuoto ma invalido non viene reinizializzato.
+dopo un arresto forzato. Il lock registra PID, cartella della sessione e ora d'avvio: un
+nuovo avvio bloccato dice se quella sessione è ancora in corso o non è più attiva, e quale
+cartella `.firebase/hybrid-*` controllare. Un archivio non vuoto ma invalido non viene reinizializzato.
 
 L'override `EXPO_PUBLIC_FIRESTORE_EMULATOR` deve essere `localhost:porta` o
 `127.0.0.1:porta`, solo nella shell; le altre porte restano quelle di `firebase.json`.
