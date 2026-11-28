@@ -1,5 +1,11 @@
 # HANDOFF — Nummo
 
+## Spese su smartphone: pulsante «Filtri» — 28 novembre 2026
+
+Su richiesta. Solo smartphone, solo vista «Spese» (non Abbonamenti, non Analisi): ricerca e pulsante «Filtri» (con «Filtri · n» se ci sono filtri attivi, tonale) sulla stessa riga; il pannello a scomparsa (`Reveal`, chiuso di base) contiene **Fondo** e **Categoria**; **Ordina** resta fuori, sotto. `Workspace` passa il `FundFilter` a `ExpenseList` (`fundFilter`, `fundActive`); da medium e negli Abbonamenti il Fondo resta sopra la lista come prima. Stato dei filtri invariato (solo presentazione). Traduzioni in `en.ts`. `typecheck` e test 630/630; **non visto a schermo** né provato sul telefono, non pubblicato.
+
+Sessione hybrid: il lock `.firebase/hybrid.lock` del 26 novembre (PID 199921, non più attivo) era rimasto; la cartella di sessione conteneva solo `cli-config`, nessun export da recuperare, `emulator-data/` intatta: lock rimosso su richiesta.
+
 ## Tema chiaro più vicino a Morphe — 28 novembre 2026
 
 Su richiesta, da due screenshot (Nummo e Morphe, Material You chiaro). `glassColors` (`palette.ts`), solo chiaro: schede col tono `surfaceContainer` (prima bianco `surfaceContainerLowest`) al 88 % (prima 72 %), contorno più marcato (mix 0,5 invece di 0,3 verso lo sfondo), barre dello stesso tono. Il tema scuro non cambia. Vale per tutti i colori, non solo Material You. Calibrazione approssimata, non provata sul telefono né pubblicata (nessun commit); da riguardare: contrasto di testo e icone sulle nuove schede. Non toccati: sfondo, pulsanti attivi, grandi riquadri (Totale), cursore.

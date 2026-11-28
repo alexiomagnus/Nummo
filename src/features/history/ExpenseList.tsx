@@ -1,5 +1,5 @@
 import { useI18n } from '../../i18n/I18nProvider';
-import { Fragment, memo, useMemo, useState } from 'react';
+import { Fragment, memo, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -9,6 +9,7 @@ import { searchAndSort, sortLabels, sortOptions, type Occurrence, type SortOptio
 import { leadingIcon } from '../../components/FieldIcon';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
+import { Reveal } from '../../components/Reveal';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { inputOutline, radius, spacing } from '../../theme/tokens';
@@ -28,6 +29,10 @@ type Props = {
   merchantNames?: ReadonlyMap<string, string>;
   // Expenses written on this device and not yet confirmed by the server (Advanced mode, offline): «In attesa di invio».
   pendingIds?: ReadonlySet<string>;
+  // The page's «Fondo» filter, handed over so that on phones it lives in the «Filtri» panel with Categoria (28 November, on
+  // request); `fundActive` = a fund is chosen. Without it (or on wider pages) the page draws Fondo itself, above the list.
+  fundFilter?: ReactNode;
+  fundActive?: boolean;
   // Shown instead of «Nessuna spesa.» when the list is empty because of the fund filter (source text, translated here).
   emptyLabel?: string;
 };
@@ -45,7 +50,7 @@ const pageSize = 50;
 
 export const ExpenseList = memo(ExpenseListView);
 
-function ExpenseListView({ occurrences, categories, error, onOpen, listItems, merchantNames, pendingIds, emptyLabel }: Props) {
+function ExpenseListView({ occurrences, categories, error, onOpen, listItems, merchantNames, pendingIds, emptyLabel, fundFilter, fundActive }: Props) {
   const { t, locale } = useI18n();
   const shortDates = useMemo(() => shortDateFormat(locale), [locale]);
   const months = useMemo(() => monthFormat(locale), [locale]);
@@ -64,6 +69,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
   const [sort, setSort] = useState<SortOption>('date-desc');
   const [categoryFilter, setCategoryFilter] = useState<string>(ALL);
   const [visibleCount, setVisibleCount] = useState(pageSize);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // A deleted category leaves expenses pointing at a missing ID: they count as uncategorised.
   const known = useMemo(() => new Set(categories.map((category) => category.id)), [categories]);
   const categoryById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
@@ -81,20 +87,50 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
   const categoryChoices = [{ value: ALL, label: t("Tutte"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={theme.colors.onSurfaceVariant} /> },
     ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))];
 
-  const filters = (
+  const search = (
+    <TextInput outlineStyle={inputOutline} label={t("Cerca per nome, mese o anno")} accessibilityLabel={t("Cerca per nome, mese o anno")} mode="outlined" value={query}
+      onChangeText={(value) => { setQuery(clipToLength(value, searchPolicy.maxQueryLength)); setVisibleCount(pageSize); }} autoCorrect={false} style={compact ? styles.searchGrow : styles.search}
+      left={leadingIcon(iconShapes.search)}
+      right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => { setQuery(''); setVisibleCount(pageSize); }}
+        icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
+  );
+  const sortSelect = (
+    <MenuSelect panel iconOnPhones label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
+      onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
+  );
+  const categorySelect = (
+    <MenuSelect panel whole iconOnPhones label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
+      onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
+  );
+  // Phones (28 November, on request): the search and a «Filtri» button share a row; Fondo and Categoria open under it, Ordina stays
+  // outside. The button says how many filters are on, so a hidden one is never forgotten.
+  const activeFilters = (filter !== ALL ? 1 : 0) + (fundFilter && fundActive ? 1 : 0);
+  const phoneFilters = compact && fundFilter !== undefined;
+  const filters = phoneFilters ? (
+    <>
+      <View style={styles.toolbarCompact}>
+        <View style={styles.searchRow}>
+          {search}
+          <Button mode={activeFilters > 0 || filtersOpen ? 'contained-tonal' : 'outlined'} contentStyle={styles.filtersContent}
+            aria-expanded={filtersOpen} accessibilityLabel={filtersOpen ? t("Nascondi i filtri") : t("Mostra i filtri")}
+            icon={({ size, color }) => <SvgIcon shape={iconShapes.filter} size={size} color={color} />}
+            onPress={() => setFiltersOpen((open) => !open)}>
+            {activeFilters > 0 ? t("Filtri · {p0}", { p0: activeFilters }) : t("Filtri")}
+          </Button>
+        </View>
+        {filtersOpen && <Reveal style={styles.filterPanel}>{fundFilter}{categorySelect}</Reveal>}
+        <View style={styles.selectsCompact}>{sortSelect}</View>
+      </View>
+      {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
+    </>
+  ) : (
     <>
       <View style={[styles.toolbar, compact && styles.toolbarCompact]}>
-        <TextInput outlineStyle={inputOutline} label={t("Cerca per nome, mese o anno")} accessibilityLabel={t("Cerca per nome, mese o anno")} mode="outlined" value={query}
-          onChangeText={(value) => { setQuery(clipToLength(value, searchPolicy.maxQueryLength)); setVisibleCount(pageSize); }} autoCorrect={false} style={compact ? styles.searchCompact : styles.search}
-          left={leadingIcon(iconShapes.search)}
-          right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => { setQuery(''); setVisibleCount(pageSize); }}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.close} size={size} color={color} />} /> : undefined} />
+        {search}
         {/* Secondary filters: they sit side by side under the search on phones, in the same line on wider pages. */}
         <View style={compact ? styles.selectsCompact : styles.selects}>
-          <MenuSelect panel iconOnPhones label={t("Ordina")} icon={iconShapes.sort} options={sortChoices} value={sort}
-            onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
-          <MenuSelect panel whole iconOnPhones label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
-            onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
+          {sortSelect}
+          {categorySelect}
         </View>
       </View>
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
@@ -209,6 +245,10 @@ const styles = StyleSheet.create({
   toolbarCompact: { flexDirection: 'column', flexWrap: 'nowrap', alignItems: 'stretch' },
   search: { flexGrow: 2, flexBasis: 240, minWidth: 0 },
   searchCompact: { minWidth: 0 },
+  searchGrow: { flex: 1, minWidth: 0 },
+  searchRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.md },
+  filtersContent: { minHeight: 56, paddingHorizontal: spacing.xs },
+  filterPanel: { gap: spacing.md },
   // Ordina and Categoria stay one group: equal halves of the row, or of what the search leaves.
   selects: { flexGrow: 2, flexBasis: 340, flexDirection: 'row', gap: spacing.md, minWidth: 0 },
   selectsCompact: { flexDirection: 'row', gap: spacing.md },

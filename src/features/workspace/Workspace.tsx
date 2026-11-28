@@ -57,6 +57,7 @@ import type { DataStore } from '../../services/dataStore';
 import type { ExpenseStore } from '../expenses/expenseStore';
 import { FundsPage } from '../funds/FundsPage';
 import { FundFilter } from '../funds/FundFilter';
+import { useSizeClass } from '../../theme/useSizeClass';
 import { useRemoteFunds, type RemoteFunds } from '../funds/useRemoteFunds';
 import { readDefaultFund, writeDefaultFund } from '../funds/defaultFund';
 import { DoneButton } from '../../components/DoneButton';
@@ -314,6 +315,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   // Only the change itself is written (see subscription.ts). Confirmed by the server transaction.
   // Fund filter of the Spese page (both views, the renewals card included): presentation only, the setting can turn it off.
   const [fundChoice, setFundChoice] = useState(allFunds);
+  const phone = useSizeClass() === 'compact';
   const fundFilterShown = fundState.funds.length > 0;
   const fundFilter = fundFilterShown ? effectiveFundFilter(fundChoice, fundState.funds.map((fund) => fund.id)) : allFunds;
   const shownOneOff = useMemo(() => filterByFund(oneOff, fundFilter), [oneOff, fundFilter]);
@@ -467,8 +469,9 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView} haptic
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
-        {fundFilterShown && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
-        {listView === 'expenses' && <ExpenseList occurrences={shownOneOff} categories={categoryState.categories} error={error} onOpen={openDetail} listItems={listItems} merchantNames={merchantNames} pendingIds={store.pendingIds}
+        {fundFilterShown && !(phone && listView === 'expenses') && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
+        {listView === 'expenses' && <ExpenseList fundActive={fundFilter !== allFunds}
+          fundFilter={fundFilterShown && phone ? <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} /> : undefined} occurrences={shownOneOff} categories={categoryState.categories} error={error} onOpen={openDetail} listItems={listItems} merchantNames={merchantNames} pendingIds={store.pendingIds}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
