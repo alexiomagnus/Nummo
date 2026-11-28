@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Pubblicazione — 28 novembre 2026 (notte, ultime)
+
+`deploy:hosting` su `nummo-6b6e2`, ognuno «Deploy complete!» (solo Hosting, Rules invariate): `1be76eb` (filtro Categoria con icona `tag` e pannello intero), `b255bb2` («Categoria predefinita» di Nuova lista intera), `1ed9968` (segmento «Spese») e **`1391e06`** (interruttore «Abbonamento»), l'ultimo e quello online ora. Release Android `android-v0.3.20` (commit `26d3f7b`, solo numero di versione) pubblicata prima di questi due ultimi: l'app resta alla 0.3.20, nessuna nuova APK. Nulla provato sul telefono.
+
 ## Interruttore «Abbonamento» — 28 novembre 2026 (notte)
 
 Su richiesta (screenshot): l'interruttore «Ricorrente» di Nuova spesa e dell'editor si chiama «Abbonamento» (`RepeatField.tsx`; inglese «Subscription», chiave «Ricorrente» tolta da `en.ts`). Comportamento invariato. `typecheck` e test 632/632; pubblicato con `deploy:hosting` (solo web); non visto a schermo.
