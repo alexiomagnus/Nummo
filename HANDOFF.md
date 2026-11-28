@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Pubblicazione e release 0.3.15 — 28 novembre 2026 (pomeriggio)
+
+Commit `5918e9c` su `main`, `deploy:hosting` su `nummo-6b6e2` («Deploy complete!»), poi release GitHub `android-v0.3.15` (APK firmato `nummo-0.3.15.apk` + `.sha256`, «Latest»). Il sito comprende barra di navigazione sotto la maniglia, conferme di scala e icona, interruttore «Pagina Liste», Fondo/Template interi. Nessuna delle voci è stata provata sul telefono: da controllare con la 0.3.15 installata (pillola e FAB sopra la maniglia, fogli, tastiera).
+
 ## Fondo e Template si aprono interi — 28 novembre 2026
 
 Su richiesta (screenshot): il selettore «Template» di Nuova spesa (`opensHalf` tolto), il campo «Fondo» del modulo (`FundField`, `whole`) e il filtro «Fondo» di Spese e Analisi (`FundFilter`, `whole`) su smartphone si aprono alla massima estensione, come Categoria. Da medium invariato. `typecheck` OK; non visto a schermo.
