@@ -137,7 +137,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         <ToggleRow icon={iconShapes.moon} title={t("Modalità AMOLED")} subtitle={t("Sfondo nero puro nel tema scuro.")}
           value={preferences.amoled} onChange={(amoled) => onChange({ amoled })} />
         <RowDivider />
-        <MenuSelect panel label={t("Animazione dello sfondo")} icon={iconShapes.sparkles} value={preferences.background}
+        <MenuSelect panel whole label={t("Animazione dello sfondo")} icon={iconShapes.sparkles} value={preferences.background}
           row={{ title: t("Animazione dello sfondo"), icon: backgroundIcons[preferences.background] }}
           options={backgrounds.map((value) => ({ value, label: t(backgroundLabels[value]),
             icon: <SvgIcon shape={backgroundIcons[value]} size={20} color={colors.onSurfaceVariant} /> }))}

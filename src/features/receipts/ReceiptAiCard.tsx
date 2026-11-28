@@ -67,7 +67,7 @@ export function ReceiptAiCard() {
         {provider !== 'none' && <View style={{ gap: spacing.md }}>
           <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Chiave API")} value={ai.apiKey} onChangeText={ai.setApiKey}
             secureTextEntry autoComplete="off" autoCapitalize="none" autoCorrect={false} spellCheck={false} />
-          <SelectField panel label={t("Modello")} options={modelOptions} value={model} disabled={modelOptions.length === 0}
+          <SelectField panel whole label={t("Modello")} options={modelOptions} value={model} disabled={modelOptions.length === 0}
             onChange={(value) => ai.change({ model: value })} />
           {list.status === 'loading' && <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }} accessibilityRole="progressbar" aria-live="polite">
             <ActivityIndicator size={16} />

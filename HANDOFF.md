@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Tre pannelli interi, vibrazione Aggiungi/Trasferisci, AGENTS.md allineato — 28 novembre 2026 (notte)
+
+Su richiesta (screenshot). (1) **`whole` torna, solo per tre pannelli**: «Animazione dello sfondo», Categoria di Nuova spesa/modifica (`ExpenseFields`) e «Modello» della scheda AI si aprono a tutta altezza su smartphone (`whole` di `ChoiceScreen`/`SelectField`/`MenuSelect` → `opensHalf` e `fitPeek` spenti); tutti gli altri pannelli di scelta restano a metà e alti quanto le righe. Se servono interi anche i filtri Categoria o altri, basta aggiungere `whole` al punto d'uso. (2) **Vibrazione** sul selettore Aggiungi/Trasferisci (`haptic` su `SegmentedButtons` di `MovementDialog`). (3) **AGENTS.md** allineato: niente ombra sui pannelli, pannelli di scelta uguali con le tre eccezioni, vibrazione nell'elenco dei punti ammessi. (4) **Nuova lista** non apre più la tastiera da sola su smartphone (`focusTextEntry={!record}` come Nuovo fondo: il focus automatico resta solo con tastiera fisica e mouse; il valore `'touch'` dell'helper resta, con il suo test). `typecheck` e test 631/631 OK; `check` non rieseguito, non visto a schermo né sul telefono; non committato né pubblicato.
+
 ## Release 0.3.17 — 28 novembre 2026 (sera)
 
 Commit `861a745` (versionCode 20, `0.3.17`, solo il numero di versione), tag e release GitHub `android-v0.3.17` (APK firmato `nummo-0.3.17.apk` + `.sha256`, «Latest»). Il sito era già pubblicato (`ddd438b`). Chi ha la 0.3.16 vede l'aggiornamento **obbligatorio** alla prossima apertura: prima prova reale dell'obbligo, mai vista sul telefono.

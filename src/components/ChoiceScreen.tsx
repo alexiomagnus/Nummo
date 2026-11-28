@@ -15,15 +15,15 @@ export type Choice<T extends string> = { value: T; label: string; icon?: ReactNo
 // picker. The rows are the grouped glass cards of the app (26 November, on request, after Morphe: each a card, 3 apart, the outer
 // corners of the list large); the chosen one is filled with the primary container, outlined in the primary and checked; a tap
 // chooses and closes.
-// Every choice panel is the same (28 November, on request: «tutti uguali»): in peek, as tall as its rows, half the screen at least (`whole`, which opened
-// some of them to the full height with empty space, is gone). `trailing`: something before the check (the amount of a template).
-export function ChoiceScreen<T extends string>({ label, options, value, selectedSuffix, onChoose, onClose }: {
+// Choice panels open in peek, as tall as their rows, half the screen at least (28 November, on request: «tutti uguali»), except those with `whole`
+// (28 November, later, on request: Animazione dello sfondo, Categoria of Nuova spesa and Modello open to the full height). `trailing`: something before the check (the amount of a template).
+export function ChoiceScreen<T extends string>({ label, options, value, selectedSuffix, onChoose, onClose, whole = false }: {
   label: string; options: readonly Choice<T>[]; value: T | ''; selectedSuffix: string;
-  onChoose: (value: T) => void; onClose: () => void;
+  onChoose: (value: T) => void; onClose: () => void; whole?: boolean;
 }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  return <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={onClose} onEscape={onClose} detents="panel" opensHalf fitPeek="shrink">
+  return <Portal><ScreenLayer label={label} title={label} backLabel={t("Indietro")} onBack={onClose} onEscape={onClose} detents="panel" opensHalf={!whole} fitPeek={whole ? false : 'shrink'}>
     <View role="menu" aria-label={label} {...{ dataSet: { glassGroup: 'true' } }} style={styles.list}>
       {options.map((option) => {
         const selected = option.value === value;

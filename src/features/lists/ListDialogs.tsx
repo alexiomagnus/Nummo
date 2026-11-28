@@ -35,7 +35,7 @@ export function ListEditor({ record, categories, defaultCategoryId = '', onSave,
   };
   const options = [{ value: '', label: t("Nessuna categoria"), icon: <NoFundAvatar size={24} /> },
     ...categories.map((c) => ({ value: c.id, label: c.label, icon: c.icon ? <CategoryGlyph icon={c.icon} size={20} /> : undefined }))];
-  return <Portal><Dialog variant="sheet" visible onDismiss={close} style={styles.dialog} focusTextEntry={record ? false : 'touch'}>
+  return <Portal><Dialog variant="sheet" visible onDismiss={close} style={styles.dialog} focusTextEntry={!record}>
     <Dialog.Title>{record ? t("Modifica lista") : t("Nuova lista")}</Dialog.Title>
     <Dialog.Content style={styles.content}>
       <View>

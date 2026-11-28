@@ -73,7 +73,7 @@ export function MovementDialog({ funds, balances, kind: initialKind, to: initial
       <Dialog.Title>{kind === 'income' ? t("Aggiungi denaro") : t("Trasferisci tra fondi")}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          {funds.length > 1 && <SegmentedButtons label={t("Tipo di movimento")} value={kind} onChange={switchKind} disabled={blocked}
+          {funds.length > 1 && <SegmentedButtons haptic label={t("Tipo di movimento")} value={kind} onChange={switchKind} disabled={blocked}
             options={[{ value: 'income', label: t("Aggiungi") }, { value: 'transfer', label: t("Trasferisci") }]} />}
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo")} value={amount} inputMode="decimal" placeholder="0,00"
