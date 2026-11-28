@@ -50,7 +50,7 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
         {/* The arrow says it is a choice, not an action. */}
         <SvgIcon shape={iconShapes.chevronDown} size={20} color={color} />
       </StateLayerPressable>
-      {open && <Portal><ScreenLayer label={t("Template")} title={t("Template")} backLabel={t("Indietro")} onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents="panel" opensHalf>
+      {open && <Portal><ScreenLayer label={t("Template")} title={t("Template")} backLabel={t("Indietro")} onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents="panel">
         {/* Same layout as the choice screens of Categoria and Fondo (user's request, 26 November), in Template's colours. */}
         <View role="menu" aria-label={t("Template")} {...{ dataSet: { glassGroup: 'true' } }} style={styles.list}>
           {rows.map((row) => {

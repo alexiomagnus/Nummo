@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Fondo e Template si aprono interi — 28 novembre 2026
+
+Su richiesta (screenshot): il selettore «Template» di Nuova spesa (`opensHalf` tolto), il campo «Fondo» del modulo (`FundField`, `whole`) e il filtro «Fondo» di Spese e Analisi (`FundFilter`, `whole`) su smartphone si aprono alla massima estensione, come Categoria. Da medium invariato. `typecheck` OK; non visto a schermo.
+
 ## Conferme per scala e icona; pagina Liste disattivabile — 28 novembre 2026
 
 Su richiesta (`npm run check` OK). **Conferma**: cambiare la scala dell'interfaccia (al rilascio del cursore) o l'icona dell'app apre un dialogo `alert` («Cambiare la scala dell'interfaccia?» / «Cambiare l'icona dell'app?», Annulla/Cambia, `ConfirmChangeDialog` di `SettingsPage.tsx`); con «Annulla» il cursore torna al valore salvato (remontaggio con `scaleKey`) e l'icona non cambia; scegliere quella già attiva non chiede nulla. **Pagina Liste**: interruttore «Pagina Liste» in Impostazioni → Funzionalità (`listsEnabled` in `nummo.preferences.v1`, acceso di base, riportato da «Ripristina predefiniti»): spento, la destinazione sparisce da barra, rail e drawer, `ListsPage` non si monta e, se si era lì (Indietro, cronologia), si passa a Spese; le liste restano nell'archivio e nel backup, i listener restano attivi. «Mostra liste archiviate» resta visibile anche con Liste spenta. `typecheck` e test 631/631; non visto a schermo.
