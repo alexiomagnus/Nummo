@@ -215,7 +215,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   const glass = glassOf(colors);
   const panelTheme = useMemo(() => ({ ...theme, colors: { ...colors, background: panelBg } }), [theme, colors, panelBg]);
   // 16 around the panel on the right and below (32 until 24 November: a larger panel, user's request).
-  // The panel is glass too: the circles of the background show through it a little.
+  // The desktop panel is opaque (28 November, on request): the background animation never shows behind the text.
   const panel = !showPanel ? { borderRadius: 0 } : { borderRadius: radius.dialog, marginTop: spacing.md, marginRight: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: glass.glassBorder };
   // The scroller fills the rounded panel, which clips it: content scrolls out of view at the panel's own edge, never at
   // a line inside it. The scrollbar would run straight through the corners (browsers do not bend it to the radius):
@@ -283,7 +283,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           {hasNav && size === 'medium' && <Rail destinations={destinations!} entries={navEntries} selected={selected} onSelect={select} fab={fab} />}
           {hasNav && size === 'expanded' && <Drawer destinations={destinations!} entries={navEntries} selected={selected} onSelect={select} fab={fab} folded={drawerToggle && drawerFolded} onToggle={drawerToggle ? toggleDrawer : undefined} />}
           {/* `appPanel`: the area a page-level layer covers from medium up (the expense detail, ExpenseDetail.tsx). */}
-          <View {...{ dataSet: { appPanel: 'true' } }} style={[styles.scroll, panel, styles.panelClip, { backgroundColor: showPanel ? withAlpha(panelBg, 0.7) : 'transparent' }]}>
+          <View {...{ dataSet: { appPanel: 'true' } }} style={[styles.scroll, panel, styles.panelClip, { backgroundColor: showPanel ? panelBg : 'transparent' }]}>
           <ScrollView ref={scroller} style={styles.scroll} {...scrollMarks} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, padding, paddingTop: padding + (overlayBars ? topRoom : 0),
               paddingBottom: padding + (overlayBars ? (navRoom ? barHeight : insets.bottom) : bottomBar ? 0 : insets.bottom) }}>

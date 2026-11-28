@@ -260,7 +260,9 @@ export function glassColors(scheme: Scheme, dark: boolean): GlassColors {
   // Light, like Morphe's (28 November, on request, from two screenshots): tinted cards (the container tone, not white), nearly
   // opaque, with a visible warm outline; before: white at 72 %, an outline barely darker than the page.
   const card = scheme.surfaceContainer;
-  const alpha = dark ? 0.78 : 0.88;
+  // Opaque (28 November, on request, after Morphe: the background animation, any of them, must never show through a card, behind
+  // its text; it stays visible only between the cards). Before: 78 % dark, 88 % light.
+  const alpha = 1;
   return {
     glass: withAlpha(card, alpha),
     glassSolid: mixColors(card, scheme.background, alpha),

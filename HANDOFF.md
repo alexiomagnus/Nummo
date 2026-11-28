@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Schede e pannello opachi — 28 novembre 2026 (notte)
+
+Su richiesta (confronto con Morphe): l'animazione dello sfondo (Neve ecc.) si vedeva attraverso schede e pannello desktop. `glassColors` ha alpha 1 (era 0,78 scuro / 0,88 chiaro) e il pannello desktop di `AppShell` è opaco (era 0,7): l'animazione resta tra le schede. Barre e pillola restano in vetro sfocato. `typecheck` e test 632/632; non visto a schermo.
+
 ## Impostazioni: sezione «Visualizzazione» — 28 novembre 2026 (notte)
 
 Su richiesta (screenshot). Scala dell'interfaccia e icona dell'app (con «Reimposta/Applica») stanno in un gruppo «Visualizzazione» sotto «Lingua e ora», visibile solo se almeno una è disponibile; la card della scala ha ora 16 di padding anche in alto. `typecheck` e test 632/632; non visto a schermo.
