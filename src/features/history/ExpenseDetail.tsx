@@ -28,7 +28,7 @@ export type ExpenseDetailValue = {
 export function ExpenseDetail({ value, onClose, onEdit }: { value: ExpenseDetailValue | null; onClose: () => void; onEdit?: (expenseId: string) => void }) {
   const { t } = useI18n();
   return <DetailScreen value={value} cardId={(shown) => expenseCardId(shown.item.expenseId)}
-    label={(shown) => t("Dettagli di {p0}", { p0: shown.item.description })} backLabel={t("Torna alle spese")} onClose={onClose}>
+    label={(shown) => t("Dettagli di {p0}", { p0: shown.item.description })} backLabel={t("Torna alle uscite")} onClose={onClose}>
     {(shown) => <ExpenseContent {...shown} onEdit={onEdit} />}
   </DetailScreen>;
 }

@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Spese» → «Uscite»; Reimposta/Applica per scala e icona — 28 novembre 2026
+
+Su richiesta. **Rinomina**: la destinazione, il titolo della pagina e la prima vista a segmenti (accanto ad «Abbonamenti») si chiamano «Uscite»; aggiornati «Vista della pagina Uscite», «Torna alle uscite», le note di Liste («sezione Uscite»), la Guida («Da Uscite e Analisi…»), il README e `scripts/check-navigation.mjs`. In inglese «Uscite» = «Outgoings» (la stessa chiave dei fondi, con «Income»; un test la fissa), mentre il resto («Back to expenses», «Expenses page view») resta «expenses». **Non** rinominati: «Nuova spesa», «Elimina le spese», i totali «Spese» del dettaglio del fondo e i nomi interni (`list`, `expenses`). **Conferma come in Morphe** (sostituisce il dialogo): scegliere una scala (al rilascio) o un'icona mostra sotto il controllo due pillole uguali, «Reimposta» (contorno) e «Applica» (piena); finché non si preme, il cursore/l'icona sono solo in anteprima e nulla cambia; «Reimposta» riporta il valore salvato. `ApplyBar` in `SettingsPage.tsx`; chiavi del dialogo tolte da `en.ts`. `npm run check` OK (631/631); non visto a schermo.
+
 ## Chiave API più chiara, «Tutte le categorie», «Categoria predefinita» intera — 28 novembre 2026
 
 Su richiesta (screenshot). **Lista scontrini**: la riga dell'interruttore dice ora che serve la chiave API di un servizio AI (Claude, OpenAI o Google Gemini) da inserire sotto, e accendendolo le impostazioni si aprono. **Filtri Categoria** di Spese e Abbonamenti: la voce senza filtro si chiama «Tutte le categorie» (era «Tutte»). **«Categoria predefinita»** di Nuova lista e Modifica lista si apre intera su smartphone (`whole`). `typecheck` e test 631/631; non visto a schermo.

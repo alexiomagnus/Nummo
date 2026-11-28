@@ -82,7 +82,7 @@ type Section = 'expense' | 'list' | 'dashboard' | 'funds' | 'lists' | 'categorie
 // «Nuova spesa» is the primary action (FAB), not a destination: one primary navigation only.
 // Categories and import/export open from the account menu, outside the main destinations.
 const destinations: readonly Destination<Section>[] = [
-  { value: 'list', label: 'Spese', icon: iconShapes.list },
+  { value: 'list', label: 'Uscite', icon: iconShapes.list },
   { value: 'dashboard', label: 'Analisi', icon: iconShapes.chart },
   { value: 'funds', label: 'Fondi', icon: iconShapes.wallet },
   { value: 'lists', label: 'Liste', icon: iconShapes.checklist },
@@ -90,8 +90,8 @@ const destinations: readonly Destination<Section>[] = [
 // The Spese page has two views: one-off expenses and subscriptions (every recurring series), never both.
 type ListView = 'expenses' | 'subscriptions';
 // Short labels keep the segmented button on one line at every width; the accessible name of the second is the full one.
-const listViews = [{ value: 'expenses', label: 'Spese', full: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Spese', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', templates: 'Templates', receipts: 'Lista scontrini', backup: 'Archiviazione e backup', merchants: 'Esercenti', info: 'Info', settings: 'Impostazioni', notifications: 'Notifiche' };
+const listViews = [{ value: 'expenses', label: 'Uscite', full: 'Uscite' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Uscite', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', templates: 'Templates', receipts: 'Lista scontrini', backup: 'Archiviazione e backup', merchants: 'Esercenti', info: 'Info', settings: 'Impostazioni', notifications: 'Notifiche' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
 const accountPages: ReadonlySet<Section> = new Set(['categories', 'templates', 'receipts', 'backup', 'merchants', 'info', 'settings', 'notifications']);
@@ -475,7 +475,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     </View>
     <VisitedSection active={section === 'list' && !starting}>
       <View style={styles.list}>
-        <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView} haptic
+        <SegmentedButtons label={t("Vista della pagina Uscite")} value={listView} onChange={setListView} haptic
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && !phone && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}

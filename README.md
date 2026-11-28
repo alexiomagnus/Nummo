@@ -85,7 +85,7 @@ app aperta sia ad app chiusa.
 - **Orario delle notifiche** (Notifiche → «Orario delle notifiche»): Mattina (9:00, predefinito), Pranzo (13:00), Sera (19:00)
   o un'ora a scelta tra le 7 e le 22, sull'orologio del fuso orario del dispositivo o di uno scelto in Impostazioni (24 o 12 ore, sempre a scelta lì); vale per backup, riepilogo e rinnovi.
 - **Rinnovi degli abbonamenti** (entrambe le modalità; predefinito attivo): una notifica all'orario scelto del giorno prima del
-  rinnovo di un abbonamento attivo («Un abbonamento si rinnova il …»), che apre Spese → Abbonamenti. Il servizio push
+  rinnovo di un abbonamento attivo («Un abbonamento si rinnova il …»), che apre Uscite → Abbonamenti. Il servizio push
   riceve solo la data del rinnovo, mai nome o importo; ne tiene uno alla volta, il successivo viene programmato quando
   l'app invia di nuovo gli orari (a ogni apertura e modifica). Nessun avviso per rinnovi già troppo vicini.
 

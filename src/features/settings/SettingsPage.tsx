@@ -1,11 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n/I18nProvider';
 import { StyleSheet, View } from 'react-native';
-import { Portal, Text, useTheme } from 'react-native-paper';
-import { AppDialog as Dialog } from '../../components/AppDialog';
+import { Text, useTheme } from 'react-native-paper';
 import { CancelButton, ConfirmButton } from '../../components/Button';
 import { Button } from '../../components/Button';
-import { ListGroup, OptionRow, RowDivider, ToggleRow } from '../../components/ActionList';
+import { ListGroup, OptionRow, RowBody, RowDivider, ToggleRow } from '../../components/ActionList';
 import { DoneButton } from '../../components/DoneButton';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { iconStyles, iconStyleText } from '../../components/categoryIconSets';
@@ -91,9 +90,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
   // preferences, the profile picture and, with an archive open, its preferred categories and fund. The receipt scan moved to
   // «Lista scontrini» (26 November, on request) and is no longer reset from here.
   // The app lock is the exception: only its delay goes back to the default, since turning it off asks for the fingerprint.
-  // Scale and app icon change the whole interface at once: they ask first (28 November, on request). A refusal puts the slider back.
-  const [scaleAsk, setScaleAsk] = useState<number | null>(null);
-  const [scaleKey, setScaleKey] = useState(0);
+  // Scale and app icon change the whole interface at once: the choice waits for «Applica» (or «Reimposta»), as in Morphe (28 November,
+  // on request; first a confirm dialog the same day). Until then the slider shows the pending value and nothing is applied.
+  const [scalePending, setScalePending] = useState<number | null>(null);
   const resetAll = () => { onReset(); resetAppLockDelay(); if (profile) saveProfileImage(noProfileImage, profile.scope); onResetArchive?.(); };
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -190,7 +189,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             })}
           </View>
         </OptionRow>
-        {scaleAvailable && <><RowDivider /><ScaleSlider key={scaleKey} value={preferences.uiScale} onChange={(uiScale) => { if (uiScale !== preferences.uiScale) setScaleAsk(uiScale); }} /></>}
+        {scaleAvailable && <><RowDivider /><ScaleSlider value={scalePending ?? preferences.uiScale} onChange={(uiScale) => setScalePending(uiScale === preferences.uiScale ? null : uiScale)} />
+          {scalePending !== null && <RowBody><ApplyBar onReset={() => setScalePending(null)} onApply={() => { onChange({ uiScale: scalePending }); setScalePending(null); }} /></RowBody>}</>}
         {iconsAvailable && <><RowDivider /><OptionRow icon={iconShapes.smartphone} title={t("Icona dell'app")}>
           <AppIconChoice /></OptionRow></>}
       </ListGroup>
@@ -218,29 +218,20 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
       {/* Outlined pill after every section: secondary to the options, still clearly a button. Paper draws the 1 dp
           `outline` border, hover/press state layers and the ripple; the global focus ring follows the radius. */}
       <ResetAllButton phone={phone} onPress={resetAll} />
-      <ConfirmChangeDialog visible={scaleAsk !== null} title={t("Cambiare la scala dell'interfaccia?")}
-        text={t("L'interfaccia passerà al {p0}%. Puoi cambiarla di nuovo in qualsiasi momento.", { p0: scaleAsk ?? preferences.uiScale })}
-        onCancel={() => { setScaleAsk(null); setScaleKey((key) => key + 1); }}
-        onConfirm={() => { if (scaleAsk !== null) onChange({ uiScale: scaleAsk }); setScaleAsk(null); }} />
     </View>
   );
 }
 
 // Its own width from medium (until 26 November it was as wide as the two actions of the AI card, now in «Lista scontrini»).
 // The launcher icons of the app (the current one read from the app, the choice made through it): three tiles with a preview.
-function ConfirmChangeDialog({ visible, title, text, onCancel, onConfirm }: { visible: boolean; title: string; text: string; onCancel: () => void; onConfirm: () => void }) {
+// «Reimposta» / «Applica» under a setting that waits for confirmation: two pills of the same width, as in Morphe.
+function ApplyBar({ onReset, onApply }: { onReset: () => void; onApply: () => void }) {
   const { t } = useI18n();
   return (
-    <Portal>
-      <Dialog variant="alert" visible={visible} onDismiss={onCancel} style={{ maxWidth: 440 }}>
-        <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Content><Text variant="bodyMedium">{text}</Text></Dialog.Content>
-        <Dialog.Actions>
-          <CancelButton onPress={onCancel}>{t("Annulla")}</CancelButton>
-          <ConfirmButton onPress={onConfirm}>{t("Cambia")}</ConfirmButton>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <View style={styles.applyBar}>
+      <CancelButton style={styles.applyButton} onPress={onReset}>{t("Reimposta")}</CancelButton>
+      <ConfirmButton style={styles.applyButton} onPress={onApply}>{t("Applica")}</ConfirmButton>
+    </View>
   );
 }
 
@@ -248,25 +239,25 @@ function AppIconChoice() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const [current, setCurrent] = useState<AppIcon>(() => { try { return parseAppIcon(androidAppIcons()?.appIcon()) ?? 'default'; } catch { return 'default'; } });
-  const [ask, setAsk] = useState<AppIcon | null>(null);
+  const [pending, setPending] = useState<AppIcon | null>(null);
   const choose = (icon: AppIcon) => { try { androidAppIcons()?.setAppIcon(icon); setCurrent(icon); } catch { /* the app refused: the choice stays */ } };
   return (
+    <View style={{ gap: spacing.md }}>
     <View style={styles.styleCards} role="radiogroup" aria-label={t("Icona dell'app")}>
       {appIcons.map((icon) => {
-        const selected = icon === current;
+        const selected = icon === (pending ?? current);
         const { background, foreground } = appIconColors[icon];
         return (
           <StateLayerPressable key={icon} layerColor={colors.onSurface} radius={radius.card} accessibilityRole="radio" aria-checked={selected}
-            accessibilityLabel={`${t(appIconLabels[icon])}${selected ? t(", selezionata") : ''}`} onPress={() => { if (icon !== current) setAsk(icon); }}
+            accessibilityLabel={`${t(appIconLabels[icon])}${selected ? t(", selezionata") : ''}`} onPress={() => setPending(icon === current ? null : icon)}
             style={[styles.iconTile, { borderColor: selected ? colors.primary : colors.outlineVariant, backgroundColor: selected ? colors.primaryContainer : 'transparent' }]}>
             <View aria-hidden style={[styles.iconPreview, { backgroundColor: background }]}><Logo size={30} color={foreground} /></View>
             <Text variant="labelLarge" style={{ color: selected ? colors.onPrimaryContainer : colors.onSurface }}>{t(appIconLabels[icon])}</Text>
           </StateLayerPressable>
         );
       })}
-      <ConfirmChangeDialog visible={ask !== null} title={t("Cambiare l'icona dell'app?")}
-        text={t("L'icona nella schermata Home diventerà «{p0}». Il launcher può impiegare qualche secondo ad aggiornarla.", { p0: t(appIconLabels[ask ?? current]) })}
-        onCancel={() => setAsk(null)} onConfirm={() => { if (ask) choose(ask); setAsk(null); }} />
+    </View>
+    {pending !== null && <ApplyBar onReset={() => setPending(null)} onApply={() => { choose(pending); setPending(null); }} />}
     </View>
   );
 }
@@ -287,6 +278,8 @@ const styles = StyleSheet.create({
   reset: { alignSelf: 'flex-start', borderRadius: radius.pill },
   // Phones: as wide as the page, like the actions above it (user's request, 22 November).
   resetPhone: { alignSelf: 'stretch' },
+  applyBar: { flexDirection: 'row', gap: spacing.md },
+  applyButton: { flex: 1, minWidth: 0, borderRadius: radius.pill },
   styleCards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   styleCard: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },
   iconTile: { flexGrow: 1, flexBasis: 96, minWidth: 0, alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderWidth: 2, borderRadius: radius.card },

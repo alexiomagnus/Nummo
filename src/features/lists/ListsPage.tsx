@@ -139,7 +139,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
       </View>}
       <DeleteDialog visible={confirmArchived} name={t("le liste archiviate")}
         title={archived.length === 1 ? t("Eliminare 1 lista archiviata?") : t("Eliminare {p0} liste archiviate?", { p0: archived.length })}
-        description={t("Le spese già registrate restano nella sezione Spese con i loro prodotti. L’operazione non può essere annullata.")}
+        description={t("Le spese già registrate restano nella sezione Uscite con i loro prodotti. L’operazione non può essere annullata.")}
         onDismiss={() => setConfirmArchived(false)}
         onConfirm={() => {
           const all = archived.length;
@@ -257,7 +257,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
             <IconButton style={styles.iconButton} accessibilityLabel={t("Duplica {p0}", { p0: list.name })} onPress={() => copy(false)}
               icon={({ size, color }) => <SvgIcon shape={iconShapes.copy} size={size} color={color} />} />
             <DeleteAction name={list.name} title={t("Eliminare la lista {p0}?", { p0: list.name })}
-              description={state === 'registered' ? t("La spesa già registrata resta nella sezione Spese con i suoi prodotti. L’operazione non può essere annullata.") : undefined}
+              description={state === 'registered' ? t("La spesa già registrata resta nella sezione Uscite con i suoi prodotti. L’operazione non può essere annullata.") : undefined}
               onDelete={remove} />
           </View>
         </View>

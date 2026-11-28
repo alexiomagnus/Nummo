@@ -55,7 +55,7 @@ try {
   if(process.argv.includes('--measure')){
   const results=[];
   await evaluate(`window.__long=[];new PerformanceObserver(l=>window.__long.push(...l.getEntries().map(e=>({start:e.startTime,duration:e.duration})))).observe({type:'longtask',buffered:true})`);
-  for(let round=0;round<3;round++)for(const label of ['Spese','Analisi','Fondi','Liste']){
+  for(let round=0;round<3;round++)for(const label of ['Uscite','Analisi','Fondi','Liste']){
     const result=await evaluate(`new Promise(resolve=>{const frames=[];const start=performance.now();const begin=window.__long.length;let last=start,committedAt=null;const tick=now=>{frames.push(now-last);last=now;if(committedAt===null&&document.querySelector('[role=navigation] [aria-current=page]')?.textContent===${JSON.stringify(label)})committedAt=performance.now()-start;if((committedAt===null||now-start<committedAt+500)&&now-start<10000)requestAnimationFrame(tick);else resolve({committedAt,label:${JSON.stringify(label)},round:${round},elapsed:now-start,maxFrame:Math.max(...frames),slowFrames:frames.filter(x=>x>34).length,longTasks:window.__long.slice(begin),frames});};requestAnimationFrame(tick);[...document.querySelectorAll('[role=navigation] [role=button]')].find(n=>n.textContent===${JSON.stringify(label)}).click();})`);
     assert.notEqual(result.committedAt,null,'The measured destination must actually open');
     results.push(result);await sleep(150);
@@ -118,7 +118,7 @@ try {
   const frames=await evaluate('window.__record=false;window.__frames');
   writeFileSync(join(out,'frames.json'),JSON.stringify(frames,null,2));
   await send('Page.captureScreenshot',{format:'png'}).then(r=>writeFileSync(join(out,'after.png'),Buffer.from(r.data,'base64')));
-  const painted=frames.filter(f=>f.buttons.some(b=>b.name==='Fondi'&&b.current==='page')&&f.buttons.some(b=>b.name==='Spese'&&b.color!=='rgba(0, 0, 0, 0)'&&Number(b.opacity)>.01));
+  const painted=frames.filter(f=>f.buttons.some(b=>b.name==='Fondi'&&b.current==='page')&&f.buttons.some(b=>b.name==='Uscite'&&b.color!=='rgba(0, 0, 0, 0)'&&Number(b.opacity)>.01));
   assert.equal(painted.length,0,'Drag origin must not flash again at release (issue #1)');
   assert.equal(await selected(),'Fondi','A drag commits its destination once');
   if(reduced)assert.ok(frames.every(f=>Number(f.main)===1),'Reduced motion must not fade the page');
@@ -129,9 +129,9 @@ try {
   assert.equal(await selected(),'Analisi','A 4 px movement stays a tap');
   // Reverse direction, returning to the starting slot, pointer cancellation and repeated quick gestures.
   const drag=async(from,to,cancel=false,settle=300)=>{const points=await rects();await touch('touchStart',points[from].x,points[from].y);for(let i=1;i<=8;i++){await touch('touchMove',points[from].x+(points[to].x-points[from].x)*i/8,points[from].y);await sleep(12);}if(cancel)await send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});else await touch('touchEnd',points[to].x,points[to].y);await sleep(settle);if(settle>=300)await waitForSelection(points[cancel?from:to].label);};
-  await drag(1,3);assert.equal(await selected(),'Liste');await drag(3,0);assert.equal(await selected(),'Spese');
-  const p=await rects();await touch('touchStart',p[0].x,p[0].y);await touch('touchMove',p[2].x,p[2].y);await touch('touchMove',p[0].x,p[0].y);await touch('touchEnd',p[0].x,p[0].y);await sleep(300);assert.equal(await selected(),'Spese');
-  await drag(0,2,true);assert.equal(await selected(),'Spese','Cancellation must preserve the selection');
+  await drag(1,3);assert.equal(await selected(),'Liste');await drag(3,0);assert.equal(await selected(),'Uscite');
+  const p=await rects();await touch('touchStart',p[0].x,p[0].y);await touch('touchMove',p[2].x,p[2].y);await touch('touchMove',p[0].x,p[0].y);await touch('touchEnd',p[0].x,p[0].y);await sleep(300);assert.equal(await selected(),'Uscite');
+  await drag(0,2,true);assert.equal(await selected(),'Uscite','Cancellation must preserve the selection');
   // Keyboard activation directly after a drag must regain both pressed feedback and navigation.
   await evaluate(`document.querySelector('[role=navigation]').querySelectorAll('[role=button]')[2].focus({preventScroll:true})`);
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});await sleep(350);
@@ -147,9 +147,9 @@ try {
   const viewport=await evaluate('({inner:innerWidth,client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth})');
   assert.equal(viewport.scroll,viewport.client,'Navigation must not widen the viewport');assert.equal(errors.length,0,'No uncaught browser exceptions');
   await send('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});await sleep(500);
-  const desktop=await evaluate(`(()=>{const n=[...document.querySelectorAll('[role=navigation] [role=button]')].find(n=>n.textContent==='Spese');const r=n.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
-  await send('Input.dispatchMouseEvent',{type:'mouseMoved',...desktop});await send('Input.dispatchMouseEvent',{type:'mousePressed',...desktop,button:'left',clickCount:1});await send('Input.dispatchMouseEvent',{type:'mouseReleased',...desktop,button:'left',clickCount:1});await waitForSelection('Spese');await sleep(400);
-  assert.equal(await selected(),'Spese','Desktop drawer navigation still works');
+  const desktop=await evaluate(`(()=>{const n=[...document.querySelectorAll('[role=navigation] [role=button]')].find(n=>n.textContent==='Uscite');const r=n.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
+  await send('Input.dispatchMouseEvent',{type:'mouseMoved',...desktop});await send('Input.dispatchMouseEvent',{type:'mousePressed',...desktop,button:'left',clickCount:1});await send('Input.dispatchMouseEvent',{type:'mouseReleased',...desktop,button:'left',clickCount:1});await waitForSelection('Uscite');await sleep(400);
+  assert.equal(await selected(),'Uscite','Desktop drawer navigation still works');
   assert.equal(await evaluate('document.documentElement.scrollWidth'),1280);assert.equal(errors.length,0);
   console.log(JSON.stringify({width,height,theme,reduced,frames:frames.length,sourcePressFrames:painted.length,minMainOpacity:Math.min(...frames.map(f=>Number(f.main))),indicatorOutsideFrames:frames.filter(f=>f.indicatorLeft<f.navLeft||f.indicatorRight>f.navRight).length,regressions:'drag/reverse/return/cancel/tap/keyboard/rapid/desktop passed',errors,viewport,out}));
   }
