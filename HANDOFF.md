@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Pubblicazione — 28 novembre 2026 (notte)
+
+`deploy:hosting` su `nummo-6b6e2` dal commit `ab5c271` («Deploy complete!», solo Hosting, Rules invariate, nessuna nuova APK; l'app resta alla 0.3.19). Il sito comprende tutte le modifiche delle sezioni sotto del 28 notte: font dei filtri uniformi su smartphone, pannelli interi (Fuso, categorie preferite), pagina «Liste», pulsante singolo scansione/template a tutta riga, sezione «Visualizzazione», schede e pannello desktop opachi, schermata di aggiornamento non obbligatoria e subito all'avvio. Nulla provato sul telefono.
+
 ## Aggiornamento: prima schermata, non obbligatorio — 28 novembre 2026 (notte)
 
 Su richiesta. `AppUpdateCheck` controlla subito all'avvio (tolto il ritardo di 3 s) e, se c'è una release più recente, `UpdateDialog` è la prima cosa sopra l'app; «Più tardi»/Indietro la chiudono e ricompare a ogni riapertura. Tolta la modalità `required` (e la «valvola» sul fallimento, ora inutile). Il controllo è asincrono: con rete lenta la schermata compare appena arriva la risposta, non blocca l'avvio; sopra c'è comunque lo schermo di blocco dell'app se acceso (da verificare l'ordine). Solo nell'app Android 0.3.6+; `typecheck` e test 632/632; non provato sul telefono.
