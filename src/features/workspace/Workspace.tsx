@@ -90,7 +90,7 @@ const destinations: readonly Destination<Section>[] = [
 // The Spese page has two views: one-off expenses and subscriptions (every recurring series), never both.
 type ListView = 'expenses' | 'subscriptions';
 // Short labels keep the segmented button on one line at every width; the accessible name of the second is the full one.
-const listViews = [{ value: 'expenses', label: 'Uscite', full: 'Uscite' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
+const listViews = [{ value: 'expenses', label: 'Spese', full: 'Spese' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
 const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Uscite', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste', categories: 'Categorie', templates: 'Templates', receipts: 'Lista scontrini', backup: 'Archiviazione e backup', merchants: 'Esercenti', info: 'Info', settings: 'Impostazioni', notifications: 'Notifiche' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
