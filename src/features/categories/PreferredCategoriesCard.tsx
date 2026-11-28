@@ -23,8 +23,8 @@ export function PreferredCategoriesCard({ categories, value, onChange }: {
   return (
     <ListGroup icon={iconShapes.star} label={t("Categorie preferite")}>
       <RowBody>
-        <SelectField panel label={t("Nuova spesa")} options={options} value={existingCategory(value.expense, categories) || none} onChange={pick('expense')} />
-        <SelectField panel label={t("Nuove liste")} options={options} value={existingCategory(value.list, categories) || none} onChange={pick('list')} />
+        <SelectField panel whole label={t("Nuova spesa")} options={options} value={existingCategory(value.expense, categories) || none} onChange={pick('expense')} />
+        <SelectField panel whole label={t("Nuove liste")} options={options} value={existingCategory(value.list, categories) || none} onChange={pick('list')} />
       </RowBody>
     </ListGroup>
   );

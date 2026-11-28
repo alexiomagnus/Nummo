@@ -125,7 +125,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             onChange={(value) => { if (value === 'auto') onChange({ timeZone: autoTimeZone }); else if (value) onChange({ timeZone: device }); }} />
           {preferences.timeZone === autoTimeZone
             ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Fuso orario: {p0}", { p0: device.replace(/_/g, ' ') })}</Text>
-            : <MenuSelect panel label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
+            : <MenuSelect panel whole label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
                 onChange={(timeZone) => onChange({ timeZone })} />}
         </OptionRow>
       </ListGroup>

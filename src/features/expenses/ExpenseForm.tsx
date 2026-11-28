@@ -200,11 +200,10 @@ function ExpenseFormView({ categories, store, fundChoices = [], defaultFundId, d
         {scanEnabled && <Button mode="contained-tonal" disabled={!enabled} onPress={() => setScanning(true)} style={styles.scanHalf}
           compact={size === 'compact'} contentStyle={size === 'compact' && compactIconPadding.snug.content} labelStyle={size === 'compact' && compactIconPadding.snug.label}
           accessibilityLabel={t("Scansiona scontrino")}
-          icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{narrow ? t("Scansiona") : t("Scansiona scontrino")}</Button>}
+          icon={({ size, color }) => <SvgIcon shape={iconShapes.receipt} size={size} color={color} />}>{narrow && templateShown ? t("Scansiona") : t("Scansiona scontrino")}</Button>}
         {templateShown && <TemplatePicker templates={templates} categories={categories} disabled={!enabled}
           value={templates.some((item) => item.id === templateId) ? templateId : ''} onChange={applyTemplate}
           style={styles.scanHalf} />}
-        {!(scanEnabled && templateShown) && <View style={styles.scanHalf} />}
       </View></RowBody></ListGroup>}
       {/* The fields in one grouped box, like the other pages, with its label from medium up: on phones it went (27 November) so «Salva spesa» fits above the navigation. */}
       <ListGroup icon={iconShapes.receipt} label={size === 'compact' ? undefined : t("Dettagli della spesa")}><RowBody tight>

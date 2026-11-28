@@ -115,7 +115,7 @@ function ListsPageView({ remote, categories, defaultCategoryId, expenses, fundCh
     <View style={styles.root}>
       {/* The new-list action shares the title row («Nuova lista» at every size since 22 November, balanced compact padding on phones); the title wraps
           before the button shrinks, so nothing overflows at 320 px. */}
-      <PageHeader title={t("Liste della spesa")} style={styles.overviewHeader} action={
+      <PageHeader title={t("Liste")} style={styles.overviewHeader} action={
         <Button mode="contained" compact={compact} style={styles.headerButton} contentStyle={compact ? [compactIconPadding.roomy.content, styles.headerButtonContent] : styles.headerButtonContent}
           labelStyle={compact ? [compactIconPadding.roomy.label, styles.headerButtonLabel] : styles.headerButtonLabel} onPress={() => setEditing('new')} accessibilityLabel={t("Nuova lista")}
           icon={({ size, color }) => <SvgIcon shape={iconShapes.plus} size={size} color={color} />}>{t("Nuova lista")}</Button>} />
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   overviewHeader: { marginBottom: spacing.lg - layout.sectionGap },
   headerButton: { flexShrink: 0 },
   // A little larger than the standard button (every width): 52 dp, 15/600 label (between the standard 48 dp and «Salva»).
-  headerButtonContent: { minHeight: layout.minTouch + spacing.xs },
+  headerButtonContent: { minHeight: layout.minTouch },
   headerButtonLabel: { fontSize: 15, fontWeight: '600', letterSpacing: 0.1 },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', width: '100%', borderRadius: radius.pill, transformOrigin: 'left center' } as ViewStyle,

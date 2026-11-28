@@ -365,7 +365,7 @@ pagina della release su GitHub; dalla 0.3.4 in giù non conosce la propria versi
 
 Perché una release sia vista dagli aggiornamenti, pubblicala così:
 
-1. alza `versionCode` (sempre) e `versionName` in `android/app/build.gradle.kts`; la versione è solo numerica (per esempio `0.3.18`);
+1. alza `versionCode` (sempre) e `versionName` in `android/app/build.gradle.kts`; la versione è solo numerica (per esempio `0.3.19`);
 2. compila con la **stessa chiave** (`./gradlew assembleRelease`) e rinomina l'APK in `nummo-<versione>.apk`;
 3. calcola l'impronta: `sha256sum nummo-<versione>.apk > nummo-<versione>.apk.sha256`;
 4. crea la release, pubblicata (non bozza né pre-release) e marcata come «Latest», con tag `android-v<versione>` già inviato:

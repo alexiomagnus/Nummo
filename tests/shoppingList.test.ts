@@ -125,7 +125,7 @@ test('backup corrente: liste con prodotti e collegamento della spesa ricostruiti
 });
 
 test('liste: testi tradotti in inglese, nomi utente mai tradotti', () => {
-  for (const [it, en] of [['Liste', 'Lists'], ['Liste della spesa', 'Shopping lists'], ['Registra spesa', 'Register expense'], ['Totale spesa', 'Shopping total'],
+  for (const [it, en] of [['Liste', 'Lists'], ['Registra spesa', 'Register expense'], ['Totale spesa', 'Shopping total'],
     ['Lista spesa', 'Shopping list'], ['Categorie', 'Categories'], ['Prodotti acquistati', 'Products bought']] as const) {
     assert.equal(translate('it', it), it);
     assert.equal(translate('en', it), en);

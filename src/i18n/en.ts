@@ -640,7 +640,6 @@ export const english: Readonly<Record<string, string>> = {
   "Lista duplicata.": "List duplicated.",
   "Nuova lista creata con i prodotti non acquistati.": "New list created with the products not bought.",
   "Apri {p0}, {p1} di {p2} acquistati": "Open {p0}, {p1} of {p2} bought",
-  "Liste della spesa": "Shopping lists",
   "Caricamento delle liste": "Loading lists",
   "Nessuna lista": "No lists",
   "Prepara la lista prima di uscire, spunta i prodotti mentre fai la spesa e registra il totale come una sola spesa.": "Prepare the list before you go, tick products off while you shop and register the total as a single expense.",

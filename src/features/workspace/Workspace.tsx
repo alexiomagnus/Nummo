@@ -93,7 +93,7 @@ const destinations: readonly Destination<Section>[] = [
 type ListView = 'expenses' | 'subscriptions';
 // Short labels keep the segmented button on one line at every width; the accessible name of the second is the full one.
 const listViews = [{ value: 'expenses', label: 'Uscite', full: 'Uscite' }, { value: 'subscriptions', label: 'Abbonamenti', full: 'Pagamenti ricorrenti' }] as const;
-const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Uscite', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste della spesa', categories: 'Categorie', templates: 'Templates', receipts: 'Lista scontrini', backup: 'Archiviazione e backup', merchants: 'Esercenti', info: 'Info', settings: 'Impostazioni', notifications: 'Notifiche' };
+const headings: Record<Section, string> = { expense: 'Nuova spesa', list: 'Uscite', dashboard: 'Analisi', funds: 'Fondi', lists: 'Liste', categories: 'Categorie', templates: 'Templates', receipts: 'Lista scontrini', backup: 'Archiviazione e backup', merchants: 'Esercenti', info: 'Info', settings: 'Impostazioni', notifications: 'Notifiche' };
 
 // Pages of the account menu: outside the destinations, «Fatto» returns where they were opened from.
 const accountPages: ReadonlySet<Section> = new Set(['categories', 'templates', 'receipts', 'backup', 'merchants', 'info', 'settings', 'notifications']);
@@ -496,11 +496,11 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
         {fundFilterShown && !phone && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
         {listView === 'expenses' && <ExpenseList fundActive={fundFilter !== allFunds}
-          fundFilter={fundFilterShown && phone ? <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} /> : undefined} occurrences={shownOneOff} categories={categoryState.categories} error={error} onOpen={openDetail} listItems={listItems} merchantNames={merchantNames} pendingIds={store.pendingIds}
+          fundFilter={fundFilterShown && phone ? <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} large={false} /> : undefined} occurrences={shownOneOff} categories={categoryState.categories} error={error} onOpen={openDetail} listItems={listItems} merchantNames={merchantNames} pendingIds={store.pendingIds}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
-          <SubscriptionList categoryFilter={subCategory} onCategoryFilter={setSubCategoryChoice} fundActive={fundFilter !== allFunds} fundFilter={fundFilterShown && phone ? <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} /> : undefined} subscriptions={shownSubscriptions} emptyLabel={fundFilter !== allFunds ? "Nessun abbonamento per questo fondo." : subCategory !== allCategories ? "Nessun abbonamento in questa categoria." : undefined} categories={categoryState.categories} error={error}
+          <SubscriptionList categoryFilter={subCategory} onCategoryFilter={setSubCategoryChoice} fundActive={fundFilter !== allFunds} fundFilter={fundFilterShown && phone ? <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} large={false} /> : undefined} subscriptions={shownSubscriptions} emptyLabel={fundFilter !== allFunds ? "Nessun abbonamento per questo fondo." : subCategory !== allCategories ? "Nessun abbonamento in questa categoria." : undefined} categories={categoryState.categories} error={error}
             onOpen={openSeries} />
         </>}
       </View>
