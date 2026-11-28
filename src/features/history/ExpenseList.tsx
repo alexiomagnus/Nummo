@@ -132,27 +132,18 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
   );
 
   const totalCount = results.length === 1 ? t("1 spesa") : t("{p0} spese", { p0: results.length });
-  const tone = { color: theme.colors.onPrimaryContainer };
+  const narrowed = query.trim() !== '' || filter !== ALL || Boolean(fundActive);
 
   return (
     <View style={styles.root}>
       {filters}
-      {/* Total of every result (all months, not only the loaded page), so it follows Fondo, the search and Categoria. */}
-      {results.length > 0 && (
-        <View style={[styles.total, { backgroundColor: theme.colors.primaryContainer }]} role="group"
+      {/* Total of every result (all months, not only the loaded page): only while a search or a filter is on, as a quiet line (28 November,
+          on request: with the plain list it repeated the monthly totals and led the page with a big figure). */}
+      {results.length > 0 && narrowed && (
+        <Text variant="bodyMedium" role="group" style={{ color: theme.colors.onSurfaceVariant }}
           accessibilityLabel={t("Totale: {p0}, {p1}", { p0: amounts.format(resultsTotal / 100), p1: totalCount })}>
-          <View style={[styles.totalTile, { backgroundColor: theme.colors.primary }]}>
-            <SvgIcon shape={iconShapes.euro} size={26} color={theme.colors.onPrimary} />
-          </View>
-          <View style={styles.totalText}>
-            <Text variant="titleMedium" style={[tone, styles.strong]}>{t("Totale")}</Text>
-            <View style={styles.figures}>
-              <Text variant="headlineSmall" style={[tone, styles.amount, styles.strong]}>{amounts.format(resultsTotal / 100)}</Text>
-              <View aria-hidden style={[styles.figureDivider, { backgroundColor: theme.colors.onPrimaryContainer }]} />
-              <Text variant="bodyLarge" style={tone}>{totalCount}</Text>
-            </View>
-          </View>
-        </View>
+          {totalCount}{'\u2002|\u2002'}<Text variant="bodyMedium" style={[styles.strong, { color: theme.colors.onSurface }]}>{amounts.format(resultsTotal / 100)}</Text>
+        </Text>
       )}
       <View role="list">
         {results.slice(0, visibleCount).map((item, index) => {
@@ -260,14 +251,5 @@ const styles = StyleSheet.create({
   marks: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   listMark: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 2, marginTop: 2 },
   start: { alignSelf: 'flex-start' },
-  // Total of the filtered results, same footprint and tone as the «Prossimo mese» card of the subscriptions view.
-  total: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 80, borderRadius: radius.group,
-    paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
-  totalTile: { width: 44, height: 44, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
-  totalText: { flex: 1, minWidth: 0 },
   strong: { fontWeight: '600' },
-  // Total and count apart, with a thin vertical line between them (22 November, on request: the «·» was too close and
-  // a «–» did not please). Text on one baseline; wraps on a very narrow card.
-  figures: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: spacing.md },
-  figureDivider: { width: 1, height: 20, alignSelf: 'center', opacity: 0.4 },
 });

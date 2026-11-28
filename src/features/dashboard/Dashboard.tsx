@@ -99,18 +99,12 @@ function DashboardView({ occurrences: all, categories, funds, preferences, onCha
         </View>
       </View>
 
-      <View style={styles.summary}>
-        <View style={[styles.metric, glassSurface(theme.colors)]}>
-          <Text variant="labelMedium" style={muted}>{t('Totale nel periodo')}</Text>
-          <Text variant="headlineSmall" style={styles.total}>{formatAmount(source.total)}</Text>
-          <Text variant="bodySmall" style={muted}>{formatDate(insights.from)} – {formatDate(insights.to)}</Text>
-        </View>
-        <View style={[styles.metric, glassSurface(theme.colors)]}>
-          <Text variant="labelMedium" style={muted}>{t('Transazioni')}</Text>
-          <Text variant="titleLarge">{source.count}</Text>
-        </View>
+      {/* One tile: total, period and number of transactions (28 November, on request: the count alone in a second tile was noise). */}
+      <View style={[styles.metric, glassSurface(theme.colors)]}>
+        <Text variant="labelMedium" style={muted}>{t('Totale nel periodo')}</Text>
+        <Text variant="headlineSmall" style={styles.total}>{formatAmount(source.total)}</Text>
+        <Text variant="bodySmall" style={muted}>{formatDate(insights.from)} – {formatDate(insights.to)}{'\u2002|\u2002'}{source.count === 1 ? t('1 transazione') : t('{p0} transazioni', { p0: source.count })}</Text>
       </View>
-
 
       {source.count === 0 ? <Text variant="bodyMedium" style={muted}>{t('Nessuna spesa in questo periodo.')}</Text> :
         <Card>
@@ -172,7 +166,5 @@ const styles = StyleSheet.create({
   donutHintBelow: { textAlign: 'center', marginTop: spacing.lg },
   chartCol: { minWidth: 0, gap: spacing.sm },
   // Two glass tiles side by side, a little apart (the connected cards of the glass language).
-  // Two glass tiles side by side; 12 apart (as Periodo and Grafico above) since 28 November, on request; was the 3 of grouped cards.
-  summary: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  metric: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs, padding: spacing.lg, borderRadius: radius.group },
+  metric: { minWidth: 0, gap: spacing.xs, padding: spacing.lg, borderRadius: radius.group },
 });

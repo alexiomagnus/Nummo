@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Meno totali: Spese senza scheda «Totale», Analisi con una scheda sola — 28 novembre 2026
+
+Su richiesta, dopo il confronto delle due pagine. **Spese** (`ExpenseList.tsx`): la scheda «Totale» non c'è più; con una ricerca, il filtro Categoria o un fondo attivi compare una riga discreta «n spese | importo» (totale di tutti i risultati, non solo della pagina caricata); senza filtri nulla, restano i totali mensili. Sort non conta come filtro. **Analisi** (`Dashboard.tsx`): un solo riquadro «Totale nel periodo» con importo e, sotto, «date | n transazioni» (prima due riquadri affiancati; la distanza di 12 aggiunta poco prima non serve più). `AGENTS.md` aggiornato. `typecheck` e test 631/631; non visto a schermo, non pubblicato.
+
 ## Abbonamenti: Categoria e Ordina — 28 novembre 2026
 
 Su richiesta. Verificato nel codice: il filtro Fondo **segue** la scheda «Prossimo mese» (`renewals`/`soon` da `shownEntries`), quindi anche Categoria la restringe (scelta coerente con Fondo, diversa da quanto avevo proposto prima). `Workspace` tiene `subCategoryChoice` (una categoria sparita vale «Tutte»), passa `categoryFilter`/`onCategoryFilter` a `SubscriptionList` e un `emptyLabel` per fondo o categoria. «Ordina» è locale alla lista: `subscriptionSortOptions` (Prossimo rinnovo, predefinito = ordine di prima; Importo più alto/basso; Nome A–Z) e `sortSubscriptions` in `domain/history.ts`, con gli attivi sempre prima di pausa e annullati (test nuovo, 631/631). Smartphone: nel pannello «Filtri» con Fondo (il conteggio include categoria e ordine diverso dal predefinito); da medium Ordina e Categoria stanno sotto la ricerca, come in Spese. Un filtro che lascia la lista vuota non fa sparire i controlli. Non visto a schermo né provato sul telefono; non pubblicato.
