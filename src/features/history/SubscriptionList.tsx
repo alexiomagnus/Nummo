@@ -71,7 +71,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
       options={subscriptionSortOptions.map((value) => ({ value, label: t(subscriptionSortLabels[value]), icon: <SvgIcon shape={sortIcons[value]} size={20} color={colors.onSurfaceVariant} /> }))} />
   );
   const categorySelect = (
-    <MenuSelect panel whole iconOnPhones label={t("Categoria")} icon={iconShapes.filter} value={categoryFilter} onChange={onCategoryFilter} style={styles.select}
+    <MenuSelect panel iconOnPhones label={t("Categoria")} icon={iconShapes.filter} value={categoryFilter} onChange={onCategoryFilter} style={styles.select}
       options={[{ value: allCategories, label: t("Tutte le categorie"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={colors.onSurfaceVariant} /> },
         ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))]} />
   );

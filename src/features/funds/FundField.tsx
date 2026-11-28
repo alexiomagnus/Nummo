@@ -24,7 +24,7 @@ export function FundField({ choices, value, error, disabled, onChange }: {
   ];
   return (
     <View>
-      <SelectField panel whole label={t("Fondo")} options={options} value={selected ? value : value === noFund ? noFund : ''} disabled={disabled} error={error} onChange={onChange} />
+      <SelectField panel label={t("Fondo")} options={options} value={selected ? value : value === noFund ? noFund : ''} disabled={disabled} error={error} onChange={onChange} />
       {/* No budget line under the field: «Budget residuo del mese» and «Budget del mese superato» were removed on request (17 November). */}
     </View>
   );

@@ -43,7 +43,7 @@ export function ListEditor({ record, categories, defaultCategoryId = '', onSave,
           onChangeText={(value) => { setName(clipToLength(value, listPolicy.maxNameLength)); setError(null); }} onSubmitEditing={save} accessibilityLabel={t("Nome della lista, obbligatorio")} />
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
       </View>
-      <SelectField panel whole label={t("Categoria predefinita")} options={options} value={categoryId ?? ''} onChange={setCategoryId} />
+      <SelectField panel label={t("Categoria predefinita")} options={options} value={categoryId ?? ''} onChange={setCategoryId} />
     </Dialog.Content>
     <Dialog.Actions style={dialogActionsRow}>
       <CancelButton onPress={close}>{t("Annulla")}</CancelButton>

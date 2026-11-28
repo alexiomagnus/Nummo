@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Portal, Text, useTheme } from 'react-native-paper';
-import { ScreenLayer } from '../../components/ScreenLayer';
+import { Text, useTheme } from 'react-native-paper';
+import { ChoiceScreen, type Choice } from '../../components/ChoiceScreen';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import type { TemplateRecord } from '../../domain/template';
 import { useI18n } from '../../i18n/I18nProvider';
-import { groupGap, layout, radius, spacing, stateOpacity } from '../../theme/tokens';
+import { layout, radius, spacing, stateOpacity } from '../../theme/tokens';
 import { NoFundAvatar } from '../funds/FundAvatar';
 
 type Props = {
@@ -37,8 +37,9 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
   const color = colors.primary;
   const chosen = templates.find((item) => item.id === value);
   const choose = (id: string) => { setOpen(false); onChange(id); };
-  const rows = [{ id: '', label: t("Nessun template"), icon: <NoFundAvatar size={24} />, amount: null as number | null },
-    ...templates.map((item) => ({ id: item.id, label: item.description, icon: <TemplateGlyph template={item} categories={categories} size={24} />, amount: item.amount_minor }))];
+  const choices: Choice<string>[] = [{ value: '', label: t("Nessun template"), icon: <NoFundAvatar size={24} /> },
+    ...templates.map((item) => ({ value: item.id, label: item.description, icon: <TemplateGlyph template={item} categories={categories} size={24} />,
+      trailing: item.amount_minor === null ? undefined : <Text variant="titleMedium" style={{ color: colors.onSurface }}>{formatAmount(item.amount_minor)}</Text> }))];
   return (
     <View style={style}>
       <StateLayerPressable layerColor={colors.onSurface} radius={radius.button} disabled={disabled} onPress={() => setOpen(true)}
@@ -50,22 +51,8 @@ export function TemplatePicker({ templates, categories, value, onChange, disable
         {/* The arrow says it is a choice, not an action. */}
         <SvgIcon shape={iconShapes.chevronDown} size={20} color={color} />
       </StateLayerPressable>
-      {open && <Portal><ScreenLayer label={t("Template")} title={t("Template")} backLabel={t("Indietro")} onBack={() => setOpen(false)} onEscape={() => setOpen(false)} detents="panel">
-        {/* Same layout as the choice screens of Categoria and Fondo (user's request, 26 November), in Template's colours. */}
-        <View role="menu" aria-label={t("Template")} {...{ dataSet: { glassGroup: 'true' } }} style={styles.list}>
-          {rows.map((row) => {
-            const selected = row.id === (chosen?.id ?? '');
-            return <StateLayerPressable key={row.id || 'none'} layerColor={colors.onSurface} onPress={() => choose(row.id)}
-              accessibilityRole="menuitem" accessibilityLabel={`${row.label}${selected ? t(", selezionata") : ''}`}
-              style={[styles.row, selected && { backgroundColor: colors.primaryContainer, borderColor: colors.primary }]}>
-              <View style={styles.icon}>{row.icon}</View>
-              <Text variant="bodyLarge" numberOfLines={2} style={[styles.name, selected && { color: colors.onPrimaryContainer }]}>{row.label}</Text>
-              {row.amount !== null && <Text variant="titleMedium" style={{ color: selected ? colors.onPrimaryContainer : colors.onSurface }}>{formatAmount(row.amount)}</Text>}
-              <View style={styles.check}>{selected && <SvgIcon shape={iconShapes.check} size={20} color={colors.onPrimaryContainer} />}</View>
-            </StateLayerPressable>;
-          })}
-        </View>
-      </ScreenLayer></Portal>}
+      {/* The same panel as every choice (Categoria, Fondo, Grafico…: 28 November, on request), with the amount before the check. */}
+      {open && <ChoiceScreen label={t("Template")} options={choices} value={chosen?.id ?? ''} selectedSuffix={t(", selezionata")} onChoose={choose} onClose={() => setOpen(false)} />}
     </View>
   );
 }
@@ -81,10 +68,4 @@ const styles = StyleSheet.create({
   button: { minHeight: layout.minTouch, borderRadius: radius.button, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
   lead: { minWidth: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   label: { flexShrink: 1 },
-  // As the rows of ChoiceScreen: grouped glass cards (26 November, on request, after Morphe).
-  list: { gap: groupGap },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56, paddingHorizontal: spacing.lg },
-  icon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
-  name: { flex: 1, minWidth: 0 },
-  check: { width: 20, height: 20 },
 });

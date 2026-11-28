@@ -522,18 +522,11 @@ function scrolledBetween(target: EventTarget | null, surface: HTMLElement): bool
   return false;
 }
 
-// The shadow above a lifted edge (28 November, on a recording: the full backdrop colour at 32 px blur, on top of the scrim dimming the
-// page, smeared a dark band over bright content such as the treemap). Tighter and a little more than a third of the backdrop's
-// opacity; the flat one is the same colour, so the animation between them only changes size.
-const shadowShare = 0.4;
-function shadowColor(backdrop: string): string {
-  const match = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(backdrop);
-  if (!match) return backdrop;
-  const alpha = Math.round(parseInt(match[2] ?? 'ff', 16) * shadowShare);
-  return `#${match[1]}${alpha.toString(16).padStart(2, '0')}`;
-}
-const liftShadow = (backdrop: string) => `0px -4px 14px ${shadowColor(backdrop)}`;
-const flatShadow = (backdrop: string) => `0px 0px 0px ${shadowColor(backdrop)}`;
+// No shadow above a lifted edge (28 November, on request, after two recordings: it smeared a dark band over the page above the panels).
+// The scrim alone separates the panel from the page; the constant stays so the animations keep one shape (corners, shadow).
+const noShadow = '0px 0px 0px #00000000';
+const liftShadow = (_backdrop: string) => noShadow;
+const flatShadow = (_backdrop: string) => noShadow;
 
 // A detail moved down by `y` (dragged, or in peek): the screen's edge shows as during the slide, with round top corners and a
 // shadow above it, and the page above is dimmed as under a sheet, fading only past the peek position on the way to closing.

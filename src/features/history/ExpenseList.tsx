@@ -100,7 +100,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
       onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
   );
   const categorySelect = (
-    <MenuSelect panel whole iconOnPhones label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
+    <MenuSelect panel iconOnPhones label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
       onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
   );
   // Phones (28 November, on request): the search and a «Filtri» button share a row; Fondo, Categoria and Ordina open under it. The button says how many filters are on, so a hidden one is never forgotten.

@@ -275,7 +275,7 @@ function AssignDialog({ funds, orphans, ready, error, defaultFundId, onAssign, c
       <Dialog.Content style={styles.dialogContent}>
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
           {t("{p0} spese registrate senza fondo (di cui {p1} ricorrenti) verranno assegnate al fondo scelto. Importi, date e categorie non cambiano.", { p0: orphans.length, p1: series })}</Text>
-        <SelectField panel whole label={t("Fondo")} value={fundId} disabled={busy || !ready} onChange={setFundId}
+        <SelectField panel label={t("Fondo")} value={fundId} disabled={busy || !ready} onChange={setFundId}
           options={funds.map((fund) => ({ value: fund.id, label: fund.name, icon: <FundAvatar fund={fund} size={24} /> }))} />
         <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>{t("Puoi sempre cambiare il fondo di una singola spesa dalla sua modifica.")}</Text>
         {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}

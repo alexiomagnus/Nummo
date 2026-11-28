@@ -21,8 +21,6 @@ type Props<T extends string> = {
   // The choices on a screen of their own (ChoiceScreen): on phones a panel with three positions opening in peek, from medium a screen
   // over the content panel instead of the menu under the field (user's requests, 24 November, for Categoria and Fondo).
   panel?: boolean;
-  // With `panel`, on phones the screen opens whole and not in peek (Categoria, user's request, 26 November).
-  whole?: boolean;
 };
 
 // Material 3 exposed dropdown: an outlined text field (label, trailing arrow). On phones the choices open in a modal
@@ -30,7 +28,7 @@ type Props<T extends string> = {
 // the field, below it or above when there is no room. The field is read-only and not focusable itself: the surrounding
 // button owns focus, press and accessibility; the overlay returns focus to it without scrolling.
 
-export function SelectField<T extends string>({ label, options, value, onChange, error, disabled, panel = false, whole = false }: Props<T>) {
+export function SelectField<T extends string>({ label, options, value, onChange, error, disabled, panel = false }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -70,7 +68,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
         </div>
       </Pressable>
       {panel
-        ? open && <ChoiceScreen label={label} options={options} value={value} selectedSuffix={t(", selezionata")} onChoose={onChange} onClose={closeMenu} whole={whole} />
+        ? open && <ChoiceScreen label={label} options={options} value={value} selectedSuffix={t(", selezionata")} onChoose={onChange} onClose={closeMenu} />
         : compact
         ? <BottomSheet visible={open} onDismiss={closeMenu} title={label}>{rows}</BottomSheet>
         : <AnchoredMenu visible={open} onDismiss={closeMenu} anchor={anchor} width={anchor.width} label={label} contentStyle={styles.menu}>{rows}</AnchoredMenu>}

@@ -138,7 +138,7 @@ function ReminderTime({ hour, timeFormat, timeZone, onChange }: { hour: number; 
       {/* Dimmed (not inert) while one of the three quick choices is selected: picking an hour here is the only way back to «Altra ora». */}
       <View style={{ opacity: choice ? 0.38 : 1 }}>
         <OptionRow icon={iconShapes.pencil} tone="secondary" title={t("Altra ora")} subtitle={t("Scegli un’ora diversa da quelle sopra.")}>
-          <MenuSelect panel whole label={t("Ora")} icon={iconShapes.clock} value={String(hour)} onChange={(value) => onChange(Number(value))}
+          <MenuSelect panel label={t("Ora")} icon={iconShapes.clock} value={String(hour)} onChange={(value) => onChange(Number(value))}
             options={hours.map((value) => ({ value: String(value), label: time(value) }))} />
         </OptionRow>
       </View>

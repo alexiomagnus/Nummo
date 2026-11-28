@@ -16,6 +16,8 @@ import { useReducedMotion, useSizeClass } from '../theme/useSizeClass';
 import { batchKeyboardReports, observeViewportShrink, revealFocusedField, observeVirtualKeyboard, type KeyboardState } from '../theme/viewport';
 import { readDrawerFolded, writeDrawerFolded } from '../services/drawerState';
 import { useHaptics } from './Haptics';
+import { Disclosure } from './Disclosure';
+import { usePresence } from './Overlay';
 import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
 import { iconShapes, SvgIcon } from './SvgIcon';
@@ -23,6 +25,50 @@ import { Orbs } from './Orbs';
 import { inAndroidApp } from '../services/androidApp';
 
 export type Destination<T extends string = string> = { value: T; label: string; icon: string };
+
+// A destination that goes away (the «Liste» toggle, 28 November, on request) does not vanish: it stays in the navigation for the length of its
+// exit and shrinks away (`NavPresence`), and one that comes back or is new grows in. What is there at the start simply is there.
+type NavEntry<T extends string> = { item: Destination<T>; present: boolean; visible: number; enter: boolean };
+function useNavEntries<T extends string>(destinations: readonly Destination<T>[] | undefined): NavEntry<T>[] {
+  const list = destinations ?? [];
+  const key = list.map((item) => item.value).join('|');
+  // Derived in the render (not in an effect): the entry that goes must never be missing from a single render, or it would unmount
+  // and lose its exit.
+  const [seen, setSeen] = useState<{ key: string; list: readonly Destination<T>[]; leaving: { item: Destination<T>; at: number }[] }>({ key, list, leaving: [] });
+  let leaving = seen.leaving;
+  if (seen.key !== key) {
+    const gone = seen.list.map((item, at) => ({ item, at })).filter(({ item }) => !list.some((now) => now.value === item.value));
+    leaving = [...seen.leaving.filter(({ item }) => !list.some((now) => now.value === item.value)), ...gone.filter(({ item }) => !seen.leaving.some((entry) => entry.item.value === item.value))];
+    setSeen({ key, list, leaving });
+  }
+  useEffect(() => {
+    if (leaving.length === 0) return undefined;
+    const timer = setTimeout(() => setSeen((old) => ({ ...old, leaving: [] })), motion.medium + 80);
+    return () => clearTimeout(timer);
+  }, [leaving.length, key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const started = useRef(false);
+  useEffect(() => { started.current = true; }, []);
+  const entries: NavEntry<T>[] = list.map((item) => ({ item, present: true, visible: 0, enter: started.current }));
+  for (const { item, at } of leaving) if (!list.some((now) => now.value === item.value)) entries.splice(Math.min(at, entries.length), 0, { item, present: false, visible: 0, enter: false });
+  let count = 0;
+  return entries.map((entry) => ({ ...entry, visible: entry.present ? count++ : -1 }));
+}
+
+// One entry of the navigation that appears and disappears: the pill (a row) grows its share and fades, the rail and the drawer (a
+// column) their height (`Disclosure grow`). Left out of the tab order and inert while it goes.
+function NavPresence({ present, enter, row, children }: { present: boolean; enter: boolean; row?: boolean; children: ReactNode }) {
+  const animate = !useReducedMotion();
+  const presence = usePresence(present, motion.fade, animate);
+  if (!row) return <Disclosure grow open={present} appear={enter}>{children}</Disclosure>;
+  if (!presence.mounted) return null;
+  const on = presence.shown || (!enter && present);
+  return (
+    <View {...{ inert: present ? undefined : true }} aria-hidden={present ? undefined : true}
+      style={[{ flexGrow: on ? 1 : 0, flexShrink: 1, flexBasis: 0, minWidth: 0, flexDirection: 'row', opacity: on ? 1 : 0 }, animate && transitions([['flex-grow', motion.medium, motion.enter], ['opacity', motion.fade]])]}>
+      {children}
+    </View>
+  );
+}
 
 type Props<T extends string> = {
   destinations?: readonly Destination<T>[];
@@ -137,6 +183,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     onSelect?.(value);
   }, [onSelect]);
   const scrollToTop = useCallback(() => scroller.current?.scrollTo({ y: 0, animated: false }), []);
+  const navEntries = useNavEntries(destinations);
   const hasNav = Boolean(destinations?.length);
   // Desktop: the drawer folds to icons only (user's request, 27 November), giving the panel the room. Remembered in this browser (services/drawerState.ts).
   const [drawerFolded, setDrawerFolded] = useState(readDrawerFolded);
@@ -183,6 +230,23 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     node.style.scrollPaddingTop = overlayBars ? `${topRoom}px` : '';
     node.style.scrollPaddingBottom = overlayBars && navRoom ? `${barHeight}px` : '';
   }, [overlayBars, topRoom, navRoom, barHeight]);
+  // The scrollbar only when the page really needs it (28 November, on request): the page's own bottom padding does not count. A page that
+  // fits but for that padding (Nuova spesa on a window a few pixels short) showed a nearly full thumb for nothing; it appears as soon as the
+  // content is taller (Ricorrente opened). Desktop panel only: the phone shows no scrollbar.
+  useLayoutEffect(() => {
+    const node = (scroller.current as unknown as { getScrollableNode?: () => HTMLElement } | null)?.getScrollableNode?.();
+    const content = node?.firstElementChild as HTMLElement | null | undefined;
+    if (!node || !content || !showPanel || typeof ResizeObserver === 'undefined') return undefined;
+    const update = () => {
+      const bottom = parseFloat(getComputedStyle(content).paddingBottom) || 0;
+      node.style.overflowY = content.getBoundingClientRect().height - bottom <= node.clientHeight + 0.5 ? 'hidden' : '';
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    observer.observe(content);
+    return () => { observer.disconnect(); node.style.overflowY = ''; };
+  }, [showPanel]);
   const scrollMarks = hasNav ? { dataSet: showPanel ? { panelScroll: 'true', pageScroll: 'true' } : { pageScroll: 'true' } } : null;
 
   return (
@@ -216,8 +280,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
         <View style={styles.actions}>{actions}</View>
       </View>
         <View style={styles.body}>
-          {hasNav && size === 'medium' && <Rail destinations={destinations!} selected={selected} onSelect={select} fab={fab} />}
-          {hasNav && size === 'expanded' && <Drawer destinations={destinations!} selected={selected} onSelect={select} fab={fab} folded={drawerToggle && drawerFolded} onToggle={drawerToggle ? toggleDrawer : undefined} />}
+          {hasNav && size === 'medium' && <Rail destinations={destinations!} entries={navEntries} selected={selected} onSelect={select} fab={fab} />}
+          {hasNav && size === 'expanded' && <Drawer destinations={destinations!} entries={navEntries} selected={selected} onSelect={select} fab={fab} folded={drawerToggle && drawerFolded} onToggle={drawerToggle ? toggleDrawer : undefined} />}
           {/* `appPanel`: the area a page-level layer covers from medium up (the expense detail, ExpenseDetail.tsx). */}
           <View {...{ dataSet: { appPanel: 'true' } }} style={[styles.scroll, panel, styles.panelClip, { backgroundColor: showPanel ? withAlpha(panelBg, 0.7) : 'transparent' }]}>
           <ScrollView ref={scroller} style={styles.scroll} {...scrollMarks} keyboardShouldPersistTaps="handled"
@@ -233,7 +297,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
           </ScrollView>
           </View>
         </View>
-        {navMounted && <NavigationBar destinations={destinations!} selected={selected} onSelect={select} bottomSpace={barBottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} reserveSpace={keyboard && !keyboardConfirmed} />}
+        {navMounted && <NavigationBar destinations={destinations!} entries={navEntries} selected={selected} onSelect={select} bottomSpace={barBottom} fab={showFab ? fab : undefined} reserveFab={Boolean(fab)} hidden={!bottomBar} reserveSpace={keyboard && !keyboardConfirmed} />}
       </SnackbarProvider>
     </View>
   );
@@ -246,9 +310,9 @@ function HoverLayer({ state, color }: { state: { pressed: boolean; hovered?: boo
 }
 
 type Fab<T extends string> = { label: string; icon: string; target: T };
-type NavProps<T extends string> = { destinations: readonly Destination<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
+type NavProps<T extends string> = { destinations: readonly Destination<T>[]; entries: NavEntry<T>[]; selected?: T; onSelect: (value: T) => void; fab?: Fab<T> };
 
-function NavigationBar<T extends string>({ destinations, selected, onSelect, bottomSpace, fab, reserveFab, hidden, reserveSpace }: NavProps<T> & { bottomSpace: number; reserveFab: boolean; hidden: boolean; reserveSpace: boolean }) {
+function NavigationBar<T extends string>({ destinations, entries, selected, onSelect, bottomSpace, fab, reserveFab, hidden, reserveSpace }: NavProps<T> & { bottomSpace: number; reserveFab: boolean; hidden: boolean; reserveSpace: boolean }) {
   const { t } = useI18n();
   const { colors, fonts } = useTheme();
   const glass = glassOf(colors);
@@ -315,17 +379,19 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along
             the pill) instead of each item switching its own fill. Until the pill is measured, the item draws it. */}
         {indicator && <Animated.View pointerEvents="none" style={[styles.indicator, indicator.style, { backgroundColor: colors.primaryContainer, borderColor: colors.primary }]} />}
-        {destinations.map((item, i) => {
-          const active = i === shownIndex;
+        {entries.map(({ item, present, enter, visible: i }) => {
+          const active = present && i === shownIndex;
           const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
           return (
-            <StateLayerPressable key={item.value} layerColor={focus === null ? color : 'transparent'} radius={radius.pill} accessibilityRole="button"
+            <NavPresence key={item.value} present={present} enter={enter} row>
+            <StateLayerPressable layerColor={focus === null ? color : 'transparent'} radius={radius.pill} accessibilityRole="button"
               suppressPressed={suppressPressed}
               aria-current={item.value === selected ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => { haptic(); onSelect(item.value); }}
               style={[styles.pillItem, active && !indicator && { backgroundColor: colors.primaryContainer, borderWidth: 1, borderColor: colors.primary }]}>
               <SvgIcon shape={item.icon} size={24} color={color} />
               <Text variant={tight ? 'labelSmall' : 'labelMedium'} numberOfLines={1} style={{ maxWidth: '100%', textAlign: 'center', color, fontWeight: active ? '700' : '500', ...(tight ? { letterSpacing: 0 } : null) }}>{item.label}</Text>
             </StateLayerPressable>
+            </NavPresence>
           );
         })}
       </View>
@@ -513,7 +579,7 @@ function useIconSource(shape: string | undefined) {
   return useCallback(({ size, color }: { size: number; color: string }) => <SvgIcon shape={shape ?? ''} size={size} color={color} />, [shape]);
 }
 
-function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavProps<T>) {
+function Rail<T extends string>({ entries, selected, onSelect, fab }: NavProps<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const fabIcon = useIconSource(fab?.icon);
@@ -525,10 +591,11 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
           onPress={() => onSelect(fab.target)} color={colors.onPrimaryContainer}
           style={[styles.railFab, { backgroundColor: colors.primaryContainer }]} />
       )}
-      {destinations.map((item) => {
+      {entries.map(({ item, present, enter }) => {
         const active = item.value === selected;
         return (
-          <StateLayerPressable key={item.value} layerColor="transparent" accessibilityRole="button"
+          <NavPresence key={item.value} present={present} enter={enter}>
+          <StateLayerPressable layerColor="transparent" accessibilityRole="button"
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)} style={styles.railItem}>
             {(state) => <>
             <View style={[styles.railIndicator, active && { backgroundColor: colors.primaryContainer, borderColor: colors.primary }]}>
@@ -538,6 +605,7 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
             <Text variant="labelMedium" numberOfLines={1} style={{ color: active ? colors.onSurface : colors.onSurfaceVariant, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
             </>}
           </StateLayerPressable>
+          </NavPresence>
         );
       })}
     </ScrollView>
@@ -547,7 +615,7 @@ function Rail<T extends string>({ destinations, selected, onSelect, fab }: NavPr
 const drawerMotion = transitions([['width', motion.long]]);
 const labelMotion = transitions([['opacity', motion.medium]]);
 
-function Drawer<T extends string>({ destinations, selected, onSelect, fab, folded, onToggle }: NavProps<T> & { folded: boolean; onToggle?: () => void }) {
+function Drawer<T extends string>({ entries, selected, onSelect, fab, folded, onToggle }: NavProps<T> & { folded: boolean; onToggle?: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const fabIcon = useIconSource(fab?.icon);
@@ -578,16 +646,18 @@ function Drawer<T extends string>({ destinations, selected, onSelect, fab, folde
           style={[styles.drawerFab, { backgroundColor: colors.primaryContainer }]} />
       ))}
       </View>
-      {destinations.map((item) => {
+      {entries.map(({ item, present, enter }) => {
         const active = item.value === selected;
         const color = active ? colors.onPrimaryContainer : colors.onSurfaceVariant;
         return (
-          <StateLayerPressable key={item.value} layerColor={color} accessibilityRole="button" radius={radius.pill}
+          <NavPresence key={item.value} present={present} enter={enter}>
+          <StateLayerPressable layerColor={color} accessibilityRole="button" radius={radius.pill}
             aria-current={active ? 'page' : undefined} accessibilityLabel={item.label} onPress={() => onSelect(item.value)}
             style={[styles.drawerItem, { borderColor: active ? colors.primary : 'transparent' }, active && { backgroundColor: colors.primaryContainer }]}>
             <SvgIcon shape={item.icon} size={24} color={color} />
             <Text variant="titleSmall" numberOfLines={1} aria-hidden={folded} style={[styles.drawerLabel, labelMotion, { color, fontWeight: active ? '700' : '500', opacity: folded ? 0 : 1 }]}>{item.label}</Text>
           </StateLayerPressable>
+          </NavPresence>
         );
       })}
       {onToggle && <>

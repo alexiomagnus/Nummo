@@ -125,7 +125,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             onChange={(value) => { if (value === 'auto') onChange({ timeZone: autoTimeZone }); else if (value) onChange({ timeZone: device }); }} />
           {preferences.timeZone === autoTimeZone
             ? <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{t("Fuso orario: {p0}", { p0: device.replace(/_/g, ' ') })}</Text>
-            : <MenuSelect panel whole label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
+            : <MenuSelect panel label={t("Fuso")} icon={iconShapes.calendar} value={preferences.timeZone} options={zones}
                 onChange={(timeZone) => onChange({ timeZone })} />}
         </OptionRow>
       </ListGroup>
@@ -137,7 +137,7 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
         <ToggleRow icon={iconShapes.moon} title={t("Modalità AMOLED")} subtitle={t("Sfondo nero puro nel tema scuro.")}
           value={preferences.amoled} onChange={(amoled) => onChange({ amoled })} />
         <RowDivider />
-        <MenuSelect panel whole label={t("Animazione dello sfondo")} icon={iconShapes.sparkles} value={preferences.background}
+        <MenuSelect panel label={t("Animazione dello sfondo")} icon={iconShapes.sparkles} value={preferences.background}
           row={{ title: t("Animazione dello sfondo"), icon: backgroundIcons[preferences.background] }}
           options={backgrounds.map((value) => ({ value, label: t(backgroundLabels[value]),
             icon: <SvgIcon shape={backgroundIcons[value]} size={20} color={colors.onSurfaceVariant} /> }))}
@@ -190,9 +190,9 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             })}
           </View>
         </OptionRow>
-        {scaleAvailable && <><RowDivider /><ScaleSlider value={scalePending ?? preferences.uiScale} onChange={(uiScale) => setScalePending(uiScale === preferences.uiScale ? null : uiScale)} />
+        {scaleAvailable && !desktop && <><RowDivider /><ScaleSlider value={scalePending ?? preferences.uiScale} onChange={(uiScale) => setScalePending(uiScale === preferences.uiScale ? null : uiScale)} />
           {/* The bar fades and slides in and out (28 November, on request): `Disclosure`, the same in-flow motion as the options under a switch. */}
-          <Disclosure open={scalePending !== null}><RowBody><ApplyBar onReset={() => setScalePending(null)} onApply={() => { if (scalePending !== null) onChange({ uiScale: scalePending }); setScalePending(null); }} /></RowBody></Disclosure></>}
+          <Disclosure grow open={scalePending !== null}><RowBody><ApplyBar onReset={() => setScalePending(null)} onApply={() => { if (scalePending !== null) onChange({ uiScale: scalePending }); setScalePending(null); }} /></RowBody></Disclosure></>}
         {iconsAvailable && <><RowDivider /><OptionRow icon={iconShapes.smartphone} title={t("Icona dell'app")}>
           <AppIconChoice /></OptionRow></>}
       </ListGroup>
@@ -259,7 +259,7 @@ function AppIconChoice() {
         );
       })}
     </View>
-    <Disclosure open={pending !== null}><ApplyBar onReset={() => setPending(null)} onApply={() => { if (pending !== null) choose(pending); setPending(null); }} /></Disclosure>
+    <Disclosure grow open={pending !== null}><ApplyBar onReset={() => setPending(null)} onApply={() => { if (pending !== null) choose(pending); setPending(null); }} /></Disclosure>
     </View>
   );
 }
