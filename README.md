@@ -354,9 +354,8 @@ sul commit da cui sono compilati. I rilasci del sito non hanno tag.
 ### Aggiornamenti dall'app (dalla 0.3.6)
 
 L'app controlla le Releases a ogni apertura (API pubblica di GitHub, senza token né backend) e, se c'è una
-versione più recente di quella installata, mostra «Aggiornamento disponibile» con le note della release: **l'aggiornamento è
-obbligatorio** (nessun «Più tardi», Indietro non chiude la schermata; «Più tardi» ricompare solo se il download o l'installazione
-falliscono). Senza rete il controllo tace e l'app si usa normalmente. Da menu account → **Info** → «Aggiornamenti» si controlla subito («Controlla aggiornamenti») e si leggono le note delle
+versione più recente di quella installata, mostra «Aggiornamento disponibile» con le note della release come prima cosa sopra l'app: **non è obbligatorio**
+(«Più tardi» o Indietro la chiudono) e ricompare a ogni apertura finché non aggiorni. Senza rete il controllo tace e l'app si usa normalmente. Da menu account → **Info** → «Aggiornamenti» si controlla subito («Controlla aggiornamenti») e si leggono le note delle
 ultime versioni («Note di rilascio»). «Aggiorna» scarica l'APK dentro l'app con una barra di avanzamento, lo verifica (SHA-256 della
 release, stesso pacchetto, versione più alta, **stessa chiave di firma**) e lo passa all'installatore di Android, che chiede sempre la
 conferma; la prima volta Android chiede anche di consentire a Nummo di installare app («Consenti da questa fonte»). I dati restano:
@@ -365,7 +364,7 @@ pagina della release su GitHub; dalla 0.3.4 in giù non conosce la propria versi
 
 Perché una release sia vista dagli aggiornamenti, pubblicala così:
 
-1. alza `versionCode` (sempre) e `versionName` in `android/app/build.gradle.kts`; la versione è solo numerica (per esempio `0.3.19`);
+1. alza `versionCode` (sempre) e `versionName` in `android/app/build.gradle.kts`; la versione è solo numerica (per esempio `0.3.20`);
 2. compila con la **stessa chiave** (`./gradlew assembleRelease`) e rinomina l'APK in `nummo-<versione>.apk`;
 3. calcola l'impronta: `sha256sum nummo-<versione>.apk > nummo-<versione>.apk.sha256`;
 4. crea la release, pubblicata (non bozza né pre-release) e marcata come «Latest», con tag `android-v<versione>` già inviato:

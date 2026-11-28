@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Release 0.3.20 — 28 novembre 2026 (notte)
+
+versionCode 23, `0.3.20`, **solo il numero di versione** (nessuna modifica nativa); il sito era già pubblicato (`b255bb2`). APK firmato `nummo-0.3.20.apk` (SHA-256 `65cd1dc3…13fc4c`, certificato `00b1c85c…0fcf` = quello della 0.3.19, verificato con `apksigner`), release GitHub `android-v0.3.20`. Chi ha la 0.3.19 vede la schermata di aggiornamento alla prossima apertura (non obbligatoria). README: paragrafo degli aggiornamenti corretto (non più obbligatori). Da provare sul telefono: la schermata di aggiornamento come prima cosa e «Più tardi».
+
 ## «Categoria predefinita» di Nuova lista intera — 28 novembre 2026 (notte)
 
 Su richiesta (screenshot): il selettore «Categoria predefinita» di Nuova/Modifica lista (`ListDialogs.tsx`) ha `whole`, si apre alla massima altezza su smartphone. `typecheck` e test 632/632; pubblicato con `deploy:hosting` (solo web); non provato sul telefono.
