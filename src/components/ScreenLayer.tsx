@@ -277,7 +277,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
       const easing = CSS.supports?.('animation-timing-function', 'linear(0, 1)') ? spring.easing : bezier(motion.enter);
       // Corners and shadow travel with it: squared off only as it lands whole.
       const look = (at: number) => ({ ...(sizing ? { top: `${at}px` } : { transform: `translateY(${at}px)` }), borderTopLeftRadius: `${at > 0 ? slideTimings.corner : 0}px`,
-        borderTopRightRadius: `${at > 0 ? slideTimings.corner : 0}px`, boxShadow: `0px ${at > 0 ? -12 : 0}px ${at > 0 ? 32 : 0}px ${latest.current.backdrop}` });
+        borderTopRightRadius: `${at > 0 ? slideTimings.corner : 0}px`, boxShadow: at > 0 ? liftShadow(latest.current.backdrop) : flatShadow(latest.current.backdrop) });
       moving.animate([look(start), look(y)], { duration: spring.duration, easing });
       scrim?.animate({ opacity: [fade(start), y ? fade(y) : '0'] }, { duration: spring.duration, easing: 'linear' });
     }
@@ -307,14 +307,22 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
     const scrollerNode = surfaceNode ? findScroller(surfaceNode) : null;
     const inner = scrollerNode?.firstElementChild;
     if (!fitPeek || !fit || !stops || !node || !inner || typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(() => {
+    let gone = false;
+    const refit = () => {
+      if (gone) return;
+      // While the screen is moving (the spring to peek, or a drag) its own change of height makes the content resize: a settle
+      // started then replaced the running animation and the screen jumped to its end (28 November, on a recording, measured in
+      // headless Chromium: top 450 → 515 mid-spring). It waits for the movement to end, then looks again.
+      const running = parts(node).surface?.getAnimations() ?? [];
+      if (running.length > 0) { void Promise.allSettled(running.map((animation) => animation.finished)).then(refit); return; }
       const before = peekAt(latest.current.frame.height);
       const next = fitTo(node, latest.current.frame.height, fitPeek !== 'shrink');
-      // Below a pixel it is rounding, not new content: no new settle (each one animates and is observed again).
-      if (Math.abs(next - before) >= 1 && detentRef.current === 'peek') settle('peek', before);
-    });
+      // Up to a pixel it is rounding, not new content: no new settle (each one animates and is observed again).
+      if (Math.abs(next - before) > 1 && detentRef.current === 'peek') settle('peek', before);
+    };
+    const observer = new ResizeObserver(refit);
     observer.observe(inner);
-    return () => observer.disconnect();
+    return () => { gone = true; observer.disconnect(); };
   }, [fitPeek, fit, stops]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const node = dom(root.current);
@@ -514,6 +522,19 @@ function scrolledBetween(target: EventTarget | null, surface: HTMLElement): bool
   return false;
 }
 
+// The shadow above a lifted edge (28 November, on a recording: the full backdrop colour at 32 px blur, on top of the scrim dimming the
+// page, smeared a dark band over bright content such as the treemap). Tighter and a little more than a third of the backdrop's
+// opacity; the flat one is the same colour, so the animation between them only changes size.
+const shadowShare = 0.4;
+function shadowColor(backdrop: string): string {
+  const match = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(backdrop);
+  if (!match) return backdrop;
+  const alpha = Math.round(parseInt(match[2] ?? 'ff', 16) * shadowShare);
+  return `#${match[1]}${alpha.toString(16).padStart(2, '0')}`;
+}
+const liftShadow = (backdrop: string) => `0px -4px 14px ${shadowColor(backdrop)}`;
+const flatShadow = (backdrop: string) => `0px 0px 0px ${shadowColor(backdrop)}`;
+
 // A detail moved down by `y` (dragged, or in peek): the screen's edge shows as during the slide, with round top corners and a
 // shadow above it, and the page above is dimmed as under a sheet, fading only past the peek position on the way to closing.
 function detentScrim(y: number, height: number, peek = peekOffset(height)): number {
@@ -526,7 +547,7 @@ function pose(surface: HTMLElement, scrim: HTMLElement | null, y: number, height
   else surface.style.transform = lifted ? `translateY(${y}px)` : '';
   surface.style.borderTopLeftRadius = lifted ? `${slideTimings.corner}px` : '';
   surface.style.borderTopRightRadius = lifted ? `${slideTimings.corner}px` : '';
-  surface.style.boxShadow = lifted ? `0px -12px 32px ${backdrop}` : '';
+  surface.style.boxShadow = lifted ? liftShadow(backdrop) : '';
   if (scrim) scrim.style.opacity = lifted ? String(detentScrim(y, height, peek)) : '';
 }
 
@@ -641,8 +662,8 @@ function slide({ surface, scrim }: Parts, root: HTMLElement, { frame, frameRadiu
     const away = `translateY(${frame.height + (sheet ? spacing.xxxl : 0)}px)`;
     animations.push(surface.animate({ transform: opening ? [away, 'translateY(0px)'] : ['translateY(0px)', away] }, { duration, easing: curve, fill: both }));
     // Shadow (and, for a whole screen, round top corners: a sheet always has them) while it moves; radius, not a clip, so the shadow shows.
-    const lifted = { boxShadow: `0px -12px 32px ${backdrop}`, ...(sheet ? null : { borderTopLeftRadius: `${corner}px`, borderTopRightRadius: `${corner}px` }) };
-    const flat = { boxShadow: `0px 0px 0px ${backdrop}`, ...(sheet ? null : { borderTopLeftRadius: `${frameRadius}px`, borderTopRightRadius: `${frameRadius}px` }) };
+    const lifted = { boxShadow: liftShadow(backdrop), ...(sheet ? null : { borderTopLeftRadius: `${corner}px`, borderTopRightRadius: `${corner}px` }) };
+    const flat = { boxShadow: flatShadow(backdrop), ...(sheet ? null : { borderTopLeftRadius: `${frameRadius}px`, borderTopRightRadius: `${frameRadius}px` }) };
     animations.push(surface.animate(opening ? [lifted, { ...lifted, offset: 0.6 }, flat] : [flat, { ...lifted, offset: 0.3 }, lifted],
       { duration, easing: 'linear', fill: both }));
     // The page under a whole screen steps back a little (around the centre of what is in view) and comes forward on the way down;
