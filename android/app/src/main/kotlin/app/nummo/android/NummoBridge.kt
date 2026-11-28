@@ -32,6 +32,16 @@ class NummoBridge(private val activity: MainActivity) {
         activity.runOnUiThread { activity.webView.performHapticFeedback(effect) }
     }
 
+    // The keyboard for the field the page has just focused (0.3.19, 28 November, on request: Nuova spesa opens with the keyboard). In
+    // a WebView a focus() from script puts the caret in the field but does not raise the keyboard: the system has to be asked.
+    @JavascriptInterface
+    fun showKeyboard() {
+        activity.runOnUiThread {
+            activity.webView.requestFocus()
+            activity.getSystemService(android.view.inputmethod.InputMethodManager::class.java)?.showSoftInput(activity.webView, 0)
+        }
+    }
+
     @JavascriptInterface
     fun setSystemBars(color: String, dark: Boolean) {
         if (!colorPattern.matches(color)) return

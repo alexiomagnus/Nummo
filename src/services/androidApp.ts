@@ -280,6 +280,13 @@ export function parseTopInset(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 200 ? value : 0;
 }
 
+// Keyboard for the focused field (app 0.3.19): optional, without the method (browser, older app) nothing happens.
+export function androidShowKeyboard(scope: unknown = globalThis): void {
+  const bridge = androidBridge(scope) as unknown as { showKeyboard?: unknown } | undefined;
+  if (!bridge || typeof bridge.showKeyboard !== 'function') return;
+  try { (bridge.showKeyboard as () => unknown).call(bridge); } catch { /* the keyboard opens with a tap anyway */ }
+}
+
 export function androidTopInset(scope: unknown = globalThis): number {
   const bridge = androidBridge(scope) as unknown as { topInset?: unknown } | undefined;
   if (!bridge || typeof bridge.topInset !== 'function') return 0;

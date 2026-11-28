@@ -43,6 +43,8 @@ import { UpcomingRenewals } from '../history/UpcomingRenewals';
 import { SubscriptionList } from '../history/SubscriptionList';
 import { makeBackup } from '../../domain/backup';
 import { backendMode, firestoreEmulator } from '../../services/backendConfig';
+import { isTextEntry } from '../../theme/viewport';
+import { androidShowKeyboard } from '../../services/androidApp';
 import { BackupActions, download, downloadBackup } from '../backup/BackupActions';
 import { ListGrid } from '../../components/ActionList';
 import { message } from '../expenses/useRemoteExpenses';
@@ -298,6 +300,20 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const formLoading = starting || (!store.error && !categoryState.error && !fundsError &&
     !(store.ready && hasUsableCategorySnapshot(categoryState) && fundState.fundsReady));
   const usableCategories = hasUsableCategorySnapshot(categoryState);
+  // Nuova spesa opens with the cursor in Importo and the keyboard up (user's request, 28 November), each time the page is shown and
+  // its data is ready: not over an open screen, and not when a field already has the focus (a field the user touched).
+  const expenseReady = section === 'expense' && !formLoading;
+  useEffect(() => {
+    if (!expenseReady || typeof document === 'undefined') return undefined;
+    const frame = requestAnimationFrame(() => {
+      if (document.querySelector('[role="dialog"]') || isTextEntry(document.activeElement as HTMLElement | null)) return;
+      const field = document.querySelector<HTMLInputElement>('[data-new-expense] input[inputmode="decimal"]');
+      if (!field) return;
+      field.focus({ preventScroll: true });
+      if (document.activeElement === field) androidShowKeyboard();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [expenseReady]);
   const formStore = useMemo(() => ({ ...store, ready: store.ready && usableCategories && fundState.fundsReady,
     error: store.error || categoryState.error || fundsError }), [store, usableCategories, fundState.fundsReady, categoryState.error, fundsError]);
   // Dashboard, CSV and backups keep every paid occurrence; only the Spese list leaves the subscriptions to their own view.
@@ -467,7 +483,7 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     {/* The form stays mounted at full size (labels measured, draft kept, title in place) while the first data arrives; it is only invisible. */}
     <View style={section === 'expense' ? styles.grow : styles.hidden}>
       {formLoading && section === 'expense' && <View style={styles.startingOverlay}><Spinner label={t("Caricamento dei dati")} /></View>}
-      <div inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
+      <div data-new-expense inert={formLoading || section !== 'expense'} aria-hidden={formLoading || section !== 'expense' || undefined} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, visibility: formLoading ? 'hidden' : 'visible' }}>
         <ExpenseForm categories={categoryState.categories} fundChoices={fundChoices} defaultFundId={defaultFundId}
           defaultCategoryId={preferred.expense} store={formStore} merchants={merchants} prefill={prefill}
           templates={dashboardPreferences.templatesEnabled ? templateState.templates : undefined} />

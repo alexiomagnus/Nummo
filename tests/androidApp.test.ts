@@ -185,3 +185,14 @@ test('top inset of the app: validated, 0 without the method or outside the app',
   assert.equal(androidBottomInset({ NummoAndroid: full }), 0);
   assert.equal(androidBottomInset({ NummoAndroid: { ...full, bottomInset: () => 24 } }), 24);
 });
+
+test('keyboard request of the app: only with the method, never throws', async () => {
+  const { androidShowKeyboard } = await import('../src/services/androidApp.ts');
+  const full = { haptic() {}, setSystemBars() {}, saveFile() {}, canAuthenticate: () => false, authenticate() {}, cancelAuthentication() {} };
+  let calls = 0;
+  androidShowKeyboard({});
+  androidShowKeyboard({ NummoAndroid: full });
+  androidShowKeyboard({ NummoAndroid: { ...full, showKeyboard: () => { calls += 1; } } });
+  assert.equal(calls, 1);
+  androidShowKeyboard({ NummoAndroid: { ...full, showKeyboard: () => { throw new Error('x'); } } });
+});

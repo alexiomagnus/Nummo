@@ -386,7 +386,7 @@ export function ScreenLayer({ label, title, backLabel, onBack, backDisabled = fa
         usable, and going to another page closes the open screens first (closeAllScreens), so the new page shows at once (user's
         request, 25 November; a transparent layer kept them from being pressed from 24 November). */}
     <View ref={root} role="dialog" aria-modal aria-label={label} {...part('root')}
-      style={[styles.root, { left: frame.left, top: frame.top, width: frame.width, height: frame.height }]}>
+      style={[styles.root, compact ? styles.rootFull : { left: frame.left, top: frame.top, width: frame.width, height: frame.height }]}>
       {sheet ? <Pressable {...part('scrim')} accessibilityRole="button" accessibilityLabel={backLabel} focusable={false} disabled={backDisabled} onPress={onBack}
         style={[StyleSheet.absoluteFill, styles.sheetScrim, { backgroundColor: colors.backdrop, opacity: scrimOpacity, borderRadius: frameRadius }]} />
         : <View {...part('scrim')} pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.backdrop, opacity: 0, borderRadius: frameRadius }]} />}
@@ -737,6 +737,9 @@ const handleClearance = spacing.xs + 24 + spacing.md;
 
 const styles = StyleSheet.create({
   root: { position: 'absolute' },
+  // On phones the frame is the whole of #root: sized by CSS, so it follows the keyboard in the very frame of #root's new height. The measured
+  // frame (state) arrives a React render later, and with the keyboard animating the screen lagged and then jumped (28 November, recording).
+  rootFull: { left: 0, top: 0, width: '100%', height: '100%' },
   surface: { overflow: 'hidden' },
   content: { flex: 1 },
   grow: { flex: 1, minHeight: 0 },
