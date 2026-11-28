@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Interruttore «Abbonamento» — 28 novembre 2026 (notte)
+
+Su richiesta (screenshot): l'interruttore «Ricorrente» di Nuova spesa e dell'editor si chiama «Abbonamento» (`RepeatField.tsx`; inglese «Subscription», chiave «Ricorrente» tolta da `en.ts`). Comportamento invariato. `typecheck` e test 632/632; pubblicato con `deploy:hosting` (solo web); non visto a schermo.
+
 ## Vista «Spese» accanto ad «Abbonamenti» — 28 novembre 2026 (notte)
 
 Su richiesta (screenshot): il segmento della prima vista della pagina Uscite si chiama di nuovo «Spese» (`listViews` in `Workspace.tsx`); destinazione, titolo della pagina e «Vista della pagina Uscite» restano «Uscite». `typecheck` e test 632/632; pubblicato con `deploy:hosting` (solo web); non visto a schermo.

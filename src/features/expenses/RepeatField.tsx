@@ -31,7 +31,7 @@ export function RepeatField({ repeat, recurrence, error, disabled, onRepeatChang
   const groups = Children.toArray(children);
   return (
     <View style={styles.section} role="group" aria-label={t("Pagamento ricorrente")}>
-      <SwitchRow label={t("Ricorrente")} value={repeat} disabled={disabled} onChange={onRepeatChange} />
+      <SwitchRow label={t("Abbonamento")} value={repeat} disabled={disabled} onChange={onRepeatChange} />
       <Disclosure open={repeat} style={{ gap: gap - switchInset }}>
         <View style={[styles.frequency, { paddingBottom: switchInset }]}>
           <RecurrencePicker value={recurrence} error={Boolean(error)} disabled={disabled} onChange={onRecurrenceChange} />

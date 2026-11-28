@@ -448,7 +448,7 @@ export const english: Readonly<Record<string, string>> = {
   "Solo il": "Only on",
   "Dal": "From",
   "Rimuovi la variazione del {p0}": "Remove the change on {p0}",
-  "Ricorrente": "Recurring",
+  "Abbonamento": "Subscription",
   "Importo": "Amount",
   "Importo in euro, obbligatorio": "Amount in euros, required",
   "Descrizione": "Description",
