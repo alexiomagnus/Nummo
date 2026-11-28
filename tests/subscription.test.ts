@@ -176,6 +176,21 @@ test('searchSubscriptions filters by normalised name and keeps all on empty quer
   assert.equal(searchSubscriptions(list, 'zzz').length, 0);
 });
 
+test('sortSubscriptions: rinnovo = ordine di base, importo e nome; gli attivi restano prima di pausa e annullati', async () => {
+  const { sortSubscriptions, subscriptionSummaries } = await import('../src/domain/history.ts');
+  const base = { category_id: null, expense_date: '2026-01-01', recurrence: 'monthly' as const, created_at: '2026-01-01T10:00:00.000Z' };
+  const paused = { status_changes: [{ date: '2026-06-01', status: 'paused' as const }] };
+  const list = subscriptionSummaries([
+    { ...base, id: 'a', description: 'Netflix', amount_minor: 1500 }, { ...base, id: 'b', description: 'Caffè Club', amount_minor: 500 },
+    { ...base, id: 'c', description: 'Zeta', amount_minor: 9900, ...paused }, { ...base, id: 'd', description: 'Altro', amount_minor: 2500 },
+  ], '2026-11-08');
+  const ids = (sort: 'renewal' | 'amount-desc' | 'amount-asc' | 'name') => sortSubscriptions(list, sort).map((item) => item.entry.id);
+  assert.deepEqual(ids('renewal'), list.map((item) => item.entry.id));
+  assert.deepEqual(ids('amount-desc'), ['d', 'a', 'b', 'c']);
+  assert.deepEqual(ids('amount-asc'), ['b', 'a', 'd', 'c']);
+  assert.deepEqual(ids('name'), ['d', 'b', 'a', 'c']);
+});
+
 test('pausa o annullamento datati nel passato: i pagamenti dopo la data non contano, quelli fino alla data restano', () => {
   const today = '2026-05-20'; // paid on the 5th of January…May
   const all = dates(expandOccurrences([entry()], today));

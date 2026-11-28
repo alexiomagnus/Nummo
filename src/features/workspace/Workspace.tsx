@@ -57,6 +57,7 @@ import type { DataStore } from '../../services/dataStore';
 import type { ExpenseStore } from '../expenses/expenseStore';
 import { FundsPage } from '../funds/FundsPage';
 import { FundFilter } from '../funds/FundFilter';
+import { allCategories } from '../history/SubscriptionList';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { useRemoteFunds, type RemoteFunds } from '../funds/useRemoteFunds';
 import { readDefaultFund, writeDefaultFund } from '../funds/defaultFund';
@@ -319,11 +320,16 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
   const fundFilterShown = fundState.funds.length > 0;
   const fundFilter = fundFilterShown ? effectiveFundFilter(fundChoice, fundState.funds.map((fund) => fund.id)) : allFunds;
   const shownOneOff = useMemo(() => filterByFund(oneOff, fundFilter), [oneOff, fundFilter]);
-  const shownSubscriptions = useMemo(() => subscriptions.filter((item) => matchesFund(item.entry, fundFilter)), [subscriptions, fundFilter]);
+  // Category filter of the subscriptions view (28 November, on request): narrows the list and, like Fondo, the «Prossimo mese» card.
+  const [subCategoryChoice, setSubCategoryChoice] = useState(allCategories);
+  const subCategory = subCategoryChoice === allCategories || categoryState.categories.some((category) => category.id === subCategoryChoice) ? subCategoryChoice : allCategories;
+  const inCategory = (item: { category_id?: string | null }) => subCategory === allCategories || item.category_id === subCategory;
+  const shownSubscriptions = useMemo(() => subscriptions.filter((item) => matchesFund(item.entry, fundFilter) && inCategory(item.entry)), [subscriptions, fundFilter, subCategory]);
   // Same window for the card's total and its list: it lists only the renewals its total counts (the next 30 days).
   const shownEntries = useMemo(() => filterByFund(store.expenses, fundFilter), [store.expenses, fundFilter]);
-  const renewals = useMemo(() => upcomingRenewals(shownEntries, today, addDays(today, forecastDays)), [shownEntries, today]);
-  const soon = useMemo(() => forecastOccurrences(shownEntries, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [shownEntries, today]);
+  const renewalEntries = useMemo(() => shownEntries.filter(inCategory), [shownEntries, subCategory]);
+  const renewals = useMemo(() => upcomingRenewals(renewalEntries, today, addDays(today, forecastDays)), [renewalEntries, today]);
+  const soon = useMemo(() => forecastOccurrences(renewalEntries, today, addDays(today, forecastDays)).reduce((sum, item) => sum + item.amount_minor, 0), [renewalEntries, today]);
   // `from`: today, or an earlier day chosen in the dialog to correct a pause/cancellation that was forgotten (never before
   // the last change, never in the future). The payments after it stop being counted; the dialog listed them first.
   const changeStatus = async (id: string, status: SubscriptionStatus, from: string = todayInRome()) => {
@@ -469,13 +475,13 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
         <SegmentedButtons label={t("Vista della pagina Spese")} value={listView} onChange={setListView} haptic
           options={listViews.map((view) => ({ value: view.value, label: t(view.label), accessibilityLabel: t(view.full) }))} />
         {/* Page-wide fund filter: under the two views, over the whole width of the section. */}
-        {fundFilterShown && !(phone && listView === 'expenses') && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
+        {fundFilterShown && !phone && <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} />}
         {listView === 'expenses' && <ExpenseList fundActive={fundFilter !== allFunds}
           fundFilter={fundFilterShown && phone ? <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} /> : undefined} occurrences={shownOneOff} categories={categoryState.categories} error={error} onOpen={openDetail} listItems={listItems} merchantNames={merchantNames} pendingIds={store.pendingIds}
           emptyLabel={fundFilter === allFunds ? undefined : "Nessuna spesa per questo fondo."} />}
         {listView === 'subscriptions' && <>
           <UpcomingRenewals renewals={renewals} categories={categoryState.categories} soon={soon} days={forecastDays} />
-          <SubscriptionList subscriptions={shownSubscriptions} emptyLabel={fundFilter === allFunds ? undefined : "Nessun abbonamento per questo fondo."} categories={categoryState.categories} error={error}
+          <SubscriptionList categoryFilter={subCategory} onCategoryFilter={setSubCategoryChoice} fundActive={fundFilter !== allFunds} fundFilter={fundFilterShown && phone ? <FundFilter funds={fundState.funds} value={fundFilter} onChange={setFundChoice} style={styles.fundFilter} /> : undefined} subscriptions={shownSubscriptions} emptyLabel={fundFilter !== allFunds ? "Nessun abbonamento per questo fondo." : subCategory !== allCategories ? "Nessun abbonamento in questa categoria." : undefined} categories={categoryState.categories} error={error}
             onOpen={openSeries} />
         </>}
       </View>

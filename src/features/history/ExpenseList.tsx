@@ -10,9 +10,10 @@ import { leadingIcon } from '../../components/FieldIcon';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { Reveal } from '../../components/Reveal';
+import { FiltersButton } from './FiltersButton';
 import { ListRow, listRowStyles } from '../../components/ListRow';
 import { CategoryGlyph } from '../../components/CategoryGlyph';
-import { inputOutline, radius, spacing } from '../../theme/tokens';
+import { inputOutline, layout, radius, spacing } from '../../theme/tokens';
 import { useSizeClass } from '../../theme/useSizeClass';
 import { expenseMonths } from './expenseMonths';
 import { expenseCardId } from './ExpenseDetail';
@@ -102,24 +103,17 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
     <MenuSelect panel whole iconOnPhones label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
       onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
   );
-  // Phones (28 November, on request): the search and a «Filtri» button share a row; Fondo and Categoria open under it, Ordina stays
-  // outside. The button says how many filters are on, so a hidden one is never forgotten.
-  const activeFilters = (filter !== ALL ? 1 : 0) + (fundFilter && fundActive ? 1 : 0);
+  // Phones (28 November, on request): the search and a «Filtri» button share a row; Fondo, Categoria and Ordina open under it. The button says how many filters are on, so a hidden one is never forgotten.
+  const activeFilters = (filter !== ALL ? 1 : 0) + (fundFilter && fundActive ? 1 : 0) + (sort !== 'date-desc' ? 1 : 0);
   const phoneFilters = compact && fundFilter !== undefined;
   const filters = phoneFilters ? (
     <>
-      <View style={styles.toolbarCompact}>
+      <View style={[styles.toolbar, styles.toolbarCompact]}>
         <View style={styles.searchRow}>
           {search}
-          <Button mode={activeFilters > 0 || filtersOpen ? 'contained-tonal' : 'outlined'} contentStyle={styles.filtersContent}
-            aria-expanded={filtersOpen} accessibilityLabel={filtersOpen ? t("Nascondi i filtri") : t("Mostra i filtri")}
-            icon={({ size, color }) => <SvgIcon shape={iconShapes.filter} size={size} color={color} />}
-            onPress={() => setFiltersOpen((open) => !open)}>
-            {activeFilters > 0 ? t("Filtri · {p0}", { p0: activeFilters }) : t("Filtri")}
-          </Button>
+          <FiltersButton active={activeFilters} open={filtersOpen} onToggle={() => setFiltersOpen((open) => !open)} />
         </View>
-        {filtersOpen && <Reveal style={styles.filterPanel}>{fundFilter}{categorySelect}</Reveal>}
-        <View style={styles.selectsCompact}>{sortSelect}</View>
+        {filtersOpen && <Reveal style={styles.filterPanel}>{fundFilter}{categorySelect}{sortSelect}</Reveal>}
       </View>
       {error && <HelperText type="error" accessibilityRole="alert">{t(error)}</HelperText>}
     </>
@@ -247,7 +241,6 @@ const styles = StyleSheet.create({
   searchCompact: { minWidth: 0 },
   searchGrow: { flex: 1, minWidth: 0 },
   searchRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.md },
-  filtersContent: { minHeight: 56, paddingHorizontal: spacing.xs },
   filterPanel: { gap: spacing.md },
   // Ordina and Categoria stay one group: equal halves of the row, or of what the search leaves.
   selects: { flexGrow: 2, flexBasis: 340, flexDirection: 'row', gap: spacing.md, minWidth: 0 },

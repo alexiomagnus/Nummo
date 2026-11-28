@@ -128,6 +128,21 @@ export function paymentsRemoved(entry: ExpenseEntry, next: readonly StatusChange
   return expandOccurrences([entry], today).filter((item) => !kept.has(item.key));
 }
 
+// Order of the subscriptions list (the «Ordina» field of the phones' filters panel, 28 November, on request): by next renewal (the
+// default, the order `subscriptionSummaries` already gives), by the price of the next renewal, or by name. Active series always
+// come before paused and cancelled ones (their «next renewal» is only a calendar slot); the sort is stable.
+export const subscriptionSortOptions = ['renewal', 'amount-desc', 'amount-asc', 'name'] as const;
+export type SubscriptionSort = (typeof subscriptionSortOptions)[number];
+export const subscriptionSortLabels: Record<SubscriptionSort, string> = {
+  renewal: 'Prossimo rinnovo', 'amount-desc': 'Importo più alto', 'amount-asc': 'Importo più basso', name: 'Nome (A–Z)',
+};
+export function sortSubscriptions(items: readonly SubscriptionSummary[], sort: SubscriptionSort): SubscriptionSummary[] {
+  if (sort === 'renewal') return [...items];
+  const key = (a: SubscriptionSummary, b: SubscriptionSummary) => sort === 'amount-desc' ? b.amount_minor - a.amount_minor
+    : sort === 'amount-asc' ? a.amount_minor - b.amount_minor : a.entry.description.localeCompare(b.entry.description);
+  return [...items].sort((a, b) => statusOrder[a.status] - statusOrder[b.status] || key(a, b));
+}
+
 // Name search over the series (same normalisation as the expense list); an empty query keeps every series.
 export function searchSubscriptions(items: readonly SubscriptionSummary[], query: string): SubscriptionSummary[] {
   const needle = searchKey(query);

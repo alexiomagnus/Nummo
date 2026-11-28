@@ -151,6 +151,8 @@ export const english: Readonly<Record<string, string>> = {
   "Cancella ricerca": "Clear search",
   "Ordina": "Sort",
   "Filtri": "Filters",
+  "Nome (A–Z)": "Name (A–Z)",
+  "Nessun abbonamento in questa categoria.": "No subscriptions in this category.",
   "Filtri · {p0}": "Filters · {p0}",
   "Mostra i filtri": "Show filters",
   "Nascondi i filtri": "Hide filters",
