@@ -72,7 +72,7 @@ export function SubscriptionList({ subscriptions: allSeries, categories, error, 
   );
   const categorySelect = (
     <MenuSelect panel whole iconOnPhones label={t("Categoria")} icon={iconShapes.filter} value={categoryFilter} onChange={onCategoryFilter} style={styles.select}
-      options={[{ value: allCategories, label: t("Tutte"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={colors.onSurfaceVariant} /> },
+      options={[{ value: allCategories, label: t("Tutte le categorie"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={colors.onSurfaceVariant} /> },
         ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))]} />
   );
   const panel = fundFilter !== undefined;

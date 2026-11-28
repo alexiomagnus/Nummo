@@ -85,7 +85,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
   const byDate = sort === 'date-desc' || sort === 'date-asc';
   const sortIcons: Record<(typeof sortOptions)[number], string> = { 'date-desc': iconShapes.sortNewest, 'date-asc': iconShapes.sortOldest, 'amount-desc': iconShapes.sortAmountHigh, 'amount-asc': iconShapes.sortAmountLow };
   const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]), icon: <SvgIcon shape={sortIcons[value]} size={20} color={theme.colors.onSurfaceVariant} /> }));
-  const categoryChoices = [{ value: ALL, label: t("Tutte"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={theme.colors.onSurfaceVariant} /> },
+  const categoryChoices = [{ value: ALL, label: t("Tutte le categorie"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={theme.colors.onSurfaceVariant} /> },
     ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))];
 
   const search = (

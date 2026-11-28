@@ -51,8 +51,8 @@ export function ReceiptAiCard() {
   const options = aiProviders.map((value) => ({ value, label: aiProviderLabels[value] }));
   return (
     <ListGroup icon={iconShapes.flash} label={t("Analisi scontrini con AI")}>
-      <ToggleRow icon={iconShapes.receipt} title={t("Scansione dello scontrino")} subtitle={t("In Nuova spesa, il pulsante Scansiona scontrino.")}
-        value={enabled} onChange={(value) => ai.change({ enabled: value })} />
+      <ToggleRow icon={iconShapes.receipt} title={t("Scansione dello scontrino")} subtitle={t("Serve la chiave API di un servizio AI (Claude, OpenAI o Google Gemini): inseriscila qui sotto. In Nuova spesa compare il pulsante Scansiona scontrino.")}
+        value={enabled} onChange={(value) => { ai.change({ enabled: value }); if (value) setShown(true); }} />
       <RowDivider />
       <ActionRow icon={shown ? iconShapes.chevronUp : iconShapes.chevronDown} tone="secondary" title={shown ? t("Nascondi le impostazioni") : t("Mostra le impostazioni")}
         onPress={() => setShown((value) => !value)} arrow={false} />

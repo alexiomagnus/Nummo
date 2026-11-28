@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Chiave API più chiara, «Tutte le categorie», «Categoria predefinita» intera — 28 novembre 2026
+
+Su richiesta (screenshot). **Lista scontrini**: la riga dell'interruttore dice ora che serve la chiave API di un servizio AI (Claude, OpenAI o Google Gemini) da inserire sotto, e accendendolo le impostazioni si aprono. **Filtri Categoria** di Spese e Abbonamenti: la voce senza filtro si chiama «Tutte le categorie» (era «Tutte»). **«Categoria predefinita»** di Nuova lista e Modifica lista si apre intera su smartphone (`whole`). `typecheck` e test 631/631; non visto a schermo.
+
 ## Pannello tirato in basso: scatto a metà molla — 28 novembre 2026
 
 Su segnalazione (registrazione schermo, «Ordina» da intero a metà). Dai fotogrammi a 120 Hz: al rilascio il pannello passava in **un solo fotogramma** dalla posizione del dito a quella di metà schermo, senza molla. Riprodotto in Chromium headless (CDP, tocco simulato, `top` letto a ogni fotogramma): la molla partiva (233 → 450) e a 180 ms `top` saltava a 515. Causa: nei pannelli con `fitPeek` il `ResizeObserver` del contenuto (`ScreenLayer.tsx`) scattava **mentre il pannello si accorciava** (l'altezza cambia con `top`), misurava un picco diverso di 1 px e chiamava un nuovo `settle('peek')`, la cui animazione sostituiva quella in corso (stessa proprietà) e portava il pannello alla fine di colpo, poi un ritocco di 1 px. Correzione: l'osservatore aspetta la fine delle animazioni del pannello (`getAnimations`) prima di rimisurare e ignora scarti fino a 1 px (prima ≥ 1). Dopo: curva continua da 233 a 515, nessun ritocco finale. Riguarda **tutti** i pannelli con `fitPeek`: Ordina, Periodo, Fondo, Categoria, selettore della data, Modifica categoria, Aggiungi/Trasferisci, rinomina Esercente; i pannelli senza `fitPeek` (Template, Prodotti) non usano l'osservatore. Misurato solo in headless (senza il peso del telefono); da riprovare sul dispositivo. `npm run check` da rieseguire; non pubblicato.
