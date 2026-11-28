@@ -2,7 +2,7 @@
 
 ## Liste: schermi al posto dei fogli; interruttore di «Altra ora» a destra — 28 novembre 2026 (notte)
 
-Su richiesta (video 16:59). Nuova lista, Modifica lista e Modifica prodotto (`ListDialogs`) non sono più fogli (`variant="sheet"` tolto): sono schermi con il pulsante Indietro, perché con la tastiera il foglio scattava e la tastiera si apriva da sola (nel video, con la 0.3.18, anche dopo `focusTextEntry={!record}`: non indagato; sullo schermo il campo non è più nel foglio che si sposta). Interruttore di «Altra ora»: il `StateLayerPressable` di `OptionRow toggle` metteva icona, testo e interruttore in colonna (`RowContent` è un fragment); ora una riga (`optionToggle`), interruttore a destra del titolo. `typecheck` e test 631/631; non visto a schermo; non committato né pubblicato.
+Su richiesta (video 16:59). Nuova lista, Modifica lista e Modifica prodotto (`ListDialogs`) non sono più fogli (`variant="sheet"` tolto): sono schermi con il pulsante Indietro, perché con la tastiera il foglio scattava e la tastiera si apriva da sola (nel video, con la 0.3.18, anche dopo `focusTextEntry={!record}`: non indagato; sullo schermo il campo non è più nel foglio che si sposta). Interruttore di «Altra ora»: il `StateLayerPressable` di `OptionRow toggle` metteva icona, testo e interruttore in colonna (`RowContent` è un fragment); ora una riga (`optionToggle`), interruttore a destra del titolo. `typecheck` e test 631/631; `npm run check` OK; commit `3552885` su `main` e `deploy:hosting` su `nummo-6b6e2` («Deploy complete!», solo web). Non visto a schermo né provato sul telefono.
 
 ## «Altra ora» con interruttore — 28 novembre 2026 (notte)
 
