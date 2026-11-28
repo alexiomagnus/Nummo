@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Categoria predefinita» di Nuova lista intera — 28 novembre 2026 (notte)
+
+Su richiesta (screenshot): il selettore «Categoria predefinita» di Nuova/Modifica lista (`ListDialogs.tsx`) ha `whole`, si apre alla massima altezza su smartphone. `typecheck` e test 632/632; pubblicato con `deploy:hosting` (solo web); non provato sul telefono.
+
 ## Filtro Categoria: icona e pannello intero — 28 novembre 2026 (notte)
 
 Su richiesta (screenshot). In Uscite e Abbonamenti il filtro Categoria usa l'icona `tag` (campo e voce «Tutte le categorie») al posto dell'imbuto, che resta solo sul pulsante «Filtri»; il pannello si apre intero su smartphone (`whole`). `typecheck` e test 632/632; pubblicato con `deploy:hosting` su `nummo-6b6e2` (solo web, Rules invariate, nessuna nuova APK); non provato sul telefono.
