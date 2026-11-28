@@ -1,5 +1,17 @@
 # HANDOFF — Nummo
 
+## «Modello» (scheda AI) si apre intero — 28 novembre 2026
+
+Su richiesta: il selettore «Modello» di «Lista scontrini» usa `whole` (su smartphone il pannello si apre alla massima apertura e non a metà, come Categoria e Fondo). `typecheck` OK; non provato a schermo. Se dopo l'apertura piena restava comunque a metà, serve verificare `ChoiceScreen`.
+
+## Cambio tema: l'animazione a cerchio a scatti — 28 novembre 2026
+
+Su segnalazione («a volte laggava»). Analisi dal codice, **senza misure sul dispositivo**: (1) durante la rivelazione lo snapshot nuovo è vivo e ridisegna la pagina a ogni fotogramma, e dietro il vetro si muovevano da soli i cerchi CSS (`[data-orb]`) e le animazioni su canvas di `Orbs.tsx` (JS a ogni fotogramma, più il ricalcolo dei livelli sfocati sopra); (2) il rendering sincrono (`flushSync`) di tutto l'albero col nuovo tema, comprese le pagine nascoste conservate, ritarda l'avvio (non toccato: costo del cambio di tema stesso); (3) il canvas dello sfondo si ricrea al cambio d'inchiostro. **Correzione**: attributo `data-theme-revealing` (`themeRevealAttribute` di `themeTransition.ts`) dall'inizio alla fine della rivelazione: i cerchi CSS vanno in pausa e i canvas disegnano un solo fotogramma fermo (così il nuovo non è vuoto) e poi nulla; al termine tutto riprende. Se lo scatto resta all'avvio, il passo successivo sarebbe ridurre il rendering delle pagine nascoste (`Activity`) al cambio di tema. Non provato sul telefono; `typecheck` e test 630/630.
+
+## Sesto avatar del profilo: «Anello», grigio — 28 novembre 2026
+
+Su richiesta: nuovo avatar `ring` («Anello», «Ring»): anello spesso attorno a un piccolo disco, in grigio neutro. Per averlo davvero grigio (non il blu-grigio di `slate`) è stata aggiunta la tinta `graphite` a `iconPalette.ts` (chiara e scura, superata dai test di contrasto della palette). Test sugli avatar portati a sei. Il valore salvato dei profili esistenti non cambia. Non visto a schermo.
+
 ## «Animazione dello sfondo» come riga, sul modello di Morphe — 28 novembre 2026
 
 Su richiesta (screenshot di Morphe): in Impostazioni → Aspetto la scelta non è più un campo con contorno dentro una scheda ma una riga con l'icona dell'animazione attuale, il titolo, la scelta corrente sotto e il chevron; al tocco si apre lo schermo di scelta (`ChoiceScreen`) come prima. Nuova prop `row` di `MenuSelect` (solo con `panel`), usata solo qui. `typecheck` OK; non visto a schermo. Se piace, lo stesso schema vale per altre scelte singole (Lingua, Tema, Carattere…): chiedere.

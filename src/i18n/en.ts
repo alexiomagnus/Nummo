@@ -1141,6 +1141,7 @@ export const english: Readonly<Record<string, string>> = {
   "Arco": "Arch",
   "Girandola": "Pinwheel",
   "Pietre": "Stones",
+  "Anello": "Ring",
   "La tua foto": "Your photo",
   "Carica una foto": "Upload a photo",
   "Il browser non ha salvato l’immagine: lo spazio per i dati del sito è pieno o bloccato.": "The browser did not save the picture: the storage for site data is full or blocked.",

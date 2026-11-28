@@ -14,7 +14,7 @@
 // Explicit black outline requested for the colourful shopping cart.
 export const cartOutlineColor = '#000000';
 
-export const iconHues = ['orange', 'amber', 'red', 'pink', 'violet', 'blue', 'teal', 'green', 'slate', 'popcorn', 'gold', 'purple'] as const;
+export const iconHues = ['orange', 'amber', 'red', 'pink', 'violet', 'blue', 'teal', 'green', 'slate', 'popcorn', 'gold', 'purple', 'graphite'] as const;
 export type IconHue = (typeof iconHues)[number];
 export type IconRamp = Readonly<{ b: string; t: string; i: string; o: string; l: string }>;
 
@@ -34,6 +34,7 @@ const light: Record<IconHue, IconRamp> = {
   teal: { b: '#00796B', t: '#BDEFE6', i: '#00302A', o: '#FFFFFF', l: '#00302A' },
   green: { b: '#3F7F3A', t: '#CDEFC5', i: '#10300D', o: '#FFFFFF', l: '#10300D' },
   slate: { b: '#5C6B7A', t: '#DAE2EA', i: '#1B2630', o: '#FFFFFF', l: '#1B2630' },
+  graphite: { b: '#5F5F5F', t: '#E4E4E4', i: '#1F1F1F', o: '#FFFFFF', l: '#1F1F1F' },
 };
 
 const dark: Record<IconHue, IconRamp> = {
@@ -49,6 +50,7 @@ const dark: Record<IconHue, IconRamp> = {
   teal: { b: '#5FCFBF', t: '#BDF0E8', i: '#002B26', o: '#002B26', l: '#BDF0E8' },
   green: { b: '#8FD18A', t: '#CDEFC9', i: '#0B2B09', o: '#0B2B09', l: '#CDEFC9' },
   slate: { b: '#A9B8C7', t: '#DCE4EC', i: '#17212B', o: '#17212B', l: '#DCE4EC' },
+  graphite: { b: '#BDBDBD', t: '#E6E6E6', i: '#1C1C1C', o: '#1C1C1C', l: '#E6E6E6' },
 };
 
 export const iconRamp = (hue: IconHue, isDark: boolean): IconRamp => (isDark ? dark : light)[hue];

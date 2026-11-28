@@ -71,6 +71,10 @@ type TransitionDocument = Document & { startViewTransition?: (update: () => void
 // Attribute that turns off CSS transitions while the new snapshot is taken (GlobalStyle): without it, controls with a
 // colour transition would fade from the old colours inside the circle.
 export const themeSwitchAttribute = 'data-theme-switching';
+// Set from the start of the switch to the end of the reveal (28 November, on report: the reveal sometimes dragged): the live new
+// snapshot repaints the whole page every frame, so what moves on its own behind the glass (the drifting circles in CSS, the
+// canvas animations of Orbs.tsx) stands still meanwhile; it would also make every blurred layer over it recompute its blur.
+export const themeRevealAttribute = 'data-theme-revealing';
 
 // Runs `apply` (which must commit synchronously: flushSync) inside a view transition revealed from `origin`.
 export function switchTheme(doc: Document, apply: () => void, options: { reducedMotion: boolean }): void {
@@ -87,6 +91,7 @@ export function switchTheme(doc: Document, apply: () => void, options: { reduced
   const radius = revealRadius(origin, width, height);
   const root = doc.documentElement;
   root.setAttribute(themeSwitchAttribute, '');
+  root.setAttribute(themeRevealAttribute, '');
   // The bars keep the old colour until the circle has covered the top edge of the page (holdDocumentChrome): at the top
   // they then always match the page under them. With one colour for both bars (theme-color, the Android app), the bottom
   // one changes a little before the circle gets there; it used to change at the very start for both.
@@ -96,6 +101,7 @@ export function switchTheme(doc: Document, apply: () => void, options: { reduced
     transition = start.call(doc, apply);
   } catch {
     root.removeAttribute(themeSwitchAttribute);
+    root.removeAttribute(themeRevealAttribute);
     releaseChrome();
     apply();
     return;
@@ -110,5 +116,6 @@ export function switchTheme(doc: Document, apply: () => void, options: { reduced
       { duration: spring.duration, easing, pseudoElement: '::view-transition-new(root)' });
     setTimeout(releaseChrome, chromeAt);
   }, () => { root.removeAttribute(themeSwitchAttribute); releaseChrome(); });
-  transition.finished.catch(() => undefined).finally(() => { root.removeAttribute(themeSwitchAttribute); releaseChrome(); });
+  const endReveal = () => root.removeAttribute(themeRevealAttribute);
+  transition.finished.catch(() => undefined).finally(() => { root.removeAttribute(themeSwitchAttribute); endReveal(); releaseChrome(); });
 }

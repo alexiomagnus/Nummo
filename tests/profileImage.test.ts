@@ -40,10 +40,10 @@ function contrast(a: string, b: string): number {
   return (light! + 0.05) / (dark! + 0.05);
 }
 
-test('avatar: cinque, ognuno con nome, tinta propria e disegno valido', () => {
-  assert.equal(profileAvatars.length, 5);
-  assert.equal(new Set(profileAvatars.map(profileAvatarHue)).size, 5);
-  assert.equal(new Set(Object.values(profileAvatarLabels)).size, 5);
+test('avatar: sei, ognuno con nome, tinta propria e disegno valido', () => {
+  assert.equal(profileAvatars.length, 6);
+  assert.equal(new Set(profileAvatars.map(profileAvatarHue)).size, 6);
+  assert.equal(new Set(Object.values(profileAvatarLabels)).size, 6);
   for (const avatar of profileAvatars) {
     for (const dark of [false, true]) {
       const svg = profileAvatarSvg(avatar, dark);
@@ -67,7 +67,7 @@ test('avatar: forma principale e accento leggibili sullo sfondo, in tema chiaro 
   }
 });
 
-test('avatar: scelta salvata e riletta uguale per ognuno dei cinque', () => {
+test('avatar: scelta salvata e riletta uguale per ognuno dei sei', () => {
   for (const avatar of profileAvatars) {
     const image = { kind: 'avatar', avatar } as const;
     assert.deepEqual(parseProfileImage(serializeProfileImage(image)), image);

@@ -1,3 +1,4 @@
+import { themeRevealAttribute } from '../theme/themeTransition';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useReducedMotion } from '../theme/useSizeClass';
@@ -125,9 +126,13 @@ function Canvas({ kind, ink: given }: { kind: Background; ink?: string }) {
       }
       ctx.globalAlpha = 1;
     };
+    // Still while the theme reveal runs (themeTransition.ts): one frame is drawn so the new canvas is not blank, then nothing.
+    let still = false;
     const tick = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.1); last = now;
-      if (!document.hidden) draw(now / 1000, dt);
+      const revealing = document.documentElement.hasAttribute(themeRevealAttribute);
+      if (!document.hidden && !(revealing && still)) draw(now / 1000, revealing ? 0 : dt);
+      still = revealing;
       frame = requestAnimationFrame(tick);
     };
     setup();

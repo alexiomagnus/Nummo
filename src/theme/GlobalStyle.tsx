@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect } from 'react';
 import { useTheme } from 'react-native-paper';
 import { applyDocumentTheme, bootThemeKey, makeBootTheme, type BootTheme } from './bootTheme';
 import type { Accent, ColorMode } from './palette';
-import { themeSwitchAttribute } from './themeTransition';
+import { themeRevealAttribute, themeSwitchAttribute } from './themeTransition';
 import { glassOf } from './theme';
 import { groupGap, radius } from './tokens';
 import { observeScrolling, observeViewportHeight, observeViewportTop, scrollingAttribute, stickyBottomProperty } from './viewport';
@@ -147,6 +147,7 @@ export function GlobalStyle({ mode, accent, colorMode, amoled = false }: Props) 
         100% { transform: translate(0, 0) scale(1); }
       }
       [data-orb] { animation: nummo-orb-drift 17s ease-in-out infinite; will-change: transform; }
+      [${themeRevealAttribute}] [data-orb] { animation-play-state: paused; }
       [data-orb='1'] { --orb-dx: -28px; --orb-dy: 36px; animation-duration: 21s; }
       [data-orb='2'] { --orb-dx: 32px; --orb-dy: 20px; animation-duration: 24s; animation-delay: -6s; }
       [data-orb='3'] { --orb-dx: -20px; --orb-dy: -28px; animation-duration: 19s; animation-delay: -9s; }

@@ -1,6 +1,6 @@
 import { iconRamp, type IconHue } from '../../theme/iconPalette.ts';
 
-// The five abstract profile pictures of the Standard mode (user's request, 22 November): drawn for Nummo only, not
+// The six abstract profile pictures of the Standard mode (user's request, 22 November): drawn for Nummo only, not
 // category icons; «Moduli» and «Prisma» redrawn the same day as «Girandola» and «Pietre» (a face, «Sorriso», and «Onde» tried and dropped). Pure: the SVG markup is built here from the shared icon palette (`theme/iconPalette.ts`), so the
 // colours come from the design system and follow the light and dark theme. Square 100×100 with a full background;
 // the shapes stay within ~36 of the centre, so they read whole in the round button and at 32–48 px.
@@ -8,7 +8,7 @@ import { iconRamp, type IconHue } from '../../theme/iconPalette.ts';
 // Roles per theme, from one hue of the palette: light = pale tint background, strong base shape, dark ink accent;
 // dark = deep ink background, bright base shape, pale tint accent. Adjacent shapes of base and accent never touch
 // (gaps or the background between them), so they stay apart even where the two are close in lightness.
-export const profileAvatars = ['orbits', 'drop', 'arch', 'pinwheel', 'stones'] as const;
+export const profileAvatars = ['orbits', 'drop', 'arch', 'pinwheel', 'stones', 'ring'] as const;
 export type ProfileAvatarId = (typeof profileAvatars)[number];
 
 type Roles = { bg: string; main: string; accent: string };
@@ -47,6 +47,11 @@ const specs: Record<ProfileAvatarId, AvatarSpec> = {
     draw: (c) => `<ellipse cx="50" cy="66" rx="22" ry="9" fill="${c.main}"/>`
       + `<ellipse cx="48" cy="47" rx="15" ry="7" fill="${c.accent}" transform="rotate(-6 48 47)"/>`
       + `<ellipse cx="53" cy="31" rx="9" ry="6" fill="${c.main}" transform="rotate(8 53 31)"/>`,
+  },
+  // A thick ring around a small disc, neutral grey (28 November, on request: a grey preset).
+  ring: {
+    label: 'Anello', hue: 'graphite',
+    draw: (c) => `<circle cx="50" cy="50" r="24" fill="none" stroke="${c.main}" stroke-width="8"/><circle cx="50" cy="50" r="9" fill="${c.accent}"/>`,
   },
 };
 
