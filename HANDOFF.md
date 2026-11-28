@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Release 0.3.16 — 28 novembre 2026 (sera)
+
+Commit `f5e6d17` (aggiornamento obbligatorio, barra «Reimposta/Applica» animata, docs) su `main` e `deploy:hosting` su `nummo-6b6e2`; poi commit `ba12d85` (versionCode 19, `0.3.16`, **solo il numero di versione**, nessuna modifica nativa), tag e release GitHub `android-v0.3.16` (APK firmato `nummo-0.3.16.apk` + `.sha256`, «Latest», non bozza). Chi ha la 0.3.15 (o 0.3.6+) alla prossima apertura vede «Aggiornamento disponibile» **obbligatorio**: è la prima prova dell'obbligo, mai vista sul telefono. Se non compare o non si installa, controllare permesso «installa app» e che la release sia «Latest». Questa sezione sostituisce «Stato corrente» e «Riallineamento» più sotto per quanto riguarda ciò che è pubblicato.
+
 ## «Reimposta/Applica» con animazione — 28 novembre 2026 (sera)
 
 Su richiesta (screenshot). In Impostazioni la barra «Reimposta | Applica» di scala dell'interfaccia e icona dell'app compare e sparisce con `Disclosure` (dissolvenza + scorrimento di 4 dp in entrata, uscita rapida; solo `opacity`/`transform`, movimento ridotto → immediata), la stessa animazione delle opzioni sotto un interruttore. Come per quelle, l'altezza si libera di colpo a fine uscita (non si anima il layout). `typecheck` e test 631/631; non visto a schermo; non pubblicato.
