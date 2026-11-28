@@ -2,7 +2,7 @@
 
 ## «Altra ora» con interruttore — 28 novembre 2026 (notte)
 
-Su richiesta (screenshot di Notifiche → Orario): la scheda «Altra ora» non è più solo attenuata; ha un **interruttore** in testa (`toggle` di `OptionRow` in `ActionList.tsx`). Spento: campo «Ora» attenuato (0,38) e `inert`. Acceso (di partenza se l'ora salvata non è Mattina/Pranzo/Sera): nessun segmento selezionato e l'ora si sceglie dal pannello. Scegliere un segmento lo spegne; spegnerlo con un'ora personalizzata riporta a «Mattina». Stato locale in `ReminderTime`, nulla di nuovo salvato. `typecheck` e test OK; non visto a schermo; non committato né pubblicato.
+Su richiesta (screenshot di Notifiche → Orario): la scheda «Altra ora» non è più solo attenuata; ha un **interruttore** in testa (`toggle` di `OptionRow` in `ActionList.tsx`). Spento: campo «Ora» attenuato (0,38) e `inert`. Acceso (di partenza se l'ora salvata non è Mattina/Pranzo/Sera): nessun segmento selezionato e l'ora si sceglie dal pannello. Scegliere un segmento lo spegne; spegnerlo con un'ora personalizzata riporta a «Mattina». Stato locale in `ReminderTime`, nulla di nuovo salvato. `npm run check` OK; commit `feat: Altra ora with a switch in Notifiche` su `main` e `deploy:hosting` su `nummo-6b6e2` («Deploy complete!», solo web, nessuna nuova APK). Non visto a schermo né provato sul telefono.
 
 ## Release 0.3.18 — 28 novembre 2026 (notte)
 
