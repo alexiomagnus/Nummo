@@ -15,6 +15,7 @@ import android.provider.Settings
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.WindowInsets
+import android.view.WindowInsetsAnimation
 import android.view.WindowInsetsController
 import android.webkit.PermissionRequest
 import android.webkit.RenderProcessGoneDetail
@@ -57,6 +58,9 @@ class MainActivity : Activity() {
     var bottomInsetDp = 0f
         private set
 
+    // The keyboard is opening or closing (0.3.18): the padding follows its animation instead of jumping to the final height.
+    private var keyboardAnimating = false
+
     fun sendTopInset() {
         if (::webView.isInitialized) webView.evaluateJavascript("window.nummoAndroidInsets&&window.nummoAndroidInsets($topInsetDp,$bottomInsetDp)", null)
     }
@@ -86,7 +90,10 @@ class MainActivity : Activity() {
             // bar extends (as in Morphe); the inset goes to the page, which pads its own top bar with it.
             // Nor at the bottom (0.3.15, 28 November, on request, as in Morphe): the page draws under the navigation bar, so
             // only the gesture handle shows; with the keyboard open the WebView ends above it and there is nothing to pad.
-            view.setPadding(bars.left, 0, bars.right, keyboard.bottom)
+            // Android hands the final keyboard height at once when the animation starts: while it runs, onProgress below sets the
+            // bottom padding frame by frame (0.3.18, 28 November, from a recording: the page jumped above the keyboard, which then
+            // caught up a few frames later).
+            view.setPadding(bars.left, 0, bars.right, if (keyboardAnimating) view.paddingBottom else keyboard.bottom)
             val density = resources.displayMetrics.density
             val top = bars.top / density
             val bottom = if (keyboard.bottom > 0) 0f else bars.bottom / density
@@ -97,6 +104,25 @@ class MainActivity : Activity() {
             }
             WindowInsets.CONSUMED
         }
+        root.setWindowInsetsAnimationCallback(object : WindowInsetsAnimation.Callback(DISPATCH_MODE_STOP) {
+            private fun isKeyboard(animation: WindowInsetsAnimation) = animation.typeMask and WindowInsets.Type.ime() != 0
+            override fun onPrepare(animation: WindowInsetsAnimation) {
+                if (isKeyboard(animation)) keyboardAnimating = true
+            }
+            override fun onProgress(insets: WindowInsets, runningAnimations: List<WindowInsetsAnimation>): WindowInsets {
+                if (keyboardAnimating && runningAnimations.any { isKeyboard(it) }) {
+                    val keyboard = insets.getInsets(WindowInsets.Type.ime()).bottom
+                    if (keyboard != root.paddingBottom) root.setPadding(root.paddingLeft, 0, root.paddingRight, keyboard)
+                }
+                return insets
+            }
+            override fun onEnd(animation: WindowInsetsAnimation) {
+                if (isKeyboard(animation)) {
+                    keyboardAnimating = false
+                    root.requestApplyInsets() // the final padding and bottom inset come from the listener
+                }
+            }
+        })
         val saved = getSharedPreferences(barsPreferences, MODE_PRIVATE)
         val startColor = saved.getInt("color", getColor(R.color.start_background))
         applyBars(startColor, saved.getBoolean("dark", true))
