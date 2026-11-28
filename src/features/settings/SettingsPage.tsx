@@ -20,6 +20,7 @@ import type { TimeFormat } from '../../domain/timeFormat';
 import { deviceTimeZone } from '../../domain/pushSchedule';
 import { autoTimeZone, timeZoneChoices } from '../../domain/timeZones';
 import { MenuSelect } from '../../components/MenuSelect';
+import { Disclosure } from '../../components/Disclosure';
 import { ScaleSlider } from '../../components/ScaleSlider';
 import { Logo } from '../../components/Logo';
 import { appIconColors, appIconLabels, appIcons, parseAppIcon, type AppIcon } from '../../domain/appIcons';
@@ -190,7 +191,8 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
           </View>
         </OptionRow>
         {scaleAvailable && <><RowDivider /><ScaleSlider value={scalePending ?? preferences.uiScale} onChange={(uiScale) => setScalePending(uiScale === preferences.uiScale ? null : uiScale)} />
-          {scalePending !== null && <RowBody><ApplyBar onReset={() => setScalePending(null)} onApply={() => { onChange({ uiScale: scalePending }); setScalePending(null); }} /></RowBody>}</>}
+          {/* The bar fades and slides in and out (28 November, on request): `Disclosure`, the same in-flow motion as the options under a switch. */}
+          <Disclosure open={scalePending !== null}><RowBody><ApplyBar onReset={() => setScalePending(null)} onApply={() => { if (scalePending !== null) onChange({ uiScale: scalePending }); setScalePending(null); }} /></RowBody></Disclosure></>}
         {iconsAvailable && <><RowDivider /><OptionRow icon={iconShapes.smartphone} title={t("Icona dell'app")}>
           <AppIconChoice /></OptionRow></>}
       </ListGroup>
@@ -257,7 +259,7 @@ function AppIconChoice() {
         );
       })}
     </View>
-    {pending !== null && <ApplyBar onReset={() => setPending(null)} onApply={() => { choose(pending); setPending(null); }} />}
+    <Disclosure open={pending !== null}><ApplyBar onReset={() => setPending(null)} onApply={() => { if (pending !== null) choose(pending); setPending(null); }} /></Disclosure>
     </View>
   );
 }

@@ -25,7 +25,10 @@ type Phase =
 // with a progress bar, the app verifies it (SHA-256 when the release has one, package, newer version, same signing key) and
 // Android's installer asks the user to confirm; the «install unknown apps» permission is asked first if missing. In an older
 // app (0.3.5) «Aggiorna» opens the release on GitHub, outside the app. Back, «Più tardi» or «Annulla download» stop it.
-export function UpdateDialog({ release, installed, onClose }: { release: AppRelease | null; installed: string; onClose: () => void }) {
+// `required` (28 November, on request; the automatic check at the start of the app): the screen cannot be dismissed (Back, Escape and «Più tardi»
+// do nothing/are absent) until the update is installed. Only if the update fails does «Più tardi» come back, so a broken release or a missing
+// permission never locks the app for ever. Only with the updater in the app: without it «Aggiorna» just opens GitHub, so nothing is forced.
+export function UpdateDialog({ release, installed, onClose, required = false }: { release: AppRelease | null; installed: string; onClose: () => void; required?: boolean }) {
   const { t, locale } = useI18n();
   const { colors } = useTheme();
   const [phase, setPhase] = useState<Phase>({ kind: 'offer' });
@@ -80,13 +83,14 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
 
   const megabytes = (bytes: number) => numberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(bytes / (1024 * 1024));
   const published = current.publishedAt ? dateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }).format(new Date(current.publishedAt)) : null;
+  const locked = required && updater !== null && phase.kind !== 'failed';
   const busy = phase.kind === 'downloading' || phase.kind === 'installing';
   const failure = phase.kind === 'failed' ? failureText(t, phase.reason) : null;
   const pill = [screenActionStyles.button];
 
   return (
     <Portal>
-    <AppDialog visible={release !== null} onDismiss={close} dismissable={phase.kind !== 'installing'}>
+    <AppDialog visible={release !== null} onDismiss={close} dismissable={phase.kind !== 'installing' && !locked}>
       <AppDialog.Title>{t("Aggiornamento disponibile")}</AppDialog.Title>
       <AppDialog.ScrollArea style={styles.area}>
         <ScrollView contentContainerStyle={styles.content}>
@@ -117,6 +121,7 @@ export function UpdateDialog({ release, installed, onClose }: { release: AppRele
         {phase.kind === 'downloading'
           ? <Button mode="outlined" style={pill} contentStyle={screenActionStyles.content} labelStyle={styles.cancelLabel}
               onPress={() => { download.current?.abort(); download.current = null; setPhase({ kind: 'offer' }); }}>{t("Annulla download")}</Button>
+          : locked ? null
           : <Button mode="outlined" style={pill} contentStyle={screenActionStyles.content} labelStyle={styles.cancelLabel}
               disabled={phase.kind === 'installing'} onPress={close}>{t("Più tardi")}</Button>}
         {phase.kind === 'permission'

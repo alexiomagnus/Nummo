@@ -353,9 +353,10 @@ sul commit da cui sono compilati. I rilasci del sito non hanno tag.
 
 ### Aggiornamenti dall'app (dalla 0.3.6)
 
-L'app controlla le Releases una volta ogni 24 ore all'apertura (API pubblica di GitHub, senza token né backend) e, se c'è una
-versione più recente di quella installata, propone «Aggiornamento disponibile» con le note della release, «Più tardi» e
-«Aggiorna». Da menu account → **Info** → «Aggiornamenti» si controlla subito («Controlla aggiornamenti») e si leggono le note delle
+L'app controlla le Releases a ogni apertura (API pubblica di GitHub, senza token né backend) e, se c'è una
+versione più recente di quella installata, mostra «Aggiornamento disponibile» con le note della release: **l'aggiornamento è
+obbligatorio** (nessun «Più tardi», Indietro non chiude la schermata; «Più tardi» ricompare solo se il download o l'installazione
+falliscono). Senza rete il controllo tace e l'app si usa normalmente. Da menu account → **Info** → «Aggiornamenti» si controlla subito («Controlla aggiornamenti») e si leggono le note delle
 ultime versioni («Note di rilascio»). «Aggiorna» scarica l'APK dentro l'app con una barra di avanzamento, lo verifica (SHA-256 della
 release, stesso pacchetto, versione più alta, **stessa chiave di firma**) e lo passa all'installatore di Android, che chiede sempre la
 conferma; la prima volta Android chiede anche di consentire a Nummo di installare app («Consenti da questa fonte»). I dati restano:

@@ -22,5 +22,5 @@ ogni voce si implementa solo su richiesta, una alla volta.
 
 - **Collegamento diretto alla banca (open banking PSD2):** richiede un aggregatore autorizzato, un backend per le chiavi,
   rinnovo del consenso periodico, gestione dei duplicati e della privacy. Complessità alta per un uso personale.
-- **Importazione dell'estratto conto (CSV/OFX/CAMT)** con anteprima e controllo dei duplicati: oggi escluso dalle
-  convenzioni («Nessun import CSV»), richiede una decisione esplicita.
+- **Importazione dell'estratto conto (OFX/CAMT):** il CSV di Nummo si importa dal 27 novembre 2026 (`domain/csvImport.ts`, solo spese
+  singole); i formati bancari OFX/CAMT, con anteprima e controllo dei duplicati, restano da decidere esplicitamente.
