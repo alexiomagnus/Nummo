@@ -5,6 +5,7 @@ import { useEscape } from '../../components/Overlay';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import { useI18n } from '../../i18n/I18nProvider';
 import { overrideDocumentChrome } from '../../theme/bootTheme';
+import { useInsets } from '../../theme/insets';
 import { viewfinderColors as c } from '../../theme/palette';
 import { radius } from '../../theme/tokens';
 
@@ -28,6 +29,9 @@ type Props = {
 // which the lock screen makes inert; Escape and Back close it (overlay level), the status bar turns dark meanwhile.
 export function CameraViewfinder({ videoRef, ready, torch, galleryDisabled, onShoot, onGallery, onClose }: Props) {
   const { t } = useI18n();
+  // The status bar's height: in the Android app the page draws under it and `env(safe-area-inset-top)` is 0 (28 November, on report:
+  // the title sat under the clock).
+  const { top } = useInsets();
   const back = useRef<HTMLButtonElement>(null);
   const [playing, setPlaying] = useState(false);
   useEscape(true, onClose);
@@ -44,7 +48,7 @@ export function CameraViewfinder({ videoRef, ready, torch, galleryDisabled, onSh
   if (!host) return null;
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={t("Scansiona scontrino")} style={styles.layer}>
-      <div style={styles.band}>
+      <div style={{ ...styles.band, minHeight: 64 + top, paddingTop: 16 + top }}>
         <Text variant="titleMedium" style={{ color: c.onMediaMuted }} numberOfLines={1}>{t("Scansiona scontrino")}</Text>
         {torch && <RoundButton label={torch.on ? t("Spegni la torcia") : t("Accendi la torcia")} pressed={torch.on} onPress={torch.toggle}
           style={torch.on ? styles.active : styles.control}>
@@ -93,9 +97,9 @@ const blur = (px: number): CSSProperties => ({ backdropFilter: `blur(${px}px)`, 
 const styles = {
   layer: { position: 'absolute', inset: 0, zIndex: 1100, display: 'flex', flexDirection: 'column', backgroundColor: c.background, overflow: 'hidden' },
   // About a quarter of the visible height, under the status bar.
-  band: { flex: '0 0 24%', minHeight: 'calc(64px + env(safe-area-inset-top, 0px))', boxSizing: 'border-box', display: 'flex',
+  band: { flex: '0 0 24%', boxSizing: 'border-box', display: 'flex',
     alignItems: 'flex-start', justifyContent: 'space-between', gap: 16,
-    padding: 'calc(16px + env(safe-area-inset-top, 0px)) calc(20px + env(safe-area-inset-right, 0px)) 16px calc(20px + env(safe-area-inset-left, 0px))' },
+    padding: '16px calc(20px + env(safe-area-inset-right, 0px)) 16px calc(20px + env(safe-area-inset-left, 0px))' },
   sheet: { position: 'relative', flex: '1 1 auto', minHeight: 0, backgroundColor: c.sheet, overflow: 'hidden',
     borderTopLeftRadius: radius.dialog, borderTopRightRadius: radius.dialog },
   video: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' },

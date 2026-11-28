@@ -327,7 +327,7 @@ export function ScanReceiptDialog({ categories, merchants, draft, onApply, onClo
     ];
   }
 
-  return <Portal><Dialog visible detents dismissable={stage !== 'working' && stage !== 'camera'} onDismiss={onClose} style={wide && stage === 'review' ? styles.wideDialog : undefined}>
+  return <Portal><Dialog visible dismissable={stage !== 'working' && stage !== 'camera'} onDismiss={onClose} style={wide && stage === 'review' ? styles.wideDialog : undefined}>
     <Dialog.Title>{stage === 'review' ? t("Controlla i dati") : t("Scansiona scontrino")}</Dialog.Title>
     <Dialog.ScrollArea style={styles.area}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
       {inputs}

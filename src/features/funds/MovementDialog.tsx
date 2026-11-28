@@ -5,6 +5,7 @@ import { AppDialog as Dialog } from '../../components/AppDialog';
 import { CancelButton, ConfirmButton, dialogActionsRow } from '../../components/Button';
 import { DateField } from '../../components/DateField';
 import { leadingIcon } from '../../components/FieldIcon';
+import { SegmentedButtons } from '../../components/SegmentedButtons';
 import { SelectField } from '../../components/SelectField';
 import { iconShapes } from '../../components/SvgIcon';
 import { normalizeDescription } from '../../domain/expense';
@@ -27,11 +28,13 @@ type Props = {
 
 // Money added by hand to a fund, or moved between two funds. One ID per opening of the dialog: pressing again after a
 // failure repeats the same request, so the server never records the movement twice.
-// The kind is the button it was opened from («Aggiungi» or «Trasferisci»): no switch inside the dialog (27 November, on request).
-export function MovementDialog({ funds, balances, kind, to: initialTo, ready, error, onCreate, close }: Props) {
+// The kind starts as the button it was opened from («Aggiungi» or «Trasferisci») and can be switched at the top of the dialog (28 November, on
+// request; from 26 to 27 November the switch was the dialog's own, removed then). Moving needs two funds: with one the switch is not offered.
+export function MovementDialog({ funds, balances, kind: initialKind, to: initialTo, ready, error, onCreate, close }: Props) {
   const { t, formatAmount } = useI18n();
   const { colors } = useTheme();
   const id = useRef(crypto.randomUUID()).current;
+  const [kind, setKind] = useState<MovementKind>(initialKind);
   const [to, setTo] = useState(initialTo ?? (kind === 'income' ? funds[0]?.id ?? '' : funds[1]?.id ?? ''));
   const [from, setFrom] = useState(kind === 'transfer' ? funds.find((f) => f.id !== (initialTo ?? funds[1]?.id))?.id ?? '' : '');
   const [amount, setAmount] = useState('');
@@ -41,6 +44,12 @@ export function MovementDialog({ funds, balances, kind, to: initialTo, ready, er
   const [busy, setBusy] = useState(false);
   const blocked = busy || !ready;
   const options = funds.map((fund) => ({ value: fund.id, label: `${fund.name} · ${formatAmount(balances.get(fund.id) ?? 0)}`, icon: <FundAvatar fund={fund} size={24} /> }));
+  const switchKind = (next: MovementKind) => {
+    if (next === kind) return;
+    setKind(next);
+    setErrors({});
+    if (next === 'transfer') setFrom((now) => (now && now !== to && funds.some((f) => f.id === now) ? now : funds.find((f) => f.id !== to)?.id ?? ''));
+  };
   const save = async () => {
     if (blocked) return;
     const next: typeof errors = {};
@@ -64,6 +73,8 @@ export function MovementDialog({ funds, balances, kind, to: initialTo, ready, er
       <Dialog.Title>{kind === 'income' ? t("Aggiungi denaro") : t("Trasferisci tra fondi")}</Dialog.Title>
       <Dialog.ScrollArea style={styles.area}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+          {funds.length > 1 && <SegmentedButtons label={t("Tipo di movimento")} value={kind} onChange={switchKind} disabled={blocked}
+            options={[{ value: 'income', label: t("Aggiungi") }, { value: 'transfer', label: t("Trasferisci") }]} />}
           <View>
             <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Importo")} value={amount} inputMode="decimal" placeholder="0,00"
               readOnly={blocked} aria-disabled={blocked} error={Boolean(errors.amount)} left={leadingIcon(iconShapes.euro)}

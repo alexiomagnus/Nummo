@@ -585,6 +585,7 @@ export const english: Readonly<Record<string, string>> = {
   "Trasferimenti inviati": "Transfers sent",
   "Trasferimenti ricevuti": "Transfers received",
   "Trasferisci": "Transfer",
+  "Tipo di movimento": "Type of movement",
   "Trasferisci tra fondi": "Transfer between funds",
   "Entrate e spostamenti": "Income and transfers",
   "Nessuna entrata o spostamento in {p0}.": "No income or transfers in {p0}.",

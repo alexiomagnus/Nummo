@@ -1,5 +1,13 @@
 # HANDOFF — Nummo
 
+## «Scansiona scontrino» con Indietro, titolo della fotocamera sotto la barra di stato — 28 novembre 2026
+
+Su richiesta e segnalazione (screenshot). **Dialogo**: `ScanReceiptDialog` non è più un pannello a tre posizioni (`detents` tolto): su smartphone è uno schermo intero con Indietro e senza maniglia né trascinamento; da medium invariato. **Fotocamera** (`CameraViewfinder`): il titolo e la torcia finivano sotto l'orologio perché nell'app Android la pagina disegna sotto la barra di stato (0.3.12) e `env(safe-area-inset-top)` vale 0; la fascia in alto usa ora `useInsets().top` (ponte `topInset`). `typecheck` e test 630/630; non visto a schermo né provato sul telefono (richiede app 0.3.12+ per l'inset).
+
+## Aggiungi/Trasferisci: selettore in cima al dialogo — 28 novembre 2026
+
+Su richiesta: `MovementDialog` ha in cima un `SegmentedButtons` «Aggiungi | Trasferisci» (tipo iniziale = pulsante premuto; passando a Trasferisci «Dal fondo» prende il primo fondo diverso da quello di destinazione; errori azzerati; importo, data e nota restano). Con un solo fondo movibile il selettore non c'è. Titolo e pulsante di conferma seguono il tipo. Traduzione «Tipo di movimento». `typecheck` e test 630/630; non visto a schermo.
+
 ## «Altra ora» attenuata con Mattina/Pranzo/Sera — 28 novembre 2026
 
 Su richiesta (Notifiche → Orario): con una delle tre scelte rapide selezionate la scheda «Altra ora» è attenuata (opacità 0,38, come le schede spente). **Non è `inert`**, di proposito: i segmenti non si deselezionano, quindi scegliere un'ora lì è l'unico modo di tornare a «Altra ora», e la scheda torna piena. La scheda è avvolta in un `View` (figlio diretto del gruppo vetro: l'attenuazione copre anche il fondo). `typecheck` OK; non visto a schermo.
