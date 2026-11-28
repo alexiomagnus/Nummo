@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Pubblicazione — 28 novembre 2026 (notte, seconda)
+
+`deploy:hosting` su `nummo-6b6e2` dal commit `d755517` («Deploy complete!», solo Hosting, Rules invariate, nessuna nuova APK). Online: Nuova spesa non apre più la tastiera da sola. Non provato sul telefono.
+
 ## Niente tastiera automatica in Nuova spesa — 28 novembre 2026 (notte)
 
 Su segnalazione («comportamento odioso»): a ogni arrivo su Nuova spesa il cursore andava in Importo e la tastiera si apriva. Tolto l'effetto da `Workspace.tsx`; `androidShowKeyboard` resta in `services/androidApp.ts` (con test) ma non è più usato. Solo web: nessuna nuova APK. `typecheck` e test 632/632; **non pubblicato** (serve `deploy:hosting`), non provato sul telefono.
