@@ -1,3 +1,4 @@
+import { useScrollToTopOn } from '../../components/AppShell';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
@@ -42,6 +43,7 @@ export function InfoPage({ onGuideChange }: { onGuideChange?: (open: boolean) =>
   const { colors } = useTheme();
   const [guide, setGuide] = useState(false);
   const version = useMemo(() => androidAppVersion(), []);
+  useScrollToTopOn(guide);
   useBackLayer(guide, backLevels.detail, () => setGuide(false));
   // The page header drops «Fatto» while the guide is open (27 November, on request): «Torna indietro» is the only way back.
   useEffect(() => { onGuideChange?.(guide); return () => onGuideChange?.(false); }, [guide, onGuideChange]);

@@ -1,3 +1,4 @@
+import { useScrollToTopOn } from '../../components/AppShell';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { Button } from '../../components/Button';
@@ -30,6 +31,7 @@ export function ModeChoice({ onChoose }: { onChoose: (mode: StorageMode) => void
   const { t } = useI18n();
   const { colors } = useTheme();
   const { guide, openGuide, closeGuide } = useGuide();
+  useScrollToTopOn(guide);
   const androidApp = appWithoutAdvanced();
   if (guide) return <Guide onBack={closeGuide} />;
   return (

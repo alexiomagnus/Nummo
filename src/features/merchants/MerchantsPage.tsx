@@ -106,9 +106,6 @@ function RenameDialog({ merchant, merchants, backend, notify, close }: { merchan
           {other && <Text variant="bodyMedium" accessibilityLiveRegion="polite">
             {t("Esiste già l’esercente {p0}: i due diventeranno uno solo, con il nome che hai scritto, e le loro spese useranno quello.", { p0: other.name })}
           </Text>}
-          {merchant.uses > 0 && !other && <Text variant="bodySmall">
-            {merchant.uses === 1 ? t("Il nuovo nome vale anche per la spesa che lo usa.") : t("Il nuovo nome vale anche per le {p0} spese che lo usano.", { p0: merchant.uses })}
-          </Text>}
         </ScrollView>
       </Dialog.ScrollArea>
       <Dialog.Actions style={dialogActionsRow}>

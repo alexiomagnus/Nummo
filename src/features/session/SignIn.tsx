@@ -1,3 +1,4 @@
+import { useScrollToTopOn } from '../../components/AppShell';
 import { useI18n } from '../../i18n/I18nProvider';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -42,6 +43,7 @@ export function SignIn({ error, onSignIn, onChangeMode, firebase }: Props) {
   const { colors } = useTheme();
   // No link to the guide here (it stays on the mode choice); a direct `#guida` link still opens it.
   const { guide, closeGuide } = useGuide();
+  useScrollToTopOn(guide);
   if (guide) return <Guide onBack={closeGuide} />;
   return (
     <View style={styles.wrap}>

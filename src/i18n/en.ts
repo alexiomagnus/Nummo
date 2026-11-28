@@ -1128,8 +1128,6 @@ export const english: Readonly<Record<string, string>> = {
   "Esercente rinominato.": "Merchant renamed.",
   "Modifica esercente": "Edit merchant",
   "Esiste già l’esercente {p0}: i due diventeranno uno solo, con il nome che hai scritto, e le loro spese useranno quello.": "The merchant {p0} already exists: the two will become one, with the name you typed, and their expenses will use it.",
-  "Il nuovo nome vale anche per la spesa che lo usa.": "The new name also applies to the expense that uses it.",
-  "Il nuovo nome vale anche per le {p0} spese che lo usano.": "The new name also applies to the {p0} expenses that use it.",
   "Unisci": "Merge",
   "Scrivi il nome dell’esercente.": "Type the merchant's name.",
   "Il nome non può contenere a capo o tabulazioni.": "The name cannot contain line breaks or tabs.",

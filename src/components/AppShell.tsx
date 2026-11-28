@@ -47,6 +47,18 @@ const KeyboardContext = createContext(false);
 const iPhone = typeof navigator !== 'undefined' && isIPhone(navigator.userAgent);
 const barSide = floatingBarSideSpace(iPhone, spacing.md, spacing.xs);
 export const useKeyboardOpen = () => useContext(KeyboardContext);
+// The shared page scroller back to its top. `selected` already does it between pages; a page that swaps its own content in place
+// (the guide opened from Info, from the mode choice or the sign-in) uses `useScrollToTopOn` so the new view opens at its top
+// (28 November, on report: the guide opened where Info had been scrolled, mid-text).
+const ScrollTopContext = createContext<() => void>(() => undefined);
+export function useScrollToTopOn(key: unknown) {
+  const toTop = useContext(ScrollTopContext);
+  const first = useRef(true);
+  useLayoutEffect(() => {
+    if (first.current) { first.current = false; return; }
+    toTop();
+  }, [key, toTop]);
+}
 
 function useVirtualKeyboard() {
   const [state, setState] = useState<KeyboardState>({ open: false, confirmed: false });
@@ -124,6 +136,7 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
     if (value === previousSection.current) scroller.current?.scrollTo({ y: 0, animated: false });
     onSelect?.(value);
   }, [onSelect]);
+  const scrollToTop = useCallback(() => scroller.current?.scrollTo({ y: 0, animated: false }), []);
   const hasNav = Boolean(destinations?.length);
   // Desktop: the drawer folds to icons only (user's request, 27 November), giving the panel the room. Remembered in this browser (services/drawerState.ts).
   const [drawerFolded, setDrawerFolded] = useState(readDrawerFolded);
@@ -211,9 +224,11 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
             contentContainerStyle={{ flexGrow: 1, padding, paddingTop: padding + (overlayBars ? topRoom : 0),
               paddingBottom: padding + (overlayBars ? (navRoom ? barHeight : insets.bottom) : bottomBar ? 0 : insets.bottom) }}>
             <ThemeProvider theme={panelTheme}>
+              <ScrollTopContext.Provider value={scrollToTop}>
               <KeyboardContext.Provider value={keyboard}>
               <View ref={page} role="main" style={[styles.content, size === 'compact' && { gap: spacing.lg }, compact && fab && selected === fab.target && { justifyContent: 'center' }]}>{children}</View>
               </KeyboardContext.Provider>
+              </ScrollTopContext.Provider>
             </ThemeProvider>
           </ScrollView>
           </View>

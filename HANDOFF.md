@@ -1,5 +1,17 @@
 # HANDOFF — Nummo
 
+## «Altra ora» attenuata con Mattina/Pranzo/Sera — 28 novembre 2026
+
+Su richiesta (Notifiche → Orario): con una delle tre scelte rapide selezionate la scheda «Altra ora» è attenuata (opacità 0,38, come le schede spente). **Non è `inert`**, di proposito: i segmenti non si deselezionano, quindi scegliere un'ora lì è l'unico modo di tornare a «Altra ora», e la scheda torna piena. La scheda è avvolta in un `View` (figlio diretto del gruppo vetro: l'attenuazione copre anche il fondo). `typecheck` OK; non visto a schermo.
+
+## «Il nuovo nome vale anche per la spesa che lo usa» tolta — 28 novembre 2026
+
+Su richiesta: nel dialogo di rinomina di «Esercenti» (`MerchantsPage.tsx`) non c'è più la nota sotto il campo (singolare e plurale, traduzioni tolte). Resta l'avviso di unione quando il nome esiste già. `typecheck` e test 630/630.
+
+## La guida si apriva a metà pagina — 28 novembre 2026
+
+Segnalazione (screenshot): «Cos'è Nummo?» da Info si apriva dove Info era stata scorsa. Causa: lo scroller condiviso torna a 0 solo al cambio di `selected`, e la guida sostituisce il contenuto **nella stessa pagina**. Verificato lo stesso nella guida aperta dalla scelta della modalità e dall'accesso (`ModeChoice`, `SignIn`); le altre pagine cambiano `selected` o aprono schermi (overlay con scroll proprio), quindi non risultano toccate. Correzione: `useScrollToTopOn(chiave)` di `AppShell.tsx` (contesto `ScrollTopContext`), usato con `guide` in `InfoPage`, `ModeChoice` e `SignIn`; vale anche al ritorno («Torna indietro» riporta Info in cima). `typecheck` OK; non provato a schermo.
+
 ## Vibrazione su «Filtri» — 28 novembre 2026
 
 Su richiesta: `FiltersButton` (Spese e Abbonamenti, smartphone) chiama `useHaptics()` al tocco, come «Salva». Solo nell'app Android (nel browser nessuna vibrazione). `typecheck` OK; non provato sul telefono.
