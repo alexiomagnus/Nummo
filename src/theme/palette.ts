@@ -161,7 +161,9 @@ function generate(accent: Accent, mode: ColorMode, dark: boolean): Scheme {
 // takes the lightest vivid tone with 3:1 on the background (WCAG non-text contrast), like the seed colours of a Material
 // You picker; in dark the scheme's own primary, secondary and tertiary, already light and vivid there. One colour, or three
 // in palette mode (graphite: neutral grey, soft blue, amber).
-export function accentSwatches(accent: Accent, mode: ColorMode, dark: boolean): string[] {
+export function accentSwatches(accent: Accent, requested: ColorMode, dark: boolean): string[] {
+  // «Material You» without the system palettes is shown as «Palette» (like buildScheme): the dots must be those of Palette.
+  const mode: ColorMode = requested === 'system' && !systemColors ? 'palette' : requested;
   const scheme = buildScheme(accent, mode, dark);
   if (mode === 'system' && systemColors) return [scheme.primary, scheme.secondary, scheme.tertiary];
   const multi = mode === 'palette';
@@ -200,7 +202,6 @@ export function buildScheme(accent: Accent, requested: ColorMode, dark: boolean,
   // Material You without the system palettes (browser, Android 11, an older app) is «Palette» with «Grigio» (the default look).
   const system = requested === 'system' && systemColors !== null;
   const mode: ColorMode = requested === 'system' && !system ? 'palette' : requested;
-  if (requested === 'system' && !system) accent = 'graphite';
   if (system) { const scheme = systemScheme(dark); return dark && amoled ? amoledOf(scheme) : scheme; }
   const scheme = accent === 'mint' && mode === 'mono' ? { ...schemes[dark ? 'dark' : 'light'] } : generate(accent, mode, dark);
   if (mode === 'mono') {

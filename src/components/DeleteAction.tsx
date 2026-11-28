@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
 // was opened is the one confirmed, even if the parent re-renders with newer data meanwhile.
 // `labeled="wide"`: «Elimina» with its label from medium, only the outlined trash icon (error colour, 48×48) on phones, where the
 // label next to «Annulla»/«Salva» did not fit and the row wrapped, leaving Elimina alone on a line (user's choice, 21 November).
-export function DeleteAction({ name, title, description, blocked, onDelete, labeled: labeledProp, mode = 'text', disabled, onOpenChange }: { name: string; title?: string; description?: string; blocked?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean | 'wide'; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
+export function DeleteAction({ name, title, description, blocked, onDelete, labeled: labeledProp, mode = 'text', disabled, onOpenChange, confirm = true }: { confirm?: boolean; name: string; title?: string; description?: string; blocked?: string; onDelete: () => boolean | Promise<boolean>; labeled?: boolean | 'wide'; mode?: 'text' | 'outlined'; disabled?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { t } = useI18n();
   const phone = useSizeClass() === 'compact';
   // On a screen (AppDialog as a screen) Elimina has a row of its own above «Annulla»/«Salva»: always with its label.
@@ -99,7 +99,8 @@ export function DeleteAction({ name, title, description, blocked, onDelete, labe
   const action = useRef(onDelete);
   const [open, setOpen] = useState(false);
   const { colors } = useTheme();
-  const request = () => { action.current = onDelete; setOpen(true); onOpenChange?.(true); };
+  // `confirm={false}`: no second dialog, the press deletes at once (user's request, 28 November: single list products).
+  const request = () => { if (!confirm) { void onDelete(); return; } action.current = onDelete; setOpen(true); onOpenChange?.(true); };
   const dismiss = () => { setOpen(false); onOpenChange?.(false); };
   const icon = ({ size, color }: { size: number; color: string }) => <SvgIcon shape={iconShapes.trash} size={size} color={color} />;
   return <>

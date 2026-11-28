@@ -146,7 +146,7 @@ test('animazione dello sfondo: sei scelte, «Cerchi» di base, il vecchio interr
 
 test('Material You: palette di sistema validate, schema dai toni, senza palette vale «Palette» con «Grigio»', async () => {
   const { androidSystemColors, systemPaletteNames, systemToneKeys } = await import('../src/services/androidApp.ts');
-  const { buildScheme, setSystemColors, hasSystemColors, contrastRatio } = await import('../src/theme/palette.ts');
+  const { buildScheme, accentSwatches, setSystemColors, hasSystemColors, contrastRatio } = await import('../src/theme/palette.ts');
   const tones = Object.fromEntries(systemToneKeys.map((key, i) => [key, `#${(i * 20).toString(16).padStart(2, '0').repeat(3)}`]));
   const palettes = Object.fromEntries(systemPaletteNames.map((name) => [name, tones]));
   const bridge = (json: string) => ({ NummoAndroid: { haptic() {}, setSystemBars() {}, saveFile() {}, canAuthenticate() {}, authenticate() {}, cancelAuthentication() {}, systemColors: () => json } });
@@ -154,8 +154,12 @@ test('Material You: palette di sistema validate, schema dai toni, senza palette 
   assert.equal(androidSystemColors(bridge('')), null);
   assert.equal(androidSystemColors(bridge(JSON.stringify({ ...palettes, a1: { ...tones, 500: 'red' } }))), null);
   assert.equal(androidSystemColors({}), null);
-  const fallback = buildScheme('mint', 'system', true);
-  assert.deepEqual(fallback, buildScheme('graphite', 'palette', true));
+  // Without system palettes «Material You» is «Palette» and keeps the accent the user picked (28 November: it was forced to
+  // graphite, so every dot was grey and choosing a colour did nothing).
+  assert.deepEqual(buildScheme('mint', 'system', true), buildScheme('mint', 'palette', true));
+  assert.deepEqual(accentSwatches('mint', 'system', true), accentSwatches('mint', 'palette', true));
+  assert.equal(accentSwatches('mint', 'system', true).length, 3);
+  const fallback = buildScheme('graphite', 'palette', true);
   setSystemColors(androidSystemColors(bridge(JSON.stringify(palettes))));
   try {
     assert.equal(hasSystemColors(), true);

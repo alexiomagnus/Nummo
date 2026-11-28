@@ -281,7 +281,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
       {editable && <View>
         <View style={styles.addRow}>
           <TextInput outlineStyle={inputOutline} mode="outlined" label={t("Aggiungi prodotto")} value={name} style={styles.grow}
-            onChangeText={(value) => { setName(clipToLength(value, listPolicy.maxItemLength)); setNameError(null); }} onSubmitEditing={add} blurOnSubmit={false}
+            onChangeText={(value) => { setName(clipToLength(value, listPolicy.maxItemLength)); setNameError(null); }} onSubmitEditing={add} blurOnSubmit={false} returnKeyType="done" enterKeyHint="done"
             error={Boolean(nameError)} accessibilityLabel={t("Nome del prodotto da aggiungere")} left={leadingIcon(iconShapes.plus)} />
           <Button mode="contained-tonal" style={styles.addButton} contentStyle={styles.addContent} onPress={add}>{t("Aggiungi")}</Button>
         </View>

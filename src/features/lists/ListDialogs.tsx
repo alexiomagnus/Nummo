@@ -75,7 +75,7 @@ export function ItemEditor({ item, onSave, onDelete, close }: {
     </Dialog.Content>
     <Dialog.Actions style={dialogActionsRow}>
       <View style={styles.grow}>
-        <DeleteAction labeled="wide" name={item.name} title={t("Eliminare {p0} dalla lista?", { p0: item.name })} description=""
+        <DeleteAction labeled="wide" confirm={false} name={item.name} title={t("Eliminare {p0} dalla lista?", { p0: item.name })} description=""
           onDelete={() => { const done = onDelete(); if (done) close(); return done; }} />
       </View>
       {/* Kept together so that, when the row wraps on narrow phones, the pair moves under Delete as one unit. */}

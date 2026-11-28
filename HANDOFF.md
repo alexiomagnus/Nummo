@@ -1,5 +1,13 @@
 # HANDOFF — Nummo
 
+## Prodotti di lista senza conferma, Invio che aggiunge, colori nel browser — 28 novembre 2026
+
+Su richiesta, dalle immagini dell'utente. `npm run check` non rieseguito (typecheck e test 630/630); nulla provato sul telefono; non su Hosting.
+
+- **«Modifica prodotto»**: «Elimina» toglie il prodotto subito, senza dialogo (`confirm={false}` di `DeleteAction`, solo lì).
+- **«Aggiungi prodotto»**: `returnKeyType`/`enterKeyHint` «done»: il tasto Invio della tastiera aggiunge il prodotto invece di portare al campo «Totale spesa».
+- **Colore nel browser** (bug): con `colorMode: 'system'` salvato e senza palette di sistema, `buildScheme` forzava l'accento a «Grigio»: pallini tutti grigi (uno solo) e scelta del colore senza effetto. Ora vale «Palette» con l'accento scelto, anche in `accentSwatches`. Test aggiornato.
+
 ## Scala al 75 %: la pagina riempiva solo i tre quarti dello schermo — 27 novembre 2026
 
 Segnalazione (app 0.3.14, scala 75 %): sotto la pagina restava una fascia vuota (circa il 27 % dell'altezza). Causa: `visibleViewportHeight` e `visibleViewportTop` (`theme/viewport.ts`) leggevano ogni `visualViewport.scale` diverso da 1 come pizzico e restituivano `null`, tenendo l'altezza vecchia di `#root`; con il tag viewport della scala la scala vale per sempre 0,75–1,25. Ora `setPageScale` (chiamata da `watchUiScale`) dice quale scala è quella della pagina e solo le altre sono pizzichi; dopo il cambio un `resize` a 200 ms rimisura. Provato in Chromium con emulazione mobile (411×860) sull'export demo con la preferenza salvata: 100 % → `#root` 411×860, 75 % → 548×1147, 125 % → 329×688 (altezza e larghezza riempiono lo schermo). Nuovo test in `tests/viewport.test.ts`; `npm run check` 630/630. Solo sito (nessuna nuova APK). Pubblicato su Hosting. Non provato sul telefono.
@@ -10,7 +18,7 @@ Segnalazione: nella schermata «Aggiornamento disponibile», durante il download
 
 ## Lista scontrini, Templates: nota tolta, fondo non obbligatorio, «Elimina tutti» fuori dalla scheda — 27 novembre 2026
 
-Su richiesta, dalle immagini dell'utente. **Non ancora in commit né su Hosting.** `npm run check` 629/629; non provato a vista.
+Su richiesta, dalle immagini dell'utente. Commit `e369ee1` su `main` (riallineato il 28 novembre: la nota «non ancora in commit né su Hosting» era superata; il deploy del fix della scala, fatto dallo stesso albero, li comprende, ma non ho confrontato il bundle online). `npm run check` 629/629; non provato a vista.
 
 - **«Lista scontrini»**: tolta la nota «Quando salvi una spesa compilata con Scansiona scontrino, qui restano i dati letti…» (e la sua traduzione). Un errore di caricamento, se c'è, si vede ancora in una scheda a parte.
 - **Nuovo template** (`TemplateForm.tsx`): il campo Fondo parte da «Nessun fondo» (come Categoria parte da «Nessuna categoria») e dopo «Crea» torna lì; prima restava vuoto e il salvataggio chiedeva di scegliere (`fundId` di `validateTemplateDraft`, regola di dominio invariata, ora non raggiungibile dal modulo). Nessun «facoltativo» scritto.
@@ -74,9 +82,13 @@ Su richiesta, pubblicati: commit `f80bcd4` su `main`, Hosting `nummo-6b6e2` («D
 - **Barra di stato** (app 0.3.12): padding superiore della WebView a 0, inset al ponte (`topInset`, `window.nummoAndroidInsets`), `useInsets` (`theme/insets.ts`) al posto di `useSafeAreaInsets` in `AppShell`, `ScreenLayer`, `Overlay`, `AppDialog`. Con l'APK precedente vale 0. **Non provata sul telefono**: controllare barra in alto, schermi con Indietro, dialoghi, menu dell'account, snackbar, leggibilità delle icone di sistema.
 - Verifiche: `npm run check` 626/626, `assembleDebug` e `assembleRelease` OK; `test:emulator` non eseguito (nessun cambio a Rules o accesso dati).
 
+## Stato corrente — 28 novembre 2026 (riallineamento)
+
+Verificato sul repository: `main` = `origin/main`, albero pulito, ultimo commit `6c1b7cc` (fix della scala al 75 %); `typecheck` OK e `npm test` 630/630 (`npm run check` e `test:emulator` non rieseguiti). **App Android: 0.3.14** (versionCode 17, tag `android-v0.3.14`, release «Latest»; non ancora installata dall'utente); backup v12; `drawerWidth` 224; `package.json` resta `0.1.0` (versione del sito). Ultimo Hosting dichiarato: quello del fix della scala (vedi la prima sezione). Le voci sulle app 0.3.11, 0.3.12 e 0.3.13 qui sotto e nello «Stato corrente — 26 novembre» («non ancora installata», «da fare: release») sono **superate**: quelle release sono uscite (0.3.12, 0.3.13, 0.3.14, vedi le sezioni datate in cima). Ancora da provare sul telefono: scala dell'interfaccia e icona dell'app (0.3.14), colori di Material You, barra di stato sotto il vetro (0.3.12), «Annulla download» e Nuova spesa senza scorrere. Nessun lavoro in sospeso nell'albero.
+
 ## Stato corrente — 27 novembre 2026 (aggiornamento)
 
-Sezione più recente; il resto del file è cronaca. Commit di questa sessione, tutti su `main` e pubblicati su Hosting dopo `npm run check` (622/622, poi 621 dopo la rimozione di un test): `f38377f` (animazione dello sfondo, Material You, «Grigio», AMOLED, bilancio del fondo) e `7d01962` (Nuova spesa senza scorrere, anelli più lenti, matita a filo, spazio sopra «Elimina le liste archiviate»); Hosting `nummo-6b6e2` con Rules invariate («Deploy complete!», bundle non confrontato con l'export). Pubblicati con il commit successivo (stesso giorno, Hosting): pulsanti dei dialoghi di modalità uguali, «Colore dell'anello» tolto, più spazio sotto gli avatar del profilo, icona a impronta (`fingerprint`) per «Blocca con impronta o viso».
+Sezione più recente al 27 novembre (la 28 sopra è solo un riallineamento); il resto del file è cronaca. Commit di questa sessione, tutti su `main` e pubblicati su Hosting dopo `npm run check` (622/622, poi 621 dopo la rimozione di un test): `f38377f` (animazione dello sfondo, Material You, «Grigio», AMOLED, bilancio del fondo) e `7d01962` (Nuova spesa senza scorrere, anelli più lenti, matita a filo, spazio sopra «Elimina le liste archiviate»); Hosting `nummo-6b6e2` con Rules invariate («Deploy complete!», bundle non confrontato con l'export). Pubblicati con il commit successivo (stesso giorno, Hosting): pulsanti dei dialoghi di modalità uguali, «Colore dell'anello» tolto, più spazio sotto gli avatar del profilo, icona a impronta (`fingerprint`) per «Blocca con impronta o viso».
 
 - **Animazione dello sfondo** (`theme/background.ts`, `components/Orbs.tsx`): Cerchi (predefinita), Anelli, Spazio, Neve, Particelle, Nessuna, scelta in Impostazioni → Aspetto; sostituisce l'interruttore «Cerchi sullo sfondo» (`orbs`, ancora letto: `false` = Nessuna). Canvas per le quattro nuove, ferme con movimento ridotto. Non provate su dispositivo, solo `build:demo`.
 - **Material You** (predefinito, `colorMode: 'system'`): solo nell'app Android **0.3.11** (versionCode 14, release GitHub `android-v0.3.11`, APK `nummo-0.3.11.apk` 9 240 344 byte, SHA-256 `bd51d46f…521c`, certificato `00b1c85c…0fcf` verificato con `apksigner`; non ancora installata dall'utente). Nel browser e con l'APK 0.3.10 vale «Palette» con «Grigio», l'opzione non compare. Da fare su richiesta: alzare la versione, assembleRelease firmata, release `android-v0.3.11`, verifica sul telefono dei colori reali (la mappa dei toni M3 è teorica, solo testata con palette finte).
