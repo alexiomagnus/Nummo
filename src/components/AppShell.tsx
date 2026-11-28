@@ -20,6 +20,7 @@ import { SnackbarProvider } from './SnackbarHost';
 import { StateLayerPressable } from './StateLayerPressable';
 import { iconShapes, SvgIcon } from './SvgIcon';
 import { Orbs } from './Orbs';
+import { inAndroidApp } from '../services/androidApp';
 
 export type Destination<T extends string = string> = { value: T; label: string; icon: string };
 
@@ -139,6 +140,9 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
   // on request); the page keeps their room as padding. The navigation keeps its room while it is visible and, as before, while the
   // keyboard is not yet confirmed (the target under the finger must not move between press and release).
   const overlayBars = size === 'compact';
+  // Blurred glass bars only in the Android app, where the bars of the system take the page's colour; in the browser and the
+  // installed web app the system bars keep a fixed colour and a translucent bar next to them looked wrong (28 November, on request).
+  const blurBars = inAndroidApp();
   const navRoom = navMounted && (bottomBar || (keyboard && !keyboardConfirmed));
   const topRoom = layout.topBarHeight + insets.top;
   const padding = size === 'compact' ? spacing.md : size === 'medium' ? spacing.xl : spacing.xxl;
@@ -174,8 +178,8 @@ export function AppShell<T extends string>({ destinations, selected, onSelect, a
       <SnackbarProvider bottomOffset={bottomBar ? barHeight : insets.bottom}>
       {/* `appChrome`: faded out on phones while a whole screen is open (ScreenLayer, holdChrome). On phones a blurred glass bar
           over the page; elsewhere in the flow, on the background. */}
-      <View role="banner" {...{ dataSet: overlayBars ? { appChrome: 'true', glassBar: 'true' } : { appChrome: 'true' } }}
-        style={[styles.topBar, overlayBars ? [styles.overlayTop, { backgroundColor: withAlpha(colors.background, 0.62), left: insets.left, right: insets.right }] : null,
+      <View role="banner" {...{ dataSet: overlayBars && blurBars ? { appChrome: 'true', glassBar: 'true' } : { appChrome: 'true' } }}
+        style={[styles.topBar, overlayBars ? [styles.overlayTop, { backgroundColor: blurBars ? withAlpha(colors.background, 0.62) : colors.background, left: insets.left, right: insets.right }] : null,
           { paddingTop: insets.top, paddingHorizontal: padding, height: topRoom }]}>
         {fab && hasNav ? (
           // The brand leads to the primary screen (new expense); on it, it does nothing.
@@ -233,6 +237,7 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
   const { t } = useI18n();
   const { colors, fonts } = useTheme();
   const glass = glassOf(colors);
+  const blurBars = inAndroidApp();
   const reduceMotion = useReducedMotion();
   // Phone only (this bar), in the Android app: a short vibration on every press of a destination or of the round action, and
   // the same one while a finger dragged along the pill enters another destination (see useSlidingIndicator). «Vibrazione» in Settings.
@@ -288,8 +293,8 @@ function NavigationBar<T extends string>({ destinations, selected, onSelect, bot
       onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
       style={[styles.floating, { paddingBottom: bottomSpace, paddingHorizontal: barSide }, hidden && (reserveSpace ? { opacity: 0 } : styles.hidden)]}>
       {/* Blurred glass pill over the page, which scrolls under it (26 November, on request, after Morphe). */}
-      <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} {...{ dataSet: { glassBar: 'true' } }}
-        style={[styles.pill, { backgroundColor: glass.glassBar }]}>
+      <View ref={pill.ref} onLayout={pill.onLayout} role="navigation" aria-label={t("Sezioni")} {...{ dataSet: blurBars ? { glassBar: 'true' } : {} }}
+        style={[styles.pill, { backgroundColor: blurBars ? glass.glassBar : glass.glassSolid }]}>
         {/* Hairline outline drawn as an overlay, so the border does not change the geometry the indicator is measured on. */}
         <View pointerEvents="none" style={[styles.pillOutline, { borderColor: glass.glassBorder }]} />
         {/* One active indicator for the whole pill: it slides between destinations (and follows a finger dragged along

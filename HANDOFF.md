@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Barre senza blur nel browser — 28 novembre 2026
+
+Su richiesta: nel browser e nella web app installata (le barre di sistema di Android restano a colore fisso, vedi `AGENTS.md`) barra in alto, pillola di navigazione e menu ancorati sono opachi, senza `backdrop-filter` (`blurBars = inAndroidApp()` in `AppShell.tsx`, stesso criterio in `Overlay.tsx`). Nell'app Android il vetro sfocato resta. Layout invariato. Schede e gruppi restano in vetro traslucido. Non provato a vista.
+
 ## Prodotti di lista senza conferma, Invio che aggiunge, colori nel browser — 28 novembre 2026
 
 Su richiesta, dalle immagini dell'utente. `npm run check` non rieseguito (typecheck e test 630/630); nulla provato sul telefono; non su Hosting.

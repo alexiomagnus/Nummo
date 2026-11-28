@@ -12,6 +12,7 @@ import { initialFocusAllowed } from '../theme/viewport';
 import { backLevels } from '../theme/backStack';
 import { useBackLayer } from './BackNavigation';
 import { menuHorizontalBounds, menuVerticalPlacement, recentVelocity, sheetDragOutcome, sheetGestureOwner, type DragSample } from './menuGeometry';
+import { inAndroidApp } from '../services/androidApp';
 
 // Shared overlay layer for menus, bottom sheets and dialogs. Every surface stays opaque while it moves: entering, it
 // becomes solid within `motion.fade` while a short transform settles it; leaving, scrim and surface fade together on the
@@ -179,8 +180,8 @@ export function AnchoredMenu({ visible, onDismiss, anchor, width, align = 'start
           style={[{ opacity: shown ? 1 : 0, transform: [{ translateY: shown ? 0 : offset }, { scale: shown ? 1 : 0.96 }],
             transformOrigin: below ? 'top' : 'bottom' } as ViewStyle, shown ? menuEnter : menuExit]}>
           {/* Blurred glass with a hairline, like the bars (26 November, on request, after Morphe). */}
-          <Surface elevation={2} {...{ dataSet: { glassBar: 'true' } }}
-            style={[styles.menu, { backgroundColor: withAlpha(colors.elevation.level2, 0.86), borderColor: glassOf(colors).glassBorder, maxHeight: place.maxHeight }, contentStyle]}>
+          <Surface elevation={2} {...{ dataSet: inAndroidApp() ? { glassBar: 'true' } : {} }}
+            style={[styles.menu, { backgroundColor: inAndroidApp() ? withAlpha(colors.elevation.level2, 0.86) : colors.elevation.level2, borderColor: glassOf(colors).glassBorder, maxHeight: place.maxHeight }, contentStyle]}>
             {/* `menuScroll`: GlobalStyle stops the scrollbar track a corner radius short of both ends (user's request, 22 November:
                 the rounded corners cut the bar). */}
             <ScrollView style={{ maxHeight: Math.max(0, place.maxHeight) }} keyboardShouldPersistTaps="handled" {...menuScrollMark}>{children}</ScrollView>
