@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Aggiornamento: prima schermata, non obbligatorio — 28 novembre 2026 (notte)
+
+Su richiesta. `AppUpdateCheck` controlla subito all'avvio (tolto il ritardo di 3 s) e, se c'è una release più recente, `UpdateDialog` è la prima cosa sopra l'app; «Più tardi»/Indietro la chiudono e ricompare a ogni riapertura. Tolta la modalità `required` (e la «valvola» sul fallimento, ora inutile). Il controllo è asincrono: con rete lenta la schermata compare appena arriva la risposta, non blocca l'avvio; sopra c'è comunque lo schermo di blocco dell'app se acceso (da verificare l'ordine). Solo nell'app Android 0.3.6+; `typecheck` e test 632/632; non provato sul telefono.
+
 ## Schede e pannello opachi — 28 novembre 2026 (notte)
 
 Su richiesta (confronto con Morphe): l'animazione dello sfondo (Neve ecc.) si vedeva attraverso schede e pannello desktop. `glassColors` ha alpha 1 (era 0,78 scuro / 0,88 chiaro) e il pannello desktop di `AppShell` è opaco (era 0,7): l'animazione resta tra le schede. Barre e pillola restano in vetro sfocato. `typecheck` e test 632/632; non visto a schermo.

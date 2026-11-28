@@ -3,11 +3,9 @@ import type { AppRelease } from '../../domain/appUpdate';
 import { UpdateDialog } from './UpdateDialog';
 import { useAppUpdate } from './useAppUpdate';
 
-// The automatic check at the start of the Android app (27 November, on request; **at every start and mandatory** from 28 November, on
-// request): a few seconds after the start (the page first settles: startup, lock), then «Aggiornamento disponibile» if GitHub has a newer
-// release, a screen that cannot be dismissed until the update is installed (`required` of `UpdateDialog`). A failed or offline check stays
-// silent and the app is usable (retried at the next start, or from Info). Nothing in the browser.
-const startDelay = 3000;
+// The automatic check at the start of the Android app (27 November, on request; **at every start**, 28 November): as soon as the app
+// starts (no delay) it asks GitHub and, if a newer release exists, «Aggiornamento disponibile» is the first thing shown over the app. The user
+// may postpone («Più tardi», Back): it comes back at the next start. A failed or offline check stays silent. Nothing in the browser.
 
 export function AppUpdateCheck() {
   const { installed, run } = useAppUpdate();
@@ -15,11 +13,9 @@ export function AppUpdateCheck() {
   useEffect(() => {
     if (!installed) return;
     let live = true;
-    const timer = setTimeout(() => {
-      void run().then((result) => { if (live && result.kind === 'available') setRelease(result.release); });
-    }, startDelay);
-    return () => { live = false; clearTimeout(timer); };
+    void run().then((result) => { if (live && result.kind === 'available') setRelease(result.release); });
+    return () => { live = false; };
   }, [installed, run]);
   if (!installed) return null;
-  return <UpdateDialog release={release} installed={installed} onClose={() => setRelease(null)} required />;
+  return <UpdateDialog release={release} installed={installed} onClose={() => setRelease(null)} />;
 }
