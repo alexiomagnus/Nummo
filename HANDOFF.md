@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## «Altra ora» con interruttore — 28 novembre 2026 (notte)
+
+Su richiesta (screenshot di Notifiche → Orario): la scheda «Altra ora» non è più solo attenuata; ha un **interruttore** in testa (`toggle` di `OptionRow` in `ActionList.tsx`). Spento: campo «Ora» attenuato (0,38) e `inert`. Acceso (di partenza se l'ora salvata non è Mattina/Pranzo/Sera): nessun segmento selezionato e l'ora si sceglie dal pannello. Scegliere un segmento lo spegne; spegnerlo con un'ora personalizzata riporta a «Mattina». Stato locale in `ReminderTime`, nulla di nuovo salvato. `typecheck` e test OK; non visto a schermo; non committato né pubblicato.
+
 ## Release 0.3.18 — 28 novembre 2026 (notte)
 
 Commit `chore: Android app 0.3.18` su `main` (versionCode 21, `0.3.18`; il sito era già pubblicato con `482f6b2`: tre pannelli interi, vibrazione Aggiungi/Trasferisci, Nuova lista senza tastiera automatica), tag e release GitHub `android-v0.3.18` (APK firmato `nummo-0.3.18.apk` + `.sha256`, «Latest», non bozza). Chi ha la 0.3.17 vede l'aggiornamento **obbligatorio** alla prossima apertura. La correzione della tastiera (sezione sotto) è **rilasciata ma mai provata sul telefono**: da controllare apertura e chiusura fluide, sfarfallii e peso del relayout; se non va, ripiego solo web (transizione su `--nummo-viewport-height`) o tornare alla 0.3.17 con una 0.3.19.

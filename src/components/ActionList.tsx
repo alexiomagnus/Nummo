@@ -109,10 +109,17 @@ export function StatusRow(content: Content & { value?: string }) {
 
 // A setting with its choices: the title row (icon, title, optional line) and the control under it, the whole width of the card
 // (connected choices, a select). Used by the pages of options (Impostazioni, Notifiche, Templates).
-export function OptionRow({ children, ...content }: Content & { children: ReactNode }) {
+// With `toggle` (28 November, on request: Altra ora) the head is a switch that enables what is below it.
+export function OptionRow({ children, toggle, ...content }: Content & { children: ReactNode; toggle?: { value: boolean; onChange: (value: boolean) => void } }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.option}>
-      <View style={styles.optionHead}><RowContent {...content} /></View>
+      <View style={styles.optionHead}>
+        {toggle
+          ? <StateLayerPressable layerColor={colors.onSurface} accessibilityRole="switch" aria-checked={toggle.value} accessibilityLabel={content.title}
+              onPress={() => toggle.onChange(!toggle.value)}><RowContent {...content} trailing={<M3Switch value={toggle.value} />} /></StateLayerPressable>
+          : <RowContent {...content} />}
+      </View>
       {children}
     </View>
   );

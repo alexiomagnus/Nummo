@@ -121,27 +121,32 @@ const hours = Array.from({ length: reminderHourRange.max - reminderHourRange.min
 function ReminderTime({ hour, timeFormat, timeZone, onChange }: { hour: number; timeFormat: TimeFormat; timeZone: string; onChange: (hour: number) => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  // No segment is selected while the hour is not one of the three.
-  const choice = timeChoiceOf(hour);
+  // «Altra ora» is switched on by hand (28 November, on request; before, the card was dimmed and the only way in was picking an hour there):
+  // on from the start when the hour is not one of the three; while it is on no segment is selected, and picking one switches it off.
+  const [custom, setCustom] = useState(() => timeChoiceOf(hour) === null);
+  const choice = custom ? null : timeChoiceOf(hour);
   const labels: Record<TimeChoice, string> = { morning: t("Mattina"), lunch: t("Pranzo"), evening: t("Sera") };
   const time = (value: number) => formatHour(value, timeFormat);
   // The zone is named only when it is not the device's own (a chosen one): the usual case stays a plain «alle 9:00».
   const zoneNote = timeZone !== autoTimeZone && timeZone !== deviceTimeZone() ? timeZoneCity(timeZone) : null;
+  // Switching it off goes back to a quick choice: the morning one if the hour is not already one of the three.
+  const toggleCustom = (on: boolean) => { setCustom(on); if (!on && timeChoiceOf(hour) === null) onChange(reminderPresets.morning); };
   return (
     <ListGroup icon={iconShapes.clock} label={t("Orario delle notifiche")}>
       <OptionRow icon={iconShapes.clock} title={t("Ora di arrivo")} subtitle={t("Vale per promemoria, riepiloghi e rinnovi.")}>
-        <SegmentedButtons label={t("Orario delle notifiche")} value={choice ?? ''} onChange={(next) => onChange(reminderPresets[next as TimeChoice])}
+        <SegmentedButtons label={t("Orario delle notifiche")} value={choice ?? ''} onChange={(next) => { setCustom(false); onChange(reminderPresets[next as TimeChoice]); }}
           options={(['morning', 'lunch', 'evening'] as const).map((value) => ({ value, label: labels[value] }))} />
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>{zoneNote ? t("Arrivano alle {p0} ({p1}).", { p0: time(hour), p1: zoneNote }) : t("Arrivano alle {p0}.", { p0: time(hour) })}</Text>
       </OptionRow>
       <RowDivider />
-      {/* Dimmed (not inert) while one of the three quick choices is selected: picking an hour here is the only way back to «Altra ora». */}
-      <View style={{ opacity: choice ? 0.38 : 1 }}>
-        <OptionRow icon={iconShapes.pencil} tone="secondary" title={t("Altra ora")} subtitle={t("Scegli un’ora diversa da quelle sopra.")}>
+      <OptionRow icon={iconShapes.pencil} tone="secondary" title={t("Altra ora")} subtitle={t("Scegli un’ora diversa da quelle sopra.")}
+        toggle={{ value: custom, onChange: toggleCustom }}>
+        {/* Dimmed and inert while the switch is off. */}
+        <View style={{ opacity: custom ? 1 : 0.38 }} {...(custom ? {} : { inert: true, 'aria-disabled': true })}>
           <MenuSelect panel label={t("Ora")} icon={iconShapes.clock} value={String(hour)} onChange={(value) => onChange(Number(value))}
             options={hours.map((value) => ({ value: String(value), label: time(value) }))} />
-        </OptionRow>
-      </View>
+        </View>
+      </OptionRow>
     </ListGroup>
   );
 }
