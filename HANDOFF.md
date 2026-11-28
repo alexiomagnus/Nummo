@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Liste: schermi al posto dei fogli; interruttore di «Altra ora» a destra — 28 novembre 2026 (notte)
+
+Su richiesta (video 16:59). Nuova lista, Modifica lista e Modifica prodotto (`ListDialogs`) non sono più fogli (`variant="sheet"` tolto): sono schermi con il pulsante Indietro, perché con la tastiera il foglio scattava e la tastiera si apriva da sola (nel video, con la 0.3.18, anche dopo `focusTextEntry={!record}`: non indagato; sullo schermo il campo non è più nel foglio che si sposta). Interruttore di «Altra ora»: il `StateLayerPressable` di `OptionRow toggle` metteva icona, testo e interruttore in colonna (`RowContent` è un fragment); ora una riga (`optionToggle`), interruttore a destra del titolo. `typecheck` e test 631/631; non visto a schermo; non committato né pubblicato.
+
 ## «Altra ora» con interruttore — 28 novembre 2026 (notte)
 
 Su richiesta (screenshot di Notifiche → Orario): la scheda «Altra ora» non è più solo attenuata; ha un **interruttore** in testa (`toggle` di `OptionRow` in `ActionList.tsx`). Spento: campo «Ora» attenuato (0,38) e `inert`. Acceso (di partenza se l'ora salvata non è Mattina/Pranzo/Sera): nessun segmento selezionato e l'ora si sceglie dal pannello. Scegliere un segmento lo spegne; spegnerlo con un'ora personalizzata riporta a «Mattina». Stato locale in `ReminderTime`, nulla di nuovo salvato. `npm run check` OK; commit `feat: Altra ora with a switch in Notifiche` su `main` e `deploy:hosting` su `nummo-6b6e2` («Deploy complete!», solo web, nessuna nuova APK). Non visto a schermo né provato sul telefono.

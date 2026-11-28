@@ -117,7 +117,7 @@ export function OptionRow({ children, toggle, ...content }: Content & { children
       <View style={styles.optionHead}>
         {toggle
           ? <StateLayerPressable layerColor={colors.onSurface} accessibilityRole="switch" aria-checked={toggle.value} accessibilityLabel={content.title}
-              onPress={() => toggle.onChange(!toggle.value)}><RowContent {...content} trailing={<M3Switch value={toggle.value} />} /></StateLayerPressable>
+              onPress={() => toggle.onChange(!toggle.value)} style={styles.optionToggle}><RowContent {...content} trailing={<M3Switch value={toggle.value} />} /></StateLayerPressable>
           : <RowContent {...content} />}
       </View>
       {children}
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
   title: { fontWeight: '600' },
   value: { flexShrink: 1, fontWeight: '500', textAlign: 'right', maxWidth: '50%' },
   option: { paddingVertical: spacing.lg, paddingHorizontal: rowSide, gap: spacing.md },
+  optionToggle: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   optionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   body: { paddingVertical: spacing.lg, paddingHorizontal: rowSide, gap: spacing.md },
   // Both axes: a bare `padding` would lose to the body's paddingVertical/paddingHorizontal (React Native's precedence).
