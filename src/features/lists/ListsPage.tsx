@@ -222,7 +222,7 @@ function ListDetail({ list, items, state, expense, remote, categories, fundChoic
   // row re-rendered on each tick took ~1.6 s with the CPU slowed 4×, as on a mid-range phone).
   const updateItem = useRef(remote.updateItem);
   updateItem.current = remote.updateItem;
-  const toggleItem = useCallback((item: SyncedListItem) => { updateItem.current(item, { checked: !item.checked }); }, []);
+  const toggleItem = useCallback((item: SyncedListItem, checked: boolean) => updateItem.current(item, { checked }), []);
   // A long list is drawn progressively: the first rows at once, the rest in chunks, each in an interruptible transition after
   // the previous one has been painted. 500 rows in one go blocked a mid-range phone for about 4 s (CPU slowed 4×); lists up to
   // `firstRows` products are drawn whole, as before. The component is keyed by list, so each list starts again.
@@ -331,18 +331,25 @@ const rowsPerChunk = 100;
 // One product of the checklist. Memoised on its fields (the store rebuilds the item objects at every snapshot), so a tick
 // re-renders only the row that changed.
 const ItemRow = memo(function ItemRow({ item, editable, last, onToggle, onEdit }: {
-  item: SyncedListItem; editable: boolean; last: boolean; onToggle: (item: SyncedListItem) => void; onEdit: (item: SyncedListItem) => void;
+  item: SyncedListItem; editable: boolean; last: boolean; onToggle: (item: SyncedListItem, checked: boolean) => boolean; onEdit: (item: SyncedListItem) => void;
 }) {
   const { t } = useI18n();
   const { colors } = useTheme();
+  // The tick shows at once: the store's snapshot comes back only after the write (in Standard an IndexedDB transaction with strict
+  // durability, tens of ms or more), so the box looked unresponsive (28 November, on report). Dropped when the snapshot arrives
+  // or when the write is refused.
+  const [pending, setPending] = useState<boolean | null>(null);
+  useEffect(() => setPending(null), [item.checked]);
+  const checked = pending ?? item.checked;
+  const toggle = () => { const next = !checked; setPending(next); if (!onToggle(item, next)) setPending(null); };
   return (
     <View role="listitem" style={styles.itemRow}>
-      <StateLayerPressable layerColor={colors.onSurface} disabled={!editable} accessibilityRole="checkbox" aria-checked={item.checked}
-        aria-disabled={!editable || undefined} accessibilityLabel={item.name} style={styles.check} onPress={() => onToggle(item)}>
-        <View style={[styles.box, item.checked ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.onSurfaceVariant }, !editable && styles.dim]}>
-          {item.checked && <SvgIcon shape={iconShapes.check} size={16} color={colors.onPrimary} />}
+      <StateLayerPressable layerColor={colors.onSurface} disabled={!editable} accessibilityRole="checkbox" aria-checked={checked}
+        aria-disabled={!editable || undefined} accessibilityLabel={item.name} style={styles.check} onPress={toggle}>
+        <View style={[styles.box, checked ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.onSurfaceVariant }, !editable && styles.dim]}>
+          {checked && <SvgIcon shape={iconShapes.check} size={16} color={colors.onPrimary} />}
         </View>
-        <Text variant="bodyLarge" style={[styles.grow, item.checked && { color: colors.onSurfaceVariant, textDecorationLine: 'line-through' }]}>{item.name}</Text>
+        <Text variant="bodyLarge" style={[styles.grow, checked && { color: colors.onSurfaceVariant, textDecorationLine: 'line-through' }]}>{item.name}</Text>
       </StateLayerPressable>
       {editable && <IconButton style={styles.itemEdit} accessibilityLabel={t("Modifica {p0}", { p0: item.name })} onPress={() => onEdit(item)}
         icon={pencilIcon} />}

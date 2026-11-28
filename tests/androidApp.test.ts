@@ -91,7 +91,7 @@ test('app Android: sblocco del dispositivo, una risposta per richiesta, annullab
 });
 
 test('app Android: testi della vibrazione e della sola modalità Standard tradotti', () => {
-  for (const key of ["Una breve vibrazione quando interagisci con l'app. Segue le impostazioni di vibrazione di Android.",
+  for (const key of ["Una breve vibrazione quando tocchi l'app.",
     "Questa versione dell'app Android offre solo la modalità Standard: aggiornala o usa Nummo nel browser.",
     "Nessun account Google su questo telefono: aggiungine uno nelle impostazioni di Android e riprova."]) {
     assert.ok(Object.hasOwn(english, key), key);

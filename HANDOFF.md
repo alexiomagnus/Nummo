@@ -1,5 +1,17 @@
 # HANDOFF — Nummo
 
+## «Animazione dello sfondo» come riga, sul modello di Morphe — 28 novembre 2026
+
+Su richiesta (screenshot di Morphe): in Impostazioni → Aspetto la scelta non è più un campo con contorno dentro una scheda ma una riga con l'icona dell'animazione attuale, il titolo, la scelta corrente sotto e il chevron; al tocco si apre lo schermo di scelta (`ChoiceScreen`) come prima. Nuova prop `row` di `MenuSelect` (solo con `panel`), usata solo qui. `typecheck` OK; non visto a schermo. Se piace, lo stesso schema vale per altre scelte singole (Lingua, Tema, Carattere…): chiedere.
+
+## Testi di «Vibrazione» e «Modalità AMOLED» accorciati — 28 novembre 2026
+
+Su richiesta: «Una breve vibrazione quando tocchi l'app.» e «Sfondo nero puro nel tema scuro.» (traduzioni e test aggiornati). Test 630/630.
+
+## Vibrazione sulle Barre, spunta immediata nelle liste — 28 novembre 2026
+
+Su richiesta (screenshot). **Analisi, Barre**: la scheda di una categoria vibra al tocco come blocchi, ciambella e legenda (`BarChart.tsx`, `useHaptics`; solo app Android). **Liste, checklist**: la casella sembrava poco reattiva perché la spunta compariva solo dopo lo snapshot dello store (in Standard una transazione IndexedDB con durabilità `strict`). `ItemRow` ora mostra subito il nuovo stato (`pending`, tolto all'arrivo dello snapshot o se la scrittura è rifiutata) e `toggleItem` riceve il valore voluto (`onToggle(item, checked)`, restituisce l'esito), così anche due tocchi ravvicinati sono coerenti. Il contatore «n di m acquistati» e la barra restano legati allo snapshot. `typecheck` e test: vedi sotto; non provato sul telefono.
+
 ## «Scansiona scontrino» con Indietro, titolo della fotocamera sotto la barra di stato — 28 novembre 2026
 
 Su richiesta e segnalazione (screenshot). **Dialogo**: `ScanReceiptDialog` non è più un pannello a tre posizioni (`detents` tolto): su smartphone è uno schermo intero con Indietro e senza maniglia né trascinamento; da medium invariato. **Fotocamera** (`CameraViewfinder`): il titolo e la torcia finivano sotto l'orologio perché nell'app Android la pagina disegna sotto la barra di stato (0.3.12) e `env(safe-area-inset-top)` vale 0; la fascia in alto usa ora `useInsets().top` (ponte `topInset`). `typecheck` e test 630/630; non visto a schermo né provato sul telefono (richiede app 0.3.12+ per l'inset).

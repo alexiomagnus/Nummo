@@ -5,6 +5,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { layout, radius, spacing } from '../theme/tokens';
 import { useSizeClass } from '../theme/useSizeClass';
 import { AnchoredMenu, BottomSheet, type MenuAnchor } from './Overlay';
+import { ActionRow } from './ActionList';
 import { ChoiceScreen } from './ChoiceScreen';
 import { StateLayerPressable } from './StateLayerPressable';
 import { SvgIcon, iconShapes } from './SvgIcon';
@@ -49,13 +50,16 @@ type Props<T extends string> = {
   panel?: boolean;
   // With `panel`, on phones the screen opens whole and not in peek (Categoria of Spese, user's request, 26 November).
   whole?: boolean;
+  // With `panel`: the trigger is a settings row (icon, title, the current choice below, chevron) in place of the outlined field, as in
+  // Morphe's «Animazione dello sfondo» (28 November, on request). `icon` is the shape shown, usually the current choice's.
+  row?: { title: string; icon: string };
 };
 
 
 // Compact single-choice selector: a 50 dp field showing the caption and the current value. Used where chips would eat
 // too much width (sort, filters). On phones the choices open in a modal bottom sheet, as in SelectField; from medium
 // width in a Material 3 menu below the field (or above it when there is no room), which returns focus to the field.
-export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style, matchFieldWidth, large, iconOnPhones, panel = false, whole = false }: Props<T>) {
+export function MenuSelect<T extends string>({ label, icon, options, value, onChange, style, matchFieldWidth, large, iconOnPhones, panel = false, whole = false, row }: Props<T>) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const compact = useSizeClass() === 'compact';
@@ -88,7 +92,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
   ));
   return (
     <View style={style}>
-      <View ref={anchorRef}>
+      {row && panel ? <ActionRow icon={row.icon} title={row.title} subtitle={current?.label} label={`${label}: ${current?.label ?? ''}`} onPress={openMenu} /> : <View ref={anchorRef}>
         <StateLayerPressable layerColor={colors.onSurface} radius={radius.input} accessibilityRole="button"
           aria-haspopup="menu" aria-expanded={open} accessibilityLabel={`${label}: ${current?.label ?? ''}`}
           onPress={openMenu} style={[styles.field, large && styles.fieldLarge, large && compact && styles.fieldLargeCompact, tight && styles.fieldTight, { borderColor: colors.outline }]}>
@@ -100,7 +104,7 @@ export function MenuSelect<T extends string>({ label, icon, options, value, onCh
           </View>
           <SvgIcon shape={iconShapes.chevronDown} size={large && !compact ? 24 : 20} color={colors.onSurfaceVariant} />
         </StateLayerPressable>
-      </View>
+      </View>}
       {/* Measuring copy of the rows: same paddings, gap and check slot, no width limit; never visible nor focusable.
           The zero-size clipping box keeps it from widening the page (horizontal overflow) next to the right edge. */}
       <View aria-hidden pointerEvents="none" style={styles.measureBox}>

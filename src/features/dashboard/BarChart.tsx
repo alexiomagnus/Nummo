@@ -5,6 +5,7 @@ import { IconTile } from '../../components/ListRow';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
 import type { Category } from '../../domain/category';
 import { barTransition } from '../../theme/motion';
+import { useHaptics } from '../../components/Haptics';
 import { StateLayerPressable } from '../../components/StateLayerPressable';
 import { useI18n } from '../../i18n/I18nProvider';
 import { glassSurface } from '../../theme/theme';
@@ -22,6 +23,7 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
   categories: readonly Category[]; onOpen: (key: string) => void;
 }) {
   const { t, formatAmount } = useI18n();
+  const haptic = useHaptics();
   const theme = useTheme();
   const [width, setWidth] = useState(0);
   const twoColumns = width >= twoColumnsFrom;
@@ -38,7 +40,7 @@ export function BarChart({ rows, total, colors, categories, onOpen }: {
           {/* One tonal card per category: icon, name and amount on top; below, the bar (length against the largest
               category) and the share of the total in a fixed pill, so the shares line up from card to card. */}
           <StateLayerPressable role="button" layerColor={theme.colors.onSurface} radius={radius.group - 1}
-            onPress={() => onOpen(series.key)}
+            onPress={() => { haptic(); onOpen(series.key); }}
             accessibilityLabel={[name, amount, share].filter(Boolean).join(', ')}
             style={[styles.card, glassSurface(theme.colors)]}>
             <View style={styles.header}>

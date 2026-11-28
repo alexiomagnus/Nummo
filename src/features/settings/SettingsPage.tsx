@@ -38,7 +38,7 @@ const vibrationAvailable = hasHaptics();
 // uses the wide viewport only from then on, which `appIcon` marks); a desktop browser has its own zoom. The icon only in the app.
 const iconsAvailable = androidAppIcons() !== undefined;
 const scaleAvailable = inAndroidApp() ? iconsAvailable : typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
-const vibrationNote = "Una breve vibrazione quando interagisci con l'app. Segue le impostazioni di vibrazione di Android.";
+const vibrationNote = "Una breve vibrazione quando tocchi l'app.";
 
 type Props = {
   preferences: Preferences;
@@ -129,15 +129,14 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
           <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
         </OptionRow>
         <RowDivider />
-        <ToggleRow icon={iconShapes.moon} title={t("Modalità AMOLED")} subtitle={t("Nel tema scuro lo sfondo è nero puro: consuma meno sugli schermi OLED.")}
+        <ToggleRow icon={iconShapes.moon} title={t("Modalità AMOLED")} subtitle={t("Sfondo nero puro nel tema scuro.")}
           value={preferences.amoled} onChange={(amoled) => onChange({ amoled })} />
         <RowDivider />
-        <OptionRow icon={iconShapes.sparkles} title={t("Animazione dello sfondo")}>
-          <MenuSelect panel whole label={t("Animazione")} icon={iconShapes.sparkles} value={preferences.background}
-            options={backgrounds.map((value) => ({ value, label: t(backgroundLabels[value]),
-              icon: <SvgIcon shape={backgroundIcons[value]} size={20} color={colors.onSurfaceVariant} /> }))}
-            onChange={(background) => onChange({ background })} />
-        </OptionRow>
+        <MenuSelect panel whole label={t("Animazione dello sfondo")} icon={iconShapes.sparkles} value={preferences.background}
+          row={{ title: t("Animazione dello sfondo"), icon: backgroundIcons[preferences.background] }}
+          options={backgrounds.map((value) => ({ value, label: t(backgroundLabels[value]),
+            icon: <SvgIcon shape={backgroundIcons[value]} size={20} color={colors.onSurfaceVariant} /> }))}
+          onChange={(background) => onChange({ background })} />
         <RowDivider />
         <OptionRow icon={iconShapes.palette} title={t("Colore")}>
           <ChoiceChips label={t("Modalità colore")} options={colorModeOptions().map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.colorMode === 'system' && !hasSystemColors() ? 'palette' : preferences.colorMode} onChange={(value) => value && onChange({ colorMode: value })} />
