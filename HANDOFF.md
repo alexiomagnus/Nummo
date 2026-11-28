@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Filtro Categoria: icona e pannello intero — 28 novembre 2026 (notte)
+
+Su richiesta (screenshot). In Uscite e Abbonamenti il filtro Categoria usa l'icona `tag` (campo e voce «Tutte le categorie») al posto dell'imbuto, che resta solo sul pulsante «Filtri»; il pannello si apre intero su smartphone (`whole`). `typecheck` e test 632/632; pubblicato con `deploy:hosting` su `nummo-6b6e2` (solo web, Rules invariate, nessuna nuova APK); non provato sul telefono.
+
 ## Pubblicazione — 28 novembre 2026 (notte, seconda)
 
 `deploy:hosting` su `nummo-6b6e2` dal commit `d755517` («Deploy complete!», solo Hosting, Rules invariate, nessuna nuova APK). Online: Nuova spesa non apre più la tastiera da sola. Non provato sul telefono.

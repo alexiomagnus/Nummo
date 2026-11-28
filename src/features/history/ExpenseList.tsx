@@ -85,7 +85,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
   const byDate = sort === 'date-desc' || sort === 'date-asc';
   const sortIcons: Record<(typeof sortOptions)[number], string> = { 'date-desc': iconShapes.sortNewest, 'date-asc': iconShapes.sortOldest, 'amount-desc': iconShapes.sortAmountHigh, 'amount-asc': iconShapes.sortAmountLow };
   const sortChoices = sortOptions.map((value) => ({ value, label: t(sortLabels[value]), icon: <SvgIcon shape={sortIcons[value]} size={20} color={theme.colors.onSurfaceVariant} /> }));
-  const categoryChoices = [{ value: ALL, label: t("Tutte le categorie"), icon: <SvgIcon shape={iconShapes.filter} size={20} color={theme.colors.onSurfaceVariant} /> },
+  const categoryChoices = [{ value: ALL, label: t("Tutte le categorie"), icon: <SvgIcon shape={iconShapes.tag} size={20} color={theme.colors.onSurfaceVariant} /> },
     ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))];
 
   const search = (
@@ -100,7 +100,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
       onChange={(value) => { setSort(value); setVisibleCount(pageSize); }} style={styles.select} />
   );
   const categorySelect = (
-    <MenuSelect panel iconOnPhones label={t("Categoria")} icon={iconShapes.filter} options={categoryChoices} value={filter}
+    <MenuSelect panel whole iconOnPhones label={t("Categoria")} icon={iconShapes.tag} options={categoryChoices} value={filter}
       onChange={(value) => { setCategoryFilter(value); setVisibleCount(pageSize); }} style={styles.select} />
   );
   // Phones (28 November, on request): the search and a «Filtri» button share a row; Fondo, Categoria and Ordina open under it. The button says how many filters are on, so a hidden one is never forgotten.
