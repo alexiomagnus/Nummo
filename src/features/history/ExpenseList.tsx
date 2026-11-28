@@ -89,7 +89,7 @@ function ExpenseListView({ occurrences, categories, error, onOpen, listItems, me
     ...categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon ? <CategoryGlyph icon={category.icon} size={20} /> : undefined }))];
 
   const search = (
-    <TextInput outlineStyle={inputOutline} label={t("Cerca per nome, mese o anno")} accessibilityLabel={t("Cerca per nome, mese o anno")} mode="outlined" value={query}
+    <TextInput outlineStyle={inputOutline} label={compact && fundFilter !== undefined ? t("Nome, mese o anno") : t("Cerca per nome, mese o anno")} accessibilityLabel={t("Cerca per nome, mese o anno")} mode="outlined" value={query}
       onChangeText={(value) => { setQuery(clipToLength(value, searchPolicy.maxQueryLength)); setVisibleCount(pageSize); }} autoCorrect={false} style={compact ? styles.searchGrow : styles.search}
       left={leadingIcon(iconShapes.search)}
       right={query ? <TextInput.Icon accessibilityLabel={t("Cancella ricerca")} onPress={() => { setQuery(''); setVisibleCount(pageSize); }}

@@ -146,6 +146,7 @@ export const english: Readonly<Record<string, string>> = {
   ". Le spese in attesa restano in coda: non inserirle di nuovo.": ". Pending expenses remain queued: do not enter them again.",
   "Tutte": "All",
   "Cerca per nome, mese o anno": "Search by name, month or year",
+  "Nome, mese o anno": "Name, month or year",
   "Cerca per nome": "Search by name",
   "Nessun abbonamento corrisponde alla ricerca.": "No subscriptions match your search.",
   "Cancella ricerca": "Clear search",
