@@ -170,3 +170,10 @@ test('Material You: palette di sistema validate, schema dai toni, senza palette 
     }
   } finally { setSystemColors(null); }
 });
+
+test('pagina Liste: accesa di base, spenta solo con un booleano salvato', () => {
+  assert.equal(defaultPreferences.listsEnabled, true);
+  assert.equal(parsePreferences('{}').listsEnabled, true);
+  for (const bad of ['"false"', '0', 'null']) assert.equal(parsePreferences(`{"listsEnabled":${bad}}`).listsEnabled, true);
+  assert.equal(parsePreferences('{"listsEnabled":false}').listsEnabled, false);
+});

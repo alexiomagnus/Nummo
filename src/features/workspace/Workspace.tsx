@@ -214,7 +214,10 @@ function WorkspaceNavigation({ categoriesRequest = 0, templatesRequest = 0, rece
   useRequest(infoRequest, () => navigate('info'));
   useRequest(settingsRequest, () => navigate('settings'));
   useRequest(notificationsRequest, () => navigate('notifications'));
-  return <AppShell destinations={destinations.map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
+  // «Liste» switched off in Impostazioni: no destination, and a page reached by Back or a saved trail moves on to Spese.
+  const listsEnabled = props.dashboardPreferences.listsEnabled;
+  useEffect(() => { if (!listsEnabled && section === 'lists') navigate('list'); }, [listsEnabled, section, navigate]);
+  return <AppShell destinations={destinations.filter((entry) => listsEnabled || entry.value !== 'lists').map((entry) => ({ ...entry, label: t(entry.label) }))} selected={section} onSelect={navigate}
     fab={{ label: t("Nuova spesa"), icon: iconShapes.plus, target: 'expense' }} drawerToggle={props.dashboardPreferences.drawerToggle}
     actions={<><SyncChip status={status} />{topActions}</>}>
     <Sections {...props} section={section} onNavigate={navigate} onDone={finish} />
@@ -499,9 +502,9 @@ function Sections({ dashboardPreferences, onChangeDashboardPreferences, uid, sec
     <SubscriptionDetail value={seriesDetail} onClose={closeSeries} canChange={synchronized && Boolean(store.update)} today={today}
       onEdit={edit} onSetStatus={changeStatus} onRemovePayment={removePayment} />
     {editing && <ExpenseEditor record={editing} categories={categoryState.categories} store={store} close={() => setEditing(null)} fundChoices={editorFundChoices} listNote={listNote} merchants={merchants} />}
-    <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} defaultCategoryId={preferred.list} expenses={store.expenses}
+    {dashboardPreferences.listsEnabled && <VisitedSection active={section === 'lists' && !starting}><ListsPage remote={listState} categories={categoryState.categories} defaultCategoryId={preferred.list} expenses={store.expenses}
       fundChoices={fundChoices} defaultFundId={defaultFundId} canRegister={synchronized && listState.ready} notify={notify}
-      showArchivedLists={dashboardPreferences.showArchivedLists} /></VisitedSection>
+      showArchivedLists={dashboardPreferences.showArchivedLists} /></VisitedSection>}
     <VisitedSection active={section === 'funds' && !starting}><FundsPage remote={fundState} expenses={store.expenses} today={today} canWrite={synchronized}
       defaultFundId={defaultFundId} onSetDefault={changeDefaultFund} notify={notify}
       showArchivedFunds={dashboardPreferences.showArchivedFunds} /></VisitedSection>

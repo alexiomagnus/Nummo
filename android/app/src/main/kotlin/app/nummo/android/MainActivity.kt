@@ -53,9 +53,12 @@ class MainActivity : Activity() {
     // Height of the status bar (and cutout) in dp = CSS pixels, read by the page through `topInset` and pushed when it changes.
     var topInsetDp = 0f
         private set
+    // Height of the navigation bar (gesture bar) in dp, 0 while the keyboard is open (0.3.15): the page draws under it too.
+    var bottomInsetDp = 0f
+        private set
 
     fun sendTopInset() {
-        if (::webView.isInitialized) webView.evaluateJavascript("window.nummoAndroidInsets&&window.nummoAndroidInsets($topInsetDp)", null)
+        if (::webView.isInitialized) webView.evaluateJavascript("window.nummoAndroidInsets&&window.nummoAndroidInsets($topInsetDp,$bottomInsetDp)", null)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,10 +84,15 @@ class MainActivity : Activity() {
             val keyboard = insets.getInsets(WindowInsets.Type.ime())
             // No top padding (0.3.12, 27 November, on request): the page draws under the status bar, where its blurred glass top
             // bar extends (as in Morphe); the inset goes to the page, which pads its own top bar with it.
-            view.setPadding(bars.left, 0, bars.right, maxOf(bars.bottom, keyboard.bottom))
-            val top = bars.top / resources.displayMetrics.density
-            if (top != topInsetDp) {
+            // Nor at the bottom (0.3.15, 28 November, on request, as in Morphe): the page draws under the navigation bar, so
+            // only the gesture handle shows; with the keyboard open the WebView ends above it and there is nothing to pad.
+            view.setPadding(bars.left, 0, bars.right, keyboard.bottom)
+            val density = resources.displayMetrics.density
+            val top = bars.top / density
+            val bottom = if (keyboard.bottom > 0) 0f else bars.bottom / density
+            if (top != topInsetDp || bottom != bottomInsetDp) {
                 topInsetDp = top
+                bottomInsetDp = bottom
                 sendTopInset()
             }
             WindowInsets.CONSUMED

@@ -286,21 +286,36 @@ export function androidTopInset(scope: unknown = globalThis): number {
   try { return parseTopInset((bridge.topInset as () => unknown)()); } catch { return 0; }
 }
 
-type InsetScope = { nummoAndroidInsets?: (top: unknown) => void };
+// Navigation bar (app 0.3.15, 28 November, on request): the page draws under it as well, only the gesture handle shows.
+export function androidBottomInset(scope: unknown = globalThis): number {
+  const bridge = androidBridge(scope) as unknown as { bottomInset?: unknown } | undefined;
+  if (!bridge || typeof bridge.bottomInset !== 'function') return 0;
+  try { return parseTopInset((bridge.bottomInset as () => unknown)()); } catch { return 0; }
+}
+
+type InsetScope = { nummoAndroidInsets?: (top: unknown, bottom?: unknown) => void };
 const insetListeners = new Set<() => void>();
 let topInsetValue: number | undefined;
+let bottomInsetValue: number | undefined;
 
 export function currentTopInset(): number {
   topInsetValue ??= androidTopInset();
   return topInsetValue;
 }
 
+export function currentBottomInset(): number {
+  bottomInsetValue ??= androidBottomInset();
+  return bottomInsetValue;
+}
+
 export function subscribeTopInset(listener: () => void, scope: unknown = globalThis): () => void {
   const target = scope as InsetScope;
-  target.nummoAndroidInsets ??= (top) => {
+  target.nummoAndroidInsets ??= (top, bottom) => {
     const next = parseTopInset(top);
-    if (next === topInsetValue) return;
+    const nextBottom = bottom === undefined ? bottomInsetValue ?? 0 : parseTopInset(bottom);
+    if (next === topInsetValue && nextBottom === bottomInsetValue) return;
     topInsetValue = next;
+    bottomInsetValue = nextBottom;
     insetListeners.forEach((notify) => notify());
   };
   insetListeners.add(listener);

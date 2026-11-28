@@ -74,6 +74,9 @@ class NummoBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun topInset(): Float = activity.topInsetDp
 
+    @JavascriptInterface
+    fun bottomInset(): Float = activity.bottomInsetDp
+
     // Material You (0.3.11, 27 November, on request): the system's tonal palettes (Android 12+, taken from the wallpaper) as JSON
     // `{"a1":{"0":"#FFFFFF",…,"1000":"#000000"},"a2":…,"a3":…,"n1":…,"n2":…}`; "" before Android 12. The page validates it.
     @JavascriptInterface

@@ -181,4 +181,7 @@ test('top inset of the app: validated, 0 without the method or outside the app',
   assert.equal(androidTopInset({ NummoAndroid: full }), 0);
   assert.equal(androidTopInset({ NummoAndroid: { ...full, topInset: () => 28.5 } }), 28.5);
   assert.equal(androidTopInset({ NummoAndroid: { ...full, topInset: () => { throw new Error('x'); } } }), 0);
+  const { androidBottomInset } = await import('../src/services/androidApp.ts');
+  assert.equal(androidBottomInset({ NummoAndroid: full }), 0);
+  assert.equal(androidBottomInset({ NummoAndroid: { ...full, bottomInset: () => 24 } }), 24);
 });
