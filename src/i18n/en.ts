@@ -124,6 +124,7 @@ export const english: Readonly<Record<string, string>> = {
   "Tema": "Theme",
   "Lingua e ora": "Language and time",
   "Aspetto": "Appearance",
+  "Visualizzazione": "Display",
   "Colore": "Colour",
   "Modalità colore": "Colour mode",
   "Colore principale": "Accent colour",

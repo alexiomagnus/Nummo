@@ -129,6 +129,13 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
                 onChange={(timeZone) => onChange({ timeZone })} />}
         </OptionRow>
       </ListGroup>
+      {((scaleAvailable && !desktop) || iconsAvailable) && <ListGroup icon={iconShapes.smartphone} label={t("Visualizzazione")}>
+        {scaleAvailable && !desktop && <><ScaleSlider value={scalePending ?? preferences.uiScale} onChange={(uiScale) => setScalePending(uiScale === preferences.uiScale ? null : uiScale)} />
+          {/* The bar fades and slides in and out (28 November, on request): `Disclosure`, the same in-flow motion as the options under a switch. */}
+          <Disclosure grow open={scalePending !== null}><RowBody><ApplyBar onReset={() => setScalePending(null)} onApply={() => { if (scalePending !== null) onChange({ uiScale: scalePending }); setScalePending(null); }} /></RowBody></Disclosure></>}
+        {iconsAvailable && <OptionRow icon={iconShapes.smartphone} title={t("Icona dell'app")}>
+          <AppIconChoice /></OptionRow>}
+      </ListGroup>}
       <ListGroup icon={iconShapes.palette} label={t("Aspetto")}>
         <OptionRow icon={iconShapes.moon} title={t("Tema")}>
           <ChoiceChips label={t("Tema")} options={themeOptions.map((entry) => ({ ...entry, label: t(entry.label) }))} value={preferences.theme} onChange={(value) => value && onChange({ theme: value })} />
@@ -190,11 +197,6 @@ export function SettingsPage({ preferences, dark, onChange, onReset, onDone, arc
             })}
           </View>
         </OptionRow>
-        {scaleAvailable && !desktop && <><RowDivider /><ScaleSlider value={scalePending ?? preferences.uiScale} onChange={(uiScale) => setScalePending(uiScale === preferences.uiScale ? null : uiScale)} />
-          {/* The bar fades and slides in and out (28 November, on request): `Disclosure`, the same in-flow motion as the options under a switch. */}
-          <Disclosure grow open={scalePending !== null}><RowBody><ApplyBar onReset={() => setScalePending(null)} onApply={() => { if (scalePending !== null) onChange({ uiScale: scalePending }); setScalePending(null); }} /></RowBody></Disclosure></>}
-        {iconsAvailable && <><RowDivider /><OptionRow icon={iconShapes.smartphone} title={t("Icona dell'app")}>
-          <AppIconChoice /></OptionRow></>}
       </ListGroup>
       <ListGroup icon={iconShapes.settings} label={t("Funzionalità")}>
         <ToggleRow icon={iconShapes.chart} title={t("Mostra andamento nel tempo")} subtitle={t("Nella pagina Analisi, il grafico delle spese giorno per giorno.")} value={preferences.dashboardTrend}

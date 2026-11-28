@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Impostazioni: sezione «Visualizzazione» — 28 novembre 2026 (notte)
+
+Su richiesta (screenshot). Scala dell'interfaccia e icona dell'app (con «Reimposta/Applica») stanno in un gruppo «Visualizzazione» sotto «Lingua e ora», visibile solo se almeno una è disponibile; la card della scala ha ora 16 di padding anche in alto. `typecheck` e test 632/632; non visto a schermo.
+
 ## Font dei filtri, pannelli interi, «Liste», riga scansione/template — 28 novembre 2026 (notte)
 
 Su richiesta (screenshot). (1) **Filtri su smartphone**: il Fondo passa `large={false}` (Uscite e Abbonamenti), così i tre campi hanno lo stesso testo; da desktop invariato. (2) **`whole`** anche per «Fuso» e per le categorie preferite («Nuova spesa», «Nuove liste»): AGENTS.md aggiornato. (3) La pagina Liste si chiama **«Liste»** (titolo a 34 come «Fondi»; chiave inglese «Liste della spesa» tolta) e «Nuova lista» è alta 48. (4) In Nuova spesa, con un solo pulsante tra «Scansiona scontrino» e «Template», occupa tutta la riga (tolta la metà vuota; l'etichetta breve «Scansiona» solo se affiancati). README: esempio di versione 0.3.19. `typecheck` e test 632/632; non visto a schermo né provato sul telefono; `check` completo non rieseguito.

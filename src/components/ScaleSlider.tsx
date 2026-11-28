@@ -46,7 +46,7 @@ export function ScaleSlider({ value, onChange }: { value: number; onChange: (val
 }
 
 const styles = StyleSheet.create({
-  box: { gap: spacing.lg, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  box: { gap: spacing.lg, padding: spacing.lg },
   value: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xl, borderRadius: radius.card },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   track: { flex: 1, height: 40, justifyContent: 'center' },
