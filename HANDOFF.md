@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Tema chiaro più vicino a Morphe — 28 novembre 2026
+
+Su richiesta, da due screenshot (Nummo e Morphe, Material You chiaro). `glassColors` (`palette.ts`), solo chiaro: schede col tono `surfaceContainer` (prima bianco `surfaceContainerLowest`) al 88 % (prima 72 %), contorno più marcato (mix 0,5 invece di 0,3 verso lo sfondo), barre dello stesso tono. Il tema scuro non cambia. Vale per tutti i colori, non solo Material You. Calibrazione approssimata, non provata sul telefono né pubblicata (nessun commit); da riguardare: contrasto di testo e icone sulle nuove schede. Non toccati: sfondo, pulsanti attivi, grandi riquadri (Totale), cursore.
+
 ## Barre senza blur nel browser — 28 novembre 2026
 
 Su richiesta: nel browser e nella web app installata (le barre di sistema di Android restano a colore fisso, vedi `AGENTS.md`) barra in alto, pillola di navigazione e menu ancorati sono opachi, senza `backdrop-filter` (`blurBars = inAndroidApp()` in `AppShell.tsx`, stesso criterio in `Overlay.tsx`). Nell'app Android il vetro sfocato resta. Layout invariato. Schede e gruppi restano in vetro traslucido. Non provato a vista.

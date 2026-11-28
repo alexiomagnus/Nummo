@@ -257,13 +257,15 @@ export const withAlpha = (color: string, alpha: number): string =>
 // blurred bars (top bar, navigation pill), `orb` the colour of the circles behind everything.
 export type GlassColors = { glass: string; glassSolid: string; glassBorder: string; glassBar: string; orb: string };
 export function glassColors(scheme: Scheme, dark: boolean): GlassColors {
-  const card = dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
-  const alpha = dark ? 0.78 : 0.72;
+  // Light, like Morphe's (28 November, on request, from two screenshots): tinted cards (the container tone, not white), nearly
+  // opaque, with a visible warm outline; before: white at 72 %, an outline barely darker than the page.
+  const card = scheme.surfaceContainer;
+  const alpha = dark ? 0.78 : 0.88;
   return {
     glass: withAlpha(card, alpha),
     glassSolid: mixColors(card, scheme.background, alpha),
-    glassBorder: dark ? mixColors(scheme.outline, scheme.background, 0.42) : mixColors(scheme.outline, scheme.background, 0.3),
-    glassBar: withAlpha(dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest, dark ? 0.72 : 0.68),
+    glassBorder: dark ? mixColors(scheme.outline, scheme.background, 0.42) : mixColors(scheme.outline, scheme.background, 0.5),
+    glassBar: withAlpha(scheme.surfaceContainer, dark ? 0.72 : 0.7),
     orb: mixColors(scheme.primaryContainer, scheme.background, dark ? 0.2 : 0.3),
   };
 }
