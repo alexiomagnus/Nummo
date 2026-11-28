@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Pubblicazione — 28 novembre 2026
+
+Commit `27d0bc0` su `main`, `npm run check` OK, poi `deploy:hosting` su `nummo-6b6e2` («Deploy complete!», Rules invariate). Il sito comprende tutte le modifiche del 28 novembre elencate sotto (Filtri, tema chiaro, barre opache, totali, guida in cima, selettore Aggiungi/Trasferisci, scansione con Indietro, vibrazioni, avatar Anello, rivelazione del tema, ecc.). Nessuna nuova APK: l'inset della fotocamera richiede l'app 0.3.12+, già rilasciata. Nulla di questo è stato provato sul telefono.
+
 ## «Modello» (scheda AI) si apre intero — 28 novembre 2026
 
 Su richiesta: il selettore «Modello» di «Lista scontrini» usa `whole` (su smartphone il pannello si apre alla massima apertura e non a metà, come Categoria e Fondo). `typecheck` OK; non provato a schermo. Se dopo l'apertura piena restava comunque a metà, serve verificare `ChoiceScreen`.
