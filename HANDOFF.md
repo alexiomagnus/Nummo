@@ -1,5 +1,9 @@
 # HANDOFF — Nummo
 
+## Release 0.3.17 — 28 novembre 2026 (sera)
+
+Commit `861a745` (versionCode 20, `0.3.17`, solo il numero di versione), tag e release GitHub `android-v0.3.17` (APK firmato `nummo-0.3.17.apk` + `.sha256`, «Latest»). Il sito era già pubblicato (`ddd438b`). Chi ha la 0.3.16 vede l'aggiornamento **obbligatorio** alla prossima apertura: prima prova reale dell'obbligo, mai vista sul telefono.
+
 ## Barra di scorrimento solo se serve, voce «Liste» animata — 28 novembre 2026 (sera)
 
 Su richiesta (screenshot di Nuova spesa su desktop). (1) **Scrollbar**: sul pannello desktop `AppShell` imposta `overflow-y: hidden` sullo scroller quando il contenuto, **senza il padding in fondo della pagina**, sta già nell'altezza visibile (`ResizeObserver` su scroller e contenuto); basta che una finestra sia di pochi pixel troppo bassa perché il solo padding (32) mostrasse una barra quasi piena. Misurato in Chromium headless a 1502×745: nascosta; con «Ricorrente» acceso (contenuto 850 su 706): compare. (2) **Toggle «Pagina Liste»**: la voce non sparisce più di colpo; `useNavEntries` la tiene in navigazione per la durata dell'uscita (stato derivato nel render, mai assente da un render) e `NavPresence` la anima: nel drawer e nella rail altezza + dissolvenza (`Disclosure grow`, con `appear={false}` per le voci presenti all'avvio, che non si animano), nella pillola dello smartphone quota di larghezza (`flex-grow`) + dissolvenza. Nella pillola l'indicatore usa già il numero di voci finale, quindi durante i ~280 ms può essere un poco fuori posto. **Non provato dal vivo**: lo script headless non è riuscito ad aprire Impostazioni (solo `typecheck`, test 631/631 e build); da guardare a schermo, desktop e telefono. Pubblicato insieme a pannelli uniformi e senza ombra (sezione sotto).
