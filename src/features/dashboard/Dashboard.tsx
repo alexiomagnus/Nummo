@@ -7,7 +7,7 @@ import { chartTypes, type ChartType, type DashboardPreferences } from '../settin
 import { Card } from '../../components/Card';
 import { MenuSelect } from '../../components/MenuSelect';
 import { SvgIcon, iconShapes } from '../../components/SvgIcon';
-import { groupGap, layout, radius, spacing } from '../../theme/tokens';
+import { layout, radius, spacing } from '../../theme/tokens';
 import { glassSurface } from '../../theme/theme';
 import { useSizeClass } from '../../theme/useSizeClass';
 import type { Category } from '../../domain/category';
@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
   donutHintBelow: { textAlign: 'center', marginTop: spacing.lg },
   chartCol: { minWidth: 0, gap: spacing.sm },
   // Two glass tiles side by side, a little apart (the connected cards of the glass language).
-  summary: { flexDirection: 'row', flexWrap: 'wrap', gap: groupGap },
+  // Two glass tiles side by side; 12 apart (as Periodo and Grafico above) since 28 November, on request; was the 3 of grouped cards.
+  summary: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   metric: { flexGrow: 1, flexBasis: 140, minWidth: 0, gap: spacing.xs, padding: spacing.lg, borderRadius: radius.group },
 });
