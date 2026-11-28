@@ -54,7 +54,7 @@ export function DailyBreakdown({ data, occurrences, categories, today }: Props) 
           <View style={styles.chevron}>{hasExpenses && <SvgIcon shape={open ? iconShapes.chevronUp : iconShapes.chevronDown} size={24} color={color} />}</View>
         </>;
         const summaryStyle = styles.summary;
-        return <View key={row.date} role="listitem" style={index < visible.length - 1 ? { borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.outlineVariant } : undefined}>
+        return <View key={row.date} role="listitem">
           {hasExpenses ? <StateLayerPressable accessibilityRole="button" aria-expanded={open}
             aria-controls={open ? `dashboard-day-${row.date}` : undefined} accessibilityLabel={label}
             layerColor={color} radius={shape.xs} onPress={() => setExpanded(open ? null : row.date)}

@@ -319,7 +319,6 @@ const styles = StyleSheet.create({
   balance: { alignItems: 'flex-end', flexShrink: 0 },
   cardActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.xs, marginHorizontal: -spacing.sm },
   spacer: { flexGrow: 1 },
-  details: { borderTopWidth: 1, paddingTop: spacing.md, gap: spacing.sm },
   line: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 32 },
   strong: { fontWeight: '600' },
   grow: { flex: 1, minWidth: 0 },

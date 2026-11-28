@@ -11,7 +11,6 @@ import { ScreenLayer, type ScreenTone } from './ScreenLayer';
 import { useSizeClass } from '../theme/useSizeClass';
 import { CancelButton, dialogActionPair } from './Button';
 import { ScreenActionsContext } from './screenActions';
-import { noScrollEdges, scrollEdges, type ScrollEdges } from './scrollEdges';
 
 type Props = Pick<ComponentProps<typeof Dialog>, 'visible' | 'onDismiss' | 'dismissable' | 'testID'> & {
   style?: StyleProp<ViewStyle>;
@@ -149,35 +148,9 @@ function AlertDialog({ visible = false, onDismiss, dismissable = true, testID, s
 }
 
 // Scroll area of every dialog (replaces Paper's Dialog.ScrollArea, same layout: 24 dp sides, grows and shrinks, 24 dp
-// below). As in Material 3 scrollable dialogs, a divider marks only the edges that hide content, so a field cut by the
-// edge reads as «more below» (the scrollbar only shows while scrolling). Borders are always 1 dp, transparent when
-// nothing is hidden: a divider never shifts the layout. Web target: the scroller is the first descendant of the area
-// that scrolls (the ScrollView inside), watched for scrolling and for size changes of itself and of its content.
+// below). No dividers at the edges (28 November, on request: cleaner GUI); the scrollbar only shows while scrolling.
 function ScrollArea({ style, children, ...rest }: ComponentProps<typeof View>) {
-  const { colors } = useTheme();
-  const [edges, setEdges] = useState<ScrollEdges>(noScrollEdges);
-  // A callback ref: Paper's Portal attaches the dialog's nodes after the first effects have run.
-  const [area, setArea] = useState<HTMLElement | null>(null);
-  const attach = useCallback((view: ComponentRef<typeof View> | null) => setArea(view as unknown as HTMLElement | null), []);
-  useEffect(() => {
-    if (!area) return;
-    const scroller = [...area.querySelectorAll<HTMLElement>('*')].find((node) => /^(auto|scroll)$/.test(getComputedStyle(node).overflowY));
-    if (!scroller) return;
-    const update = () => {
-      const found = scrollEdges(scroller.scrollTop, scroller.clientHeight, scroller.scrollHeight);
-      setEdges((now) => now.above === found.above && now.below === found.below ? now : found);
-    };
-    update();
-    scroller.addEventListener('scroll', update, { passive: true });
-    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
-    resize?.observe(scroller);
-    if (scroller.firstElementChild) resize?.observe(scroller.firstElementChild);
-    return () => { scroller.removeEventListener('scroll', update); resize?.disconnect(); };
-  }, [area]);
-  return <View {...rest} ref={attach} style={[scrollAreaStyles.container, style, {
-    borderTopWidth: 1, borderBottomWidth: 1,
-    borderTopColor: edges.above ? colors.outlineVariant : 'transparent', borderBottomColor: edges.below ? colors.outlineVariant : 'transparent',
-  }]}>{children}</View>;
+  return <View {...rest} style={[scrollAreaStyles.container, style]}>{children}</View>;
 }
 
 const scrollAreaStyles = StyleSheet.create({

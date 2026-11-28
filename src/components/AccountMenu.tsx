@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n/I18nProvider';
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Divider, Menu, Text, useTheme } from 'react-native-paper';
+import { Menu, Text, useTheme } from 'react-native-paper';
 import { radius, spacing } from '../theme/tokens';
 import { AnchoredMenu, type MenuAnchor } from './Overlay';
 import { StateLayerPressable } from './StateLayerPressable';
@@ -58,7 +58,6 @@ export function AccountMenu({ email, photoURL, avatar, ring, signedIn = false, o
         <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>{t("Modalità Standard")}</Text>
         <Text variant="bodyMedium">{t("Dati su questo dispositivo")}</Text>
       </View>}
-      <Divider />
       {!avatar && photoURL && photoFailed && <Menu.Item title={t('Riprova foto')} style={styles.item}
         leadingIcon={({ size, color }) => <SvgIcon shape={iconShapes.sync} size={size} color={color} />}
         onPress={() => { setPhotoLoaded(false); setPhotoFailed(false); setPhotoAttempt((attempt) => attempt + 1); }} />}
